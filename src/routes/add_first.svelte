@@ -1,4 +1,5 @@
 <script>
+	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { repos } from '$lib/stores';
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -8,18 +9,20 @@
 	const unsubscribeRepos = repos.subscribe((value) => {
 		reposValue = value;
 
-		if (value.length === 0) {
-			console.log(goto('/add_first'));
+		if (reposValue.length >= 1) {
+			console.log(goto('/'));
 		}
 	});
 
 	onDestroy(unsubscribeRepos);
 </script>
 
-<div class="content">
-	index
+<svelte:head>
+	<title>Cut branches</title>
+</svelte:head>
 
-	{reposValue.toString()}
+<div class="content">
+	<AddRepo />
 </div>
 
 <style>

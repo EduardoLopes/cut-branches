@@ -1,9 +1,6 @@
 <script>
-	import Header from '$lib/Header/index.svelte';
 	import '../app.css';
 </script>
-
-<Header />
 
 <main>
 	<slot />
@@ -12,4 +9,7 @@
 <footer />
 
 <style>
+	main {
+		min-height: 100vh;
+	}
 </style>
