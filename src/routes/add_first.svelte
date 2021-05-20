@@ -8,9 +8,9 @@
 
 	const unsubscribeRepos = repos.subscribe((value) => {
 		reposValue = value;
-
+		console.log(value);
 		if (reposValue.length >= 1) {
-			console.log(goto('/'));
+			goto('/');
 		}
 	});
 
