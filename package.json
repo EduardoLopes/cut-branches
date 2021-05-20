@@ -11,6 +11,7 @@
     "tauri": "tauri"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^1.0.0-next.10",
     "@sveltejs/kit": "next",
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
@@ -28,7 +29,6 @@
   "dependencies": {
     "@fontsource/fira-mono": "^4.2.2",
     "@lukeed/uuid": "^2.0.0",
-    "@sveltejs/adapter-static": "*",
     "@tauri-apps/api": "*",
     "@tauri-apps/cli": "*",
     "cookie": "^0.4.1"
