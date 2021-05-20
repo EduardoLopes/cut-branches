@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev:svelte": "svelte-kit dev",
-    "dev": "tauri dev",
+    "dev": "concurrently \"npm run dev:svelte\" \"wait-on http://localhost:3000 && tauri dev\"",
     "build": "svelte-kit build && tauri build",
     "preview": "svelte-kit preview",
     "lint": "prettier --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
@@ -15,6 +15,7 @@
     "@sveltejs/kit": "next",
     "@typescript-eslint/eslint-plugin": "^4.24.0",
     "@typescript-eslint/parser": "^4.24.0",
+    "concurrently": "^6.1.0",
     "eslint": "^7.26.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-svelte3": "^3.2.0",
@@ -23,7 +24,8 @@
     "svelte": "^3.38.2",
     "svelte-preprocess": "^4.7.3",
     "tslib": "^2.2.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "wait-on": "^5.3.0"
   },
   "type": "module",
   "dependencies": {
