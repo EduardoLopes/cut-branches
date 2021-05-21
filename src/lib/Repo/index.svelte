@@ -51,11 +51,36 @@
 <style>
 	.container {
 		min-width: 500px;
-		background: rgba(128, 161, 66, 0.4);
+		background: rgba(128, 161, 66, 0.1);
 		border: 1px solid #80a142;
 	}
 	.rootPath {
 		padding: 16px;
 		border-bottom: 1px solid #80a142;
+		background: rgba(128, 161, 66, 0.2);
+	}
+
+	.branches {
+		padding: 0;
+		margin: 0;
+	}
+
+	.branches li {
+		list-style: none;
+		padding: 16px;
+		border-bottom: 1px solid #80a142;
+		cursor: pointer;
+	}
+
+	.branches li:hover {
+		list-style: none;
+		padding: 16px;
+		border-bottom: 1px solid #80a142;
+		background: rgba(128, 161, 66, 0.15);
+		cursor: pointer;
+	}
+
+	.branches li:last-child {
+		border-bottom: none;
 	}
 </style>
