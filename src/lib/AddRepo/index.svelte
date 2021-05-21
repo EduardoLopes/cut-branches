@@ -1,9 +1,17 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
-	import { open } from '@tauri-apps/api/dialog';
+	import { onMount } from 'svelte';
+
+	let apiOpen;
+
+	onMount(async () => {
+		const { open } = await import('@tauri-apps/api/dialog');
+
+		apiOpen = open;
+	});
 
 	function handleClick() {
-		open({ directory: true })
+		apiOpen({ directory: true })
 			.then((dir: string) => {
 				repos.update((prev) => {
 					prev.push(dir);

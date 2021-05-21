@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { invoke } from '@tauri-apps/api/tauri';
 	import { repos } from '$lib/stores';
+	import { onMount } from 'svelte';
 
 	export let path: string;
+
+	let apiInvoke;
 	let root_path: string;
 	let branches: string[];
 	let currentBranch: string;
@@ -21,16 +23,22 @@
 			.filter((item) => item !== '');
 	}
 
-	invoke('git_repo_dir', { path: path }).then((res: string) => {
-		const resParser = JSON.parse(res);
-		root_path = resParser.root_path;
-		parseBranches(resParser.branches);
+	onMount(async () => {
+		const { invoke } = await import('@tauri-apps/api/tauri');
 
-		if (!root_path) {
-			repos.update((prev) => {
-				return [...new Set(prev.filter((item) => item !== path))];
-			});
-		}
+		apiInvoke = invoke;
+
+		apiInvoke('git_repo_dir', { path: path }).then((res: string) => {
+			const resParser = JSON.parse(res);
+			root_path = resParser.root_path;
+			parseBranches(resParser.branches);
+
+			if (!root_path) {
+				repos.update((prev) => {
+					return [...new Set(prev.filter((item) => item !== path))];
+				});
+			}
+		});
 	});
 </script>
 
