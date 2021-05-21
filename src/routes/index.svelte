@@ -29,7 +29,7 @@
 <style>
 	.content {
 		width: 100%;
-		min-height: 100vh;
+		grid-template-rows: min-content;
 		display: grid;
 		gap: 16px;
 		justify-content: center;
