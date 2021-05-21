@@ -3,8 +3,7 @@
 
 	export let path;
 
-	// invoke('git_status').then((message) => console.log(message));
-	invoke('is_git_repo', { path: path }).then((message) => console.log(message));
+	invoke('git_repo_dir', { path: path }).then((real_path) => (path = real_path));
 </script>
 
 <div>
