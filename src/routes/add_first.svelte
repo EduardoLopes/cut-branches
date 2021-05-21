@@ -1,17 +1,17 @@
 <script>
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { repos } from '$lib/stores';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	let reposValue;
+	let unsubscribeRepos;
 
-	const unsubscribeRepos = repos.subscribe((value) => {
-		reposValue = value;
-		console.log(value);
-		if (reposValue.length >= 1) {
-			goto('/');
-		}
+	onMount(() => {
+		unsubscribeRepos = repos.subscribe((value) => {
+			if (value && value?.length >= 1) {
+				goto('/');
+			}
+		});
 	});
 
 	onDestroy(unsubscribeRepos);

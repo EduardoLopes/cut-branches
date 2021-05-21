@@ -1,18 +1,22 @@
 <script>
 	import { repos } from '$lib/stores';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import Repo from '$lib/Repo/index.svelte';
 
 	let reposValue;
 
-	const unsubscribeRepos = repos.subscribe((value) => {
-		reposValue = value;
+	let unsubscribeRepos;
 
-		if (value.length === 0) {
-			console.log(goto('/add_first'));
-		}
+	onMount(() => {
+		unsubscribeRepos = repos.subscribe((value) => {
+			reposValue = value;
+
+			if (value && value?.length === 0) {
+				goto('/add_first');
+			}
+		});
 	});
 
 	onDestroy(unsubscribeRepos);
@@ -21,9 +25,11 @@
 <div class="content">
 	<AddRepo />
 
-	{#each reposValue as path}
-		<Repo {path} />
-	{/each}
+	{#if reposValue}
+		{#each reposValue as path}
+			<Repo {path} />
+		{/each}
+	{/if}
 </div>
 
 <style>
