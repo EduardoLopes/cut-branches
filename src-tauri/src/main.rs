@@ -9,6 +9,12 @@ use std::process::Stdio;
 
 use execute::{shell, Execute};
 
+#[derive(serde::Serialize)]
+struct GitDirResponse {
+  absolute_path: String,
+  root_path: String,
+}
+
 #[tauri::command]
 fn git_repo_dir(path: String) -> String {
   let mut command = shell(format!("cd {} && git rev-parse --git-dir", path));
@@ -17,9 +23,16 @@ fn git_repo_dir(path: String) -> String {
 
   let output = command.execute_output().unwrap();
 
-  return String::from_utf8(output.stdout)
-    .unwrap()
-    .replace(".git", "");
+  let absolute_path = String::from_utf8(output.stdout).unwrap();
+
+  let root_path = absolute_path.replace(".git", "");
+
+  let response = GitDirResponse {
+    absolute_path,
+    root_path,
+  };
+
+  return serde_json::to_string(&response).unwrap();
 }
 
 fn main() {
