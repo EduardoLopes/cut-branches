@@ -11,14 +11,13 @@ use execute::{shell, Execute};
 
 #[derive(serde::Serialize)]
 struct GitDirResponse {
-  absolute_path: String,
   root_path: String,
   branches: String,
 }
 
 #[tauri::command]
 fn git_repo_dir(path: String) -> String {
-  let mut command = shell(format!("cd {} && git rev-parse --git-dir", path));
+  let mut command = shell(format!("cd {} && git rev-parse --show-toplevel", path));
 
   command.stdout(Stdio::piped());
 
@@ -32,12 +31,9 @@ fn git_repo_dir(path: String) -> String {
 
   let branches = String::from_utf8(output_branch.stdout).unwrap();
 
-  let absolute_path = String::from_utf8(output.stdout).unwrap();
-
-  let root_path = absolute_path.replace(".git", "");
+  let root_path = String::from_utf8(output.stdout).unwrap();
 
   let response = GitDirResponse {
-    absolute_path,
     root_path,
     branches,
   };
