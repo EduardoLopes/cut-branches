@@ -32,7 +32,6 @@
 		absolute_path = resParser.absolute_path;
 		root_path = resParser.root_path;
 		parseBranches(resParser.branches);
-		console.log(currentBranch, branches);
 	});
 </script>
 
