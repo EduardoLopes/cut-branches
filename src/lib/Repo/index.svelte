@@ -1,14 +1,7 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/tauri';
 
-	interface PathInfo {
-		absolute_path: string;
-		root_path: string;
-		branches: string;
-	}
-
 	export let path: string;
-	let absolute_path: string;
 	let root_path: string;
 	let branches: string[];
 	let currentBranch: string;
@@ -29,16 +22,31 @@
 
 	invoke('git_repo_dir', { path: path }).then((res: string) => {
 		const resParser = JSON.parse(res);
-		absolute_path = resParser.absolute_path;
 		root_path = resParser.root_path;
 		parseBranches(resParser.branches);
 	});
 </script>
 
-<div>
-	Root path: {root_path}
-	{currentBranch}
+<div class="container">
+	<div class="rootPath">{root_path}</div>
+
+	{#if branches}
+		<ul class="branches">
+			{#each branches as branch}
+				<li>{branch}</li>
+			{/each}
+		</ul>
+	{/if}
 </div>
 
 <style>
+	.container {
+		min-width: 500px;
+		background: rgba(128, 161, 66, 0.4);
+		border: 1px solid #80a142;
+	}
+	.rootPath {
+		padding: 16px;
+		border-bottom: 1px solid #80a142;
+	}
 </style>
