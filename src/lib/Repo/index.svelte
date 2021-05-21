@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { invoke } from '@tauri-apps/api/tauri';
+	import { repos } from '$lib/stores';
 
 	export let path: string;
 	let root_path: string;
@@ -24,20 +25,28 @@
 		const resParser = JSON.parse(res);
 		root_path = resParser.root_path;
 		parseBranches(resParser.branches);
+
+		if (!root_path) {
+			repos.update((prev) => {
+				return [...new Set(prev.filter((item) => item !== path))];
+			});
+		}
 	});
 </script>
 
-<div class="container">
-	<div class="rootPath">{root_path}</div>
+{#if root_path}
+	<div class="container">
+		<div class="rootPath">{root_path}</div>
 
-	{#if branches}
-		<ul class="branches">
-			{#each branches as branch}
-				<li>{branch}</li>
-			{/each}
-		</ul>
-	{/if}
-</div>
+		{#if branches}
+			<ul class="branches">
+				{#each branches as branch}
+					<li>{branch}</li>
+				{/each}
+			</ul>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	.container {
