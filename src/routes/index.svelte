@@ -2,6 +2,7 @@
 	import { repos } from '$lib/stores';
 	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
+	import AddRepo from '$lib/AddRepo/index.svelte';
 	import Repo from '$lib/Repo/index.svelte';
 
 	let reposValue;
@@ -18,6 +19,8 @@
 </script>
 
 <div class="content">
+	<AddRepo />
+
 	{#each reposValue as path}
 		<Repo {path} />
 	{/each}
@@ -27,7 +30,9 @@
 	.content {
 		width: 100%;
 		min-height: 100vh;
-		display: flex;
+		display: grid;
+		gap: 16px;
 		justify-content: center;
+		padding: 16px 0;
 	}
 </style>
