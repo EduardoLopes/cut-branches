@@ -28,10 +28,12 @@
 
 		apiInvoke = invoke;
 
-		apiInvoke('git_repo_dir', { path: path }).then((res: string) => {
+		apiInvoke('git_repo_dir', { path }).then((res: string) => {
 			const resParser = JSON.parse(res);
 			root_path = resParser.root_path;
 			parseBranches(resParser.branches);
+
+			console.log(res);
 
 			if (!root_path) {
 				repos.update((prev) => {

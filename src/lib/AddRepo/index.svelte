@@ -4,13 +4,19 @@
 
 	let apiOpen;
 
+	let _invoke;
+
 	onMount(async () => {
 		const { open } = await import('@tauri-apps/api/dialog');
+		// const { invoke } = await import('@tauri-apps/api/tauri');
+		// _invoke = invoke;
 
 		apiOpen = open;
 	});
 
 	function handleClick() {
+		// _invoke('git_repo_dir', { path: 'a' });
+		// console.log('git_repo_dir');
 		apiOpen({ directory: true })
 			.then((dir: string) => {
 				repos.update((prev) => {
