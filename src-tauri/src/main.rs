@@ -27,21 +27,17 @@ fn git_repo_dir(path: String) -> String {
     .output()
     .expect("Failed to execute command");
 
-  let root_path = String::from_utf8(dir_child.stdout).unwrap();
+  let root_path = String::from_utf8(dir_child.stdout)
+    .unwrap()
+    .replace("\n", "");
 
-  // if cfg!(windows) {
-  //   println!("this is windows");
-  // }
+  let raw_root_path = Path::new(&root_path);
 
   // println!("root_path: {}", root_path);
-  // println!("path: {}", path);
-
-  // let raw_root_path = Path::new(&root_path);
-
   // println!("raw_root_path: {}", raw_root_path.display());
   // println!("raw_path: {}", raw_path.display());
 
-  env::set_current_dir(&raw_path).expect("Unable to change into");
+  env::set_current_dir(&raw_root_path).expect("Unable to change into");
 
   let branch_child = Command::new("git")
     .arg("branch")
