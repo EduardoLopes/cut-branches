@@ -8,6 +8,7 @@
 	let root_path: string;
 	let branches: string[];
 	let currentBranch: string;
+	let branchSelected: string[] = [];
 
 	function parseBranches(rowBranches: string) {
 		branches = rowBranches
@@ -33,8 +34,6 @@
 			root_path = resParser.root_path;
 			parseBranches(resParser.branches);
 
-			console.log(res);
-
 			if (!root_path) {
 				repos.update((prev) => {
 					return [...new Set(prev.filter((item) => item !== path))];
@@ -42,6 +41,19 @@
 			}
 		});
 	});
+
+	function handleBranchClick(branchClicked) {
+		if (branches.length <= 1) return;
+
+		const alreadySelected = branchSelected.some((item) => item === branchClicked);
+		if (alreadySelected) {
+			branchSelected = branchSelected.filter((item) => item !== branchClicked);
+		} else {
+			branchSelected.push(branchClicked);
+		}
+
+		branchSelected = branchSelected;
+	}
 </script>
 
 {#if root_path}
@@ -51,10 +63,13 @@
 		{#if branches}
 			<ul class="branches">
 				{#each branches as branch}
-					<li style={branches.length > 1 ? 'cursor: pointer' : 'cursor: default'}>
+					<li
+						class={branchSelected.some((item) => item === branch) ? 'selected' : ''}
+						style={branches.length > 1 ? 'cursor: pointer' : 'cursor: default'}
+						on:click={() => handleBranchClick(`${branch}`)}
+					>
 						<div>
 							<div class="branch-name">{branch}</div>
-
 							{#if branches.length > 1}
 								<button>X</button>
 							{/if}
@@ -89,6 +104,17 @@
 		padding: 4px;
 	}
 
+	.branches li.selected {
+		list-style: none;
+		background: rgba(255, 142, 142, 0.5);
+		padding: 4px;
+	}
+
+	.branches li.selected:hover {
+		list-style: none;
+		background: rgba(255, 142, 142, 0.7);
+		padding: 4px;
+	}
 	.branches li div {
 		display: flex;
 		justify-content: space-between;
