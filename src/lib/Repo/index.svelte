@@ -169,5 +169,6 @@
 		padding: 16px;
 		background: rgb(255, 142, 142);
 		border: none;
+		cursor: pointer;
 	}
 </style>
