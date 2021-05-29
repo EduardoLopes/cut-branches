@@ -66,13 +66,16 @@
 					<li
 						class={branchSelected.some((item) => item === branch) ? 'selected' : ''}
 						style={branches.length > 1 ? 'cursor: pointer' : 'cursor: default'}
-						on:click={() => handleBranchClick(`${branch}`)}
 					>
 						<div>
-							<div class="branch-name">{branch}</div>
-							{#if branches.length > 1}
-								<button>X</button>
-							{/if}
+							<div class="branch-name" on:click={() => handleBranchClick(`${branch}`)}>
+								{branch}
+							</div>
+							<div class="button-container">
+								{#if branches.length > 1}
+									<button class={branchSelected.length > 0 ? 'hide' : ''}>X</button>
+								{/if}
+							</div>
 						</div>
 					</li>
 				{/each}
@@ -101,32 +104,36 @@
 	.branches li {
 		list-style: none;
 		border-bottom: 1px solid #80a142;
-		padding: 4px;
 	}
 
 	.branches li.selected {
-		list-style: none;
 		background: rgba(255, 142, 142, 0.5);
-		padding: 4px;
 	}
 
 	.branches li.selected:hover {
-		list-style: none;
 		background: rgba(255, 142, 142, 0.7);
-		padding: 4px;
 	}
 	.branches li div {
-		display: flex;
-		justify-content: space-between;
+		display: grid;
+		grid-template-columns: auto min-content;
 	}
 
-	.branches li div button {
+	.button-container {
+		padding: 4px;
+		padding-left: 0;
+	}
+
+	.branches li .button-container button {
 		border: none;
 		background: rgb(255, 142, 142);
-		padding: 16px;
+		padding: 8px 16px;
 		height: 100%;
 		cursor: pointer;
 		color: #fff;
+	}
+
+	.branches li div button.hide {
+		display: none;
 	}
 
 	.branches li div button:hover {
