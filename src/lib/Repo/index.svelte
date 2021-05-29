@@ -56,7 +56,7 @@
 							<div class="branch-name">{branch}</div>
 
 							{#if branches.length > 1}
-								<button>x</button>
+								<button>X</button>
 							{/if}
 						</div>
 					</li>
@@ -100,6 +100,11 @@
 		padding: 16px;
 		height: 100%;
 		cursor: pointer;
+		color: #fff;
+	}
+
+	.branches li div button:hover {
+		background: rgb(255, 168, 142);
 	}
 
 	.branches li .branch-name {
