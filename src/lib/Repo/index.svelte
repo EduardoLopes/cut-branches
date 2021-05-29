@@ -9,6 +9,7 @@
 	let branches: string[];
 	let currentBranch: string;
 	let branchSelected: string[] = [];
+	let repoName: string;
 
 	function parseBranches(rowBranches: string) {
 		branches = rowBranches
@@ -34,6 +35,12 @@
 			root_path = resParser.root_path;
 			parseBranches(resParser.branches);
 
+			if (root_path.lastIndexOf('/')) {
+				repoName = root_path.substring(root_path.lastIndexOf('/') + 1);
+			} else {
+				repoName = root_path.substring(root_path.lastIndexOf('\\') + 1);
+			}
+
 			if (!root_path) {
 				repos.update((prev) => {
 					return [...new Set(prev.filter((item) => item !== path))];
@@ -58,7 +65,7 @@
 
 {#if root_path}
 	<div class="container">
-		<div class="rootPath">{root_path}</div>
+		<div class="rootPath">{repoName}</div>
 
 		{#if branches}
 			<ul class="branches">
