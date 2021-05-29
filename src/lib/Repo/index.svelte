@@ -79,6 +79,11 @@
 						</div>
 					</li>
 				{/each}
+				{#if branchSelected.length}
+					<li class="delete-all-container">
+						<button>Delete All ({branchSelected.length})</button>
+					</li>
+				{/if}
 			</ul>
 		{/if}
 	</div>
@@ -99,6 +104,7 @@
 	.branches {
 		padding: 0;
 		margin: 0;
+		position: relative;
 	}
 
 	.branches li {
@@ -150,5 +156,15 @@
 
 	.branches li:last-child {
 		border-bottom: none;
+	}
+	.delete-all-container {
+		position: sticky;
+		bottom: 0;
+	}
+	.delete-all-container button {
+		width: 100%;
+		padding: 16px;
+		background: rgb(255, 142, 142);
+		border: none;
 	}
 </style>
