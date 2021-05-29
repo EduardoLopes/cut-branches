@@ -51,7 +51,15 @@
 		{#if branches}
 			<ul class="branches">
 				{#each branches as branch}
-					<li>{branch}</li>
+					<li style={branches.length > 1 ? 'cursor: pointer' : 'cursor: default'}>
+						<div>
+							<div class="branch-name">{branch}</div>
+
+							{#if branches.length > 1}
+								<button>x</button>
+							{/if}
+						</div>
+					</li>
 				{/each}
 			</ul>
 		{/if}
@@ -77,17 +85,29 @@
 
 	.branches li {
 		list-style: none;
-		padding: 16px;
 		border-bottom: 1px solid #80a142;
+		padding: 4px;
+	}
+
+	.branches li div {
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.branches li div button {
+		border: none;
+		background: rgb(255, 142, 142);
+		padding: 16px;
+		height: 100%;
 		cursor: pointer;
 	}
 
-	.branches li:hover {
-		list-style: none;
+	.branches li .branch-name {
 		padding: 16px;
-		border-bottom: 1px solid #80a142;
+	}
+
+	.branches li:hover {
 		background: rgba(128, 161, 66, 0.15);
-		cursor: pointer;
 	}
 
 	.branches li:last-child {
