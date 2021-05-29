@@ -97,8 +97,11 @@
 	}
 	.rootPath {
 		padding: 16px;
-		border-bottom: 1px solid #80a142;
-		background: rgba(128, 161, 66, 0.2);
+		border-bottom: 1px solid #c0d892;
+		background: #c0d892;
+		position: sticky;
+		top: 0;
+		z-index: 10;
 	}
 
 	.branches {
