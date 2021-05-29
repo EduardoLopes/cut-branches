@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
+	import DeleteModal from '$lib/DeleteModal/index.svelte';
 
 	export let path: string;
 
@@ -10,6 +11,7 @@
 	let currentBranch: string;
 	let branchSelected: string[] = [];
 	let repoName: string;
+	let showDeleteModal: boolean = false;
 
 	function parseBranches(rowBranches: string) {
 		branches = rowBranches
@@ -63,6 +65,19 @@
 	}
 </script>
 
+{#if showDeleteModal}
+	<DeleteModal
+		onClose={() => {
+			showDeleteModal = false;
+			branchSelected = [];
+		}}
+		branches={branchSelected}
+		path={root_path}
+		{repoName}
+		show={showDeleteModal}
+	/>
+{/if}
+
 {#if root_path}
 	<div class="container">
 		<div class="rootPath">{repoName}</div>
@@ -75,19 +90,30 @@
 						style={branches.length > 1 ? 'cursor: pointer' : 'cursor: default'}
 					>
 						<div>
-							<div class="branch-name" on:click={() => handleBranchClick(`${branch}`)}>
+							<div
+								class="branch-name"
+								on:click={() => {
+									handleBranchClick(`${branch}`);
+								}}
+							>
 								{branch}
 							</div>
 							<div class="button-container">
 								{#if branches.length > 1}
-									<button class={branchSelected.length > 0 ? 'hide' : ''}>X</button>
+									<button
+										class={branchSelected.length > 0 ? 'hide' : ''}
+										on:click={() => {
+											showDeleteModal = true;
+											branchSelected.push(branch);
+										}}>X</button
+									>
 								{/if}
 							</div>
 						</div>
 					</li>
 				{/each}
 				{#if branchSelected.length}
-					<li class="delete-all-container">
+					<li class="delete-all-container" on:click={() => (showDeleteModal = true)}>
 						<button>Delete All ({branchSelected.length})</button>
 					</li>
 				{/if}
