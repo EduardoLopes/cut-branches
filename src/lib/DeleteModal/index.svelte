@@ -7,6 +7,8 @@
 	export let repoName;
 	export let onClose;
 	export let branches: string[];
+
+	onMount(() => (document.body.style.overflow = 'hidden'));
 </script>
 
 <div class={`container ${show ? 'show' : 'hide'}`}>
@@ -16,6 +18,7 @@
 			<button
 				on:click={() => {
 					if (onClose) onClose();
+					document.body.style.overflow = 'auto';
 				}}
 				class="close">X</button
 			>
