@@ -102,7 +102,7 @@
 		gap: 8px;
 		margin: 8px;
 		padding-right: 8px;
-		height: 100%;
+		margin-bottom: 0;
 		overflow: auto;
 	}
 
@@ -115,7 +115,6 @@
 
 	.question {
 		padding: 16px;
-		flex: 1;
 		text-align: center;
 	}
 
@@ -126,7 +125,6 @@
 	.question button {
 		border: none;
 		padding: 8px 16px;
-		height: 100%;
 		cursor: pointer;
 		color: #fff;
 	}
