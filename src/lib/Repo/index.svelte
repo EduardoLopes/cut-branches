@@ -69,7 +69,13 @@
 	<DeleteModal
 		onClose={() => {
 			showDeleteModal = false;
+		}}
+		onYes={() => {
 			branchSelected = [];
+			showDeleteModal = false;
+		}}
+		onNo={() => {
+			showDeleteModal = false;
 		}}
 		branches={branchSelected}
 		path={root_path}

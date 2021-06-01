@@ -6,7 +6,19 @@
 	export let path;
 	export let repoName;
 	export let onClose;
+	export let onYes;
+	export let onNo;
 	export let branches: string[];
+
+	function handleYes() {
+		if (onYes) onYes();
+		document.body.style.overflow = 'auto';
+	}
+
+	function handleNo() {
+		if (onNo) onNo();
+		document.body.style.overflow = 'auto';
+	}
 
 	onMount(() => (document.body.style.overflow = 'hidden'));
 </script>
@@ -30,7 +42,13 @@
 				{/each}
 			</div>
 		{/if}
-		<div class="question" />
+		<div class="question">
+			<p>Are you sure do you wanna delete these branches?</p>
+			<div>
+				<button class="yes" on:click={handleYes}>Yes</button>
+				<button class="no" on:click={handleNo}>No</button>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -96,7 +114,28 @@
 	}
 
 	.question {
-		height: 200px;
+		padding: 16px;
 		flex: 1;
+		text-align: center;
+	}
+
+	.question p {
+		margin-top: 0;
+	}
+
+	.question button {
+		border: none;
+		padding: 8px 16px;
+		height: 100%;
+		cursor: pointer;
+		color: #fff;
+	}
+
+	.question button.no {
+		background: rgb(255, 142, 142);
+	}
+
+	.question button.yes {
+		background: rgba(128, 161, 66, 1);
 	}
 </style>
