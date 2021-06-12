@@ -7,6 +7,7 @@
 	export let repoName;
 	export let onClose;
 	export let onYes;
+	export let onDone;
 	export let onNo;
 	export let branches: string[];
 
@@ -16,7 +17,11 @@
 
 		const { invoke } = await import('@tauri-apps/api/tauri');
 
-		invoke('delete_branches', { DeleteOptions: [path, branches.toString().replace(/,/g, ' ')] });
+		invoke('delete_branches', {
+			DeleteOptions: [path, branches.toString().replace(/,/g, ' ')]
+		}).then(() => {
+			if (onDone) onDone();
+		});
 	}
 
 	function handleNo() {

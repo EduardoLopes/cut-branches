@@ -63,6 +63,14 @@
 
 		branchSelected = branchSelected;
 	}
+
+	function handleDeleteDone() {
+		apiInvoke('git_repo_dir', { path }).then((res: string) => {
+			const resParser = JSON.parse(res);
+			root_path = resParser.root_path;
+			parseBranches(resParser.branches);
+		});
+	}
 </script>
 
 {#if showDeleteModal}
@@ -70,6 +78,7 @@
 		onClose={() => {
 			showDeleteModal = false;
 		}}
+		onDone={handleDeleteDone}
 		onYes={() => {
 			branchSelected = [];
 			showDeleteModal = false;
