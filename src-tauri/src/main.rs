@@ -39,7 +39,14 @@ fn git_repo_dir(path: String) -> String {
   // println!("raw_root_path: {}", raw_root_path.display());
   // println!("raw_path: {}", raw_path.display());
 
-  env::set_current_dir(&raw_root_path).expect("Unable to change into");
+  env::set_current_dir(&raw_root_path).unwrap_or_else(|error| {
+    println!(
+      "Unable to change into: {0} | {1}",
+      error,
+      raw_root_path.display()
+    );
+    //     .expect("Unable to change into");
+  });
 
   let branch_child = Command::new("git")
     .arg("branch")
