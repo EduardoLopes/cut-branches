@@ -10,6 +10,8 @@ use std::process::Command;
 use std::env;
 use std::path::Path;
 
+use serde::Deserialize;
+
 #[derive(serde::Serialize)]
 struct GitDirResponse {
   root_path: String,
@@ -54,9 +56,30 @@ fn git_repo_dir(path: String) -> String {
   return serde_json::to_string(&response).unwrap();
 }
 
+#[derive(Deserialize)]
+struct DeleteOptions<'a>(&'a str, String);
+
+#[tauri::command]
+fn delete_branches(DeleteOptions(path, branches): DeleteOptions) {
+  let raw_path = Path::new(&path);
+  env::set_current_dir(&raw_path).expect("Unable to change into");
+
+  // println!("path: {}", path);
+  // println!("branches: {}", branches);
+
+  Command::new("git")
+    .arg("branch")
+    .arg("-D")
+    .arg(branches)
+    .output()
+    .expect("Failed to execute command");
+
+  // println!("out: {}", String::from_utf8(out.stdout).unwrap());
+}
+
 fn main() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![git_repo_dir])
+    .invoke_handler(tauri::generate_handler![git_repo_dir, delete_branches])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

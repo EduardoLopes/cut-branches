@@ -10,9 +10,13 @@
 	export let onNo;
 	export let branches: string[];
 
-	function handleYes() {
+	async function handleYes() {
 		if (onYes) onYes();
 		document.body.style.overflow = 'auto';
+
+		const { invoke } = await import('@tauri-apps/api/tauri');
+
+		invoke('delete_branches', { DeleteOptions: [path, branches.toString().replace(/,/g, ' ')] });
 	}
 
 	function handleNo() {
@@ -20,7 +24,9 @@
 		document.body.style.overflow = 'auto';
 	}
 
-	onMount(() => (document.body.style.overflow = 'hidden'));
+	onMount(() => {
+		document.body.style.overflow = 'hidden';
+	});
 </script>
 
 <div class={`container ${show ? 'show' : 'hide'}`}>
