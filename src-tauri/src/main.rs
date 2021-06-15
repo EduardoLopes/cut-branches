@@ -76,8 +76,8 @@ fn delete_branches(DeleteOptions(path, branches): DeleteOptions) {
 
   Command::new("git")
     .arg("branch")
-    .arg("-D")
-    .arg(branches)
+    .arg("-d")
+    .args(branches.split(" "))
     .output()
     .expect("Failed to execute command");
 

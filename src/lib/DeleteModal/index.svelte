@@ -18,7 +18,7 @@
 		const { invoke } = await import('@tauri-apps/api/tauri');
 
 		invoke('delete_branches', {
-			DeleteOptions: [path, branches.toString().replace(/,/g, ' ')]
+			DeleteOptions: [path, branches.toString().replace(/,/g, ' ').trim()]
 		}).then(() => {
 			if (onDone) onDone();
 		});
