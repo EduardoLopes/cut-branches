@@ -10,13 +10,9 @@
 	let unsubscribeRepos;
 
 	onMount(() => {
-		unsubscribeRepos = repos.subscribe((value) => {
-			reposValue = value;
-
-			if (value && value?.length === 0) {
-				goto('/add_first');
-			}
-		});
+		if ($repos?.length === 0) {
+			goto('/add_first');
+		}
 	});
 
 	onDestroy(unsubscribeRepos);
@@ -25,8 +21,8 @@
 <div class="content">
 	<AddRepo />
 
-	{#if reposValue}
-		{#each reposValue as path}
+	{#if $repos}
+		{#each $repos as path}
 			<Repo {path} />
 		{/each}
 	{/if}

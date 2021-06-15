@@ -19,10 +19,14 @@
 		// console.log('git_repo_dir');
 		apiOpen({ directory: true })
 			.then((dir: string) => {
-				repos.update((prev) => {
-					prev.push(dir);
-					return [...new Set(prev)];
-				});
+				if (dir) {
+					// repos.update((prev) => {
+					// 	prev.push(dir);
+					// 	return [...new Set(prev)];
+					// });
+
+					$repos = [...new Set($repos), dir];
+				}
 			})
 			.catch((error) => {
 				console.log(error);

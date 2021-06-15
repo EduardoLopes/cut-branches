@@ -71,6 +71,10 @@
 			parseBranches(resParser.branches);
 		});
 	}
+
+	function removeRepo() {
+		$repos = $repos.filter((item) => item !== path);
+	}
 </script>
 
 {#if showDeleteModal}
@@ -95,7 +99,12 @@
 
 {#if root_path}
 	<div class="container">
-		<div class="rootPath">{repoName}</div>
+		<div class="rootPath">
+			<div class="name">{repoName}</div>
+			<div class="remove-repo">
+				<button on:click={removeRepo}>X</button>
+			</div>
+		</div>
 
 		{#if branches}
 			<ul class="branches">
@@ -144,12 +153,35 @@
 		border: 1px solid #80a142;
 	}
 	.rootPath {
-		padding: 16px;
 		border-bottom: 1px solid #c0d892;
 		background: #c0d892;
 		position: sticky;
 		top: 0;
 		z-index: 10;
+		display: flex;
+		justify-content: space-between;
+	}
+
+	.rootPath .name {
+		padding: 16px;
+	}
+
+	.remove-repo {
+		padding: 4px;
+		padding-right: 4px;
+	}
+
+	.remove-repo button {
+		border: none;
+		background: transparent;
+		padding: 8px 16px;
+		height: 100%;
+		cursor: pointer;
+		color: #fff;
+	}
+
+	.remove-repo button:hover {
+		background: rgb(255, 142, 142);
 	}
 
 	.branches {
