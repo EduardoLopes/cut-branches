@@ -22,7 +22,7 @@
 	<AddRepo />
 
 	{#if $repos}
-		{#each $repos as path}
+		{#each $repos as path (path)}
 			<Repo {path} />
 		{/each}
 	{/if}
