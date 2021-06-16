@@ -19,15 +19,24 @@
 			</ul>
 		{/if}
 	</div>
-	<div class="add-more">add more</div>
+	<div class="add-more">
+		<button> + </button>
+	</div>
 </div>
 
 <style>
 	.container {
 		display: grid;
 		grid-template-rows: min-content auto min-content;
-		background: #c7cd3e;
+		background: var(--color-primary-1);
 		height: 100vh;
+		border-right: 1px dashed var(--color-primary);
+	}
+
+	.content {
+		border: 1px dashed var(--color-primary);
+		border-right-width: 0;
+		border-left-width: 0;
 	}
 
 	.logo {
@@ -42,7 +51,7 @@
 		margin: 0;
 		padding: 0;
 		font-size: 0.8em;
-		padding: 8px;
+		height: 100%;
 	}
 
 	.menu li button {
@@ -54,16 +63,35 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: space-between;
-		border-radius: 8px;
+		align-items: center;
+		border-bottom: 1px dashed var(--color-primary);
 	}
 
 	.menu li button:hover {
-		background: #e9e9e7;
+		background: var(--color-gray);
 		cursor: pointer;
 	}
 
 	.menu li button span {
 		cursor: pointer;
 		margin-left: 32px;
+		background: var(--color-primary-2);
+		padding: 4px;
+		font-size: 0.8em;
+	}
+
+	.add-more button {
+		width: 100%;
+		height: 100%;
+		padding: 8px;
+		border: 0;
+		background: var(--color-primary-2);
+		color: var(--color-primary);
+		font-size: 1.5em;
+		cursor: pointer;
+	}
+
+	.add-more button:hover {
+		background: var(--color-gray);
 	}
 </style>
