@@ -12,9 +12,7 @@
 	let unsubscribeRepos;
 
 	onMount(() => {
-		if ($repos?.length === 0) {
-			goto('/add_first');
-		}
+		// TODO: update repos on app mount
 	});
 
 	onDestroy(unsubscribeRepos);

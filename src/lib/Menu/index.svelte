@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
-	import { getRepoName } from '$lib/utils';
+	import type { Repo } from '$lib/stores';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
 
 	export let sortBy = 'BRANCH_COUNT';
 
-	function handleSort(a: string, b: string) {
+	function handleSort(a: Repo, b: Repo) {
 		if (sortBy === 'BRANCH_COUNT') {
 			// TODO
 		}
 
-		return a.localeCompare(b);
+		return a.name.localeCompare(b.name);
 	}
 
 	onMount(async () => {});
@@ -22,9 +22,9 @@
 	<div class="content">
 		{#if $repos}
 			<ul class="menu">
-				{#each $repos.sort(handleSort) as path (path)}
+				{#each $repos.sort(handleSort) as repo (repo.name)}
 					<li>
-						<button>{getRepoName(path)}<span class="count">21</span></button>
+						<button>{repo.name}<span class="count">{repo.branches.length}</span></button>
 					</li>
 				{/each}
 			</ul>

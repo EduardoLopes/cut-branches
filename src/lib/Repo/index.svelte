@@ -13,42 +13,10 @@
 	let repoName: string;
 	let showDeleteModal: boolean = false;
 
-	function parseBranches(rowBranches: string) {
-		branches = rowBranches
-			.split('\n')
-			.map((item) => {
-				if (/\*\s.*/gm.test(item)) {
-					currentBranch = item.trim().replace('* ', '');
-					return item.trim().replace('* ', '');
-				}
-
-				return item.trim();
-			})
-			.filter((item) => item !== '');
-	}
-
 	onMount(async () => {
 		const { invoke } = await import('@tauri-apps/api/tauri');
 
 		apiInvoke = invoke;
-
-		apiInvoke('git_repo_dir', { path }).then((res: string) => {
-			const resParser = JSON.parse(res);
-			root_path = resParser.root_path;
-			parseBranches(resParser.branches);
-
-			if (root_path.lastIndexOf('/')) {
-				repoName = root_path.substring(root_path.lastIndexOf('/') + 1);
-			} else {
-				repoName = root_path.substring(root_path.lastIndexOf('\\') + 1);
-			}
-
-			if (!root_path) {
-				repos.update((prev) => {
-					return [...new Set(prev.filter((item) => item !== path))];
-				});
-			}
-		});
 	});
 
 	function handleBranchClick(branchClicked) {
@@ -68,12 +36,11 @@
 		apiInvoke('git_repo_dir', { path }).then((res: string) => {
 			const resParser = JSON.parse(res);
 			root_path = resParser.root_path;
-			parseBranches(resParser.branches);
 		});
 	}
 
 	function removeRepo() {
-		$repos = $repos.filter((item) => item !== path);
+		$repos = $repos.filter((item) => item.path !== path);
 	}
 </script>
 

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
+	import type { Repo } from '$lib/stores';
+	import { getRepoInfo } from '$lib/utils';
 	import { onMount } from 'svelte';
 
 	let apiOpen;
@@ -8,24 +10,17 @@
 
 	onMount(async () => {
 		const { open } = await import('@tauri-apps/api/dialog');
-		// const { invoke } = await import('@tauri-apps/api/tauri');
-		// _invoke = invoke;
 
 		apiOpen = open;
 	});
 
 	function handleClick() {
-		// _invoke('git_repo_dir', { path: 'a' });
-		// console.log('git_repo_dir');
 		apiOpen({ directory: true })
 			.then((dir: string) => {
 				if (dir) {
-					// repos.update((prev) => {
-					// 	prev.push(dir);
-					// 	return [...new Set(prev)];
-					// });
-
-					$repos = [...new Set($repos), dir];
+					getRepoInfo(dir).then((res: Repo) => {
+						$repos = [...new Set($repos), res];
+					});
 				}
 			})
 			.catch((error) => {
