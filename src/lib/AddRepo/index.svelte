@@ -34,21 +34,21 @@
 	}
 </script>
 
-<button class="add-repo" on:click={handleClick}> Add Repository </button>
+<button class="add-repo" on:click={handleClick}> + </button>
 
 <style>
 	.add-repo {
-		background: rgba(128, 161, 66, 0.4);
-		border: 1px solid #80a142;
-		padding: 16px 32px;
-		color: #000;
+		width: 100%;
+		height: 100%;
+		padding: 8px;
+		border: 0;
+		background: var(--color-primary-2);
+		color: var(--color-primary);
+		font-size: 1.5em;
 		cursor: pointer;
 	}
 
 	.add-repo:hover {
-		background: rgba(128, 161, 66, 0.6);
-		border: 1px solid #80a142;
-		padding: 16px 32px;
-		color: #000;
+		background: var(--color-gray);
 	}
 </style>

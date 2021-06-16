@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
 	import { getRepoName } from '$lib/utils';
+	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
 
 	onMount(async () => {});
@@ -20,7 +21,7 @@
 		{/if}
 	</div>
 	<div class="add-more">
-		<button> + </button>
+		<AddRepo />
 	</div>
 </div>
 
@@ -78,20 +79,5 @@
 		background: var(--color-primary-2);
 		padding: 4px;
 		font-size: 0.8em;
-	}
-
-	.add-more button {
-		width: 100%;
-		height: 100%;
-		padding: 8px;
-		border: 0;
-		background: var(--color-primary-2);
-		color: var(--color-primary);
-		font-size: 1.5em;
-		cursor: pointer;
-	}
-
-	.add-more button:hover {
-		background: var(--color-gray);
 	}
 </style>
