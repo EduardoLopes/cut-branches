@@ -4,6 +4,16 @@
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
 
+	export let sortBy = 'BRANCH_COUNT';
+
+	function handleSort(a: string, b: string) {
+		if (sortBy === 'BRANCH_COUNT') {
+			// TODO
+		}
+
+		return a.localeCompare(b);
+	}
+
 	onMount(async () => {});
 </script>
 
@@ -12,7 +22,7 @@
 	<div class="content">
 		{#if $repos}
 			<ul class="menu">
-				{#each $repos as path (path)}
+				{#each $repos.sort(handleSort) as path (path)}
 					<li>
 						<button>{getRepoName(path)}<span class="count">21</span></button>
 					</li>
