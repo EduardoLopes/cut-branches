@@ -3,6 +3,8 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import AddRepo from '$lib/AddRepo/index.svelte';
+	import Menu from '$lib/Menu/index.svelte';
+	import Branches from '$lib/Branches/index.svelte';
 	import Repo from '$lib/Repo/index.svelte';
 
 	let reposValue;
@@ -19,22 +21,23 @@
 </script>
 
 <div class="content">
-	<AddRepo />
+	<!-- <AddRepo /> -->
 
-	{#if $repos}
+	<!-- {#if $repos}
 		{#each $repos as path (path)}
 			<Repo {path} />
 		{/each}
-	{/if}
+	{/if} -->
+
+	<Menu />
+	<Branches />
 </div>
 
 <style>
 	.content {
 		width: 100%;
-		grid-template-rows: min-content;
 		display: grid;
-		gap: 16px;
-		justify-content: center;
-		padding: 16px 0;
+		grid-template-columns: max-content auto;
+		height: 100%;
 	}
 </style>
