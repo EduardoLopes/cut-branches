@@ -5,6 +5,7 @@
 
 extern crate execute;
 
+use std::os::windows::process::CommandExt;
 use std::process::Command;
 
 use std::env;
@@ -26,6 +27,7 @@ fn git_repo_dir(path: String) -> String {
   let dir_child = Command::new("git")
     .arg("rev-parse")
     .arg("--show-toplevel")
+    .creation_flags(0x08000000)
     .output()
     .expect("Failed to execute command");
 
@@ -50,6 +52,7 @@ fn git_repo_dir(path: String) -> String {
 
   let branch_child = Command::new("git")
     .arg("branch")
+    .creation_flags(0x08000000)
     .output()
     .expect("Failed to execute command");
 
@@ -78,6 +81,7 @@ fn delete_branches(DeleteOptions(path, branches): DeleteOptions) {
     .arg("branch")
     .arg("-d")
     .args(branches.split(" "))
+    .creation_flags(0x08000000)
     .output()
     .expect("Failed to execute command");
 
