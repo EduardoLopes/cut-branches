@@ -57,6 +57,13 @@
 
 	.branch.current {
 		border-left: 4px solid var(--color-primary-1);
+		cursor: default;
+	}
+
+	.branch.current:hover {
+		background: rgba(255, 255, 255, 0.7);
+		border-left: 4px solid var(--color-primary-1);
+		cursor: default;
 	}
 
 	.branch:hover {
