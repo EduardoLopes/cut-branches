@@ -19,14 +19,6 @@
 </script>
 
 <div class="content">
-	<!-- <AddRepo /> -->
-
-	<!-- {#if $repos}
-		{#each $repos as path (path)}
-			<Repo {path} />
-		{/each}
-	{/if} -->
-
 	<Menu />
 	<Branches />
 </div>

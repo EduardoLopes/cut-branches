@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos } from '$lib/stores';
+	import { repos, currentRepo } from '$lib/stores';
 	import type { Repo } from '$lib/stores';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
@@ -24,7 +24,9 @@
 			<ul class="menu">
 				{#each $repos.sort(handleSort) as repo (repo.name)}
 					<li>
-						<button>{repo.name}<span class="count">{repo.branches.length}</span></button>
+						<button on:click={() => ($currentRepo = repo)}
+							>{repo.name}<span class="count">{repo.branches.length}</span></button
+						>
 					</li>
 				{/each}
 			</ul>

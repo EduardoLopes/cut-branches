@@ -12,6 +12,10 @@
 	--color-gray-1: #b2c3cf;
 }
 
+* {
+	box-sizing: border-box;
+}
+
 body {
 	min-height: 100vh;
 	margin: 0;
