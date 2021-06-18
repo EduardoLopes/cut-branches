@@ -2,6 +2,8 @@
 	import { currentRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
 
+	let selected: string[] = [];
+
 	onMount(async () => {});
 </script>
 
@@ -12,8 +14,19 @@
 		{#if $currentRepo.branches}
 			{#each $currentRepo.branches as branch (branch)}
 				<div
-					class={`branch ${$currentRepo.currentBranch == branch ? 'current' : ''}`}
-					title={`${$currentRepo.currentBranch == branch ? 'Current branch ' : ''}`}
+					class={`branch`}
+					class:current={$currentRepo.currentBranch === branch}
+					class:selected={selected.some((item) => item === branch)}
+					title={`${$currentRepo.currentBranch === branch ? 'Current branch ' : ''}`}
+					on:click={() => {
+						if (selected.some((item) => item === branch)) {
+							selected = selected.filter((item) => item !== branch);
+							return;
+						}
+
+						selected.push(branch);
+						selected = selected;
+					}}
 				>
 					{branch}
 				</div>
@@ -64,6 +77,15 @@
 		background: rgba(255, 255, 255, 0.7);
 		border-left: 4px solid var(--color-primary-1);
 		cursor: default;
+	}
+
+	.branch.selected {
+		background: var(--color-primary-2);
+	}
+
+	.branch.selected:hover {
+		background: var(--color-primary-2);
+		filter: contrast(1.2);
 	}
 
 	.branch:hover {
