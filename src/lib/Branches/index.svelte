@@ -19,6 +19,8 @@
 					class:selected={selected.some((item) => item === branch)}
 					title={`${$currentRepo.currentBranch === branch ? 'Current branch ' : ''}`}
 					on:click={() => {
+						if ($currentRepo.currentBranch === branch) return;
+
 						if (selected.some((item) => item === branch)) {
 							selected = selected.filter((item) => item !== branch);
 							return;
