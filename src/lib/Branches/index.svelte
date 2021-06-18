@@ -38,14 +38,19 @@
 		overflow-y: auto;
 		height: calc(100% - 29px - 16px);
 		grid-auto-rows: min-content;
-		row-gap: 8px;
-		padding-right: 16px;
+		row-gap: 0;
+		border: 1px dashed var(--color-gray);
 	}
 
 	.branch {
-		background: #fff;
-		border: 1px dashed var(--color-gray);
-		padding: 8px;
+		background: rgba(255, 255, 255, 0.7);
+		border-bottom: 1px dashed var(--color-gray);
+		padding: 14px;
 		font-size: 0.9em;
+		cursor: pointer;
+	}
+
+	.branch:hover {
+		background: rgba(255, 255, 255, 1);
 	}
 </style>
