@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { currentRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
+	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
 
 	let selected: string[] = [];
 
@@ -14,23 +15,36 @@
 		{#if $currentRepo.branches}
 			{#each $currentRepo.branches as branch (branch)}
 				<div
-					class={`branch`}
+					class="branch"
 					class:current={$currentRepo.currentBranch === branch}
 					class:selected={selected.some((item) => item === branch)}
 					title={`${$currentRepo.currentBranch === branch ? 'Current branch ' : ''}`}
-					on:click={() => {
-						if ($currentRepo.currentBranch === branch) return;
-
-						if (selected.some((item) => item === branch)) {
-							selected = selected.filter((item) => item !== branch);
-							return;
-						}
-
-						selected.push(branch);
-						selected = selected;
-					}}
 				>
-					{branch}
+					<div
+						class="name"
+						on:click={() => {
+							if ($currentRepo.currentBranch === branch) return;
+
+							if (selected.some((item) => item === branch)) {
+								selected = selected.filter((item) => item !== branch);
+								return;
+							}
+
+							selected.push(branch);
+							selected = selected;
+						}}
+					>
+						{branch}
+					</div>
+					{#if selected.length === 0}
+						{#if $currentRepo.currentBranch !== branch}
+							<div class="menu">
+								<button class="delete-button">
+									<Delete16 class="delete-icon" />
+								</button>
+							</div>
+						{/if}
+					{/if}
 				</div>
 			{/each}
 		{/if}
@@ -65,9 +79,40 @@
 	.branch {
 		background: rgba(255, 255, 255, 0.7);
 		border-bottom: 1px dashed var(--color-gray);
-		padding: 14px;
 		font-size: 0.9em;
 		cursor: pointer;
+		display: grid;
+		grid-template-columns: auto min-content;
+	}
+
+	.branch .name {
+		padding: 14px;
+	}
+
+	.branch .menu {
+		display: none;
+		align-items: center;
+	}
+
+	.branch:hover > .menu {
+		display: flex;
+	}
+
+	:global(svg.delete-icon) {
+		fill: rgba(0, 0, 0, 0.5);
+	}
+
+	.delete-button {
+		padding: 8px 12px;
+		height: 100%;
+		border: 0;
+		background: transparent;
+		border-left: 1px dashed var(--color-gray);
+		cursor: pointer;
+	}
+
+	.delete-button:hover {
+		background: rgb(255, 209, 209);
 	}
 
 	.branch.current {
