@@ -44,6 +44,7 @@
 	}
 
 	.add-repo:hover {
-		background: var(--color-gray);
+		filter: contrast(1.3);
+		background: var(--color-primary-2);
 	}
 </style>

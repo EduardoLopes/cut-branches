@@ -54,9 +54,9 @@
 
 	.logo {
 		padding: 16px;
-		font-weight: bold;
 		text-align: center;
 		color: #fff;
+		font-size: 1.2em;
 	}
 
 	.menu {
@@ -81,7 +81,8 @@
 	}
 
 	.menu li button:hover {
-		background: var(--color-gray);
+		background: var(--color-primary-1);
+		filter: contrast(1.3);
 		cursor: pointer;
 	}
 
