@@ -11,7 +11,12 @@
 	<div class="branches">
 		{#if $currentRepo.branches}
 			{#each $currentRepo.branches as branch (branch)}
-				<div class="branch">{branch}</div>
+				<div
+					class={`branch ${$currentRepo.currentBranch == branch ? 'current' : ''}`}
+					title={`${$currentRepo.currentBranch == branch ? 'Current branch ' : ''}`}
+				>
+					{branch}
+				</div>
 			{/each}
 		{/if}
 	</div>
@@ -48,6 +53,10 @@
 		padding: 14px;
 		font-size: 0.9em;
 		cursor: pointer;
+	}
+
+	.branch.current {
+		border-left: 4px solid var(--color-primary-1);
 	}
 
 	.branch:hover {
