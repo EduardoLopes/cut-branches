@@ -24,7 +24,9 @@
 			<ul class="menu">
 				{#each $repos.sort(handleSort) as repo (repo.name)}
 					<li>
-						<button on:click={() => ($currentRepo = repo)}
+						<button
+							on:click={() => ($currentRepo = repo)}
+							class:current={$currentRepo.name === repo.name}
 							>{repo.name}<span class="count">{repo.branches.length}</span></button
 						>
 					</li>
@@ -84,6 +86,16 @@
 		background: var(--color-primary-1);
 		filter: contrast(1.3);
 		cursor: pointer;
+	}
+
+	.menu li button.current {
+		background: var(--color-primary-1);
+		filter: contrast(1.2);
+	}
+
+	.menu li button:hover.current {
+		background: var(--color-primary-1);
+		filter: contrast(1.3);
 	}
 
 	.menu li button span {
