@@ -5,6 +5,10 @@
 
 	let selected: string[] = [];
 
+	currentRepo.subscribe(() => {
+		selected = [];
+	});
+
 	onMount(async () => {});
 </script>
 
@@ -48,6 +52,11 @@
 				</div>
 			{/each}
 		{/if}
+		{#if selected.length > 0}
+			<button class="delete-all">
+				Delete {#if selected.length > 1}all ({selected.length}){/if}</button
+			>
+		{/if}
 	</div>
 </main>
 
@@ -74,6 +83,16 @@
 		grid-auto-rows: min-content;
 		row-gap: 0;
 		border: 1px dashed var(--color-gray);
+	}
+
+	.delete-all {
+		position: sticky;
+		bottom: 0;
+		background: #f34642;
+		padding: 16px;
+		color: #fff;
+		border: 0;
+		cursor: pointer;
 	}
 
 	.branch {
