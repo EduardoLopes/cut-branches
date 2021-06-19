@@ -3,6 +3,7 @@
 	import type { Repo } from '$lib/stores';
 	import { getRepoInfo } from '$lib/utils';
 	import { onMount } from 'svelte';
+	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt20';
 
 	let apiOpen;
 
@@ -29,7 +30,7 @@
 	}
 </script>
 
-<button class="add-repo" on:click={handleClick}> + </button>
+<button class="add-repo" on:click={handleClick}> <AddAlt20 /> </button>
 
 <style>
 	.add-repo {
