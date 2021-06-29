@@ -3,6 +3,7 @@
 	import type { Repo } from '$lib/stores';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
+	import { getRepoInfo } from '$lib/utils';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -12,6 +13,18 @@
 		}
 
 		return a.name.localeCompare(b.name);
+	}
+
+	function handleOnClick(repo: Repo) {
+		// $currentRepo = repo;
+		getRepoInfo(repo.path)
+			.then((res: Repo) => {
+				$repos = [...$repos.filter((item) => item.path !== res.path), res];
+				$currentRepo = res;
+			})
+			.catch((error) => {
+				console.log(error);
+			});
 	}
 
 	onMount(async () => {});
@@ -25,7 +38,7 @@
 				{#each $repos.sort(handleSort) as repo (repo.name)}
 					<li>
 						<button
-							on:click={() => ($currentRepo = repo)}
+							on:click={() => handleOnClick(repo)}
 							class:current={$currentRepo.name === repo.name}
 							>{repo.name}<span class="count">{repo.branches.length}</span></button
 						>
