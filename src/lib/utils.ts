@@ -1,3 +1,5 @@
+import type { Repo } from '$lib/stores';
+
 export const getRepoName = (root_path: string): string => {
 	if (root_path.lastIndexOf('\\')) {
 		return root_path.substring(root_path.lastIndexOf('\\') + 1);
@@ -29,6 +31,8 @@ export function parseBranches(rowBranches: string): ParserBranches {
 }
 
 export const getRepoInfo = async (path: string): Promise<Repo> => {
+	if (!path) return;
+
 	const { invoke } = await import('@tauri-apps/api/tauri');
 
 	const res: string = await invoke('git_repo_dir', { path });
