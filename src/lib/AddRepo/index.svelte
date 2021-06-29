@@ -20,7 +20,7 @@
 			.then((dir: string) => {
 				if (dir) {
 					getRepoInfo(dir).then((res: Repo) => {
-						$repos = [...new Set($repos), res];
+						$repos = [...$repos.filter((item) => item.path !== res.path), res];
 					});
 				}
 			})
