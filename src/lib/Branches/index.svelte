@@ -1,16 +1,50 @@
 <script lang="ts">
+	import type { Repo } from '$lib/stores';
 	import { currentRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
+	import DeleteModal from '$lib/DeleteModal/index.svelte';
+	import { getRepoInfo } from '$lib/utils';
+	import { repos } from '$lib/stores';
 
 	let selected: string[] = [];
+	let showDeleteModal: boolean = false;
 
 	currentRepo.subscribe(() => {
 		selected = [];
 	});
 
-	onMount(async () => {});
+	function handleDeleteDone() {
+		getRepoInfo($currentRepo.path)
+			.then((res: Repo) => {
+				$repos = [...$repos.filter((item) => item.path !== res.path), res];
+				$currentRepo = res;
+			})
+			.catch((error) => {
+				console.log(error);
+			});
+	}
 </script>
+
+{#if showDeleteModal}
+	<DeleteModal
+		onClose={() => {
+			showDeleteModal = false;
+		}}
+		onDone={handleDeleteDone}
+		onYes={() => {
+			selected = [];
+			showDeleteModal = false;
+		}}
+		onNo={() => {
+			showDeleteModal = false;
+		}}
+		branches={selected}
+		path={$currentRepo.path}
+		repoName={$currentRepo.name}
+		show={showDeleteModal}
+	/>
+{/if}
 
 <main class="container">
 	<h1>{$currentRepo.name}</h1>
@@ -44,7 +78,14 @@
 						{#if $currentRepo.currentBranch !== branch}
 							<div class="menu">
 								<button class="delete-button">
-									<Delete16 class="delete-icon" />
+									<Delete16
+										class="delete-icon"
+										on:click={() => {
+											selected = [branch];
+											showDeleteModal = true;
+											console.log('asdasdsa');
+										}}
+									/>
 								</button>
 							</div>
 						{/if}
@@ -53,7 +94,7 @@
 			{/each}
 		{/if}
 		{#if selected.length > 0}
-			<button class="delete-all">
+			<button class="delete-all" on:click={() => (showDeleteModal = true)}>
 				Delete {#if selected.length > 1}all ({selected.length}){/if}</button
 			>
 		{/if}
