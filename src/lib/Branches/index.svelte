@@ -38,6 +38,9 @@
 		}}
 		onNo={() => {
 			showDeleteModal = false;
+			if (selected.length === 1) {
+				selected = [];
+			}
 		}}
 		branches={selected}
 		path={$currentRepo.path}
@@ -83,7 +86,6 @@
 										on:click={() => {
 											selected = [branch];
 											showDeleteModal = true;
-											console.log('asdasdsa');
 										}}
 									/>
 								</button>
