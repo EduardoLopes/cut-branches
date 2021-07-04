@@ -80,14 +80,15 @@
 					{#if selected.length === 0}
 						{#if $currentRepo.currentBranch !== branch}
 							<div class="menu">
-								<button class="delete-button">
-									<Delete16
-										class="delete-icon"
-										on:click={() => {
-											selected = [branch];
-											showDeleteModal = true;
-										}}
-									/>
+								<button
+									class="delete-button"
+									on:click={() => {
+										selected = [branch];
+										console.log(selected);
+										showDeleteModal = true;
+									}}
+								>
+									<Delete16 class="delete-icon" />
 								</button>
 							</div>
 						{/if}
