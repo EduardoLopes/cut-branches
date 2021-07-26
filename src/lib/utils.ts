@@ -38,6 +38,11 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 	const res: string = await invoke('git_repo_dir', { path });
 
 	const resParser = JSON.parse(res);
+
+	const errors = resParser.errors;
+
+	if (errors.length > 0) return Promise.reject(errors);
+
 	const root_path = resParser.root_path;
 	let name: string;
 	const branches = parseBranches(resParser.branches);
