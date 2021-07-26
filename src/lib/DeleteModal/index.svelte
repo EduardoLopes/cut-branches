@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
+	import type { Branch } from '$lib/stores';
+	import { deleteBranches } from '$lib/utils';
 	import { onMount } from 'svelte';
 
 	export let show;
@@ -9,19 +11,50 @@
 	export let onYes;
 	export let onDone;
 	export let onNo;
-	export let branches: string[];
+	export let branches: Branch[];
 
 	async function handleYes() {
 		if (onYes) onYes();
 		document.body.style.overflow = 'auto';
 
-		const { invoke } = await import('@tauri-apps/api/tauri');
+		const branchesNames = branches.map((item) => item.name);
 
-		invoke('delete_branches', {
-			DeleteOptions: [path, branches.toString().replace(/,/g, ' ').trim()]
-		}).then(() => {
-			if (onDone) onDone();
-		});
+		deleteBranches(path, branches)
+			.then((res) => {
+				if (onDone) onDone();
+
+				console.log(res);
+			})
+			.catch((errors: string[]) => {
+				console.log(errors);
+
+				const b = branches.map((item) => {
+					console.log(errors);
+					return {
+						name: item.name,
+						fullyMerged: errors.some(
+							(erro) => erro === `error: The branch '${item.name}' is not fully merged.`
+						)
+					};
+				});
+
+				const repo = $repos.filter((item) => item.path === path)[0];
+
+				const newBranches = [
+					...repo.branches.filter((item) => branchesNames.some((i) => item.name !== i)),
+					...b
+				];
+
+				$repos = [
+					...$repos.map((item) => {
+						if (item.path === path) {
+							item.branches = newBranches;
+						}
+
+						return item;
+					})
+				];
+			});
 	}
 
 	function handleNo() {

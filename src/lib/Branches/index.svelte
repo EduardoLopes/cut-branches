@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Repo } from '$lib/stores';
+	import type { Branch, Repo } from '$lib/stores';
 	import { currentRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
@@ -7,7 +7,7 @@
 	import { getRepoInfo } from '$lib/utils';
 	import { repos } from '$lib/stores';
 
-	let selected: string[] = [];
+	let selected: Branch[] = [];
 	let showDeleteModal: boolean = false;
 
 	currentRepo.subscribe(() => {
@@ -54,20 +54,20 @@
 
 	<div class="branches">
 		{#if $currentRepo.branches}
-			{#each $currentRepo.branches as branch (branch)}
+			{#each $currentRepo.branches as branch (branch.name)}
 				<div
 					class="branch"
-					class:current={$currentRepo.currentBranch === branch}
+					class:current={$currentRepo.currentBranch.name === branch.name}
 					class:selected={selected.some((item) => item === branch)}
 					title={`${$currentRepo.currentBranch === branch ? 'Current branch ' : ''}`}
 				>
 					<div
 						class="name"
 						on:click={() => {
-							if ($currentRepo.currentBranch === branch) return;
+							if ($currentRepo.currentBranch.name === branch.name) return;
 
-							if (selected.some((item) => item === branch)) {
-								selected = selected.filter((item) => item !== branch);
+							if (selected.some((item) => item.name === branch.name)) {
+								selected = selected.filter((item) => item.name !== branch.name);
 								return;
 							}
 
@@ -75,10 +75,10 @@
 							selected = selected;
 						}}
 					>
-						{branch}
+						{branch.name}
 					</div>
 					{#if selected.length === 0}
-						{#if $currentRepo.currentBranch !== branch}
+						{#if $currentRepo.currentBranch.name !== branch.name}
 							<div class="menu">
 								<button
 									class="delete-button"
