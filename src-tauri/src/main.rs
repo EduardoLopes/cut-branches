@@ -17,10 +17,13 @@ use serde::Deserialize;
 struct GitDirResponse {
   root_path: String,
   branches: String,
+  errors: Vec<String>,
 }
 
 #[tauri::command]
 fn git_repo_dir(path: String) -> String {
+  let mut errors: Vec<String> = Vec::new();
+
   let raw_path = Path::new(&path);
   env::set_current_dir(&raw_path).expect("Unable to change into");
 
@@ -31,23 +34,29 @@ fn git_repo_dir(path: String) -> String {
     .output()
     .expect("Failed to execute command");
 
-  let root_path = String::from_utf8(dir_child.stdout)
-    .unwrap()
-    .replace("\n", "");
+  let root_path: String = match String::from_utf8(dir_child.stdout) {
+    Ok(output) => Some(output.trim().to_string()),
+    Err(err) => {
+      let e = format!("{:?}", err);
+      errors.push(e);
+
+      None
+    }
+  }
+  .unwrap();
 
   let raw_root_path = Path::new(&root_path);
 
   // println!("root_path: {}", root_path);
-  // println!("raw_root_path: {}", raw_root_path.display());
-  // println!("raw_path: {}", raw_path.display());
+  // println!("raw_root_path: {:?}", raw_root_path);
+  // println!("raw_path: {:?}", raw_path);
 
   env::set_current_dir(&raw_root_path).unwrap_or_else(|error| {
-    println!(
+    errors.push(format!(
       "Unable to change into: {0} | {1}",
       error,
       raw_root_path.display()
-    );
-    //     .expect("Unable to change into");
+    ));
   });
 
   let branch_child = Command::new("git")
@@ -61,6 +70,7 @@ fn git_repo_dir(path: String) -> String {
   let response = GitDirResponse {
     root_path: root_path,
     branches: branches,
+    errors: errors,
   };
 
   return serde_json::to_string(&response).unwrap();
