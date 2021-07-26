@@ -79,23 +79,38 @@ fn git_repo_dir(path: String) -> String {
 #[derive(Deserialize)]
 struct DeleteOptions<'a>(&'a str, String);
 
+#[derive(serde::Serialize)]
+struct DeleteBranchesResponse {
+  result: String,
+  errors: String,
+}
+
 #[tauri::command]
-fn delete_branches(DeleteOptions(path, branches): DeleteOptions) {
+fn delete_branches(DeleteOptions(path, branches): DeleteOptions) -> String {
   let raw_path = Path::new(&path);
+  // let mut errors: Vec<String> = Vec::new();
+
   env::set_current_dir(&raw_path).expect("Unable to change into");
 
   // println!("path: {}", path);
   // println!("branches: {}", branches);
 
-  Command::new("git")
+  let args: Vec<_> = branches.split(" ").collect();
+
+  let child = Command::new("git")
     .arg("branch")
     .arg("-d")
-    .args(branches.split(" "))
+    .args(args)
     .creation_flags(0x08000000)
     .output()
     .expect("Failed to execute command");
 
-  // println!("out: {}", String::from_utf8(out.stdout).unwrap());
+  let response = DeleteBranchesResponse {
+    result: String::from_utf8(child.stdout).unwrap(),
+    errors: String::from_utf8(child.stderr).unwrap(),
+  };
+
+  return serde_json::to_string(&response).unwrap();
 }
 
 fn main() {
