@@ -18,23 +18,6 @@ export interface DeletedBranches {
 	errors: string[];
 }
 
-export function parseBranches(rowBranches: string): ParserBranches {
-	let current: string;
-	const branches: Branch[] = rowBranches
-		.split('\n')
-		.map((item) => {
-			if (/\*\s.*/gm.test(item)) {
-				current = item.trim().replace('* ', '');
-				return { name: item.trim().replace('* ', '') };
-			}
-
-			return { name: item.trim() };
-		})
-		.filter((item) => item.name !== '');
-
-	return { current, branches };
-}
-
 export const deleteBranches = async (
 	path: string,
 	branches: Branch[]
@@ -86,7 +69,6 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 
 	const root_path = resParser.root_path;
 	let name: string;
-	const branches = parseBranches(resParser.branches);
 
 	if (root_path.lastIndexOf('/')) {
 		name = root_path.substring(root_path.lastIndexOf('/') + 1);
@@ -96,7 +78,7 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 
 	return {
 		path: root_path,
-		branches: branches.branches,
+		branches: resParser.branches,
 		currentBranch: { name: branches.current },
 		name
 	};

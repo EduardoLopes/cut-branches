@@ -14,9 +14,16 @@ use std::path::Path;
 use serde::Deserialize;
 
 #[derive(serde::Serialize)]
+struct Branch {
+  name: String,
+  fully_merged: bool,
+  is_current: bool,
+}
+
+#[derive(serde::Serialize)]
 struct GitDirResponse {
   root_path: String,
-  branches: String,
+  branches: Vec<Branch>,
   errors: Vec<String>,
 }
 
@@ -65,7 +72,53 @@ fn git_repo_dir(path: String) -> String {
     .output()
     .expect("Failed to execute command");
 
-  let branches = String::from_utf8(branch_child.stdout).unwrap();
+  let all_branches = String::from_utf8(branch_child.stdout).unwrap();
+
+  let all_branches_vec: Vec<String> = all_branches
+    .split("\n")
+    .map(|s| s.trim().replace("* ", ""))
+    .filter(|s| !s.is_empty())
+    .collect();
+
+  let branch_no_merged_child = Command::new("git")
+    .arg("branch")
+    .arg("--no-merged")
+    .creation_flags(0x08000000)
+    .output()
+    .expect("Failed to execute command");
+
+  let branch_no_merged_child_output = branch_no_merged_child.stdout;
+
+  let all_branches_no_merged = String::from_utf8(branch_no_merged_child_output).unwrap();
+
+  let all_branches_no_merged_vec: Vec<String> = all_branches_no_merged
+    .split("\n")
+    .map(|s| s.trim().replace("* ", ""))
+    .filter(|s| !s.is_empty())
+    .collect();
+
+  let branch_current_child = Command::new("git")
+    .arg("branch")
+    .arg("--show-current")
+    .creation_flags(0x08000000)
+    .output()
+    .expect("Failed to execute command");
+
+  let branch_current_child_output = branch_current_child.stdout;
+
+  let current_branch = String::from_utf8(branch_current_child_output).unwrap();
+
+  let current = current_branch.trim();
+
+  let mut branches: Vec<Branch> = Vec::new();
+
+  for branch in &all_branches_vec {
+    branches.push(Branch {
+      name: branch.to_string(),
+      fully_merged: all_branches_no_merged_vec.contains(branch),
+      is_current: &current == branch,
+    });
+  }
 
   let response = GitDirResponse {
     root_path: root_path,
