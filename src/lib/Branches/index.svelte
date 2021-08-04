@@ -3,7 +3,9 @@
 	import { currentRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
+	import Information16 from 'carbon-icons-svelte/lib/Information16';
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
+
 	import { getRepoInfo } from '$lib/utils';
 	import { repos } from '$lib/stores';
 
@@ -55,44 +57,52 @@
 	<div class="branches">
 		{#if $currentRepo.branches}
 			{#each $currentRepo.branches as branch (branch.name)}
-				<div
-					class="branch"
-					class:current={branch.current}
-					class:selected={selected.some((item) => item === branch)}
-					title={`${branch.current ? 'Current branch ' : ''}`}
-				>
+				<div class="branch-container" title={`${branch.current ? 'Current branch ' : ''}`}>
 					<div
-						class="name"
-						on:click={() => {
-							if (branch.current) return;
-
-							if (selected.some((item) => item.name === branch.name)) {
-								selected = selected.filter((item) => item.name !== branch.name);
-								return;
-							}
-
-							selected.push(branch);
-							selected = selected;
-						}}
+						class="branch"
+						class:current={branch.current}
+						class:selected={selected.some((item) => item === branch)}
 					>
-						{branch.name}
+						<div
+							class="name"
+							on:click={() => {
+								if (branch.current) return;
+
+								if (selected.some((item) => item.name === branch.name)) {
+									selected = selected.filter((item) => item.name !== branch.name);
+									return;
+								}
+
+								selected.push(branch);
+								selected = selected;
+							}}
+						>
+							{branch.name}
+						</div>
+						{#if selected.length === 0}
+							{#if !branch.current}
+								<div class="menu">
+									<button
+										class="delete-button"
+										on:click={() => {
+											selected = [branch];
+											console.log(selected);
+											showDeleteModal = true;
+										}}
+									>
+										<Delete16 class="delete-icon" />
+									</button>
+								</div>
+							{/if}
+						{/if}
 					</div>
-					{#if selected.length === 0}
-						{#if !branch.current}
-							<div class="menu">
-								<button
-									class="delete-button"
-									on:click={() => {
-										selected = [branch];
-										console.log(selected);
-										showDeleteModal = true;
-									}}
-								>
-									<Delete16 class="delete-icon" />
-								</button>
+					<div class="info">
+						{#if branch.fully_merged}
+							<div class="grid-2">
+								<span class="icon"> <Information16 /></span> This branch is not fully merged!
 							</div>
 						{/if}
-					{/if}
+					</div>
 				</div>
 			{/each}
 		{/if}
@@ -139,20 +149,38 @@
 		cursor: pointer;
 	}
 
-	.branch {
+	.branch-container {
 		background: rgba(255, 255, 255, 0.7);
-		border-bottom: 1px dashed var(--color-gray);
 		font-size: 0.9em;
-		cursor: pointer;
-		display: grid;
-		grid-template-columns: auto min-content;
+		margin-bottom: 8px;
 	}
 
-	.branch .name {
+	.branch {
+		display: grid;
+		grid-template-columns: auto min-content;
+		cursor: pointer;
+	}
+
+	.info .grid-2 {
+		display: grid;
+		grid-template-columns: min-content auto;
+		padding: 8px;
+		align-items: center;
+		font-size: 0.7rem;
+		border-top: 1px dashed var(--color-gray);
+	}
+
+	.info .grid-2 .icon {
+		display: flex;
+		margin-right: 8px;
+		align-items: center;
+	}
+
+	.branch-container .name {
 		padding: 14px;
 	}
 
-	.branch .menu {
+	.branch-container .menu {
 		display: none;
 		align-items: center;
 	}

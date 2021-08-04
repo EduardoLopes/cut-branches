@@ -2,8 +2,8 @@ import { writable } from 'svelte/store';
 
 export interface Branch {
 	name: string;
-	fullyMerged: boolean;
 	current: boolean;
+	fully_merged: boolean;
 }
 export interface Repo {
 	path: string;

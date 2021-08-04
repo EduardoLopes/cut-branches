@@ -37,9 +37,9 @@
 					};
 				});
 
-				const repo = $repos.filter((item) => item.path === path)[0];
+				const repo: Repo = $repos.filter((item) => item.path === path)[0];
 
-				const newBranches = [
+				const newBranches: Branch[] = [
 					...repo.branches.filter((item) => branchesNames.some((i) => item.name !== i)),
 					...b
 				];
@@ -81,7 +81,7 @@
 		{#if branches}
 			<div class="branches">
 				{#each branches as branch}
-					<div>{branch}</div>
+					<div>{branch.name}</div>
 				{/each}
 			</div>
 		{/if}
