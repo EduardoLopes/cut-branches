@@ -19,6 +19,8 @@ export const currentRepo = writable<Repo>(
 	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('currentRepo')) ?? {} : {}
 );
 
+export const loadingRepoInfo = writable<boolean>(false);
+
 repos.subscribe((value) => {
 	if (typeof window !== 'undefined') {
 		localStorage?.setItem('repos', JSON.stringify(value));

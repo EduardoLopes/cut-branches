@@ -59,26 +59,26 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 
 	const { invoke } = await import('@tauri-apps/api/tauri');
 
-	const res: string = await invoke('git_repo_dir', { path });
+	return invoke('git_repo_dir', { path }).then((res: string) => {
+		const resParser = JSON.parse(res);
 
-	const resParser = JSON.parse(res);
+		const errors = resParser.errors;
 
-	const errors = resParser.errors;
+		if (errors.length > 0) return Promise.reject(errors);
 
-	if (errors.length > 0) return Promise.reject(errors);
+		const root_path = resParser.root_path;
+		let name: string;
 
-	const root_path = resParser.root_path;
-	let name: string;
+		if (root_path.lastIndexOf('/')) {
+			name = root_path.substring(root_path.lastIndexOf('/') + 1);
+		} else {
+			name = root_path.substring(root_path.lastIndexOf('\\') + 1);
+		}
 
-	if (root_path.lastIndexOf('/')) {
-		name = root_path.substring(root_path.lastIndexOf('/') + 1);
-	} else {
-		name = root_path.substring(root_path.lastIndexOf('\\') + 1);
-	}
-
-	return {
-		path: root_path,
-		branches: resParser.branches,
-		name
-	};
+		return {
+			path: root_path,
+			branches: resParser.branches,
+			name
+		};
+	});
 };

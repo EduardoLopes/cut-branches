@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos, currentRepo } from '$lib/stores';
+	import { repos, currentRepo, loadingRepoInfo } from '$lib/stores';
 	import type { Repo } from '$lib/stores';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
@@ -16,14 +16,17 @@
 	}
 
 	function handleOnClick(repo: Repo) {
-		// $currentRepo = repo;
+		$currentRepo = repo;
+		$loadingRepoInfo = true;
 		getRepoInfo(repo.path)
 			.then((res: Repo) => {
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
-				$currentRepo = res;
 			})
 			.catch((error) => {
 				console.log(error);
+			})
+			.finally(() => {
+				$loadingRepoInfo = false;
 			});
 	}
 

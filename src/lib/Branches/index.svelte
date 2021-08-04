@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Branch, Repo } from '$lib/stores';
-	import { currentRepo } from '$lib/stores';
+	import { currentRepo, loadingRepoInfo } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
 	import Information16 from 'carbon-icons-svelte/lib/Information16';
+	import CircleDash32 from 'carbon-icons-svelte/lib/CircleDash32';
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
 
 	import { getRepoInfo } from '$lib/utils';
@@ -52,6 +53,10 @@
 {/if}
 
 <main class="container">
+	{#if $loadingRepoInfo}
+		<div class="loading"><span><CircleDash32 class="spin" /></span></div>
+	{/if}
+
 	<h1>{$currentRepo.name}</h1>
 
 	<div class="branches">
@@ -115,11 +120,36 @@
 </main>
 
 <style>
+	@keyframes spin {
+		100% {
+			-webkit-transform: rotate(360deg);
+			transform: rotate(360deg);
+		}
+	}
+
 	.container {
 		background: #e9e9e7;
 		padding: 16px;
 		height: 100vh;
 		overflow: hidden;
+		position: relative;
+	}
+
+	.loading {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(255, 255, 255, 0.3);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.loading :global(.spin) {
+		animation: spin 4s linear infinite;
+		fill: var(--color-primary-1);
 	}
 
 	h1 {
