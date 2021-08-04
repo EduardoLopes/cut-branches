@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
-	import type { Branch } from '$lib/stores';
+	import type { Branch, Repo } from '$lib/stores';
 	import { deleteBranches } from '$lib/utils';
 	import { onMount } from 'svelte';
 
@@ -29,7 +29,6 @@
 				console.log(errors);
 
 				const b = branches.map((item) => {
-					console.log(errors);
 					return {
 						name: item.name,
 						fullyMerged: errors.some(
@@ -46,7 +45,7 @@
 				];
 
 				$repos = [
-					...$repos.map((item) => {
+					...$repos.map((item: Repo) => {
 						if (item.path === path) {
 							item.branches = newBranches;
 						}

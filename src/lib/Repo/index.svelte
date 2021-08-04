@@ -8,7 +8,6 @@
 	let apiInvoke;
 	let root_path: string;
 	let branches: string[];
-	let currentBranch: string;
 	let branchSelected: string[] = [];
 	let repoName: string;
 	let showDeleteModal: boolean = false;

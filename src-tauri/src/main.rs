@@ -17,7 +17,7 @@ use serde::Deserialize;
 struct Branch {
   name: String,
   fully_merged: bool,
-  is_current: bool,
+  current: bool,
 }
 
 #[derive(serde::Serialize)]
@@ -116,7 +116,7 @@ fn git_repo_dir(path: String) -> String {
     branches.push(Branch {
       name: branch.to_string(),
       fully_merged: all_branches_no_merged_vec.contains(branch),
-      is_current: &current == branch,
+      current: &current == branch,
     });
   }
 

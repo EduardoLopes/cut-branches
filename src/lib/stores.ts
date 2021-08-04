@@ -2,13 +2,13 @@ import { writable } from 'svelte/store';
 
 export interface Branch {
 	name: string;
-	fullyMerged?: boolean;
+	fullyMerged: boolean;
+	current: boolean;
 }
 export interface Repo {
 	path: string;
 	branches: Branch[];
 	name: string;
-	currentBranch: Branch;
 }
 
 export const repos = writable<Repo[]>(

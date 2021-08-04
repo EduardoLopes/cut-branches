@@ -79,7 +79,6 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 	return {
 		path: root_path,
 		branches: resParser.branches,
-		currentBranch: { name: branches.current },
 		name
 	};
 };

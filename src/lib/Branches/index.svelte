@@ -57,14 +57,14 @@
 			{#each $currentRepo.branches as branch (branch.name)}
 				<div
 					class="branch"
-					class:current={$currentRepo.currentBranch.name === branch.name}
+					class:current={branch.current}
 					class:selected={selected.some((item) => item === branch)}
-					title={`${$currentRepo.currentBranch === branch ? 'Current branch ' : ''}`}
+					title={`${branch.current ? 'Current branch ' : ''}`}
 				>
 					<div
 						class="name"
 						on:click={() => {
-							if ($currentRepo.currentBranch.name === branch.name) return;
+							if (branch.current) return;
 
 							if (selected.some((item) => item.name === branch.name)) {
 								selected = selected.filter((item) => item.name !== branch.name);
@@ -78,7 +78,7 @@
 						{branch.name}
 					</div>
 					{#if selected.length === 0}
-						{#if $currentRepo.currentBranch.name !== branch.name}
+						{#if !branch.current}
 							<div class="menu">
 								<button
 									class="delete-button"
