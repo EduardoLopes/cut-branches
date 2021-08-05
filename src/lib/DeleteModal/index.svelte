@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { repos } from '$lib/stores';
 	import type { Branch, Repo } from '$lib/stores';
 	import { deleteBranches } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -22,27 +21,9 @@
 		deleteBranches(path, branches)
 			.then((res) => {
 				if (onDone) onDone();
-
-				console.log(res);
 			})
 			.catch((errors: string[]) => {
 				console.log(errors);
-
-				const repo: Repo = $repos.filter((item) => item.path === path)[0];
-
-				const newBranches: Branch[] = repo.branches.filter((item) =>
-					branchesNames.some((i) => item.name !== i)
-				);
-
-				$repos = [
-					...$repos.map((item: Repo) => {
-						if (item.path === path) {
-							item.branches = newBranches;
-						}
-
-						return item;
-					})
-				];
 			});
 	}
 
