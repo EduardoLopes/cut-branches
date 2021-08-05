@@ -28,21 +28,11 @@
 			.catch((errors: string[]) => {
 				console.log(errors);
 
-				const b = branches.map((item) => {
-					return {
-						name: item.name,
-						fullyMerged: errors.some(
-							(erro) => erro === `error: The branch '${item.name}' is not fully merged.`
-						)
-					};
-				});
-
 				const repo: Repo = $repos.filter((item) => item.path === path)[0];
 
-				const newBranches: Branch[] = [
-					...repo.branches.filter((item) => branchesNames.some((i) => item.name !== i)),
-					...b
-				];
+				const newBranches: Branch[] = repo.branches.filter((item) =>
+					branchesNames.some((i) => item.name !== i)
+				);
 
 				$repos = [
 					...$repos.map((item: Repo) => {
