@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Branch, Repo } from '$lib/stores';
 	import { currentRepo, loadingRepoInfo } from '$lib/stores';
-	import { onMount } from 'svelte';
+
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
 	import Information16 from 'carbon-icons-svelte/lib/Information16';
 	import CircleDash32 from 'carbon-icons-svelte/lib/CircleDash32';
@@ -91,7 +91,6 @@
 										class="delete-button"
 										on:click={() => {
 											selected = [branch];
-											console.log(selected);
 											showDeleteModal = true;
 										}}
 									>
