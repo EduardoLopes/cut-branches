@@ -21,6 +21,7 @@
 		getRepoInfo(repo.path)
 			.then((res: Repo) => {
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
+				$currentRepo = res;
 			})
 			.catch((error) => {
 				console.log(error);
