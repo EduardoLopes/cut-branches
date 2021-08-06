@@ -4,8 +4,8 @@
 
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
 	import Information16 from 'carbon-icons-svelte/lib/Information16';
-	import CircleDash32 from 'carbon-icons-svelte/lib/CircleDash32';
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
+	import Loading from '$lib/Loading/index.svelte';
 
 	import { getRepoInfo } from '$lib/utils';
 	import { repos } from '$lib/stores';
@@ -53,9 +53,7 @@
 {/if}
 
 <main class="container">
-	{#if $loadingRepoInfo}
-		<div class="loading"><span><CircleDash32 class="spin" /></span></div>
-	{/if}
+	<Loading show={$loadingRepoInfo} overlay={true} />
 
 	<h1>{$currentRepo.name}</h1>
 

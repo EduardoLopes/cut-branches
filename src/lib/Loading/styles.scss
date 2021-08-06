@@ -1,0 +1,30 @@
+@keyframes spin {
+	100% {
+		-webkit-transform: rotate(360deg);
+		transform: rotate(360deg);
+	}
+}
+
+.loading {
+	display: none;
+
+	&.overlay {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(255, 255, 255, 0.5);
+		align-items: center;
+		justify-content: center;
+	}
+
+	&.show {
+		display: flex;
+	}
+
+	:global(.spin) {
+		animation: spin 4s linear infinite;
+		fill: var(--color-primary-1);
+	}
+}
