@@ -16,8 +16,6 @@
 		if (onYes) onYes();
 		document.body.style.overflow = 'auto';
 
-		const branchesNames = branches.map((item) => item.name);
-
 		deleteBranches(path, branches)
 			.then((res) => {
 				if (onDone) onDone();

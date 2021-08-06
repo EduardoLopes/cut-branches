@@ -18,6 +18,8 @@
 	});
 
 	function handleDeleteDone() {
+		$loadingRepoInfo = true;
+
 		getRepoInfo($currentRepo.path)
 			.then((res: Repo) => {
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
@@ -25,6 +27,9 @@
 			})
 			.catch((error) => {
 				console.log(error);
+			})
+			.finally(() => {
+				$loadingRepoInfo = false;
 			});
 	}
 </script>
