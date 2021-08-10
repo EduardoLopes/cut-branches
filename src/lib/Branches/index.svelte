@@ -13,8 +13,12 @@
 	let selected: Branch[] = [];
 	let showDeleteModal: boolean = false;
 
+	let current: Branch = $currentRepo.branches.filter((item) => item.current)[0];
+
 	currentRepo.subscribe(() => {
 		selected = [];
+
+		current = $currentRepo.branches.filter((item) => item.current)[0];
 	});
 
 	function handleDeleteDone() {
@@ -106,7 +110,10 @@
 					<div class="info">
 						{#if branch.fully_merged}
 							<div class="grid-2">
-								<span class="icon"> <Information16 /></span> This branch is not fully merged!
+								<span class="icon"> <Information16 /></span>
+								<div>
+									This branch is not fully merged into the current branch, {current.name}!
+								</div>
 							</div>
 						{/if}
 					</div>
