@@ -9,6 +9,7 @@ export interface Repo {
 	path: string;
 	branches: Branch[];
 	name: string;
+	current_branch: string;
 }
 
 export const repos = writable<Repo[]>(

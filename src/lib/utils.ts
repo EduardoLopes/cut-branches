@@ -78,7 +78,8 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 		return {
 			path: root_path,
 			branches: resParser.branches,
-			name
+			name,
+			current_branch: resParser.current_branch
 		};
 	});
 };

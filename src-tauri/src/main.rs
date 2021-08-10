@@ -25,6 +25,7 @@ struct GitDirResponse {
   root_path: String,
   branches: Vec<Branch>,
   errors: Vec<String>,
+  current_branch: String,
 }
 
 #[tauri::command]
@@ -124,6 +125,7 @@ fn git_repo_dir(path: String) -> String {
     root_path: root_path,
     branches: branches,
     errors: errors,
+    current_branch: current.to_string(),
   };
 
   return serde_json::to_string(&response).unwrap();
