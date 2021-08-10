@@ -9,6 +9,7 @@
 
 	import { getRepoInfo } from '$lib/utils';
 	import { repos } from '$lib/stores';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	let selected: Branch[] = [];
 	let showDeleteModal: boolean = false;
@@ -37,8 +38,8 @@
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
 				$currentRepo = res;
 			})
-			.catch((error) => {
-				console.log(error);
+			.catch((errors: string[]) => {
+				errors.reverse().forEach((item) => toast.push(item));
 			})
 			.finally(() => {
 				$loadingRepoInfo = false;

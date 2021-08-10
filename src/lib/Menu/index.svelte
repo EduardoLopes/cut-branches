@@ -4,6 +4,7 @@
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
 	import { getRepoInfo } from '$lib/utils';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -23,8 +24,8 @@
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
 				$currentRepo = res;
 			})
-			.catch((error) => {
-				console.log(error);
+			.catch((errors: string[]) => {
+				errors.reverse().forEach((item) => toast.push(item));
 			})
 			.finally(() => {
 				$loadingRepoInfo = false;

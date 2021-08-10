@@ -4,6 +4,7 @@
 	import { getRepoInfo } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt20';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	let apiOpen;
 
@@ -17,13 +18,17 @@
 		apiOpen({ directory: true })
 			.then((dir: string) => {
 				if (dir) {
-					getRepoInfo(dir).then((res: Repo) => {
-						$repos = [...$repos.filter((item) => item.path !== res.path), res];
-					});
+					getRepoInfo(dir)
+						.then((res: Repo) => {
+							$repos = [...$repos.filter((item) => item.path !== res.path), res];
+						})
+						.catch((errors: string[]) => {
+							errors.reverse().forEach((item) => toast.push(item));
+						});
 				}
 			})
 			.catch((error) => {
-				console.log(error);
+				toast.push(error);
 			});
 	}
 </script>

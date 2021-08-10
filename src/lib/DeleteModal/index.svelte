@@ -2,6 +2,7 @@
 	import type { Branch, Repo } from '$lib/stores';
 	import { deleteBranches } from '$lib/utils';
 	import { onMount } from 'svelte';
+	import { toast } from '@zerodevx/svelte-toast';
 
 	export let show;
 	export let path;
@@ -21,7 +22,7 @@
 				if (onDone) onDone();
 			})
 			.catch((errors: string[]) => {
-				console.log(errors);
+				errors.reverse().forEach((item) => toast.push(item));
 			});
 	}
 
