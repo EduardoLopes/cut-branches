@@ -17,6 +17,18 @@
 		selected = [];
 	});
 
+	// current branch first
+	function sort(a: Branch, b: Branch) {
+		if (a.current) {
+			return -1;
+		}
+		if (b.current) {
+			return 1;
+		}
+		// a must be equal to b
+		return 0;
+	}
+
 	function handleDeleteDone() {
 		$loadingRepoInfo = true;
 
@@ -64,7 +76,7 @@
 
 	<div class="branches">
 		{#if $currentRepo.branches}
-			{#each $currentRepo.branches as branch (branch.name)}
+			{#each $currentRepo.branches.sort(sort) as branch (branch.name)}
 				<div class="branch-container" title={`${branch.current ? 'Current branch ' : ''}`}>
 					<div
 						class="branch"
