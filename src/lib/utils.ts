@@ -109,7 +109,7 @@ export const toast = {
 			theme: {
 				'--toastBackground': '#9b1c1c',
 				'--toastColor': 'white',
-				'--toastProgressBackground': '#ce3c3c'
+				'--toastProgressBackground': '#f34642'
 			}
 		});
 	}
