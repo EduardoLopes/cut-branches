@@ -10,14 +10,15 @@
 	export let onClick: (branch: Branch) => void = null;
 	export let branch: Branch;
 	export let selected: boolean = false;
+	export let disabled: boolean = false;
 </script>
 
 <div class="branch-container" title={`${branch.current ? 'Current branch ' : ''}`}>
-	<div class="branch" class:current={branch.current} class:selected>
+	<div class="branch" class:current={branch.current} class:selected class:disabled>
 		<div
 			class="name"
 			on:click={() => {
-				if (branch.current) return;
+				if (branch.current || disabled) return;
 
 				if (onClick) onClick(branch);
 			}}
@@ -30,6 +31,8 @@
 				<button
 					class="delete-button"
 					on:click={() => {
+						if (disabled) return;
+
 						onClickDelete(branch);
 					}}
 				>

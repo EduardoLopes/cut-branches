@@ -2,8 +2,6 @@
 	import type { Branch as IBranch, Repo } from '$lib/stores';
 	import { currentRepo, loadingRepoInfo } from '$lib/stores';
 
-	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
-	import Information16 from 'carbon-icons-svelte/lib/Information16';
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
 	import Loading from '$lib/Loading/index.svelte';
 	import Branch from '$lib/Branch/index.svelte';

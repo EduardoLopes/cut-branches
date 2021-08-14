@@ -36,6 +36,14 @@
 			filter: contrast(1.2);
 		}
 	}
+
+	&.disabled {
+		cursor: default;
+
+		&:hover {
+			background: transparent !important;
+		}
+	}
 }
 
 .info .grid-2 {
