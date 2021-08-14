@@ -22,12 +22,12 @@
 							$repos = [...$repos.filter((item) => item.path !== res.path), res];
 						})
 						.catch((errors: string[]) => {
-							errors.reverse().forEach((item) => toast.warning(item));
+							errors.reverse().forEach((item) => toast.failure(item));
 						});
 				}
 			})
 			.catch((error) => {
-				toast.warning(error);
+				toast.failure(error);
 			});
 	}
 </script>
