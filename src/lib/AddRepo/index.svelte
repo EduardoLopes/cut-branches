@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
 	import type { Repo } from '$lib/stores';
-	import { getRepoInfo } from '$lib/utils';
+	import { getRepoInfo, toast } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt20';
-	import { toast } from '@zerodevx/svelte-toast';
 
 	let apiOpen;
 
@@ -23,12 +22,12 @@
 							$repos = [...$repos.filter((item) => item.path !== res.path), res];
 						})
 						.catch((errors: string[]) => {
-							errors.reverse().forEach((item) => toast.push(item));
+							errors.reverse().forEach((item) => toast.warning(item));
 						});
 				}
 			})
 			.catch((error) => {
-				toast.push(error);
+				toast.warning(error);
 			});
 	}
 </script>

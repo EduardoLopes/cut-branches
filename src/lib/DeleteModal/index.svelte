@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { Branch, Repo } from '$lib/stores';
-	import { deleteBranches } from '$lib/utils';
+	import { deleteBranches, toast } from '$lib/utils';
 	import { onMount } from 'svelte';
-	import { toast } from '@zerodevx/svelte-toast';
 
 	export let show;
 	export let path;
@@ -22,7 +21,7 @@
 				if (onDone) onDone();
 			})
 			.catch((errors: string[]) => {
-				errors.reverse().forEach((item) => toast.push(item));
+				errors.reverse().forEach((item) => toast.failure(item));
 			});
 	}
 

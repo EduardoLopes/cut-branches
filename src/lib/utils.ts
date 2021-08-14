@@ -1,4 +1,5 @@
 import type { Branch, Repo } from '$lib/stores';
+import { toast as svelteToast } from '@zerodevx/svelte-toast';
 
 export const getRepoName = (root_path: string): string => {
 	if (root_path.lastIndexOf('\\')) {
@@ -82,4 +83,34 @@ export const getRepoInfo = async (path: string): Promise<Repo> => {
 			current_branch: resParser.current_branch
 		};
 	});
+};
+
+export const toast = {
+	success: (message: string): void => {
+		svelteToast.push(message, {
+			theme: {
+				'--toastColor': 'white',
+				'--toastBackground': '#799b1c',
+				'--toastProgressBackground': '#c5ce3c'
+			}
+		});
+	},
+	warning: (message: string): void => {
+		svelteToast.push(message, {
+			theme: {
+				'--toastBackground': '#999b1c',
+				'--toastColor': '#cebb3c',
+				'--toastProgressBackground': 'darkgreen'
+			}
+		});
+	},
+	failure: (message: string): void => {
+		svelteToast.push(message, {
+			theme: {
+				'--toastBackground': '#9b1c1c',
+				'--toastColor': 'white',
+				'--toastProgressBackground': '#ce3c3c'
+			}
+		});
+	}
 };

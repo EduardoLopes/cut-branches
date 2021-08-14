@@ -7,9 +7,8 @@
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
 	import Loading from '$lib/Loading/index.svelte';
 
-	import { getRepoInfo } from '$lib/utils';
+	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
-	import { toast } from '@zerodevx/svelte-toast';
 
 	let selected: Branch[] = [];
 	let showDeleteModal: boolean = false;
@@ -39,7 +38,7 @@
 				$currentRepo = res;
 			})
 			.catch((errors: string[]) => {
-				errors.reverse().forEach((item) => toast.push(item));
+				errors.reverse().forEach((item) => toast.failure(item));
 			})
 			.finally(() => {
 				$loadingRepoInfo = false;
