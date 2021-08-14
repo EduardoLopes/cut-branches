@@ -1,13 +1,7 @@
 <script>
-	import { repos } from '$lib/stores';
 	import { onDestroy, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import AddRepo from '$lib/AddRepo/index.svelte';
 	import Menu from '$lib/Menu/index.svelte';
 	import Branches from '$lib/Branches/index.svelte';
-	import Repo from '$lib/Repo/index.svelte';
-
-	let reposValue;
 
 	let unsubscribeRepos;
 

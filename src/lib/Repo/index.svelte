@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Branch } from '$lib/stores';
+	import type { IBranch } from '$lib/stores';
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
@@ -8,8 +8,8 @@
 
 	let apiInvoke;
 	let root_path: string;
-	let branches: Branch[];
-	let branchSelected: Branch[] = [];
+	let branches: IBranch[];
+	let branchSelected: IBranch[] = [];
 	let repoName: string;
 	let showDeleteModal: boolean = false;
 

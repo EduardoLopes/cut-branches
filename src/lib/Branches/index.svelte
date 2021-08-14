@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Branch as IBranch, Repo } from '$lib/stores';
+	import type { IBranch, IRepo } from '$lib/stores';
 	import { currentRepo, loadingRepoInfo } from '$lib/stores';
 
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
@@ -32,7 +32,7 @@
 		$loadingRepoInfo = true;
 
 		getRepoInfo($currentRepo.path)
-			.then((res: Repo) => {
+			.then((res: IRepo) => {
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
 				$currentRepo = res;
 			})

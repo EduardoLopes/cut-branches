@@ -1,14 +1,14 @@
 <script lang="ts">
-	import type { Branch as IBranch } from '$lib/stores';
+	import type { IBranch } from '$lib/stores';
 	import { currentRepo } from '$lib/stores';
 
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
 	import Information16 from 'carbon-icons-svelte/lib/Information16';
 
 	export let showDeletebutton: boolean = false;
-	export let onClickDelete: (branch: Branch) => void = null;
-	export let onClick: (branch: Branch) => void = null;
-	export let branch: Branch;
+	export let onClickDelete: (branch: IBranch) => void = null;
+	export let onClick: (branch: IBranch) => void = null;
+	export let branch: IBranch;
 	export let selected: boolean = false;
 	export let disabled: boolean = false;
 </script>

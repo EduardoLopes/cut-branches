@@ -1,4 +1,4 @@
-import type { Branch, Repo } from '$lib/stores';
+import type { IBranch, IRepo } from '$lib/stores';
 import { toast as svelteToast } from '@zerodevx/svelte-toast';
 
 export const getRepoName = (root_path: string): string => {
@@ -11,7 +11,7 @@ export const getRepoName = (root_path: string): string => {
 
 export interface ParserBranches {
 	current: string;
-	branches: Branch[];
+	branches: IBranch[];
 }
 
 export interface DeletedBranches {
@@ -21,7 +21,7 @@ export interface DeletedBranches {
 
 export const deleteBranches = async (
 	path: string,
-	branches: Branch[]
+	branches: IBranch[]
 ): Promise<DeletedBranches> => {
 	const { invoke } = await import('@tauri-apps/api/tauri');
 
@@ -55,7 +55,7 @@ export const deleteBranches = async (
 	};
 };
 
-export const getRepoInfo = async (path: string): Promise<Repo> => {
+export const getRepoInfo = async (path: string): Promise<IRepo> => {
 	if (!path) return;
 
 	const { invoke } = await import('@tauri-apps/api/tauri');

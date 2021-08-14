@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { repos, currentRepo, loadingRepoInfo } from '$lib/stores';
-	import type { Repo } from '$lib/stores';
+	import type { IRepo } from '$lib/stores';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
 	import { getRepoInfo, toast } from '$lib/utils';
 
 	export let sortBy = 'BRANCH_COUNT';
 
-	function handleSort(a: Repo, b: Repo) {
+	function handleSort(a: IRepo, b: IRepo) {
 		if (sortBy === 'BRANCH_COUNT') {
 			// TODO
 		}
@@ -15,11 +15,11 @@
 		return a.name.localeCompare(b.name);
 	}
 
-	function handleOnClick(repo: Repo) {
+	function handleOnClick(repo: IRepo) {
 		$currentRepo = repo;
 		$loadingRepoInfo = true;
 		getRepoInfo(repo.path)
-			.then((res: Repo) => {
+			.then((res: IRepo) => {
 				$repos = [...$repos.filter((item) => item.path !== res.path), res];
 				$currentRepo = res;
 			})

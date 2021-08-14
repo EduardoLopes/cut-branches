@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
-	import type { Repo } from '$lib/stores';
+	import type { IRepo } from '$lib/stores';
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt20';
@@ -18,7 +18,7 @@
 			.then((dir: string) => {
 				if (dir) {
 					getRepoInfo(dir)
-						.then((res: Repo) => {
+						.then((res: IRepo) => {
 							$repos = [...$repos.filter((item) => item.path !== res.path), res];
 						})
 						.catch((errors: string[]) => {
