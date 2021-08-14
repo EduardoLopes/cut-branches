@@ -20,6 +20,8 @@
 		deleteBranches(path, branches)
 			.then((res) => {
 				if (onDone) onDone();
+
+				res.result.forEach((item) => toast.success(item));
 			})
 			.catch((errors: string[]) => {
 				errors.reverse().forEach((item) => toast.failure(item));
@@ -37,7 +39,7 @@
 </script>
 
 <div class="overlay" />
-<div class={`container ${show ? 'show' : 'hide'}`}>
+<div class="container" class:show class:hide={!show}>
 	<div class="wrapper">
 		<div class="header">
 			<div class="repoName">{repoName}</div>
