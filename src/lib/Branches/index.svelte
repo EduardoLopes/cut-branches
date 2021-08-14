@@ -80,6 +80,7 @@
 					{branch}
 					showDeletebutton={selected.length === 0}
 					selected={selected.some((item) => item === branch)}
+					disabled={branch.current}
 					onClick={() => {
 						if (selected.some((item) => item.name === branch.name)) {
 							selected = selected.filter((item) => item.name !== branch.name);

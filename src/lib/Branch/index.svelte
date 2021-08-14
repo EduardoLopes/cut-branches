@@ -13,8 +13,14 @@
 	export let disabled: boolean = false;
 </script>
 
-<div class="branch-container" title={`${branch.current ? 'Current branch ' : ''}`}>
-	<div class="branch" class:current={branch.current} class:selected class:disabled>
+<div
+	class="branch-container"
+	class:disabled
+	class:current={branch.current}
+	class:selected
+	title={`${branch.current ? 'Current branch ' : ''}`}
+>
+	<div class="branch">
 		<div
 			class="name"
 			on:click={() => {
