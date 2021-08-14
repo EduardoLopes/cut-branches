@@ -6,10 +6,10 @@
 	import Information16 from 'carbon-icons-svelte/lib/Information16';
 
 	export let showDeletebutton: boolean = false;
-	export let onClickDelete: (branch: Branch) => void;
-	export let onClick: (branch: Branch) => void;
+	export let onClickDelete: (branch: Branch) => void = null;
+	export let onClick: (branch: Branch) => void = null;
 	export let branch: Branch;
-	export let selected: boolean;
+	export let selected: boolean = false;
 </script>
 
 <div class="branch-container" title={`${branch.current ? 'Current branch ' : ''}`}>

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import type { Branch, Repo } from '$lib/stores';
+	import type { Branch as IBranch, Repo } from '$lib/stores';
 	import { deleteBranches, toast } from '$lib/utils';
+	import Branch from '$lib/Branch/index.svelte';
 	import { onMount } from 'svelte';
 
 	export let show;
@@ -10,7 +11,7 @@
 	export let onYes;
 	export let onDone;
 	export let onNo;
-	export let branches: Branch[];
+	export let branches: IBranch[];
 
 	async function handleYes() {
 		if (onYes) onYes();
@@ -49,8 +50,8 @@
 		</div>
 		{#if branches}
 			<div class="branches">
-				{#each branches as branch}
-					<div>{branch.name}</div>
+				{#each branches as branch (branch.name)}
+					<Branch {branch} />
 				{/each}
 			</div>
 		{/if}
@@ -66,8 +67,8 @@
 
 <style>
 	.container {
+		background: #e9e9e7;
 		position: fixed;
-		background: #fff;
 		top: 0;
 		z-index: 20;
 		left: 0;
@@ -109,9 +110,6 @@
 	}
 
 	.branches {
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
 		margin: 8px;
 		padding-right: 8px;
 		margin-bottom: 0;
