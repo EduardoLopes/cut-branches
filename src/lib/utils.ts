@@ -98,9 +98,9 @@ export const toast = {
 	warning: (message: string): void => {
 		svelteToast.push(message, {
 			theme: {
-				'--toastBackground': '#999b1c',
-				'--toastColor': '#cebb3c',
-				'--toastProgressBackground': 'darkgreen'
+				'--toastBackground': '#b59f35',
+				'--toastColor': 'white',
+				'--toastProgressBackground': '#e6cb43'
 			}
 		});
 	},
