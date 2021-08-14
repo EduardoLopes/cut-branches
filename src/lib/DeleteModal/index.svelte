@@ -141,6 +141,8 @@
 		margin: 8px;
 		margin-bottom: 16;
 		overflow: auto;
+		display: grid;
+		gap: 8px;
 	}
 
 	.branches div {

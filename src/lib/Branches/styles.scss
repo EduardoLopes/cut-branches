@@ -19,7 +19,7 @@
 	overflow-y: auto;
 	height: calc(100% - 29px - 16px);
 	grid-auto-rows: min-content;
-	row-gap: 0;
+	gap: 8px;
 	border: 1px dashed var(--color-gray);
 }
 
