@@ -70,10 +70,11 @@
 
 .branches {
 	margin: 8px;
-	margin-bottom: 16;
 	overflow: auto;
 	display: grid;
+	grid-auto-rows: min-content;
 	gap: 8px;
+	padding-right: 8px;
 
 	div {
 		padding: 10px;
