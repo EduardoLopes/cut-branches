@@ -9,10 +9,6 @@
 		.info .grid-2 {
 			background: rgba(255, 255, 255, 0.5);
 		}
-
-		& > .menu {
-			display: flex;
-		}
 	}
 
 	&.current {
@@ -47,6 +43,15 @@
 			filter: contrast(1.1);
 		}
 	}
+
+	.name {
+		padding: 14px;
+	}
+
+	.menu {
+		display: none;
+		align-items: center;
+	}
 }
 
 .branch {
@@ -77,17 +82,6 @@
 	display: flex;
 	margin-right: 8px;
 	align-items: center;
-}
-
-.branch-container {
-	.name {
-		padding: 14px;
-	}
-
-	.menu {
-		display: none;
-		align-items: center;
-	}
 }
 
 :global(svg.delete-icon) {
