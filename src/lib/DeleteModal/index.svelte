@@ -54,7 +54,7 @@
 		{#if branches}
 			<div class="branches">
 				{#each branches as branch (branch.name)}
-					<Branch {branch} disabled={true} />
+					<Branch {branch} disabled={true} showSelectedWarning={true} />
 				{/each}
 			</div>
 		{/if}

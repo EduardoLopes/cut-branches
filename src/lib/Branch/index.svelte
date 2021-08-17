@@ -12,6 +12,19 @@
 	export let branch: IBranch;
 	export let selected: boolean = false;
 	export let disabled: boolean = false;
+	export let showSelectedWarning = false;
+
+	let protectedWords = [
+		'develop',
+		'dev',
+		'stg',
+		'staging',
+		'master',
+		'hml',
+		'master',
+		'default',
+		'trunk'
+	];
 </script>
 
 <div
@@ -67,6 +80,15 @@
 					>
 					and make sure to change the branch name to <strong>main</strong>,
 					<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
+				</div>
+			</div>
+		{/if}
+		{#if protectedWords.some( (item) => branch.name.includes(item) ) && (selected || showSelectedWarning)}
+			<div class="grid-2">
+				<span class="icon"> <WarningAlt16 /></span>
+				<div>
+					You're selecting a branch with the name <strong>{branch.name}</strong>, review and make
+					sure you really wanna delete this branch!
 				</div>
 			</div>
 		{/if}
