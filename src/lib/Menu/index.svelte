@@ -82,7 +82,7 @@
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		font-size: 0.8em;
+		font-size: 0.9em;
 		height: 100%;
 	}
 
