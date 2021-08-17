@@ -4,6 +4,7 @@
 
 	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
 	import Information16 from 'carbon-icons-svelte/lib/Information16';
+	import WarningAlt16 from 'carbon-icons-svelte/lib/WarningAlt16';
 
 	export let showDeletebutton: boolean = false;
 	export let onClickDelete: (branch: IBranch) => void = null;
@@ -53,6 +54,19 @@
 				<span class="icon"> <Information16 /></span>
 				<div>
 					This branch is not fully merged into the current branch, {$currentRepo.current_branch}!
+				</div>
+			</div>
+		{/if}
+		{#if branch.name.includes('master')}
+			<div class="grid-2">
+				<span class="icon"> <WarningAlt16 /></span>
+				<div>
+					The branch name <strong>master</strong> is offensive. Check out this
+					<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+						>article</a
+					>
+					and make sure to change the branch name to <strong>main</strong>,
+					<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
 				</div>
 			</div>
 		{/if}
