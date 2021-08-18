@@ -46,23 +46,57 @@
 		padding: 13px;
 	}
 
-	.icon {
-		height: 52px;
-		width: 52px;
-		border-left: 1px dashed var(--color-gray-1);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
+	.menu {
+		position: relative;
+
+		.icon {
+			height: 52px;
+			width: 52px;
+			border: none;
+			border-left: 1px dashed var(--color-gray-1);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			flex-direction: row;
+			background: #fff;
+			&:hover,
+			&:focus {
+				background: var(--color-gray);
+			}
+		}
 
 		:global {
 			.MenuVertical {
 				width: 22px;
+				height: 52px;
 			}
 		}
 
-		&:hover {
-			background: var(--color-gray);
+		.dropdown {
+			display: none;
+			position: absolute;
+			background: #fff;
+			right: 0;
+			margin: 0;
+			padding: 0;
+
+			li {
+				padding: 16px;
+				list-style: none;
+				cursor: pointer;
+				border-top: 1px dashed var(--color-gray-1);
+				&:hover,
+				&:focus {
+					background: var(--color-gray);
+				}
+			}
+		}
+
+		&:hover > .dropdown,
+		&:focus > .dropdown,
+		&:focus-visible > .dropdown {
+			display: flex;
 		}
 	}
 }

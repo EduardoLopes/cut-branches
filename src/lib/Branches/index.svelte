@@ -74,7 +74,14 @@
 
 	<div class="header">
 		<h1>{$currentRepo.name}</h1>
-		<div class="icon"><OverflowMenuVertical32 class="MenuVertical" /></div>
+		<div class="menu">
+			<button class="icon">
+				<OverflowMenuVertical32 class="MenuVertical" />
+			</button>
+			<ul class="dropdown">
+				<li>Remove</li>
+			</ul>
+		</div>
 	</div>
 
 	<div class="branches">
