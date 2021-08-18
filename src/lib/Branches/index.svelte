@@ -69,51 +69,60 @@
 	/>
 {/if}
 
-<main class="container">
-	<Loading show={$loadingRepoInfo} overlay={true} />
+{#if $currentRepo}
+	<main class="container">
+		<Loading show={$loadingRepoInfo} overlay={true} />
 
-	<div class="header">
-		<h1>{$currentRepo.name}</h1>
-		<div class="menu">
-			<button class="icon">
-				<OverflowMenuVertical32 class="MenuVertical" />
-			</button>
-			<ul class="dropdown">
-				<li>Remove</li>
-			</ul>
+		<div class="header">
+			<h1>{$currentRepo.name}</h1>
+			<div class="menu">
+				<button class="icon">
+					<OverflowMenuVertical32 class="MenuVertical" />
+				</button>
+				<ul class="dropdown">
+					<li
+						on:click={() => {
+							$repos = $repos.filter((item) => item.path !== $currentRepo.path);
+							$currentRepo = $repos[0] || null;
+						}}
+					>
+						Remove
+					</li>
+				</ul>
+			</div>
 		</div>
-	</div>
 
-	<div class="branches">
-		{#if $currentRepo.branches}
-			{#each $currentRepo.branches.sort(sort) as branch (branch.name)}
-				<Branch
-					{branch}
-					showDeletebutton={selected.length === 0}
-					selected={selected.some((item) => item === branch)}
-					disabled={branch.current}
-					onClick={() => {
-						if (selected.some((item) => item.name === branch.name)) {
-							selected = selected.filter((item) => item.name !== branch.name);
-							return;
-						}
+		<div class="branches">
+			{#if $currentRepo.branches}
+				{#each $currentRepo.branches.sort(sort) as branch (branch.name)}
+					<Branch
+						{branch}
+						showDeletebutton={selected.length === 0}
+						selected={selected.some((item) => item === branch)}
+						disabled={branch.current}
+						onClick={() => {
+							if (selected.some((item) => item.name === branch.name)) {
+								selected = selected.filter((item) => item.name !== branch.name);
+								return;
+							}
 
-						selected.push(branch);
-						selected = selected;
-					}}
-					onClickDelete={() => {
-						selected = [branch];
-						showDeleteModal = true;
-					}}
-				/>
-			{/each}
-		{/if}
-		{#if selected.length > 0}
-			<button class="delete-all" on:click={() => (showDeleteModal = true)}>
-				Delete {#if selected.length > 1}all ({selected.length}){/if}</button
-			>
-		{/if}
-	</div>
-</main>
+							selected.push(branch);
+							selected = selected;
+						}}
+						onClickDelete={() => {
+							selected = [branch];
+							showDeleteModal = true;
+						}}
+					/>
+				{/each}
+			{/if}
+			{#if selected.length > 0}
+				<button class="delete-all" on:click={() => (showDeleteModal = true)}>
+					Delete {#if selected.length > 1}all ({selected.length}){/if}</button
+				>
+			{/if}
+		</div>
+	</main>
+{/if}
 
 <style src="./styles.scss" lang="scss"></style>
