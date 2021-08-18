@@ -8,6 +8,7 @@
 
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
+	import OverflowMenuVertical32 from 'carbon-icons-svelte/lib/OverflowMenuVertical32';
 
 	let selected: IBranch[] = [];
 	let showDeleteModal: boolean = false;
@@ -71,7 +72,10 @@
 <main class="container">
 	<Loading show={$loadingRepoInfo} overlay={true} />
 
-	<h1>{$currentRepo.name}</h1>
+	<div class="header">
+		<h1>{$currentRepo.name}</h1>
+		<div class="icon"><OverflowMenuVertical32 class="MenuVertical" /></div>
+	</div>
 
 	<div class="branches">
 		{#if $currentRepo.branches}
