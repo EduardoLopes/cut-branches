@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos } from '$lib/stores';
+	import { currentRepo, repos } from '$lib/stores';
 	import type { IRepo } from '$lib/stores';
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { onMount } from 'svelte';
@@ -20,6 +20,7 @@
 					getRepoInfo(dir)
 						.then((res: IRepo) => {
 							$repos = [...$repos.filter((item) => item.path !== res.path), res];
+							$currentRepo = res;
 						})
 						.catch((errors: string[]) => {
 							errors.reverse().forEach((item) => toast.failure(item));
