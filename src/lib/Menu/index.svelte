@@ -17,18 +17,6 @@
 
 	function handleOnClick(repo: IRepo) {
 		$currentRepo = repo;
-		$loadingRepoInfo = true;
-		getRepoInfo(repo.path)
-			.then((res: IRepo) => {
-				$repos = [...$repos.filter((item) => item.path !== res.path), res];
-				$currentRepo = res;
-			})
-			.catch((errors: string[]) => {
-				errors.reverse().forEach((item) => toast.failure(item));
-			})
-			.finally(() => {
-				$loadingRepoInfo = false;
-			});
 	}
 
 	onMount(async () => {});
