@@ -29,7 +29,7 @@
 		return 0;
 	}
 
-	function handleDeleteDone() {
+	function update_repo() {
 		$loadingRepoInfo = true;
 
 		getRepoInfo($currentRepo.path)
@@ -51,7 +51,7 @@
 		onClose={() => {
 			showDeleteModal = false;
 		}}
-		onDone={handleDeleteDone}
+		onDone={update_repo}
 		onYes={() => {
 			selected = [];
 			showDeleteModal = false;
@@ -88,6 +88,7 @@
 					>
 						Remove
 					</li>
+					<li on:click={update_repo}>Update</li>
 				</ul>
 			</div>
 		</div>
