@@ -9,6 +9,8 @@
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
 	import OverflowMenuVertical32 from 'carbon-icons-svelte/lib/OverflowMenuVertical32';
+	import Rotate16 from 'carbon-icons-svelte/lib/Rotate16';
+	import TrashCan16 from 'carbon-icons-svelte/lib/TrashCan16';
 
 	let selected: IBranch[] = [];
 	let showDeleteModal: boolean = false;
@@ -76,20 +78,18 @@
 		<div class="header">
 			<h1>{$currentRepo.name}</h1>
 			<div class="menu">
-				<button class="icon">
-					<OverflowMenuVertical32 class="MenuVertical" />
+				<button class="button" on:click={update_repo}>
+					<Rotate16 class="icon" />
 				</button>
-				<ul class="dropdown">
-					<li
-						on:click={() => {
-							$repos = $repos.filter((item) => item.path !== $currentRepo.path);
-							$currentRepo = $repos[0] || null;
-						}}
-					>
-						Remove
-					</li>
-					<li on:click={update_repo}>Update</li>
-				</ul>
+				<button
+					class="button"
+					on:click={() => {
+						$repos = $repos.filter((item) => item.path !== $currentRepo.path);
+						$currentRepo = $repos[0] || null;
+					}}
+				>
+					<TrashCan16 class="icon" />
+				</button>
 			</div>
 		</div>
 

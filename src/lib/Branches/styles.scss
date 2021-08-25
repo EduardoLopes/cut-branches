@@ -47,9 +47,9 @@
 	}
 
 	.menu {
-		position: relative;
+		display: flex;
 
-		.icon {
+		.button {
 			height: 52px;
 			width: 52px;
 			border: none;
@@ -60,44 +60,23 @@
 			cursor: pointer;
 			flex-direction: row;
 			background: #fff;
-			&:hover,
-			&:focus {
+			&:hover {
 				background: var(--color-gray);
-			}
-		}
-
-		:global {
-			.MenuVertical {
-				width: 22px;
-				height: 52px;
-			}
-		}
-
-		.dropdown {
-			display: none;
-			position: absolute;
-			background: #fff;
-			right: 0;
-			margin: 0;
-			padding: 0;
-			flex-direction: column;
-
-			li {
-				padding: 16px;
-				list-style: none;
-				cursor: pointer;
-				border-top: 1px dashed var(--color-gray-1);
-				&:hover,
-				&:focus {
-					background: var(--color-gray);
+				:global(.icon) {
+					fill: rgba(0, 0, 0, 0.8);
 				}
 			}
-		}
 
-		&:hover > .dropdown,
-		&:focus > .dropdown,
-		&:focus-visible > .dropdown {
-			display: flex;
+			&:active {
+				background: var(--color-gray-1);
+				:global(.icon) {
+					fill: rgba(0, 0, 0, 0.8);
+				}
+			}
+
+			:global(.icon) {
+				fill: rgba(0, 0, 0, 0.5);
+			}
 		}
 	}
 }
