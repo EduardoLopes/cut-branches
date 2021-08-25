@@ -97,6 +97,13 @@
 	cursor: pointer;
 
 	&:hover {
-		background: rgb(255, 209, 209);
+		background: var(--color-gray);
+		:global(svg.delete-icon) {
+			fill: rgba(0, 0, 0, 0.8);
+		}
+	}
+
+	&:active {
+		background: var(--color-gray-1);
 	}
 }

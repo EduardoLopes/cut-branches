@@ -69,9 +69,6 @@
 
 			&:active {
 				background: var(--color-gray-1);
-				:global(.icon) {
-					fill: rgba(0, 0, 0, 0.8);
-				}
 			}
 
 			:global(.icon) {
