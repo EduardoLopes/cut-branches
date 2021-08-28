@@ -11,7 +11,7 @@
 	import { repos } from '$lib/stores';
 	import OverflowMenuVertical32 from 'carbon-icons-svelte/lib/OverflowMenuVertical32';
 	import Rotate16 from 'carbon-icons-svelte/lib/Rotate16';
-	import TrashCan16 from 'carbon-icons-svelte/lib/TrashCan16';
+	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline16';
 
 	let selected: IBranch[] = [];
 	let showDeleteModal: boolean = false;
@@ -103,7 +103,7 @@
 						showDeleteRepoModal = true;
 					}}
 				>
-					<TrashCan16 class="icon" />
+					<CloseOutline16 class="icon" />
 				</button>
 			</div>
 		</div>
