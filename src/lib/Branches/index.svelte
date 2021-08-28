@@ -3,6 +3,7 @@
 	import { currentRepo, loadingRepoInfo } from '$lib/stores';
 
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
+	import Modal from '$lib/Modal/index.svelte';
 	import Loading from '$lib/Loading/index.svelte';
 	import Branch from '$lib/Branch/index.svelte';
 
@@ -14,6 +15,7 @@
 
 	let selected: IBranch[] = [];
 	let showDeleteModal: boolean = false;
+	let showDeleteRepoModal: boolean = false;
 
 	currentRepo.subscribe(() => {
 		selected = [];
@@ -71,6 +73,20 @@
 	/>
 {/if}
 
+<Modal
+	title={`Remove ${$currentRepo?.name}`}
+	question={'Are you sure you wanna remove this repository'}
+	onYes={() => {
+		$repos = $repos.filter((item) => item.path !== $currentRepo.path);
+		$currentRepo = $repos[0] || null;
+		showDeleteRepoModal = false;
+	}}
+	onNo={() => {
+		showDeleteRepoModal = false;
+	}}
+	show={showDeleteRepoModal}
+/>
+
 {#if $currentRepo}
 	<main class="container">
 		<Loading show={$loadingRepoInfo} overlay={true} />
@@ -84,8 +100,7 @@
 				<button
 					class="button"
 					on:click={() => {
-						$repos = $repos.filter((item) => item.path !== $currentRepo.path);
-						$currentRepo = $repos[0] || null;
+						showDeleteRepoModal = true;
 					}}
 				>
 					<TrashCan16 class="icon" />

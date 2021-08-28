@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IBranch, IRepo } from '$lib/stores';
+	import type { IBranch } from '$lib/stores';
 	import { deleteBranches, toast } from '$lib/utils';
 	import Branch from '$lib/Branch/index.svelte';
 	import { onMount } from 'svelte';
