@@ -3,7 +3,6 @@
 	import type { IRepo } from '$lib/stores';
 	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
-	import { getRepoInfo, toast } from '$lib/utils';
 
 	export let sortBy = 'BRANCH_COUNT';
 
