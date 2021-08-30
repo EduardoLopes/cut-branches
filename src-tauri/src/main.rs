@@ -130,7 +130,10 @@ fn git_repo_dir(path: String) -> String {
   let response = GitDirResponse {
     root_path: root_path,
     branches: branches,
-    errors: errors,
+    errors: errors
+      .into_iter()
+      .filter(|s| !s.is_empty())
+      .collect::<Vec<_>>(),
     current_branch: current.to_string(),
   };
 
