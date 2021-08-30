@@ -75,6 +75,8 @@ fn git_repo_dir(path: String) -> String {
 
   let all_branches = String::from_utf8(branch_child.stdout).unwrap();
 
+  errors.push(String::from_utf8(branch_child.stderr).unwrap());
+
   let all_branches_vec: Vec<String> = all_branches
     .split("\n")
     .map(|s| s.trim().replace("* ", ""))
@@ -89,6 +91,8 @@ fn git_repo_dir(path: String) -> String {
     .expect("Failed to execute command");
 
   let branch_no_merged_child_output = branch_no_merged_child.stdout;
+
+  errors.push(String::from_utf8(branch_no_merged_child.stderr).unwrap());
 
   let all_branches_no_merged = String::from_utf8(branch_no_merged_child_output).unwrap();
 
@@ -106,6 +110,8 @@ fn git_repo_dir(path: String) -> String {
     .expect("Failed to execute command");
 
   let branch_current_child_output = branch_current_child.stdout;
+
+  errors.push(String::from_utf8(branch_current_child.stderr).unwrap());
 
   let current_branch = String::from_utf8(branch_current_child_output).unwrap();
 
