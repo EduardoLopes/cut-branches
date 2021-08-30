@@ -163,7 +163,7 @@ fn delete_branches(DeleteOptions(path, branches): DeleteOptions) -> String {
 
   let child = Command::new("git")
     .arg("branch")
-    .arg("-d")
+    .arg("-D")
     .args(args)
     .creation_flags(0x08000000)
     .output()
