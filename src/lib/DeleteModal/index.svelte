@@ -21,7 +21,8 @@
 			.then((res) => {
 				if (onDone) onDone();
 
-				res.result.forEach((item) => toast.success(item));
+				// FIXME: turn this back on, when the notifications problems be fixed
+				// res.result.forEach((item) => toast.success(item));
 			})
 			.catch((errors: string[]) => {
 				errors.reverse().forEach((item) => toast.failure(item));
