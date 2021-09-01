@@ -54,8 +54,8 @@
     "windows": [
       {
         "title": "Cut Branches",
-        "width": 800,
-        "height": 600,
+        "width": 960,
+        "height": 540,
         "resizable": true,
         "fullscreen": false
       }
