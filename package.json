@@ -12,29 +12,29 @@
 		"tauri": "tauri"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-static": "^1.0.0-next.10",
+		"@sveltejs/adapter-static": "^1.0.0-next.34",
 		"@sveltejs/kit": "next",
-		"@typescript-eslint/eslint-plugin": "^5.16.0",
-		"@typescript-eslint/parser": "^5.16.0",
-		"@zerodevx/svelte-toast": "^0.7.1",
+		"@typescript-eslint/eslint-plugin": "^5.27.1",
+		"@typescript-eslint/parser": "^5.27.1",
+		"@zerodevx/svelte-toast": "^0.7.2",
 		"carbon-icons-svelte": "^10.45.1",
-		"eslint": "^8.11.0",
+		"eslint": "^8.17.0",
 		"eslint-config-prettier": "^8.5.0",
-		"eslint-plugin-svelte3": "^3.4.1",
-		"prettier": "~2.6.0",
-		"prettier-plugin-svelte": "^2.6.0",
-		"sass": "^1.49.9",
-		"svelte": "^3.46.4",
-		"svelte-preprocess": "^4.10.4",
-		"tslib": "^2.3.1",
-		"typescript": "^4.6.2"
+		"eslint-plugin-svelte3": "^4.0.0",
+		"prettier": "~2.6.2",
+		"prettier-plugin-svelte": "^2.7.0",
+		"sass": "^1.52.2",
+		"svelte": "^3.48.0",
+		"svelte-preprocess": "^4.10.7",
+		"tslib": "^2.4.0",
+		"typescript": "^4.7.3"
 	},
 	"type": "module",
 	"dependencies": {
-		"@fontsource/fira-mono": "^4.5.4",
+		"@fontsource/fira-mono": "^4.5.8",
 		"@lukeed/uuid": "^2.0.0",
-		"@tauri-apps/api": "^1.0.0-rc.2",
-		"@tauri-apps/cli": "^1.0.0-rc.7",
-		"cookie": "^0.4.2"
+		"@tauri-apps/api": "^1.0.0-rc.6",
+		"@tauri-apps/cli": "^1.0.0-rc.13",
+		"cookie": "^0.5.0"
 	}
 }
