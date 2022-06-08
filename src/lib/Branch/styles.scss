@@ -45,7 +45,13 @@
 	}
 
 	.name {
+		display: inline-flex;
+		align-items: center;
 		padding: 14px;
+		text-align: left;
+		border: none;
+		cursor: pointer;
+		background: transparent;
 	}
 
 	.menu {
@@ -58,10 +64,8 @@
 	display: grid;
 	grid-template-columns: auto min-content;
 	cursor: pointer;
-
-	&:hover {
-		background: rgba(255, 255, 255, 0.8);
-
+	&:hover,
+	&:focus-within {
 		& > .menu {
 			display: flex;
 		}

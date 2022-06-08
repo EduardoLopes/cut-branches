@@ -35,7 +35,7 @@
 	title={`${branch.current ? 'Current branch ' : ''}`}
 >
 	<div class="branch">
-		<div
+		<button
 			class="name"
 			on:click={() => {
 				if (branch.current || disabled) return;
@@ -44,7 +44,7 @@
 			}}
 		>
 			{branch.name}
-		</div>
+		</button>
 
 		{#if !branch.current && showDeletebutton}
 			<div class="menu">
