@@ -1,17 +1,15 @@
 <script>
-	import { onDestroy, onMount } from 'svelte';
+	import { afterUpdate } from 'svelte';
 	import Menu from '$lib/Menu/index.svelte';
 	import Branches from '$lib/Branches/index.svelte';
 	import { goto } from '$app/navigation';
 	import { repos } from '$lib/stores';
 
-	let unsubscribeRepos = repos.subscribe((value) => {
-		if (value.length === 0) {
+	afterUpdate(() => {
+		if ($repos.length === 0) {
 			goto('/add-first');
 		}
 	});
-
-	onDestroy(unsubscribeRepos);
 </script>
 
 <div class="content">

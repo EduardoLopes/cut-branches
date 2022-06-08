@@ -3,15 +3,17 @@
 	"version": "0.0.1",
 	"scripts": {
 		"dev:svelte": "svelte-kit dev",
+		"build:svelte": "svelte-kit build",
 		"dev": "tauri dev",
-		"build": "svelte-kit build && tauri build",
-		"build:debug": "svelte-kit build && tauri build --debug",
+		"build": "tauri build",
+		"build:debug": "tauri build --debug",
 		"preview": "svelte-kit preview",
 		"lint": "prettier --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
 		"format": "prettier --write --plugin-search-dir=. .",
 		"tauri": "tauri"
 	},
 	"devDependencies": {
+		"@sveltejs/adapter-node": "^1.0.0-next.78",
 		"@sveltejs/adapter-static": "^1.0.0-next.34",
 		"@sveltejs/kit": "next",
 		"@typescript-eslint/eslint-plugin": "^5.27.1",
