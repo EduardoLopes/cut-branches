@@ -1,15 +1,18 @@
 <script>
-	import { afterUpdate } from 'svelte';
+	import { afterUpdate, onMount } from 'svelte';
 	import Menu from '$lib/Menu/index.svelte';
 	import Branches from '$lib/Branches/index.svelte';
 	import { goto } from '$app/navigation';
 	import { repos } from '$lib/stores';
 
-	afterUpdate(() => {
+	function checkRepos() {
 		if ($repos.length === 0) {
 			goto('/add-first');
 		}
-	});
+	}
+
+	afterUpdate(() => checkRepos());
+	onMount(() => checkRepos());
 </script>
 
 <div class="content">
