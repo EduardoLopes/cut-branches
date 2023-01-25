@@ -5,9 +5,10 @@
 	import { onMount } from 'svelte';
 	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt20';
 	import AddAlt32 from 'carbon-icons-svelte/lib/AddAlt32';
+	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
 
-	let apiOpen;
-	export let isFirst = null;
+	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
+	export let isFirst: boolean = false;
 
 	onMount(async () => {
 		const { open } = await import('@tauri-apps/api/dialog');
@@ -17,7 +18,7 @@
 
 	function handleClick() {
 		apiOpen({ directory: true })
-			.then((dir: string) => {
+			.then((dir) => {
 				if (dir) {
 					getRepoInfo(dir)
 						.then((res: IRepo) => {

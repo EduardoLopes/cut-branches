@@ -13,11 +13,11 @@ export interface IRepo {
 }
 
 export const repos = writable<IRepo[]>(
-	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('repos')) ?? [] : []
+	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('repos') ?? '[]') : []
 );
 
 export const currentRepo = writable<IRepo>(
-	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('currentRepo')) ?? {} : {}
+	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('currentRepo') ?? '{}') : {}
 );
 
 export const loadingRepoInfo = writable<boolean>(false);
