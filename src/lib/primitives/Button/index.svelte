@@ -57,8 +57,8 @@
 			}
 
 			&:disabled {
-				background: var(--color-background-1);
-				border-style: var(--color-neutral-8);
+				background: var(--color-neutral-6);
+				border: solid 1px var(--color-neutral-6);
 				color: var(--color-neutral-10);
 			}
 		}
@@ -68,6 +68,10 @@
 		&.feedback-#{$type} {
 			background: var(--color-background-1);
 			color: var(--color-#{$type}-4);
+			&:disabled {
+				background: var(--color-background-1);
+				border: solid 1px var(--color-neutral-6);
+			}
 		}
 	}
 
@@ -76,6 +80,11 @@
 			background: var(--color-background-1);
 			border-color: var(--color-background-1);
 			color: var(--color-#{$type}-4);
+
+			&:disabled {
+				background: var(--color-background-1);
+				border: 1px solid var(--color-background-1);
+			}
 
 			&:hover {
 				border-color: var(--color-#{$type}-4);
