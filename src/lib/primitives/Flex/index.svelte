@@ -1,5 +1,14 @@
 <script lang="ts">
 	import type * as CSS from 'csstype';
+	import type { HTMLAttributes } from 'svelte/elements';
+
+	interface $$Props extends HTMLAttributes<HTMLDivElement> {
+		direction?: CSS.Properties['flexDirection'];
+		align?: CSS.Properties['alignItems'];
+		justify?: CSS.Properties['justifyContent'];
+		gap?: CSS.Properties['gap'];
+		wrap?: CSS.Properties['flexWrap'];
+	}
 
 	export let direction: CSS.Properties['flexDirection'] = 'column';
 	export let align: CSS.Properties['alignItems'] = 'flex-start';
@@ -9,7 +18,7 @@
 </script>
 
 <div
-	class="container"
+	class="container {$$restProps.class}"
 	style="--direction:{direction};--align:{align};--justify:{justify};--gap:{gap};--wrap:{wrap};"
 >
 	<slot />
