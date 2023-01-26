@@ -1,61 +1,44 @@
 <script lang="ts">
 	import type { Hst } from '@histoire/plugin-svelte';
-	import Button from './index.svelte';
+	import Button, { type ButtonFeedback, type ButtonSize, type ButtonState } from './index.svelte';
 	export let Hst: Hst;
+
+	let feedback: ButtonFeedback = 'normal';
+	let feedbackOptions = [
+		{ value: 'danger', label: 'danger' },
+		{ value: 'info', label: 'info' },
+		{ value: 'normal', label: 'normal' },
+		{ value: 'success', label: 'success' },
+		{ value: 'warning', label: 'warning' }
+	];
+
+	let size: ButtonSize = 'md';
+	let sizeOptions = [
+		{ value: 'sm', label: 'sm' },
+		{ value: 'md', label: 'md' },
+		{ value: 'lg', label: 'lg' }
+	];
+
+	let state: ButtonState = 'normal';
+	let stateOptions = [
+		{ value: 'normal2', label: 'normal' },
+		{ value: 'pressed', label: 'pressed' },
+		{ value: 'disabled', label: 'disabled' },
+		{ value: 'loading', label: 'loading' }
+	];
 </script>
 
 <Hst.Story>
-	<Hst.Variant title="default">
-		<Button>Default</Button>
-		<Button variant="secondary">Secondary</Button>
-		<Button variant="tertiary">Tertiary</Button>
-	</Hst.Variant>
+	<svelte:fragment slot="controls">
+		<Hst.Radio bind:value={feedback} bind:options={feedbackOptions} title="Feedback" />
+		<Hst.Radio bind:value={size} bind:options={sizeOptions} title="Size" />
+		<Hst.Radio bind:value={state} bind:options={stateOptions} title="State" />
+	</svelte:fragment>
 
-	<Hst.Variant title="danger">
-		<Button feedback="danger">Default</Button>
-		<Button variant="secondary" feedback="danger">Secondary</Button>
-		<Button variant="tertiary" feedback="danger">Tertiary</Button>
-	</Hst.Variant>
-
-	<Hst.Variant title="warning">
-		<Button feedback="warning">Default</Button>
-		<Button variant="secondary" feedback="warning">Secondary</Button>
-		<Button variant="tertiary" feedback="warning">Tertiary</Button>
-	</Hst.Variant>
-
-	<Hst.Variant title="success">
-		<Button feedback="success">Default</Button>
-		<Button variant="secondary" feedback="success">Secondary</Button>
-		<Button variant="tertiary" feedback="success">Tertiary</Button>
-	</Hst.Variant>
-
-	<Hst.Variant title="info">
-		<Button feedback="info">Default</Button>
-		<Button variant="secondary" feedback="info">Secondary</Button>
-		<Button variant="tertiary" feedback="info">Tertiary</Button>
-	</Hst.Variant>
-
-	<Hst.Variant title="disabled">
-		<Button state="disabled">Default</Button>
-		<Button variant="secondary" state="disabled">Secondary</Button>
-		<Button variant="tertiary" state="disabled">Tertiary</Button>
-	</Hst.Variant>
-
-	<Hst.Variant title="pressed">
-		<Button state="pressed">Default</Button>
-		<Button variant="secondary" state="pressed">Secondary</Button>
-		<Button variant="tertiary" state="pressed">Tertiary</Button>
-	</Hst.Variant>
-
-	<Hst.Variant title="loading">
-		<Button state="loading">Default</Button>
-		<Button variant="secondary" state="loading">Secondary</Button>
-		<Button variant="tertiary" state="loading">Tertiary</Button>
-	</Hst.Variant>
-	<Hst.Variant title="sizes">
-		<Button size="sm">Small</Button>
-		<Button size="md">Medium</Button>
-		<Button size="lg">Large</Button>
+	<Hst.Variant title="default variants">
+		<Button {feedback} {size} {state}>Default</Button>
+		<Button variant="secondary" {feedback} {size} {state}>Secondary</Button>
+		<Button variant="tertiary" {feedback} {size} {state}>Tertiary</Button>
 	</Hst.Variant>
 </Hst.Story>
 
