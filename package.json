@@ -9,9 +9,13 @@
 		"preview": "vite preview",
 		"lint": "prettier --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
 		"format": "prettier --write --plugin-search-dir=. .",
-		"tauri": "tauri"
+		"tauri": "tauri",		
+		"story:dev": "histoire dev",
+		"story:build": "histoire build",
+		"story:preview": "histoire preview"		  
 	},
 	"devDependencies": {
+		"@histoire/plugin-svelte": "^0.12.4",
 		"@sveltejs/adapter-static": "^1.0.5",
 		"@sveltejs/kit": "^1.2.9",
 		"@typescript-eslint/eslint-plugin": "^5.49.0",
@@ -21,6 +25,7 @@
 		"eslint": "^8.32.0",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-svelte3": "^4.0.0",
+		"histoire": "^0.12.4",
 		"prettier": "~2.8.3",
 		"prettier-plugin-svelte": "^2.9.0",
 		"sass": "^1.57.1",
