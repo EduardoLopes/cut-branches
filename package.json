@@ -9,10 +9,10 @@
 		"preview": "vite preview",
 		"lint": "prettier --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
 		"format": "prettier --write --plugin-search-dir=. .",
-		"tauri": "tauri",		
+		"tauri": "tauri",
 		"story:dev": "histoire dev",
 		"story:build": "histoire build",
-		"story:preview": "histoire preview"		  
+		"story:preview": "histoire preview"
 	},
 	"devDependencies": {
 		"@histoire/plugin-svelte": "^0.12.4",
@@ -21,7 +21,8 @@
 		"@typescript-eslint/eslint-plugin": "^5.49.0",
 		"@typescript-eslint/parser": "^5.49.0",
 		"@zerodevx/svelte-toast": "^0.8.2",
-		"carbon-icons-svelte": "^10.45.1",
+		"carbon-icons-svelte": "^11.4.0",
+		"csstype": "^3.1.1",
 		"eslint": "^8.32.0",
 		"eslint-config-prettier": "^8.6.0",
 		"eslint-plugin-svelte3": "^4.0.0",
@@ -39,6 +40,7 @@
 	"dependencies": {
 		"@fontsource/fira-mono": "^4.5.10",
 		"@lukeed/uuid": "^2.0.0",
+		"@radix-ui/colors": "^0.1.8",
 		"@tauri-apps/api": "^1.2.0",
 		"@tauri-apps/cli": "^1.2.3",
 		"cookie": "^0.5.0"
