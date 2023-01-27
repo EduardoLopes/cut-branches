@@ -82,9 +82,9 @@
 		--button-disabled-text-color: var(--color-neutral-10);
 
 		// font-size
-		--button-font-size-sm: var(--space-sm);
-		--button-font-size-md: var(--space-md);
-		--button-font-size-lg: var(--space-lg);
+		--button-font-size-sm: var(--font-size-sm);
+		--button-font-size-md: var(--font-size-md);
+		--button-font-size-lg: var(--font-size-lg);
 
 		// padding
 		--button-padding-sm: var(--space-xs) var(--space-sm);

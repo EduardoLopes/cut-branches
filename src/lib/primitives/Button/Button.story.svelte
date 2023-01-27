@@ -43,6 +43,3 @@
 		<Button variant="ghost" {feedback} {size} {state}>Ghost</Button>
 	</Hst.Variant>
 </Hst.Story>
-
-<style>
-</style>

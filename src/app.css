@@ -85,6 +85,20 @@
     --space-xxl: calc(3.2rem * var(--space-unit));
     --space-xxxl: calc(6.4rem * var(--space-unit));
 
+	--font-size-unit: 1;
+
+    --font-size-none: 0;
+	--font-size-xxxxs: calc(0.1rem * var(--font-size-unit));
+    --font-size-xxxs: calc(0.2rem * var(--font-size-unit)),; 
+    --font-size-xxs: calc(0.4rem * var(--font-size-unit));
+    --font-size-xs: calc(0.8rem * var(--font-size-unit)); 
+    --font-size-sm: calc(1.2rem * var(--font-size-unit)); 
+    --font-size-md: calc(1.6rem * var(--font-size-unit)); 
+    --font-size-lg: calc(2rem * var(--font-size-unit)); 
+    --font-size-xl: calc(2.4rem * var(--font-size-unit));   
+    --font-size-xxl: calc(3.2rem * var(--font-size-unit));
+    --font-size-xxxl: calc(6.4rem * var(--font-size-unit));
+
 }
 
 * {
