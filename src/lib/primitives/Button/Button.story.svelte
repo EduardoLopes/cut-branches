@@ -19,9 +19,10 @@
 		{ value: 'lg', label: 'lg' }
 	];
 
-	let state: ButtonState = 'normal';
+	// @ts-ignore
+	let state: ButtonState = 'normal-1';
 	let stateOptions = [
-		{ value: 'normal2', label: 'normal' },
+		{ value: 'normal-1', label: 'normal' },
 		{ value: 'pressed', label: 'pressed' },
 		{ value: 'disabled', label: 'disabled' },
 		{ value: 'loading', label: 'loading' }
@@ -39,6 +40,7 @@
 		<Button {feedback} {size} {state}>Default</Button>
 		<Button variant="secondary" {feedback} {size} {state}>Secondary</Button>
 		<Button variant="tertiary" {feedback} {size} {state}>Tertiary</Button>
+		<Button variant="ghost" {feedback} {size} {state}>Ghost</Button>
 	</Hst.Variant>
 </Hst.Story>
 

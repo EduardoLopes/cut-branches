@@ -43,54 +43,7 @@
 </button>
 
 <style lang="scss">
-	@mixin feedback-primary($type) {
-		&.feedback-#{$type} {
-			background: var(--color-#{$type}-3);
-			border-color: var(--color-#{$type}-3);
-			&:hover {
-				background: var(--color-#{$type}-4);
-				color: var(--color-background-1);
-			}
-
-			&:active {
-				background: var(--color-#{$type}-2);
-			}
-
-			&:disabled {
-				background: var(--color-neutral-6);
-				border: solid 1px var(--color-neutral-6);
-				color: var(--color-neutral-10);
-			}
-		}
-	}
-
-	@mixin feedback-secondary($type) {
-		&.feedback-#{$type} {
-			background: var(--color-background-1);
-			color: var(--color-#{$type}-4);
-			&:disabled {
-				background: var(--color-background-1);
-				border: solid 1px var(--color-neutral-6);
-			}
-		}
-	}
-
-	@mixin feedback-tertiary($type) {
-		&.feedback-#{$type} {
-			background: var(--color-background-1);
-			border-color: var(--color-background-1);
-			color: var(--color-#{$type}-4);
-
-			&:disabled {
-				background: var(--color-background-1);
-				border: 1px solid var(--color-background-1);
-			}
-
-			&:hover {
-				border-color: var(--color-#{$type}-4);
-			}
-		}
-	}
+	$feedbacks: 'danger', 'warning', 'success', 'info';
 
 	@keyframes spin {
 		0% {
@@ -101,123 +54,160 @@
 		}
 	}
 
+	// vars
 	.button {
-		display: inline-flex;
-		position: relative;
-		transition: all 0.1s ease-in-out;
-		cursor: pointer;
-		text-align: center;
-		text-decoration: none;
-		vertical-align: middle;
-		border: none;
-		gap: 1rem;
-		user-select: none;
+		--button-background-color: var(--color-primary-3);
+		--button-text-color: var(--color-neutral-1);
+		--button-border-color: var(--button-background-color);
+		--button-hover-background-color: var(--color-primary-3);
+		--button-hover-border-color: var(--button-hover-background-color);
+		--button-hover-text-color: var(--color-neutral-1);
+		--button-active-background-color: var(--color-primary-2);
+		--button-active-color: var(--color-primary-2);
+		--button-disabled-background-color: var(--color-neutral-6);
+		--button-disabled-border-color: var(--color-neutral-6);
+		--button-disabled-text-color: var(--color-neutral-10);
 
-		&.variant-primary {
-			background: var(--color-primary-3);
-			color: #fff;
-			border: solid 1px var(--color-primary-3);
-			&:hover {
-				background: var(--color-primary-4);
-				color: #fff;
+		@each $feedback in $feedbacks {
+			&.feedback-#{$feedback} {
+				--button-background-color: var(--color-#{$feedback}-3);
+				--button-hover-background-color: var(--color-#{$feedback}-4);
+				--button-hover-text-color: var(--color-background-1);
+				--button-active-background-color: var(--color-#{$feedback}-2);
+				--button-disabled-background-color: var(--color-neutral-6);
+				--button-disabled-border-color: var(--color-neutral-6);
+				--button-disabled-text-color: var(--color-neutral-10);
 			}
-
-			&:active {
-				background: var(--color-primary-2);
-			}
-
-			&:disabled {
-				background: var(--color-neutral-6);
-				border: solid 1px var(--color-neutral-6);
-				color: var(--color-neutral-10);
-				cursor: default;
-			}
-
-			&.size-sm {
-				padding: 6px 14px;
-				font-size: 0.8em;
-			}
-
-			&.size-md {
-				padding: 8px 16px;
-				font-size: 1em;
-			}
-
-			&.size-lg {
-				padding: 10px 22px;
-				font-size: 1.2rem;
-			}
-
-			&.state-pressed {
-				box-shadow: inset 0 2px 4px 0px rgb(0 0 0 / 25%);
-			}
-
-			&.state-loading {
-				pointer-events: none;
-
-				.loading {
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					position: absolute;
-					inset: 0;
-					backdrop-filter: blur(6px);
-					background: rgba(255 255 255 / 10%);
-
-					.icon {
-						width: 24px;
-						height: 24px;
-						animation: spin 1s linear infinite;
-					}
-				}
-			}
-
-			@include feedback-primary('danger');
-			@include feedback-primary('warning');
-			@include feedback-primary('success');
-			@include feedback-primary('info');
 		}
 
 		&.variant-secondary {
-			@extend .variant-primary;
-			background: var(--color-background-1);
-			color: var(--color-primary-4);
-			border: solid 1px var(--color-primary-3);
+			--button-background-color: var(--color-background-1);
+			--button-text-color: var(--color-primary-4);
+			--button-disabled-background-color: var(--color-background-1);
+			--button-border-color: var(--color-primary-3);
 
-			&:disabled {
-				background: var(--color-background-1);
-				border: solid 1px var(--color-neutral-6);
+			@each $feedback in $feedbacks {
+				&.feedback-#{$feedback} {
+					--button-background-color: var(--color-background-1);
+					--button-text-color: var(--color-#{$feedback}-4);
+					--button-border-color: var(--color-#{$feedback}-3);
+					--button-disabled-background-color: var(--color-background-1);
+				}
 			}
-
-			@include feedback-secondary('danger');
-			@include feedback-secondary('warning');
-			@include feedback-secondary('success');
-			@include feedback-secondary('info');
 		}
 
 		&.variant-tertiary {
-			@extend .variant-primary;
-			background: var(--color-background-1);
-			color: var(--color-primary-4);
-			border: 1px solid var(--color-background-1);
-
-			&:disabled {
-				background: var(--color-background-1);
-				border: 1px solid var(--color-background-1);
-			}
+			--button-background-color: var(--color-background-1);
+			--button-text-color: var(--color-primary-4);
+			--button-border-color: var(--color-background-1);
+			--button-hover-background-color: var(--color-primary-3);
+			--button-disabled-background-color: var(--color-background-1);
+			--button-disabled-border-color: var(--color-background-1);
 
 			&.state-pressed {
 				border: 1px solid rgb(0 0 0 / 12%);
 			}
 
-			@include feedback-tertiary('danger');
-			@include feedback-tertiary('warning');
-			@include feedback-tertiary('success');
-			@include feedback-tertiary('info');
+			@each $feedback in $feedbacks {
+				&.feedback-#{$feedback} {
+					--button-background-color: var(--color-background-1);
+					--button-text-color: var(--color-#{$feedback}-4);
+					--button-border-color: var(--color-background-1);
+					--button-disabled-background-color: var(--color-background-1);
+					--button-hover-background-color: var(--color-#{$feedback}-3);
+				}
+			}
 		}
 
 		&.variant-ghost {
-			background: transparent;
+			--button-background-color: transparent;
+			--button-text-color: var(--color-neutral-12);
+			--button-border-color: transparent;
+			--button-disabled-background-color: var(--color-background-1);
+			--button-hover-background-color: transparent;
+			--button-hover-text-color: var(--color-neutral-12);
+			--button-active-background-color: transparent;
+			--button-active-color: var(--color-background-1);
+			--button-disabled-border-color: var(--color-background-1);
+		}
+	}
+
+	// props
+	.button {
+		display: inline-flex;
+		position: relative;
+		transition-timing-function: ease-in-out;
+		transition-duration: 0.1s;
+		transition-property: width, height, border, color, background, padding, font-size;
+		cursor: pointer;
+		gap: 1rem;
+		user-select: none;
+		background: var(--button-background-color);
+		color: var(--button-text-color);
+		border-style: solid;
+		border-width: 1px;
+		border-color: var(--button-border-color);
+
+		&:hover {
+			background: var(--button-hover-background-color);
+			color: var(--button-hover-text-color);
+			border-color: var(--button-hover-border-color);
+		}
+
+		&:active {
+			background: var(--button-active-background-color);
+		}
+
+		&:disabled {
+			background: var(--button-disabled-background-color);
+			border: solid 1px var(--button-disabled-border-color);
+			color: var(--button-disabled-text-color);
+			cursor: default;
+		}
+
+		&.size-sm {
+			padding: 6px 14px;
+			font-size: 0.8em;
+		}
+
+		&.size-md {
+			padding: 8px 16px;
+			font-size: 1em;
+		}
+
+		&.size-lg {
+			padding: 10px 22px;
+			font-size: 1.2rem;
+		}
+
+		&.state-pressed {
+			box-shadow: inset 0 2px 4px 0px rgb(0 0 0 / 25%);
+		}
+
+		&.state-loading {
+			pointer-events: none;
+
+			.loading {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				position: absolute;
+				inset: 0;
+				backdrop-filter: blur(6px);
+				background: rgba(255 255 255 / 10%);
+
+				.icon {
+					width: 24px;
+					height: 24px;
+					animation: spin 1s linear infinite;
+				}
+			}
+		}
+
+		&.variant-tertiary {
+			&.state-pressed {
+				border: 1px solid rgb(0 0 0 / 12%);
+			}
 		}
 	}
 </style>
