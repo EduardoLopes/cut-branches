@@ -69,16 +69,37 @@
 	--color-neutral-12: var(--gray12);
 
 	--color-background-1: var(--gray1);
+
+	--space-unit: 1;
+
+	--space-auto: auto;
+    --space-none: 0;
+	--space-xxxxs: calc(0.1rem * var(--space-unit));
+    --space-xxxs: calc(0.2rem * var(--space-unit)),; 
+    --space-xxs: calc(0.4rem * var(--space-unit));
+    --space-xs: calc(0.8rem * var(--space-unit)); 
+    --space-sm: calc(1.2rem * var(--space-unit)); 
+    --space-md: calc(1.6rem * var(--space-unit)); 
+    --space-lg: calc(2rem * var(--space-unit)); 
+    --space-xl: calc(2.4rem * var(--space-unit));   
+    --space-xxl: calc(3.2rem * var(--space-unit));
+    --space-xxxl: calc(6.4rem * var(--space-unit));
+
 }
 
 * {
 	box-sizing: border-box;
 }
 
+html {
+	font-size:62.5%;
+}
+
 body {
 	min-height: 100vh;
 	margin: 0;
-	font-weight: 500;
+	font-weight: 500;	
+	font-size: 1.6rem;
 }
 
 #svelte {
