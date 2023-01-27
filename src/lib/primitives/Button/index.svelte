@@ -91,6 +91,12 @@
 		--button-padding-md: var(--space-sm) var(--space-md);
 		--button-padding-lg: var(--space-md) var(--space-lg);
 
+		// border radius
+		--button-border-top-left-radius: var(--border-radius-md);
+		--button-border-top-right-radius: var(--border-radius-md);
+		--button-border-bottom-left-radius: var(--border-radius-md);
+		--button-border-bottom-right-radius: var(--border-radius-md);
+
 		@each $feedback in $feedbacks {
 			&.feedback-#{$feedback} {
 				//default
@@ -198,6 +204,11 @@
 		border-style: solid;
 		border-width: 1px;
 		border-color: var(--button-border-color);
+
+		border-top-left-radius: var(--button-border-top-left-radius);
+		border-top-right-radius: var(--button-border-top-right-radius);
+		border-bottom-left-radius: var(--button-border-bottom-left-radius);
+		border-bottom-right-radius: var(--button-border-bottom-right-radius);
 
 		&:hover {
 			background: var(--button-hover-background-color);

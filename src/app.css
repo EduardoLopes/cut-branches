@@ -99,6 +99,13 @@
     --font-size-xxl: calc(3.2rem * var(--font-size-unit));
     --font-size-xxxl: calc(6.4rem * var(--font-size-unit));
 
+	--border-radius-sm: 0.2rem;
+	--border-radius-md: 0.4rem;
+	--border-radius-lg: 0.8rem;
+	--border-radius-xl: 1.6rem;
+	--border-radius-circle: 50%;
+	--border-radius-pill: 9999px;
+
 }
 
 * {
