@@ -2,9 +2,9 @@
 	import type { IBranch } from '$lib/stores';
 	import { currentRepo } from '$lib/stores';
 
-	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
-	import Information16 from 'carbon-icons-svelte/lib/Information16';
-	import WarningAlt16 from 'carbon-icons-svelte/lib/WarningAlt16';
+	import Delete16 from 'carbon-icons-svelte/lib/TrashCan.svelte';
+	import Information16 from 'carbon-icons-svelte/lib/Information.svelte';
+	import WarningAlt16 from 'carbon-icons-svelte/lib/WarningAlt.svelte';
 
 	export let showDeletebutton: boolean = false;
 	export let onClickDelete: (branch: IBranch) => void = null;

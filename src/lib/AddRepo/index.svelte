@@ -3,8 +3,8 @@
 	import type { IRepo } from '$lib/stores';
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { onMount } from 'svelte';
-	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt20';
-	import AddAlt32 from 'carbon-icons-svelte/lib/AddAlt32';
+	import AddAlt20 from 'carbon-icons-svelte/lib/AddAlt.svelte';
+	import AddAlt32 from 'carbon-icons-svelte/lib/AddAlt.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
 
 	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;

@@ -9,9 +9,9 @@
 
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
-	import OverflowMenuVertical32 from 'carbon-icons-svelte/lib/OverflowMenuVertical32';
-	import Rotate16 from 'carbon-icons-svelte/lib/Rotate16';
-	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline16';
+	import OverflowMenuVertical32 from 'carbon-icons-svelte/lib/OverflowMenuVertical.svelte';
+	import Rotate16 from 'carbon-icons-svelte/lib/Rotate.svelte';
+	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline.svelte';
 
 	let selected: IBranch[] = [];
 	let showDeleteModal: boolean = false;
