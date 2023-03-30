@@ -8,6 +8,7 @@
 	import Button from '$lib/primitives/Button/index.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
 	import { getRepoInfo, toast } from '$lib/utils';
+	import { page } from '$app/stores';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -17,10 +18,6 @@
 		}
 
 		return a.name.localeCompare(b.name);
-	}
-
-	function handleOnClick(repo: IRepo) {
-		$currentRepo = repo;
 	}
 
 	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
@@ -73,13 +70,11 @@
 			<ul class="menu">
 				{#each $repos.sort(handleSort) as repo (repo.name)}
 					<li>
-						<button
-							on:click={() => handleOnClick(repo)}
-							class:current={$currentRepo.name === repo.name}
+						<a href={`/repos/${repo.name}`} class:current={$page.params.id === repo.name}
 							>{repo.name}<span class="count"
 								>{repo.branches.length} {repo.branches.length > 0 ? 'branches' : 'branch'}</span
-							></button
-						>
+							>
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -141,7 +136,7 @@
 
 		li {
 			margin: 0;
-			button {
+			a {
 				display: inline-flex;
 				flex-direction: column;
 				width: 100%;
@@ -152,6 +147,7 @@
 				font-weight: bold;
 				color: #fff;
 				margin: 0;
+				text-decoration: none;
 
 				&:hover {
 					background: var(--color-primary-4);

@@ -1,17 +1,15 @@
-import staticAdapter from "@sveltejs/adapter-static";
+import staticAdapter from '@sveltejs/adapter-static';
 import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  preprocess: [preprocess()],
-  kit: {
-    adapter: staticAdapter({
-		// default options are shown
-		pages: 'build',
-		assets: 'build',
-		fallback: null
-	}),
-  },
+	preprocess: [preprocess()],
+	kit: {
+		adapter: staticAdapter({
+			fallback: 'index.html',
+			strict: false
+		})
+	}
 };
 
 export default config;

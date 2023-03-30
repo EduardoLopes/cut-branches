@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { IBranch, IRepo } from '$lib/stores';
-	import { currentRepo, loadingRepoInfo } from '$lib/stores';
+	import { loadingRepoInfo } from '$lib/stores';
 
 	import DeleteModal from '$lib/DeleteModal/index.svelte';
 	import Modal from '$lib/Modal/index.svelte';
@@ -9,17 +9,15 @@
 
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
-	import OverflowMenuVertical32 from 'carbon-icons-svelte/lib/OverflowMenuVertical.svelte';
 	import Rotate16 from 'carbon-icons-svelte/lib/Rotate.svelte';
 	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline.svelte';
 
 	let selected: IBranch[] = [];
 	let showDeleteModal: boolean = false;
 	let showDeleteRepoModal: boolean = false;
+	export let id: string | null = null;
 
-	currentRepo.subscribe(() => {
-		selected = [];
-	});
+	let currentRepo: IRepo | undefined = $repos.filter((item) => item.name === id)[0];
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -36,21 +34,25 @@
 	function update_repo() {
 		$loadingRepoInfo = true;
 
-		getRepoInfo($currentRepo.path)
-			.then((res: IRepo) => {
-				$repos = [...$repos.filter((item) => item.path !== res.path), res];
-				$currentRepo = res;
-			})
-			.catch((errors: string[]) => {
-				errors.reverse().forEach((item) => toast.failure(item));
-			})
-			.finally(() => {
-				$loadingRepoInfo = false;
-			});
+		if (currentRepo) {
+			getRepoInfo(currentRepo.path)
+				.then((res) => {
+					if (res) {
+						$repos = [...$repos.filter((item) => item.path !== res.path), res];
+						currentRepo = res;
+					}
+				})
+				.catch((errors: string[]) => {
+					errors.reverse().forEach((item) => toast.failure(item));
+				})
+				.finally(() => {
+					$loadingRepoInfo = false;
+				});
+		}
 	}
 </script>
 
-{#if showDeleteModal}
+{#if showDeleteModal && currentRepo}
 	<DeleteModal
 		onClose={() => {
 			showDeleteModal = false;
@@ -67,18 +69,18 @@
 			}
 		}}
 		branches={selected}
-		path={$currentRepo.path}
-		repoName={$currentRepo.name}
+		path={currentRepo.path}
+		repoName={currentRepo.name}
 		show={showDeleteModal}
 	/>
 {/if}
 
 <Modal
-	title={`Remove ${$currentRepo?.name}`}
+	title={`Remove ${currentRepo?.name}`}
 	question={'Are you sure you wanna remove this repository'}
 	onYes={() => {
-		$repos = $repos.filter((item) => item.path !== $currentRepo.path);
-		$currentRepo = $repos[0] || null;
+		$repos = $repos.filter((item) => item.path !== currentRepo.path);
+		currentRepo = $repos[0] || null;
 		showDeleteRepoModal = false;
 	}}
 	onNo={() => {
@@ -87,12 +89,12 @@
 	show={showDeleteRepoModal}
 />
 
-{#if $currentRepo}
+{#if currentRepo}
 	<main class="container">
 		<Loading show={$loadingRepoInfo} overlay={true} />
 
 		<div class="header">
-			<h1>{$currentRepo.name}</h1>
+			<h1>{currentRepo.name}</h1>
 			<div class="menu">
 				<button class="button" on:click={update_repo}>
 					<Rotate16 class="icon" />
@@ -109,8 +111,8 @@
 		</div>
 
 		<div class="branches">
-			{#if $currentRepo.branches}
-				{#each $currentRepo.branches.sort(sort) as branch (branch.name)}
+			{#if currentRepo.branches}
+				{#each currentRepo.branches.sort(sort) as branch (branch.name)}
 					<Branch
 						{branch}
 						showDeletebutton={selected.length === 0}

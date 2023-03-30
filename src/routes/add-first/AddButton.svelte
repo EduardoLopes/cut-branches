@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { currentRepo, repos } from '$lib/stores';
+	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import Icon from '$lib/primitives/Icon/index.svelte';
 	import MdAddCircleOutline from 'svelte-icons/md/MdAddCircleOutline.svelte';
@@ -22,7 +22,6 @@
 						.then((res) => {
 							if (res) {
 								$repos = [...$repos.filter((item) => item.path !== res.path), res];
-								$currentRepo = res;
 							}
 						})
 						.catch((errors: string[]) => {
