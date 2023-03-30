@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { repos, currentRepo, loadingRepoInfo } from '$lib/stores';
 	import type { IRepo } from '$lib/stores';
-	import AddRepo from '$lib/AddRepo/index.svelte';
 	import { onMount } from 'svelte';
 	import GiTreeBranch from 'svelte-icons/gi/GiTreeBranch.svelte';
 	import Icon from '$lib/primitives/Icon/index.svelte';
