@@ -6,7 +6,7 @@
 	import GiTreeBranch from 'svelte-icons/gi/GiTreeBranch.svelte';
 	import Icon from '$lib/primitives/Icon/index.svelte';
 
-	onMount(async () => {
+	onMount(() => {
 		let unsubscribeRepos = repos.subscribe((value) => {
 			if (value.length >= 1) {
 				goto('/');

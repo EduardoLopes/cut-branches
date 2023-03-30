@@ -12,8 +12,6 @@
 		const { open } = await import('@tauri-apps/api/dialog');
 
 		apiOpen = open;
-
-		console.log('add first');
 	});
 
 	function handleAddClick() {
