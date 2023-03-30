@@ -55,33 +55,35 @@ export const deleteBranches = async (
 	};
 };
 
-export const getRepoInfo = async (path: string): Promise<IRepo> => {
+export const getRepoInfo = async (path: string) => {
 	if (!path) return;
 
 	const { invoke } = await import('@tauri-apps/api/tauri');
 
-	return invoke('git_repo_dir', { path }).then((res: string) => {
-		const resParser = JSON.parse(res);
+	return invoke<string>('git_repo_dir', { path }).then((res) => {
+		if (res) {
+			const resParser = JSON.parse(res) satisfies IRepo;
 
-		const errors = resParser.errors;
+			const errors = resParser.errors;
 
-		if (errors.length > 0) return Promise.reject(errors);
+			if (errors.length > 0) return Promise.reject(errors);
 
-		const root_path = resParser.root_path;
-		let name: string;
+			const root_path = resParser.root_path;
+			let name: string;
 
-		if (root_path.lastIndexOf('/')) {
-			name = root_path.substring(root_path.lastIndexOf('/') + 1);
-		} else {
-			name = root_path.substring(root_path.lastIndexOf('\\') + 1);
+			if (root_path.lastIndexOf('/')) {
+				name = root_path.substring(root_path.lastIndexOf('/') + 1);
+			} else {
+				name = root_path.substring(root_path.lastIndexOf('\\') + 1);
+			}
+
+			return {
+				path: root_path,
+				branches: resParser.branches,
+				name,
+				current_branch: resParser.current_branch
+			};
 		}
-
-		return {
-			path: root_path,
-			branches: resParser.branches,
-			name,
-			current_branch: resParser.current_branch
-		};
 	});
 };
 

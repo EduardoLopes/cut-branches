@@ -23,6 +23,5 @@
 		--toastWidth: 100%;
 		--toastMinHeight: 1.5rem;
 		--toastMsgPadding: 1rem;
-		font-size: 0.875rem;
 	}
 </style>

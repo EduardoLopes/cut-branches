@@ -19,11 +19,13 @@
 	function handleClick() {
 		apiOpen({ directory: true })
 			.then((dir) => {
-				if (dir) {
+				if (dir && typeof dir === 'string') {
 					getRepoInfo(dir)
-						.then((res: IRepo) => {
-							$repos = [...$repos.filter((item) => item.path !== res.path), res];
-							$currentRepo = res;
+						.then((res) => {
+							if (res) {
+								$repos = [...$repos.filter((item) => item.path !== res.path), res];
+								$currentRepo = res;
+							}
 						})
 						.catch((errors: string[]) => {
 							errors.reverse().forEach((item) => toast.failure(item));

@@ -30,6 +30,11 @@
 <button
 	class="button variant-{variant} size-{size} state-{state} feedback-{feedback}"
 	{...$$restProps}
+	on:click
+	on:mouseover
+	on:mouseenter
+	on:mouseleave
+	on:focus
 	disabled={state === 'disabled'}
 >
 	<slot />
@@ -204,6 +209,7 @@
 		border-style: solid;
 		border-width: 1px;
 		border-color: var(--button-border-color);
+		margin: 0;
 
 		border-top-left-radius: var(--button-border-top-left-radius);
 		border-top-right-radius: var(--button-border-top-right-radius);

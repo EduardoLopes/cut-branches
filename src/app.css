@@ -1,29 +1,29 @@
 @import '@fontsource/fira-mono';
-@import "@radix-ui/colors/gray.css";
-@import "@radix-ui/colors/blue.css";
-@import "@radix-ui/colors/green.css";
-@import "@radix-ui/colors/red.css";
-@import "@radix-ui/colors/lime.css";
-@import "@radix-ui/colors/violet.css";
-@import "@radix-ui/colors/yellow.css";
-@import "@radix-ui/colors/grayDark.css";
-@import "@radix-ui/colors/blueDark.css";
-@import "@radix-ui/colors/greenDark.css";
-@import "@radix-ui/colors/redDark.css";
-@import "@radix-ui/colors/limeDark.css";
-@import "@radix-ui/colors/violetDark.css";
-@import "@radix-ui/colors/yellow.css";
+@import '@radix-ui/colors/gray.css';
+@import '@radix-ui/colors/blue.css';
+@import '@radix-ui/colors/green.css';
+@import '@radix-ui/colors/red.css';
+@import '@radix-ui/colors/lime.css';
+@import '@radix-ui/colors/teal.css';
+@import '@radix-ui/colors/violet.css';
+@import '@radix-ui/colors/yellow.css';
+@import '@radix-ui/colors/grayDark.css';
+@import '@radix-ui/colors/blueDark.css';
+@import '@radix-ui/colors/greenDark.css';
+@import '@radix-ui/colors/redDark.css';
+@import '@radix-ui/colors/limeDark.css';
+@import '@radix-ui/colors/violetDark.css';
+@import '@radix-ui/colors/yellow.css';
 
 :root {
 	font-family: 'Montserrat', Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
 		Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 
-	--color-primary-1: var(--lime6);
-	--color-primary-1: var(--lime6);
-	--color-primary-2: var(--lime7);
-	--color-primary-3: var(--lime8);
-	--color-primary-4: var(--lime10);
-	--color-primary-5: var(--lime12);
+	--color-primary-1: var(--teal7);
+	--color-primary-2: var(--teal8);
+	--color-primary-3: var(--teal9);
+	--color-primary-4: var(--teal10);
+	--color-primary-5: var(--teal11);
 
 	--color-secondary-1: var(--violet6);
 	--color-secondary-2: var(--violet7);
@@ -73,31 +73,31 @@
 	--space-unit: 1;
 
 	--space-auto: auto;
-    --space-none: 0;
+	--space-none: 0;
 	--space-xxxxs: calc(0.1rem * var(--space-unit));
-    --space-xxxs: calc(0.2rem * var(--space-unit)),; 
-    --space-xxs: calc(0.4rem * var(--space-unit));
-    --space-xs: calc(0.8rem * var(--space-unit)); 
-    --space-sm: calc(1.2rem * var(--space-unit)); 
-    --space-md: calc(1.6rem * var(--space-unit)); 
-    --space-lg: calc(2rem * var(--space-unit)); 
-    --space-xl: calc(2.4rem * var(--space-unit));   
-    --space-xxl: calc(3.2rem * var(--space-unit));
-    --space-xxxl: calc(6.4rem * var(--space-unit));
+	--space-xxxs: calc(0.2rem * var(--space-unit));
+	--space-xxs: calc(0.4rem * var(--space-unit));
+	--space-xs: calc(0.8rem * var(--space-unit));
+	--space-sm: calc(1.2rem * var(--space-unit));
+	--space-md: calc(1.6rem * var(--space-unit));
+	--space-lg: calc(2rem * var(--space-unit));
+	--space-xl: calc(2.4rem * var(--space-unit));
+	--space-xxl: calc(3.2rem * var(--space-unit));
+	--space-xxxl: calc(6.4rem * var(--space-unit));
 
 	--font-size-unit: 1;
 
-    --font-size-none: 0;
+	--font-size-none: 0;
 	--font-size-xxxxs: calc(0.1rem * var(--font-size-unit));
-    --font-size-xxxs: calc(0.2rem * var(--font-size-unit)),; 
-    --font-size-xxs: calc(0.4rem * var(--font-size-unit));
-    --font-size-xs: calc(0.8rem * var(--font-size-unit)); 
-    --font-size-sm: calc(1.2rem * var(--font-size-unit)); 
-    --font-size-md: calc(1.6rem * var(--font-size-unit)); 
-    --font-size-lg: calc(2rem * var(--font-size-unit)); 
-    --font-size-xl: calc(2.4rem * var(--font-size-unit));   
-    --font-size-xxl: calc(3.2rem * var(--font-size-unit));
-    --font-size-xxxl: calc(6.4rem * var(--font-size-unit));
+	--font-size-xxxs: calc(0.2rem * var(--font-size-unit));
+	--font-size-xxs: calc(0.4rem * var(--font-size-unit));
+	--font-size-xs: calc(0.8rem * var(--font-size-unit));
+	--font-size-sm: calc(1.2rem * var(--font-size-unit));
+	--font-size-md: calc(1.6rem * var(--font-size-unit));
+	--font-size-lg: calc(2rem * var(--font-size-unit));
+	--font-size-xl: calc(2.4rem * var(--font-size-unit));
+	--font-size-xxl: calc(3.2rem * var(--font-size-unit));
+	--font-size-xxxl: calc(6.4rem * var(--font-size-unit));
 
 	--border-radius-sm: 0.2rem;
 	--border-radius-md: 0.4rem;
@@ -105,7 +105,6 @@
 	--border-radius-xl: 1.6rem;
 	--border-radius-circle: 50%;
 	--border-radius-pill: 9999px;
-
 }
 
 * {
@@ -113,13 +112,13 @@
 }
 
 html {
-	font-size:62.5%;
+	font-size: 10px;
 }
 
 body {
 	min-height: 100vh;
 	margin: 0;
-	font-weight: 500;	
+	font-weight: 500;
 	font-size: 1.6rem;
 }
 
