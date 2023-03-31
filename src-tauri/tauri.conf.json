@@ -47,7 +47,9 @@
 			"active": false
 		},
 		"allowlist": {
-			"all": true
+			"dialog": {
+				"all": true
+			}
 		},
 		"windows": [
 			{
@@ -59,7 +61,7 @@
 			}
 		],
 		"security": {
-			"csp": "default-src blob: data: filesystem: ws: http: https: 'unsafe-eval' 'unsafe-inline' img-src: 'self'"
+			"csp": null
 		}
 	}
 }
