@@ -6,8 +6,10 @@ const config = {
 	preprocess: [preprocess()],
 	kit: {
 		adapter: staticAdapter({
+			pages: 'build',
+			assets: 'build',
 			fallback: 'index.html',
-			strict: false
+			static: false
 		})
 	}
 };

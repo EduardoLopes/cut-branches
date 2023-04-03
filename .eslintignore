@@ -6,8 +6,7 @@ node_modules
 .env
 .env.*
 !.env.example
-/src-tauri
-/src-tauri/target
+src-tauri
 /.histoire
 *.story.svelte
 
