@@ -19,7 +19,7 @@
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import Renew from 'carbon-icons-svelte/lib/Renew.svelte';
 
-	interface $$Props extends ButtonProps {}
+	type $$Props = ButtonProps;
 
 	export let variant: $$Props['variant'] = 'primary';
 	export let size: $$Props['size'] = 'md';
@@ -41,7 +41,7 @@
 	{#if state === 'loading'}
 		<div class="loading">
 			<div class="icon">
-				<Renew size="24" />
+				<Renew />
 			</div>
 		</div>
 	{/if}

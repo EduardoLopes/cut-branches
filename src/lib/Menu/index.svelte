@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos, currentRepo, loadingRepoInfo } from '$lib/stores';
+	import { repos } from '$lib/stores';
 	import type { IRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import GiTreeBranch from 'svelte-icons/gi/GiTreeBranch.svelte';
@@ -28,24 +28,26 @@
 	});
 
 	function handleAddClick() {
-		apiOpen({ directory: true })
-			.then((dir) => {
-				if (dir && typeof dir === 'string') {
-					getRepoInfo(dir)
-						.then((res) => {
-							if (res) {
-								$repos = [...$repos.filter((item) => item.path !== res.path), res];
-								$currentRepo = res;
-							}
-						})
-						.catch((errors: string[]) => {
-							errors.reverse().forEach((item) => toast.failure(item));
-						});
-				}
-			})
-			.catch((error) => {
-				toast.failure(error);
-			});
+		if (apiOpen) {
+			apiOpen({ directory: true })
+				.then((dir) => {
+					if (dir && typeof dir === 'string') {
+						getRepoInfo(dir)
+							.then((res) => {
+								if (res) {
+									$repos = [...$repos.filter((item) => item.path !== res.path), res];
+									console.log($repos);
+								}
+							})
+							.catch((errors: string[]) => {
+								errors.reverse().forEach((item) => toast.failure(item));
+							});
+					}
+				})
+				.catch((error) => {
+					toast.failure(error);
+				});
+		}
 	}
 </script>
 

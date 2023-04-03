@@ -6,6 +6,7 @@
 	import MdAddCircleOutline from 'svelte-icons/md/MdAddCircleOutline.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
 	import { getRepoInfo, toast } from '$lib/utils';
+	import { goto } from '$app/navigation';
 
 	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
 	onMount(async () => {
@@ -22,6 +23,7 @@
 						.then((res) => {
 							if (res) {
 								$repos = [...$repos.filter((item) => item.path !== res.path), res];
+								goto('/');
 							}
 						})
 						.catch((errors: string[]) => {

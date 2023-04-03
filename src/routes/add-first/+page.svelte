@@ -1,10 +1,7 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { repos } from '$lib/stores';
-	import AddButton from './AddButton.svelte';
 	import GiTreeBranch from 'svelte-icons/gi/GiTreeBranch.svelte';
 	import Icon from '$lib/primitives/Icon/index.svelte';
+	import AddButton from '$lib/AddButton.svelte';
 </script>
 
 <div class="content">

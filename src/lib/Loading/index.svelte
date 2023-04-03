@@ -1,8 +1,8 @@
 <script lang="ts">
 	import CircleDash32 from 'carbon-icons-svelte/lib/CircleDash.svelte';
 
-	export let show: boolean = false;
-	export let overlay: boolean = false;
+	export let show = false;
+	export let overlay = false;
 </script>
 
 <div class="loading" class:show class:overlay>

@@ -1,18 +1,28 @@
 <script lang="ts">
-	import type { IBranch } from '$lib/stores';
-	import { currentRepo } from '$lib/stores';
+	import type { IBranch, IRepo } from '$lib/stores';
+	import { repos } from '$lib/stores';
 
 	import Delete16 from 'carbon-icons-svelte/lib/TrashCan.svelte';
 	import Information16 from 'carbon-icons-svelte/lib/Information.svelte';
 	import WarningAlt16 from 'carbon-icons-svelte/lib/WarningAlt.svelte';
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
 
-	export let showDeletebutton: boolean = false;
-	export let onClickDelete: (branch: IBranch) => void = null;
-	export let onClick: (branch: IBranch) => void = null;
+	export let showDeletebutton = false;
+	export let onClickDelete: (branch: IBranch) => void;
+	export let onClick: (branch: IBranch) => void;
 	export let branch: IBranch;
-	export let selected: boolean = false;
-	export let disabled: boolean = false;
+	export let selected = false;
+	export let disabled = false;
 	export let showSelectedWarning = false;
+
+	let id = $page.params.id;
+
+	let currentRepo: IRepo | undefined;
+
+	onMount(() => {
+		currentRepo = $repos.filter((item) => item.name === id)[0];
+	});
 
 	let protectedWords = [
 		'develop',
@@ -66,7 +76,7 @@
 			<div class="grid-2">
 				<span class="icon"> <Information16 /></span>
 				<div>
-					This branch is not fully merged into the current branch, {$currentRepo.current_branch}!
+					This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
 				</div>
 			</div>
 		{/if}
