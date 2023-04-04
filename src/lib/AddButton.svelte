@@ -2,11 +2,10 @@
 	import { onMount } from 'svelte';
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
-	import Icon from '$lib/primitives/Icon/index.svelte';
-	import MdAddCircleOutline from 'svelte-icons/md/MdAddCircleOutline.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { goto } from '$app/navigation';
+	import Icon from '@iconify/svelte';
 
 	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
 	onMount(async () => {
@@ -39,7 +38,10 @@
 
 <Button on:click={handleAddClick}>
 	Add a git repository
-	<Icon size="2rem" color="#FFF">
-		<MdAddCircleOutline />
-	</Icon>
+	<Icon
+		icon="material-symbols:add-circle-outline-rounded"
+		width="20px"
+		height="20px"
+		color="#fff"
+	/>
 </Button>

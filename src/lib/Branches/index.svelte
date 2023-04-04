@@ -54,8 +54,8 @@
 				<Button variant="tertiary" size="sm" on:click={update_repo}>
 					<Icon
 						icon="material-symbols:refresh-rounded"
-						width="2.4rem"
-						height="2.4rem"
+						width="24px"
+						height="24px"
 						color="var(--primary-color)"
 					/>
 				</Button>
@@ -63,8 +63,8 @@
 					<Button variant="tertiary" size="sm">
 						<Icon
 							icon="solar:close-circle-linear"
-							width="2.4rem"
-							height="2.4rem"
+							width="24px"
+							height="24px"
 							color="var(--primary-color)"
 						/>
 					</Button>

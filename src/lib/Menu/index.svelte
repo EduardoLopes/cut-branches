@@ -51,6 +51,7 @@
 
 <section class="container">
 	<div class="logo-container">
+		<Icon icon="game-icons:tree-branch" width="24px" height="24px" color="#fff" />
 		<h1 class="logo">Cut Branches</h1>
 	</div>
 	<nav class="content">
@@ -59,8 +60,8 @@
 			<Button size="sm" on:click={handleAddClick}>
 				<Icon
 					icon="material-symbols:add-circle-outline-rounded"
-					width="2rem"
-					height="2rem"
+					width="20px"
+					height="20px"
 					color="#fff"
 				/>
 			</Button>
@@ -160,8 +161,8 @@
 				&.current {
 					background: var(--color-primary-5);
 
-					&:active {
-						filter: contrast(100%);
+					&.remove {
+						background: var(--color-danger-3);
 					}
 				}
 

@@ -1,14 +1,11 @@
 <script lang="ts">
-	import GiTreeBranch from 'svelte-icons/gi/GiTreeBranch.svelte';
-	import Icon from '$lib/primitives/Icon/index.svelte';
+	import Icon from '@iconify/svelte';
 	import AddButton from '$lib/AddButton.svelte';
 </script>
 
 <div class="content">
 	<div class="logo-container">
-		<Icon size="4.8rem" color="var(--color-primary-3)">
-			<GiTreeBranch />
-		</Icon>
+		<Icon icon="game-icons:tree-branch" width="48px" height="48px" color="var(--color-primary-3)" />
 
 		<h1 class="logo">Cut Branches</h1>
 	</div>

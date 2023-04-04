@@ -4,6 +4,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import Button from '$lib/primitives/Button/index.svelte';
+	import Icon from '@iconify/svelte';
 
 	let id = $page.params.id;
 
@@ -24,15 +26,17 @@
 </script>
 
 <div class="container">
-	<div class="wrapper">
-		<div class="header">
-			<div class="repoName">{currentRepo?.name}</div>
-		</div>
+	<div class="header">
+		<h1>{currentRepo?.name}</h1>
+	</div>
+	<div class="content">
 		<div class="question">
-			<p><strong>Are you sure do you wanna delete these branches?</strong></p>
-			<div>
-				<button class="yes" on:click={handleYes}>Yes</button>
-				<button class="no" on:click={handleNo}>No</button>
+			<p><strong>Are you sure do you wanna remove this repository from the app?</strong></p>
+			<div class="buttons">
+				<Button feedback="danger" on:click={handleYes}
+					>Yes <Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" /></Button
+				>
+				<Button variant="secondary" on:click={handleNo}>No</Button>
 			</div>
 		</div>
 	</div>
@@ -41,106 +45,58 @@
 <style lang="scss">
 	.container {
 		background: #e9e9e7;
-
-		&.show {
-			display: block;
-		}
-
-		&.hide {
-			display: none;
-		}
+		height: 100%;
+		background: rgba(255, 255, 255, 0.5);
 	}
 
-	.wrapper {
-		position: relative;
-		display: grid;
-		grid-template-rows: min-content auto min-content;
+	.content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 		height: 100%;
 	}
 
 	.header {
-		border-bottom: 1px solid #c0d892;
-		background: #c0d892;
-		top: 0;
-		z-index: 10;
 		display: flex;
-		flex-direction: row;
 		justify-content: space-between;
-		min-height: min-content;
-		display: flex;
-		background: var(--color-primary-1);
+		background: var(--color-danger-3);
+		top: 0;
+		box-shadow: 0px 2px 2px 0px rgb(0 0 0 / 8%);
 		color: #fff;
-		text-transform: uppercase;
-		font-size: 1.1em;
 
-		.repoName {
-			padding: 16px;
+		h1 {
+			font-size: 1.3em;
+			margin: 0;
+			text-align: left;
+			text-transform: uppercase;
+			font-weight: bold;
+			padding: 1.6rem;
 		}
-
-		button {
-			border: 0;
-			padding: 16px 24px;
-			color: #fff;
-			cursor: pointer;
-			background: var(--color-primary-1);
-			filter: contrast(1.2);
-
-			&:hover {
-				filter: contrast(1.3);
-			}
-		}
-	}
-
-	.branches {
-		margin: 8px;
-		overflow: auto;
-		display: grid;
-		grid-auto-rows: min-content;
-		gap: 8px;
-		padding-right: 8px;
 	}
 
 	.question {
 		padding: 16px;
 		text-align: center;
 		border-top: 1px dashed var(--color-gray-1);
-		background: rgba(255, 255, 255, 0.5);
+
+		.buttons {
+			display: flex;
+			gap: 1.6rem;
+			justify-content: center;
+
+			:global {
+				button {
+					min-width: 10.6rem;
+					justify-content: center;
+					text-align: center;
+					font-weight: bold;
+				}
+			}
+		}
 
 		p {
 			margin-top: 0;
-		}
-
-		button {
-			border: none;
-			padding: 8px 32px;
-			cursor: pointer;
-			color: #fff;
-			font-size: 1.1rem;
-			font-weight: bold;
-
-			&:hover {
-				filter: contrast(1.2);
-			}
-
-			&:active {
-				filter: contrast(1.1);
-			}
-
-			&.no {
-				background: var(--color-gray-1);
-			}
-
-			&.yes {
-				background: #f34642;
-
-				&:hover {
-					filter: brightness(1.4);
-				}
-
-				&:active {
-					filter: contrast(1.3);
-				}
-			}
 		}
 	}
 </style>
