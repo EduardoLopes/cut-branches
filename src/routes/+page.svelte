@@ -15,6 +15,7 @@
 			goto(`/repos/${$repos[0].name}`);
 		}
 	}
+
 	onMount(() => {
 		checkRedirect();
 	});

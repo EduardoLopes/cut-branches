@@ -8,6 +8,10 @@
 	import Rotate16 from 'carbon-icons-svelte/lib/Rotate.svelte';
 	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline.svelte';
 	import { onMount } from 'svelte';
+	import Button from '$lib/primitives/Button/index.svelte';
+	import Icon from '$lib/primitives/Icon/index.svelte';
+	import IoIosCloseCircleOutline from 'svelte-icons/io/IoIosCloseCircleOutline.svelte';
+	import IoIosRefresh from 'svelte-icons/io/IoIosRefresh.svelte';
 
 	let selected: IBranch[] = [];
 	export let id: string | null = null;
@@ -47,11 +51,17 @@
 		<div class="header">
 			<h1>{currentRepo.name}</h1>
 			<div class="menu">
-				<button class="button" on:click={update_repo}>
-					<Rotate16 class="icon" />
-				</button>
-				<a href={`/repos/${currentRepo.name}/delete`} class="button">
-					<CloseOutline16 class="icon" />
+				<Button variant="tertiary" size="sm" on:click={update_repo}>
+					<Icon size="2.4rem" color="var(--primary-color)">
+						<IoIosRefresh />
+					</Icon>
+				</Button>
+				<a href={`/repos/${currentRepo.name}/remove`}>
+					<Button variant="tertiary" size="sm">
+						<Icon size="2.4rem" color="var(--primary-color)">
+							<IoIosCloseCircleOutline />
+						</Icon>
+					</Button>
 				</a>
 			</div>
 		</div>
@@ -88,4 +98,66 @@
 	</main>
 {/if}
 
-<style src="./styles.scss" lang="scss"></style>
+<style lang="scss">
+	.container {
+		background: #e9e9e7;
+		height: 100vh;
+		overflow: hidden;
+		position: relative;
+	}
+
+	.branches {
+		display: flex;
+		flex-direction: column;
+		height: calc(100vh - 52px);
+		overflow-y: auto;
+		grid-auto-rows: max-content;
+		gap: 8px;
+		border: 1px dashed var(--color-gray);
+		padding: 16px;
+	}
+
+	.delete-all {
+		position: sticky;
+		bottom: 0;
+		background: #f34642;
+		padding: 16px;
+		color: #fff;
+		border: 0;
+		cursor: pointer;
+	}
+
+	.header {
+		display: flex;
+		justify-content: space-between;
+		background: #fff;
+		top: 0;
+		box-shadow: 0px 2px 2px 0px rgb(0 0 0 / 8%);
+
+		h1 {
+			font-size: 1.3em;
+			margin: 0;
+			text-align: left;
+			text-transform: uppercase;
+			font-weight: bold;
+			padding: 1.6rem;
+		}
+
+		.menu {
+			display: flex;
+			// margin-right: 1.6rem;
+			align-items: center;
+
+			:global {
+				button,
+				a {
+					border-radius: 0;
+					height: 100%;
+					align-items: center;
+					justify-content: center;
+					width: 57px;
+				}
+			}
+		}
+	}
+</style>
