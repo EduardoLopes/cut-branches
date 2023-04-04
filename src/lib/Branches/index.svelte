@@ -9,9 +9,9 @@
 	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline.svelte';
 	import { onMount } from 'svelte';
 	import Button from '$lib/primitives/Button/index.svelte';
-	import Icon from '$lib/primitives/Icon/index.svelte';
 	import IoIosCloseCircleOutline from 'svelte-icons/io/IoIosCloseCircleOutline.svelte';
 	import IoIosRefresh from 'svelte-icons/io/IoIosRefresh.svelte';
+	import Icon from '@iconify/svelte';
 
 	let selected: IBranch[] = [];
 	export let id: string | null = null;
@@ -52,15 +52,21 @@
 			<h1>{currentRepo.name}</h1>
 			<div class="menu">
 				<Button variant="tertiary" size="sm" on:click={update_repo}>
-					<Icon size="2.4rem" color="var(--primary-color)">
-						<IoIosRefresh />
-					</Icon>
+					<Icon
+						icon="material-symbols:refresh-rounded"
+						width="2.4rem"
+						height="2.4rem"
+						color="var(--primary-color)"
+					/>
 				</Button>
 				<a href={`/repos/${currentRepo.name}/remove`}>
 					<Button variant="tertiary" size="sm">
-						<Icon size="2.4rem" color="var(--primary-color)">
-							<IoIosCloseCircleOutline />
-						</Icon>
+						<Icon
+							icon="solar:close-circle-linear"
+							width="2.4rem"
+							height="2.4rem"
+							color="var(--primary-color)"
+						/>
 					</Button>
 				</a>
 			</div>

@@ -2,13 +2,11 @@
 	import { repos } from '$lib/stores';
 	import type { IRepo } from '$lib/stores';
 	import { onMount } from 'svelte';
-	import GiTreeBranch from 'svelte-icons/gi/GiTreeBranch.svelte';
-	import Icon from '$lib/primitives/Icon/index.svelte';
-	import MdAddCircleOutline from 'svelte-icons/md/MdAddCircleOutline.svelte';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { page } from '$app/stores';
+	import Icon from '@iconify/svelte';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -53,19 +51,18 @@
 
 <section class="container">
 	<div class="logo-container">
-		<Icon size="2.4rem" color="#fff">
-			<GiTreeBranch />
-		</Icon>
-
 		<h1 class="logo">Cut Branches</h1>
 	</div>
 	<nav class="content">
 		<div class="title">
 			<h2>Repositories</h2>
 			<Button size="sm" on:click={handleAddClick}>
-				<Icon size="2rem" color="#FFF">
-					<MdAddCircleOutline />
-				</Icon>
+				<Icon
+					icon="material-symbols:add-circle-outline-rounded"
+					width="2rem"
+					height="2rem"
+					color="#fff"
+				/>
 			</Button>
 		</div>
 		{#if $repos}
