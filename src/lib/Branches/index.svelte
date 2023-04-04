@@ -115,6 +115,7 @@
 		gap: 8px;
 		border: 1px dashed var(--color-gray);
 		padding: 16px;
+		height: calc(100vh - 57px);
 	}
 
 	.delete-all {
