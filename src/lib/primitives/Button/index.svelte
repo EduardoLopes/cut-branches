@@ -17,7 +17,7 @@
 
 <script lang="ts">
 	import type { HTMLButtonAttributes } from 'svelte/elements';
-	import Renew from 'carbon-icons-svelte/lib/Renew.svelte';
+	import Icon from '@iconify/svelte';
 
 	type $$Props = ButtonProps;
 
@@ -41,7 +41,7 @@
 	{#if state === 'loading'}
 		<div class="loading">
 			<div class="icon">
-				<Renew />
+				<Icon icon="mingcute:loading-line" width="24px" height="24px" />
 			</div>
 		</div>
 	{/if}
@@ -52,10 +52,10 @@
 
 	@keyframes spin {
 		0% {
-			transform: rotate(360deg);
+			transform: rotate(0);
 		}
 		100% {
-			transform: rotate(0);
+			transform: rotate(360deg);
 		}
 	}
 
