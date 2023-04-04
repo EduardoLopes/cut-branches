@@ -58,12 +58,7 @@
 		<div class="title">
 			<h2>Repositories</h2>
 			<Button size="sm" on:click={handleAddClick}>
-				<Icon
-					icon="material-symbols:add-circle-outline-rounded"
-					width="20px"
-					height="20px"
-					color="#fff"
-				/>
+				<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
 			</Button>
 		</div>
 		{#if $repos}
@@ -111,12 +106,18 @@
 			align-items: center;
 			h2 {
 				font-weight: bold;
-				font-size: 1.1rem;
+				font-size: 1.3rem;
 				text-transform: uppercase;
 				color: #fff;
 				margin: 0;
 			}
-			padding: 0.5rem 1rem;
+			padding: 1.2rem 1rem;
+
+			:global {
+				button {
+					border: var(--color-primary-1) 1px solid;
+				}
+			}
 		}
 	}
 
