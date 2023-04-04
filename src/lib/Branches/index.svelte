@@ -1,16 +1,11 @@
 <script lang="ts">
-	import type { IBranch, IRepo } from '$lib/stores';
+	import type { IBranch } from '$lib/stores';
 
 	import Branch from '$lib/Branch/index.svelte';
 
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
-	import Rotate16 from 'carbon-icons-svelte/lib/Rotate.svelte';
-	import CloseOutline16 from 'carbon-icons-svelte/lib/CloseOutline.svelte';
-	import { onMount } from 'svelte';
 	import Button from '$lib/primitives/Button/index.svelte';
-	import IoIosCloseCircleOutline from 'svelte-icons/io/IoIosCloseCircleOutline.svelte';
-	import IoIosRefresh from 'svelte-icons/io/IoIosRefresh.svelte';
 	import Icon from '@iconify/svelte';
 
 	let selected: IBranch[] = [];
