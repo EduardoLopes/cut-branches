@@ -104,7 +104,6 @@
 		display: grid;
 		grid-template-rows: min-content auto min-content;
 		background: var(--color-primary-3);
-		height: 100vh;
 	}
 
 	.content {

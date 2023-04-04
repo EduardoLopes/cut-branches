@@ -101,15 +101,14 @@
 <style lang="scss">
 	.container {
 		background: #e9e9e7;
-		height: 100vh;
 		overflow: hidden;
 		position: relative;
+		height: 100%;
 	}
 
 	.branches {
 		display: flex;
 		flex-direction: column;
-		height: calc(100vh - 52px);
 		overflow-y: auto;
 		grid-auto-rows: max-content;
 		gap: 8px;

@@ -12,6 +12,6 @@
 		width: 100%;
 		display: grid;
 		grid-template-columns: max-content auto;
-		height: 100%;
+		height: 100vh;
 	}
 </style>

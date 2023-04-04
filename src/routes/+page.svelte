@@ -23,16 +23,3 @@
 	// checks every route change
 	$: if ($navigating) checkRedirect();
 </script>
-
-<div class="content">
-	<slot />
-</div>
-
-<style>
-	.content {
-		width: 100%;
-		display: grid;
-		grid-template-columns: max-content auto;
-		height: 100%;
-	}
-</style>

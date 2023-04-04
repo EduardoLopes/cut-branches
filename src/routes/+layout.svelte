@@ -3,19 +3,11 @@
 	import '../app.css';
 </script>
 
-<main>
-	<SvelteToast options={{ intro: { y: 100 } }} />
-	<slot />
-</main>
-
+<SvelteToast options={{ intro: { y: 100 } }} />
+<slot />
 <footer />
 
 <style>
-	main {
-		width: 100%;
-		min-height: 100vh;
-	}
-
 	:root {
 		--toastContainerTop: auto;
 		--toastContainerRight: 2rem;
