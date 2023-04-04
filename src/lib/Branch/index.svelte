@@ -1,10 +1,8 @@
 <script lang="ts">
 	import type { IBranch, IRepo } from '$lib/stores';
 	import { repos } from '$lib/stores';
+	import Icon from '@iconify/svelte';
 
-	import Delete16 from 'carbon-icons-svelte/lib/TrashCan.svelte';
-	import Information16 from 'carbon-icons-svelte/lib/Information.svelte';
-	import WarningAlt16 from 'carbon-icons-svelte/lib/WarningAlt.svelte';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
@@ -66,7 +64,7 @@
 						onClickDelete(branch);
 					}}
 				>
-					<Delete16 class="delete-icon" />
+					<Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" />
 				</button>
 			</div>
 		{/if}
@@ -74,7 +72,9 @@
 	<div class="info">
 		{#if branch.fully_merged}
 			<div class="grid-2">
-				<span class="icon"> <Information16 /></span>
+				<span class="icon">
+					<Icon icon="mdi:information-variant-circle-outline" width="16px" height="16px" /></span
+				>
 				<div>
 					This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
 				</div>
@@ -82,7 +82,7 @@
 		{/if}
 		{#if branch.name.includes('master')}
 			<div class="grid-2">
-				<span class="icon"> <WarningAlt16 /></span>
+				<span class="icon"> <Icon icon="ph:warning-bold" width="16px" height="16px" /></span>
 				<div>
 					The branch name <strong>master</strong> is offensive. Check out this
 					<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
@@ -95,7 +95,7 @@
 		{/if}
 		{#if protectedWords.some( (item) => branch.name.includes(item) ) && (selected || showSelectedWarning)}
 			<div class="grid-2">
-				<span class="icon"> <WarningAlt16 /></span>
+				<span class="icon"> <Icon icon="ph:warning-bold" width="16px" height="16px" /></span>
 				<div>
 					You're selecting a branch with the name <strong>{branch.name}</strong>, review and make
 					sure you really wanna delete this branch!
