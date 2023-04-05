@@ -91,7 +91,12 @@
 			<div class="toolbar">
 				<a href={`/repos/${currentRepo.name}/branches/delete?branches=${selected.join(',')}`}>
 					<Button variant="primary" feedback="danger" size="sm">
-						<Icon icon="carbon:delete" width="16px" height="16px" color="var(--primary-color)" />
+						<Icon
+							icon="ion:trash-outline"
+							width="16px"
+							height="16px"
+							color="var(--primary-color)"
+						/>
 						Delete
 					</Button>
 				</a>
@@ -119,7 +124,9 @@
 				</div>
 
 				<div class="branche">
-					{branch.name}
+					<span class="name">
+						{branch.name}
+					</span>
 				</div>
 			</div>
 		{/each}
@@ -163,8 +170,11 @@
 
 		&.selected {
 			.branche {
-				border-color: var(--color-danger-1);
-				color: var(--color-danger-4);
+				border-color: var(--color-danger-2);
+				border-style: dashed;
+				.name {
+					color: var(--color-danger-3);
+				}
 			}
 		}
 
@@ -173,6 +183,11 @@
 			border: 1px solid var(--color-neutral-7);
 			padding: 1.6rem;
 			border-radius: 4px;
+
+			.name {
+				color: var(--color-neutral-12);
+				font-weight: 600;
+			}
 
 			@extend .transition;
 		}
