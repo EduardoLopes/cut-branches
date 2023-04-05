@@ -8,7 +8,7 @@
 		"build": "tauri build",
 		"build:debug": "RUST_BACKTRACE=1 tauri build --debug",
 		"preview": "vite preview",
-		"lint": "prettier --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
+		"lint": "prettier --check --plugin-search-dir=. . && eslint .",
 		"format": "prettier --write --plugin-search-dir=. .",
 		"tauri": "tauri",
 		"story:dev": "histoire dev",
