@@ -210,6 +210,7 @@
 		border-width: 1px;
 		border-color: var(--button-border-color);
 		margin: 0;
+		appearance: none;
 
 		border-top-left-radius: var(--button-border-top-left-radius);
 		border-top-right-radius: var(--button-border-top-right-radius);
