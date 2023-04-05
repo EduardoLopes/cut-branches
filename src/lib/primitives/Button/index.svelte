@@ -194,6 +194,12 @@
 		}
 	}
 
+	:global {
+		a:has(.button) {
+			text-decoration: none;
+		}
+	}
+
 	// props
 	.button {
 		display: inline-flex;
