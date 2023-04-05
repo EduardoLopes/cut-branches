@@ -1,17 +1,18 @@
 <script lang="ts">
 	import type { IBranch } from '$lib/stores';
 
-	import Branch from '$lib/Branch/index.svelte';
-
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import Icon from '@iconify/svelte';
+	import Checkbox from '$lib/primitives/Checkbox.svelte';
+	import { navigating } from '$app/stores';
 
-	let selected: IBranch[] = [];
+	let selected: string[] = [];
 	export let id: string | null = null;
 
 	$: currentRepo = $repos.filter((item) => item.name === id)[0];
+	$: if ($navigating) selected = [];
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -41,70 +42,140 @@
 	}
 </script>
 
-{#if currentRepo}
-	<main class="container">
-		<div class="header">
-			<h1>{currentRepo.name}</h1>
-			<div class="menu">
-				<Button variant="tertiary" size="sm" on:click={update_repo}>
+<main class="container">
+	<div class="header">
+		<h1>{currentRepo.name}</h1>
+		<div class="menu">
+			<Button variant="tertiary" size="sm" on:click={update_repo}>
+				<Icon
+					icon="material-symbols:refresh-rounded"
+					width="24px"
+					height="24px"
+					color="var(--primary-color)"
+				/>
+			</Button>
+			<a href={`/repos/${currentRepo.name}/remove`}>
+				<Button variant="tertiary" size="sm">
 					<Icon
-						icon="material-symbols:refresh-rounded"
+						icon="solar:close-circle-linear"
 						width="24px"
 						height="24px"
 						color="var(--primary-color)"
 					/>
 				</Button>
-				<a href={`/repos/${currentRepo.name}/remove`}>
-					<Button variant="tertiary" size="sm">
-						<Icon
-							icon="solar:close-circle-linear"
-							width="24px"
-							height="24px"
-							color="var(--primary-color)"
-						/>
+			</a>
+		</div>
+	</div>
+
+	<div class="toolbar-container">
+		<div class="checkbox">
+			<Checkbox
+				visuallyHideLabel
+				indeterminate={selected.length !== currentRepo.branches.length && selected.length > 0}
+				on:click={(e) => {
+					const indeterminate =
+						selected.length !== currentRepo.branches.length && selected.length > 0;
+
+					if (indeterminate || selected.length === 0) {
+						selected = currentRepo.branches.map((item) => item.name);
+					} else {
+						selected = [];
+					}
+				}}
+				checked={selected.length === currentRepo.branches.length}>Select all</Checkbox
+			>
+
+			{selected.length} / {currentRepo.branches.length} branches selected
+		</div>
+		{#if selected.length > 0}
+			<div class="toolbar">
+				<a href={`/repos/${currentRepo.name}/branches/delete?branches=${selected.join(',')}`}>
+					<Button variant="primary" feedback="danger" size="sm">
+						<Icon icon="carbon:delete" width="16px" height="16px" color="var(--primary-color)" />
+						Delete
 					</Button>
 				</a>
 			</div>
-		</div>
+		{/if}
+	</div>
 
-		<div class="branches">
-			{#if currentRepo.branches}
-				{#each currentRepo.branches.sort(sort) as branch (branch.name)}
-					<Branch
-						{branch}
-						showDeletebutton={selected.length === 0}
-						selected={selected.some((item) => item === branch)}
-						disabled={branch.current}
-						onClick={() => {
-							if (selected.some((item) => item.name === branch.name)) {
-								selected = selected.filter((item) => item.name !== branch.name);
-								return;
+	<div class="branches">
+		{#each currentRepo.branches.sort(sort) as branch, index}
+			<div class="branch-container" class:selected={selected.includes(branch.name)}>
+				<div class="checkbox">
+					<Checkbox
+						visuallyHideLabel
+						on:click={(e) => {
+							if (selected.includes(branch.name)) {
+								selected = selected.filter((item) => item !== branch.name);
+							} else {
+								selected = [...selected, branch.name];
 							}
+						}}
+						checked={selected.includes(branch.name)}
+					>
+						{branch.name}
+					</Checkbox>
+				</div>
 
-							selected.push(branch);
-							selected = selected;
-						}}
-						onClickDelete={() => {
-							selected = [branch];
-						}}
-					/>
-				{/each}
-			{/if}
-			{#if selected.length > 0}
-				<button class="delete-all">
-					Delete {#if selected.length > 1}all ({selected.length}){/if}</button
-				>
-			{/if}
-		</div>
-	</main>
-{/if}
+				<div class="branche">
+					{branch.name}
+				</div>
+			</div>
+		{/each}
+	</div>
+</main>
 
 <style lang="scss">
+	.transition {
+		transition-timing-function: ease-in-out;
+		transition-duration: 0.1s;
+		transition-property: width, height, border, color, background, padding, font-size;
+	}
 	.container {
-		background: #e9e9e7;
+		background: var(--color-neutral-2);
 		overflow: hidden;
 		position: relative;
 		height: 100%;
+	}
+
+	.toolbar-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.6rem;
+		padding-bottom: 0;
+		height: 50px;
+
+		.checkbox {
+			display: flex;
+			align-items: center;
+			height: 100%;
+			gap: 1.6rem;
+		}
+	}
+
+	.branch-container {
+		display: grid;
+		grid-template-columns: min-content auto;
+		gap: 1.6rem;
+		border-radius: 4px;
+
+		&.selected {
+			.branche {
+				border-color: var(--color-danger-1);
+				color: var(--color-danger-4);
+			}
+		}
+
+		.branche {
+			background: var(--color-neutral-4);
+			border: 1px solid var(--color-neutral-7);
+			padding: 1.6rem;
+			border-radius: 4px;
+
+			@extend .transition;
+		}
 	}
 
 	.branches {
@@ -112,28 +183,18 @@
 		flex-direction: column;
 		overflow-y: auto;
 		grid-auto-rows: max-content;
-		gap: 8px;
+		gap: 1.6rem;
 		border: 1px dashed var(--color-gray);
 		padding: 16px;
 		height: calc(100vh - 57px);
 	}
 
-	.delete-all {
-		position: sticky;
-		bottom: 0;
-		background: #f34642;
-		padding: 16px;
-		color: #fff;
-		border: 0;
-		cursor: pointer;
-	}
-
 	.header {
 		display: flex;
 		justify-content: space-between;
-		background: #fff;
+		background: var(--color-neutral-2);
 		top: 0;
-		box-shadow: 0px 2px 2px 0px rgb(0 0 0 / 8%);
+		border-bottom: 1px dashed var(--color-neutral-8);
 
 		h1 {
 			font-size: 1.3em;

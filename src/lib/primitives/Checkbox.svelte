@@ -3,6 +3,8 @@
 
 	export interface CheckboxProps extends HTMLInputAttributes {
 		indeterminate?: boolean;
+		visuallyHideLabel?: boolean;
+		group?: string[];
 	}
 </script>
 
@@ -10,6 +12,8 @@
 	type $$Props = CheckboxProps;
 
 	export let indeterminate = false;
+	export let visuallyHideLabel = false;
+	export let group: $$Props['group'] = [];
 </script>
 
 <label class="label">
@@ -19,13 +23,17 @@
 		bind:indeterminate
 		aria-checked={indeterminate ? 'mixed' : undefined}
 		{...$$restProps}
+		bind:group
 		on:click
+		on:change
 		on:mouseover
 		on:mouseenter
 		on:mouseleave
 		on:focus
 	/>
-	<slot />
+	<span class:visually-hide-label={visuallyHideLabel}>
+		<slot />
+	</span>
 </label>
 
 <style lang="scss">
@@ -33,6 +41,18 @@
 		transition-timing-function: ease-in-out;
 		transition-duration: 0.1s;
 		transition-property: width, height, border, color, background, padding, font-size;
+	}
+
+	.visually-hide-label {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
 	}
 
 	.label {
@@ -69,8 +89,8 @@
 			position: relative;
 			-webkit-appearance: none;
 			appearance: none;
-			height: 1.6em;
-			width: 1.6em;
+			height: 1.4em;
+			width: 1.4em;
 			border-radius: 4px;
 			background: #fff;
 			border: 1px solid var(--color-neutral-10);
@@ -117,7 +137,7 @@
 			border-bottom: 3px solid var(--color-neutral-1);
 			height: 45%;
 			width: 20%;
-			transform: rotate(45deg) translateY(-15%) translateX(-10%);
+			transform: rotate(45deg) translateY(-7%) translateX(-10%);
 		}
 
 		input[type='checkbox']:checked {

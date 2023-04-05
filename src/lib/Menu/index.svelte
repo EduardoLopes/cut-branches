@@ -161,10 +161,6 @@
 
 				&.current {
 					background: var(--color-primary-5);
-
-					&.remove {
-						background: var(--color-danger-3);
-					}
 				}
 
 				& span {

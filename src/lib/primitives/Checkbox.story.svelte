@@ -23,6 +23,12 @@
     </div>
 	</Hst.Variant>
 
+  <Hst.Variant title="visually hidden label">
+    <div class="item">
+		  <Checkbox visuallyHideLabel>Disabled</Checkbox>
+    </div>
+	</Hst.Variant>
+
 </Hst.Story>
 
 <style lang="scss">
