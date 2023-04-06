@@ -14,6 +14,7 @@
 @import '@radix-ui/colors/limeDark.css';
 @import '@radix-ui/colors/violetDark.css';
 @import '@radix-ui/colors/yellow.css';
+@import '@radix-ui/colors/amber.css';
 
 :root {
 	font-family: 'Montserrat', Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
@@ -31,29 +32,57 @@
 	--color-secondary-4: var(--violet10);
 	--color-secondary-5: var(--violet12);
 
-	--color-danger-1: var(--red7);
-	--color-danger-2: var(--red8);
-	--color-danger-3: var(--red9);
-	--color-danger-4: var(--red10);
-	--color-danger-5: var(--red11);
+	--color-danger-1: var(--red1);
+	--color-danger-2: var(--red2);
+	--color-danger-3: var(--red3);
+	--color-danger-4: var(--red4);
+	--color-danger-5: var(--red5);
+	--color-danger-6: var(--red6);
+	--color-danger-7: var(--red7);
+	--color-danger-8: var(--red8);
+	--color-danger-9: var(--red9);
+	--color-danger-10: var(--red10);
+	--color-danger-11: var(--red11);
+	--color-danger-12: var(--red12);
 
-	--color-warning-1: var(--yellow7);
-	--color-warning-2: var(--yellow8);
-	--color-warning-3: var(--yellow9);
-	--color-warning-4: var(--yellow10);
-	--color-warning-5: var(--yellow11);
+	--color-warning-1: var(--amber1);
+	--color-warning-2: var(--amber2);
+	--color-warning-3: var(--amber3);
+	--color-warning-4: var(--amber4);
+	--color-warning-5: var(--amber5);
+	--color-warning-6: var(--amber6);
+	--color-warning-7: var(--amber7);
+	--color-warning-8: var(--amber8);
+	--color-warning-9: var(--amber9);
+	--color-warning-10: var(--amber10);
+	--color-warning-11: var(--amber11);
+	--color-warning-12: var(--amber12);
 
-	--color-success-1: var(--green8);
-	--color-success-2: var(--green9);
-	--color-success-3: var(--green10);
-	--color-success-4: var(--green11);
-	--color-success-5: var(--green12);
+	--color-success-1: var(--green1);
+	--color-success-2: var(--green2);
+	--color-success-3: var(--green3);
+	--color-success-4: var(--green4);
+	--color-success-5: var(--green5);
+	--color-success-6: var(--green6);
+	--color-success-7: var(--green7);
+	--color-success-8: var(--green8);
+	--color-success-9: var(--green9);
+	--color-success-10: var(--green10);
+	--color-success-11: var(--green11);
+	--color-success-12: var(--green12);
 
-	--color-info-1: var(--blue8);
-	--color-info-2: var(--blue9);
-	--color-info-3: var(--blue10);
-	--color-info-4: var(--blue11);
-	--color-info-5: var(--blue12);
+	--color-info-1: var(--blue1);
+	--color-info-2: var(--blue2);
+	--color-info-3: var(--blue3);
+	--color-info-4: var(--blue4);
+	--color-info-5: var(--blue5);
+	--color-info-6: var(--blue6);
+	--color-info-7: var(--blue7);
+	--color-info-8: var(--blue8);
+	--color-info-9: var(--blue9);
+	--color-info-10: var(--blue10);
+	--color-info-11: var(--blue11);
+	--color-info-12: var(--blue12);
 
 	--color-neutral-1: var(--gray1);
 	--color-neutral-2: var(--gray2);
