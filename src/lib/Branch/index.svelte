@@ -6,6 +6,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import Alert from '$lib/primitives/Alert.svelte';
+	import Group from '$lib/primitives/Group.svelte';
 
 	export let data: IBranch;
 	export let selected = false;
@@ -43,28 +44,30 @@
 		{data.name}
 	</div>
 
-	<div class="info">
-		{#if data.fully_merged}
-			<Alert feedback="info" size={'sm'}>
-				This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
-			</Alert>
-		{/if}
-		{#if data.name.includes('master')}
-			<Alert feedback="danger" size={'sm'}>
-				The branch name <strong>master</strong> is offensive. Check out this
-				<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
-					>article</a
-				>
-				and make sure to change the branch name to <strong>main</strong>,
-				<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
-			</Alert>
-		{/if}
-		{#if protectedWords.some((item) => data.name.includes(item)) && selected}
-			<Alert feedback="warning" size={'sm'}>
-				You're selecting a branch with the name <strong>{data.name}</strong>, review and make sure
-				you really wanna delete this branch!
-			</Alert>
-		{/if}
+	<div class="info alert-group">
+		<Group direction="column">
+			{#if data.fully_merged}
+				<Alert feedback="info" size={'sm'}>
+					This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
+				</Alert>
+			{/if}
+			{#if data.name.includes('master')}
+				<Alert feedback="danger" size={'sm'}>
+					The branch name <strong>master</strong> is offensive. Check out this
+					<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+						>article</a
+					>
+					and make sure to change the branch name to <strong>main</strong>,
+					<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
+				</Alert>
+			{/if}
+			{#if protectedWords.some((item) => data.name.includes(item)) && selected}
+				<Alert feedback="warning" size={'sm'}>
+					You're selecting a branch with the name <strong>{data.name}</strong>, review and make sure
+					you really wanna delete this branch!
+				</Alert>
+			{/if}
+		</Group>
 	</div>
 </div>
 
@@ -73,6 +76,17 @@
 		transition-timing-function: ease-in-out;
 		transition-duration: 0.1s;
 		transition-property: width, height, border, color, background, padding, font-size;
+	}
+
+	.alert-group {
+		:global {
+			.alert {
+				border-width: 0;
+				border-top-width: 1px;
+				border-top-right-radius: 0;
+				border-top-left-radius: 0;
+			}
+		}
 	}
 
 	.branch {
