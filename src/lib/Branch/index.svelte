@@ -6,13 +6,9 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
-	export let showDeletebutton = false;
-	export let onClickDelete: (branch: IBranch) => void;
-	export let onClick: (branch: IBranch) => void;
-	export let branch: IBranch;
+	export let data: IBranch;
 	export let selected = false;
 	export let disabled = false;
-	export let showSelectedWarning = false;
 
 	let id = $page.params.id;
 
@@ -36,41 +32,18 @@
 </script>
 
 <div
-	class="branch-container"
+	class="branch"
 	class:disabled
-	class:current={branch.current}
+	class:current={data.current}
 	class:selected
-	title={`${branch.current ? 'Current branch ' : ''}`}
+	title={`${data.current ? 'Current branch ' : ''}`}
 >
-	<div class="branch">
-		<div
-			class="name"
-			on:click={() => {
-				if (branch.current || disabled) return;
-
-				if (onClick) onClick(branch);
-			}}
-		>
-			{branch.name}
-		</div>
-
-		{#if !branch.current && showDeletebutton}
-			<div class="menu">
-				<button
-					class="delete-button"
-					on:click={() => {
-						if (disabled) return;
-
-						onClickDelete(branch);
-					}}
-				>
-					<Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" />
-				</button>
-			</div>
-		{/if}
+	<div class="name">
+		{data.name}
 	</div>
+
 	<div class="info">
-		{#if branch.fully_merged}
+		{#if data.fully_merged}
 			<div class="grid-2">
 				<span class="icon">
 					<Icon icon="mdi:information-variant-circle-outline" width="16px" height="16px" /></span
@@ -80,7 +53,7 @@
 				</div>
 			</div>
 		{/if}
-		{#if branch.name.includes('master')}
+		{#if data.name.includes('master')}
 			<div class="grid-2">
 				<span class="icon"> <Icon icon="ph:warning-bold" width="16px" height="16px" /></span>
 				<div>
@@ -93,16 +66,44 @@
 				</div>
 			</div>
 		{/if}
-		{#if protectedWords.some( (item) => branch.name.includes(item) ) && (selected || showSelectedWarning)}
+		{#if protectedWords.some((item) => data.name.includes(item)) && selected}
 			<div class="grid-2">
 				<span class="icon"> <Icon icon="ph:warning-bold" width="16px" height="16px" /></span>
 				<div>
-					You're selecting a branch with the name <strong>{branch.name}</strong>, review and make
-					sure you really wanna delete this branch!
+					You're selecting a branch with the name <strong>{data.name}</strong>, review and make sure
+					you really wanna delete this branch!
 				</div>
 			</div>
 		{/if}
 	</div>
 </div>
 
-<style src="./styles.scss" lang="scss"></style>
+<style lang="scss">
+	.transition {
+		transition-timing-function: ease-in-out;
+		transition-duration: 0.1s;
+		transition-property: width, height, border, color, background, padding, font-size;
+	}
+
+	.branch {
+		background: var(--color-neutral-4);
+		border: 1px solid var(--color-neutral-7);
+		border-radius: 4px;
+
+		.name {
+			color: var(--color-neutral-12);
+			font-weight: 600;
+			padding: 1.6rem;
+		}
+
+		@extend .transition;
+
+		&.selected {
+			border-color: var(--color-danger-2);
+			border-style: dashed;
+			.name {
+				color: var(--color-danger-3);
+			}
+		}
+	}
+</style>

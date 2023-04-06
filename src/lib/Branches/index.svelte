@@ -4,6 +4,7 @@
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
+	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
 	import Checkbox from '$lib/primitives/Checkbox.svelte';
 	import { navigating } from '$app/stores';
@@ -123,11 +124,7 @@
 					</Checkbox>
 				</div>
 
-				<div class="branche">
-					<span class="name">
-						{branch.name}
-					</span>
-				</div>
+				<Branch data={branch} selected={selected.includes(branch.name)} />
 			</div>
 		{/each}
 	</div>
@@ -167,30 +164,6 @@
 		grid-template-columns: min-content auto;
 		gap: 1.6rem;
 		border-radius: 4px;
-
-		&.selected {
-			.branche {
-				border-color: var(--color-danger-2);
-				border-style: dashed;
-				.name {
-					color: var(--color-danger-3);
-				}
-			}
-		}
-
-		.branche {
-			background: var(--color-neutral-4);
-			border: 1px solid var(--color-neutral-7);
-			padding: 1.6rem;
-			border-radius: 4px;
-
-			.name {
-				color: var(--color-neutral-12);
-				font-weight: 600;
-			}
-
-			@extend .transition;
-		}
 	}
 
 	.branches {
