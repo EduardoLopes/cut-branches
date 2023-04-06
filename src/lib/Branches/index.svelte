@@ -119,6 +119,7 @@
 							}
 						}}
 						checked={selected.includes(branch.name)}
+						disabled={currentRepo.current_branch === branch.name}
 					>
 						{branch.name}
 					</Checkbox>

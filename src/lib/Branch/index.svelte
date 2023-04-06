@@ -5,6 +5,7 @@
 
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
+	import Alert from '$lib/primitives/Alert.svelte';
 
 	export let data: IBranch;
 	export let selected = false;
@@ -44,36 +45,25 @@
 
 	<div class="info">
 		{#if data.fully_merged}
-			<div class="grid-2">
-				<span class="icon">
-					<Icon icon="mdi:information-variant-circle-outline" width="16px" height="16px" /></span
-				>
-				<div>
-					This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
-				</div>
-			</div>
+			<Alert feedback="info" size={'sm'}>
+				This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
+			</Alert>
 		{/if}
 		{#if data.name.includes('master')}
-			<div class="grid-2">
-				<span class="icon"> <Icon icon="ph:warning-bold" width="16px" height="16px" /></span>
-				<div>
-					The branch name <strong>master</strong> is offensive. Check out this
-					<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
-						>article</a
-					>
-					and make sure to change the branch name to <strong>main</strong>,
-					<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
-				</div>
-			</div>
+			<Alert feedback="danger" size={'sm'}>
+				The branch name <strong>master</strong> is offensive. Check out this
+				<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+					>article</a
+				>
+				and make sure to change the branch name to <strong>main</strong>,
+				<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
+			</Alert>
 		{/if}
 		{#if protectedWords.some((item) => data.name.includes(item)) && selected}
-			<div class="grid-2">
-				<span class="icon"> <Icon icon="ph:warning-bold" width="16px" height="16px" /></span>
-				<div>
-					You're selecting a branch with the name <strong>{data.name}</strong>, review and make sure
-					you really wanna delete this branch!
-				</div>
-			</div>
+			<Alert feedback="warning" size={'sm'}>
+				You're selecting a branch with the name <strong>{data.name}</strong>, review and make sure
+				you really wanna delete this branch!
+			</Alert>
 		{/if}
 	</div>
 </div>
@@ -99,10 +89,12 @@
 		@extend .transition;
 
 		&.selected {
-			border-color: var(--color-danger-2);
+			background: var(--color-danger-3);
+			border-color: var(--color-danger-10);
 			border-style: dashed;
+
 			.name {
-				color: var(--color-danger-3);
+				color: var(--color-danger-9);
 			}
 		}
 	}

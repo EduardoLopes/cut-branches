@@ -57,6 +57,11 @@
 </div>
 
 <style lang="scss">
+	.transition {
+		transition-timing-function: ease-in-out;
+		transition-duration: 0.1s;
+		transition-property: width, height, border, color, background, padding, font-size;
+	}
 	.alert {
 		// font-size
 		--alert-font-size-sm: var(--font-size-sm);
@@ -156,6 +161,8 @@
 		border-style: solid;
 		padding: var(--alert-padding);
 		width: 100%;
+
+		@extend .transition;
 
 		.contents {
 			margin-top: 0.3rem;
