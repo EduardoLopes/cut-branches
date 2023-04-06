@@ -73,6 +73,11 @@
 		--alert-icon-size-md: var(--space-xl);
 		--alert-icon-size-lg: var(--space-xxl);
 
+		// gap
+		--alert-gap-sm: var(--space-xs);
+		--alert-gap-md: var(--space-sm);
+		--alert-gap-lg: var(--space-md);
+
 		// variants
 		&.variant-primary {
 			--alert-background-color: var(--color-neutral-4);
@@ -120,25 +125,28 @@
 			--alert-font-size: var(--alert-font-size-sm);
 			--alert-padding: var(--alert-padding-sm);
 			--alert-icon-size: var(--alert-icon-size-sm);
+			--alert-gap: var(--alert-gap-sm);
 		}
 
 		&.size-md {
 			--alert-font-size: var(--alert-font-size-md);
 			--alert-padding: var(--alert-padding-md);
 			--alert-icon-size: var(--alert-icon-size-md);
+			--alert-gap: var(--alert-gap-md);
 		}
 
 		&.size-lg {
 			--alert-font-size: var(--alert-font-size-lg);
 			--alert-padding: var(--alert-padding-lg);
 			--alert-icon-size: var(--alert-icon-size-lg);
+			--alert-gap: var(--alert-gap-lg);
 		}
 	}
 
 	.alert {
 		display: grid;
 		grid-template-columns: auto 1fr;
-		gap: 1.6rem;
+		gap: var(--alert-gap);
 		border-radius: 4px;
 		color: var(--alert-color);
 		font-size: var(--alert-font-size);
@@ -148,6 +156,10 @@
 		border-style: solid;
 		padding: var(--alert-padding);
 		width: 100%;
+
+		.contents {
+			margin-top: 0.3rem;
+		}
 
 		.icon {
 			width: var(--alert-icon-size);
