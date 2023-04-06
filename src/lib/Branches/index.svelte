@@ -68,66 +68,66 @@
 		</div>
 	</div>
 
-	<div class="toolbar-container">
-		<div class="checkbox">
-			<Checkbox
-				visuallyHideLabel
-				indeterminate={selected.length !== currentRepo.branches.length && selected.length > 0}
-				on:click={(e) => {
-					const indeterminate =
-						selected.length !== currentRepo.branches.length && selected.length > 0;
+	<div class="content">
+		<div class="toolbar-container">
+			<div class="checkbox">
+				<Checkbox
+					visuallyHideLabel
+					indeterminate={selected.length !== currentRepo.branches.length && selected.length > 0}
+					on:click={(e) => {
+						const indeterminate =
+							selected.length !== currentRepo.branches.length && selected.length > 0;
 
-					if (indeterminate || selected.length === 0) {
-						selected = currentRepo.branches.map((item) => item.name);
-					} else {
-						selected = [];
-					}
-				}}
-				checked={selected.length === currentRepo.branches.length}>Select all</Checkbox
-			>
+						if (indeterminate || selected.length === 0) {
+							selected = currentRepo.branches.map((item) => item.name);
+						} else {
+							selected = [];
+						}
+					}}
+					checked={selected.length === currentRepo.branches.length}>Select all</Checkbox
+				>
 
-			{selected.length} / {currentRepo.branches.length} branches selected
-		</div>
-		{#if selected.length > 0}
+				{selected.length} / {currentRepo.branches.length} branches selected
+			</div>
+
 			<div class="toolbar">
-				<a href={`/repos/${currentRepo.name}/branches/delete?branches=${selected.join(',')}`}>
-					<Button variant="primary" feedback="danger" size="sm">
-						<Icon
-							icon="ion:trash-outline"
-							width="16px"
-							height="16px"
-							color="var(--primary-color)"
-						/>
-						Delete
-					</Button>
-				</a>
+				<!-- <a href={`/repos/${currentRepo.name}/branches/delete?branches=${selected.join(',')}`}> -->
+				<Button
+					variant="primary"
+					feedback="danger"
+					size="sm"
+					state={selected.length === 0 ? 'disabled' : undefined}
+				>
+					<Icon icon="ion:trash-outline" width="16px" height="16px" color="var(--primary-color)" />
+					Delete
+				</Button>
+				<!-- </a> -->
 			</div>
-		{/if}
-	</div>
+		</div>
+		<div class="branches">
+			{#each currentRepo.branches.sort(sort) as branch, index}
+				<div class="branch-container" class:selected={selected.includes(branch.name)}>
+					<div class="checkbox">
+						<Checkbox
+							visuallyHideLabel
+							on:click={(e) => {
+								if (selected.includes(branch.name)) {
+									selected = selected.filter((item) => item !== branch.name);
+								} else {
+									selected = [...selected, branch.name];
+								}
+							}}
+							checked={selected.includes(branch.name)}
+							disabled={currentRepo.current_branch === branch.name}
+						>
+							{branch.name}
+						</Checkbox>
+					</div>
 
-	<div class="branches">
-		{#each currentRepo.branches.sort(sort) as branch, index}
-			<div class="branch-container" class:selected={selected.includes(branch.name)}>
-				<div class="checkbox">
-					<Checkbox
-						visuallyHideLabel
-						on:click={(e) => {
-							if (selected.includes(branch.name)) {
-								selected = selected.filter((item) => item !== branch.name);
-							} else {
-								selected = [...selected, branch.name];
-							}
-						}}
-						checked={selected.includes(branch.name)}
-						disabled={currentRepo.current_branch === branch.name}
-					>
-						{branch.name}
-					</Checkbox>
+					<Branch data={branch} selected={selected.includes(branch.name)} />
 				</div>
-
-				<Branch data={branch} selected={selected.includes(branch.name)} />
-			</div>
-		{/each}
+			{/each}
+		</div>
 	</div>
 </main>
 
@@ -148,9 +148,11 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		position: sticky;
+		top: 0;
+		background: var(--color-neutral-2);
 		padding: 1.6rem;
-		padding-bottom: 0;
-		height: 50px;
+		z-index: 10;
 
 		.checkbox {
 			display: flex;
@@ -160,22 +162,25 @@
 		}
 	}
 
+	.content {
+		overflow-y: auto;
+		height: calc(100vh - 57px);
+	}
+
 	.branch-container {
 		display: grid;
 		grid-template-columns: min-content auto;
 		gap: 1.6rem;
 		border-radius: 4px;
 	}
-
 	.branches {
 		display: flex;
 		flex-direction: column;
-		overflow-y: auto;
 		grid-auto-rows: max-content;
 		gap: 1.6rem;
 		border: 1px dashed var(--color-gray);
 		padding: 16px;
-		height: calc(100vh - 57px);
+		padding-top: 0;
 	}
 
 	.header {
