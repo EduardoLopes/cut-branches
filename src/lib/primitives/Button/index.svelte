@@ -105,14 +105,14 @@
 		@each $feedback in $feedbacks {
 			&.feedback-#{$feedback} {
 				//default
-				--button-background-color: var(--color-#{$feedback}-3);
+				--button-background-color: var(--color-#{$feedback}-10);
 
 				//hover
-				--button-hover-background-color: var(--color-#{$feedback}-4);
+				--button-hover-background-color: var(--color-#{$feedback}-8);
 				--button-hover-text-color: var(--color-background-1);
 
 				//acitve
-				--button-active-background-color: var(--color-#{$feedback}-2);
+				--button-active-background-color: var(--color-#{$feedback}-11);
 
 				//disabled
 				--button-disabled-background-color: var(--color-neutral-6);
@@ -134,8 +134,8 @@
 				&.feedback-#{$feedback} {
 					//default
 					--button-background-color: var(--color-background-1);
-					--button-text-color: var(--color-#{$feedback}-4);
-					--button-border-color: var(--color-#{$feedback}-3);
+					--button-text-color: var(--color-#{$feedback}-10);
+					--button-border-color: var(--color-#{$feedback}-10);
 
 					//disabled
 					--button-disabled-background-color: var(--color-background-1);
@@ -160,11 +160,11 @@
 				&.feedback-#{$feedback} {
 					// default
 					--button-background-color: var(--color-background-1);
-					--button-text-color: var(--color-#{$feedback}-4);
+					--button-text-color: var(--color-#{$feedback}-10);
 					--button-border-color: var(--color-background-1);
 
 					// hover
-					--button-hover-background-color: var(--color-#{$feedback}-4);
+					--button-hover-background-color: var(--color-#{$feedback}-8);
 
 					// disabled
 					--button-disabled-background-color: var(--color-background-1);
