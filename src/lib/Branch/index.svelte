@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { IBranch, IRepo } from '$lib/stores';
 	import { repos } from '$lib/stores';
-	import Icon from '@iconify/svelte';
 
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -101,6 +100,15 @@
 		}
 
 		@extend .transition;
+
+		&.current {
+			background: var(--color-warning-2);
+			border-color: var(--color-warning-10);
+
+			.name {
+				color: var(--color-warning-10);
+			}
+		}
 
 		&.selected {
 			background: var(--color-danger-3);

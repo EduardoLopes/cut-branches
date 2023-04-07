@@ -14,6 +14,7 @@
 
 	$: currentRepo = $repos.filter((item) => item.name === id)[0];
 	$: if ($navigating) selected = [];
+	$: selectibleCount = currentRepo?.branches.length - 1;
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -71,59 +72,81 @@
 	<div class="content">
 		<div class="toolbar-container">
 			<div class="checkbox">
-				<Checkbox
-					visuallyHideLabel
-					indeterminate={selected.length !== currentRepo.branches.length && selected.length > 0}
-					on:click={(e) => {
-						const indeterminate =
-							selected.length !== currentRepo.branches.length && selected.length > 0;
+				{#if selectibleCount > 0}
+					<Checkbox
+						visuallyHideLabel
+						indeterminate={selected.length !== selectibleCount && selected.length > 0}
+						on:click={(e) => {
+							const indeterminate = selected.length !== selectibleCount && selected.length > 0;
 
-						if (indeterminate || selected.length === 0) {
-							selected = currentRepo.branches.map((item) => item.name);
-						} else {
-							selected = [];
-						}
-					}}
-					checked={selected.length === currentRepo.branches.length}>Select all</Checkbox
-				>
+							if (indeterminate || selected.length === 0) {
+								selected = currentRepo.branches
+									.map((item) => item.name)
+									.filter((item) => item !== currentRepo.current_branch);
+							} else {
+								selected = [];
+							}
+						}}
+						checked={selected.length === selectibleCount}>Select all</Checkbox
+					>
+					{selected.length} / {selectibleCount} branches selected
+				{/if}
 
-				{selected.length} / {currentRepo.branches.length} branches selected
+				{#if selectibleCount === 0}
+					This repository has no branches to delete.
+				{/if}
 			</div>
 
 			<div class="toolbar">
-				<!-- <a href={`/repos/${currentRepo.name}/branches/delete?branches=${selected.join(',')}`}> -->
-				<Button
-					variant="primary"
-					feedback="danger"
-					size="sm"
-					state={selected.length === 0 ? 'disabled' : undefined}
-				>
-					<Icon icon="ion:trash-outline" width="16px" height="16px" color="var(--primary-color)" />
-					Delete
-				</Button>
-				<!-- </a> -->
+				{#if selectibleCount > 0}
+					<Button
+						variant="primary"
+						feedback="danger"
+						size="sm"
+						state={selected.length === 0 ? 'disabled' : undefined}
+					>
+						<Icon
+							icon="ion:trash-outline"
+							width="16px"
+							height="16px"
+							color="var(--primary-color)"
+						/>
+						Delete
+					</Button>
+				{/if}
 			</div>
 		</div>
 		<div class="branches">
 			{#each currentRepo.branches.sort(sort) as branch, index}
 				<div class="branch-container" class:selected={selected.includes(branch.name)}>
-					<div class="checkbox">
-						<Checkbox
-							visuallyHideLabel
-							on:click={(e) => {
-								if (selected.includes(branch.name)) {
-									selected = selected.filter((item) => item !== branch.name);
-								} else {
-									selected = [...selected, branch.name];
-								}
-							}}
-							checked={selected.includes(branch.name)}
-							disabled={currentRepo.current_branch === branch.name}
-						>
-							{branch.name}
-						</Checkbox>
-					</div>
+					{#if currentRepo.current_branch !== branch.name}
+						<div class="checkbox">
+							<Checkbox
+								visuallyHideLabel
+								on:click={(e) => {
+									if (selected.includes(branch.name)) {
+										selected = selected.filter((item) => item !== branch.name);
+									} else {
+										selected = [...selected, branch.name];
+									}
+								}}
+								checked={selected.includes(branch.name)}
+							>
+								{branch.name}
+							</Checkbox>
+						</div>
+					{/if}
 
+					{#if currentRepo.current_branch === branch.name}
+						<div class="current-branch-icon">
+							<Icon
+								icon="octicon:feed-star-16"
+								width="32px"
+								height="32px"
+								color="var(--color-warning-10)"
+							/>
+						</div>
+					{/if}
 					<Branch data={branch} selected={selected.includes(branch.name)} />
 				</div>
 			{/each}
@@ -153,6 +176,7 @@
 		background: var(--color-neutral-2);
 		padding: 1.6rem;
 		z-index: 10;
+		min-height: 66px;
 
 		.checkbox {
 			display: flex;
@@ -168,10 +192,18 @@
 	}
 
 	.branch-container {
+		position: relative;
 		display: grid;
-		grid-template-columns: min-content auto;
+		grid-template-columns: 24px auto;
 		gap: 1.6rem;
 		border-radius: 4px;
+	}
+
+	.current-branch-icon {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		margin-left: 2px;
 	}
 	.branches {
 		display: flex;
