@@ -64,8 +64,8 @@
 		{#if $repos}
 			<ul class="menu">
 				{#each $repos.sort(handleSort) as repo (repo.name)}
-					<li>
-						<a href={`/repos/${repo.name}`} class:current={$page.params.id === repo.name}
+					<li class:current={$page.params.id === repo.name}>
+						<a href={`/repos/${repo.name}`}
 							>{repo.name}<span class="count"
 								>{repo.branches.length} {repo.branches.length > 0 ? 'branches' : 'branch'}</span
 							>
@@ -136,6 +136,15 @@
 
 		li {
 			margin: 0;
+			cursor: pointer;
+			&.current {
+				a {
+					background: var(--color-primary-5);
+					cursor: default;
+				}
+				pointer-events: none;
+			}
+
 			a {
 				display: inline-flex;
 				flex-direction: column;
@@ -151,20 +160,13 @@
 
 				&:hover {
 					background: var(--color-primary-4);
-					cursor: pointer;
 				}
 
 				&:active {
 					filter: contrast(75%);
-					cursor: pointer;
-				}
-
-				&.current {
-					background: var(--color-primary-5);
 				}
 
 				& span {
-					cursor: pointer;
 					font-size: 0.8em;
 					font-weight: normal;
 				}
