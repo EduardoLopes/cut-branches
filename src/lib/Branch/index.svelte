@@ -67,6 +67,7 @@
 		'develop',
 		'dev',
 		'stg',
+		'main',
 		'staging',
 		'master',
 		'hml',
@@ -78,7 +79,10 @@
 	// https://svelte.dev/repl/5b46f83924f5437dae097b612f3d97b0?version=3.38.2
 	function resizeContainer(node: HTMLElement) {
 		function updateHeight() {
-			const childrenHeight = [...node.children].reduce((acc, item) => acc + item.offsetHeight, 0);
+			const childrenHeight = (Array.from(node.children) as HTMLElement[]).reduce(
+				(acc, item) => acc + item.offsetHeight,
+				0
+			);
 			node.style.setProperty('height', `${childrenHeight}px`);
 		}
 
