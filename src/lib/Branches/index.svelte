@@ -136,7 +136,7 @@
 					<div
 						class="branch-container"
 						class:selected={selected.includes(branch.name)}
-						animate:flip
+						animate:flip={{ duration: 150 }}
 						in:fly={{
 							x: -10,
 							duration: 100,
@@ -184,7 +184,7 @@
 	.transition {
 		transition-timing-function: ease-in-out;
 		transition-duration: 0.1s;
-		transition-property: width, height, border, color, background, padding, font-size;
+		transition-property: width, height, border, color, background, padding, font-size, max-height;
 	}
 	.container {
 		background: var(--color-neutral-2);
@@ -261,6 +261,7 @@
 		grid-template-columns: 24px auto;
 		gap: 1.6rem;
 		border-radius: 4px;
+		@extend .transition;
 	}
 
 	.current-branch-icon {
