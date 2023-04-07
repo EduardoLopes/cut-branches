@@ -7,7 +7,9 @@
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
 	import Checkbox from '$lib/primitives/Checkbox.svelte';
-	import { navigating } from '$app/stores';
+	import { navigating, page } from '$app/stores';
+	import { fly } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
 
 	let selected: string[] = [];
 	export let id: string | null = null;
@@ -46,7 +48,9 @@
 
 <main class="container">
 	<div class="header">
-		<h1>{currentRepo.name}</h1>
+		{#key currentRepo.name}
+			<h1 in:fly={{ x: -20 }}>{currentRepo.name}</h1>
+		{/key}
 		<div class="menu">
 			<Button variant="tertiary" size="sm" on:click={update_repo}>
 				<Icon
@@ -69,89 +73,111 @@
 		</div>
 	</div>
 
-	<div class="content">
-		<div class="toolbar-container">
-			<div class="checkbox">
-				{#if selectibleCount > 0}
-					<Checkbox
-						visuallyHideLabel
-						indeterminate={selected.length !== selectibleCount && selected.length > 0}
-						on:click={(e) => {
-							const indeterminate = selected.length !== selectibleCount && selected.length > 0;
+	{#key $page.params.id}
+		<div class="content" in:fly={{ y: -30, duration: 150 }}>
+			<div class="toolbar-container">
+				<div class="left">
+					{#if selectibleCount > 0}
+						{#key selectibleCount}
+							<div in:fly={{ x: -10 }} class="checkbox">
+								<Checkbox
+									visuallyHideLabel
+									indeterminate={selected.length !== selectibleCount && selected.length > 0}
+									on:click={(e) => {
+										const indeterminate =
+											selected.length !== selectibleCount && selected.length > 0;
 
-							if (indeterminate || selected.length === 0) {
-								selected = currentRepo.branches
-									.map((item) => item.name)
-									.filter((item) => item !== currentRepo.current_branch);
-							} else {
-								selected = [];
-							}
-						}}
-						checked={selected.length === selectibleCount}>Select all</Checkbox
-					>
-					{selected.length} / {selectibleCount} branches selected
-				{/if}
+										if (indeterminate || selected.length === 0) {
+											selected = currentRepo.branches
+												.map((item) => item.name)
+												.filter((item) => item !== currentRepo.current_branch);
+										} else {
+											selected = [];
+										}
+									}}
+									checked={selected.length === selectibleCount}
+								>
+									Select all
+								</Checkbox>
 
-				{#if selectibleCount === 0}
-					This repository has no branches to delete.
-				{/if}
-			</div>
-
-			<div class="toolbar">
-				{#if selectibleCount > 0}
-					<Button
-						variant="primary"
-						feedback="danger"
-						size="sm"
-						state={selected.length === 0 ? 'disabled' : undefined}
-					>
-						<Icon
-							icon="ion:trash-outline"
-							width="16px"
-							height="16px"
-							color="var(--primary-color)"
-						/>
-						Delete
-					</Button>
-				{/if}
-			</div>
-		</div>
-		<div class="branches">
-			{#each currentRepo.branches.sort(sort) as branch, index}
-				<div class="branch-container" class:selected={selected.includes(branch.name)}>
-					{#if currentRepo.current_branch !== branch.name}
-						<div class="checkbox">
-							<Checkbox
-								visuallyHideLabel
-								on:click={(e) => {
-									if (selected.includes(branch.name)) {
-										selected = selected.filter((item) => item !== branch.name);
-									} else {
-										selected = [...selected, branch.name];
-									}
-								}}
-								checked={selected.includes(branch.name)}
-							>
-								{branch.name}
-							</Checkbox>
-						</div>
+								{selected.length} / {selectibleCount} branches selected
+							</div>
+						{/key}
 					{/if}
 
-					{#if currentRepo.current_branch === branch.name}
-						<div class="current-branch-icon">
-							<Icon
-								icon="octicon:feed-star-16"
-								width="32px"
-								height="32px"
-								color="var(--color-warning-10)"
-							/>
-						</div>
+					{#if selectibleCount === 0}
+						<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
 					{/if}
-					<Branch data={branch} selected={selected.includes(branch.name)} />
 				</div>
-			{/each}
+
+				<div class="actions">
+					{#if selectibleCount > 0}
+						<div in:fly={{ x: 10 }}>
+							<Button
+								variant="primary"
+								feedback="danger"
+								size="sm"
+								state={selected.length === 0 ? 'disabled' : undefined}
+							>
+								<Icon
+									icon="ion:trash-outline"
+									width="16px"
+									height="16px"
+									color="var(--primary-color)"
+								/>
+								Delete
+							</Button>
+						</div>
+					{/if}
+				</div>
+			</div>
+			<div class="branches">
+				{#each currentRepo.branches.sort(sort) as branch, index (branch.name)}
+					<div
+						class="branch-container"
+						class:selected={selected.includes(branch.name)}
+						animate:flip
+						in:fly={{
+							x: -10,
+							duration: 100,
+							delay: 50 * (index + 1 / currentRepo.branches.length)
+						}}
+					>
+						{#if currentRepo.current_branch !== branch.name}
+							<div class="checkbox">
+								<Checkbox
+									visuallyHideLabel
+									on:click={(e) => {
+										if (selected.includes(branch.name)) {
+											selected = selected.filter((item) => item !== branch.name);
+										} else {
+											selected = [...selected, branch.name];
+										}
+									}}
+									checked={selected.includes(branch.name)}
+								>
+									{branch.name}
+								</Checkbox>
+							</div>
+						{/if}
+
+						{#if currentRepo.current_branch === branch.name}
+							<div class="current-branch-icon">
+								<Icon
+									icon="octicon:feed-star-16"
+									width="32px"
+									height="32px"
+									color="var(--color-warning-10)"
+								/>
+							</div>
+						{/if}
+
+						<Branch data={branch} selected={selected.includes(branch.name)} />
+					</div>
+				{/each}
+			</div>
 		</div>
-	</div>
+	{/key}
 </main>
 
 <style lang="scss">
@@ -167,60 +193,13 @@
 		height: 100%;
 	}
 
-	.toolbar-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		position: sticky;
-		top: 0;
-		background: var(--color-neutral-2);
-		padding: 1.6rem;
-		z-index: 10;
-		min-height: 66px;
-
-		.checkbox {
-			display: flex;
-			align-items: center;
-			height: 100%;
-			gap: 1.6rem;
-		}
-	}
-
-	.content {
-		overflow-y: auto;
-		height: calc(100vh - 57px);
-	}
-
-	.branch-container {
-		position: relative;
-		display: grid;
-		grid-template-columns: 24px auto;
-		gap: 1.6rem;
-		border-radius: 4px;
-	}
-
-	.current-branch-icon {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		margin-left: 2px;
-	}
-	.branches {
-		display: flex;
-		flex-direction: column;
-		grid-auto-rows: max-content;
-		gap: 1.6rem;
-		border: 1px dashed var(--color-gray);
-		padding: 16px;
-		padding-top: 0;
-	}
-
 	.header {
 		display: flex;
 		justify-content: space-between;
 		background: var(--color-neutral-2);
 		top: 0;
 		border-bottom: 1px dashed var(--color-neutral-8);
+		z-index: 20;
 
 		h1 {
 			font-size: 1.3em;
@@ -247,5 +226,56 @@
 				}
 			}
 		}
+	}
+
+	.toolbar-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		position: sticky;
+		top: 0;
+		background: var(--color-neutral-2);
+		padding: 1.6rem;
+		z-index: 10;
+		min-height: 66px;
+
+		.left,
+		.checkbox {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			height: 100%;
+			gap: 1.6rem;
+		}
+	}
+
+	.content {
+		overflow-y: scroll;
+		height: calc(100vh - 57px);
+		overflow-x: hidden;
+	}
+
+	.branch-container {
+		position: relative;
+		display: grid;
+		grid-template-columns: 24px auto;
+		gap: 1.6rem;
+		border-radius: 4px;
+	}
+
+	.current-branch-icon {
+		display: flex;
+		align-items: center;
+		width: 100%;
+		margin-left: 2px;
+	}
+	.branches {
+		display: flex;
+		flex-direction: column;
+		grid-auto-rows: max-content;
+		gap: 1.6rem;
+		border: 1px dashed var(--color-gray);
+		padding: 16px;
+		padding-top: 0;
 	}
 </style>
