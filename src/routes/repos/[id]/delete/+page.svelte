@@ -7,10 +7,16 @@
 	import Button from '$lib/primitives/Button/index.svelte';
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
+	import { deleteBranchesMutation } from '$lib/services/deleteBranches';
 
 	let id = $page.params.id;
 
 	let currentRepo: IRepo | undefined;
+	const deleteMutation = deleteBranchesMutation({
+		onSuccess(data, variables, context) {
+			console.log(data);
+		}
+	});
 
 	onMount(() => {
 		currentRepo = $repos.filter((item) => item.name === id)[0];
@@ -20,8 +26,13 @@
 	console.log(selected);
 
 	function handleYes() {
-		$repos = $repos.filter((item) => item.path !== currentRepo?.path);
-		goto(`/`);
+		if (selected && currentRepo) {
+			$deleteMutation.mutate({
+				path: currentRepo?.path,
+				branches: selected
+			});
+		}
+		goto(`/repos/${id}`);
 	}
 
 	function handleNo() {
@@ -36,15 +47,6 @@
 
 	{#if selected}
 		<div class="branches">
-			{#each selected as branch}
-				<Branch data={branch} />
-			{/each}
-			{#each selected as branch}
-				<Branch data={branch} />
-			{/each}
-			{#each selected as branch}
-				<Branch data={branch} />
-			{/each}
 			{#each selected as branch}
 				<Branch data={branch} />
 			{/each}

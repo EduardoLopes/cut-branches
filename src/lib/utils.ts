@@ -14,47 +14,6 @@ export interface ParserBranches {
 	branches: IBranch[];
 }
 
-export interface DeletedBranches {
-	result: string[];
-	errors: string[];
-}
-
-export const deleteBranches = async (
-	path: string,
-	branches: IBranch[]
-): Promise<DeletedBranches> => {
-	const { invoke } = await import('@tauri-apps/api/tauri');
-
-	const res: string = await invoke('delete_branches', {
-		DeleteOptions: [
-			path,
-			branches
-				.map((item) => item.name)
-				.toString()
-				.replace(/,/g, ' ')
-				.trim()
-		]
-	});
-
-	const resParser = JSON.parse(res);
-
-	const errors = resParser.errors
-		.trim()
-		.split('\n')
-		.map((item: string) => item.trim());
-	const result = resParser.result
-		.trim()
-		.split('\n')
-		.map((item: string) => item.trim());
-
-	if (resParser.errors.length > 0) return Promise.reject(errors);
-
-	return {
-		result,
-		errors
-	};
-};
-
 export const getRepoInfo = async (path: string) => {
 	if (!path) return;
 
