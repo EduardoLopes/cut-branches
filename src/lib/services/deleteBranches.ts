@@ -7,19 +7,14 @@ interface DeleteBranchesVariables {
 }
 
 type DeleteBranchesMutationOptions = CreateMutationOptions<
-	DeletedBranches,
-	unknown,
+	string[],
+	string[],
 	DeleteBranchesVariables,
 	unknown
 >;
 
-export interface DeletedBranches {
-	result: string[];
-	errors: string[];
-}
-
 export function deleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
-	return createMutation<DeletedBranches, unknown, DeleteBranchesVariables>(
+	return createMutation<string[], string[], DeleteBranchesVariables>(
 		['branches', 'delete'],
 		async (vars) => {
 			const { invoke } = await import('@tauri-apps/api/tauri');
@@ -41,17 +36,13 @@ export function deleteBranchesMutation(options?: DeleteBranchesMutationOptions) 
 				.trim()
 				.split('\n')
 				.map((item: string) => item.trim());
-			const result = resParser.result
-				.trim()
-				.split('\n')
-				.map((item: string) => item.trim());
 
 			if (resParser.errors.length > 0) return Promise.reject(errors);
 
-			return {
-				result,
-				errors
-			};
+			return resParser.result
+				.trim()
+				.split('\n')
+				.map((item: string) => item.trim());
 		},
 		options
 	);

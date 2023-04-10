@@ -8,6 +8,7 @@
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
 	import { deleteBranchesMutation } from '$lib/services/deleteBranches';
+	import { toast } from '$lib/utils';
 
 	let id = $page.params.id;
 
@@ -15,6 +16,11 @@
 	const deleteMutation = deleteBranchesMutation({
 		onSuccess(data, variables, context) {
 			console.log(data);
+		},
+		onError(error) {
+			error.forEach((message) => {
+				toast.failure(message);
+			});
 		}
 	});
 
