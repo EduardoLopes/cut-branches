@@ -33,7 +33,8 @@ export function getRepoByPath(path: string) {
 			};
 
 			repos.update((items) => {
-				items.filter((item) => item.name === data.name).push(data);
+				items = items.filter((item) => item.name !== data.name);
+				items.push(data);
 
 				return items;
 			});

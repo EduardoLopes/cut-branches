@@ -31,7 +31,6 @@
 	});
 
 	$: selected = currentRepo?.branches.filter((item) => history.state.branches.includes(item.name));
-	console.log(selected);
 
 	function handleYes() {
 		if (selected && currentRepo) {

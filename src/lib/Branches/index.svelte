@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IBranch } from '$lib/stores';
+	import type { IBranch, IRepo } from '$lib/stores';
 
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
@@ -15,10 +15,12 @@
 	let selected: string[] = [];
 	export let id: string | null = null;
 
-	$: currentRepo = $repos.filter((item) => item.name === id)[0];
-	$: getBranchesQuery = getRepoByPath(currentRepo.path);
+	$: currentRepo = $repos.filter((item) => item.name === id)[0] as IRepo | undefined;
+	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path);
 	$: if ($navigating) selected = [];
-	$: selectibleCount = currentRepo?.branches.length - 1;
+	$: selectibleCount = Math.max(0, ($getBranchesQuery.data?.branches?.length ?? 0) - 1);
+
+	$: if ($navigating) console.log({ state: history.state });
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -39,7 +41,7 @@
 	}
 
 	function handleDelete() {
-		goto(`/repos/${currentRepo.name}/delete`, {
+		goto(`/repos/${$getBranchesQuery.data?.name}/delete`, {
 			state: {
 				branches: selected
 			}
@@ -49,8 +51,8 @@
 
 <main class="container">
 	<div class="header">
-		{#key currentRepo.name}
-			<h1 in:fly={{ x: -20 }}>{currentRepo.name}</h1>
+		{#key $getBranchesQuery.data?.name}
+			<h1 in:fly={{ x: -20 }}>{$getBranchesQuery.data?.name}</h1>
 		{/key}
 		<div class="menu">
 			<Button
@@ -66,7 +68,7 @@
 					color="var(--primary-color)"
 				/>
 			</Button>
-			<a href={`/repos/${currentRepo.name}/remove`}>
+			<a href={`/repos/${$getBranchesQuery.data?.name}/remove`}>
 				<Button variant="tertiary" size="sm">
 					<Icon
 						icon="solar:close-circle-linear"
@@ -94,9 +96,10 @@
 											selected.length !== selectibleCount && selected.length > 0;
 
 										if (indeterminate || selected.length === 0) {
-											selected = currentRepo.branches
-												.map((item) => item.name)
-												.filter((item) => item !== currentRepo.current_branch);
+											selected =
+												$getBranchesQuery.data?.branches
+													.map((item) => item.name)
+													.filter((item) => item !== $getBranchesQuery.data?.current_branch) ?? [];
 										} else {
 											selected = [];
 										}
@@ -148,10 +151,10 @@
 							in:fly={{
 								x: -10,
 								duration: 100,
-								delay: 50 * (index + 1 / currentRepo.branches.length)
+								delay: 50 * (index + 1 / $getBranchesQuery.data?.branches.length)
 							}}
 						>
-							{#if currentRepo.current_branch !== branch.name}
+							{#if $getBranchesQuery.data?.current_branch !== branch.name}
 								<div class="checkbox">
 									<Checkbox
 										visuallyHideLabel
@@ -169,7 +172,7 @@
 								</div>
 							{/if}
 
-							{#if currentRepo.current_branch === branch.name}
+							{#if $getBranchesQuery.data?.current_branch === branch.name}
 								<div class="current-branch-icon">
 									<Icon
 										icon="octicon:feed-star-16"

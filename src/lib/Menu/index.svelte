@@ -7,6 +7,8 @@
 	import { getRepoInfo, toast } from '$lib/utils';
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
+	import { useGetRootPath } from '$lib/services/useGetRootPath';
+	import { goto } from '$app/navigation';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -18,27 +20,32 @@
 		return a.name.localeCompare(b.name);
 	}
 
-	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
-	onMount(async () => {
-		const { open } = await import('@tauri-apps/api/dialog');
+	let lastPathSelected: string | undefined;
 
-		apiOpen = open;
+	$: getRootPath = useGetRootPath(lastPathSelected, {
+		enabled: Boolean(lastPathSelected),
+		onError: (errors) => {
+			errors.reverse().forEach((item) => toast.failure(item));
+		}
 	});
 
-	function handleAddClick() {
-		if (apiOpen) {
-			apiOpen({ directory: true })
-				.then((dir) => {
+	$: if ($getRootPath.data) {
+		goto(`/repos/${$getRootPath.data.name}`, {
+			state: {
+				path: $getRootPath.data.path,
+				name: $getRootPath.data.name
+			}
+		});
+	}
+
+	async function handleAddClick() {
+		const { open } = await import('@tauri-apps/api/dialog');
+
+		if (open) {
+			open({ directory: true })
+				.then(async (dir) => {
 					if (dir && typeof dir === 'string') {
-						getRepoInfo(dir)
-							.then((res) => {
-								if (res) {
-									$repos = [...$repos.filter((item) => item.path !== res.path), res];
-								}
-							})
-							.catch((errors: string[]) => {
-								errors.reverse().forEach((item) => toast.failure(item));
-							});
+						lastPathSelected = dir;
 					}
 				})
 				.catch((error) => {

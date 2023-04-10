@@ -5,6 +5,8 @@
 
 extern crate execute;
 
+mod path;
+
 use std::process::Command;
 
 use std::env;
@@ -175,7 +177,7 @@ fn delete_branches(DeleteOptions(path, branches): DeleteOptions) -> String {
 
 fn main() {
   tauri::Builder::default()
-    .invoke_handler(tauri::generate_handler![git_repo_dir, delete_branches])
+    .invoke_handler(tauri::generate_handler![git_repo_dir, path::get_root, delete_branches])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
