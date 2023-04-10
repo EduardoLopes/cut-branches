@@ -7,15 +7,17 @@
 	import Button from '$lib/primitives/Button/index.svelte';
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
-	import { deleteBranchesMutation } from '$lib/services/deleteBranches';
+	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { toast } from '$lib/utils';
 
 	let id = $page.params.id;
 
 	let currentRepo: IRepo | undefined;
-	const deleteMutation = deleteBranchesMutation({
-		onSuccess(data, variables, context) {
-			console.log(data);
+	const deleteMutation = useDeleteBranchesMutation({
+		onSuccess(data) {
+			data.forEach((message) => {
+				toast.success(message);
+			});
 		},
 		onError(error) {
 			error.forEach((message) => {

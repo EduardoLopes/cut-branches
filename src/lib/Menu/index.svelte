@@ -34,7 +34,6 @@
 							.then((res) => {
 								if (res) {
 									$repos = [...$repos.filter((item) => item.path !== res.path), res];
-									console.log($repos);
 								}
 							})
 							.catch((errors: string[]) => {

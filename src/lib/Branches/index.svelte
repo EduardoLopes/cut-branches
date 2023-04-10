@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { IBranch } from '$lib/stores';
 
-	import { getRepoInfo, toast } from '$lib/utils';
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import Branch from '$lib/Branch/index.svelte';
@@ -11,11 +10,13 @@
 	import { fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { goto } from '$app/navigation';
+	import { getRepoByPath } from '$lib/services/getRepoByPath';
 
 	let selected: string[] = [];
 	export let id: string | null = null;
 
 	$: currentRepo = $repos.filter((item) => item.name === id)[0];
+	$: getBranchesQuery = getRepoByPath(currentRepo.path);
 	$: if ($navigating) selected = [];
 	$: selectibleCount = currentRepo?.branches.length - 1;
 
@@ -33,16 +34,7 @@
 
 	function update_repo() {
 		if (currentRepo) {
-			getRepoInfo(currentRepo.path)
-				.then((res) => {
-					if (res) {
-						$repos = [...$repos.filter((item) => item.path !== res.path), res];
-						currentRepo = res;
-					}
-				})
-				.catch((errors: string[]) => {
-					errors.reverse().forEach((item) => toast.failure(item));
-				});
+			$getBranchesQuery.refetch();
 		}
 	}
 
@@ -61,7 +53,12 @@
 			<h1 in:fly={{ x: -20 }}>{currentRepo.name}</h1>
 		{/key}
 		<div class="menu">
-			<Button variant="tertiary" size="sm" on:click={update_repo}>
+			<Button
+				variant="tertiary"
+				size="sm"
+				on:click={update_repo}
+				state={$getBranchesQuery.isFetching ? 'loading' : undefined}
+			>
 				<Icon
 					icon="material-symbols:refresh-rounded"
 					width="24px"
@@ -142,49 +139,51 @@
 				</div>
 			</div>
 			<div class="branches">
-				{#each currentRepo.branches.sort(sort) as branch, index (branch.name)}
-					<div
-						class="branch-container"
-						class:selected={selected.includes(branch.name)}
-						animate:flip={{ duration: 150 }}
-						in:fly={{
-							x: -10,
-							duration: 100,
-							delay: 50 * (index + 1 / currentRepo.branches.length)
-						}}
-					>
-						{#if currentRepo.current_branch !== branch.name}
-							<div class="checkbox">
-								<Checkbox
-									visuallyHideLabel
-									on:click={(e) => {
-										if (selected.includes(branch.name)) {
-											selected = selected.filter((item) => item !== branch.name);
-										} else {
-											selected = [...selected, branch.name];
-										}
-									}}
-									checked={selected.includes(branch.name)}
-								>
-									{branch.name}
-								</Checkbox>
-							</div>
-						{/if}
+				{#if $getBranchesQuery.data?.branches}
+					{#each $getBranchesQuery.data.branches.sort(sort) as branch, index (branch.name)}
+						<div
+							class="branch-container"
+							class:selected={selected.includes(branch.name)}
+							animate:flip={{ duration: 150 }}
+							in:fly={{
+								x: -10,
+								duration: 100,
+								delay: 50 * (index + 1 / currentRepo.branches.length)
+							}}
+						>
+							{#if currentRepo.current_branch !== branch.name}
+								<div class="checkbox">
+									<Checkbox
+										visuallyHideLabel
+										on:click={(e) => {
+											if (selected.includes(branch.name)) {
+												selected = selected.filter((item) => item !== branch.name);
+											} else {
+												selected = [...selected, branch.name];
+											}
+										}}
+										checked={selected.includes(branch.name)}
+									>
+										{branch.name}
+									</Checkbox>
+								</div>
+							{/if}
 
-						{#if currentRepo.current_branch === branch.name}
-							<div class="current-branch-icon">
-								<Icon
-									icon="octicon:feed-star-16"
-									width="32px"
-									height="32px"
-									color="var(--color-warning-10)"
-								/>
-							</div>
-						{/if}
+							{#if currentRepo.current_branch === branch.name}
+								<div class="current-branch-icon">
+									<Icon
+										icon="octicon:feed-star-16"
+										width="32px"
+										height="32px"
+										color="var(--color-warning-10)"
+									/>
+								</div>
+							{/if}
 
-						<Branch data={branch} selected={selected.includes(branch.name)} />
-					</div>
-				{/each}
+							<Branch data={branch} selected={selected.includes(branch.name)} />
+						</div>
+					{/each}
+				{/if}
 			</div>
 		</div>
 	{/key}
