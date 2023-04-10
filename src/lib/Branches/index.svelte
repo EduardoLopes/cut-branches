@@ -10,6 +10,7 @@
 	import { navigating, page } from '$app/stores';
 	import { fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
+	import { goto } from '$app/navigation';
 
 	let selected: string[] = [];
 	export let id: string | null = null;
@@ -43,6 +44,14 @@
 					errors.reverse().forEach((item) => toast.failure(item));
 				});
 		}
+	}
+
+	function handleDelete() {
+		goto(`/repos/${currentRepo.name}/delete`, {
+			state: {
+				branches: selected
+			}
+		});
 	}
 </script>
 
@@ -118,6 +127,7 @@
 								feedback="danger"
 								size="sm"
 								state={selected.length === 0 ? 'disabled' : undefined}
+								on:click={handleDelete}
 							>
 								<Icon
 									icon="ion:trash-outline"
