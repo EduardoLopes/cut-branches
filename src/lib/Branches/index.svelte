@@ -22,14 +22,6 @@
 
 	$: if ($navigating) console.log({ state: history.state });
 
-	function nextPage() {
-		pagination.page++;
-	}
-
-	function prevPage() {
-		pagination.page--;
-	}
-
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
 		if (a.current) {
@@ -58,14 +50,19 @@
 
 	let searchQuery = '';
 
-	$: pagination = {
-		page: 0,
-		perPage: 10,
-		totalPages: Math.ceil(($getBranchesQuery.data?.branches?.length ?? 0) / 10)
-	};
+	let currentPage = 0;
+	let itemsPerPage = 10;
 
-	$: start = Math.max(0, pagination.perPage * pagination.page);
-	$: end = start + pagination.perPage;
+	function nextPage() {
+		currentPage++;
+	}
+
+	function prevPage() {
+		currentPage--;
+	}
+
+	$: start = Math.max(0, itemsPerPage * currentPage);
+	$: end = start + itemsPerPage;
 	$: branches =
 		$getBranchesQuery.data?.branches.sort(sort).filter((item) => item.name.includes(searchQuery)) ??
 		[];
@@ -216,7 +213,14 @@
 			</div>
 			<div class="bottom-toolbar">
 				<div class="left">
-					<input class="search-input" placeholder="Search" bind:value={searchQuery} />
+					<input
+						class="search-input"
+						placeholder="Search"
+						bind:value={searchQuery}
+						on:input={() => {
+							currentPage = 0;
+						}}
+					/>
 				</div>
 				<div class="pagination">
 					{#if $getBranchesQuery.data?.branches}
@@ -224,18 +228,18 @@
 							variant="tertiary"
 							size="sm"
 							on:click={prevPage}
-							state={pagination.page <= 0 ? 'disabled' : 'normal'}
+							state={currentPage <= 0 ? 'disabled' : 'normal'}
 						>
 							<Icon icon="material-symbols:chevron-left-rounded" width="32px" height="32px" />
 						</Button>
 						<div class="numbers">
-							{pagination.page + 1} / {totalPages}
+							{currentPage + 1} / {totalPages}
 						</div>
 						<Button
 							variant="tertiary"
 							size="sm"
 							on:click={nextPage}
-							state={pagination.page + 1 >= totalPages ? 'disabled' : 'normal'}
+							state={currentPage + 1 >= totalPages ? 'disabled' : 'normal'}
 						>
 							<Icon icon="material-symbols:chevron-right-rounded" width="32px" height="32px" />
 						</Button>
