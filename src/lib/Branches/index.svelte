@@ -21,6 +21,19 @@
 	$: selectibleCount = Math.max(0, ($getBranchesQuery.data?.branches?.length ?? 0) - 1);
 
 	$: if ($navigating) console.log({ state: history.state });
+	$: pagination = {
+		page: 0,
+		perPage: 10,
+		totalPages: Math.ceil(($getBranchesQuery.data?.branches?.length ?? 0) / 10)
+	};
+
+	function nextPage() {
+		pagination.page++;
+	}
+
+	function prevPage() {
+		pagination.page--;
+	}
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -143,15 +156,19 @@
 			</div>
 			<div class="branches">
 				{#if $getBranchesQuery.data?.branches}
-					{#each $getBranchesQuery.data.branches.sort(sort) as branch, index (branch.name)}
+					{@const start = Math.max(0, pagination.perPage * pagination.page)}
+					{@const end = start + pagination.perPage}
+					{@const branches = $getBranchesQuery.data.branches.sort(sort).slice(start, end)}
+
+					{#each branches as branch, index (branch.name)}
 						<div
 							class="branch-container"
 							class:selected={selected.includes(branch.name)}
 							animate:flip={{ duration: 150 }}
 							in:fly={{
-								x: -10,
-								duration: 100,
-								delay: 50 * (index + 1 / $getBranchesQuery.data?.branches.length)
+								x: -30,
+								duration: 150,
+								delay: 20 * (index + 1 / $getBranchesQuery.data?.branches.length)
 							}}
 						>
 							{#if $getBranchesQuery.data?.current_branch !== branch.name}
@@ -187,6 +204,32 @@
 						</div>
 					{/each}
 				{/if}
+			</div>
+			<div class="bottom-toolbar">
+				<div class="left" />
+				<div class="pagination">
+					{#if $getBranchesQuery.data?.branches}
+						<Button
+							variant="tertiary"
+							size="sm"
+							on:click={prevPage}
+							state={pagination.page <= 0 ? 'disabled' : 'normal'}
+						>
+							<Icon icon="material-symbols:chevron-left-rounded" width="32px" height="32px" />
+						</Button>
+						<div class="numbers">
+							{pagination.page + 1} / {pagination.totalPages}
+						</div>
+						<Button
+							variant="tertiary"
+							size="sm"
+							on:click={nextPage}
+							state={pagination.page + 1 >= pagination.totalPages ? 'disabled' : 'normal'}
+						>
+							<Icon icon="material-symbols:chevron-right-rounded" width="32px" height="32px" />
+						</Button>
+					{/if}
+				</div>
 			</div>
 		</div>
 	{/key}
@@ -236,6 +279,32 @@
 					justify-content: center;
 					width: 57px;
 				}
+			}
+		}
+	}
+
+	.bottom-toolbar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		position: sticky;
+		bottom: 0;
+		background: var(--color-neutral-2);
+		z-index: 10;
+		border-top: 1px solid var(--color-neutral-6);
+
+		.pagination {
+			display: flex;
+
+			.numbers {
+				display: flex;
+				align-items: center;
+				padding: 1.6rem;
+			}
+			:global(.button) {
+				border-radius: 0;
+				border: 1px solid var(--color-neutral-6);
+				border-top-width: 0;
 			}
 		}
 	}
