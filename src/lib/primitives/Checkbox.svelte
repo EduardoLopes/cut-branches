@@ -4,7 +4,6 @@
 	export interface CheckboxProps extends HTMLInputAttributes {
 		indeterminate?: boolean;
 		visuallyHideLabel?: boolean;
-		group?: string[];
 	}
 </script>
 
@@ -13,7 +12,6 @@
 
 	export let indeterminate = false;
 	export let visuallyHideLabel = false;
-	export let group: $$Props['group'] = [];
 </script>
 
 <label class="label">
@@ -23,7 +21,6 @@
 		bind:indeterminate
 		aria-checked={indeterminate ? 'mixed' : undefined}
 		{...$$restProps}
-		bind:group
 		on:click
 		on:change
 		on:mouseover
