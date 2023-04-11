@@ -14,56 +14,7 @@
 	export let disabled = false;
 
 	let id = $page.params.id;
-
 	let currentRepo: IRepo | undefined;
-
-	onMount(() => {
-		currentRepo = $repos.filter((item) => item.name === id)[0];
-	});
-
-	let alerts: Array<{
-		message: string;
-		type: AlertFeedback;
-		id: string;
-	}> = [];
-
-	$: if (data) {
-		alerts = [];
-		if (data.fully_merged) {
-			alerts.push({
-				message: `This branch is not fully merged into the current branch, ${currentRepo?.current_branch}!`,
-				type: 'info',
-				id: 'fully_merged'
-			});
-		} else {
-			alerts = alerts.filter((item) => item.id !== 'fully_merged');
-		}
-
-		if (protectedWords.some((item) => data.name.includes(item)) && selected) {
-			alerts.push({
-				message: `You're selecting a branch with the name <strong>${data.name}</strong>, review and make
-						sure you really wanna delete this branch!`,
-				type: 'warning',
-				id: 'protected_words'
-			});
-		} else {
-			alerts = alerts.filter((item) => item.id !== 'protected_words');
-		}
-
-		if (data.name.includes('master')) {
-			alerts.push({
-				message: `The branch name <strong>master</strong> is offensive. Check out this
-						<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank">article</a>
-						and make sure to change the branch name to <strong>main</strong>, <strong>default</strong>,
-						<strong>truck</strong> or any other word that don't offend others!`,
-				type: 'danger',
-				id: 'offensive_words'
-			});
-		} else {
-			alerts = alerts.filter((item) => item.id !== 'offensive_words');
-		}
-	}
-
 	let protectedWords = [
 		'develop',
 		'dev',
@@ -76,6 +27,24 @@
 		'default',
 		'trunk'
 	];
+
+	onMount(() => {
+		currentRepo = $repos.filter((item) => item.name === id)[0];
+	});
+
+	type Alert = {
+		message: string;
+		type: AlertFeedback;
+		id: string;
+	};
+
+	$: alerts = Object.entries({
+		fullyMerged: data.fully_merged,
+		protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
+		offensiveWords: data.name.includes('master')
+	})
+		.filter((item) => item[1] === true)
+		.map((item) => item[0]);
 </script>
 
 <div
@@ -91,15 +60,34 @@
 
 	<div class="info alert-group" use:resizeContainer>
 		<Group direction="column">
-			{#each alerts as alert (alert.id)}
+			{#each alerts as alert (alert)}
 				<div
 					animate:flip={{ duration: 150 }}
 					in:fly|local={{ y: -20, duration: 200 }}
 					out:fly|local={{ y: -10, duration: 50 }}
 				>
-					<Alert feedback={alert.type}>
-						{@html alert.message}
-					</Alert>
+					{#if alert === 'fullyMerged'}
+						<Alert feedback="info">
+							This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
+						</Alert>
+					{/if}
+					{#if alert === 'protectedWords'}
+						<Alert feedback="warning">
+							You're selecting a branch with the name <strong>{data.name}</strong>, review and make
+							sure you really wanna delete this branch!
+						</Alert>
+					{/if}
+					{#if alert === 'offensiveWords'}
+						<Alert feedback="danger">
+							The branch name <strong>master</strong> is offensive. Check out this
+							<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+								>article</a
+							>
+							and make sure to change the branch name to <strong>main</strong>,
+							<strong>default</strong>,
+							<strong>truck</strong> or any other word that don't offend others!
+						</Alert>
+					{/if}
 				</div>
 			{/each}
 		</Group>
