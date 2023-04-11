@@ -16,7 +16,7 @@ export function resizeContainer(node: HTMLElement) {
 	updateHeight();
 
 	node.style.setProperty('overflow', 'hidden');
-	node.style.setProperty('transition', 'height 150ms ease');
+	node.style.setProperty('transition', 'height 150ms ease-out');
 
 	return {
 		destroy() {

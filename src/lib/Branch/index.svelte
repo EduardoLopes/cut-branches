@@ -92,11 +92,10 @@
 	.transition {
 		transition-timing-function: ease-in-out;
 		transition-duration: 0.1s;
-		transition-property: width, height, border, color, background, padding, font-size;
+		transition-property: border, color, background;
 	}
 
 	.alert-group {
-		@extend .transition;
 		:global {
 			.alert {
 				border-width: 0;
@@ -117,8 +116,6 @@
 			font-weight: 600;
 			padding: 1.6rem;
 		}
-
-		@extend .transition;
 
 		&.current {
 			background: var(--color-warning-2);

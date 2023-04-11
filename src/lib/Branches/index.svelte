@@ -169,58 +169,68 @@
 					{/if}
 				</div>
 			</div>
-			<div class="branches">
-				{#if paginatedBranches}
-					{#each paginatedBranches as branch, index (branch.name)}
-						<div
-							class="branch-container"
-							class:selected={selected.includes(branch.name)}
-							animate:flip={{ duration: 150 }}
-						>
-							<!-- Nice animation that has bad performance -->
-							<!-- in:fly={{
-							x: -30,
-							duration: 150,
-							delay: 20 * (index + 1 / paginatedBranches.length)
-						}}
-						out:fly|local={{
-							x: -30,
-							duration: 150,
-							delay: 20 * (index + 1 / paginatedBranches.length)
-						}} -->
-							{#if $getBranchesQuery.data?.current_branch !== branch.name}
-								<div class="checkbox">
-									<Checkbox
-										visuallyHideLabel
-										on:click={(e) => {
-											if (selected.includes(branch.name)) {
-												selected = selected.filter((item) => item !== branch.name);
-											} else {
-												selected = [...selected, branch.name];
-											}
+			<div class="branches-container">
+				{#key currentPage}
+					<div
+						class="branches"
+						in:fly={{ x: 40, duration: 200 }}
+						out:fly|local={{ x: 60, duration: 200 }}
+					>
+						{#if paginatedBranches}
+							{#each paginatedBranches as branch, index (branch.name)}
+								<div
+									class="branch-container"
+									class:selected={selected.includes(branch.name)}
+									animate:flip={{ duration: 150 }}
+								>
+									<!-- Nice animation that has bad performance -->
+									<!--
+										in:fly={{
+											x: -30,
+											duration: 150,
+											delay: 20 * (index + 1 / paginatedBranches.length)
 										}}
-										checked={selected.includes(branch.name)}
-									>
-										{branch.name}
-									</Checkbox>
-								</div>
-							{/if}
+										out:fly|local={{
+											x: -30,
+											duration: 150,
+											delay: 20 * (index + 1 / paginatedBranches.length)
+										}}
+									-->
+									{#if $getBranchesQuery.data?.current_branch !== branch.name}
+										<div class="checkbox">
+											<Checkbox
+												visuallyHideLabel
+												on:click={(e) => {
+													if (selected.includes(branch.name)) {
+														selected = selected.filter((item) => item !== branch.name);
+													} else {
+														selected = [...selected, branch.name];
+													}
+												}}
+												checked={selected.includes(branch.name)}
+											>
+												{branch.name}
+											</Checkbox>
+										</div>
+									{/if}
 
-							{#if $getBranchesQuery.data?.current_branch === branch.name}
-								<div class="current-branch-icon">
-									<Icon
-										icon="octicon:feed-star-16"
-										width="32px"
-										height="32px"
-										color="var(--color-warning-10)"
-									/>
-								</div>
-							{/if}
+									{#if $getBranchesQuery.data?.current_branch === branch.name}
+										<div class="current-branch-icon">
+											<Icon
+												icon="octicon:feed-star-16"
+												width="32px"
+												height="32px"
+												color="var(--color-warning-10)"
+											/>
+										</div>
+									{/if}
 
-							<Branch data={branch} selected={selected.includes(branch.name)} />
-						</div>
-					{/each}
-				{/if}
+									<Branch data={branch} selected={selected.includes(branch.name)} />
+								</div>
+							{/each}
+						{/if}
+					</div>
+				{/key}
 			</div>
 			<div class="bottom-toolbar">
 				<div class="left">
@@ -322,8 +332,6 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		position: sticky;
-		top: 0;
 		background: var(--color-neutral-2);
 		padding: 1.6rem;
 		z-index: 10;
@@ -340,6 +348,14 @@
 		}
 	}
 
+	.branches-container {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+		overflow: hidden;
+		position: relative;
+	}
+
 	.branches {
 		display: flex;
 		flex-direction: column;
@@ -351,7 +367,10 @@
 		flex-grow: 1;
 		overflow-y: scroll;
 		height: calc(100vh - 200px);
-		overflow-x: hidden;
+		z-index: 0;
+		position: absolute;
+		width: 100%;
+		height: 100%;
 
 		.branch-container {
 			position: relative;
@@ -359,7 +378,6 @@
 			grid-template-columns: 24px auto;
 			gap: 1.6rem;
 			border-radius: 4px;
-			@extend .transition;
 		}
 
 		.current-branch-icon {
@@ -374,8 +392,6 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		position: sticky;
-		bottom: 0;
 		background: var(--color-neutral-2);
 		z-index: 10;
 		border-top: 1px solid var(--color-neutral-6);
