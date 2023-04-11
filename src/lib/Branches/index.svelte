@@ -181,6 +181,11 @@
 								duration: 150,
 								delay: 20 * (index + 1 / paginatedBranches.length)
 							}}
+							out:fly|local={{
+								x: -30,
+								duration: 150,
+								delay: 20 * (index + 1 / paginatedBranches.length)
+							}}
 						>
 							{#if $getBranchesQuery.data?.current_branch !== branch.name}
 								<div class="checkbox">
