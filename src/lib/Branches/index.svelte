@@ -16,11 +16,11 @@
 	export let id: string | null = null;
 
 	$: currentRepo = $repos.filter((item) => item.name === id)[0] as IRepo | undefined;
-	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path);
+	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
+		staleTime: 20000
+	});
 	$: if ($navigating) selected = [];
 	$: selectibleCount = Math.max(0, ($getBranchesQuery.data?.branches?.length ?? 0) - 1);
-
-	$: if ($navigating) console.log({ state: history.state });
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -70,6 +70,11 @@
 	$: paginatedBranches = branches.slice(start, end);
 
 	$: totalPages = Math.ceil((branches?.length ?? 0) / 10);
+
+	$: if ($navigating) {
+		currentPage = 0;
+		searchQuery = '';
+	}
 </script>
 
 <main class="container">
