@@ -32,12 +32,6 @@
 		currentRepo = $repos.filter((item) => item.name === id)[0];
 	});
 
-	type Alert = {
-		message: string;
-		type: AlertFeedback;
-		id: string;
-	};
-
 	$: alerts = Object.entries({
 		fullyMerged: data.fully_merged,
 		protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
