@@ -21,11 +21,6 @@
 	$: selectibleCount = Math.max(0, ($getBranchesQuery.data?.branches?.length ?? 0) - 1);
 
 	$: if ($navigating) console.log({ state: history.state });
-	$: pagination = {
-		page: 0,
-		perPage: 10,
-		totalPages: Math.ceil(($getBranchesQuery.data?.branches?.length ?? 0) / 10)
-	};
 
 	function nextPage() {
 		pagination.page++;
@@ -60,6 +55,24 @@
 			}
 		});
 	}
+
+	let searchQuery = '';
+
+	$: pagination = {
+		page: 0,
+		perPage: 10,
+		totalPages: Math.ceil(($getBranchesQuery.data?.branches?.length ?? 0) / 10)
+	};
+
+	$: start = Math.max(0, pagination.perPage * pagination.page);
+	$: end = start + pagination.perPage;
+	$: branches =
+		$getBranchesQuery.data?.branches.sort(sort).filter((item) => item.name.includes(searchQuery)) ??
+		[];
+
+	$: paginatedBranches = branches.slice(start, end);
+
+	$: totalPages = Math.ceil((branches?.length ?? 0) / 10);
 </script>
 
 <main class="container">
@@ -155,12 +168,8 @@
 				</div>
 			</div>
 			<div class="branches">
-				{#if $getBranchesQuery.data?.branches}
-					{@const start = Math.max(0, pagination.perPage * pagination.page)}
-					{@const end = start + pagination.perPage}
-					{@const branches = $getBranchesQuery.data.branches.sort(sort).slice(start, end)}
-
-					{#each branches as branch, index (branch.name)}
+				{#if paginatedBranches}
+					{#each paginatedBranches as branch, index (branch.name)}
 						<div
 							class="branch-container"
 							class:selected={selected.includes(branch.name)}
@@ -168,7 +177,7 @@
 							in:fly={{
 								x: -30,
 								duration: 150,
-								delay: 20 * (index + 1 / $getBranchesQuery.data?.branches.length)
+								delay: 20 * (index + 1 / paginatedBranches.length)
 							}}
 						>
 							{#if $getBranchesQuery.data?.current_branch !== branch.name}
@@ -206,7 +215,9 @@
 				{/if}
 			</div>
 			<div class="bottom-toolbar">
-				<div class="left" />
+				<div class="left">
+					<input class="search-input" placeholder="Search" bind:value={searchQuery} />
+				</div>
 				<div class="pagination">
 					{#if $getBranchesQuery.data?.branches}
 						<Button
@@ -218,13 +229,13 @@
 							<Icon icon="material-symbols:chevron-left-rounded" width="32px" height="32px" />
 						</Button>
 						<div class="numbers">
-							{pagination.page + 1} / {pagination.totalPages}
+							{pagination.page + 1} / {totalPages}
 						</div>
 						<Button
 							variant="tertiary"
 							size="sm"
 							on:click={nextPage}
-							state={pagination.page + 1 >= pagination.totalPages ? 'disabled' : 'normal'}
+							state={pagination.page + 1 >= totalPages ? 'disabled' : 'normal'}
 						>
 							<Icon icon="material-symbols:chevron-right-rounded" width="32px" height="32px" />
 						</Button>
@@ -292,6 +303,20 @@
 		background: var(--color-neutral-2);
 		z-index: 10;
 		border-top: 1px solid var(--color-neutral-6);
+
+		.left {
+			display: flex;
+			.search-input {
+				display: block;
+				height: 100%;
+				padding: 1.6rem;
+				margin: 0;
+				border-radius: 0;
+				appearance: none;
+				border: 1px solid var(--color-neutral-6);
+				border-top-width: 0;
+			}
+		}
 
 		.pagination {
 			display: flex;
