@@ -253,6 +253,8 @@
 		transition-property: width, height, border, color, background, padding, font-size, max-height;
 	}
 	.container {
+		display: flex;
+		flex-direction: column;
 		background: var(--color-neutral-2);
 		overflow: hidden;
 		position: relative;
@@ -266,6 +268,7 @@
 		top: 0;
 		border-bottom: 1px dashed var(--color-neutral-8);
 		z-index: 20;
+		flex-shrink: 0;
 
 		h1 {
 			font-size: 1.3em;
@@ -294,6 +297,64 @@
 		}
 	}
 
+	.content {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+	}
+
+	.toolbar-container {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		position: sticky;
+		top: 0;
+		background: var(--color-neutral-2);
+		padding: 1.6rem;
+		z-index: 10;
+		min-height: 66px;
+		flex-shrink: 0;
+
+		.left,
+		.checkbox {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+			height: 100%;
+			gap: 1.6rem;
+		}
+	}
+
+	.branches {
+		display: flex;
+		flex-direction: column;
+		grid-auto-rows: max-content;
+		gap: 1.6rem;
+		border: 1px dashed var(--color-gray);
+		padding: 16px;
+		padding-top: 0;
+		flex-grow: 1;
+		overflow-y: scroll;
+		height: calc(100vh - 200px);
+		overflow-x: hidden;
+
+		.branch-container {
+			position: relative;
+			display: grid;
+			grid-template-columns: 24px auto;
+			gap: 1.6rem;
+			border-radius: 4px;
+			@extend .transition;
+		}
+
+		.current-branch-icon {
+			display: flex;
+			align-items: center;
+			width: 100%;
+			margin-left: 2px;
+		}
+	}
+
 	.bottom-toolbar {
 		display: flex;
 		justify-content: space-between;
@@ -303,6 +364,7 @@
 		background: var(--color-neutral-2);
 		z-index: 10;
 		border-top: 1px solid var(--color-neutral-6);
+		flex-shrink: 0;
 
 		.left {
 			display: flex;
@@ -332,57 +394,5 @@
 				border-top-width: 0;
 			}
 		}
-	}
-
-	.toolbar-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		position: sticky;
-		top: 0;
-		background: var(--color-neutral-2);
-		padding: 1.6rem;
-		z-index: 10;
-		min-height: 66px;
-
-		.left,
-		.checkbox {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			height: 100%;
-			gap: 1.6rem;
-		}
-	}
-
-	.content {
-		overflow-y: scroll;
-		height: calc(100vh - 57px);
-		overflow-x: hidden;
-	}
-
-	.branch-container {
-		position: relative;
-		display: grid;
-		grid-template-columns: 24px auto;
-		gap: 1.6rem;
-		border-radius: 4px;
-		@extend .transition;
-	}
-
-	.current-branch-icon {
-		display: flex;
-		align-items: center;
-		width: 100%;
-		margin-left: 2px;
-	}
-	.branches {
-		display: flex;
-		flex-direction: column;
-		grid-auto-rows: max-content;
-		gap: 1.6rem;
-		border: 1px dashed var(--color-gray);
-		padding: 16px;
-		padding-top: 0;
 	}
 </style>
