@@ -48,14 +48,20 @@
 		});
 	}
 
+	function clearSearch() {
+		searchQuery = '';
+		deboucedSearchQuery = '';
+		currentPage = 0;
+	}
+
 	let searchQuery = '';
 	let deboucedSearchQuery = '';
 
-	const debounceSearchQuery = debounce(() => {
-		deboucedSearchQuery = searchQuery;
+	const debounceSearchQuery = debounce((value: string) => {
+		deboucedSearchQuery = value;
 	}, 300);
 
-	$: debounceSearchQuery();
+	$: debounceSearchQuery(searchQuery);
 
 	let currentPage = 0;
 	let itemsPerPage = 10;
@@ -84,7 +90,10 @@
 		searchQuery = '';
 	}
 
-	$: selectibleCount = Math.max(0, (branches?.length ?? 0) - 1);
+	$: selectibleCount = Math.max(
+		0,
+		branches.filter((item) => item.name !== $getBranchesQuery.data?.current_branch)?.length ?? 0
+	);
 </script>
 
 <main class="container">
@@ -124,30 +133,40 @@
 			<div class="toolbar-container">
 				<div class="left">
 					{#if selectibleCount > 0}
+						{@const selectedLength = branches.filter((item) => selected.includes(item.name)).length}
 						{#key selectibleCount}
 							<div in:fly={{ x: -10 }} class="checkbox">
 								<Checkbox
 									visuallyHideLabel
-									indeterminate={selected.length !== selectibleCount && selected.length > 0}
+									indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
 									on:click={(e) => {
-										const indeterminate =
-											selected.length !== selectibleCount && selected.length > 0;
+										const indeterminate = selectedLength !== selectibleCount && selectedLength > 0;
 
-										if (indeterminate || selected.length === 0) {
+										if (indeterminate || selectedLength === 0) {
 											selected =
-												$getBranchesQuery.data?.branches
+												branches
 													.map((item) => item.name)
 													.filter((item) => item !== $getBranchesQuery.data?.current_branch) ?? [];
 										} else {
-											selected = [];
+											const allSelectedBranch = branches.map((item) => item.name);
+
+											console.log(allSelectedBranch);
+
+											selected = selected.filter((item) => !allSelectedBranch.includes(item));
 										}
 									}}
-									checked={selected.length === selectibleCount}
+									checked={selectedLength === selectibleCount}
 								>
 									Select all
 								</Checkbox>
+								{#if deboucedSearchQuery.length > 0}
+									{selectedLength} / {selectibleCount}
+									branches were found
+								{/if}
 
-								{selected.length} / {selectibleCount} branches selected
+								{#if deboucedSearchQuery.length === 0}
+									{selectedLength} / {selectibleCount} branches
+								{/if}
 							</div>
 						{/key}
 					{/if}
@@ -158,7 +177,7 @@
 				</div>
 
 				<div class="actions">
-					{#if selectibleCount > 0}
+					{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
 						<div in:fly={{ x: 10 }}>
 							<Button
 								variant="primary"
@@ -174,6 +193,20 @@
 									color="var(--primary-color)"
 								/>
 								Delete
+							</Button>
+						</div>
+					{/if}
+
+					{#if deboucedSearchQuery.length > 0}
+						<div in:fly={{ x: 10 }}>
+							<Button variant="primary" feedback="normal" size="sm" on:click={clearSearch}>
+								<Icon
+									icon="ion:trash-outline"
+									width="16px"
+									height="16px"
+									color="var(--primary-color)"
+								/>
+								Clear search
 							</Button>
 						</div>
 					{/if}
@@ -249,10 +282,22 @@
 						placeholder="Search"
 						bind:value={searchQuery}
 						on:input={(event) => {
-							debounceSearchQuery(event.target?.value);
 							currentPage = 0;
 						}}
 					/>
+					<!-- <div class="search-info">
+						{#if deboucedSearchQuery}
+							{#if branches.length === 0}
+								No results found
+							{/if}
+							{#if branches.length > 1}
+								{branches.length} branches were found!
+							{/if}
+							{#if branches.length === 1}
+								A single branch was found!
+							{/if}
+						{/if}
+					</div> -->
 				</div>
 				<div class="pagination">
 					{#if $getBranchesQuery.data?.branches}
