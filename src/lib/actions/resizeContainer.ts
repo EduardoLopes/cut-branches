@@ -11,6 +11,9 @@ export function resizeContainer(node: HTMLElement) {
 	const observer = new MutationObserver(() => {
 		updateHeight();
 	});
+
+	window.addEventListener('resize', updateHeight);
+
 	observer.observe(node, { characterData: true, subtree: true, childList: true });
 
 	updateHeight();
