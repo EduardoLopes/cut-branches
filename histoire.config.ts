@@ -3,5 +3,6 @@ import { HstSvelte } from '@histoire/plugin-svelte';
 
 export default defineConfig({
 	setupFile: 'histoire.setup.ts',
-	plugins: [HstSvelte()]
+	plugins: [HstSvelte()],
+	storyIgnored: ['**/node_modules/**', '**/src-tauri/**']
 });
