@@ -11,6 +11,7 @@
 	import { flip } from 'svelte/animate';
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import debounce from 'just-debounce-it';
 
 	let selected: string[] = [];
 	export let id: string | null = null;
@@ -20,7 +21,6 @@
 		staleTime: 20000
 	});
 	$: if ($navigating) selected = [];
-	$: selectibleCount = Math.max(0, ($getBranchesQuery.data?.branches?.length ?? 0) - 1);
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -49,6 +49,13 @@
 	}
 
 	let searchQuery = '';
+	let deboucedSearchQuery = '';
+
+	const debounceSearchQuery = debounce(() => {
+		deboucedSearchQuery = searchQuery;
+	}, 300);
+
+	$: debounceSearchQuery();
 
 	let currentPage = 0;
 	let itemsPerPage = 10;
@@ -64,8 +71,9 @@
 	$: start = Math.max(0, itemsPerPage * currentPage);
 	$: end = start + itemsPerPage;
 	$: branches =
-		$getBranchesQuery.data?.branches.sort(sort).filter((item) => item.name.includes(searchQuery)) ??
-		[];
+		$getBranchesQuery.data?.branches
+			.sort(sort)
+			.filter((item) => item.name.includes(deboucedSearchQuery)) ?? [];
 
 	$: paginatedBranches = branches.slice(start, end);
 
@@ -75,6 +83,8 @@
 		currentPage = 0;
 		searchQuery = '';
 	}
+
+	$: selectibleCount = Math.max(0, (branches?.length ?? 0) - 1);
 </script>
 
 <main class="container">
@@ -238,7 +248,8 @@
 						class="search-input"
 						placeholder="Search"
 						bind:value={searchQuery}
-						on:input={() => {
+						on:input={(event) => {
+							debounceSearchQuery(event.target?.value);
 							currentPage = 0;
 						}}
 					/>
