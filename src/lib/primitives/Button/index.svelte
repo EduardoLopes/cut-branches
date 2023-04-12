@@ -277,6 +277,7 @@
 				position: absolute;
 				inset: 0;
 				backdrop-filter: blur(6px);
+				-webkit-backdrop-filter: blur(6px);
 				background: rgba(255 255 255 / 10%);
 
 				.icon {
