@@ -166,7 +166,7 @@
 								</Checkbox>
 								{#if deboucedSearchQuery.length > 0}
 									{selectedLength} / {selectibleCount}
-									branches were found
+									{selectibleCount === 1 ? 'branch was' : 'branches were'} found
 								{/if}
 
 								{#if deboucedSearchQuery.length === 0}
