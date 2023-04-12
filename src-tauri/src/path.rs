@@ -12,8 +12,8 @@ struct RootPathResponse {
   errors: Vec<String>,
 }
 
-#[tauri::command]
-pub fn get_root(path: String) -> String {
+#[tauri::command(async)]
+pub async fn get_root(path: String) -> String {
   let mut errors: Vec<String> = Vec::new();
 
   let raw_path = Path::new(&path);

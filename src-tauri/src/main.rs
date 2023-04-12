@@ -29,8 +29,8 @@ struct GitDirResponse {
   current_branch: String,
 }
 
-#[tauri::command]
-fn git_repo_dir(path: String) -> String {
+#[tauri::command(async)]
+async fn git_repo_dir(path: String) -> String {
   let mut errors: Vec<String> = Vec::new();
 
   let raw_path = Path::new(&path);
@@ -85,7 +85,7 @@ fn git_repo_dir(path: String) -> String {
 
   let branch_no_merged_child = Command::new("git")
     .arg("branch")
-    .arg("--no-merged")    
+    .arg("--no-merged")
     .output()
     .expect("Failed to execute command");
 
@@ -135,6 +135,10 @@ fn git_repo_dir(path: String) -> String {
     current_branch: current.to_string(),
   };
 
+  // for testing
+  // let ten_millis = std::time::Duration::from_millis(1000);
+  // std::thread::sleep(ten_millis);
+
   return serde_json::to_string(&response).unwrap();
 }
 
@@ -147,7 +151,7 @@ struct DeleteBranchesResponse {
   errors: String,
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn delete_branches(DeleteOptions(path, branches): DeleteOptions) -> String {
   let raw_path = Path::new(&path);
   // let mut errors: Vec<String> = Vec::new();
