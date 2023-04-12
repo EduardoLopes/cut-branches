@@ -20,7 +20,10 @@
 	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
 		staleTime: 20000
 	});
-	$: if ($navigating) selected = [];
+	$: if ($navigating) {
+		selected = [];
+		clearSearch();
+	}
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -94,6 +97,8 @@
 		0,
 		branches.filter((item) => item.name !== $getBranchesQuery.data?.current_branch)?.length ?? 0
 	);
+
+	$: searchNoResultsFound = deboucedSearchQuery.length > 0 && branches.length === 0;
 </script>
 
 <main class="container">
@@ -171,7 +176,7 @@
 						{/key}
 					{/if}
 
-					{#if selectibleCount === 0}
+					{#if selectibleCount === 0 && deboucedSearchQuery.length === 0}
 						<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
 					{/if}
 				</div>
@@ -197,15 +202,10 @@
 						</div>
 					{/if}
 
-					{#if deboucedSearchQuery.length > 0}
+					{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
 						<div in:fly={{ x: 10 }}>
-							<Button variant="primary" feedback="normal" size="sm" on:click={clearSearch}>
-								<Icon
-									icon="ion:trash-outline"
-									width="16px"
-									height="16px"
-									color="var(--primary-color)"
-								/>
+							<Button variant="primary" feedback="info" size="sm" on:click={clearSearch}>
+								<Icon icon="mdi:clear" width="16px" height="16px" />
 								Clear search
 							</Button>
 						</div>
@@ -213,6 +213,18 @@
 				</div>
 			</div>
 			<div class="branches-container">
+				{#if searchNoResultsFound}
+					<div class="search-no-found" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
+						<Icon
+							icon="material-symbols:search-off"
+							width="64px"
+							height="64px"
+							color="var(--color-warning-10)"
+						/>
+						<div>No results for <b>{deboucedSearchQuery}</b>!</div>
+					</div>
+				{/if}
+
 				{#key currentPage}
 					<div
 						class="branches"
@@ -299,8 +311,8 @@
 						{/if}
 					</div> -->
 				</div>
-				<div class="pagination">
-					{#if $getBranchesQuery.data?.branches}
+				{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
+					<div class="pagination" in:fly={{ x: 10 }} out:fly|local={{ x: 10 }}>
 						<Button
 							variant="tertiary"
 							size="sm"
@@ -320,8 +332,8 @@
 						>
 							<Icon icon="material-symbols:chevron-right-rounded" width="32px" height="32px" />
 						</Button>
-					{/if}
-				</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/key}
@@ -410,6 +422,16 @@
 		flex-grow: 1;
 		overflow: hidden;
 		position: relative;
+	}
+
+	.search-no-found {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100%;
+		font-size: 2.4rem;
+		flex-direction: column;
+		gap: 1.6rem;
 	}
 
 	.branches {
