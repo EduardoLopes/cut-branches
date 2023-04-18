@@ -34,7 +34,11 @@ struct GitDirResponse {
 
 fn set_current_dir(path: &Path) -> Result<(), Error> {
     env::set_current_dir(&path).map_err(|error| Error {
-        message: format!("Unable to change into: {0} | {1}", error, path.display()),
+        message: format!(
+            "Unable to change into the path: <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(error.to_string()),
         kind: "set_current_dir".to_string(),
     })
 }

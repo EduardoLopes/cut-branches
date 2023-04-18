@@ -1,21 +1,44 @@
-<script>
-	import { SvelteToast } from '@zerodevx/svelte-toast';
-	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
+<script lang="ts">
+	import {
+		MutationCache,
+		QueryCache,
+		QueryClient,
+		QueryClientProvider
+	} from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
-
 	import '../app.css';
+	import type { ServiceError } from '$lib/services/models';
+	import Toast, { toast } from '$lib/primitives/Toast.svelte';
+
+	const mutationCache = new MutationCache({
+		onError: (error) => {
+			const e = error as ServiceError;
+			toast.danger({ message: e.message, description: e.description });
+		}
+	});
+
+	const queryCache = new QueryCache({
+		onError: (error) => {
+			const e = error as ServiceError;
+			toast.danger({ message: e.message, description: e.description });
+		}
+	});
 
 	const queryClient = new QueryClient({
+		mutationCache,
+		queryCache,
 		defaultOptions: {
 			queries: {
-				enabled: browser
+				enabled: browser,
+				retry: 0,
+				refetchOnWindowFocus: false
 			}
 		}
 	});
 </script>
 
 <QueryClientProvider client={queryClient}>
-	<SvelteToast options={{ intro: { y: 100 } }} />
+	<Toast />
 	<slot />
 	<footer />
 </QueryClientProvider>

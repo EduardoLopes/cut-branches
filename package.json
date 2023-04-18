@@ -22,7 +22,6 @@
 		"@sveltejs/kit": "^1.15.7",
 		"@typescript-eslint/eslint-plugin": "^5.59.0",
 		"@typescript-eslint/parser": "^5.59.0",
-		"@zerodevx/svelte-toast": "^0.9.3",
 		"csstype": "^3.1.2",
 		"eslint": "^8.38.0",
 		"eslint-config-prettier": "^8.8.0",
@@ -45,7 +44,7 @@
 		"@tanstack/svelte-query": "^4.29.1",
 		"@tauri-apps/api": "^1.2.0",
 		"@tauri-apps/cli": "^1.2.3",
-		"cookie": "^0.5.0",
+		"hash-it": "^6.0.0",
 		"just-debounce-it": "^3.2.0"
 	}
 }

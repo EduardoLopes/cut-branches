@@ -9,6 +9,7 @@
 	import Icon from '@iconify/svelte';
 	import { useGetRootPath } from '$lib/services/useGetRootPath';
 	import { goto } from '$app/navigation';
+	import { invoke } from '@tauri-apps/api/tauri';
 
 	export let sortBy = 'BRANCH_COUNT';
 

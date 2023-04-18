@@ -373,7 +373,7 @@
 		position: absolute;
 		inset: 0;
 		background: rgba(255, 255, 255, 0.5);
-		z-index: 9999;
+		z-index: 100;
 		backdrop-filter: blur(2px);
 		-webkit-backdrop-filter: blur(2px);
 	}
