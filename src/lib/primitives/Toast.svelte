@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-	const TOAST_DEFAULT_TIMEOUT_MS = 6000;
+	const TOAST_DEFAULT_TIMEOUT_MS = 600000;
 
 	export interface Toast {
 		message: string;
@@ -50,14 +50,15 @@
 			message: toastOptions.message,
 			feedback: toastOptions.feedback || 'normal',
 			description: toastOptions.description,
-			id: toastOptions.id || hash(message),
+			id:
+				toastOptions.id ||
+				hash(`${toastOptions.message}_${toastOptions.feedback}_${toastOptions.description}}`),
 			timeout: toastOptions.timeout || TOAST_DEFAULT_TIMEOUT_MS,
 			timeoutId: 0,
 			count: 0
 		};
 
-		const toast =
-			get(toastsStore).find((item) => item.id === toastOptions.id || newToast.id) || newToast;
+		const toast = get(toastsStore).find((item) => item.id === newToast.id) || newToast;
 
 		toast.count += 1;
 
@@ -77,36 +78,25 @@
 		warning: (options: ToastOptions) => addToast({ feedback: 'warning', ...options }),
 		danger: (options: ToastOptions) => addToast({ feedback: 'danger', ...options })
 	};
+
+	for (let i = 0; i < 10; i++) {
+		console.log(`Hello World ${i}`);
+		toast.add({
+			message: `Hello World ${i}`,
+			description: 'This is a description',
+			feedback: 'success'
+		});
+	}
 </script>
 
 <script lang="ts">
 	import Alert, { type AlertFeedback } from '$lib/primitives/Alert.svelte';
 	import { flip } from 'svelte/animate';
 	import { get, writable } from 'svelte/store';
-	import { fade, fly, slide, type TransitionConfig } from 'svelte/transition';
-	import { linear } from 'svelte/easing';
+	import { fade, fly } from 'svelte/transition';
 	import { resizeContainer } from '$lib/actions/resizeContainer';
 	import debounce from 'just-debounce-it';
 	import hash from 'hash-it';
-	import { message } from '@tauri-apps/api/dialog';
-
-	interface TimeoutTransitionParams {
-		delay?: number;
-		duration?: number;
-	}
-
-	function timeout(_: Element, options?: TimeoutTransitionParams): TransitionConfig {
-		const { delay = 0, duration = TOAST_DEFAULT_TIMEOUT_MS } = options || {};
-
-		return {
-			duration,
-			delay,
-			easing: linear,
-			css: (t: number) => {
-				return `width: ${Math.abs(100 - 100 * t)}%;`;
-			}
-		};
-	}
 
 	const clearToastTimeout = debounce((toast: Toast) => {
 		if (toast.timeoutId) {
@@ -121,6 +111,7 @@
 		{#each $toastsStore as toast (toast.id)}
 			<div
 				class="alert-container feedback-{toast.feedback}"
+				style="--timeout-ms:{toast.timeout ?? TOAST_DEFAULT_TIMEOUT_MS}ms;"
 				animate:flip={{ duration: 150 }}
 				in:fly|local={{
 					x: -30,
@@ -159,11 +150,7 @@
 				{/key}
 
 				{#key toast.timeoutId}
-					<div
-						class="timeout"
-						in:timeout={{ duration: toast.timeout }}
-						out:fade={{ duration: 400 }}
-					/>
+					<div class="timeout" out:fade={{ duration: 400 }} />
 				{/key}
 			</div>
 		{/each}
@@ -237,14 +224,26 @@
 			}
 		}
 
+		@keyframes timeout {
+			0% {
+				width: 100%;
+			}
+
+			100% {
+				width: 0%;
+			}
+		}
+
 		.timeout {
 			position: absolute;
-			transition: opacity 250ms ease-in-out 500ms, background 250ms ease-in-out;
+			transition: opacity 250ms ease-in-out 250ms, background 250ms ease-in-out;
 			bottom: 0;
-			height: 2px;
+			height: 3px;
 			background-color: var(--color-main-1);
 			border-radius: 4px;
 			z-index: 100;
+			animation: timeout var(--timeout-ms) linear;
+			animation-play-state: running;
 		}
 
 		.count {
