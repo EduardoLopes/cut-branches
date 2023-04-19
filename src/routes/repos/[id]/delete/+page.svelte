@@ -18,7 +18,7 @@
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
 			toast.success({
-				message: `${data.length > 1 ? 'Branchs' : 'Branch'} deleted`,
+				message: `${data.length > 1 ? 'Branches' : 'Branch'} deleted`,
 				description: data
 					.map((item) => {
 						const s = item.replace('Deleted branch', '').split(' (was');

@@ -31,15 +31,19 @@
 		}
 
 		t.timeoutId = window.setTimeout(() => {
-			toastsStore.update((toasts) => {
-				const filtered = toasts.filter((item) => item.id !== toast.id);
-
-				return filtered;
-			});
+			removeToast(t);
 		}, t.timeout);
 
 		toastsStore.update((toasts) => {
 			return toasts;
+		});
+	}
+
+	function removeToast(toast: Toast) {
+		toastsStore.update((toasts) => {
+			const filtered = toasts.filter((item) => item.id !== toast.id);
+
+			return filtered;
 		});
 	}
 
@@ -74,7 +78,8 @@
 		success: (options: ToastOptions) => addToast({ feedback: 'success', ...options }),
 		info: (options: ToastOptions) => addToast({ feedback: 'info', ...options }),
 		warning: (options: ToastOptions) => addToast({ feedback: 'warning', ...options }),
-		danger: (options: ToastOptions) => addToast({ feedback: 'danger', ...options })
+		danger: (options: ToastOptions) => addToast({ feedback: 'danger', ...options }),
+		remove: removeToast
 	};
 </script>
 
@@ -86,6 +91,9 @@
 	import { resizeContainer } from '$lib/actions/resizeContainer';
 	import debounce from 'just-debounce-it';
 	import hash from 'hash-it';
+	import Flex from './Flex/index.svelte';
+	import Button from './Button/index.svelte';
+	import Icon from '@iconify/svelte';
 
 	const clearToastTimeout = debounce((toast: Toast) => {
 		if (toast.timeoutId) {
@@ -96,7 +104,6 @@
 
 	// used for debug
 	// for (let i = 0; i < 10; i++) {
-	// 	console.log(`Hello World ${i}`);
 	// 	toast.add({
 	// 		message: `Hello World ${i}`,
 	// 		description: 'This is a description',
@@ -135,11 +142,27 @@
 					}}
 				>
 					<Alert feedback={toast.feedback} size="sm">
-						{@html toast.message}
+						<Flex direction="row" justify="space-between">
+							<div class="content">
+								{@html toast.message}
 
-						{#if toast.description}
-							<div class="description">{@html toast.description}</div>
-						{/if}
+								{#if toast.description}
+									<div class="description">{@html toast.description}</div>
+								{/if}
+							</div>
+							<div class="close-button">
+								<Button
+									on:click={() => {
+										removeToast(toast);
+									}}
+									size="sm"
+									variant="secondary"
+									feedback={toast.feedback}
+								>
+									<Icon icon="mingcute:close-fill" width="16px" height="16px" color="inherit" />
+								</Button>
+							</div>
+						</Flex>
 					</Alert>
 					{#key toast.count}
 						{#if toast.count > 1}
@@ -191,10 +214,22 @@
 		margin: 0;
 		border-radius: 4px;
 
-		.description {
-			margin-top: 0.8rem;
-			font-size: 1.2rem;
-			color: var(--color-neutral-11);
+		.content {
+			width: max-content;
+
+			.description {
+				margin-top: 0.8rem;
+				font-size: 1.2rem;
+				color: var(--color-neutral-11);
+			}
+		}
+
+		.close-button {
+			:global(button) {
+				--button-background-color: transparent !important;
+				border: none;
+				padding: 0.6rem;
+			}
 		}
 
 		--color-main-1: var(--color-neutral-10);
