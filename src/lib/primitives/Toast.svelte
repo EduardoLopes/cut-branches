@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-	const TOAST_DEFAULT_TIMEOUT_MS = 600000;
+	const TOAST_DEFAULT_TIMEOUT_MS = 6000;
 
 	export interface Toast {
 		message: string;
@@ -78,15 +78,6 @@
 		warning: (options: ToastOptions) => addToast({ feedback: 'warning', ...options }),
 		danger: (options: ToastOptions) => addToast({ feedback: 'danger', ...options })
 	};
-
-	for (let i = 0; i < 10; i++) {
-		console.log(`Hello World ${i}`);
-		toast.add({
-			message: `Hello World ${i}`,
-			description: 'This is a description',
-			feedback: 'success'
-		});
-	}
 </script>
 
 <script lang="ts">
@@ -104,57 +95,72 @@
 			toast.timeoutId = undefined;
 		}
 	}, 250);
+
+	// used for debug
+	// for (let i = 0; i < 10; i++) {
+	// 	console.log(`Hello World ${i}`);
+	// 	toast.add({
+	// 		message: `Hello World ${i}`,
+	// 		description: 'This is a description',
+	// 		feedback: (['success', 'info', 'warning', 'danger', 'normal'] as AlertFeedback[])[
+	// 			Math.floor(Math.random() * 4)
+	// 		]
+	// 	});
+	// }
 </script>
 
 <div class="container" use:resizeContainer>
-	<div class="container-wrapper">
-		{#each $toastsStore as toast (toast.id)}
-			<div
-				class="alert-container feedback-{toast.feedback}"
-				style="--timeout-ms:{toast.timeout ?? TOAST_DEFAULT_TIMEOUT_MS}ms;"
-				animate:flip={{ duration: 150 }}
-				in:fly|local={{
-					x: -30,
-					duration: 150
-				}}
-				out:fly|local={{
-					x: 30,
-					duration: 150
-				}}
-				on:mouseenter={() => {
-					clearToastTimeout(toast);
-				}}
-				on:mouseleave={() => {
-					if (toast && !toast.timeoutId) {
-						hide(toast);
-					}
-				}}
-			>
-				<Alert feedback={toast.feedback}>
-					{@html toast.message}
+	{#if $toastsStore.length}
+		<div class="container-wrapper">
+			{#each $toastsStore as toast (toast.id)}
+				<!-- svelte-ignore a11y-mouse-events-have-key-events -->
+				<div
+					class="alert-container feedback-{toast.feedback}"
+					style="--timeout-ms:{toast.timeout ?? TOAST_DEFAULT_TIMEOUT_MS}ms;"
+					animate:flip={{ duration: 150 }}
+					in:fly|local={{
+						x: -30,
+						duration: 150
+					}}
+					out:fly|local={{
+						x: 30,
+						duration: 150
+					}}
+					on:mouseover={() => {
+						clearToastTimeout(toast);
+					}}
+					on:mouseout={() => {
+						if (toast && !toast.timeoutId) {
+							hide(toast);
+						}
+					}}
+				>
+					<Alert feedback={toast.feedback}>
+						{@html toast.message}
 
-					{#if toast.description}
-						<div class="description">{@html toast.description}</div>
-					{/if}
-				</Alert>
-				{#key toast.count}
-					{#if toast.count > 1}
-						<div
-							class="count"
-							in:fly={{ duration: 150, x: -20, opacity: 0 }}
-							out:fly={{ duration: 150, x: 30, opacity: 0 }}
-						>
-							{toast.count}
-						</div>
-					{/if}
-				{/key}
+						{#if toast.description}
+							<div class="description">{@html toast.description}</div>
+						{/if}
+					</Alert>
+					{#key toast.count}
+						{#if toast.count > 1}
+							<div
+								class="count"
+								in:fly={{ duration: 150, x: -20, opacity: 0 }}
+								out:fly={{ duration: 150, x: 30, opacity: 0 }}
+							>
+								{toast.count}
+							</div>
+						{/if}
+					{/key}
 
-				{#key toast.timeoutId}
-					<div class="timeout" out:fade={{ duration: 400 }} />
-				{/key}
-			</div>
-		{/each}
-	</div>
+					{#key toast.timeoutId}
+						<div class="timeout" out:fade={{ duration: 400 }} />
+					{/key}
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <style lang="scss">
@@ -164,13 +170,20 @@
 		z-index: 1000;
 		top: 0;
 		right: 0;
-		max-height: 100vh;
+		height: min-content;
+		background: hsla(0%, 0%, 100%, 0.6);
+		box-shadow: 0 0 0 1px hsla(0%, 0%, 0%, 0.1), 0 4px 11px hsla(0%, 0%, 0%, 0.1);
+		-webkit-backdrop-filter: blur(2px);
+		backdrop-filter: blur(2px);
+		border-radius: 0 0 0 4px;
 
 		.container-wrapper {
 			padding: 1.6rem;
 			display: flex;
 			flex-direction: column;
 			gap: 1.6rem;
+			max-height: 100vh;
+			overflow-y: auto;
 		}
 	}
 
