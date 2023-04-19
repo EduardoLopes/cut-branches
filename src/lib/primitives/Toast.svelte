@@ -30,19 +30,17 @@
 			t.timeoutId = undefined;
 		}
 
+		t.timeoutId = window.setTimeout(() => {
+			toastsStore.update((toasts) => {
+				const filtered = toasts.filter((item) => item.id !== toast.id);
+
+				return filtered;
+			});
+		}, t.timeout);
+
 		toastsStore.update((toasts) => {
 			return toasts;
 		});
-
-		if (t) {
-			t.timeoutId = window.setTimeout(() => {
-				toastsStore.update((toasts) => {
-					const filtered = toasts.filter((item) => item.id !== toast.id);
-
-					return filtered;
-				});
-			}, t.timeout);
-		}
 	}
 
 	export function addToast(toastOptions: ToastOptions) {
@@ -130,6 +128,7 @@
 						clearToastTimeout(toast);
 					}}
 					on:mouseout={() => {
+						clearToastTimeout.cancel();
 						if (toast && !toast.timeoutId) {
 							hide(toast);
 						}

@@ -1,5 +1,4 @@
 import { writable } from 'svelte/store';
-import type { AlertFeedback } from './primitives/Alert.svelte';
 
 export interface IBranch {
 	name: string;
