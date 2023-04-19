@@ -134,7 +134,7 @@
 						}
 					}}
 				>
-					<Alert feedback={toast.feedback}>
+					<Alert feedback={toast.feedback} size="sm">
 						{@html toast.message}
 
 						{#if toast.description}
