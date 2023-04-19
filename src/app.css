@@ -150,6 +150,7 @@ body {
 	font-weight: 500;
 	font-size: 1.6rem;
 	overflow: hidden;
+	text-rendering: optimizeLegibility;
 }
 
 #svelte {
