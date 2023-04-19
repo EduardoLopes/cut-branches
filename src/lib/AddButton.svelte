@@ -3,9 +3,10 @@
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
-	import { getRepoInfo, toast } from '$lib/utils';
+	import { getRepoInfo } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
+	import { toast } from './primitives/Toast.svelte';
 
 	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
 	onMount(async () => {
@@ -26,12 +27,12 @@
 							}
 						})
 						.catch((errors: string[]) => {
-							errors.reverse().forEach((item) => toast.failure(item));
+							errors.reverse().forEach((item) => toast.danger({ message: item }));
 						});
 				}
 			})
 			.catch((error) => {
-				toast.failure(error);
+				toast.danger({ message: error });
 			});
 	}
 </script>

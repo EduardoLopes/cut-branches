@@ -3,7 +3,7 @@
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import Alert, { type AlertFeedback } from '$lib/primitives/Alert.svelte';
+	import Alert from '$lib/primitives/Alert.svelte';
 	import Group from '$lib/primitives/Group.svelte';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
@@ -89,12 +89,6 @@
 </div>
 
 <style lang="scss">
-	.transition {
-		transition-timing-function: ease-in-out;
-		transition-duration: 0.1s;
-		transition-property: border, color, background;
-	}
-
 	.alert-group {
 		:global {
 			.alert {

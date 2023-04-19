@@ -8,20 +8,30 @@
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
-	import { toast } from '$lib/utils';
+	import { toast } from '$lib/primitives/Toast.svelte';
+	import { useQueryClient } from '@tanstack/svelte-query';
+	const client = useQueryClient();
 
 	let id = $page.params.id;
 
 	let currentRepo: IRepo | undefined;
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
-			data.forEach((message) => {
-				toast.success(message);
+			toast.success({
+				message: `${data.length > 1 ? 'Branchs' : 'Branch'} deleted`,
+				description: data
+					.map((item) => {
+						const s = item.replace('Deleted branch', '').split(' (was');
+						return `<strong>${s[0].trim()}</strong> (was ${s[1].trim()}`;
+					})
+					.join('<br />')
 			});
+
+			client.invalidateQueries(['branches', 'get-all', currentRepo?.path]);
 		},
 		onError(error) {
 			error.forEach((message) => {
-				toast.failure(message);
+				toast.danger({ message });
 			});
 		}
 	});

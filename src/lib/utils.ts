@@ -1,7 +1,5 @@
 import type { IBranch, IRepo } from '$lib/stores';
 
-import frenchToast, { type Renderable } from 'svelte-french-toast';
-
 export const getRepoName = (root_path: string): string => {
 	if (root_path.lastIndexOf('\\')) {
 		return root_path.substring(root_path.lastIndexOf('\\') + 1);
@@ -45,29 +43,4 @@ export const getRepoInfo = async (path: string) => {
 			};
 		}
 	});
-};
-
-export const toast = {
-	success: (message: Renderable): void => {
-		frenchToast.success(message, {
-			position: 'top-right',
-			style:
-				'border: 1px solid var(--color-success-10); border-radius: 4px; transition: all 150ms cubic-bezier(0.860, 0.000, 0.070, 1.000);',
-			iconTheme: {
-				primary: '#713200',
-				secondary: '#FFFAEE'
-			}
-		});
-	},
-	error: (message: Renderable): void => {
-		frenchToast.error(message, {
-			position: 'top-right',
-			style:
-				'border: 1px solid var(--color-danger-6); background: var(--color-danger-3); border-radius: 4px; transition: all 150ms cubic-bezier(0.860, 0.000, 0.070, 1.000);',
-			iconTheme: {
-				primary: 'var(--color-danger-10)',
-				secondary: '#FFFAEE'
-			}
-		});
-	}
 };

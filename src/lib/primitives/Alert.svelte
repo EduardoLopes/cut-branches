@@ -21,7 +21,7 @@
 	export let variant: $$Props['variant'] = 'primary';
 	export let size: $$Props['size'] = 'md';
 	export let feedback: $$Props['feedback'] = 'normal';
-	export let showIcon: boolean = true;
+	export let showIcon = true;
 </script>
 
 <div class="alert variant-{variant} size-{size} feedback-{feedback} ">

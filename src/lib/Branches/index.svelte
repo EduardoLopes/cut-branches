@@ -151,7 +151,7 @@
 									<Checkbox
 										visuallyHideLabel
 										indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
-										on:click={(e) => {
+										on:click={() => {
 											const indeterminate =
 												selectedLength !== selectibleCount && selectedLength > 0;
 
@@ -163,8 +163,6 @@
 													[];
 											} else {
 												const allSelectedBranch = branches.map((item) => item.name);
-
-												console.log(allSelectedBranch);
 
 												selected = selected.filter((item) => !allSelectedBranch.includes(item));
 											}
@@ -264,7 +262,7 @@
 											<div class="checkbox">
 												<Checkbox
 													visuallyHideLabel
-													on:click={(e) => {
+													on:click={() => {
 														if (selected.includes(branch.name)) {
 															selected = selected.filter((item) => item !== branch.name);
 														} else {
@@ -302,7 +300,7 @@
 							class="search-input"
 							placeholder="Search"
 							bind:value={searchQuery}
-							on:input={(event) => {
+							on:input={() => {
 								currentPage = 0;
 							}}
 						/>
@@ -350,11 +348,6 @@
 </main>
 
 <style lang="scss">
-	.transition {
-		transition-timing-function: ease-in-out;
-		transition-duration: 0.1s;
-		transition-property: width, height, border, color, background, padding, font-size, max-height;
-	}
 	.container {
 		display: flex;
 		flex-direction: column;

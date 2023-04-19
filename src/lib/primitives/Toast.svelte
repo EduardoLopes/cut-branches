@@ -170,8 +170,8 @@
 		top: 0;
 		right: 0;
 		height: min-content;
-		background: hsla(0%, 0%, 100%, 0.6);
-		box-shadow: 0 0 0 1px hsla(0%, 0%, 0%, 0.1), 0 4px 11px hsla(0%, 0%, 0%, 0.1);
+		background: hsla(0, 0%, 100%, 0.6);
+		box-shadow: 0 0 0 1px hsla(0, 0%, 0%, 0.1), 0 4px 11px hsla(0, 0%, 0%, 0.1);
 		-webkit-backdrop-filter: blur(2px);
 		backdrop-filter: blur(2px);
 		border-radius: 0 0 0 4px;
@@ -194,7 +194,7 @@
 		.description {
 			margin-top: 0.8rem;
 			font-size: 1.2rem;
-			color: var(--color-neutral-10);
+			color: var(--color-neutral-11);
 		}
 
 		--color-main-1: var(--color-neutral-10);

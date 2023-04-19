@@ -1,5 +1,5 @@
 import type { IBranch } from '$lib/stores';
-import { createMutation, useQueryClient, type CreateMutationOptions } from '@tanstack/svelte-query';
+import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
 
 interface DeleteBranchesVariables {
 	branches: IBranch[];
@@ -18,10 +18,6 @@ export function useDeleteBranchesMutation(options?: DeleteBranchesMutationOption
 		['branches', 'delete'],
 		async (vars) => {
 			const { invoke } = await import('@tauri-apps/api/tauri');
-
-			const client = useQueryClient();
-
-			client.invalidateQueries(['branches', 'get-all', vars.path]);
 
 			const res: string = await invoke('delete_branches', {
 				deleteOptions: [

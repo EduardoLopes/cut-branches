@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { repos } from '$lib/stores';
 	import type { IRepo } from '$lib/stores';
-	import { onMount } from 'svelte';
 	import Button from '$lib/primitives/Button/index.svelte';
-	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
-	import { getRepoInfo, toast } from '$lib/utils';
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
 	import { useGetRootPath } from '$lib/services/useGetRootPath';
 	import { goto } from '$app/navigation';
-	import { invoke } from '@tauri-apps/api/tauri';
+	import { toast } from '$lib/primitives/Toast.svelte';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -26,7 +23,7 @@
 	$: getRootPath = useGetRootPath(lastPathSelected, {
 		enabled: Boolean(lastPathSelected),
 		onError: (errors) => {
-			errors.reverse().forEach((item) => toast.failure(item));
+			errors.reverse().forEach((item) => toast.danger({ message: item }));
 		}
 	});
 
@@ -50,7 +47,7 @@
 					}
 				})
 				.catch((error) => {
-					toast.failure(error);
+					toast.danger({ message: error });
 				});
 		}
 	}
