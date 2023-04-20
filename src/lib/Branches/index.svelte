@@ -184,7 +184,7 @@
 							{/key}
 						{/if}
 
-						{#if selectibleCount === 0 && deboucedSearchQuery.length === 0}
+						{#if selectibleCount === 0 && branches.length !== 0 && deboucedSearchQuery.length === 0}
 							<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
 						{/if}
 					</div>
@@ -230,6 +230,18 @@
 								color="var(--color-warning-10)"
 							/>
 							<div>No results for <b>{deboucedSearchQuery}</b>!</div>
+						</div>
+					{/if}
+
+					{#if branches.length === 0}
+						<div class="no-branches" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
+							<Icon
+								icon="mdi:source-branch-remove"
+								width="64px"
+								height="64px"
+								color="var(--color-warning-10)"
+							/>
+							<div>This repository has no branches!</div>
 						</div>
 					{/if}
 
@@ -461,7 +473,8 @@
 		position: relative;
 	}
 
-	.search-no-found {
+	.search-no-found,
+	.no-branches {
 		display: flex;
 		justify-content: center;
 		align-items: center;
