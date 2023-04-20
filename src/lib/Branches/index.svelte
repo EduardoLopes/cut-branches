@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import debounce from 'just-debounce-it';
+	import { error } from '@sveltejs/kit';
 
 	let selected: string[] = [];
 	export let id: string | null = null;
@@ -107,6 +108,21 @@
 		<div class="loading">Loading...</div>
 	{/if}
 
+	{#if $getBranchesQuery.isError}
+		<div class="error" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
+			<div>
+				<Icon
+					icon="material-symbols:dangerous-rounded"
+					width="64px"
+					height="64px"
+					color="var(--color-danger-10)"
+				/>
+				<div class="message">{@html $getBranchesQuery.error.message}</div>
+				<div class="description">{@html $getBranchesQuery.error.description}</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if $getBranchesQuery.isSuccess}
 		<div class="header">
 			{#key $getBranchesQuery.data?.name}
@@ -184,7 +200,7 @@
 							{/key}
 						{/if}
 
-						{#if selectibleCount === 0 && branches.length !== 0 && deboucedSearchQuery.length === 0}
+						{#if selectibleCount === 0 && $getBranchesQuery.data.branches.length !== 0 && deboucedSearchQuery.length === 0}
 							<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
 						{/if}
 					</div>
@@ -223,25 +239,29 @@
 				<div class="branches-container">
 					{#if searchNoResultsFound}
 						<div class="search-no-found" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-							<Icon
-								icon="material-symbols:search-off"
-								width="64px"
-								height="64px"
-								color="var(--color-warning-10)"
-							/>
-							<div>No results for <b>{deboucedSearchQuery}</b>!</div>
+							<div>
+								<Icon
+									icon="material-symbols:search-off"
+									width="64px"
+									height="64px"
+									color="var(--color-warning-10)"
+								/>
+								<div>No results for <b>{deboucedSearchQuery}</b>!</div>
+							</div>
 						</div>
 					{/if}
 
-					{#if branches.length === 0}
+					{#if $getBranchesQuery.data.branches.length === 0}
 						<div class="no-branches" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-							<Icon
-								icon="mdi:source-branch-remove"
-								width="64px"
-								height="64px"
-								color="var(--color-warning-10)"
-							/>
-							<div>This repository has no branches!</div>
+							<div>
+								<Icon
+									icon="mdi:source-branch-remove"
+									width="64px"
+									height="64px"
+									color="var(--color-warning-10)"
+								/>
+								<div>This repository has no branches!</div>
+							</div>
 						</div>
 					{/if}
 
@@ -474,14 +494,30 @@
 	}
 
 	.search-no-found,
-	.no-branches {
-		display: flex;
-		justify-content: center;
-		align-items: center;
+	.no-branches,
+	.error {
+		display: grid;
+		place-items: center;
 		height: 100%;
 		font-size: 2.4rem;
 		flex-direction: column;
 		gap: 1.6rem;
+		> div {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 1.6rem;
+			max-width: 500px;
+			text-align: center;
+		}
+	}
+
+	.error {
+		.description {
+			font-size: 2.2rem;
+			text-align: center;
+			color: var(--color-neutral-11);
+		}
 	}
 
 	.branches {

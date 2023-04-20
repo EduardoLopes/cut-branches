@@ -2,8 +2,9 @@ import type { IRepo } from '$lib/stores';
 import { createQuery, type CreateQueryOptions, type QueryKey } from '@tanstack/svelte-query';
 import { repos } from '$lib/stores';
 import { invoke } from '@tauri-apps/api/tauri';
+import type { ServiceError } from './models';
 
-export function getRepoByPath(path: string, options?: CreateQueryOptions<IRepo, string[]>) {
+export function getRepoByPath(path: string, options?: CreateQueryOptions<IRepo, ServiceError>) {
 	return createQuery(
 		['branches', 'get-all', path] as QueryKey,
 		async () => {
