@@ -12,7 +12,6 @@
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import debounce from 'just-debounce-it';
-	import { error } from '@sveltejs/kit';
 
 	let selected: string[] = [];
 	export let id: string | null = null;
@@ -20,7 +19,10 @@
 
 	$: currentRepo = $repos.filter((item) => item.name === id)[0] as IRepo | undefined;
 	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
-		staleTime: 0
+		staleTime: 0,
+		meta: {
+			showErrorToast: false
+		}
 	});
 	$: if ($navigating) {
 		selected = [];

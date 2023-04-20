@@ -11,16 +11,41 @@
 	import Toast, { toast } from '$lib/primitives/Toast.svelte';
 
 	const mutationCache = new MutationCache({
-		onError: (error) => {
+		onSuccess: (_data, _variabled, _context, mutation) => {
+			if (mutation.meta?.showSuccessToast) {
+				const toastInfo = mutation.meta?.toast as { message: string; description: string };
+
+				if (toastInfo.message) {
+					toast.success({ message: toastInfo.message, description: toastInfo.description });
+				}
+			}
+		},
+		onError: (error, _variabled, _context, mutation) => {
 			const e = error as ServiceError;
-			toast.danger({ message: e.message, description: e.description });
+
+			if (mutation.meta?.showErrorToast) {
+				toast.danger({ message: e.message, description: e.description });
+			}
 		}
 	});
 
 	const queryCache = new QueryCache({
-		onError: (error) => {
+		onSuccess: (_, query) => {
+			if (query.meta?.showSuccessToast) {
+				const toastInfo = query.meta?.toast as { message: string; description: string };
+
+				console.log(toastInfo);
+				if (toastInfo.message) {
+					toast.success({ message: toastInfo.message, description: toastInfo.description });
+				}
+			}
+		},
+		onError: (error, query) => {
 			const e = error as ServiceError;
-			toast.danger({ message: e.message, description: e.description });
+
+			if (query.meta?.showErrorToast) {
+				toast.danger({ message: e.message, description: e.description });
+			}
 		}
 	});
 
