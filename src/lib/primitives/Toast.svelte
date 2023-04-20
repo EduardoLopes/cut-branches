@@ -206,6 +206,7 @@
 			gap: 1.6rem;
 			max-height: 100vh;
 			overflow-y: auto;
+			overflow-x: hidden;
 		}
 	}
 
@@ -215,8 +216,6 @@
 		border-radius: 4px;
 
 		.content {
-			width: max-content;
-
 			.description {
 				margin-top: 0.8rem;
 				font-size: 1.2rem;
