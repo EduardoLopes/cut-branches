@@ -15,6 +15,7 @@
 
 	let selected: string[] = [];
 	export let id: string | null = null;
+	let searchInputElement: HTMLInputElement | null = null;
 
 	$: currentRepo = $repos.filter((item) => item.name === id)[0] as IRepo | undefined;
 	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
@@ -296,14 +297,34 @@
 				</div>
 				<div class="bottom-toolbar">
 					<div class="left">
-						<input
-							class="search-input"
-							placeholder="Search"
-							bind:value={searchQuery}
-							on:input={() => {
-								currentPage = 0;
-							}}
-						/>
+						<div class="search-input-container">
+							<input
+								class="search-input"
+								placeholder="Search"
+								bind:value={searchQuery}
+								on:input={() => {
+									currentPage = 0;
+								}}
+								bind:this={searchInputElement}
+							/>
+
+							<Button
+								variant="tertiary"
+								on:click={() => {
+									if (deboucedSearchQuery.length > 0) {
+										clearSearch();
+									} else {
+										searchInputElement?.focus();
+									}
+								}}
+							>
+								{#if deboucedSearchQuery.length > 0}
+									<Icon icon="mdi:clear" width="24px" height="24px" />
+								{:else}
+									<Icon icon="ic:round-search" width="24px" height="24px" />
+								{/if}
+							</Button>
+						</div>
 						<!-- <div class="search-info">
 						{#if deboucedSearchQuery}
 							{#if branches.length === 0}
@@ -493,15 +514,31 @@
 
 		.left {
 			display: flex;
-			.search-input {
-				display: block;
-				height: 100%;
-				padding: 1.6rem;
-				margin: 0;
-				border-radius: 0;
-				appearance: none;
+
+			.search-input-container {
+				display: flex;
+				align-items: center;
+				flex-direction: row;
 				border: 1px solid var(--color-neutral-6);
-				border-top-width: 0;
+				border-bottom: none;
+
+				:global(button) {
+					border-radius: 0;
+					height: 100%;
+					align-items: center;
+					justify-content: center;
+					width: 57px;
+				}
+				.search-input {
+					display: block;
+					height: 100%;
+					padding: 1.6rem;
+					margin: 0;
+					border: none;
+					border-radius: 0;
+					appearance: none;
+					border-top-width: 0;
+				}
 			}
 		}
 
