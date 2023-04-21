@@ -17,7 +17,6 @@
 	import { toast } from '$lib/primitives/Toast.svelte';
 	import { version } from '$app/environment';
 
-
 	let selected: string[] = [];
 	export let id: string | null = null;
 	let searchInputElement: HTMLInputElement | null = null;
@@ -48,7 +47,11 @@
 
 	function update_repo() {
 		if (currentRepo) {
-			$getBranchesQuery.refetch();
+			$getBranchesQuery.refetch().then(() => {
+				toast.success({
+					message: `The repository <strong>${$getBranchesQuery.data?.name}</strong> was updated`
+				});
+			});
 		}
 	}
 
@@ -630,7 +633,6 @@
 					appearance: none;
 					border-top-width: 0;
 					z-index: 2;
-					
 				}
 			}
 		}
@@ -647,7 +649,7 @@
 				font-size: 1.4rem;
 				background: var(--color-neutral-1);
 				min-width: 75px;
-				text-align: center;				
+				text-align: center;
 				justify-content: center;
 			}
 
