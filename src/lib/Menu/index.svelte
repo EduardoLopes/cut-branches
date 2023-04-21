@@ -7,6 +7,7 @@
 	import { useGetRootPath } from '$lib/services/useGetRootPath';
 	import { goto } from '$app/navigation';
 	import { toast } from '$lib/primitives/Toast.svelte';
+	import { version } from '$app/environment';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -79,6 +80,9 @@
 			</ul>
 		{/if}
 	</nav>
+
+	<div class="bottom-info-bar"> v{version} </div>
+	
 </section>
 
 <style src="./styles.scss" lang="scss">
@@ -176,5 +180,14 @@
 				}
 			}
 		}
+	}
+
+	.bottom-info-bar {
+		font-size: 1.2rem;
+		padding: 0.4rem 0.8rem;
+		border-top: 1px dashed var(--color-primary-3);
+		background: var(--color-primary-2);
+		text-align: left;
+		color: var(--color-neutral-1);
 	}
 </style>

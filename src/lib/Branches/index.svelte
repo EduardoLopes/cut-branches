@@ -11,7 +11,12 @@
 	import { flip } from 'svelte/animate';
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { format, intlFormat, intlFormatDistance } from 'date-fns';
 	import debounce from 'just-debounce-it';
+	import { onMount } from 'svelte';
+	import { toast } from '$lib/primitives/Toast.svelte';
+	import { version } from '$app/environment';
+
 
 	let selected: string[] = [];
 	export let id: string | null = null;
@@ -103,6 +108,24 @@
 	);
 
 	$: searchNoResultsFound = deboucedSearchQuery.length > 0 && branches.length === 0;
+
+	$: lastUpdatedAtDate = $getBranchesQuery.dataUpdatedAt
+		? new Date($getBranchesQuery.dataUpdatedAt)
+		: undefined;
+
+	$: lastUpdatedAt = lastUpdatedAtDate ? intlFormatDistance(lastUpdatedAtDate, Date.now()) : null;
+
+	onMount(() => {
+		const interval = setInterval(() => {
+			if (lastUpdatedAtDate) {
+				lastUpdatedAt = intlFormatDistance(lastUpdatedAtDate, Date.now());
+			}
+		}, 61000);
+
+		return () => {
+			clearInterval(interval);
+		};
+	});
 </script>
 
 <main class="container">
@@ -397,6 +420,23 @@
 						</div>
 					{/if}
 				</div>
+				<div class="bottom-info-bar">
+					{#if lastUpdatedAt && lastUpdatedAtDate}
+						<time
+							datetime={lastUpdatedAtDate.toISOString()}
+							title={intlFormat(lastUpdatedAtDate, {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: 'numeric',
+								second: 'numeric'
+							})}
+						>
+							Last updated {lastUpdatedAt}
+						</time>
+					{/if}
+				</div>
 			</div>
 		{/key}
 	{/if}
@@ -607,5 +647,14 @@
 				border-top-width: 0;
 			}
 		}
+	}
+
+	.bottom-info-bar {
+		font-size: 1.2rem;
+		padding: 0.4rem 0.8rem;
+		border-top: solid 1px var(--color-neutral-6);
+		background: var(--color-neutral-4);
+		text-align: right;
+		color: var(--color-neutral-11);
 	}
 </style>
