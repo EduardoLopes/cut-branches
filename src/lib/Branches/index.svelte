@@ -367,6 +367,7 @@
 
 							<Button
 								variant="tertiary"
+								size="sm"
 								on:click={() => {
 									if (deboucedSearchQuery.length > 0) {
 										clearSearch();
@@ -404,7 +405,7 @@
 								on:click={prevPage}
 								state={currentPage <= 0 ? 'disabled' : 'normal'}
 							>
-								<Icon icon="material-symbols:chevron-left-rounded" width="32px" height="32px" />
+								<Icon icon="material-symbols:chevron-left-rounded" width="24px" height="24px" />
 							</Button>
 							<div class="numbers">
 								{currentPage + 1} / {totalPages}
@@ -415,7 +416,7 @@
 								on:click={nextPage}
 								state={currentPage + 1 >= totalPages ? 'disabled' : 'normal'}
 							>
-								<Icon icon="material-symbols:chevron-right-rounded" width="32px" height="32px" />
+								<Icon icon="material-symbols:chevron-right-rounded" width="24px" height="24px" />
 							</Button>
 						</div>
 					{/if}
@@ -618,33 +619,51 @@
 					height: 100%;
 					align-items: center;
 					justify-content: center;
-					width: 57px;
 				}
 				.search-input {
 					display: block;
 					height: 100%;
-					padding: 1.6rem;
+					padding: 1.2rem;
 					margin: 0;
 					border: none;
 					border-radius: 0;
 					appearance: none;
 					border-top-width: 0;
+					z-index: 2;
+					
 				}
 			}
 		}
 
 		.pagination {
 			display: flex;
+			height: 100%;
 
 			.numbers {
 				display: flex;
 				align-items: center;
-				padding: 1.6rem;
+				padding: 1.2rem;
+				white-space: nowrap;
+				font-size: 1.4rem;
+				background: var(--color-neutral-1);
+				min-width: 75px;
+				text-align: center;				
+				justify-content: center;
 			}
+
 			:global(.button) {
+				display: grid;
+				align-items: center;
 				border-radius: 0;
 				border: 1px solid var(--color-neutral-6);
 				border-top-width: 0;
+				height: 100%;
+				border-bottom: none;
+				border-top: none;
+
+				&:last-child {
+					border-right: none;
+				}
 			}
 		}
 	}
