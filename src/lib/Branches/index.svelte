@@ -170,16 +170,21 @@
 						color="var(--primary-color)"
 					/>
 				</Button>
-				<a href={`/repos/${$getBranchesQuery.data?.name}/remove`}>
-					<Button variant="tertiary" size="sm">
-						<Icon
-							icon="solar:close-circle-linear"
-							width="24px"
-							height="24px"
-							color="var(--primary-color)"
-						/>
-					</Button>
-				</a>
+
+				<Button
+					variant="tertiary"
+					size="sm"
+					on:click={() => {
+						goto(`/repos/${$getBranchesQuery.data?.name}/remove`);
+					}}
+				>
+					<Icon
+						icon="solar:close-circle-linear"
+						width="24px"
+						height="24px"
+						color="var(--primary-color)"
+					/>
+				</Button>
 			</div>
 		</div>
 
@@ -500,6 +505,7 @@
 					align-items: center;
 					justify-content: center;
 					width: 57px;
+					height: 100%;
 				}
 			}
 		}
