@@ -60,7 +60,7 @@
 	.header {
 		display: flex;
 		justify-content: space-between;
-		background: var(--color-danger-3);
+		background: var(--color-danger-10);
 		top: 0;
 		box-shadow: 0px 2px 2px 0px rgb(0 0 0 / 8%);
 		color: #fff;
