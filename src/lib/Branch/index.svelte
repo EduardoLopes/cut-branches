@@ -1,23 +1,25 @@
 <script lang="ts">
-	import type { IBranch } from '$lib/stores';
-	import { currentRepo } from '$lib/stores';
+	import type { IBranch, IRepo } from '$lib/stores';
+	import { repos } from '$lib/stores';
+	import { onMount } from 'svelte';
+	import { page } from '$app/stores';
+	import Alert from '$lib/primitives/Alert.svelte';
+	import Group from '$lib/primitives/Group.svelte';
+	import { flip } from 'svelte/animate';
+	import { fly } from 'svelte/transition';
+	import { resizeContainer } from '$lib/actions/resizeContainer';
 
-	import Delete16 from 'carbon-icons-svelte/lib/Delete16';
-	import Information16 from 'carbon-icons-svelte/lib/Information16';
-	import WarningAlt16 from 'carbon-icons-svelte/lib/WarningAlt16';
+	export let data: IBranch;
+	export let selected = false;
+	export let disabled = false;
 
-	export let showDeletebutton: boolean = false;
-	export let onClickDelete: (branch: IBranch) => void = null;
-	export let onClick: (branch: IBranch) => void = null;
-	export let branch: IBranch;
-	export let selected: boolean = false;
-	export let disabled: boolean = false;
-	export let showSelectedWarning = false;
-
+	let id = $page.params.id;
+	let currentRepo: IRepo | undefined;
 	let protectedWords = [
 		'develop',
 		'dev',
 		'stg',
+		'main',
 		'staging',
 		'master',
 		'hml',
@@ -25,74 +27,107 @@
 		'default',
 		'trunk'
 	];
+
+	onMount(() => {
+		currentRepo = $repos.filter((item) => item.name === id)[0];
+	});
+
+	$: alerts = Object.entries({
+		fullyMerged: data.fully_merged,
+		protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
+		offensiveWords: data.name.includes('master')
+	})
+		.filter((item) => item[1] === true)
+		.map((item) => item[0]);
 </script>
 
 <div
-	class="branch-container"
+	class="branch"
 	class:disabled
-	class:current={branch.current}
+	class:current={data.current}
 	class:selected
-	title={`${branch.current ? 'Current branch ' : ''}`}
+	title={`${data.current ? 'Current branch ' : ''}`}
 >
-	<div class="branch">
-		<div
-			class="name"
-			on:click={() => {
-				if (branch.current || disabled) return;
-
-				if (onClick) onClick(branch);
-			}}
-		>
-			{branch.name}
-		</div>
-
-		{#if !branch.current && showDeletebutton}
-			<div class="menu">
-				<button
-					class="delete-button"
-					on:click={() => {
-						if (disabled) return;
-
-						onClickDelete(branch);
-					}}
-				>
-					<Delete16 class="delete-icon" />
-				</button>
-			</div>
-		{/if}
+	<div class="name">
+		{data.name}
 	</div>
-	<div class="info">
-		{#if branch.fully_merged}
-			<div class="grid-2">
-				<span class="icon"> <Information16 /></span>
-				<div>
-					This branch is not fully merged into the current branch, {$currentRepo.current_branch}!
+
+	<div class="info alert-group" use:resizeContainer>
+		<Group direction="column">
+			{#each alerts as alert (alert)}
+				<div
+					animate:flip={{ duration: 150 }}
+					in:fly|local={{ y: -20, duration: 200 }}
+					out:fly|local={{ y: -10, duration: 50 }}
+				>
+					{#if alert === 'fullyMerged'}
+						<Alert feedback="info">
+							This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
+						</Alert>
+					{/if}
+					{#if alert === 'protectedWords'}
+						<Alert feedback="warning">
+							You're selecting a branch with the name <strong>{data.name}</strong>, review and make
+							sure you really wanna delete this branch!
+						</Alert>
+					{/if}
+					{#if alert === 'offensiveWords'}
+						<Alert feedback="danger">
+							The branch name <strong>master</strong> is offensive. Check out this
+							<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+								>article</a
+							>
+							and make sure to change the branch name to <strong>main</strong>,
+							<strong>default</strong>,
+							<strong>truck</strong> or any other word that don't offend others!
+						</Alert>
+					{/if}
 				</div>
-			</div>
-		{/if}
-		{#if branch.name.includes('master')}
-			<div class="grid-2">
-				<span class="icon"> <WarningAlt16 /></span>
-				<div>
-					The branch name <strong>master</strong> is offensive. Check out this
-					<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
-						>article</a
-					>
-					and make sure to change the branch name to <strong>main</strong>,
-					<strong>default</strong>, <strong>truck</strong> or any other word that don't offend others!
-				</div>
-			</div>
-		{/if}
-		{#if protectedWords.some( (item) => branch.name.includes(item) ) && (selected || showSelectedWarning)}
-			<div class="grid-2">
-				<span class="icon"> <WarningAlt16 /></span>
-				<div>
-					You're selecting a branch with the name <strong>{branch.name}</strong>, review and make
-					sure you really wanna delete this branch!
-				</div>
-			</div>
-		{/if}
+			{/each}
+		</Group>
 	</div>
 </div>
 
-<style src="./styles.scss" lang="scss"></style>
+<style lang="scss">
+	.alert-group {
+		:global {
+			.alert {
+				border-width: 0;
+				border-top-width: 1px;
+				border-top-right-radius: 0;
+				border-top-left-radius: 0;
+			}
+		}
+	}
+
+	.branch {
+		background: var(--color-neutral-4);
+		border: 1px solid var(--color-neutral-7);
+		border-radius: 4px;
+
+		.name {
+			color: var(--color-neutral-12);
+			font-weight: 600;
+			padding: 1.6rem;
+		}
+
+		&.current {
+			background: var(--color-warning-2);
+			border-color: var(--color-warning-10);
+
+			.name {
+				color: var(--color-warning-10);
+			}
+		}
+
+		&.selected {
+			background: var(--color-danger-3);
+			border-color: var(--color-danger-10);
+			border-style: dashed;
+
+			.name {
+				color: var(--color-danger-9);
+			}
+		}
+	}
+</style>

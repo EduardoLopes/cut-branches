@@ -1,4 +1,17 @@
-.svelte-kit/**
-static/**
-build/**
-node_modules/**
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+/src-tauri
+/src-tauri/target
+/.histoire
+*.story.svelte
+
+# Ignore files for PNPM, NPM and YARN
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

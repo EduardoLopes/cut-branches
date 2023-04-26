@@ -1,32 +1,23 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
-	import Menu from '$lib/Menu/index.svelte';
-	import Branches from '$lib/Branches/index.svelte';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { repos } from '$lib/stores';
-	import type { Unsubscriber } from 'svelte/store';
+	import { navigating, page } from '$app/stores';
+
+	function checkRedirect() {
+		if ($repos.length === 0) {
+			goto('/add-first');
+		}
+
+		if ($repos.length > 0 && $page.url.pathname === '/' && !$page.params.id) {
+			goto(`/repos/${$repos[0].name}`);
+		}
+	}
 
 	onMount(() => {
-		let unsubscribeRepos = repos.subscribe((value) => {
-			if (value.length === 0) {
-				goto('/add-first');
-			}
-		});
-
-		onDestroy(unsubscribeRepos);
+		checkRedirect();
 	});
+
+	// checks every route change
+	$: if ($navigating) checkRedirect();
 </script>
-
-<div class="content">
-	<Menu />
-	<Branches />
-</div>
-
-<style>
-	.content {
-		width: 100%;
-		display: grid;
-		grid-template-columns: max-content auto;
-		height: 100%;
-	}
-</style>

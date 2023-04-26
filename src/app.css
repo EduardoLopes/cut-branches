@@ -1,25 +1,156 @@
 @import '@fontsource/fira-mono';
+@import '@radix-ui/colors/gray.css';
+@import '@radix-ui/colors/blue.css';
+@import '@radix-ui/colors/green.css';
+@import '@radix-ui/colors/red.css';
+@import '@radix-ui/colors/lime.css';
+@import '@radix-ui/colors/teal.css';
+@import '@radix-ui/colors/violet.css';
+@import '@radix-ui/colors/yellow.css';
+@import '@radix-ui/colors/grayDark.css';
+@import '@radix-ui/colors/blueDark.css';
+@import '@radix-ui/colors/greenDark.css';
+@import '@radix-ui/colors/redDark.css';
+@import '@radix-ui/colors/limeDark.css';
+@import '@radix-ui/colors/violetDark.css';
+@import '@radix-ui/colors/yellow.css';
+@import '@radix-ui/colors/amber.css';
 
 :root {
 	font-family: 'Montserrat', Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
 		Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 
-	--color-primary: #7a9b1c;
-	--color-primary-1: #c5ce3c;
-	--color-primary-2: #d7dd96;
+	--color-primary-1: var(--teal7);
+	--color-primary-2: var(--teal8);
+	--color-primary-3: var(--teal9);
+	--color-primary-4: var(--teal10);
+	--color-primary-5: var(--teal11);
 
-	--color-gray: #e9e9e7;
-	--color-gray-1: #b2c3cf;
+	--color-secondary-1: var(--violet6);
+	--color-secondary-2: var(--violet7);
+	--color-secondary-3: var(--violet8);
+	--color-secondary-4: var(--violet10);
+	--color-secondary-5: var(--violet12);
+
+	--color-danger-1: var(--red1);
+	--color-danger-2: var(--red2);
+	--color-danger-3: var(--red3);
+	--color-danger-4: var(--red4);
+	--color-danger-5: var(--red5);
+	--color-danger-6: var(--red6);
+	--color-danger-7: var(--red7);
+	--color-danger-8: var(--red8);
+	--color-danger-9: var(--red9);
+	--color-danger-10: var(--red10);
+	--color-danger-11: var(--red11);
+	--color-danger-12: var(--red12);
+
+	--color-warning-1: var(--amber1);
+	--color-warning-2: var(--amber2);
+	--color-warning-3: var(--amber3);
+	--color-warning-4: var(--amber4);
+	--color-warning-5: var(--amber5);
+	--color-warning-6: var(--amber6);
+	--color-warning-7: var(--amber7);
+	--color-warning-8: var(--amber8);
+	--color-warning-9: var(--amber9);
+	--color-warning-10: var(--amber10);
+	--color-warning-11: var(--amber11);
+	--color-warning-12: var(--amber12);
+
+	--color-success-1: var(--green1);
+	--color-success-2: var(--green2);
+	--color-success-3: var(--green3);
+	--color-success-4: var(--green4);
+	--color-success-5: var(--green5);
+	--color-success-6: var(--green6);
+	--color-success-7: var(--green7);
+	--color-success-8: var(--green8);
+	--color-success-9: var(--green9);
+	--color-success-10: var(--green10);
+	--color-success-11: var(--green11);
+	--color-success-12: var(--green12);
+
+	--color-info-1: var(--blue1);
+	--color-info-2: var(--blue2);
+	--color-info-3: var(--blue3);
+	--color-info-4: var(--blue4);
+	--color-info-5: var(--blue5);
+	--color-info-6: var(--blue6);
+	--color-info-7: var(--blue7);
+	--color-info-8: var(--blue8);
+	--color-info-9: var(--blue9);
+	--color-info-10: var(--blue10);
+	--color-info-11: var(--blue11);
+	--color-info-12: var(--blue12);
+
+	--color-neutral-1: var(--gray1);
+	--color-neutral-2: var(--gray2);
+	--color-neutral-3: var(--gray3);
+	--color-neutral-4: var(--gray4);
+	--color-neutral-5: var(--gray5);
+	--color-neutral-6: var(--gray6);
+	--color-neutral-7: var(--gray7);
+	--color-neutral-8: var(--gray8);
+	--color-neutral-9: var(--gray9);
+	--color-neutral-10: var(--gray10);
+	--color-neutral-11: var(--gray11);
+	--color-neutral-12: var(--gray12);
+
+	--color-background-1: var(--gray1);
+
+	--space-unit: 1;
+
+	--space-auto: auto;
+	--space-none: 0;
+	--space-xxxxs: calc(0.1rem * var(--space-unit));
+	--space-xxxs: calc(0.2rem * var(--space-unit));
+	--space-xxs: calc(0.4rem * var(--space-unit));
+	--space-xs: calc(0.8rem * var(--space-unit));
+	--space-sm: calc(1.2rem * var(--space-unit));
+	--space-md: calc(1.6rem * var(--space-unit));
+	--space-lg: calc(2rem * var(--space-unit));
+	--space-xl: calc(2.4rem * var(--space-unit));
+	--space-xxl: calc(3.2rem * var(--space-unit));
+	--space-xxxl: calc(6.4rem * var(--space-unit));
+
+	--font-size-unit: 1;
+
+	--font-size-none: 0;
+	--font-size-xxxxs: calc(0.1rem * var(--font-size-unit));
+	--font-size-xxxs: calc(0.2rem * var(--font-size-unit));
+	--font-size-xxs: calc(0.4rem * var(--font-size-unit));
+	--font-size-xs: calc(0.8rem * var(--font-size-unit));
+	--font-size-sm: calc(1.2rem * var(--font-size-unit));
+	--font-size-md: calc(1.6rem * var(--font-size-unit));
+	--font-size-lg: calc(2rem * var(--font-size-unit));
+	--font-size-xl: calc(2.4rem * var(--font-size-unit));
+	--font-size-xxl: calc(3.2rem * var(--font-size-unit));
+	--font-size-xxxl: calc(6.4rem * var(--font-size-unit));
+
+	--border-radius-sm: 0.2rem;
+	--border-radius-md: 0.4rem;
+	--border-radius-lg: 0.8rem;
+	--border-radius-xl: 1.6rem;
+	--border-radius-circle: 50%;
+	--border-radius-pill: 9999px;
 }
 
 * {
 	box-sizing: border-box;
 }
 
+html {
+	font-size: 10px;
+	max-height: 100vh;
+}
+
 body {
-	min-height: 100vh;
 	margin: 0;
 	font-weight: 500;
+	font-size: 1.6rem;
+	overflow: hidden;
+	text-rendering: optimizeLegibility;
 }
 
 #svelte {
@@ -84,18 +215,18 @@ button:focus:not(:focus-visible) {
 }
 
 ::-webkit-scrollbar-track {
-	background-color: var(--color-gray);
+	background-color: var(--color-primary-1);
 }
 
 ::-webkit-scrollbar {
 	width: 6px;
-	background-color: var(--color-gray-1);
+	background-color: var(--color-primary-2);
 }
 
 ::-webkit-scrollbar-thumb {
-	background-color: var(--color-gray-1);
+	background-color: var(--color-primary-3);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background-color: var(--color-primary);
+	background-color: var(--color-primary-5);
 }
