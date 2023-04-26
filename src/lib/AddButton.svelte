@@ -7,33 +7,39 @@
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
 	import { toast } from './primitives/Toast.svelte';
+	import { useGetRootPath } from './services/useGetRootPath';
+	import { open } from '@tauri-apps/api/dialog';
 
-	let apiOpen: (options?: OpenDialogOptions | undefined) => Promise<string | string[] | null>;
-	onMount(async () => {
-		const { open } = await import('@tauri-apps/api/dialog');
+	let lastPathSelected: string | undefined;
 
-		apiOpen = open;
+	$: getRootPath = useGetRootPath(lastPathSelected, {
+		enabled: Boolean(lastPathSelected),
+		onError: (errors) => {
+			errors.reverse().forEach((item) => toast.danger({ message: item }));
+		}
 	});
 
-	function handleAddClick() {
-		apiOpen({ directory: true })
-			.then((dir) => {
-				if (dir && typeof dir === 'string') {
-					getRepoInfo(dir)
-						.then((res) => {
-							if (res) {
-								$repos = [...$repos.filter((item) => item.path !== res.path), res];
-								goto('/');
-							}
-						})
-						.catch((errors: string[]) => {
-							errors.reverse().forEach((item) => toast.danger({ message: item }));
-						});
-				}
-			})
-			.catch((error) => {
-				toast.danger({ message: error });
-			});
+	$: if ($getRootPath.data) {
+		goto(`/repos/${$getRootPath.data.name}`, {
+			state: {
+				path: $getRootPath.data.path,
+				name: $getRootPath.data.name
+			}
+		});
+	}
+
+	async function handleAddClick() {
+		if (open) {
+			open({ directory: true })
+				.then(async (dir) => {
+					if (dir && typeof dir === 'string') {
+						lastPathSelected = dir;
+					}
+				})
+				.catch((error) => {
+					toast.danger({ message: error });
+				});
+		}
 	}
 </script>
 
