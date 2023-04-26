@@ -38,11 +38,7 @@
 		>
 			<div class="overlay" />
 			<div class="icon">
-				<Icon
-					icon="mingcute:loading-line"
-					width="var(--loading-size)"
-					height="var(--loading-size)"
-				/>
+				<Icon icon="mingcute:loading-line" width="100%" height="100%" />
 			</div>
 		</div>
 	{/if}
