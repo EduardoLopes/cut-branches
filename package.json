@@ -14,7 +14,8 @@
 		"tauri": "tauri",
 		"story:dev": "histoire dev",
 		"story:build": "histoire build",
-		"story:preview": "histoire preview"
+		"story:preview": "histoire preview",
+		"update": "npx npm-check-updates -u && cd src-tauri && cargo update && cd .."
 	},
 	"devDependencies": {
 		"@histoire/plugin-svelte": "^0.16.1",
@@ -30,13 +31,13 @@
 		"histoire": "^0.16.1",
 		"prettier": "~2.8.8",
 		"prettier-plugin-svelte": "^2.10.0",
-		"sass": "^1.62.0",
+		"sass": "^1.62.1",
 		"svelte": "^3.58.0",
 		"svelte-check": "^3.2.0",
 		"svelte-preprocess": "^5.0.3",
 		"tslib": "^2.5.0",
 		"typescript": "^5.0.4",
-		"vite": "^4.3.1"
+		"vite": "^4.3.2"
 	},
 	"type": "module",
 	"dependencies": {
