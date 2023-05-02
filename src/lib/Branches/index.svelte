@@ -134,6 +134,46 @@
 
 <Loading state={$getBranchesQuery.isInitialLoading ? 'loading' : undefined}>
 	<main class="container">
+		<div class="header">
+			{#key $getBranchesQuery.data?.name}
+				<h1 in:fly={{ x: -20 }}>
+					{#if $getBranchesQuery.data?.name}
+						{$getBranchesQuery.data?.name}
+					{/if}
+				</h1>
+			{/key}
+
+			<div class="menu">
+				<Button
+					variant="tertiary"
+					size="sm"
+					on:click={update_repo}
+					state={$getBranchesQuery.isFetching ? 'loading' : undefined}
+				>
+					<Icon
+						icon="material-symbols:refresh-rounded"
+						width="24px"
+						height="24px"
+						color="var(--primary-color)"
+					/>
+				</Button>
+
+				<Button
+					variant="tertiary"
+					size="sm"
+					on:click={() => {
+						goto(`/repos/${$getBranchesQuery.data?.name}/remove`);
+					}}
+				>
+					<Icon
+						icon="solar:close-circle-linear"
+						width="24px"
+						height="24px"
+						color="var(--primary-color)"
+					/>
+				</Button>
+			</div>
+		</div>
 		{#if $getBranchesQuery.isError}
 			<div class="error" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
 				<div>
@@ -150,42 +190,6 @@
 		{/if}
 
 		{#if $getBranchesQuery.isSuccess}
-			<div class="header">
-				{#key $getBranchesQuery.data?.name}
-					<h1 in:fly={{ x: -20 }}>{$getBranchesQuery.data?.name}</h1>
-				{/key}
-				<div class="menu">
-					<Button
-						variant="tertiary"
-						size="sm"
-						on:click={update_repo}
-						state={$getBranchesQuery.isFetching ? 'loading' : undefined}
-					>
-						<Icon
-							icon="material-symbols:refresh-rounded"
-							width="24px"
-							height="24px"
-							color="var(--primary-color)"
-						/>
-					</Button>
-
-					<Button
-						variant="tertiary"
-						size="sm"
-						on:click={() => {
-							goto(`/repos/${$getBranchesQuery.data?.name}/remove`);
-						}}
-					>
-						<Icon
-							icon="solar:close-circle-linear"
-							width="24px"
-							height="24px"
-							color="var(--primary-color)"
-						/>
-					</Button>
-				</div>
-			</div>
-
 			{#key $page.params.id}
 				<div class="content" in:fly={{ y: -30, duration: 150 }}>
 					<div class="toolbar-container">
@@ -469,6 +473,7 @@
 		border-bottom: 1px dashed var(--color-neutral-8);
 		z-index: 20;
 		flex-shrink: 0;
+		min-height: 58px;
 
 		h1 {
 			font-size: 1.3em;
@@ -537,7 +542,7 @@
 		display: grid;
 		place-items: center;
 		height: 100%;
-		font-size: 2.4rem;
+		font-size: 2rem;
 		flex-direction: column;
 		gap: 1.6rem;
 		> div {
@@ -552,7 +557,7 @@
 
 	.error {
 		.description {
-			font-size: 2.2rem;
+			font-size: 1.8rem;
 			text-align: center;
 			color: var(--color-neutral-11);
 		}
