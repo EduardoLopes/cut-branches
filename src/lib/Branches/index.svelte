@@ -49,9 +49,11 @@
 	function update_repo() {
 		if (currentRepo) {
 			$getBranchesQuery.refetch().then(() => {
-				toast.success({
-					message: `The repository <strong>${$getBranchesQuery.data?.name}</strong> was updated`
-				});
+				if ($getBranchesQuery.isSuccess) {
+					toast.success({
+						message: `The repository <strong>${$getBranchesQuery.data?.name}</strong> was updated`
+					});
+				}
 			});
 		}
 	}

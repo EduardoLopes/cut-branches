@@ -43,6 +43,30 @@ fn set_current_dir(path: &Path) -> Result<(), Error> {
     })
 }
 
+fn is_git_repository(path: &Path) -> Result<bool, Error> {
+    let result = Command::new("git")
+        .arg("rev-parse")
+        .arg("--is-inside-work-tree")
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8(result.stdout).unwrap();
+    let stderr = String::from_utf8(result.stderr).unwrap();
+
+    if (!stdout.is_empty()) {
+        return Ok(true);
+    }
+
+    Err(Error {
+        message: format!(
+            "The path <strong>{0}</strong> is not a git repository",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "is_git_repository".to_string(),
+    })
+}
+
 #[tauri::command(async)]
 async fn git_repo_dir(path: String) -> Result<String, Error> {
     let mut errors: Vec<String> = Vec::new();
@@ -50,6 +74,8 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
     let raw_path = Path::new(&path);
 
     set_current_dir(&raw_path)?;
+
+    is_git_repository(&raw_path)?;
 
     let dir_child = Command::new("git")
         .arg("rev-parse")
@@ -70,9 +96,9 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
 
     let raw_root_path = Path::new(&root_path);
 
-    // println!("root_path: {}", root_path);
-    // println!("raw_root_path: {:?}", raw_root_path);
-    // println!("raw_path: {:?}", raw_path);
+    // printlnln!("root_path: {}", root_path);
+    // printlnln!("raw_root_path: {:?}", raw_root_path);
+    // printlnln!("raw_path: {:?}", raw_path);
 
     env::set_current_dir(&raw_root_path).unwrap_or_else(|error| {
         errors.push(format!(
@@ -172,8 +198,8 @@ fn delete_branches(DeleteOptions(path, branches): DeleteOptions) -> String {
 
     env::set_current_dir(&raw_path).expect("Unable to change into");
 
-    // println!("path: {}", path);
-    // println!("branches: {}", branches);
+    // printlnln!("path: {}", path);
+    // printlnln!("branches: {}", branches);
 
     let args: Vec<_> = branches.split(" ").collect();
 
