@@ -1,10 +1,5 @@
 import { repos, type RepoID } from '$lib/stores';
-import {
-	type QueryKey,
-	type MutationOptions,
-	type CreateMutationOptions,
-	createMutation
-} from '@tanstack/svelte-query';
+import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import type { ServiceError } from './models';
 import { invoke } from '@tauri-apps/api/tauri';
 

@@ -31,8 +31,10 @@
 		checkRedirect();
 	});
 
-	// checks every route change
+	// checks every time route change
 	$: if ($navigating) checkRedirect();
+	// checks every time the repos store changes
+	$: if ($repos) checkRedirect();
 
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
