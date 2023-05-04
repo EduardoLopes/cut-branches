@@ -61,9 +61,7 @@
 					out:fly|local={{ y: -10, duration: 50 }}
 				>
 					{#if alert === 'fullyMerged'}
-						<Alert feedback="info">
-							This branch is not fully merged into the current branch, {currentRepo?.current_branch}!
-						</Alert>
+						<Alert feedback="info">This branch is not fully merged into the current branch!</Alert>
 					{/if}
 					{#if alert === 'protectedWords'}
 						<Alert feedback="warning">

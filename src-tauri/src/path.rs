@@ -1,9 +1,9 @@
 extern crate execute;
 
+use std::env;
 use std::process::Command;
 
 use std::collections::hash_map::DefaultHasher;
-use std::env;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 

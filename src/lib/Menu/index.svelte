@@ -8,7 +8,8 @@
 	import { goto } from '$app/navigation';
 	import { toast } from '$lib/primitives/Toast.svelte';
 	import { version } from '$app/environment';
-	import { useQueryClient } from '@tanstack/svelte-query';
+	import { flip } from 'svelte/animate';
+	import { fly } from 'svelte/transition';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -19,8 +20,6 @@
 
 		return a.name.localeCompare(b.name);
 	}
-
-	const client = useQueryClient();
 
 	let createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data, variables, context) {
@@ -54,8 +53,6 @@
 				});
 		}
 	}
-
-	console.log();
 </script>
 
 <section class="container">
@@ -66,18 +63,22 @@
 	<nav class="content">
 		<div class="title">
 			<h2>Repositories</h2>
-			<Button size="sm" on:click={handleAddClick}>
+			<Button
+				size="sm"
+				on:click={handleAddClick}
+				state={$createRepositoryIDMutation.isLoading ? 'loading' : undefined}
+			>
 				<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
 			</Button>
 		</div>
 		{#if $repos}
 			<ul class="menu">
 				{#each $repos.sort(handleSort) as repo (repo.name)}
-					<li class:current={$page.params.id === repo.id}>
+					<li class:current={$page.params.id === repo.id} animate:flip={{ duration: 150 }}>
 						<a href={`/repos/${repo.id}`}
 							>{repo.name}
 							{#if repo.branchesCount}
-								<span class="count"
+								<span class="count" in:fly|local={{ x: -10 }} out:fly|local={{ x: -10 }}
 									>{repo.branchesCount}
 									{repo.branchesCount > 0 ? 'branches' : 'branch'}</span
 								>
