@@ -31,7 +31,10 @@ repos.subscribe((value) => {
 
 window.addEventListener('storage', () => {
 	const storedValueStr = localStorage.getItem('repos');
-	if (storedValueStr == null) return;
+	if (storedValueStr == null) {
+		repos.set([]);
+		return;
+	}
 
 	const localValue = JSON.parse(storedValueStr);
 	if (localValue !== get(repos)) repos.set(localValue);
