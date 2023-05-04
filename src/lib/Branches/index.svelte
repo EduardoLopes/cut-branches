@@ -193,7 +193,7 @@
 
 		{#if $getBranchesQuery.isSuccess}
 			{#key $page.params.id}
-				<div class="content" in:fly={{ y: -30, duration: 150 }}>
+				<div class="content" in:fly|local={{ x: -30, duration: 150 }}>
 					<div class="toolbar-container">
 						<div class="left">
 							{#if selectibleCount > 0}
@@ -410,7 +410,7 @@
 					</div> -->
 						</div>
 						{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
-							<div class="pagination" in:fly={{ x: 10 }} out:fly|local={{ x: 10 }}>
+							<div class="pagination">
 								<Button
 									variant="tertiary"
 									size="sm"
@@ -420,7 +420,9 @@
 									<Icon icon="material-symbols:chevron-left-rounded" width="24px" height="24px" />
 								</Button>
 								<div class="numbers">
-									{currentPage + 1} / {totalPages}
+									<span in:fly={{ y: 5 }} out:fly|local={{ y: -10 }}>
+										{currentPage + 1} / {totalPages}
+									</span>
 								</div>
 								<Button
 									variant="tertiary"
