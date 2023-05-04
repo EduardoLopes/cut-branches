@@ -493,6 +493,8 @@
 
 			:global {
 				button {
+					--button-background-color: transparent;
+					border: none;
 					border-radius: 0;
 					height: 100%;
 					align-items: center;
