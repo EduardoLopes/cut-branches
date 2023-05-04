@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IRepo, RepoID } from '$lib/stores';
+	import type { IBranch, IRepo, RepoID } from '$lib/stores';
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -37,10 +37,10 @@
 	});
 
 	onMount(() => {
-		currentRepo = $repos.filter((item) => item.name === id)[0];
+		currentRepo = $repos.filter((item) => item.id === id)[0];
 	});
 
-	$: selected = currentRepo?.branches.filter((item) => history.state.branches.includes(item.name));
+	$: selected = history.state.branches as IBranch[];
 
 	function handleYes() {
 		if (selected && currentRepo) {

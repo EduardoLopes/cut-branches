@@ -22,9 +22,11 @@
 	export let id: string | null = null;
 	let searchInputElement: HTMLInputElement | null = null;
 
+	const oneMinute = 60000;
+
 	$: currentRepo = $repos.filter((item) => item.id === id)[0] as RepoID | undefined;
 	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
-		staleTime: 0,
+		staleTime: oneMinute,
 		meta: {
 			showErrorToast: false
 		}
@@ -59,11 +61,13 @@
 	}
 
 	function handleDelete() {
-		goto(`/repos/${$getBranchesQuery.data?.name}/delete`, {
-			state: {
-				branches: selected
-			}
-		});
+		if ($getBranchesQuery.data) {
+			goto(`/repos/${id}/delete`, {
+				state: {
+					branches: $getBranchesQuery.data.branches.filter((item) => selected.includes(item.name))
+				}
+			});
+		}
 	}
 
 	function clearSearch() {
