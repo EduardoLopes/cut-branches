@@ -8,6 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { toast } from '$lib/primitives/Toast.svelte';
 	import { version } from '$app/environment';
+	import { useQueryClient } from '@tanstack/svelte-query';
 
 	export let sortBy = 'BRANCH_COUNT';
 
@@ -18,6 +19,8 @@
 
 		return a.name.localeCompare(b.name);
 	}
+
+	const client = useQueryClient();
 
 	let createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data, variables, context) {
@@ -51,6 +54,8 @@
 				});
 		}
 	}
+
+	console.log();
 </script>
 
 <section class="container">
@@ -71,7 +76,12 @@
 					<li class:current={$page.params.id === repo.id}>
 						<a href={`/repos/${repo.id}`}
 							>{repo.name}
-							<!-- <span class="count">{repo.branches.length} {repo.branches.length > 0 ? 'branches' : 'branch'}</span> -->
+							{#if repo.branchesCount}
+								<span class="count"
+									>{repo.branchesCount}
+									{repo.branchesCount > 0 ? 'branches' : 'branch'}</span
+								>
+							{/if}
 						</a>
 					</li>
 				{/each}
@@ -162,8 +172,7 @@
 				color: #fff;
 				margin: 0;
 				text-decoration: none;
-				min-height: 48px;
-				justify-content: center;
+				line-height: 1.5;
 
 				&:hover {
 					background: var(--color-primary-4);

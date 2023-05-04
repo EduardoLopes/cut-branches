@@ -16,6 +16,7 @@ export interface RepoID {
 	path: string;
 	id: string;
 	name: string;
+	branchesCount?: number;
 }
 
 export const repos = writable<RepoID[]>(

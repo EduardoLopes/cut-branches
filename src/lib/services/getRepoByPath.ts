@@ -1,4 +1,4 @@
-import type { IRepo } from '$lib/stores';
+import { repos, type IRepo } from '$lib/stores';
 import { createQuery, type CreateQueryOptions, type QueryKey } from '@tanstack/svelte-query';
 
 import { invoke } from '@tauri-apps/api/tauri';
@@ -10,10 +10,6 @@ export function getRepoByPath(path: string, options?: CreateQueryOptions<IRepo, 
 		async () => {
 			return invoke<string>('git_repo_dir', { path }).then((res) => {
 				const resParser = JSON.parse(res) satisfies IRepo;
-
-				const errors = resParser.errors;
-
-				if (errors.length > 0) return Promise.reject(errors);
 
 				const root_path = resParser.root_path;
 				let name: string;
@@ -30,6 +26,16 @@ export function getRepoByPath(path: string, options?: CreateQueryOptions<IRepo, 
 					name,
 					current_branch: resParser.current_branch
 				};
+
+				repos.update((items) => {
+					const repo = items.find((item) => item.path === data.path);
+
+					if (repo) {
+						repo.branchesCount = data.branches.length;
+					}
+
+					return [...items];
+				});
 
 				return data;
 			});
