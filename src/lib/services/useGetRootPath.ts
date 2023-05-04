@@ -1,19 +1,12 @@
+import { repos, type RepoID } from '$lib/stores';
 import { createQuery, type CreateQueryOptions, type QueryKey } from '@tanstack/svelte-query';
 
 interface RootPath {
 	root_path: string;
-	error: string[];
+	id: string;
 }
 
-interface RootPathResponse {
-	path: string;
-	name: string;
-}
-
-export function useGetRootPath(
-	path?: string,
-	options?: CreateQueryOptions<RootPathResponse, string[]>
-) {
+export function useGetRootPath(path?: string, options?: CreateQueryOptions<RepoID, string[]>) {
 	return createQuery(
 		['repository', 'root-path', path] as QueryKey,
 		async () => {
@@ -25,10 +18,6 @@ export function useGetRootPath(
 
 			const resParser = JSON.parse(res) satisfies RootPath;
 
-			const errors = resParser.errors;
-
-			if (errors.length > 0) return Promise.reject(errors);
-
 			const root_path = resParser.root_path;
 			let name: string;
 
@@ -38,10 +27,18 @@ export function useGetRootPath(
 				name = root_path.substring(root_path.lastIndexOf('\\') + 1);
 			}
 
-			const data: RootPathResponse = {
+			const data: RepoID = {
 				path: root_path,
-				name
+				name,
+				id: String(resParser.id)
 			};
+
+			repos.update((items) => {
+				items = items.filter((item) => item.id !== data.id);
+				items.push(data);
+
+				return items;
+			});
 
 			return data;
 		},

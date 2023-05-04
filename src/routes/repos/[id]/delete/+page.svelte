@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IRepo } from '$lib/stores';
+	import type { IRepo, RepoID } from '$lib/stores';
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -14,7 +14,7 @@
 
 	let id = $page.params.id;
 
-	let currentRepo: IRepo | undefined;
+	let currentRepo: RepoID | undefined;
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
 			toast.success({

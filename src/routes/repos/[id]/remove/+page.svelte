@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IRepo } from '$lib/stores';
+	import type { RepoID } from '$lib/stores';
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -9,14 +9,17 @@
 
 	let id = $page.params.id;
 
-	let currentRepo: IRepo | undefined;
+	let currentRepo: RepoID | undefined;
 
 	onMount(() => {
-		currentRepo = $repos.filter((item) => item.name === id)[0];
+		currentRepo = $repos.filter((item) => item.id === id)[0];
 	});
 
 	function handleYes() {
-		$repos = $repos.filter((item) => item.path !== currentRepo?.path);
+		$repos = $repos.filter((item) => {
+			return item.id !== currentRepo?.id;
+		});
+
 		goto(`/`);
 	}
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IBranch, IRepo } from '$lib/stores';
+	import type { IBranch, RepoID } from '$lib/stores';
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
@@ -14,7 +14,7 @@
 	export let disabled = false;
 
 	let id = $page.params.id;
-	let currentRepo: IRepo | undefined;
+	let currentRepo: RepoID | undefined;
 	let protectedWords = [
 		'develop',
 		'dev',

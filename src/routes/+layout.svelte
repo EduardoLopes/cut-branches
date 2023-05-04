@@ -9,6 +9,30 @@
 	import '../app.css';
 	import type { ServiceError } from '$lib/services/models';
 	import Toast, { toast } from '$lib/primitives/Toast.svelte';
+	import { repos } from '$lib/stores';
+	import { goto } from '$app/navigation';
+	import { navigating, page } from '$app/stores';
+	import { onMount } from 'svelte';
+
+	function checkRedirect() {
+		if ($repos.length === 0) {
+			goto('/add-first');
+		}
+
+		// if is in any route that requires a repo id and the repo does not exist in the app anymore
+		const idExists = $repos.filter((item) => item.id === $page.params.id).length > 0;
+
+		if ($repos.length > 0 && !idExists) {
+			goto(`/repos/${$repos[0].id}`);
+		}
+	}
+
+	onMount(() => {
+		checkRedirect();
+	});
+
+	// checks every route change
+	$: if ($navigating) checkRedirect();
 
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
@@ -34,7 +58,6 @@
 			if (query.meta?.showSuccessToast) {
 				const toastInfo = query.meta?.toast as { message: string; description: string };
 
-				console.log(toastInfo);
 				if (toastInfo.message) {
 					toast.success({ message: toastInfo.message, description: toastInfo.description });
 				}

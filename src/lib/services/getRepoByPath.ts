@@ -1,6 +1,6 @@
 import type { IRepo } from '$lib/stores';
 import { createQuery, type CreateQueryOptions, type QueryKey } from '@tanstack/svelte-query';
-import { repos } from '$lib/stores';
+
 import { invoke } from '@tauri-apps/api/tauri';
 import type { ServiceError } from './models';
 
@@ -30,13 +30,6 @@ export function getRepoByPath(path: string, options?: CreateQueryOptions<IRepo, 
 					name,
 					current_branch: resParser.current_branch
 				};
-
-				repos.update((items) => {
-					items = items.filter((item) => item.name !== data.name);
-					items.push(data);
-
-					return items;
-				});
 
 				return data;
 			});

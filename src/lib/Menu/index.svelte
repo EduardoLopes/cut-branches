@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { repos } from '$lib/stores';
-	import type { IRepo } from '$lib/stores';
+	import { repos, type RepoID } from '$lib/stores';
+	import type { IRepo as Repo } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import { page } from '$app/stores';
 	import Icon from '@iconify/svelte';
@@ -11,7 +11,7 @@
 
 	export let sortBy = 'BRANCH_COUNT';
 
-	function handleSort(a: IRepo, b: IRepo) {
+	function handleSort(a: RepoID, b: RepoID) {
 		if (sortBy === 'BRANCH_COUNT') {
 			// TODO
 		}
@@ -23,16 +23,17 @@
 
 	$: getRootPath = useGetRootPath(lastPathSelected, {
 		enabled: Boolean(lastPathSelected),
-		onError: (errors) => {
-			errors.reverse().forEach((item) => toast.danger({ message: item }));
+		meta: {
+			showErrorToast: true
 		}
 	});
 
 	$: if ($getRootPath.data) {
-		goto(`/repos/${$getRootPath.data.name}`, {
+		goto(`/repos/${$getRootPath.data.id}`, {
 			state: {
 				path: $getRootPath.data.path,
-				name: $getRootPath.data.name
+				name: $getRootPath.data.name,
+				id: $getRootPath.data.id
 			}
 		});
 	}
@@ -69,11 +70,10 @@
 		{#if $repos}
 			<ul class="menu">
 				{#each $repos.sort(handleSort) as repo (repo.name)}
-					<li class:current={$page.params.id === repo.name}>
-						<a href={`/repos/${repo.name}`}
-							>{repo.name}<span class="count"
-								>{repo.branches.length} {repo.branches.length > 0 ? 'branches' : 'branch'}</span
-							>
+					<li class:current={$page.params.id === repo.id}>
+						<a href={`/repos/${repo.id}`}
+							>{repo.name}
+							<!-- <span class="count">{repo.branches.length} {repo.branches.length > 0 ? 'branches' : 'branch'}</span> -->
 						</a>
 					</li>
 				{/each}
@@ -81,8 +81,7 @@
 		{/if}
 	</nav>
 
-	<div class="bottom-info-bar"> v{version} </div>
-	
+	<div class="bottom-info-bar">v{version}</div>
 </section>
 
 <style src="./styles.scss" lang="scss">
@@ -165,6 +164,8 @@
 				color: #fff;
 				margin: 0;
 				text-decoration: none;
+				min-height: 48px;
+				justify-content: center;
 
 				&:hover {
 					background: var(--color-primary-4);

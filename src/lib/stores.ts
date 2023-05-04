@@ -12,7 +12,13 @@ export interface IRepo {
 	current_branch: string;
 }
 
-export const repos = writable<IRepo[]>(
+export interface RepoID {
+	path: string;
+	id: string;
+	name: string;
+}
+
+export const repos = writable<RepoID[]>(
 	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('repos') ?? '[]') : []
 );
 

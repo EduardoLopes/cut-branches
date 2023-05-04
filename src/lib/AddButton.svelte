@@ -1,9 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
 	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
-	import { getRepoInfo } from '$lib/utils';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
 	import { toast } from './primitives/Toast.svelte';
@@ -14,16 +11,17 @@
 
 	$: getRootPath = useGetRootPath(lastPathSelected, {
 		enabled: Boolean(lastPathSelected),
-		onError: (errors) => {
-			errors.reverse().forEach((item) => toast.danger({ message: item }));
+		meta: {
+			showErrorToast: true
 		}
 	});
 
 	$: if ($getRootPath.data) {
-		goto(`/repos/${$getRootPath.data.name}`, {
+		goto(`/repos/${$getRootPath.data.id}`, {
 			state: {
 				path: $getRootPath.data.path,
-				name: $getRootPath.data.name
+				name: $getRootPath.data.name,
+				id: $getRootPath.data.id
 			}
 		});
 	}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IBranch, IRepo } from '$lib/stores';
+	import type { IBranch, IRepo, RepoID } from '$lib/stores';
 
 	import { repos } from '$lib/stores';
 	import Button from '$lib/primitives/Button/index.svelte';
@@ -22,7 +22,7 @@
 	export let id: string | null = null;
 	let searchInputElement: HTMLInputElement | null = null;
 
-	$: currentRepo = $repos.filter((item) => item.name === id)[0] as IRepo | undefined;
+	$: currentRepo = $repos.filter((item) => item.id === id)[0] as RepoID | undefined;
 	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
 		staleTime: 0,
 		meta: {
@@ -164,7 +164,7 @@
 					variant="tertiary"
 					size="sm"
 					on:click={() => {
-						goto(`/repos/${$getBranchesQuery.data?.name}/remove`);
+						goto(`/repos/${currentRepo?.id}/remove`);
 					}}
 				>
 					<Icon
