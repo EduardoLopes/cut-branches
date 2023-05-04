@@ -2,50 +2,101 @@ extern crate execute;
 
 use std::process::Command;
 
+use std::collections::hash_map::DefaultHasher;
 use std::env;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 
-#[derive(Debug)]
-#[derive(serde::Serialize)]
+use crate::error::Error;
+
+#[derive(Debug, serde::Serialize)]
 struct RootPathResponse {
-  root_path: String,  
-  errors: Vec<String>,
+    root_path: String,
+    id: Option<u64>,
+}
+
+impl Hash for RootPathResponse {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.root_path.hash(state);
+    }
+}
+
+pub fn set_current_dir(path: &Path) -> Result<(), Error> {
+    env::set_current_dir(&path).map_err(|error| Error {
+        message: format!(
+            "Unable to access the path <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(error.to_string()),
+        kind: "set_current_dir".to_string(),
+    })
+}
+
+pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
+    set_current_dir(&path)?;
+
+    let result = Command::new("git")
+        .arg("rev-parse")
+        .arg("--is-inside-work-tree")
+        .output()
+        .unwrap();
+
+    let stdout = String::from_utf8(result.stdout).unwrap();
+    let stderr = String::from_utf8(result.stderr).unwrap();
+
+    if !stdout.is_empty() {
+        return Ok(true);
+    }
+
+    Err(Error {
+        message: format!(
+            "The path <strong>{0}</strong> is not a git repository",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "is_git_repository".to_string(),
+    })
+}
+
+fn calculate_hash<T: Hash>(t: &T) -> u64 {
+    let mut s = DefaultHasher::new();
+    t.hash(&mut s);
+    s.finish()
 }
 
 #[tauri::command(async)]
-pub async fn get_root(path: String) -> String {
-  let mut errors: Vec<String> = Vec::new();
+pub async fn get_root(path: String) -> Result<String, Error> {
+    let raw_path = Path::new(&path);
+    set_current_dir(&raw_path)?;
 
-  let raw_path = Path::new(&path);
-  env::set_current_dir(&raw_path).expect("Unable to change into");
+    is_git_repository(&raw_path)?;
 
-  let dir_child = Command::new("git")
-    .arg("rev-parse")
-    .arg("--show-toplevel")
-    
-    .output()
-    .expect("Failed to execute command");
+    let result = Command::new("git")
+        .arg("rev-parse")
+        .arg("--show-toplevel")
+        .output()
+        .unwrap();
 
-  let root_path: String = match String::from_utf8(dir_child.stdout) {
-    Ok(output) => Some(output.trim().to_string()),
-    Err(err) => {
-      let e = format!("{:?}", err);
-      errors.push(e);
+    let rootpath = String::from_utf8(result.stdout).unwrap();
+    let stderr = String::from_utf8(result.stderr).unwrap();
 
-      None
+    if !stderr.is_empty() {
+        return Err(Error {
+            message: format!(
+                "We can't get the toplevel path of this git repository. Make sure the path {0} is a git repository",
+                raw_path.display()
+            ),
+            description: Some(stderr),
+            kind: "is_git_repository".to_string(),
+        });
     }
-  }
-  .unwrap();
 
-  errors.push(String::from_utf8(dir_child.stderr).unwrap());
+    let mut response = RootPathResponse {
+        root_path: rootpath.trim().to_string(),
+        id: None,
+    };
 
-  let response = RootPathResponse {
-    root_path: root_path,    
-    errors: errors
-      .into_iter()
-      .filter(|s| !s.is_empty())
-      .collect::<Vec<_>>(),
-  };
+    response.id = Some(calculate_hash(&response));
 
-  return serde_json::to_string(&response).unwrap();
+    Ok(serde_json::to_string(&response).unwrap())
 }

@@ -32,50 +32,15 @@ struct GitDirResponse {
     current_branch: String,
 }
 
-fn set_current_dir(path: &Path) -> Result<(), Error> {
-    env::set_current_dir(&path).map_err(|error| Error {
-        message: format!(
-            "Unable to access the path <strong>{0}</strong>",
-            path.display()
-        ),
-        description: Some(error.to_string()),
-        kind: "set_current_dir".to_string(),
-    })
-}
-
-fn is_git_repository(path: &Path) -> Result<bool, Error> {
-    let result = Command::new("git")
-        .arg("rev-parse")
-        .arg("--is-inside-work-tree")
-        .output()
-        .unwrap();
-
-    let stdout = String::from_utf8(result.stdout).unwrap();
-    let stderr = String::from_utf8(result.stderr).unwrap();
-
-    if (!stdout.is_empty()) {
-        return Ok(true);
-    }
-
-    Err(Error {
-        message: format!(
-            "The path <strong>{0}</strong> is not a git repository",
-            path.display()
-        ),
-        description: Some(stderr),
-        kind: "is_git_repository".to_string(),
-    })
-}
-
 #[tauri::command(async)]
 async fn git_repo_dir(path: String) -> Result<String, Error> {
     let mut errors: Vec<String> = Vec::new();
 
     let raw_path = Path::new(&path);
 
-    set_current_dir(&raw_path)?;
+    path::set_current_dir(&raw_path)?;
 
-    is_git_repository(&raw_path)?;
+    path::is_git_repository(&raw_path)?;
 
     let dir_child = Command::new("git")
         .arg("rev-parse")
