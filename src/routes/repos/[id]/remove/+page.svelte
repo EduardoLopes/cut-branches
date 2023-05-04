@@ -36,10 +36,10 @@
 		<div class="question">
 			<p><strong>Are you sure do you wanna remove this repository from the app?</strong></p>
 			<div class="buttons">
+				<Button variant="secondary" on:click={handleNo}>Cancel</Button>
 				<Button feedback="danger" on:click={handleYes}>
-					<Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" />Yes
+					<Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" /> Remove repository
 				</Button>
-				<Button variant="secondary" on:click={handleNo}>No</Button>
 			</div>
 		</div>
 	</div>

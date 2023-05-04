@@ -73,15 +73,19 @@
 	<div class="question">
 		<p>
 			<strong
-				>Are you sure do you wanna delete these branches from the repository {$page.params
-					.id}?</strong
+				>Are you sure do you wanna delete these branches from the repository <span class="uppercase"
+					>{currentRepo?.name}</span
+				>?</strong
 			>
 		</p>
 		<div class="buttons">
-			<Button feedback="danger" on:click={handleYes}>
-				<Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" />Yes
-			</Button>
 			<Button variant="secondary" on:click={handleNo}>No</Button>
+			<Button feedback="danger" on:click={handleYes}>
+				<Icon icon="ion:trash-outline" width="20px" height="20px" color="#fff" /> Delete {selected.length ===
+				1
+					? 'branch'
+					: 'branches'}
+			</Button>
 		</div>
 	</div>
 </div>
@@ -93,6 +97,10 @@
 		background: rgba(255, 255, 255, 0.5);
 		flex-direction: column;
 		height: 100vh;
+	}
+
+	.uppercase {
+		text-transform: uppercase;
 	}
 
 	.header {
