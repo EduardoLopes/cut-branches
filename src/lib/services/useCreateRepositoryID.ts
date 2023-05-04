@@ -6,6 +6,7 @@ import {
 	createMutation
 } from '@tanstack/svelte-query';
 import type { ServiceError } from './models';
+import { invoke } from '@tauri-apps/api/tauri';
 
 interface RootPath {
 	root_path: string;
@@ -23,37 +24,35 @@ export function useCreateRepositoryID(options?: CreateRepositoryIDMutationOption
 	return createMutation(
 		['repository', 'create-ID'],
 		async ({ path }) => {
-			const { invoke } = await import('@tauri-apps/api/tauri');
-
 			if (!path) return Promise.reject('No path provided');
 
-			const res = await invoke<string>('get_root', { path });
+			return invoke<string>('get_root', { path }).then((res) => {
+				const resParser = JSON.parse(res) satisfies RootPath;
 
-			const resParser = JSON.parse(res) satisfies RootPath;
+				const root_path = resParser.root_path;
+				let name: string;
 
-			const root_path = resParser.root_path;
-			let name: string;
+				if (root_path.lastIndexOf('/')) {
+					name = root_path.substring(root_path.lastIndexOf('/') + 1);
+				} else {
+					name = root_path.substring(root_path.lastIndexOf('\\') + 1);
+				}
 
-			if (root_path.lastIndexOf('/')) {
-				name = root_path.substring(root_path.lastIndexOf('/') + 1);
-			} else {
-				name = root_path.substring(root_path.lastIndexOf('\\') + 1);
-			}
+				const data: RepoID = {
+					path: root_path,
+					name,
+					id: String(resParser.id)
+				};
 
-			const data: RepoID = {
-				path: root_path,
-				name,
-				id: String(resParser.id)
-			};
+				repos.update((items) => {
+					items = items.filter((item) => item.id !== data.id);
+					items.push(data);
 
-			repos.update((items) => {
-				items = items.filter((item) => item.id !== data.id);
-				items.push(data);
+					return items;
+				});
 
-				return items;
+				return data;
 			});
-
-			return data;
 		},
 		options
 	);
