@@ -1,15 +1,28 @@
 import { repos, type RepoID } from '$lib/stores';
-import { createQuery, type CreateQueryOptions, type QueryKey } from '@tanstack/svelte-query';
+import {
+	type QueryKey,
+	type MutationOptions,
+	type CreateMutationOptions,
+	createMutation
+} from '@tanstack/svelte-query';
+import type { ServiceError } from './models';
 
 interface RootPath {
 	root_path: string;
 	id: string;
 }
 
-export function useGetRootPath(path?: string, options?: CreateQueryOptions<RepoID, string[]>) {
-	return createQuery(
-		['repository', 'root-path', path] as QueryKey,
-		async () => {
+type CreateRepositoryIDMutationOptions = CreateMutationOptions<
+	RepoID,
+	ServiceError,
+	{ path: string },
+	unknown
+>;
+
+export function useCreateRepositoryID(options?: CreateRepositoryIDMutationOptions) {
+	return createMutation(
+		['repository', 'create-ID'],
+		async ({ path }) => {
 			const { invoke } = await import('@tauri-apps/api/tauri');
 
 			if (!path) return Promise.reject('No path provided');
