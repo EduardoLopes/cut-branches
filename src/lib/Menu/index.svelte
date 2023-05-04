@@ -173,6 +173,7 @@
 				margin: 0;
 				text-decoration: none;
 				line-height: 1.5;
+				min-height: 55px;
 
 				&:hover {
 					background: var(--color-primary-4);
