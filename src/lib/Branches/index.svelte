@@ -142,7 +142,7 @@
 	<main class="container">
 		<div class="header">
 			{#key $getBranchesQuery.data?.name}
-				<h1 in:fly={{ x: -20 }}>
+				<h1 in:fly|local={{ x: -20 }}>
 					{#if $getBranchesQuery.data?.name}
 						{$getBranchesQuery.data?.name}
 					{/if}
@@ -247,7 +247,7 @@
 
 					<div class="actions">
 						{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
-							<div in:fly={{ x: 15 }}>
+							<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
 								<Button
 									variant="primary"
 									feedback="danger"
@@ -299,12 +299,11 @@
 							</div>
 						</div>
 					{/if}
-
-					{#key currentPage}
+					{#key `${$page.params.id}${currentPage}`}
 						<div
 							class="branches"
-							in:fly={{ x: 40, duration: 200 }}
-							out:fly|local={{ x: 60, duration: 200 }}
+							in:fly|local={{ x: 30, duration: 200 }}
+							out:fly|local={{ x: 20, duration: 200 }}
 						>
 							{#if paginatedBranches}
 								{#each paginatedBranches as branch, index (branch.name)}
@@ -417,9 +416,11 @@
 								<Icon icon="material-symbols:chevron-left-rounded" width="24px" height="24px" />
 							</Button>
 							<div class="numbers">
-								<span in:fly={{ y: 5 }} out:fly|local={{ y: -10 }}>
-									{currentPage + 1} / {totalPages}
-								</span>
+								{#key `${currentPage}-${totalPages}`}
+									<span in:fly|local={{ y: 5 }}>
+										{currentPage + 1} / {totalPages}
+									</span>
+								{/key}
 							</div>
 							<Button
 								variant="tertiary"
@@ -445,9 +446,11 @@
 								second: 'numeric'
 							})}
 						>
-							<div in:fly={{ x: 15 }}>
-								Last updated {lastUpdatedAt}
-							</div>
+							{#key lastUpdatedAt}
+								<div in:fly|local={{ x: 15 }}>
+									Last updated {lastUpdatedAt}
+								</div>
+							{/key}
 						</time>
 					{/if}
 				</div>

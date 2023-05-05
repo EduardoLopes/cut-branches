@@ -4,9 +4,7 @@
 </script>
 
 <div class="content">
-	{#key $page.params.id}
-		<Branches id={$page.params.id} />
-	{/key}
+	<Branches id={$page.params.id} />
 </div>
 
 <style>
