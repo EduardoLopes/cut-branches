@@ -96,11 +96,12 @@
 <style src="./styles.scss" lang="scss">
 	.logo-container {
 		display: flex;
-		gap: 0.8rem;
+		gap: 1rem;
 		align-items: center;
 		padding: 1.6rem;
 		background: var(--color-primary-7);
 		border-bottom: 1px dashed var(--color-primary-6);
+		min-height: 58px;
 
 		.logo {
 			color: #fff;
@@ -195,7 +196,7 @@
 	.bottom-info-bar {
 		font-size: 1.2rem;
 		padding: 0.4rem 0.8rem;
-		border-top: 1px dashed var(--color-primary-5);
+		border-top: 1px dashed var(--color-primary-7);
 		background: var(--color-primary-6);
 		text-align: left;
 		color: var(--color-neutral-1);

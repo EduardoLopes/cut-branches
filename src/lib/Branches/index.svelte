@@ -471,7 +471,7 @@
 		display: flex;
 		justify-content: space-between;
 		top: 0;
-		border-bottom: 1px dashed var(--color-neutral-4);
+		border-bottom: 1px dashed var(--color-neutral-3);
 		z-index: 20;
 		flex-shrink: 0;
 		min-height: 58px;
@@ -602,7 +602,7 @@
 		justify-content: space-between;
 		align-items: center;
 		z-index: 10;
-		border-top: 1px solid var(--color-neutral-4);
+		border-top: 1px solid var(--color-neutral-3);
 		flex-shrink: 0;
 
 		.left {
@@ -612,7 +612,7 @@
 				display: flex;
 				align-items: center;
 				flex-direction: row;
-				border: 1px solid var(--color-neutral-4);
+				border: 1px solid var(--color-neutral-3);
 				border-bottom: none;
 				border-top-width: 0;
 
@@ -656,7 +656,7 @@
 				display: grid;
 				align-items: center;
 				border-radius: 0;
-				border: 1px solid var(--color-neutral-4);
+				border: 1px solid var(--color-neutral-3);
 				border-top-width: 0;
 				height: 100%;
 				border-bottom: none;
@@ -672,7 +672,7 @@
 	.bottom-info-bar {
 		font-size: 1.2rem;
 		padding: 0.4rem 0.8rem;
-		border-top: solid 1px var(--color-neutral-4);
+		border-top: dashed 1px var(--color-neutral-1);
 		background: var(--color-neutral-3);
 		text-align: right;
 		color: var(--color-neutral-6);
