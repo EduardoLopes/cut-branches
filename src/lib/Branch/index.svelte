@@ -114,7 +114,7 @@
 			border-color: var(--color-warning-4);
 
 			.name {
-				color: var(--color-warning-7);
+				color: var(--color-warning-5);
 			}
 		}
 

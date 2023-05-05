@@ -45,8 +45,6 @@
 </div>
 
 <style lang="scss">
-	@import '@radix-ui/colors/teal.css';
-
 	@keyframes spin {
 		0% {
 			transform: rotate(0);
