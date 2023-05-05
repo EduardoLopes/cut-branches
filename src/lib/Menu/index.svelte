@@ -99,8 +99,8 @@
 		gap: 0.8rem;
 		align-items: center;
 		padding: 1.6rem;
-		background: var(--color-primary-3);
-		border-bottom: 1px dashed var(--color-primary-1);
+		background: var(--color-primary-7);
+		border-bottom: 1px dashed var(--color-primary-6);
 
 		.logo {
 			color: #fff;
@@ -112,7 +112,7 @@
 	.container {
 		display: grid;
 		grid-template-rows: min-content auto min-content;
-		background: var(--color-primary-3);
+		background: var(--color-primary-7);
 	}
 
 	.content {
@@ -131,7 +131,7 @@
 
 			:global {
 				button {
-					border: var(--color-primary-1) 1px solid;
+					border: var(--color-primary-6) 1px solid;
 				}
 			}
 		}
@@ -155,7 +155,7 @@
 			cursor: pointer;
 			&.current {
 				a {
-					background: var(--color-primary-5);
+					background: var(--color-primary-9);
 					cursor: default;
 				}
 				pointer-events: none;
@@ -177,7 +177,7 @@
 				min-height: 55px;
 
 				&:hover {
-					background: var(--color-primary-4);
+					background: var(--color-primary-8);
 				}
 
 				&:active {
@@ -195,8 +195,8 @@
 	.bottom-info-bar {
 		font-size: 1.2rem;
 		padding: 0.4rem 0.8rem;
-		border-top: 1px dashed var(--color-primary-3);
-		background: var(--color-primary-2);
+		border-top: 1px dashed var(--color-primary-5);
+		background: var(--color-primary-6);
 		text-align: left;
 		color: var(--color-neutral-1);
 	}

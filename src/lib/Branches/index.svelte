@@ -196,132 +196,125 @@
 		{/if}
 
 		{#if $getBranchesQuery.isSuccess}
-			{#key $page.params.id}
-				<div class="content" in:fly|local={{ x: -30, duration: 150 }}>
-					<div class="toolbar-container">
-						<div class="left">
-							{#if selectibleCount > 0}
-								{@const selectedLength = branches.filter((item) =>
-									selected.includes(item.name)
-								).length}
-								{#key selectibleCount}
-									<div in:fly={{ x: -10 }} class="checkbox">
-										<Checkbox
-											visuallyHideLabel
-											indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
-											on:click={() => {
-												const indeterminate =
-													selectedLength !== selectibleCount && selectedLength > 0;
+			<div class="content" in:fly|local={{ x: -30, duration: 150 }}>
+				<div class="toolbar-container">
+					<div class="left">
+						{#if selectibleCount > 0}
+							{@const selectedLength = branches.filter((item) =>
+								selected.includes(item.name)
+							).length}
+							{#key selectibleCount}
+								<div in:fly={{ x: -10 }} class="checkbox">
+									<Checkbox
+										visuallyHideLabel
+										indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
+										on:click={() => {
+											const indeterminate =
+												selectedLength !== selectibleCount && selectedLength > 0;
 
-												if (indeterminate || selectedLength === 0) {
-													selected =
-														branches
-															.map((item) => item.name)
-															.filter((item) => item !== $getBranchesQuery.data?.current_branch) ??
-														[];
-												} else {
-													const allSelectedBranch = branches.map((item) => item.name);
+											if (indeterminate || selectedLength === 0) {
+												selected =
+													branches
+														.map((item) => item.name)
+														.filter((item) => item !== $getBranchesQuery.data?.current_branch) ??
+													[];
+											} else {
+												const allSelectedBranch = branches.map((item) => item.name);
 
-													selected = selected.filter((item) => !allSelectedBranch.includes(item));
-												}
-											}}
-											checked={selectedLength === selectibleCount}
-										>
-											Select all
-										</Checkbox>
-										{#if deboucedSearchQuery.length > 0}
-											{selectedLength} / {selectibleCount}
-											{selectibleCount === 1 ? 'branch was' : 'branches were'} found
-										{/if}
-
-										{#if deboucedSearchQuery.length === 0}
-											{selectedLength} / {selectibleCount} branches
-										{/if}
-									</div>
-								{/key}
-							{/if}
-
-							{#if selectibleCount === 0 && $getBranchesQuery.data.branches.length !== 0 && deboucedSearchQuery.length === 0}
-								<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
-							{/if}
-						</div>
-
-						<div class="actions">
-							{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
-								<div in:fly={{ x: 10 }}>
-									<Button
-										variant="primary"
-										feedback="danger"
-										size="sm"
-										state={selected.length === 0 ? 'disabled' : undefined}
-										on:click={handleDelete}
+												selected = selected.filter((item) => !allSelectedBranch.includes(item));
+											}
+										}}
+										checked={selectedLength === selectibleCount}
 									>
-										<Icon
-											icon="ion:trash-outline"
-											width="16px"
-											height="16px"
-											color="var(--primary-color)"
-										/>
-										Delete
-									</Button>
-								</div>
-							{/if}
+										Select all
+									</Checkbox>
+									{#if deboucedSearchQuery.length > 0}
+										{selectedLength} / {selectibleCount}
+										{selectibleCount === 1 ? 'branch was' : 'branches were'} found
+									{/if}
 
-							{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
-								<div in:fly={{ x: 10 }}>
-									<Button variant="primary" feedback="info" size="sm" on:click={clearSearch}>
-										<Icon icon="mdi:clear" width="16px" height="16px" />
-										Clear search
-									</Button>
+									{#if deboucedSearchQuery.length === 0}
+										{selectedLength} / {selectibleCount} branches
+									{/if}
 								</div>
-							{/if}
-						</div>
+							{/key}
+						{/if}
+
+						{#if selectibleCount === 0 && $getBranchesQuery.data.branches.length !== 0 && deboucedSearchQuery.length === 0}
+							<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
+						{/if}
 					</div>
-					<div class="branches-container">
-						{#if searchNoResultsFound}
-							<div class="search-no-found" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-								<div>
-									<Icon
-										icon="material-symbols:search-off"
-										width="64px"
-										height="64px"
-										color="var(--color-warning-10)"
-									/>
-									<div>No results for <b>{deboucedSearchQuery}</b>!</div>
-								</div>
+
+					<div class="actions">
+						{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
+							<div in:fly={{ x: 15 }}>
+								<Button
+									variant="primary"
+									feedback="danger"
+									size="sm"
+									state={selected.length === 0 ? 'disabled' : undefined}
+									on:click={handleDelete}
+								>
+									<Icon icon="ion:trash-outline" width="16px" height="16px" />
+									Delete
+								</Button>
 							</div>
 						{/if}
 
-						{#if $getBranchesQuery.data.branches.length === 0}
-							<div class="no-branches" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-								<div>
-									<Icon
-										icon="mdi:source-branch-remove"
-										width="64px"
-										height="64px"
-										color="var(--color-warning-10)"
-									/>
-									<div>This repository has no branches!</div>
-								</div>
+						{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
+							<div in:fly={{ x: 10 }}>
+								<Button variant="primary" feedback="info" size="sm" on:click={clearSearch}>
+									<Icon icon="mdi:clear" width="16px" height="16px" />
+									Clear search
+								</Button>
 							</div>
 						{/if}
+					</div>
+				</div>
+				<div class="branches-container">
+					{#if searchNoResultsFound}
+						<div class="search-no-found" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
+							<div>
+								<Icon
+									icon="material-symbols:search-off"
+									width="64px"
+									height="64px"
+									color="var(--color-warning-10)"
+								/>
+								<div>No results for <b>{deboucedSearchQuery}</b>!</div>
+							</div>
+						</div>
+					{/if}
 
-						{#key currentPage}
-							<div
-								class="branches"
-								in:fly={{ x: 40, duration: 200 }}
-								out:fly|local={{ x: 60, duration: 200 }}
-							>
-								{#if paginatedBranches}
-									{#each paginatedBranches as branch, index (branch.name)}
-										<div
-											class="branch-container"
-											class:selected={selected.includes(branch.name)}
-											animate:flip={{ duration: 150 }}
-										>
-											<!-- Nice animation that has bad performance -->
-											<!--
-										in:fly={{
+					{#if $getBranchesQuery.data.branches.length === 0}
+						<div class="no-branches" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
+							<div>
+								<Icon
+									icon="mdi:source-branch-remove"
+									width="64px"
+									height="64px"
+									color="var(--color-warning-10)"
+								/>
+								<div>This repository has no branches!</div>
+							</div>
+						</div>
+					{/if}
+
+					{#key currentPage}
+						<div
+							class="branches"
+							in:fly={{ x: 40, duration: 200 }}
+							out:fly|local={{ x: 60, duration: 200 }}
+						>
+							{#if paginatedBranches}
+								{#each paginatedBranches as branch, index (branch.name)}
+									<div
+										class="branch-container"
+										class:selected={selected.includes(branch.name)}
+										animate:flip={{ duration: 150 }}
+									>
+										<!-- Nice animation that has bad performance -->
+										<!-- in:fly={{
 											x: -30,
 											duration: 150,
 											delay: 20 * (index + 1 / paginatedBranches.length)
@@ -330,76 +323,76 @@
 											x: -30,
 											duration: 150,
 											delay: 20 * (index + 1 / paginatedBranches.length)
-										}}
-									-->
-											{#if $getBranchesQuery.data?.current_branch !== branch.name}
-												<div class="checkbox">
-													<Checkbox
-														visuallyHideLabel
-														on:click={() => {
-															if (selected.includes(branch.name)) {
-																selected = selected.filter((item) => item !== branch.name);
-															} else {
-																selected = [...selected, branch.name];
-															}
-														}}
-														checked={selected.includes(branch.name)}
-													>
-														{branch.name}
-													</Checkbox>
-												</div>
-											{/if}
+										}} -->
 
-											{#if $getBranchesQuery.data?.current_branch === branch.name}
-												<div class="current-branch-icon">
-													<Icon
-														icon="octicon:feed-star-16"
-														width="32px"
-														height="32px"
-														color="var(--color-warning-10)"
-													/>
-												</div>
-											{/if}
+										{#if $getBranchesQuery.data?.current_branch !== branch.name}
+											<div class="checkbox">
+												<Checkbox
+													visuallyHideLabel
+													on:click={() => {
+														if (selected.includes(branch.name)) {
+															selected = selected.filter((item) => item !== branch.name);
+														} else {
+															selected = [...selected, branch.name];
+														}
+													}}
+													checked={selected.includes(branch.name)}
+												>
+													{branch.name}
+												</Checkbox>
+											</div>
+										{/if}
 
-											<Branch data={branch} selected={selected.includes(branch.name)} />
-										</div>
-									{/each}
+										{#if $getBranchesQuery.data?.current_branch === branch.name}
+											<div class="current-branch-icon">
+												<Icon
+													icon="octicon:feed-star-16"
+													width="32px"
+													height="32px"
+													color="var(--color-warning-5)"
+												/>
+											</div>
+										{/if}
+
+										<Branch data={branch} selected={selected.includes(branch.name)} />
+									</div>
+								{/each}
+							{/if}
+						</div>
+					{/key}
+				</div>
+				<div class="bottom-toolbar">
+					<div class="left">
+						<div class="search-input-container">
+							<input
+								class="search-input"
+								placeholder="Search"
+								bind:value={searchQuery}
+								on:input={() => {
+									currentPage = 0;
+								}}
+								bind:this={searchInputElement}
+							/>
+
+							<Button
+								variant="tertiary"
+								size="sm"
+								on:click={() => {
+									if (deboucedSearchQuery.length > 0) {
+										clearSearch();
+									} else {
+										searchInputElement?.focus();
+									}
+								}}
+							>
+								{#if deboucedSearchQuery.length > 0}
+									<Icon icon="mdi:clear" width="24px" height="24px" />
+								{:else}
+									<Icon icon="ic:round-search" width="24px" height="24px" />
 								{/if}
-							</div>
-						{/key}
-					</div>
-					<div class="bottom-toolbar">
-						<div class="left">
-							<div class="search-input-container">
-								<input
-									class="search-input"
-									placeholder="Search"
-									bind:value={searchQuery}
-									on:input={() => {
-										currentPage = 0;
-									}}
-									bind:this={searchInputElement}
-								/>
-
-								<Button
-									variant="tertiary"
-									size="sm"
-									on:click={() => {
-										if (deboucedSearchQuery.length > 0) {
-											clearSearch();
-										} else {
-											searchInputElement?.focus();
-										}
-									}}
-								>
-									{#if deboucedSearchQuery.length > 0}
-										<Icon icon="mdi:clear" width="24px" height="24px" />
-									{:else}
-										<Icon icon="ic:round-search" width="24px" height="24px" />
-									{/if}
-								</Button>
-							</div>
-							<!-- <div class="search-info">
+							</Button>
+						</div>
+						<!-- <div class="search-info">
 						{#if deboucedSearchQuery}
 							{#if branches.length === 0}
 								No results found
@@ -412,52 +405,53 @@
 							{/if}
 						{/if}
 					</div> -->
-						</div>
-						{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
-							<div class="pagination">
-								<Button
-									variant="tertiary"
-									size="sm"
-									on:click={prevPage}
-									state={currentPage <= 0 ? 'disabled' : 'normal'}
-								>
-									<Icon icon="material-symbols:chevron-left-rounded" width="24px" height="24px" />
-								</Button>
-								<div class="numbers">
-									<span in:fly={{ y: 5 }} out:fly|local={{ y: -10 }}>
-										{currentPage + 1} / {totalPages}
-									</span>
-								</div>
-								<Button
-									variant="tertiary"
-									size="sm"
-									on:click={nextPage}
-									state={currentPage + 1 >= totalPages ? 'disabled' : 'normal'}
-								>
-									<Icon icon="material-symbols:chevron-right-rounded" width="24px" height="24px" />
-								</Button>
-							</div>
-						{/if}
 					</div>
-					<div class="bottom-info-bar">
-						{#if lastUpdatedAt && lastUpdatedAtDate}
-							<time
-								datetime={lastUpdatedAtDate.toISOString()}
-								title={intlFormat(lastUpdatedAtDate, {
-									year: 'numeric',
-									month: 'long',
-									day: 'numeric',
-									hour: 'numeric',
-									minute: 'numeric',
-									second: 'numeric'
-								})}
+					{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
+						<div class="pagination">
+							<Button
+								variant="tertiary"
+								size="sm"
+								on:click={prevPage}
+								state={currentPage <= 0 ? 'disabled' : 'normal'}
 							>
-								Last updated {lastUpdatedAt}
-							</time>
-						{/if}
-					</div>
+								<Icon icon="material-symbols:chevron-left-rounded" width="24px" height="24px" />
+							</Button>
+							<div class="numbers">
+								<span in:fly={{ y: 5 }} out:fly|local={{ y: -10 }}>
+									{currentPage + 1} / {totalPages}
+								</span>
+							</div>
+							<Button
+								variant="tertiary"
+								size="sm"
+								on:click={nextPage}
+								state={currentPage + 1 >= totalPages ? 'disabled' : 'normal'}
+							>
+								<Icon icon="material-symbols:chevron-right-rounded" width="24px" height="24px" />
+							</Button>
+						</div>
+					{/if}
 				</div>
-			{/key}
+				<div class="bottom-info-bar">
+					{#if lastUpdatedAt && lastUpdatedAtDate}
+						<time
+							datetime={lastUpdatedAtDate.toISOString()}
+							title={intlFormat(lastUpdatedAtDate, {
+								year: 'numeric',
+								month: 'long',
+								day: 'numeric',
+								hour: 'numeric',
+								minute: 'numeric',
+								second: 'numeric'
+							})}
+						>
+							<div in:fly={{ x: 15 }}>
+								Last updated {lastUpdatedAt}
+							</div>
+						</time>
+					{/if}
+				</div>
+			</div>
 		{/if}
 	</main>
 </Loading>
@@ -466,7 +460,7 @@
 	.container {
 		display: flex;
 		flex-direction: column;
-		background: var(--color-neutral-2);
+		background: var(--color-background-1);
 		overflow: hidden;
 		position: relative;
 		height: 100%;
@@ -476,9 +470,8 @@
 	.header {
 		display: flex;
 		justify-content: space-between;
-		background: var(--color-neutral-2);
 		top: 0;
-		border-bottom: 1px dashed var(--color-neutral-8);
+		border-bottom: 1px dashed var(--color-neutral-4);
 		z-index: 20;
 		flex-shrink: 0;
 		min-height: 58px;
@@ -522,7 +515,6 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		background: var(--color-neutral-2);
 		padding: 1.6rem;
 		z-index: 10;
 		min-height: 66px;
@@ -609,9 +601,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		background: var(--color-neutral-2);
 		z-index: 10;
-		border-top: 1px solid var(--color-neutral-6);
+		border-top: 1px solid var(--color-neutral-4);
 		flex-shrink: 0;
 
 		.left {
@@ -621,8 +612,9 @@
 				display: flex;
 				align-items: center;
 				flex-direction: row;
-				border: 1px solid var(--color-neutral-6);
+				border: 1px solid var(--color-neutral-4);
 				border-bottom: none;
+				border-top-width: 0;
 
 				:global(button) {
 					border-radius: 0;
@@ -638,8 +630,8 @@
 					border: none;
 					border-radius: 0;
 					appearance: none;
-					border-top-width: 0;
 					z-index: 2;
+					background-color: transparent;
 				}
 			}
 		}
@@ -654,17 +646,17 @@
 				padding: 1.2rem;
 				white-space: nowrap;
 				font-size: 1.4rem;
-				background: var(--color-neutral-1);
 				min-width: 75px;
 				text-align: center;
 				justify-content: center;
+				color: var(--color-neutral-7);
 			}
 
 			:global(.button) {
 				display: grid;
 				align-items: center;
 				border-radius: 0;
-				border: 1px solid var(--color-neutral-6);
+				border: 1px solid var(--color-neutral-4);
 				border-top-width: 0;
 				height: 100%;
 				border-bottom: none;
@@ -680,9 +672,9 @@
 	.bottom-info-bar {
 		font-size: 1.2rem;
 		padding: 0.4rem 0.8rem;
-		border-top: solid 1px var(--color-neutral-6);
-		background: var(--color-neutral-4);
+		border-top: solid 1px var(--color-neutral-4);
+		background: var(--color-neutral-3);
 		text-align: right;
-		color: var(--color-neutral-11);
+		color: var(--color-neutral-6);
 	}
 </style>

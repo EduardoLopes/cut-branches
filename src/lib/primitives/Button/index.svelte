@@ -48,7 +48,7 @@
 </button>
 
 <style lang="scss">
-	$feedbacks: 'danger', 'warning', 'success', 'info';
+	$feedbacks: 'danger', 'warning', 'success', 'info', 'normal';
 
 	@keyframes spin {
 		0% {
@@ -62,17 +62,13 @@
 	// vars
 	.button {
 		//default
-		--button-background-color: var(--color-primary-3);
 		--button-text-color: var(--color-neutral-1);
 		--button-border-color: var(--button-background-color);
 
 		//hover
-		--button-hover-background-color: var(--color-primary-4);
-		--button-hover-text-color: var(--color-neutral-1);
 		--button-hover-border-color: var(--button-hover-background-color);
 
 		//active
-		--button-active-background-color: var(--color-primary-2);
 		--button-active-text-color: var(--color-neutral-1);
 		--button-active-border-color: var(--button-active-background-color);
 
@@ -80,11 +76,6 @@
 		--button-focus-background-color: var(--button-hover-background-color);
 		--button-focus-text-color: var(--button-hover-text-color);
 		--button-focus-border-color: var(--button-hover-border-color);
-
-		//disabled
-		--button-disabled-background-color: var(--color-neutral-6);
-		--button-disabled-border-color: var(--color-neutral-6);
-		--button-disabled-text-color: var(--color-neutral-10);
 
 		// font-size
 		--button-font-size-sm: var(--font-size-sm);
@@ -104,20 +95,24 @@
 
 		@each $feedback in $feedbacks {
 			&.feedback-#{$feedback} {
+				@if $feedback == 'normal' {
+					$feedback: 'primary';
+				}
+
 				//default
-				--button-background-color: var(--color-#{$feedback}-10);
+				--button-background-color: var(--color-#{$feedback}-7);
 
 				//hover
 				--button-hover-background-color: var(--color-#{$feedback}-8);
 				--button-hover-text-color: var(--color-background-1);
 
 				//acitve
-				--button-active-background-color: var(--color-#{$feedback}-11);
+				--button-active-background-color: var(--color-#{$feedback}-9);
 
 				//disabled
-				--button-disabled-background-color: var(--color-neutral-6);
-				--button-disabled-border-color: var(--color-neutral-6);
-				--button-disabled-text-color: var(--color-neutral-10);
+				--button-disabled-background-color: var(--color-neutral-2);
+				--button-disabled-border-color: var(--color-neutral-4);
+				--button-disabled-text-color: var(--color-neutral-5);
 			}
 		}
 
@@ -132,10 +127,13 @@
 
 			@each $feedback in $feedbacks {
 				&.feedback-#{$feedback} {
+					@if $feedback == 'normal' {
+						$feedback: 'primary';
+					}
 					//default
 					--button-background-color: var(--color-background-1);
-					--button-text-color: var(--color-#{$feedback}-10);
-					--button-border-color: var(--color-#{$feedback}-10);
+					--button-text-color: var(--color-#{$feedback}-6);
+					--button-border-color: var(--color-#{$feedback}-6);
 
 					//disabled
 					--button-disabled-background-color: var(--color-background-1);
@@ -158,13 +156,16 @@
 
 			@each $feedback in $feedbacks {
 				&.feedback-#{$feedback} {
+					@if $feedback == 'normal' {
+						$feedback: 'primary';
+					}
 					// default
 					--button-background-color: var(--color-background-1);
-					--button-text-color: var(--color-#{$feedback}-10);
+					--button-text-color: var(--color-#{$feedback}-7);
 					--button-border-color: var(--color-background-1);
 
 					// hover
-					--button-hover-background-color: var(--color-#{$feedback}-8);
+					--button-hover-background-color: var(--color-#{$feedback}-7);
 
 					// disabled
 					--button-disabled-background-color: var(--color-background-1);

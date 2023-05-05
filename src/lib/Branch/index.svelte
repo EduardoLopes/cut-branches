@@ -99,32 +99,32 @@
 	}
 
 	.branch {
-		background: var(--color-neutral-4);
-		border: 1px solid var(--color-neutral-7);
+		background: var(--color-neutral-2);
+		border: 1px solid var(--color-neutral-4);
 		border-radius: 4px;
 
 		.name {
-			color: var(--color-neutral-12);
+			color: var(--color-neutral-9);
 			font-weight: 600;
 			padding: 1.6rem;
 		}
 
 		&.current {
-			background: var(--color-warning-2);
-			border-color: var(--color-warning-10);
+			background: var(--color-warning-1);
+			border-color: var(--color-warning-4);
 
 			.name {
-				color: var(--color-warning-10);
+				color: var(--color-warning-7);
 			}
 		}
 
 		&.selected {
-			background: var(--color-danger-3);
-			border-color: var(--color-danger-10);
+			background: var(--color-danger-2);
+			border-color: var(--color-danger-4);
 			border-style: dashed;
 
 			.name {
-				color: var(--color-danger-9);
+				color: var(--color-danger-7);
 			}
 		}
 	}

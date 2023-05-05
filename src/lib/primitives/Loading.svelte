@@ -61,29 +61,17 @@
 		--loading-size: var(--space-md);
 		--loading-icon-color: var(--color-primary-3);
 
-		&.feedback-normal {
-			--loading-background-color: var(--teal3);
-			--loading-icon-color: var(--color-primary-3);
-		}
+		$feedbacks: 'danger', 'warning', 'success', 'info', 'normal';
 
-		&.feedback-danger {
-			--loading-background-color: var(--color-danger-3);
-			--loading-icon-color: var(--color-danger-11);
-		}
+		@each $feedback in $feedbacks {
+			&.feedback-#{$feedback} {
+				@if $feedback == 'normal' {
+					$feedback: 'primary';
+				}
 
-		&.feedback-warning {
-			--loading-background-color: var(--color-warning-3);
-			--loading-icon-color: var(--color-warning-11);
-		}
-
-		&.feedback-success {
-			--loading-background-color: var(--color-success-3);
-			--loading-icon-color: var(--color-success-11);
-		}
-
-		&.feedback-info {
-			--loading-background-color: var(--color-info-3);
-			--loading-icon-color: var(--color-info-11);
+				--loading-background-color: var(--color-#{$feedback}-2);
+				--loading-icon-color: var(--color-#{$feedback}-6);
+			}
 		}
 
 		&.size-sm {
@@ -135,7 +123,7 @@
 
 			.icon-container .overlay {
 				&::after {
-					background: var(--color-neutral-3);
+					background: var(--color-neutral-2);
 				}
 			}
 		}

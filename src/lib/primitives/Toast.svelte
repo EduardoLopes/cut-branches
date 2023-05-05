@@ -231,32 +231,17 @@
 			}
 		}
 
-		--color-main-1: var(--color-neutral-10);
-		--color-main-2: var(--color-neutral-11);
+		$feedbacks: 'danger', 'warning', 'success', 'info', 'normal';
 
-		&.feedback-normal {
-			--color-main-1: var(--color-neutral-10);
-			--color-main-2: var(--color-neutral-11);
-		}
+		@each $feedback in $feedbacks {
+			&.feedback-#{$feedback} {
+				@if $feedback == 'normal' {
+					$feedback: 'primary';
+				}
 
-		&.feedback-danger {
-			--color-main-1: var(--color-danger-10);
-			--color-main-2: var(--color-danger-11);
-		}
-
-		&.feedback-warning {
-			--color-main-1: var(--color-warning-10);
-			--color-main-2: var(--color-warning-11);
-		}
-
-		&.feedback-success {
-			--color-main-1: var(--color-success-10);
-			--color-main-2: var(--color-success-11);
-		}
-
-		&.feedback-info {
-			--color-main-1: var(--color-info-10);
-			--color-main-2: var(--color-info-11);
+				--color-main-1: var(--color-#{$feedback}-7);
+				--color-main-2: var(--color-#{$feedback}-8);
+			}
 		}
 
 		&:hover {

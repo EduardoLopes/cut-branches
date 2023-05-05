@@ -93,36 +93,21 @@
 			--alert-color: var(--alert-icon-color);
 		}
 
-		//feedback
-		&.feedback-normal {
-			--alert-background-color: var(--color-neutral-4);
-			--alert-border-style: var(--color-neutral-6);
-			--alert-color: var(--color-neutral-12);
-			--alert-border-style: var(--color-neutral-6);
-		}
+		$feedbacks: 'danger', 'warning', 'success', 'info', 'normal';
 
-		&.feedback-danger {
-			--alert-background-color: var(--color-danger-4);
-			--alert-border-style: var(--color-danger-6);
-			--alert-icon-color: var(--color-danger-10);
-		}
+		@each $feedback in $feedbacks {
+			&.feedback-#{$feedback} {
+				@if $feedback == 'normal' {
+					$feedback: 'neutral';
+					--alert-background-color: var(--color-#{$feedback}-2);
+				} @else {
+					--alert-background-color: var(--color-#{$feedback}-1);
+				}
 
-		&.feedback-warning {
-			--alert-background-color: var(--color-warning-3);
-			--alert-border-style: var(--color-warning-6);
-			--alert-icon-color: var(--color-warning-10);
-		}
-
-		&.feedback-success {
-			--alert-background-color: var(--color-success-4);
-			--alert-border-style: var(--color-success-6);
-			--alert-icon-color: var(--color-success-10);
-		}
-
-		&.feedback-info {
-			--alert-background-color: var(--color-info-4);
-			--alert-border-style: var(--color-info-6);
-			--alert-icon-color: var(--color-info-10);
+				--alert-color: var(--color-neutral-9);
+				--alert-border-style: var(--color-#{$feedback}-4);
+				--alert-icon-color: var(--color-#{$feedback}-7);
+			}
 		}
 
 		// size
