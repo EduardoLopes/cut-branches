@@ -22,17 +22,14 @@
 	export const toastsStore = writable<Toast[]>([]);
 
 	function hide(toast: Toast) {
-		//toast
-		const t = toast;
-
-		if (t.timeoutId) {
-			window.clearTimeout(t.timeoutId);
-			t.timeoutId = undefined;
+		if (toast.timeoutId) {
+			window.clearTimeout(toast.timeoutId);
+			toast.timeoutId = undefined;
 		}
 
-		t.timeoutId = window.setTimeout(() => {
-			removeToast(t);
-		}, t.timeout);
+		toast.timeoutId = window.setTimeout(() => {
+			removeToast(toast);
+		}, toast.timeout);
 
 		toastsStore.update((toasts) => {
 			return toasts;
@@ -40,6 +37,8 @@
 	}
 
 	function removeToast(toast: Toast) {
+		window.clearTimeout(toast.timeoutId);
+
 		toastsStore.update((toasts) => {
 			const filtered = toasts.filter((item) => item.id !== toast.id);
 
@@ -103,15 +102,15 @@
 	}, 250);
 
 	// used for debug
-	// for (let i = 0; i < 10; i++) {
-	// 	toast.add({
-	// 		message: `Hello World ${i}`,
-	// 		description: 'This is a description',
-	// 		feedback: (['success', 'info', 'warning', 'danger', 'normal'] as AlertFeedback[])[
-	// 			Math.floor(Math.random() * 4)
-	// 		]
-	// 	});
-	// }
+	for (let i = 0; i < 10; i++) {
+		toast.add({
+			message: `Hello World ${i}`,
+			description: 'This is a description',
+			feedback: (['success', 'info', 'warning', 'danger', 'normal'] as AlertFeedback[])[
+				Math.floor(Math.random() * 4)
+			]
+		});
+	}
 </script>
 
 <div class="container" use:resizeContainer>
@@ -122,7 +121,7 @@
 				<div
 					class="alert-container feedback-{toast.feedback}"
 					style="--timeout-ms:{toast.timeout ?? TOAST_DEFAULT_TIMEOUT_MS}ms;"
-					animate:flip={{ duration: 150 }}
+					animate:flip={{ duration: 150, delay: 0 }}
 					in:fly|local={{
 						x: -30,
 						duration: 150
@@ -152,7 +151,8 @@
 							</div>
 							<div class="close-button">
 								<Button
-									on:click={() => {
+									on:click={(e) => {
+										clearToastTimeout.cancel();
 										removeToast(toast);
 									}}
 									size="sm"
@@ -177,7 +177,7 @@
 					{/key}
 
 					{#key toast.timeoutId}
-						<div class="timeout" out:fade={{ duration: 400 }} />
+						<div class="timeout" out:fade|local={{ duration: 400 }} />
 					{/key}
 				</div>
 			{/each}
