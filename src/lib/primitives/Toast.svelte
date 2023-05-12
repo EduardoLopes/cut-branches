@@ -102,15 +102,15 @@
 	}, 250);
 
 	// used for debug
-	for (let i = 0; i < 10; i++) {
-		toast.add({
-			message: `Hello World ${i}`,
-			description: 'This is a description',
-			feedback: (['success', 'info', 'warning', 'danger', 'normal'] as AlertFeedback[])[
-				Math.floor(Math.random() * 4)
-			]
-		});
-	}
+	// for (let i = 0; i < 10; i++) {
+	// 	toast.add({
+	// 		message: `Hello World ${i}`,
+	// 		description: 'This is a description',
+	// 		feedback: (['success', 'info', 'warning', 'danger', 'normal'] as AlertFeedback[])[
+	// 			Math.floor(Math.random() * 4)
+	// 		]
+	// 	});
+	// }
 </script>
 
 <div class="container" use:resizeContainer>
