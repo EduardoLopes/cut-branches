@@ -1,5 +1,7 @@
 import type { IBranch } from '$lib/stores';
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
+import { invoke } from '@tauri-apps/api';
+import type { ServiceError } from './models';
 
 interface DeleteBranchesVariables {
 	branches: IBranch[];
@@ -8,41 +10,26 @@ interface DeleteBranchesVariables {
 
 type DeleteBranchesMutationOptions = CreateMutationOptions<
 	string[],
-	string[],
+	ServiceError,
 	DeleteBranchesVariables,
 	unknown
 >;
 
 export function useDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
-	return createMutation<string[], string[], DeleteBranchesVariables>(
+	return createMutation<string[], ServiceError, DeleteBranchesVariables>(
 		['branches', 'delete'],
 		async (vars) => {
-			const { invoke } = await import('@tauri-apps/api/tauri');
 
-			const res: string = await invoke('delete_branches', {
-				deleteOptions: [
-					vars.path,
-					vars.branches
-						.map((item) => item.name)
-						.toString()
-						.replace(/,/g, ' ')
-						.trim()
-				]
+			return invoke<string>('delete_branches', {
+				path: vars.path,
+				branches: vars.branches.map((item) => item.name),
+			}).then((res) => {
+				const resParser = JSON.parse(res) as string[];
+
+				return resParser
+					.map((item: string) => item.trim());
 			});
 
-			const resParser = JSON.parse(res);
-
-			const errors = resParser.errors
-				.trim()
-				.split('\n')
-				.map((item: string) => item.trim());
-
-			if (resParser.errors.length > 0) return Promise.reject(errors);
-
-			return resParser.result
-				.trim()
-				.split('\n')
-				.map((item: string) => item.trim());
 		},
 		options
 	);

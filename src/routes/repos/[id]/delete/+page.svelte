@@ -17,6 +17,8 @@
 	let currentRepo: RepoID | undefined;
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
+			console.log(data);
+
 			toast.success({
 				message: `${data.length > 1 ? 'Branches' : 'Branch'} deleted`,
 				description: data
@@ -30,9 +32,7 @@
 			client.invalidateQueries(['branches', 'get-all', currentRepo?.path]);
 		},
 		onError(error) {
-			error.forEach((message) => {
-				toast.danger({ message });
-			});
+			toast.danger({ message: error.message, description: error.description });
 		}
 	});
 

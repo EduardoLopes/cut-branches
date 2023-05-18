@@ -1,6 +1,7 @@
 {
 	"[svelte]": {
-		"editor.defaultFormatter": "svelte.svelte-vscode"
+		"editor.defaultFormatter": "svelte.svelte-vscode",
+		"enable-ts-plugin": true
 	},
 	"rust-analyzer.showUnlinkedFileNotification": false,
 	"[rust]": {

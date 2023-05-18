@@ -9,13 +9,12 @@ mod error;
 mod path;
 
 use error::Error;
+use path::set_current_dir;
 
 use std::process::Command;
 
 use std::env;
 use std::path::Path;
-
-use serde::Deserialize;
 
 #[derive(serde::Serialize)]
 struct Branch {
@@ -44,7 +43,7 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
 
     let dir_child = Command::new("git")
         .arg("rev-parse")
-        .arg("--show-toplevel") 
+        .arg("--show-toplevel")
         .output()
         .expect("Failed to execute command");
 
@@ -147,40 +146,82 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
     Ok(serde_json::to_string(&response).unwrap())
 }
 
-#[derive(Deserialize)]
-struct DeleteOptions<'a>(&'a str, String);
-
 #[derive(serde::Serialize)]
 struct DeleteBranchesResponse {
-    result: String,
-    errors: String,
+    branches: String,
+}
+
+fn branch_exists(path: String, branch_name: String) -> Option<bool> {
+    let raw_path = Path::new(&path);
+
+    set_current_dir(&raw_path).unwrap();
+
+    let result = Command::new("git")
+        .arg("rev-parse")
+        .arg("--verify")
+        .arg(&branch_name)
+        .output()
+        .unwrap();
+
+    Some(result.status.success())
 }
 
 #[tauri::command(async)]
-fn delete_branches(DeleteOptions(path, branches): DeleteOptions) -> String {
+async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, Error> {
     let raw_path = Path::new(&path);
-    // let mut errors: Vec<String> = Vec::new();
 
-    env::set_current_dir(&raw_path).expect("Unable to change into");
+    set_current_dir(&raw_path)?;
 
-    // printlnln!("path: {}", path);
-    // printlnln!("branches: {}", branches);
+    let mut not_found_branches: Vec<String> = Vec::new();
+    let mut found_branches: Vec<String> = Vec::new();
 
-    let args: Vec<_> = branches.split(" ").collect();
+    for branch in &branches {
+        if !branch_exists(path.clone(), branch.to_string()).unwrap() {
+            not_found_branches.push(branch.to_string());
+        }
+    }
 
-    let child = Command::new("git")
+    for branch in &branches {
+        if branch_exists(path.clone(), branch.to_string()).unwrap() {
+            found_branches.push(branch.to_string());
+        }
+    }
+
+    if not_found_branches.len() > 0 {
+        return Err(Error {
+            message: format!(
+                "Branch{2} not found: <strong>{0}</strong>. The branch{3} <strong>{1}</strong> still exists",
+                not_found_branches.join(", "),
+                found_branches.join(", "),
+                if not_found_branches.len() == 1 { "" } else { "es" },
+                if found_branches.len() == 1 { "" } else { "es" },
+            ),
+            description: None,
+            kind: "branches_not_found".to_string(),
+        });
+    }
+
+    let result = Command::new("git")
         .arg("branch")
         .arg("-D")
-        .args(args)
+        .args(branches)
         .output()
-        .expect("Failed to execute command");
+        .unwrap();
 
-    let response = DeleteBranchesResponse {
-        result: String::from_utf8(child.stdout).unwrap(),
-        errors: String::from_utf8(child.stderr).unwrap(),
-    };
+    let stdout: String = String::from_utf8(result.stdout).unwrap();
+    let stderr = String::from_utf8(result.stderr).unwrap();
 
-    return serde_json::to_string(&response).unwrap();
+    if !result.status.success() {
+        return Err(Error {
+            message: format!("Unable to delete branches: {0}", raw_path.display()),
+            description: Some(stderr),
+            kind: "unable_to_delete_branches".to_string(),
+        });
+    }
+
+    let branches_deleted = stdout.trim().split("\n").collect::<Vec<_>>();
+
+    Ok(serde_json::to_string(&branches_deleted).unwrap())
 }
 
 fn main() {
