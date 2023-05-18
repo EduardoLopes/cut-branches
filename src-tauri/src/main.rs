@@ -44,7 +44,7 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
 
     let dir_child = Command::new("git")
         .arg("rev-parse")
-        .arg("--show-toplevel")
+        .arg("--show-toplevel") 
         .output()
         .expect("Failed to execute command");
 
@@ -131,7 +131,7 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
     }
 
     let response = GitDirResponse {
-        root_path: root_path,
+        root_path,
         branches: branches,
         errors: errors
             .into_iter()

@@ -1,4 +1,4 @@
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Debug)]
 pub struct Error {
     pub message: String,
     pub kind: String,

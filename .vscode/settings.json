@@ -2,5 +2,9 @@
 	"[svelte]": {
 		"editor.defaultFormatter": "svelte.svelte-vscode"
 	},
-	"rust-analyzer.showUnlinkedFileNotification": false
+	"rust-analyzer.showUnlinkedFileNotification": false,
+	"[rust]": {
+		"editor.defaultFormatter": "rust-lang.rust-analyzer",
+		"editor.formatOnSave": true
+	}
 }

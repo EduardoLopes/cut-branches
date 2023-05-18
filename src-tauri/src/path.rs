@@ -9,7 +9,7 @@ use std::path::Path;
 
 use crate::error::Error;
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 struct RootPathResponse {
     root_path: String,
     id: Option<u64>,
@@ -28,7 +28,7 @@ pub fn set_current_dir(path: &Path) -> Result<(), Error> {
             path.display()
         ),
         description: Some(error.to_string()),
-        kind: "set_current_dir".to_string(),
+        kind: "unable_to_access_dir".to_string(),
     })
 }
 
@@ -41,10 +41,9 @@ pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
         .output()
         .unwrap();
 
-    let stdout = String::from_utf8(result.stdout).unwrap();
     let stderr = String::from_utf8(result.stderr).unwrap();
 
-    if !stdout.is_empty() {
+    if result.status.success() {
         return Ok(true);
     }
 
@@ -54,7 +53,7 @@ pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
             path.display()
         ),
         description: Some(stderr),
-        kind: "is_git_repository".to_string(),
+        kind: "is_not_git_repository".to_string(),
     })
 }
 
@@ -80,7 +79,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
     let rootpath = String::from_utf8(result.stdout).unwrap();
     let stderr = String::from_utf8(result.stderr).unwrap();
 
-    if !stderr.is_empty() {
+    if !result.status.success() {
         return Err(Error {
             message: format!(
                 "We can't get the toplevel path of this git repository. Make sure the path {0} is a git repository",
@@ -91,12 +90,50 @@ pub async fn get_root(path: String) -> Result<String, Error> {
         });
     }
 
-    let mut response = RootPathResponse {
+    let response = RootPathResponse {
         root_path: rootpath.trim().to_string(),
-        id: None,
+        id: Some(calculate_hash(&rootpath.to_string())),
     };
 
-    response.id = Some(calculate_hash(&response));
-
     Ok(serde_json::to_string(&response).unwrap())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_git_repository() {
+        // Test with a valid git repository
+        let path = Path::new("./");
+        assert_eq!(is_git_repository(&path).unwrap(), true);
+
+        // Test with an invalid git repository when the path doesn't exist
+        let path = Path::new("/");
+        let error = is_git_repository(&path).unwrap_err();
+        assert_eq!(
+            error.message,
+            "The path <strong>/</strong> is not a git repository"
+        );
+        assert_eq!(error.kind, "is_not_git_repository");
+    }
+
+    #[tokio::test]
+    async fn test_get_root() {
+        // Test with a valid git repository
+        let path = String::from("./");
+        let result = get_root(path).await.unwrap();
+        let response: RootPathResponse = serde_json::from_str(&result).unwrap();
+
+        assert_eq!(response.root_path.ends_with("/cut-branches"), true);
+
+        // Test with an invalid git repository when the path doesn't exist
+        let path = String::from("/");
+        let error = get_root(path).await.unwrap_err();
+        assert_eq!(
+            error.message,
+            "The path <strong>/</strong> is not a git repository"
+        );
+        assert_eq!(error.kind, "is_not_git_repository");
+    }
 }

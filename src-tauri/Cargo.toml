@@ -20,6 +20,8 @@ serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.2.4", features = ["dialog-all"] }
 execute = "0.2.9"
 thiserror = "1.0.40"
+tokio = { version = "1.11.0", features = ["full"] }
+
 
 [features]
 # by default Tauri runs in production mode
