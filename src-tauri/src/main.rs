@@ -151,11 +151,16 @@ struct DeleteBranchesResponse {
     branches: String,
 }
 
+// This function checks if a branch exists in a git repository.
+// It receives a path to the repository and the name of the branch to be checked.
+// It returns an Option containing a boolean indicating whether the branch exists or not.
 fn branch_exists(path: String, branch_name: String) -> Option<bool> {
     let raw_path = Path::new(&path);
 
+    // Set the current working directory to the repository path.
     set_current_dir(&raw_path).unwrap();
 
+    // Execute the git command to verify if the branch exists.
     let result = Command::new("git")
         .arg("rev-parse")
         .arg("--verify")
@@ -163,9 +168,13 @@ fn branch_exists(path: String, branch_name: String) -> Option<bool> {
         .output()
         .unwrap();
 
+    // Return an Option containing a boolean indicating whether the branch exists or not.
     Some(result.status.success())
 }
 
+// This function deletes branches from a git repository.
+// It receives a path to the repository and a vector of branch names to be deleted.
+// It returns a Result containing a string with the deleted branches or an Error with a message, a description and a kind.
 #[tauri::command(async)]
 async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, Error> {
     let raw_path = Path::new(&path);
@@ -175,18 +184,23 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
     let mut not_found_branches: Vec<String> = Vec::new();
     let mut found_branches: Vec<String> = Vec::new();
 
+    // Check if each branch exists in the repository.
+    // If it doesn't exist, add it to the not_found_branches vector.
     for branch in &branches {
         if !branch_exists(path.clone(), branch.to_string()).unwrap() {
             not_found_branches.push(branch.to_string());
         }
     }
 
+    // Check if each branch exists in the repository.
+    // If it exists, add it to the found_branches vector.
     for branch in &branches {
         if branch_exists(path.clone(), branch.to_string()).unwrap() {
             found_branches.push(branch.to_string());
         }
     }
 
+    // If there are branches that were not found in the repository, return an Error.
     if not_found_branches.len() > 0 {
         return Err(Error {
             message: format!(
@@ -201,6 +215,7 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
         });
     }
 
+    // Delete the branches using the git command if all branches exists
     let result = Command::new("git")
         .arg("branch")
         .arg("-D")
@@ -211,6 +226,7 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
     let stdout: String = String::from_utf8(result.stdout).unwrap();
     let stderr = String::from_utf8(result.stderr).unwrap();
 
+    // If the command was not successful, return an Error.
     if !result.status.success() {
         return Err(Error {
             message: format!("Unable to delete branches: {0}", raw_path.display()),
@@ -219,6 +235,7 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
         });
     }
 
+    // Return a string with the deleted branches.
     let branches_deleted = stdout.trim().split("\n").collect::<Vec<_>>();
 
     Ok(serde_json::to_string(&branches_deleted).unwrap())
