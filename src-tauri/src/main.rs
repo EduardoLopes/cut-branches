@@ -13,7 +13,6 @@ use path::set_current_dir;
 
 use std::process::Command;
 
-use std::env;
 use std::path::Path;
 
 #[derive(serde::Serialize)]
@@ -27,104 +26,132 @@ struct Branch {
 struct GitDirResponse {
     root_path: String,
     branches: Vec<Branch>,
-    errors: Vec<String>,
     current_branch: String,
 }
 
-#[tauri::command(async)]
-async fn git_repo_dir(path: String) -> Result<String, Error> {
-    let mut errors: Vec<String> = Vec::new();
+// This function returns a vector of all branches in a git repository.
+// It receives a path to the repository.
+// It returns a Result containing a vector of strings with the branches or an Error with a message, a description and a kind.
+pub fn get_branches(path: &Path) -> Result<Vec<String>, Error> {
+    set_current_dir(&path)?;
 
-    let raw_path = Path::new(&path);
+    let result = Command::new("git").arg("branch").output().unwrap();
 
-    path::set_current_dir(&raw_path)?;
+    let stderr = String::from_utf8(result.stderr).unwrap();
 
-    path::is_git_repository(&raw_path)?;
-
-    let dir_child = Command::new("git")
-        .arg("rev-parse")
-        .arg("--show-toplevel")
-        .output()
-        .expect("Failed to execute command");
-
-    let root_path: String = match String::from_utf8(dir_child.stdout) {
-        Ok(output) => Some(output.trim().to_string()),
-        Err(err) => {
-            let e = format!("{:?}", err);
-            errors.push(e);
-
-            None
-        }
+    if result.status.success() {
+        let all_branches = String::from_utf8(result.stdout).unwrap();
+        return Ok(all_branches
+            .split("\n")
+            .map(|s| s.trim().replace("* ", ""))
+            .filter(|s| !s.is_empty())
+            .collect());
     }
-    .unwrap();
 
-    let raw_root_path = Path::new(&root_path);
+    // we need to check what really happens when a git repo has no branches
+    Err(Error {
+        message: format!(
+            "We couldn't find branches in the path <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "no_branches".to_string(),
+    })
+}
 
-    // printlnln!("root_path: {}", root_path);
-    // printlnln!("raw_root_path: {:?}", raw_root_path);
-    // printlnln!("raw_path: {:?}", raw_path);
+// This function returns a vector of all branches in a git repository that are not merged.
+// It receives a path to the repository.
+// It returns a Result containing a vector of strings with the branches or an Error with a message, a description and a kind.
+pub fn get_branches_no_merged(path: &Path) -> Result<Vec<String>, Error> {
+    set_current_dir(&path)?;
 
-    env::set_current_dir(&raw_root_path).unwrap_or_else(|error| {
-        errors.push(format!(
-            "Unable to change into: {0} | {1}",
-            error,
-            raw_root_path.display()
-        ));
-    });
-
-    let branch_child = Command::new("git")
-        .arg("branch")
-        .output()
-        .expect("Failed to execute command");
-
-    let all_branches = String::from_utf8(branch_child.stdout).unwrap();
-
-    errors.push(String::from_utf8(branch_child.stderr).unwrap());
-
-    let all_branches_vec: Vec<String> = all_branches
-        .split("\n")
-        .map(|s| s.trim().replace("* ", ""))
-        .filter(|s| !s.is_empty())
-        .collect();
-
-    let branch_no_merged_child = Command::new("git")
+    let result = Command::new("git")
         .arg("branch")
         .arg("--no-merged")
         .output()
-        .expect("Failed to execute command");
+        .unwrap();
 
-    let branch_no_merged_child_output = branch_no_merged_child.stdout;
+    let stderr = String::from_utf8(result.stderr).unwrap();
 
-    errors.push(String::from_utf8(branch_no_merged_child.stderr).unwrap());
+    if result.status.success() {
+        let all_branches = String::from_utf8(result.stdout).unwrap();
+        return Ok(all_branches
+            .split("\n")
+            .map(|s| s.trim().replace("* ", ""))
+            .filter(|s| !s.is_empty())
+            .collect());
+    }
 
-    let all_branches_no_merged = String::from_utf8(branch_no_merged_child_output).unwrap();
+    // we need to check what really happens when a git repo has no branches
+    Err(Error {
+        message: format!(
+            "Couldn't find branches not merged in the path <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "no_branches".to_string(),
+    })
+}
 
-    let all_branches_no_merged_vec: Vec<String> = all_branches_no_merged
-        .split("\n")
-        .map(|s| s.trim().replace("* ", ""))
-        .filter(|s| !s.is_empty())
-        .collect();
+// This function returns the name of the current branch in a git repository.
+// It receives a path to the repository.
+// It returns a Result containing a string with the current branch or an Error with a message, a description and a kind.
+pub fn get_current_branch(path: &Path) -> Result<String, Error> {
+    set_current_dir(&path)?;
 
-    let branch_current_child = Command::new("git")
+    let result = Command::new("git")
         .arg("branch")
         .arg("--show-current")
         .output()
-        .expect("Failed to execute command");
+        .unwrap();
 
-    let branch_current_child_output = branch_current_child.stdout;
+    let stderr = String::from_utf8(result.stderr).unwrap();
 
-    errors.push(String::from_utf8(branch_current_child.stderr).unwrap());
+    if result.status.success() {
+        let current_branch = String::from_utf8(result.stdout).unwrap().trim().to_string();
+        return Ok(current_branch);
+    }
 
-    let current_branch = String::from_utf8(branch_current_child_output).unwrap();
+    // we need to check what really happens when a git repo has no branches
+    Err(Error {
+        message: format!(
+            "Couldn't find the current branch in the path <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "no_branches".to_string(),
+    })
+}
 
-    let current = current_branch.trim();
+// This function returns a JSON string with information about a git repository.
+// It receives a path to the repository.
+// It returns a Result containing a string with the JSON or an Error with a message, a description and a kind.
+#[tauri::command(async)]
+async fn get_repo_info(path: String) -> Result<String, Error> {
+    let raw_path = Path::new(&path);
+
+    path::is_git_repository(&raw_path)?;
+
+    let unserialized_root_path: String = path::get_root(path).await?;
+
+    let root_path = serde_json::from_str::<path::RootPathResponse>(&unserialized_root_path)
+        .unwrap()
+        .root_path;
+
+    let raw_root_path = Path::new(&root_path);
+
+    path::set_current_dir(&raw_root_path)?;
+
+    let all_branches = get_branches(&raw_root_path)?;
+    let all_branches_no_merged: Vec<String> = get_branches_no_merged(&raw_root_path)?;
+    let current = get_current_branch(&raw_root_path)?;
 
     let mut branches: Vec<Branch> = Vec::new();
 
-    for branch in &all_branches_vec {
+    for branch in &all_branches {
         branches.push(Branch {
             name: branch.to_string(),
-            fully_merged: all_branches_no_merged_vec.contains(branch),
+            fully_merged: all_branches_no_merged.contains(branch),
             current: &current == branch,
         });
     }
@@ -132,16 +159,8 @@ async fn git_repo_dir(path: String) -> Result<String, Error> {
     let response = GitDirResponse {
         root_path,
         branches: branches,
-        errors: errors
-            .into_iter()
-            .filter(|s| !s.is_empty())
-            .collect::<Vec<_>>(),
         current_branch: current.to_string(),
     };
-
-    // for testing
-    // let ten_millis = std::time::Duration::from_millis(1000);
-    // std::thread::sleep(ten_millis);
 
     Ok(serde_json::to_string(&response).unwrap())
 }
@@ -244,7 +263,7 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
 fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
-            git_repo_dir,
+            get_repo_info,
             path::get_root,
             delete_branches
         ])

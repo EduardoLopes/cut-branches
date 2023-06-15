@@ -10,9 +10,9 @@ use std::path::Path;
 use crate::error::Error;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
-struct RootPathResponse {
-    root_path: String,
-    id: Option<u64>,
+pub struct RootPathResponse {
+    pub root_path: String,
+    pub id: Option<u64>,
 }
 
 impl Hash for RootPathResponse {

@@ -8,7 +8,7 @@ export function getRepoByPath(path: string, options?: CreateQueryOptions<IRepo, 
 	return createQuery(
 		['branches', 'get-all', path] as QueryKey,
 		async () => {
-			return invoke<string>('git_repo_dir', { path }).then((res) => {
+			return invoke<string>('get_repo_info', { path }).then((res) => {
 				const resParser = JSON.parse(res) satisfies IRepo;
 
 				const root_path = resParser.root_path;
