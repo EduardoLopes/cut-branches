@@ -19,17 +19,14 @@ export function useDeleteBranchesMutation(options?: DeleteBranchesMutationOption
 	return createMutation<string[], ServiceError, DeleteBranchesVariables>(
 		['branches', 'delete'],
 		async (vars) => {
-
 			return invoke<string>('delete_branches', {
 				path: vars.path,
-				branches: vars.branches.map((item) => item.name),
+				branches: vars.branches.map((item) => item.name)
 			}).then((res) => {
 				const resParser = JSON.parse(res) as string[];
 
-				return resParser
-					.map((item: string) => item.trim());
+				return resParser.map((item: string) => item.trim());
 			});
-
 		},
 		options
 	);
