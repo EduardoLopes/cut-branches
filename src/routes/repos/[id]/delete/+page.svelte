@@ -17,8 +17,6 @@
 	let currentRepo: RepoID | undefined;
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
-			console.log(data);
-
 			toast.success({
 				message: `${data.length > 1 ? 'Branches' : 'Branch'} deleted`,
 				description: data

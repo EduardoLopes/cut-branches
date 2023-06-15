@@ -8,10 +8,7 @@ const config = {
 	kit: {
 		version: { name: '0.0.1' },
 		adapter: staticAdapter({
-			pages: 'build',
-			assets: 'build',
 			fallback: 'index.html',
-			static: false
 		})
 	}
 };
