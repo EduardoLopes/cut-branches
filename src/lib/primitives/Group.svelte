@@ -47,6 +47,7 @@
 					}
 
 					&:first-child:not(:only-child) {
+						border-right-width: 0;
 						border-top-right-radius: 0 !important;
 						border-bottom-right-radius: 0 !important;
 					}

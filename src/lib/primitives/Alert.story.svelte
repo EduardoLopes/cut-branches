@@ -47,12 +47,16 @@
       <Alert {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
       <Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
       <Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
+			<Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
+      <Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
     </Group>
 
     <Group direction="column">
       <Alert {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
       <Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
       <Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
+			<Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
+			<Alert variant="secondary" {feedback} {size} {showIcon}> Lorem ipsum dolor, sit amet consectetur adipisicing elit. Et quo, eveniet corporis fugiat minus doloribus aperiam impedit magni dolor quidem iusto, cupiditate explicabo maxime aut sed consequatur dolorum quam esse! </Alert>
     </Group>
 
     <Group direction="column">
