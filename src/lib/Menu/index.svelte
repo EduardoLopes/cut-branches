@@ -21,7 +21,7 @@
 		return a.name.localeCompare(b.name);
 	}
 
-	let createRepositoryIDMutation = useCreateRepositoryID({
+	const createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data, variables, context) {
 			goto(`/repos/${data.id}`, {
 				state: {
@@ -66,7 +66,7 @@
 			<Button
 				size="sm"
 				on:click={handleAddClick}
-				state={$createRepositoryIDMutation.isLoading ? 'loading' : undefined}
+				state={$createRepositoryIDMutation.isPending ? 'loading' : undefined}
 			>
 				<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
 			</Button>

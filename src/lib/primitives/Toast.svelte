@@ -119,6 +119,7 @@
 			{#each $toastsStore as toast (toast.id)}
 				<!-- svelte-ignore a11y-mouse-events-have-key-events -->
 				<div
+					role="alert"
 					class="alert-container feedback-{toast.feedback}"
 					style="--timeout-ms:{toast.timeout ?? TOAST_DEFAULT_TIMEOUT_MS}ms;"
 					animate:flip={{ duration: 150, delay: 0 }}
@@ -194,7 +195,9 @@
 		right: 0;
 		height: min-content;
 		background: hsla(0, 0%, 100%, 0.6);
-		box-shadow: 0 0 0 1px hsla(0, 0%, 0%, 0.1), 0 4px 11px hsla(0, 0%, 0%, 0.1);
+		box-shadow:
+			0 0 0 1px hsla(0, 0%, 0%, 0.1),
+			0 4px 11px hsla(0, 0%, 0%, 0.1);
 		-webkit-backdrop-filter: blur(2px);
 		backdrop-filter: blur(2px);
 		border-radius: 0 0 0 4px;
@@ -267,7 +270,9 @@
 
 		.timeout {
 			position: absolute;
-			transition: opacity 250ms ease-in-out 250ms, background 250ms ease-in-out;
+			transition:
+				opacity 250ms ease-in-out 250ms,
+				background 250ms ease-in-out;
 			bottom: 0;
 			height: 3px;
 			background-color: var(--color-main-1);

@@ -27,7 +27,7 @@
 					.join('<br />')
 			});
 
-			client.invalidateQueries(['branches', 'get-all', currentRepo?.path]);
+			client.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
 		},
 		onError(error) {
 			toast.danger({ message: error.message, description: error.description });

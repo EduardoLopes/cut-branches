@@ -16,9 +16,9 @@ type DeleteBranchesMutationOptions = CreateMutationOptions<
 >;
 
 export function useDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
-	return createMutation<string[], ServiceError, DeleteBranchesVariables>(
-		['branches', 'delete'],
-		async (vars) => {
+	return createMutation<string[], ServiceError, DeleteBranchesVariables>({
+		mutationKey: ['branches', 'delete'],
+		mutationFn: async (vars) => {
 			return invoke<string>('delete_branches', {
 				path: vars.path,
 				branches: vars.branches.map((item) => item.name)
@@ -28,6 +28,6 @@ export function useDeleteBranchesMutation(options?: DeleteBranchesMutationOption
 				return resParser.map((item: string) => item.trim());
 			});
 		},
-		options
-	);
+		...options
+	});
 }

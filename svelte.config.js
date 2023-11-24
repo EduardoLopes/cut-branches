@@ -8,7 +8,7 @@ const config = {
 	kit: {
 		version: { name: '0.0.1' },
 		adapter: staticAdapter({
-			fallback: 'index.html',
+			fallback: 'index.html'
 		})
 	}
 };

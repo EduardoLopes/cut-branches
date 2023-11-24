@@ -47,7 +47,7 @@
 			}
 		},
 		onError: (error, _variabled, _context, mutation) => {
-			const e = error as ServiceError;
+			const e = error as unknown as ServiceError;
 
 			if (mutation.meta?.showErrorToast) {
 				toast.danger({ message: e.message, description: e.description });
@@ -66,7 +66,7 @@
 			}
 		},
 		onError: (error, query) => {
-			const e = error as ServiceError;
+			const e = error as unknown as ServiceError;
 
 			if (query.meta?.showErrorToast) {
 				toast.danger({ message: e.message, description: e.description });
