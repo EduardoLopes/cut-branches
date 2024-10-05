@@ -493,17 +493,15 @@
 			// margin-right: 1.6rem;
 			align-items: center;
 
-			:global {
-				button {
-					--button-background-color: transparent;
-					border: none;
-					border-radius: 0;
-					height: 100%;
-					align-items: center;
-					justify-content: center;
-					width: 57px;
-					height: 100%;
-				}
+			:global(button) {
+				--button-background-color: transparent;
+				border: none;
+				border-radius: 0;
+				height: 100%;
+				align-items: center;
+				justify-content: center;
+				width: 57px;
+				height: 100%;
 			}
 		}
 	}

@@ -88,13 +88,11 @@
 
 <style lang="scss">
 	.alert-group {
-		:global {
-			.alert {
-				border-width: 0;
-				border-top-width: 1px;
-				border-top-right-radius: 0;
-				border-top-left-radius: 0;
-			}
+		:global(.alert) {
+			border-width: 0;
+			border-top-width: 1px;
+			border-top-right-radius: 0;
+			border-top-left-radius: 0;
 		}
 	}
 
