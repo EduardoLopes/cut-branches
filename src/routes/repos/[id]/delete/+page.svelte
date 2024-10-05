@@ -147,13 +147,11 @@
 			gap: 1.6rem;
 			justify-content: center;
 
-			:global {
-				button {
-					min-width: 10.6rem;
-					justify-content: center;
-					text-align: center;
-					font-weight: bold;
-				}
+			:global(button) {
+				min-width: 10.6rem;
+				justify-content: center;
+				text-align: center;
+				font-weight: bold;
 			}
 		}
 

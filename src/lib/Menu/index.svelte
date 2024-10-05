@@ -130,10 +130,8 @@
 			}
 			padding: 1.2rem 1rem;
 
-			:global {
-				button {
-					border: var(--color-primary-6) 1px solid;
-				}
+			:global(button) {
+				border: var(--color-primary-6) 1px solid;
 			}
 		}
 	}

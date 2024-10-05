@@ -195,10 +195,8 @@
 		}
 	}
 
-	:global {
-		a:has(.button) {
-			text-decoration: none;
-		}
+	:global(a:has(.button)) {
+		text-decoration: none;
 	}
 
 	// props

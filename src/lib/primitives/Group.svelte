@@ -29,64 +29,46 @@
 		}
 
 		&.direction-row {
-			> :global {
-				div,
-				button,
-				input,
-				textarea,
-				select,
-				label,
-				a,
-				span {
-					&:not(:first-child):not(:last-child):not(:only-child) {
-						border-right-width: 0;
-						border-top-right-radius: 0;
-						border-bottom-right-radius: 0;
-						border-top-left-radius: 0;
-						border-bottom-left-radius: 0;
-					}
+			> :where(div, button, input, textarea, select, label, a, span) {
+				&:not(:first-child):not(:last-child):not(:only-child) {
+					border-right-width: 0;
+					border-top-right-radius: 0;
+					border-bottom-right-radius: 0;
+					border-top-left-radius: 0;
+					border-bottom-left-radius: 0;
+				}
 
-					&:first-child:not(:only-child) {
-						border-right-width: 0;
-						border-top-right-radius: 0 !important;
-						border-bottom-right-radius: 0 !important;
-					}
+				&:first-child:not(:only-child) {
+					border-right-width: 0;
+					border-top-right-radius: 0 !important;
+					border-bottom-right-radius: 0 !important;
+				}
 
-					&:last-child:not(:only-child) {
-						border-top-left-radius: 0 !important;
-						border-bottom-left-radius: 0 !important;
-					}
+				&:last-child:not(:only-child) {
+					border-top-left-radius: 0 !important;
+					border-bottom-left-radius: 0 !important;
 				}
 			}
 		}
 		&.direction-column {
-			> :global {
-				div,
-				button,
-				input,
-				textarea,
-				select,
-				label,
-				a,
-				span {
-					&:not(:first-child):not(:last-child):not(:only-child) {
-						border-bottom-width: 0;
-						border-top-right-radius: 0;
-						border-bottom-right-radius: 0;
-						border-top-left-radius: 0;
-						border-bottom-left-radius: 0;
-					}
+			> :where(div, button, input, textarea, select, label, a, span) {
+				&:not(:first-child):not(:last-child):not(:only-child) {
+					border-bottom-width: 0;
+					border-top-right-radius: 0;
+					border-bottom-right-radius: 0;
+					border-top-left-radius: 0;
+					border-bottom-left-radius: 0;
+				}
 
-					&:first-child:not(:only-child) {
-						border-bottom-left-radius: 0;
-						border-bottom-right-radius: 0;
-						border-bottom-width: 0;
-					}
+				&:first-child:not(:only-child) {
+					border-bottom-left-radius: 0;
+					border-bottom-right-radius: 0;
+					border-bottom-width: 0;
+				}
 
-					&:last-child:not(:only-child) {
-						border-top-left-radius: 0;
-						border-top-right-radius: 0;
-					}
+				&:last-child:not(:only-child) {
+					border-top-left-radius: 0;
+					border-top-right-radius: 0;
 				}
 			}
 		}
