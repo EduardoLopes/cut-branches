@@ -49,6 +49,7 @@
 		"@fontsource/fira-mono": "^5.1.0",
 		"@pindoba/panda": "alpha",
 		"@pindoba/panda-preset": "alpha",
+		"@pindoba/styles": "0.0.0-alpha-20241006002012",
 		"@pindoba/svelte-alert": "alpha",
 		"@pindoba/svelte-badge": "alpha",
 		"@pindoba/svelte-button": "alpha",

@@ -6,18 +6,22 @@ export default defineConfig({
 	preflight: true,
 
 	// Where to look for your css declarations
-	include: ['./src/**/*.{ts,tsx,svelte}', 'node_modules/@pindoba/**/*.{ts,tsx,svelte}'],
+	include: [
+		'node_modules/@pindoba/**/*.{ts,tsx,svelte}',
+		'./src/**/*.{ts,tsx,svelte}',
+		'./src/lib/Menu.svelte'
+	],
 	dependencies: ['@pindoba/panda', '@pindoba/styles'],
 	importMap: '@pindoba/panda',
-
-	// Files to exclude
-	exclude: [],
+	watch: true,
+	clean: true,
 
 	// Useful for theme customization
 	theme: {
 		extend: {}
 	},
 	presets: ['@pandacss/dev/presets', pindobaPreset],
+	jsxFramework: 'svelte',
 
 	// The output directory for your css system
 	outdir: 'styled-system'
