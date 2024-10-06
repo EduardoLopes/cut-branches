@@ -12,8 +12,14 @@ const config = {
 			fallback: 'index.html'
 		}),
 		alias: {
-			'styled-system': './styled-system/*'
+			'@pindoba/panda': './styled-system/*'
 		}
+		// typescript: {
+		// 	config: (config) => {
+		// 		config.include['@pindoba/panda/*'] = './styled-system/*';
+		// 		return config;
+		// 	}
+		// }
 	}
 };
 

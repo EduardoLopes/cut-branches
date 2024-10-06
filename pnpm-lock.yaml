@@ -17,6 +17,9 @@ importers:
       '@pindoba/panda-preset':
         specifier: alpha
         version: 0.0.0-alpha-20241006002012
+      '@pindoba/styles':
+        specifier: 0.0.0-alpha-20241006002012
+        version: 0.0.0-alpha-20241006002012(jsdom@20.0.3)(typescript@5.6.2)
       '@pindoba/svelte-alert':
         specifier: alpha
         version: 0.0.0-alpha-20241006002012(jsdom@20.0.3)(svelte@5.0.0-next.262)(typescript@5.6.2)
@@ -40,7 +43,7 @@ importers:
         version: link:../pindoba/packages/ui/svelte/loading
       '@pindoba/svelte-navigation':
         specifier: alpha
-        version: 0.0.0-alpha-20241006002012(jsdom@20.0.3)(svelte@5.0.0-next.262)(typescript@5.6.2)
+        version: link:../pindoba/packages/ui/svelte/navigation
       '@pindoba/svelte-pagination':
         specifier: alpha
         version: 0.0.0-alpha-20241006002012(jsdom@20.0.3)(svelte@5.0.0-next.262)(typescript@5.6.2)
@@ -707,11 +710,6 @@ packages:
     peerDependencies:
       svelte: ^5.0.0-next.1
 
-  '@pindoba/svelte-navigation@0.0.0-alpha-20241006002012':
-    resolution: {integrity: sha512-V7YCM0S8lGHWfK873HJP0MT2BnulEvPMBuEKjabWGO6swCZYRtMAT+l/NDc9oHqAdcmIpFD/7udR1Pc/aqudFw==}
-    peerDependencies:
-      svelte: ^5.0.0-next.1
-
   '@pindoba/svelte-pagination@0.0.0-alpha-20241006002012':
     resolution: {integrity: sha512-Vkur0PjlpAIP2AygDp4m6TRcb9Cr1qMFta1XixttIT3oyhKVhK3NWThOuM8BtADaCjYjyWQ+njUI0EVztJK60A==}
     peerDependencies:
@@ -1126,10 +1124,6 @@ packages:
   chokidar@4.0.1:
     resolution: {integrity: sha512-n8enUVCED/KVRQlab1hr3MVpcVMvxtZjmEa956u+4YijlmQED223XMSYj2tLuKvr4jcCTzNNMpQDUer72MMmzA==}
     engines: {node: '>= 14.16.0'}
-
-  clsx@2.1.1:
-    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
-    engines: {node: '>=6'}
 
   code-block-writer@12.0.0:
     resolution: {integrity: sha512-q4dMFMlXtKR3XNBHyMHt/3pwYNA69EDk00lloMOaaUMKPUXBw6lpXtbu3MMVG6/uOihGnRDOlkyqsONEUj60+w==}
@@ -3202,17 +3196,6 @@ snapshots:
       - jsdom
       - typescript
 
-  '@pindoba/svelte-navigation@0.0.0-alpha-20241006002012(jsdom@20.0.3)(svelte@5.0.0-next.262)(typescript@5.6.2)':
-    dependencies:
-      '@pindoba/panda': 0.0.0-alpha-20241006002012
-      '@pindoba/styles': 0.0.0-alpha-20241006002012(jsdom@20.0.3)(typescript@5.6.2)
-      '@pindoba/svelte-badge': 0.0.0-alpha-20241006002012(jsdom@20.0.3)(svelte@5.0.0-next.262)(typescript@5.6.2)
-      clsx: 2.1.1
-      svelte: 5.0.0-next.262
-    transitivePeerDependencies:
-      - jsdom
-      - typescript
-
   '@pindoba/svelte-pagination@0.0.0-alpha-20241006002012(jsdom@20.0.3)(svelte@5.0.0-next.262)(typescript@5.6.2)':
     dependencies:
       '@pindoba/panda': 0.0.0-alpha-20241006002012
@@ -3724,8 +3707,6 @@ snapshots:
   chokidar@4.0.1:
     dependencies:
       readdirp: 4.0.2
-
-  clsx@2.1.1: {}
 
   code-block-writer@12.0.0: {}
 

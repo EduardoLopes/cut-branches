@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '../app.css';
 	import {
 		MutationCache,
 		QueryCache,
@@ -6,7 +7,6 @@
 		QueryClientProvider
 	} from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
-	import '../app.css';
 	import type { ServiceError } from '$lib/services/models';
 	import Toast, { toast } from '$lib/primitives/Toast.svelte';
 	import { repos } from '$lib/stores';
@@ -90,7 +90,6 @@
 <QueryClientProvider client={queryClient}>
 	<Toast />
 	<slot />
-	<footer />
 </QueryClientProvider>
 
 <style>

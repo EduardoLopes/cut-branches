@@ -9,6 +9,8 @@
 	import { goto } from '$app/navigation';
 	import { toast } from '$lib/primitives/Toast.svelte';
 	import { version } from '$app/environment';
+	import { page } from '$app/stores';
+	import { css } from '@pindoba/panda/css';
 
 	const sortBy = 'BRANCH_COUNT';
 
@@ -55,6 +57,7 @@
 
 	const items = $derived(
 		$repos.map((repo) => ({
+			id: repo.id,
 			label: repo.name,
 			href: `/repos/${repo.id}`,
 			badge: repo.branchesCount ? `${repo.branchesCount}` : undefined
@@ -62,7 +65,13 @@
 	);
 </script>
 
-<section class="container">
+<section
+	class={css({
+		display: 'grid',
+		gridTemplateRows: 'min-content auto min-content',
+		background: 'primary.800'
+	})}
+>
 	<div class="logo-container">
 		<Icon icon="game-icons:tree-branch" width="24px" height="24px" color="#fff" />
 		<h1 class="logo">Cut Branches</h1>
@@ -77,7 +86,19 @@
 			</Loading>
 		</div>
 		{#if $repos}
-			<Navigation {items} activeItem="home" direction="vertical" />
+			<Navigation
+				{items}
+				activeItem={$page.params.id}
+				direction="vertical"
+				passThrough={{
+					root: css.raw({
+						bg: 'transparent'
+					}),
+					item: css.raw({
+						color: 'primary.800.contrast'
+					})
+				}}
+			/>
 		{/if}
 	</nav>
 
@@ -100,15 +121,9 @@
 			font-weight: bold;
 		}
 	}
-	.container {
-		display: grid;
-		grid-template-rows: min-content auto min-content;
-		background: var(--color-primary-7);
-	}
 
 	.content {
 		min-width: 260px;
-		padding: 1.6rem;
 		.title {
 			display: flex;
 			justify-content: space-between;
@@ -121,10 +136,6 @@
 				margin: 0;
 			}
 			padding: 1.2rem 0;
-
-			:global(button) {
-				border: var(--color-primary-6) 1px solid;
-			}
 		}
 	}
 
