@@ -1,9 +1,16 @@
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
+import Icons from 'unplugin-icons/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	plugins: [sveltekit()],
+	plugins: [
+		sveltekit(),
+		Icons({
+			// experimental
+			compiler: 'raw'
+		})
+	],
 
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	// prevent vite from obscuring rust errors
@@ -11,7 +18,10 @@ export default defineConfig({
 	// tauri expects a fixed port, fail if that port is not available
 	server: {
 		port: 1420,
-		strictPort: true
+		strictPort: true,
+		fs: {
+			allow: ['styled-system']
+		}
 	},
 	// to make use of `TAURI_DEBUG` and other env variables
 	// https://tauri.studio/v1/api/config#buildconfig.beforedevcommand

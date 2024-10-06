@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { repos, type RepoID } from '$lib/stores';
-	import type { IRepo as Repo } from '$lib/stores';
-	import Button from '$lib/primitives/Button/index.svelte';
-	import { page } from '$app/stores';
+
+	import Button from '@pindoba/svelte-button';
+	import Loading from '@pindoba/svelte-loading';
+	import Navigation from '@pindoba/svelte-navigation';
 	import Icon from '@iconify/svelte';
 	import { useCreateRepositoryID } from '$lib/services/useCreateRepositoryID';
 	import { goto } from '$app/navigation';
 	import { toast } from '$lib/primitives/Toast.svelte';
 	import { version } from '$app/environment';
-	import { flip } from 'svelte/animate';
-	import { fly } from 'svelte/transition';
 
-	export let sortBy = 'BRANCH_COUNT';
+	const sortBy = 'BRANCH_COUNT';
 
 	function handleSort(a: RepoID, b: RepoID) {
 		if (sortBy === 'BRANCH_COUNT') {
@@ -53,6 +52,14 @@
 				});
 		}
 	}
+
+	const items = $derived(
+		$repos.map((repo) => ({
+			label: repo.name,
+			href: `/repos/${repo.id}`,
+			badge: repo.branchesCount ? `${repo.branchesCount}` : undefined
+		}))
+	);
 </script>
 
 <section class="container">
@@ -63,30 +70,14 @@
 	<nav class="content">
 		<div class="title">
 			<h2>Repositories</h2>
-			<Button
-				size="sm"
-				on:click={handleAddClick}
-				state={$createRepositoryIDMutation.isPending ? 'loading' : undefined}
-			>
-				<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
-			</Button>
+			<Loading isLoading={$createRepositoryIDMutation.isPending}>
+				<Button size="sm" onclick={handleAddClick}>
+					<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
+				</Button>
+			</Loading>
 		</div>
 		{#if $repos}
-			<ul class="menu">
-				{#each $repos.sort(handleSort) as repo (repo.name)}
-					<li class:current={$page.params.id === repo.id} animate:flip={{ duration: 150 }}>
-						<a href={`/repos/${repo.id}`}
-							>{repo.name}
-							{#if repo.branchesCount}
-								<span class="count" in:fly|local={{ x: -10 }} out:fly|local={{ x: -10 }}
-									>{repo.branchesCount}
-									{repo.branchesCount > 0 ? 'branches' : 'branch'}</span
-								>
-							{/if}
-						</a>
-					</li>
-				{/each}
-			</ul>
+			<Navigation {items} activeItem="home" direction="vertical" />
 		{/if}
 	</nav>
 
@@ -98,7 +89,6 @@
 		display: flex;
 		gap: 1rem;
 		align-items: center;
-		padding: 1.6rem;
 		background: var(--color-primary-7);
 		border-bottom: 1px dashed var(--color-primary-6);
 		min-height: 58px;
@@ -117,6 +107,8 @@
 	}
 
 	.content {
+		min-width: 260px;
+		padding: 1.6rem;
 		.title {
 			display: flex;
 			justify-content: space-between;
@@ -128,65 +120,10 @@
 				color: #fff;
 				margin: 0;
 			}
-			padding: 1.2rem 1rem;
+			padding: 1.2rem 0;
 
 			:global(button) {
 				border: var(--color-primary-6) 1px solid;
-			}
-		}
-	}
-
-	.menu {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		font-size: 0.9em;
-		height: 100%;
-		min-width: 270px;
-		margin-block-start: 0;
-		margin-block-end: 0;
-		margin-inline-start: 0;
-		margin-inline-end: 0;
-		padding-inline-start: 0;
-
-		li {
-			margin: 0;
-			cursor: pointer;
-			&.current {
-				a {
-					background: var(--color-primary-9);
-					cursor: default;
-				}
-				pointer-events: none;
-			}
-
-			a {
-				display: inline-flex;
-				flex-direction: column;
-				width: 100%;
-				border: none;
-				padding: 8px 24px;
-				background: none;
-				text-align: left;
-				font-weight: bold;
-				color: #fff;
-				margin: 0;
-				text-decoration: none;
-				line-height: 1.5;
-				min-height: 55px;
-
-				&:hover {
-					background: var(--color-primary-8);
-				}
-
-				&:active {
-					filter: contrast(75%);
-				}
-
-				& span {
-					font-size: 0.8em;
-					font-weight: normal;
-				}
 			}
 		}
 	}
