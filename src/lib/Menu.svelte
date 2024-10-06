@@ -11,6 +11,8 @@
 	import { version } from '$app/environment';
 	import { page } from '$app/stores';
 	import { css } from '@pindoba/panda/css';
+	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import { token } from '@pindoba/panda/tokens';
 
 	const sortBy = 'BRANCH_COUNT';
 
@@ -69,19 +71,64 @@
 	class={css({
 		display: 'grid',
 		gridTemplateRows: 'min-content auto min-content',
-		background: 'primary.800'
+		background: 'primary.50'
 	})}
 >
-	<div class="logo-container">
-		<Icon icon="game-icons:tree-branch" width="24px" height="24px" color="#fff" />
-		<h1 class="logo">Cut Branches</h1>
+	<div
+		class={css({
+			display: 'flex',
+			gap: 'md',
+			padding: 'md',
+			alignItems: 'center',
+			borderBottom: '1px dashed token(colors.primary.300)',
+			minHeight: '58px'
+		})}
+	>
+		<Icon
+			icon="game-icons:tree-branch"
+			width="24px"
+			height="24px"
+			color={token('colors.primary.800')}
+		/>
+		<h1
+			class={css({
+				color: 'primary.800.contrast',
+				fontSize: 'lg',
+				margin: '0',
+				fontWeight: 'bold'
+			})}
+		>
+			Cut Branches
+		</h1>
 	</div>
-	<nav class="content">
-		<div class="title">
-			<h2>Repositories</h2>
+	<div
+		class={css({
+			minWidth: '260px',
+			px: 'token(spacing.sm)'
+		})}
+	>
+		<div
+			class={css({
+				display: 'flex',
+				justifyContent: 'space-between',
+				alignItems: 'center',
+				py: 'token(spacing.sm)'
+			})}
+		>
+			<h2
+				class={css({
+					fontSize: 'xs',
+					textTransform: 'uppercase',
+					color: 'neutral.800',
+					margin: '0'
+				})}
+			>
+				Repositories
+			</h2>
 			<Loading isLoading={$createRepositoryIDMutation.isPending}>
-				<Button size="sm" onclick={handleAddClick}>
+				<Button size="sm" onclick={handleAddClick} shape="square">
 					<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
+					<span class={visuallyHidden()}>Add repository</span>
 				</Button>
 			</Loading>
 		</div>
@@ -100,51 +147,18 @@
 				}}
 			/>
 		{/if}
-	</nav>
+	</div>
 
-	<div class="bottom-info-bar">v{version}</div>
+	<div
+		class={css({
+			fontSize: 'sm',
+			padding: 'token(spacing.xxs) token(spacing.xs)',
+			borderTop: '1px dashed token(colors.primary.300)',
+			background: 'primary.200',
+			textAlign: 'left',
+			color: 'primary.900'
+		})}
+	>
+		v{version}
+	</div>
 </section>
-
-<style src="./styles.scss" lang="scss">
-	.logo-container {
-		display: flex;
-		gap: 1rem;
-		align-items: center;
-		background: var(--color-primary-7);
-		border-bottom: 1px dashed var(--color-primary-6);
-		min-height: 58px;
-
-		.logo {
-			color: #fff;
-			font-size: 1.6rem;
-			margin: 0;
-			font-weight: bold;
-		}
-	}
-
-	.content {
-		min-width: 260px;
-		.title {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			h2 {
-				font-weight: bold;
-				font-size: 1.3rem;
-				text-transform: uppercase;
-				color: #fff;
-				margin: 0;
-			}
-			padding: 1.2rem 0;
-		}
-	}
-
-	.bottom-info-bar {
-		font-size: 1.2rem;
-		padding: 0.4rem 0.8rem;
-		border-top: 1px dashed var(--color-primary-7);
-		background: var(--color-primary-6);
-		text-align: left;
-		color: var(--color-neutral-1);
-	}
-</style>
