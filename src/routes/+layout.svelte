@@ -13,6 +13,7 @@
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/stores';
 	import { onMount } from 'svelte';
+	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 
 	function checkRedirect() {
 		if ($repos.length === 0) {
@@ -86,6 +87,8 @@
 		}
 	});
 </script>
+
+<ThemeModeSelectScript />
 
 <QueryClientProvider client={queryClient}>
 	<Toast />

@@ -7,7 +7,10 @@ export default defineConfig({
 
 	// Where to look for your css declarations
 	include: [
-		'node_modules/@pindoba/styles/**/*.{ts,tsx,svelte}',
+		'node_modules/@pindoba/styles/**/*.{ts,tsx}',
+		'node_modules/@pindoba/svelte-theme-mode-select/**/*.{ts,tsx,svelte}',
+		'node_modules/@pindoba/svelte-alert/**/*.{ts,tsx,svelte}',
+		'node_modules/@pindoba/svelte-select/**/*.{ts,tsx,svelte}',
 		'./src/**/*.{ts,tsx,svelte}',
 		'./src/lib/Menu.svelte'
 	],
