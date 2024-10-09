@@ -4,6 +4,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation from '@pindoba/svelte-navigation';
+	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import Icon from '@iconify/svelte';
 	import { useCreateRepositoryID } from '$lib/services/useCreateRepositoryID';
 	import { goto } from '$app/navigation';
@@ -11,7 +12,7 @@
 	import { version } from '$app/environment';
 	import { page } from '$app/stores';
 	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
 
 	const sortBy = 'BRANCH_COUNT';
@@ -71,7 +72,14 @@
 	class={css({
 		display: 'grid',
 		gridTemplateRows: 'min-content auto min-content',
-		background: 'primary.50'
+		_dark: {
+			background: 'primary.50',
+			borderRight: '1px dashed token(colors.primary.300)'
+		},
+		_light: {
+			borderRight: '1px dashed token(colors.primary.700)',
+			background: 'primary.800'
+		}
 	})}
 >
 	<div
@@ -80,19 +88,37 @@
 			gap: 'md',
 			padding: 'md',
 			alignItems: 'center',
+			_dark: {
+				borderBottom: '1px dashed token(colors.primary.300)'
+			},
+			_light: {
+				borderBottom: '1px dashed token(colors.primary.700)'
+			},
 			borderBottom: '1px dashed token(colors.primary.300)',
-			minHeight: '58px'
+			height: 'calc((token(spacing.xl)) * 2.5)'
 		})}
 	>
 		<Icon
 			icon="game-icons:tree-branch"
 			width="24px"
 			height="24px"
-			color={token('colors.primary.800')}
+			class={css({
+				_dark: {
+					color: 'primary.800'
+				},
+				_light: {
+					color: 'primary.800.contrast'
+				}
+			})}
 		/>
 		<h1
 			class={css({
-				color: 'primary.800.contrast',
+				_dark: {
+					color: 'primary.950'
+				},
+				_light: {
+					color: 'primary.800.contrast'
+				},
 				fontSize: 'lg',
 				margin: '0',
 				fontWeight: 'bold'
@@ -119,14 +145,25 @@
 				class={css({
 					fontSize: 'xs',
 					textTransform: 'uppercase',
-					color: 'neutral.800',
+					opacity: 0.6,
+					color: 'neutral.800.contrast',
 					margin: '0'
 				})}
 			>
 				Repositories
 			</h2>
 			<Loading isLoading={$createRepositoryIDMutation.isPending}>
-				<Button size="sm" onclick={handleAddClick} shape="square">
+				<Button
+					size="sm"
+					onclick={handleAddClick}
+					shape="square"
+					passThrough={{
+						root: css.raw({
+							background: 'transparent',
+							boxShadow: '0 0 0 1px token(colors.primary.600)'
+						})
+					}}
+				>
 					<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
 					<span class={visuallyHidden()}>Add repository</span>
 				</Button>
@@ -139,10 +176,17 @@
 				direction="vertical"
 				passThrough={{
 					root: css.raw({
-						bg: 'transparent'
+						bg: 'transparent',
+						padding: '0'
 					}),
 					item: css.raw({
-						color: 'primary.800.contrast'
+						color: 'neutral.800.contrast',
+						_hover: {
+							color: 'primary.950'
+						}
+					}),
+					itemActive: css.raw({
+						color: 'primary.950.contrast'
 					})
 				}}
 			/>
@@ -151,14 +195,52 @@
 
 	<div
 		class={css({
-			fontSize: 'sm',
-			padding: 'token(spacing.xxs) token(spacing.xs)',
-			borderTop: '1px dashed token(colors.primary.300)',
-			background: 'primary.200',
-			textAlign: 'left',
-			color: 'primary.900'
+			_dark: {
+				borderTop: '1px dashed token(colors.primary.300)',
+				background: 'primary.200'
+			},
+			_light: {
+				borderTop: '1px dashed token(colors.primary.700)',
+				background: 'primary.950'
+			},
+			display: 'flex',
+			justifyContent: 'center',
+			alignItems: 'center',
+			height: 'calc((token(spacing.sm)) * 2.5)',
+			p: 'token(spacing.xxs)'
 		})}
 	>
-		v{version}
+		<div
+			class={css({
+				fontSize: 'sm',
+				_dark: {
+					color: 'primary.900'
+				},
+				_light: {
+					color: 'primary.600'
+				},
+				display: 'flex'
+			})}
+		>
+			v{version}
+		</div>
+		<div class={spacer()}></div>
+		<ThemeModeSelect
+			popoverProps={{ placement: 'top' }}
+			buttonProps={{
+				size: 'xs',
+				passThrough: {
+					root: {
+						padding: 0,
+						_dark: {
+							color: 'primary.900'
+						},
+						_light: {
+							color: 'primary.600'
+						}
+					}
+				}
+			}}
+		/>
 	</div>
 </section>

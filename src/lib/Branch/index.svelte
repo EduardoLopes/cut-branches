@@ -3,11 +3,12 @@
 	import { repos } from '$lib/stores';
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import Alert from '$lib/primitives/Alert.svelte';
-	import Group from '$lib/primitives/Group.svelte';
+	import Alert from '@pindoba/svelte-alert';
+	import Group from '@pindoba/svelte-group';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
 	import { resizeContainer } from '$lib/actions/resizeContainer';
+	import { css } from '@pindoba/panda/css';
 
 	export let data: IBranch;
 	export let selected = false;
@@ -42,26 +43,64 @@
 </script>
 
 <div
-	class="branch"
+	class={css({
+		borderRadius: 'md',
+		borderWidth: '1px',
+		borderColor: 'neutral.400',
+		_light: {
+			background: 'neutral.50'
+		},
+		_dark: {
+			background: 'neutral.100'
+		},
+		color: 'neutral.950.contrast',
+		'&.disabled': {
+			opacity: 0.5,
+			pointerEvents: 'none',
+			filter: 'grayscale(1)'
+		},
+		'&.current': {
+			_dark: {
+				background: 'primary.200'
+			},
+			_light: {
+				background: 'primary.400'
+			},
+			borderWidth: '1px',
+			borderColor: 'primary.800',
+			color: 'primary.950'
+		},
+		'&.selected': {
+			background: 'danger.200',
+			borderColor: 'danger.800',
+			borderStyle: 'dashed'
+		}
+	})}
 	class:disabled
 	class:current={data.current}
 	class:selected
 	title={`${data.current ? 'Current branch ' : ''}`}
 >
-	<div class="name">
+	<div
+		class={css({
+			padding: 'md',
+			color: 'inherit',
+			fontWeight: 600
+		})}
+	>
 		{data.name}
 	</div>
 
 	<div class="info alert-group" use:resizeContainer>
-		<Group direction="column">
-			{#each alerts as alert (alert)}
-				<div
-					animate:flip={{ duration: 150 }}
-					in:fly|local={{ y: -20, duration: 200 }}
-					out:fly|local={{ y: -10, duration: 50 }}
-				>
+		{#each alerts as alert (alert)}
+			<div
+				animate:flip={{ duration: 150 }}
+				in:fly|local={{ y: -20, duration: 200 }}
+				out:fly|local={{ y: -10, duration: 50 }}
+			>
+				<Group direction="vertical" noBorder>
 					{#if alert === 'fullyMerged'}
-						<Alert feedback="info">This branch is not fully merged into the current branch!</Alert>
+						<Alert>This branch is not fully merged into the current branch!</Alert>
 					{/if}
 					{#if alert === 'protectedWords'}
 						<Alert feedback="warning">
@@ -80,50 +119,8 @@
 							<strong>truck</strong> or any other word that don't offend others!
 						</Alert>
 					{/if}
-				</div>
-			{/each}
-		</Group>
+				</Group>
+			</div>
+		{/each}
 	</div>
 </div>
-
-<style lang="scss">
-	.alert-group {
-		:global(.alert) {
-			border-width: 0;
-			border-top-width: 1px;
-			border-top-right-radius: 0;
-			border-top-left-radius: 0;
-		}
-	}
-
-	.branch {
-		background: var(--color-neutral-2);
-		border: 1px solid var(--color-neutral-4);
-		border-radius: 4px;
-
-		.name {
-			color: var(--color-neutral-9);
-			font-weight: 600;
-			padding: 1.6rem;
-		}
-
-		&.current {
-			background: var(--color-warning-1);
-			border-color: var(--color-warning-4);
-
-			.name {
-				color: var(--color-warning-5);
-			}
-		}
-
-		&.selected {
-			background: var(--color-danger-2);
-			border-color: var(--color-danger-4);
-			border-style: dashed;
-
-			.name {
-				color: var(--color-danger-7);
-			}
-		}
-	}
-</style>

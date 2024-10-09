@@ -2,10 +2,10 @@
 	import type { IBranch, IRepo, RepoID } from '$lib/stores';
 
 	import { repos } from '$lib/stores';
-	import Button from '$lib/primitives/Button/index.svelte';
+	import Button from '@pindoba/svelte-button';
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
-	import Checkbox from '$lib/primitives/Checkbox.svelte';
+	import Checkbox from '@pindoba/svelte-checkbox';
 	import { navigating, page } from '$app/stores';
 	import { fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
@@ -15,26 +15,48 @@
 	import debounce from 'just-debounce-it';
 	import { onMount } from 'svelte';
 	import { toast } from '$lib/primitives/Toast.svelte';
+	import Group from '@pindoba/svelte-group';
 	import { version } from '$app/environment';
-	import Loading from '$lib/primitives/Loading.svelte';
+	import Loading from '@pindoba/svelte-loading';
+	import { css } from '@pindoba/panda/css';
+	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import { token } from '@pindoba/panda/tokens';
+	import Pagination from '@pindoba/svelte-pagination';
+	import { spring } from 'svelte/motion';
+	import { quintOut } from 'svelte/easing';
 
-	let selected: string[] = [];
-	export let id: string | null = null;
+	// const branchesSpring = spring({ x: 0, opacity: 1 });
+	// branchesSpring.stiffness = 0.3;
+	// branchesSpring.damping = 0.9;
+	// branchesSpring.precision = 0.005;
+
+	let selected = $state<string[]>([]);
+
+	interface Props {
+		id: string | null;
+	}
+	const { id }: Props = $props();
+
 	let searchInputElement: HTMLInputElement | null = null;
 
 	const oneMinute = 60000;
 
-	$: currentRepo = $repos.filter((item) => item.id === id)[0] as RepoID | undefined;
-	$: getBranchesQuery = getRepoByPath(currentRepo?.path ?? history.state.path, {
-		staleTime: oneMinute,
-		meta: {
-			showErrorToast: false
+	const currentRepo = $derived($repos.filter((item) => item.id === id)[0]);
+	const getBranchesQuery = $derived(
+		getRepoByPath(currentRepo?.path ?? history.state.path, {
+			staleTime: oneMinute,
+			meta: {
+				showErrorToast: false
+			}
+		})
+	);
+
+	$effect(() => {
+		if ($navigating) {
+			selected = [];
+			clearSearch();
 		}
 	});
-	$: if ($navigating) {
-		selected = [];
-		clearSearch();
-	}
 
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
@@ -73,64 +95,104 @@
 	function clearSearch() {
 		searchQuery = '';
 		deboucedSearchQuery = '';
-		currentPage = 0;
+		currentPage = 1;
 	}
 
-	let searchQuery = '';
-	let deboucedSearchQuery = '';
+	let searchQuery = $state('');
+	let deboucedSearchQuery = $state('');
 
 	const debounceSearchQuery = debounce((value: string) => {
 		deboucedSearchQuery = value;
+		console.log('debounced', value);
 	}, 300);
 
-	$: debounceSearchQuery(searchQuery);
+	$effect(() => {
+		debounceSearchQuery(searchQuery);
+	});
 
-	let currentPage = 0;
-	let itemsPerPage = 10;
+	let currentPage = $state(1);
+	let itemsPerPage = $state(10);
+	let pageForward = $state(false);
 
-	function nextPage() {
-		currentPage++;
+	function handleOnPageChange(currentPage: number, oldPage: number) {
+		pageForward = currentPage > oldPage;
+
+		// branchesSpring.set({ x: forward ? 50 : -50, opacity: 0.5 }, { hard: true });
+		// branchesSpring.update(
+		// 	(target, current) => {
+		// 		console.log({ target, current });
+		// 		return {
+		// 			x: Math.max(Math.min(current.x + (forward ? -50 : 50), 50), -50),
+		// 			opacity: current.opacity ? Math.max(current.opacity + 1, 1) : 0
+		// 		};
+		// 	},
+		// 	{
+		// 		soft: 0.5
+		// 	}
+		// );
 	}
 
-	function prevPage() {
-		currentPage--;
-	}
+	// $effect(() => {
+	// 	lastPage = currentPage;
 
-	$: start = Math.max(0, itemsPerPage * currentPage);
-	$: end = start + itemsPerPage;
-	$: branches =
+	// 	if (Number.isInteger(currentPage)) {
+	// 		branchesSpring.set({ x: 30, opacity: 0 }, { hard: true });
+	// 		branchesSpring.set({ x: 0, opacity: 1 }, { soft: 0.2 });
+	// 		// branchesSpring.update(
+	// 		// 	(target, current) => {
+	// 		// 		return { x: 0, opacity: 1 };
+	// 		// 	},
+	// 		// 	{ soft: 1 }
+	// 		// );
+	// 	}
+	// });
+
+	let branches = $derived(
 		$getBranchesQuery.data?.branches
 			.sort(sort)
-			.filter((item) => item.name.includes(deboucedSearchQuery)) ?? [];
-
-	$: paginatedBranches = branches.slice(start, end);
-
-	$: totalPages = Math.ceil((branches?.length ?? 0) / 10);
-
-	$: if ($navigating) {
-		currentPage = 0;
-		searchQuery = '';
-	}
-
-	$: selectibleCount = Math.max(
-		0,
-		branches.filter((item) => item.name !== $getBranchesQuery.data?.current_branch)?.length ?? 0
+			.filter((item) =>
+				item.name.toLowerCase().trim().includes(deboucedSearchQuery.toLowerCase().trim())
+			) ?? []
 	);
 
-	$: searchNoResultsFound = deboucedSearchQuery.length > 0 && branches.length === 0;
+	let start = $derived(Math.max(0, itemsPerPage * currentPage));
+	let end = $derived(start + itemsPerPage);
+	let paginatedBranches = $derived(branches.slice(start, end));
 
-	$: lastUpdatedAtDate = $getBranchesQuery.dataUpdatedAt
-		? new Date($getBranchesQuery.dataUpdatedAt)
-		: undefined;
+	let totalPages = $derived(Math.ceil((branches?.length ?? 0) / 10));
 
-	$: lastUpdatedAt = lastUpdatedAtDate ? intlFormatDistance(lastUpdatedAtDate, Date.now()) : null;
+	$effect(() => {
+		if ($navigating) {
+			currentPage = 1;
+			searchQuery = '';
+		}
+	});
 
-	onMount(() => {
+	let selectibleCount = $derived(
+		Math.max(
+			0,
+			branches.filter((item) => item.name !== $getBranchesQuery.data?.current_branch)?.length ?? 0
+		)
+	);
+
+	let searchNoResultsFound = $derived(deboucedSearchQuery.length > 0 && branches.length === 0);
+
+	let lastUpdatedAtDate = $derived(
+		$getBranchesQuery.dataUpdatedAt ? new Date($getBranchesQuery.dataUpdatedAt) : undefined
+	);
+
+	let lastUpdatedAt = $state<string | undefined>();
+
+	$effect(() => {
+		if (lastUpdatedAtDate) {
+			lastUpdatedAt = intlFormatDistance(lastUpdatedAtDate, Date.now());
+		}
+
 		const interval = setInterval(() => {
 			if (lastUpdatedAtDate) {
 				lastUpdatedAt = intlFormatDistance(lastUpdatedAtDate, Date.now());
 			}
-		}, 61000);
+		}, oneMinute);
 
 		return () => {
 			clearInterval(interval);
@@ -138,140 +200,251 @@
 	});
 </script>
 
-<Loading state={$getBranchesQuery.isInitialLoading ? 'loading' : undefined}>
-	<main class="container">
-		<div class="header">
+<main
+	class={css({
+		display: 'flex',
+		flexDirection: 'column',
+		_light: {
+			background: 'neutral.200'
+		},
+		_dark: {
+			background: 'neutral.50'
+		},
+		overflow: 'hidden',
+		position: 'relative',
+		height: '100%'
+	})}
+>
+	<Loading
+		isLoading={$getBranchesQuery.isLoading}
+		fillParent
+		passThrough={{
+			root: {
+				borderRadius: '0'
+			}
+		}}
+	>
+		<!-- TOP BAR -->
+		<div
+			class={css({
+				display: 'flex',
+				position: 'sticky',
+				justifyContent: 'space-between',
+				top: '0',
+				_dark: {
+					background: 'neutral.100',
+					borderBottom: '1px dashed token(colors.neutral.300)'
+				},
+				_light: {
+					background: 'neutral.50',
+					borderBottom: '1px dashed token(colors.neutral.400)'
+				},
+				alignItems: 'center',
+				zIndex: '20',
+				flexShrink: '0',
+				px: 'md',
+				height: 'calc((token(spacing.xl)) * 2.5)'
+			})}
+		>
 			{#key $getBranchesQuery.data?.name}
-				<h1 in:fly|local={{ x: -20 }}>
+				<h2
+					class={css({
+						fontSize: 'xl',
+						textAlign: 'left',
+						textTransform: 'uppercase',
+						fontWeight: 'bold',
+						color: 'neutral.950'
+					})}
+					in:fly|local={{ x: -20 }}
+				>
 					{#if $getBranchesQuery.data?.name}
 						{$getBranchesQuery.data?.name}
 					{/if}
-				</h1>
+				</h2>
 			{/key}
 
-			<div class="menu">
-				<Button
-					variant="tertiary"
-					size="sm"
-					on:click={update_repo}
-					state={$getBranchesQuery.isFetching ? 'loading' : undefined}
-				>
-					<Icon
-						icon="material-symbols:refresh-rounded"
-						width="24px"
-						height="24px"
-						color="var(--primary-color)"
-					/>
-				</Button>
+			<Loading isLoading={$getBranchesQuery.isFetching}>
+				<Group direction="horizontal">
+					<Button emphasis="ghost" size="sm" onclick={update_repo} shape="square">
+						<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
+						<span class={visuallyHidden()}>Update</span>
+					</Button>
 
-				<Button
-					variant="tertiary"
-					size="sm"
-					on:click={() => {
-						goto(`/repos/${currentRepo?.id}/remove`);
-					}}
-				>
-					<Icon
-						icon="solar:close-circle-linear"
-						width="24px"
-						height="24px"
-						color="var(--primary-color)"
-					/>
-				</Button>
-			</div>
+					<Button
+						emphasis="ghost"
+						size="sm"
+						feedback="danger"
+						onclick={() => {
+							goto(`/repos/${currentRepo?.id}/remove`);
+						}}
+						shape="square"
+					>
+						<Icon
+							icon="solar:close-circle-linear"
+							width="24px"
+							height="24px"
+							color="var(--primary-color)"
+						/>
+						<span class={visuallyHidden()}>Remove</span>
+					</Button>
+				</Group>
+			</Loading>
 		</div>
-		{#if $getBranchesQuery.isError}
-			<div class="error" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-				<div>
-					<Icon
-						icon="material-symbols:dangerous-rounded"
-						width="64px"
-						height="64px"
-						color="var(--color-danger-10)"
-					/>
-					<div class="message">{@html $getBranchesQuery.error.message}</div>
-					<div class="description">{@html $getBranchesQuery.error.description}</div>
-				</div>
-			</div>
-		{/if}
+		<!-- TOP BAR END -->
 
-		{#if $getBranchesQuery.isSuccess}
-			<div class="content" in:fly|local={{ x: -30, duration: 150 }}>
-				<div class="toolbar-container">
-					<div class="left">
-						{#if selectibleCount > 0}
-							{@const selectedLength = branches.filter((item) =>
-								selected.includes(item.name)
-							).length}
-							{#key selectibleCount}
-								<div in:fly={{ x: -10 }} class="checkbox">
-									<Checkbox
-										visuallyHideLabel
-										indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
-										on:click={() => {
-											const indeterminate =
-												selectedLength !== selectibleCount && selectedLength > 0;
-
-											if (indeterminate || selectedLength === 0) {
-												selected =
-													branches
-														.map((item) => item.name)
-														.filter((item) => item !== $getBranchesQuery.data?.current_branch) ??
-													[];
-											} else {
-												const allSelectedBranch = branches.map((item) => item.name);
-
-												selected = selected.filter((item) => !allSelectedBranch.includes(item));
-											}
-										}}
-										checked={selectedLength === selectibleCount}
-									>
-										Select all
-									</Checkbox>
-									{#if deboucedSearchQuery.length > 0}
-										{selectedLength} / {selectibleCount}
-										{selectibleCount === 1 ? 'branch was' : 'branches were'} found
-									{/if}
-
-									{#if deboucedSearchQuery.length === 0}
-										{selectedLength} / {selectibleCount} branches
-									{/if}
-								</div>
-							{/key}
-						{/if}
-
-						{#if selectibleCount === 0 && $getBranchesQuery.data.branches.length !== 0 && deboucedSearchQuery.length === 0}
-							<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
-						{/if}
+		<!-- GERAL -->
+		<div
+			class={css({
+				display: 'flex',
+				flexDirection: 'column',
+				width: '100%',
+				height: 'calc(100vh - (token(spacing.sm) * 2.5 + token(spacing.xl) * 2.5))',
+				overflowY: 'auto',
+				overflowX: 'hidden'
+			})}
+		>
+			<!-- ERRO MESSAGE -->
+			{#if $getBranchesQuery.isError}
+				<div class="error" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
+					<div>
+						<Icon
+							icon="material-symbols:dangerous-rounded"
+							width="64px"
+							height="64px"
+							color="var(--color-danger-10)"
+						/>
+						<div class="message">{@html $getBranchesQuery.error.message}</div>
+						<div class="description">{@html $getBranchesQuery.error.description}</div>
 					</div>
+				</div>
+			{/if}
+			<!-- ERRO MESSAGE END -->
 
-					<div class="actions">
-						{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
-							<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
-								<Button
-									variant="primary"
-									feedback="danger"
-									size="sm"
-									state={selected.length === 0 ? 'disabled' : undefined}
-									on:click={handleDelete}
+			<!-- BULK ACTIONS -->
+			<div
+				class={css({
+					display: 'flex',
+					justifyContent: 'space-between',
+					alignItems: 'center',
+					padding: 'md',
+					zIndex: '10',
+					flexShrink: '0',
+					position: 'sticky',
+					top: '0',
+					backdropFilter: 'blur(5px) saturate(3)',
+					_light: {
+						background: 'neutral.200/80'
+					},
+					_dark: {
+						background: 'neutral.50/80'
+					}
+				})}
+			>
+				<div
+					class={css({
+						display: 'flex',
+						flexDirection: 'row',
+						alignItems: 'center',
+						height: '100%',
+						gap: 'md'
+					})}
+				>
+					{#if selectibleCount > 0}
+						{@const selectedLength = branches.filter((item) => selected.includes(item.name)).length}
+						{#key selectibleCount}
+							<div
+								in:fly={{ x: -10 }}
+								class={css({
+									display: 'flex',
+									flexDirection: 'row',
+									alignItems: 'center',
+									height: '100%',
+									gap: 'md'
+								})}
+							>
+								<Checkbox
+									id="select-all"
+									indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
+									onclick={() => {
+										const indeterminate = selectedLength !== selectibleCount && selectedLength > 0;
+
+										if (indeterminate || selectedLength === 0) {
+											selected =
+												branches
+													.map((item) => item.name)
+													.filter((item) => item !== $getBranchesQuery.data?.current_branch) ?? [];
+										} else {
+											const allSelectedBranch = branches.map((item) => item.name);
+
+											selected = selected.filter((item) => !allSelectedBranch.includes(item));
+										}
+									}}
+									checked={selectedLength === selectibleCount}
 								>
-									<Icon icon="ion:trash-outline" width="16px" height="16px" />
-									Delete
-								</Button>
-							</div>
-						{/if}
+									<div class={visuallyHidden()}>Select all</div>
+								</Checkbox>
+								{#if deboucedSearchQuery.length > 0}
+									{selectedLength} / {selectibleCount}
+									{selectibleCount === 1 ? 'branch was' : 'branches were'} found
+								{/if}
 
-						{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
-							<div in:fly={{ x: 10 }}>
-								<Button variant="primary" feedback="info" size="sm" on:click={clearSearch}>
+								{#if deboucedSearchQuery.length === 0}
+									{selectedLength} / {selectibleCount} branches
+								{/if}
+							</div>
+						{/key}
+					{/if}
+				</div>
+
+				<div class="actions">
+					{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
+						<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
+							<Button
+								feedback="danger"
+								size="sm"
+								disabled={selected.length === 0}
+								onclick={handleDelete}
+							>
+								<Icon icon="ion:trash-outline" width="16px" height="16px" />
+								Delete
+							</Button>
+						</div>
+					{/if}
+
+					{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
+						<div in:fly={{ x: 10 }}>
+							<Button emphasis="ghost" size="sm" onclick={clearSearch}>
+								<div
+									class={css({
+										display: 'flex',
+										alignItems: 'center',
+										gap: 'xs'
+									})}
+								>
 									<Icon icon="mdi:clear" width="16px" height="16px" />
 									Clear search
-								</Button>
-							</div>
-						{/if}
-					</div>
+								</div>
+							</Button>
+						</div>
+					{/if}
 				</div>
-				<div class="branches-container">
+			</div>
+			<!-- BULK ACTIONS END -->
+
+			{#if $getBranchesQuery.isSuccess}
+				<!-- BRANCHES -->
+				<div
+					class={css({
+						display: 'flex',
+						flexDirection: 'column',
+						flexGrow: '1'
+					})}
+					in:fly|local={{ x: -30, duration: 150 }}
+				>
+					{#if selectibleCount === 0 && $getBranchesQuery.data?.branches.length !== 0 && deboucedSearchQuery.length === 0}
+						<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
+					{/if}
+
 					{#if searchNoResultsFound}
 						<div class="search-no-found" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
 							<div>
@@ -299,16 +472,33 @@
 							</div>
 						</div>
 					{/if}
+
 					{#key `${$page.params.id}${currentPage}`}
 						<div
-							class="branches"
-							in:fly|local={{ x: 30, duration: 200 }}
-							out:fly|local={{ x: 20, duration: 200 }}
+							class={css({
+								display: 'flex',
+								flexDirection: 'column',
+								gridAutoRows: 'max-content',
+								gap: 'md',
+								padding: '16px',
+								paddingTop: '0',
+								zIndex: '0',
+								height: '100%',
+								width: 'full'
+							})}
+							in:fly|local={{ x: pageForward ? -30 : 30, duration: 150, easing: quintOut }}
+							out:fly|local={{ x: pageForward ? -20 : 20, duration: 150, easing: quintOut }}
 						>
 							{#if paginatedBranches}
 								{#each paginatedBranches as branch, index (branch.name)}
 									<div
-										class="branch-container"
+										class={css({
+											position: 'relative',
+											display: 'grid',
+											gridTemplateColumns: 'token(spacing.lg) auto',
+											gap: 'md',
+											borderRadius: 'sm'
+										})}
 										class:selected={selected.includes(branch.name)}
 										animate:flip={{ duration: 150 }}
 									>
@@ -327,8 +517,8 @@
 										{#if $getBranchesQuery.data?.current_branch !== branch.name}
 											<div class="checkbox">
 												<Checkbox
-													visuallyHideLabel
-													on:click={() => {
+													id={`checkbox-${branch.name}`}
+													onclick={() => {
 														if (selected.includes(branch.name)) {
 															selected = selected.filter((item) => item !== branch.name);
 														} else {
@@ -337,18 +527,27 @@
 													}}
 													checked={selected.includes(branch.name)}
 												>
-													{branch.name}
+													<div class={visuallyHidden()}>
+														{branch.name}
+													</div>
 												</Checkbox>
 											</div>
 										{/if}
 
 										{#if $getBranchesQuery.data?.current_branch === branch.name}
-											<div class="current-branch-icon">
+											<div
+												class={css({
+													display: 'flex',
+													alignItems: 'center',
+													width: '100%',
+													marginLeft: '2px'
+												})}
+											>
 												<Icon
 													icon="octicon:feed-star-16"
 													width="32px"
 													height="32px"
-													color="var(--color-warning-5)"
+													color={token('colors.primary.800')}
 												/>
 											</div>
 										{/if}
@@ -359,186 +558,95 @@
 							{/if}
 						</div>
 					{/key}
-				</div>
-				<div class="bottom-toolbar">
-					<div class="left">
-						<div class="search-input-container">
-							<input
-								class="search-input"
-								placeholder="Search"
-								bind:value={searchQuery}
-								on:input={() => {
-									currentPage = 0;
-								}}
-								bind:this={searchInputElement}
-							/>
 
-							<Button
-								variant="tertiary"
-								size="sm"
-								on:click={() => {
-									if (deboucedSearchQuery.length > 0) {
-										clearSearch();
-									} else {
-										searchInputElement?.focus();
-									}
-								}}
-							>
-								{#if deboucedSearchQuery.length > 0}
-									<Icon icon="mdi:clear" width="24px" height="24px" />
-								{:else}
-									<Icon icon="ic:round-search" width="24px" height="24px" />
-								{/if}
-							</Button>
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'column',
+							bottom: 0,
+							position: 'sticky'
+						})}
+					>
+						<div class="bottom-toolbar">
+							{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
+								<div
+									class={css({
+										p: 'md',
+										backdropFilter: 'blur(5px) saturate(3)',
+										_light: {
+											background: 'neutral.200/80'
+										},
+										_dark: {
+											background: 'neutral.50/80'
+										}
+									})}
+								>
+									<Pagination
+										itemsTotal={branches?.length}
+										bind:itemsPerPage
+										bind:currentPage
+										onChangePage={handleOnPageChange}
+									/>
+								</div>
+							{/if}
 						</div>
-						<!-- <div class="search-info">
-						{#if deboucedSearchQuery}
-							{#if branches.length === 0}
-								No results found
-							{/if}
-							{#if branches.length > 1}
-								{branches.length} branches were found!
-							{/if}
-							{#if branches.length === 1}
-								A single branch was found!
-							{/if}
-						{/if}
-					</div> -->
 					</div>
-					{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
-						<div class="pagination">
-							<Button
-								variant="tertiary"
-								size="sm"
-								on:click={prevPage}
-								state={currentPage <= 0 ? 'disabled' : 'normal'}
-							>
-								<Icon icon="material-symbols:chevron-left-rounded" width="24px" height="24px" />
-							</Button>
-							<div class="numbers">
-								{#key `${currentPage}-${totalPages}`}
-									<span in:fly|local={{ y: 5 }}>
-										{currentPage + 1} / {totalPages}
-									</span>
-								{/key}
-							</div>
-							<Button
-								variant="tertiary"
-								size="sm"
-								on:click={nextPage}
-								state={currentPage + 1 >= totalPages ? 'disabled' : 'normal'}
-							>
-								<Icon icon="material-symbols:chevron-right-rounded" width="24px" height="24px" />
-							</Button>
-						</div>
-					{/if}
 				</div>
-				<div class="bottom-info-bar">
-					{#if lastUpdatedAt && lastUpdatedAtDate}
-						<time
-							datetime={lastUpdatedAtDate.toISOString()}
-							title={intlFormat(lastUpdatedAtDate, {
-								year: 'numeric',
-								month: 'long',
-								day: 'numeric',
-								hour: 'numeric',
-								minute: 'numeric',
-								second: 'numeric'
+				<!-- BRANCHES END -->
+			{/if}
+		</div>
+		<div
+			class={css({
+				_dark: {
+					background: 'primary.100',
+					borderTop: '1px dashed token(colors.primary.300)'
+				},
+				_light: {
+					background: 'primary.800',
+					borderTop: '1px dashed token(colors.primary.400)'
+				},
+				height: 'calc((token(spacing.sm)) * 2.5)',
+				p: 'token(spacing.xxs)',
+				display: 'flex',
+				justifyContent: 'flex-end',
+				alignItems: 'center'
+			})}
+		>
+			{#if lastUpdatedAt && lastUpdatedAtDate}
+				<time
+					datetime={lastUpdatedAtDate.toISOString()}
+					title={intlFormat(lastUpdatedAtDate, {
+						year: 'numeric',
+						month: 'long',
+						day: 'numeric',
+						hour: 'numeric',
+						minute: 'numeric',
+						second: 'numeric'
+					})}
+				>
+					{#key lastUpdatedAt}
+						<div
+							in:fly|local={{ x: 15 }}
+							class={css({
+								fontSize: 'sm',
+								_dark: {
+									color: 'primary.900'
+								},
+								_light: {
+									color: 'primary.600'
+								}
 							})}
 						>
-							{#key lastUpdatedAt}
-								<div in:fly|local={{ x: 15 }}>
-									Last updated {lastUpdatedAt}
-								</div>
-							{/key}
-						</time>
-					{/if}
-				</div>
-			</div>
-		{/if}
-	</main>
-</Loading>
+							Last updated {lastUpdatedAt}
+						</div>
+					{/key}
+				</time>
+			{/if}
+		</div>
+	</Loading>
+</main>
 
 <style lang="scss">
-	.container {
-		display: flex;
-		flex-direction: column;
-		background: var(--color-background-1);
-		overflow: hidden;
-		position: relative;
-		height: 100%;
-		position: relative;
-	}
-
-	.header {
-		display: flex;
-		justify-content: space-between;
-		top: 0;
-		border-bottom: 1px dashed var(--color-neutral-3);
-		z-index: 20;
-		flex-shrink: 0;
-		min-height: 58px;
-
-		h1 {
-			font-size: 1.3em;
-			margin: 0;
-			text-align: left;
-			text-transform: uppercase;
-			font-weight: bold;
-			padding: 1.6rem;
-		}
-
-		.menu {
-			display: flex;
-			// margin-right: 1.6rem;
-			align-items: center;
-
-			:global(button) {
-				--button-background-color: transparent;
-				border: none;
-				border-radius: 0;
-				height: 100%;
-				align-items: center;
-				justify-content: center;
-				width: 57px;
-				height: 100%;
-			}
-		}
-	}
-
-	.content {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-	}
-
-	.toolbar-container {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		padding: 1.6rem;
-		z-index: 10;
-		min-height: 66px;
-		flex-shrink: 0;
-
-		.left,
-		.checkbox {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-			height: 100%;
-			gap: 1.6rem;
-		}
-	}
-
-	.branches-container {
-		display: flex;
-		flex-direction: column;
-		flex-grow: 1;
-		overflow: hidden;
-		position: relative;
-	}
-
 	.search-no-found,
 	.no-branches,
 	.error {
@@ -564,118 +672,5 @@
 			text-align: center;
 			color: var(--color-neutral-11);
 		}
-	}
-
-	.branches {
-		display: flex;
-		flex-direction: column;
-		grid-auto-rows: max-content;
-		gap: 1.6rem;
-		border: 1px dashed var(--color-gray);
-		padding: 16px;
-		padding-top: 0;
-		flex-grow: 1;
-		overflow-y: scroll;
-		height: calc(100vh - 200px);
-		z-index: 0;
-		position: absolute;
-		width: 100%;
-		height: 100%;
-
-		.branch-container {
-			position: relative;
-			display: grid;
-			grid-template-columns: 24px auto;
-			gap: 1.6rem;
-			border-radius: 4px;
-		}
-
-		.current-branch-icon {
-			display: flex;
-			align-items: center;
-			width: 100%;
-			margin-left: 2px;
-		}
-	}
-
-	.bottom-toolbar {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		z-index: 10;
-		border-top: 1px solid var(--color-neutral-3);
-		flex-shrink: 0;
-
-		.left {
-			display: flex;
-
-			.search-input-container {
-				display: flex;
-				align-items: center;
-				flex-direction: row;
-				border: 1px solid var(--color-neutral-3);
-				border-bottom: none;
-				border-top-width: 0;
-
-				:global(button) {
-					border-radius: 0;
-					height: 100%;
-					align-items: center;
-					justify-content: center;
-				}
-				.search-input {
-					display: block;
-					height: 100%;
-					padding: 1.2rem;
-					margin: 0;
-					border: none;
-					border-radius: 0;
-					appearance: none;
-					z-index: 2;
-					background-color: transparent;
-				}
-			}
-		}
-
-		.pagination {
-			display: flex;
-			height: 100%;
-
-			.numbers {
-				display: flex;
-				align-items: center;
-				padding: 1.2rem;
-				white-space: nowrap;
-				font-size: 1.4rem;
-				min-width: 75px;
-				text-align: center;
-				justify-content: center;
-				color: var(--color-neutral-7);
-			}
-
-			:global(.button) {
-				display: grid;
-				align-items: center;
-				border-radius: 0;
-				border: 1px solid var(--color-neutral-3);
-				border-top-width: 0;
-				height: 100%;
-				border-bottom: none;
-				border-top: none;
-
-				&:last-child {
-					border-right: none;
-				}
-			}
-		}
-	}
-
-	.bottom-info-bar {
-		font-size: 1.2rem;
-		padding: 0.4rem 0.8rem;
-		border-top: dashed 1px var(--color-neutral-1);
-		background: var(--color-neutral-3);
-		text-align: right;
-		color: var(--color-neutral-6);
 	}
 </style>
