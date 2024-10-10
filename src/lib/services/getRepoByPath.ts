@@ -11,7 +11,10 @@ import type { ServiceError } from './models';
 
 export function getRepoByPath(
 	path: string,
-	options?: StoreOrVal<UndefinedInitialDataOptions<IRepo, ServiceError, IRepo, QueryKey>>
+	options?: Omit<
+		StoreOrVal<UndefinedInitialDataOptions<IRepo, ServiceError, IRepo, QueryKey>>,
+		'queryKey' | 'queryFn'
+	>
 ) {
 	return createQuery({
 		queryKey: ['branches', 'get-all', path] as QueryKey,
