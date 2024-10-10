@@ -7,7 +7,7 @@
 	import Icon from '@iconify/svelte';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { navigating, page } from '$app/stores';
-	import { fly } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
@@ -155,11 +155,9 @@
 			) ?? []
 	);
 
-	let start = $derived(Math.max(0, itemsPerPage * currentPage));
+	let start = $derived(Math.max(0, itemsPerPage * (currentPage - 1)));
 	let end = $derived(start + itemsPerPage);
 	let paginatedBranches = $derived(branches.slice(start, end));
-
-	let totalPages = $derived(Math.ceil((branches?.length ?? 0) / 10));
 
 	$effect(() => {
 		if ($navigating) {
@@ -215,6 +213,7 @@
 		height: '100%'
 	})}
 >
+	{JSON.stringify({ start, end })}
 	<Loading
 		isLoading={$getBranchesQuery.isLoading}
 		fillParent
@@ -486,11 +485,9 @@
 								height: '100%',
 								width: 'full'
 							})}
-							in:fly|local={{ x: pageForward ? -30 : 30, duration: 150, easing: quintOut }}
-							out:fly|local={{ x: pageForward ? -20 : 20, duration: 150, easing: quintOut }}
 						>
 							{#if paginatedBranches}
-								{#each paginatedBranches as branch, index (branch.name)}
+								{#each paginatedBranches as branch (`${branch.name}-${currentPage}`)}
 									<div
 										class={css({
 											position: 'relative',
@@ -500,7 +497,6 @@
 											borderRadius: 'sm'
 										})}
 										class:selected={selected.includes(branch.name)}
-										animate:flip={{ duration: 150 }}
 									>
 										<!-- Nice animation that has bad performance -->
 										<!-- in:fly={{
