@@ -24,6 +24,7 @@
 	import Pagination from '@pindoba/svelte-pagination';
 	import { spring } from 'svelte/motion';
 	import { quintOut } from 'svelte/easing';
+	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 
 	// const branchesSpring = spring({ x: 0, opacity: 1 });
 	// branchesSpring.stiffness = 0.3;
@@ -273,23 +274,7 @@
 						<span class={visuallyHidden()}>Update</span>
 					</Button>
 
-					<Button
-						emphasis="ghost"
-						size="sm"
-						feedback="danger"
-						onclick={() => {
-							goto(`/repos/${currentRepo?.id}/remove`);
-						}}
-						shape="square"
-					>
-						<Icon
-							icon="solar:close-circle-linear"
-							width="24px"
-							height="24px"
-							color="var(--primary-color)"
-						/>
-						<span class={visuallyHidden()}>Remove</span>
-					</Button>
+					<RemoveRepositoryModal {currentRepo} />
 				</Group>
 			</Loading>
 		</div>
