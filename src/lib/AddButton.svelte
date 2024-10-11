@@ -39,7 +39,7 @@
 	}
 </script>
 
-<Button on:click={handleAddClick} size="lg" emphasis="secondary">
+<Button onclick={handleAddClick} size="lg" emphasis="secondary">
 	<div
 		class={css({
 			display: 'flex',
