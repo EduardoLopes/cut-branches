@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Button from '$lib/primitives/Button/index.svelte';
-	import type { OpenDialogOptions } from '@tauri-apps/api/dialog';
+	import Button from '@pindoba/svelte-button';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
 	import { toast } from './primitives/Toast.svelte';
 	import { useCreateRepositoryID } from './services/useCreateRepositoryID';
 	import { open } from '@tauri-apps/api/dialog';
+	import { css } from '@pindoba/panda/css';
 
 	let createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data, variables, context) {
@@ -39,12 +39,20 @@
 	}
 </script>
 
-<Button on:click={handleAddClick}>
-	Add a git repository
-	<Icon
-		icon="material-symbols:add-circle-outline-rounded"
-		width="20px"
-		height="20px"
-		color="#fff"
-	/>
+<Button on:click={handleAddClick} size="lg" emphasis="secondary">
+	<div
+		class={css({
+			display: 'flex',
+			alignItems: 'center',
+			gap: 'sm'
+		})}
+	>
+		Add a git repository
+		<Icon
+			icon="material-symbols:add-circle-outline-rounded"
+			width="20px"
+			height="20px"
+			color="#fff"
+		/>
+	</div>
 </Button>
