@@ -1,38 +1,46 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import AddButton from '$lib/AddButton.svelte';
+	import { css } from '@pindoba/panda/css';
+	import { token } from '@pindoba/panda/tokens';
 </script>
 
-<div class="content">
-	<div class="logo-container">
-		<Icon icon="game-icons:tree-branch" width="48px" height="48px" color="var(--color-primary-7)" />
+<div
+	class={css({
+		display: 'flex',
+		alignItems: 'center',
+		justifyContent: 'center',
+		flexDirection: 'column',
+		height: '100vh',
+		background: 'primary.50'
+	})}
+>
+	<div
+		class={css({
+			display: 'flex',
+			flexDirection: 'column',
+			gap: 'md',
+			alignItems: 'center',
+			padding: 'md'
+		})}
+	>
+		<Icon
+			icon="game-icons:tree-branch"
+			width="48px"
+			height="48px"
+			color={token('colors.primary.800')}
+		/>
 
-		<h1 class="logo">Cut Branches</h1>
+		<h1
+			class={css({
+				color: token('colors.primary.950'),
+				fontSize: 'xl',
+				margin: '0',
+				fontWeight: 'bold'
+			})}
+		>
+			Cut Branches
+		</h1>
 	</div>
 	<AddButton />
 </div>
-
-<style lang="scss">
-	.content {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		height: 100vh;
-
-		.logo-container {
-			display: flex;
-			gap: 0.8rem;
-			align-items: center;
-			padding: 4.8rem;
-
-			.logo {
-				color: var(--color-primary-7);
-				font-size: 2.4rem;
-				margin: 0;
-				font-weight: bold;
-			}
-		}
-	}
-</style>
