@@ -63,8 +63,8 @@ importers:
         specifier: link:../pindoba/packages/blocks/svelte/theme-mode-select
         version: link:../pindoba/packages/blocks/svelte/theme-mode-select
       '@tanstack/svelte-query':
-        specifier: ^5.59.0
-        version: 5.59.0(svelte@5.0.0-next.262)
+        specifier: https://pkg.pr.new/@tanstack/svelte-query@ccce0b8
+        version: https://pkg.pr.new/@tanstack/svelte-query@ccce0b8(svelte@5.0.0-next.262)
       '@tauri-apps/api':
         specifier: ^1.6.0
         version: 1.6.0
@@ -708,13 +708,15 @@ packages:
       svelte: ^4.0.0 || ^5.0.0-next.0
       vite: ^5.0.0
 
-  '@tanstack/query-core@5.59.0':
-    resolution: {integrity: sha512-WGD8uIhX6/deH/tkZqPNcRyAhDUqs729bWKoByYHSogcshXfFbppOdTER5+qY7mFvu8KEFJwT0nxr8RfPTVh0Q==}
+  '@tanstack/query-core@https://pkg.pr.new/TanStack/query/@tanstack/query-core@ccce0b8':
+    resolution: {tarball: https://pkg.pr.new/TanStack/query/@tanstack/query-core@ccce0b8}
+    version: 5.56.2
 
-  '@tanstack/svelte-query@5.59.0':
-    resolution: {integrity: sha512-KjRQg6me2LSNvENUJalvLjTfFG2kmWRd7K+hFyPd2CysfqFAoyKvXnzLaUfJgtDSS4cobLlqMECZQ7kD37VGhw==}
+  '@tanstack/svelte-query@https://pkg.pr.new/@tanstack/svelte-query@ccce0b8':
+    resolution: {tarball: https://pkg.pr.new/@tanstack/svelte-query@ccce0b8}
+    version: 5.56.2
     peerDependencies:
-      svelte: ^3.54.0 || ^4.0.0 || ^5.0.0-next.0
+      svelte: ^5.0.0-next.259
 
   '@tauri-apps/api@1.6.0':
     resolution: {integrity: sha512-rqI++FWClU5I2UBp4HXFvl+sBWkdigBkxnpJDQUWttNyG7IZP4FwQGhTNL5EOw0vI8i6eSAJ5frLqO7n7jbJdg==}
@@ -3095,11 +3097,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@tanstack/query-core@5.59.0': {}
+  '@tanstack/query-core@https://pkg.pr.new/TanStack/query/@tanstack/query-core@ccce0b8': {}
 
-  '@tanstack/svelte-query@5.59.0(svelte@5.0.0-next.262)':
+  '@tanstack/svelte-query@https://pkg.pr.new/@tanstack/svelte-query@ccce0b8(svelte@5.0.0-next.262)':
     dependencies:
-      '@tanstack/query-core': 5.59.0
+      '@tanstack/query-core': https://pkg.pr.new/TanStack/query/@tanstack/query-core@ccce0b8
       svelte: 5.0.0-next.262
 
   '@tauri-apps/api@1.6.0': {}

@@ -27,7 +27,7 @@
 			open({ directory: true })
 				.then(async (dir) => {
 					if (dir && typeof dir === 'string') {
-						$createRepositoryIDMutation.mutate({
+						createRepositoryIDMutation.mutate({
 							path: dir
 						});
 					}

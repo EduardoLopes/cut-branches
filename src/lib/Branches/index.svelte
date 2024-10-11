@@ -42,14 +42,13 @@
 	const oneMinute = 60000;
 
 	const currentRepo = $derived($repos.filter((item) => item.id === id)[0]);
-	const getBranchesQuery = $derived(
-		getRepoByPath(currentRepo?.path ?? history.state.path, {
-			staleTime: oneMinute,
-			meta: {
-				showErrorToast: false
-			}
-		})
-	);
+	let currentPath = $derived(currentRepo?.path);
+	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
+		staleTime: oneMinute,
+		meta: {
+			showErrorToast: false
+		}
+	});
 
 	$effect(() => {
 		if ($navigating) {
@@ -72,10 +71,10 @@
 
 	function update_repo() {
 		if (currentRepo) {
-			$getBranchesQuery.refetch().then(() => {
-				if ($getBranchesQuery.isSuccess) {
+			getBranchesQuery.refetch().then(() => {
+				if (getBranchesQuery.isSuccess) {
 					toast.success({
-						message: `The repository <strong>${$getBranchesQuery.data?.name}</strong> was updated`
+						message: `The repository <strong>${getBranchesQuery.data?.name}</strong> was updated`
 					});
 				}
 			});
@@ -83,10 +82,10 @@
 	}
 
 	function handleDelete() {
-		if ($getBranchesQuery.data) {
+		if (getBranchesQuery.data) {
 			goto(`/repos/${id}/delete`, {
 				state: {
-					branches: $getBranchesQuery.data.branches.filter((item) => selected.includes(item.name))
+					branches: getBranchesQuery.data.branches.filter((item) => selected.includes(item.name))
 				}
 			});
 		}
@@ -148,7 +147,7 @@
 	// });
 
 	let branches = $derived(
-		$getBranchesQuery.data?.branches
+		getBranchesQuery.data?.branches
 			.sort(sort)
 			.filter((item) =>
 				item.name.toLowerCase().trim().includes(deboucedSearchQuery.toLowerCase().trim())
@@ -169,14 +168,14 @@
 	let selectibleCount = $derived(
 		Math.max(
 			0,
-			branches.filter((item) => item.name !== $getBranchesQuery.data?.current_branch)?.length ?? 0
+			branches.filter((item) => item.name !== getBranchesQuery.data?.current_branch)?.length ?? 0
 		)
 	);
 
 	let searchNoResultsFound = $derived(deboucedSearchQuery.length > 0 && branches.length === 0);
 
 	let lastUpdatedAtDate = $derived(
-		$getBranchesQuery.dataUpdatedAt ? new Date($getBranchesQuery.dataUpdatedAt) : undefined
+		getBranchesQuery.dataUpdatedAt ? new Date(getBranchesQuery.dataUpdatedAt) : undefined
 	);
 
 	let lastUpdatedAt = $state<string | undefined>();
@@ -196,6 +195,12 @@
 			clearInterval(interval);
 		};
 	});
+
+	const hasNoBranchesToDelete = $derived(
+		selectibleCount === 0 &&
+			getBranchesQuery.data?.branches.length !== 0 &&
+			deboucedSearchQuery.length === 0
+	);
 </script>
 
 <main
@@ -213,9 +218,8 @@
 		height: '100%'
 	})}
 >
-	{JSON.stringify({ start, end })}
 	<Loading
-		isLoading={$getBranchesQuery.isLoading}
+		isLoading={getBranchesQuery.isLoading}
 		fillParent
 		passThrough={{
 			root: {
@@ -245,7 +249,7 @@
 				height: 'calc((token(spacing.xl)) * 2.5)'
 			})}
 		>
-			{#key $getBranchesQuery.data?.name}
+			{#key getBranchesQuery.data?.name}
 				<h2
 					class={css({
 						fontSize: 'xl',
@@ -256,13 +260,13 @@
 					})}
 					in:fly|local={{ x: -20 }}
 				>
-					{#if $getBranchesQuery.data?.name}
-						{$getBranchesQuery.data?.name}
+					{#if getBranchesQuery.data?.name}
+						{getBranchesQuery.data?.name}
 					{/if}
 				</h2>
 			{/key}
 
-			<Loading isLoading={$getBranchesQuery.isFetching}>
+			<Loading isLoading={getBranchesQuery.isFetching}>
 				<Group direction="horizontal">
 					<Button emphasis="ghost" size="sm" onclick={update_repo} shape="square">
 						<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
@@ -303,7 +307,7 @@
 			})}
 		>
 			<!-- ERRO MESSAGE -->
-			{#if $getBranchesQuery.isError}
+			{#if getBranchesQuery.isError}
 				<div class="error" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
 					<div>
 						<Icon
@@ -312,125 +316,129 @@
 							height="64px"
 							color="var(--color-danger-10)"
 						/>
-						<div class="message">{@html $getBranchesQuery.error.message}</div>
-						<div class="description">{@html $getBranchesQuery.error.description}</div>
+						<div class="message">{@html getBranchesQuery.error.message}</div>
+						<div class="description">{@html getBranchesQuery.error.description}</div>
 					</div>
 				</div>
 			{/if}
 			<!-- ERRO MESSAGE END -->
-
-			<!-- BULK ACTIONS -->
-			<div
-				class={css({
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					padding: 'md',
-					zIndex: '10',
-					flexShrink: '0',
-					position: 'sticky',
-					top: '0',
-					backdropFilter: 'blur(5px) saturate(3)',
-					_light: {
-						background: 'neutral.200/80'
-					},
-					_dark: {
-						background: 'neutral.50/80'
-					}
-				})}
-			>
+			{#if !hasNoBranchesToDelete}
+				<!-- BULK ACTIONS -->
 				<div
 					class={css({
 						display: 'flex',
-						flexDirection: 'row',
+						justifyContent: 'space-between',
 						alignItems: 'center',
-						height: '100%',
-						gap: 'md'
+						padding: 'md',
+						zIndex: '10',
+						flexShrink: '0',
+						position: 'sticky',
+						top: '0',
+						backdropFilter: 'blur(5px) saturate(3)',
+						_light: {
+							background: 'neutral.200/80'
+						},
+						_dark: {
+							background: 'neutral.50/80'
+						}
 					})}
 				>
-					{#if selectibleCount > 0}
-						{@const selectedLength = branches.filter((item) => selected.includes(item.name)).length}
-						{#key selectibleCount}
-							<div
-								in:fly={{ x: -10 }}
-								class={css({
-									display: 'flex',
-									flexDirection: 'row',
-									alignItems: 'center',
-									height: '100%',
-									gap: 'md'
-								})}
-							>
-								<Checkbox
-									id="select-all"
-									indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
-									onclick={() => {
-										const indeterminate = selectedLength !== selectibleCount && selectedLength > 0;
-
-										if (indeterminate || selectedLength === 0) {
-											selected =
-												branches
-													.map((item) => item.name)
-													.filter((item) => item !== $getBranchesQuery.data?.current_branch) ?? [];
-										} else {
-											const allSelectedBranch = branches.map((item) => item.name);
-
-											selected = selected.filter((item) => !allSelectedBranch.includes(item));
-										}
-									}}
-									checked={selectedLength === selectibleCount}
-								>
-									<div class={visuallyHidden()}>Select all</div>
-								</Checkbox>
-								{#if deboucedSearchQuery.length > 0}
-									{selectedLength} / {selectibleCount}
-									{selectibleCount === 1 ? 'branch was' : 'branches were'} found
-								{/if}
-
-								{#if deboucedSearchQuery.length === 0}
-									{selectedLength} / {selectibleCount} branches
-								{/if}
-							</div>
-						{/key}
-					{/if}
-				</div>
-
-				<div class="actions">
-					{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
-						<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
-							<Button
-								feedback="danger"
-								size="sm"
-								disabled={selected.length === 0}
-								onclick={handleDelete}
-							>
-								<Icon icon="ion:trash-outline" width="16px" height="16px" />
-								Delete
-							</Button>
-						</div>
-					{/if}
-
-					{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
-						<div in:fly={{ x: 10 }}>
-							<Button emphasis="ghost" size="sm" onclick={clearSearch}>
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'row',
+							alignItems: 'center',
+							height: '100%',
+							gap: 'md'
+						})}
+					>
+						{#if selectibleCount > 0}
+							{@const selectedLength = branches.filter((item) =>
+								selected.includes(item.name)
+							).length}
+							{#key selectibleCount}
 								<div
+									in:fly={{ x: -10 }}
 									class={css({
 										display: 'flex',
+										flexDirection: 'row',
 										alignItems: 'center',
-										gap: 'xs'
+										height: '100%',
+										gap: 'md'
 									})}
 								>
-									<Icon icon="mdi:clear" width="16px" height="16px" />
-									Clear search
-								</div>
-							</Button>
-						</div>
-					{/if}
-				</div>
-			</div>
-			<!-- BULK ACTIONS END -->
+									<Checkbox
+										id="select-all"
+										indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
+										onclick={() => {
+											const indeterminate =
+												selectedLength !== selectibleCount && selectedLength > 0;
 
-			{#if $getBranchesQuery.isSuccess}
+											if (indeterminate || selectedLength === 0) {
+												selected =
+													branches
+														.map((item) => item.name)
+														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? [];
+											} else {
+												const allSelectedBranch = branches.map((item) => item.name);
+
+												selected = selected.filter((item) => !allSelectedBranch.includes(item));
+											}
+										}}
+										checked={selectedLength === selectibleCount}
+									>
+										<div class={visuallyHidden()}>Select all</div>
+									</Checkbox>
+									{#if deboucedSearchQuery.length > 0}
+										{selectedLength} / {selectibleCount}
+										{selectibleCount === 1 ? 'branch was' : 'branches were'} found
+									{/if}
+
+									{#if deboucedSearchQuery.length === 0}
+										{selectedLength} / {selectibleCount} branches
+									{/if}
+								</div>
+							{/key}
+						{/if}
+					</div>
+
+					<div class="actions">
+						{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
+							<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
+								<Button
+									feedback="danger"
+									size="sm"
+									disabled={selected.length === 0}
+									onclick={handleDelete}
+								>
+									<Icon icon="ion:trash-outline" width="16px" height="16px" />
+									Delete
+								</Button>
+							</div>
+						{/if}
+
+						{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
+							<div in:fly={{ x: 10 }}>
+								<Button emphasis="ghost" size="sm" onclick={clearSearch}>
+									<div
+										class={css({
+											display: 'flex',
+											alignItems: 'center',
+											gap: 'xs'
+										})}
+									>
+										<Icon icon="mdi:clear" width="16px" height="16px" />
+										Clear search
+									</div>
+								</Button>
+							</div>
+						{/if}
+					</div>
+				</div>
+				<!-- BULK ACTIONS END -->
+			{/if}
+
+			{#if getBranchesQuery.isSuccess}
 				<!-- BRANCHES -->
 				<div
 					class={css({
@@ -440,8 +448,18 @@
 					})}
 					in:fly|local={{ x: -30, duration: 150 }}
 				>
-					{#if selectibleCount === 0 && $getBranchesQuery.data?.branches.length !== 0 && deboucedSearchQuery.length === 0}
-						<div in:fly={{ x: -10 }}>This repository has no branches to delete.</div>
+					{#if hasNoBranchesToDelete}
+						<div
+							class={css({
+								display: 'flex',
+								alignItems: 'center',
+								padding: 'md',
+								fontSize: 'lg'
+							})}
+							in:fly={{ x: -10 }}
+						>
+							This repository has no branches to delete.
+						</div>
 					{/if}
 
 					{#if searchNoResultsFound}
@@ -458,7 +476,7 @@
 						</div>
 					{/if}
 
-					{#if $getBranchesQuery.data.branches.length === 0}
+					{#if getBranchesQuery.data.branches.length === 0}
 						<div class="no-branches" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
 							<div>
 								<Icon
@@ -510,7 +528,7 @@
 											delay: 20 * (index + 1 / paginatedBranches.length)
 										}} -->
 
-										{#if $getBranchesQuery.data?.current_branch !== branch.name}
+										{#if getBranchesQuery.data?.current_branch !== branch.name}
 											<div class="checkbox">
 												<Checkbox
 													id={`checkbox-${branch.name}`}
@@ -530,7 +548,7 @@
 											</div>
 										{/if}
 
-										{#if $getBranchesQuery.data?.current_branch === branch.name}
+										{#if getBranchesQuery.data?.current_branch === branch.name}
 											<div
 												class={css({
 													display: 'flex',
@@ -564,7 +582,7 @@
 						})}
 					>
 						<div class="bottom-toolbar">
-							{#if $getBranchesQuery.data?.branches && !searchNoResultsFound}
+							{#if getBranchesQuery.data?.branches && !searchNoResultsFound}
 								<div
 									class={css({
 										p: 'md',
