@@ -16,7 +16,7 @@ type CreateRepositoryIDMutationOptions = CreateMutationOptions<
 >;
 
 export function useCreateRepositoryID(options?: CreateRepositoryIDMutationOptions) {
-	return createMutation({
+	return createMutation(() => ({
 		mutationKey: ['repository', 'create-ID'],
 		mutationFn: async ({ path }) => {
 			if (!path) return Promise.reject('No path provided');
@@ -50,5 +50,5 @@ export function useCreateRepositoryID(options?: CreateRepositoryIDMutationOption
 			});
 		},
 		...options
-	});
+	}));
 }

@@ -47,7 +47,7 @@
 			open({ directory: true })
 				.then(async (dir) => {
 					if (dir && typeof dir === 'string') {
-						$createRepositoryIDMutation.mutate({
+						createRepositoryIDMutation.mutate({
 							path: dir
 						});
 					}
@@ -152,7 +152,7 @@
 			>
 				Repositories
 			</h2>
-			<Loading isLoading={$createRepositoryIDMutation.isPending}>
+			<Loading isLoading={createRepositoryIDMutation.isPending}>
 				<Button
 					size="sm"
 					onclick={handleAddClick}
