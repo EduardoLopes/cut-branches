@@ -6,6 +6,9 @@
 	import { useCreateRepositoryID } from './services/useCreateRepositoryID';
 	import { open } from '@tauri-apps/api/dialog';
 	import { css } from '@pindoba/panda/css';
+	import { createNotifications } from './hooks/notifications';
+
+	const notifications = createNotifications();
 
 	let createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data, variables, context) {
@@ -33,7 +36,7 @@
 					}
 				})
 				.catch((error) => {
-					toast.danger({ message: error });
+					notifications.push({ title: 'Error', message: error, feedback: 'danger' });
 				});
 		}
 	}

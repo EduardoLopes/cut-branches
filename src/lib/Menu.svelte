@@ -230,7 +230,7 @@
 			buttonProps={{
 				size: 'xs',
 				passThrough: {
-					root: {
+					root: css.raw({
 						padding: 0,
 						_dark: {
 							color: 'primary.900'
@@ -238,7 +238,7 @@
 						_light: {
 							color: 'primary.600'
 						}
-					}
+					})
 				}
 			}}
 		/>
