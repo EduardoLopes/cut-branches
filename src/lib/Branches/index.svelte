@@ -25,6 +25,8 @@
 	import { spring } from 'svelte/motion';
 	import { quintOut } from 'svelte/easing';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
+	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
+	import { createNotifications } from '$lib/hooks/notifications';
 
 	// const branchesSpring = spring({ x: 0, opacity: 1 });
 	// branchesSpring.stiffness = 0.3;
@@ -32,6 +34,7 @@
 	// branchesSpring.precision = 0.005;
 
 	let selected = $state<string[]>([]);
+	const notifications = createNotifications();
 
 	interface Props {
 		id: string | null;
@@ -74,8 +77,10 @@
 		if (currentRepo) {
 			getBranchesQuery.refetch().then(() => {
 				if (getBranchesQuery.isSuccess) {
-					toast.success({
-						message: `The repository <strong>${getBranchesQuery.data?.name}</strong> was updated`
+					notifications.push({
+						title: 'Repository updated',
+						message: `The repository <strong>${getBranchesQuery.data?.name}</strong> was updated`,
+						feedback: 'success'
 					});
 				}
 			});
@@ -219,67 +224,70 @@
 		height: '100%'
 	})}
 >
+	<!-- TOP BAR -->
+	<div
+		class={css({
+			display: 'flex',
+			position: 'sticky',
+			justifyContent: 'space-between',
+			top: '0',
+			_dark: {
+				background: 'neutral.100',
+				borderBottom: '1px dashed token(colors.neutral.300)'
+			},
+			_light: {
+				background: 'neutral.50',
+				borderBottom: '1px dashed token(colors.neutral.400)'
+			},
+			alignItems: 'center',
+			zIndex: '20',
+			flexShrink: '0',
+			px: 'md',
+			height: 'calc((token(spacing.xl)) * 2.5)'
+		})}
+	>
+		{#key getBranchesQuery.data?.name}
+			<h2
+				class={css({
+					fontSize: 'xl',
+					textAlign: 'left',
+					textTransform: 'uppercase',
+					fontWeight: 'bold',
+					color: 'neutral.950'
+				})}
+				in:fly|local={{ x: -20 }}
+			>
+				{#if getBranchesQuery.data?.name}
+					{getBranchesQuery.data?.name}
+				{/if}
+			</h2>
+		{/key}
+
+		<Loading isLoading={getBranchesQuery.isFetching}>
+			<Group direction="horizontal">
+				<Button emphasis="ghost" size="sm" onclick={update_repo} shape="square">
+					<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
+					<span class={visuallyHidden()}>Update</span>
+				</Button>
+
+				<RemoveRepositoryModal {currentRepo} />
+			</Group>
+		</Loading>
+	</div>
+	<!-- TOP BAR END -->
 	<Loading
 		isLoading={getBranchesQuery.isLoading}
 		fillParent
 		passThrough={{
 			root: {
 				borderRadius: '0'
+			},
+			overlay: {
+				borderRadius: '0',
+				border: 'none'
 			}
 		}}
 	>
-		<!-- TOP BAR -->
-		<div
-			class={css({
-				display: 'flex',
-				position: 'sticky',
-				justifyContent: 'space-between',
-				top: '0',
-				_dark: {
-					background: 'neutral.100',
-					borderBottom: '1px dashed token(colors.neutral.300)'
-				},
-				_light: {
-					background: 'neutral.50',
-					borderBottom: '1px dashed token(colors.neutral.400)'
-				},
-				alignItems: 'center',
-				zIndex: '20',
-				flexShrink: '0',
-				px: 'md',
-				height: 'calc((token(spacing.xl)) * 2.5)'
-			})}
-		>
-			{#key getBranchesQuery.data?.name}
-				<h2
-					class={css({
-						fontSize: 'xl',
-						textAlign: 'left',
-						textTransform: 'uppercase',
-						fontWeight: 'bold',
-						color: 'neutral.950'
-					})}
-					in:fly|local={{ x: -20 }}
-				>
-					{#if getBranchesQuery.data?.name}
-						{getBranchesQuery.data?.name}
-					{/if}
-				</h2>
-			{/key}
-
-			<Loading isLoading={getBranchesQuery.isFetching}>
-				<Group direction="horizontal">
-					<Button emphasis="ghost" size="sm" onclick={update_repo} shape="square">
-						<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
-						<span class={visuallyHidden()}>Update</span>
-					</Button>
-
-					<RemoveRepositoryModal {currentRepo} />
-				</Group>
-			</Loading>
-		</div>
-		<!-- TOP BAR END -->
-
 		<!-- GERAL -->
 		<div
 			class={css({
@@ -594,55 +602,57 @@
 				<!-- BRANCHES END -->
 			{/if}
 		</div>
-		<div
-			class={css({
-				_dark: {
-					background: 'primary.100',
-					borderTop: '1px dashed token(colors.primary.300)'
-				},
-				_light: {
-					background: 'primary.800',
-					borderTop: '1px dashed token(colors.primary.400)'
-				},
-				height: 'calc((token(spacing.sm)) * 2.5)',
-				p: 'token(spacing.xxs)',
-				display: 'flex',
-				justifyContent: 'flex-end',
-				alignItems: 'center'
-			})}
-		>
-			{#if lastUpdatedAt && lastUpdatedAtDate}
-				<time
-					datetime={lastUpdatedAtDate.toISOString()}
-					title={intlFormat(lastUpdatedAtDate, {
-						year: 'numeric',
-						month: 'long',
-						day: 'numeric',
-						hour: 'numeric',
-						minute: 'numeric',
-						second: 'numeric'
-					})}
-				>
-					{#key lastUpdatedAt}
-						<div
-							in:fly|local={{ x: 15 }}
-							class={css({
-								fontSize: 'sm',
-								_dark: {
-									color: 'primary.900'
-								},
-								_light: {
-									color: 'primary.600'
-								}
-							})}
-						>
-							Last updated {lastUpdatedAt}
-						</div>
-					{/key}
-				</time>
-			{/if}
-		</div>
 	</Loading>
+	<div
+		class={css({
+			_dark: {
+				background: 'primary.100',
+				borderTop: '1px dashed token(colors.primary.300)'
+			},
+			_light: {
+				background: 'primary.800',
+				borderTop: '1px dashed token(colors.primary.400)'
+			},
+			height: 'calc((token(spacing.sm)) * 2.5)',
+			p: 'token(spacing.xxs)',
+			display: 'flex',
+			justifyContent: 'flex-end',
+			alignItems: 'center',
+			gap: 'md'
+		})}
+	>
+		{#if lastUpdatedAt && lastUpdatedAtDate}
+			<time
+				datetime={lastUpdatedAtDate.toISOString()}
+				title={intlFormat(lastUpdatedAtDate, {
+					year: 'numeric',
+					month: 'long',
+					day: 'numeric',
+					hour: 'numeric',
+					minute: 'numeric',
+					second: 'numeric'
+				})}
+			>
+				{#key lastUpdatedAt}
+					<div
+						in:fly|local={{ x: 15 }}
+						class={css({
+							fontSize: 'sm',
+							_dark: {
+								color: 'primary.900'
+							},
+							_light: {
+								color: 'primary.600'
+							}
+						})}
+					>
+						Last updated {lastUpdatedAt}
+					</div>
+				{/key}
+			</time>
+		{/if}
+		<NotificationsPopover />
+	</div>
 </main>
 
 <style lang="scss">

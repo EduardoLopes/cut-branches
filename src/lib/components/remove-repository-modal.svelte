@@ -64,6 +64,6 @@
 	}}
 	shape="square"
 >
-	<Icon icon="solar:close-circle-linear" width="24px" height="24px" color="var(--primary-color)" />
+	<Icon icon="solar:close-circle-linear" width="24px" height="24px" />
 	<span class={visuallyHidden()}>Remove</span>
 </Button>
