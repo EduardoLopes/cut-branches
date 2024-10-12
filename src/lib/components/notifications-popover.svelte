@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Popover from '@pindoba/svelte-popover';
+	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import Button from '@pindoba/svelte-button';
 	import { css } from '@pindoba/panda/css';
 	import Icon from '@iconify/svelte';
@@ -58,7 +58,7 @@
 		width: '400px'
 	})}
 >
-	{#snippet trigger(props)}
+	{#snippet trigger(props: TriggerSnippetProps)}
 		<Button size="xs" shape="square" emphasis="ghost" {...props}>
 			<Icon
 				icon="mingcute:notification-fill"
