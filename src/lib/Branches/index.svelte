@@ -7,14 +7,11 @@
 	import Icon from '@iconify/svelte';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { navigating, page } from '$app/stores';
-	import { fade, fly } from 'svelte/transition';
-	import { flip } from 'svelte/animate';
+	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import { format, intlFormat, intlFormatDistance } from 'date-fns';
+	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import debounce from 'just-debounce-it';
-	import { onMount } from 'svelte';
-	import { toast } from '$lib/primitives/Toast.svelte';
 	import Group from '@pindoba/svelte-group';
 	import { version } from '$app/environment';
 	import Loading from '@pindoba/svelte-loading';
@@ -26,7 +23,7 @@
 	import { quintOut } from 'svelte/easing';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
-	import { createNotifications } from '$lib/hooks/notifications';
+	import { createNotifications } from '$lib/stores/notifications';
 
 	// const branchesSpring = spring({ x: 0, opacity: 1 });
 	// branchesSpring.stiffness = 0.3;
@@ -50,7 +47,7 @@
 	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
 		staleTime: oneMinute,
 		meta: {
-			showErrorToast: false
+			showErrorNotification: false
 		}
 	});
 

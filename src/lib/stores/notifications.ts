@@ -1,10 +1,10 @@
 import { get, writable } from 'svelte/store';
 
 export interface Notification {
+	message?: string;
 	id?: string;
-	title: string;
-	message: string;
-	feedback: 'success' | 'danger' | 'warning' | 'default';
+	title?: string;
+	feedback?: 'success' | 'danger' | 'warning' | 'default';
 	date?: number;
 }
 
@@ -30,3 +30,33 @@ window.addEventListener('storage', () => {
 		notifications.set(localValue);
 	}
 });
+
+export function createNotificationObject(notification: Notification): Notification {
+	return {
+		id: crypto.randomUUID(),
+		feedback: 'default',
+		date: Date.now(),
+		...notification
+	};
+}
+
+export function createNotifications() {
+	const push = (notification: Notification) => {
+		notifications.update((value) => {
+			const n = createNotificationObject(notification);
+			const newValue = [n, ...value];
+
+			return newValue;
+		});
+	};
+
+	const remove = (id: string) => {
+		notifications.update((value) => {
+			const newValue = value.filter((notification) => notification.id !== id);
+
+			return newValue;
+		});
+	};
+
+	return { push, remove };
+}

@@ -8,18 +8,21 @@
 	import Branch from '$lib/Branch/index.svelte';
 	import Icon from '@iconify/svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
-	import { toast } from '$lib/primitives/Toast.svelte';
 	import { useQueryClient } from '@tanstack/svelte-query';
+	import { createNotifications } from '$lib/stores/notifications';
 	const client = useQueryClient();
+
+	const notifications = createNotifications();
 
 	let id = $page.params.id;
 
 	let currentRepo: RepoID | undefined;
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
-			toast.success({
-				message: `${data.length > 1 ? 'Branches' : 'Branch'} deleted`,
-				description: data
+			notifications.push({
+				feedback: 'success',
+				title: `${data.length > 1 ? 'Branches' : 'Branch'} deleted`,
+				message: data
 					.map((item) => {
 						const s = item.replace('Deleted branch', '').split(' (was');
 						return `<strong>${s[0].trim()}</strong> (was ${s[1].trim()}`;
@@ -28,9 +31,6 @@
 			});
 
 			client.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
-		},
-		onError(error) {
-			toast.danger({ message: error.message, description: error.description });
 		}
 	});
 
@@ -42,7 +42,7 @@
 
 	function handleYes() {
 		if (selected && currentRepo) {
-			$deleteMutation.mutate({
+			deleteMutation.mutate({
 				path: currentRepo?.path,
 				branches: selected
 			});

@@ -6,7 +6,7 @@
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { notifications } from '$lib/stores/notifications';
 	import Alert from '@pindoba/svelte-alert';
-	import { createNotifications } from '$lib/hooks/notifications';
+	import { createNotifications } from '$lib/stores/notifications';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { fly, slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';

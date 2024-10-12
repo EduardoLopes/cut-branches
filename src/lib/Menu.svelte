@@ -8,14 +8,15 @@
 	import Icon from '@iconify/svelte';
 	import { useCreateRepositoryID } from '$lib/services/useCreateRepositoryID';
 	import { goto } from '$app/navigation';
-	import { toast } from '$lib/primitives/Toast.svelte';
 	import { version } from '$app/environment';
 	import { page } from '$app/stores';
 	import { css } from '@pindoba/panda/css';
 	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
-	import { token } from '@pindoba/panda/tokens';
+	import { createNotifications } from './stores/notifications';
 
 	const sortBy = 'BRANCH_COUNT';
+
+	const notifications = createNotifications();
 
 	function handleSort(a: RepoID, b: RepoID) {
 		if (sortBy === 'BRANCH_COUNT') {
@@ -36,7 +37,7 @@
 			});
 		},
 		meta: {
-			showErrorToast: true
+			showErrorNotification: true
 		}
 	});
 
@@ -53,7 +54,7 @@
 					}
 				})
 				.catch((error) => {
-					toast.danger({ message: error });
+					notifications.push({ feedback: 'danger', title: 'Error', message: error });
 				});
 		}
 	}
