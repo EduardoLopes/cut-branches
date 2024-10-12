@@ -143,7 +143,7 @@
 							gap: 'sm'
 						})}
 					>
-						<h3>{notification.title}</h3>
+						<h3>{@html notification.title}</h3>
 						<p>
 							{@html notification.message}
 						</p>

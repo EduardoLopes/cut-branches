@@ -49,7 +49,7 @@ pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
 
     Err(Error {
         message: format!(
-            "The path <strong>{0}</strong> is not a git repository",
+            "The path <strong style=\"word-break: break-all;\">{0}</strong> is not a git repository",
             path.display()
         ),
         description: Some(stderr),
