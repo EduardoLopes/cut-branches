@@ -1,24 +1,14 @@
 import { repos, type IRepo } from '$lib/stores';
-import {
-	createQuery,
-	type DefinedInitialDataOptions,
-	type CreateQueryOptions,
-	type FunctionedParams,
-	type QueryKey,
-	type UndefinedInitialDataOptions
-} from '@tanstack/svelte-query';
+import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 
 import { invoke } from '@tauri-apps/api/tauri';
 import type { ServiceError } from './models';
 
 export function getRepoByPath(
 	path: () => string,
-	options?: Omit<
-		FunctionedParams<DefinedInitialDataOptions<IRepo, ServiceError, IRepo, string[]>>,
-		'queryKey' | 'queryFn'
-	>
+	options?: Omit<CreateQueryOptions<IRepo, ServiceError, IRepo, string[]>, 'queryKey' | 'queryFn'>
 ) {
-	return createQuery<IRepo>(() => ({
+	return createQuery<IRepo, ServiceError, IRepo, string[]>(() => ({
 		queryKey: ['branches', 'get-all', path()],
 		queryFn: async () => {
 			return invoke<string>('get_repo_info', { path: path() }).then((res) => {
