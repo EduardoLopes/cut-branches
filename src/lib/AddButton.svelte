@@ -2,11 +2,10 @@
 	import Button from '@pindoba/svelte-button';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
-	import { toast } from './primitives/Toast.svelte';
 	import { useCreateRepositoryID } from './services/useCreateRepositoryID';
 	import { open } from '@tauri-apps/api/dialog';
 	import { css } from '@pindoba/panda/css';
-	import { createNotifications } from './hooks/notifications';
+	import { createNotifications } from './stores/notifications';
 
 	const notifications = createNotifications();
 
@@ -21,7 +20,7 @@
 			});
 		},
 		meta: {
-			showErrorToast: true
+			showErrorNotification: true
 		}
 	});
 
