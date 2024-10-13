@@ -22,6 +22,7 @@
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import { createNotifications } from '$lib/stores/notifications';
 	import { createSelected, selected } from '$lib/stores/selected.svelte';
+	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 
 	// const branchesSpring = spring({ x: 0, opacity: 1 });
 	// branchesSpring.stiffness = 0.3;
@@ -79,18 +80,6 @@
 						message: `The repository <strong>${getBranchesQuery.data?.name}</strong> was updated`,
 						feedback: 'success'
 					});
-				}
-			});
-		}
-	}
-
-	function handleDelete() {
-		if (getBranchesQuery.data) {
-			goto(`/repos/${id}/delete`, {
-				state: {
-					branches: getBranchesQuery.data.branches.filter((item) =>
-						selectedList.includes(item.name)
-					)
 				}
 			});
 		}
@@ -397,15 +386,7 @@
 					<div class="actions">
 						{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
 							<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
-								<Button
-									feedback="danger"
-									size="sm"
-									disabled={selectedList.length === 0}
-									onclick={handleDelete}
-								>
-									<Icon icon="ion:trash-outline" width="16px" height="16px" />
-									Delete
-								</Button>
+								<DeleteBranchModal {currentRepo} />
 							</div>
 						{/if}
 
