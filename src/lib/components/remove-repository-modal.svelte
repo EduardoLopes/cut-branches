@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { type RepoID } from '$lib/stores';
+	import { type RepoID } from '$lib/stores/branches';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { repos } from '$lib/stores';
+	import { repos } from '$lib/stores/branches';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 

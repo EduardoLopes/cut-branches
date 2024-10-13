@@ -1,4 +1,4 @@
-import { repos, type IRepo } from '$lib/stores';
+import { repos, type IRepo } from '$lib/stores/branches';
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 
 import { invoke } from '@tauri-apps/api/tauri';

@@ -1,4 +1,4 @@
-import type { IBranch } from '$lib/stores';
+import type { IBranch } from '$lib/stores/branches';
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api';
 import type { ServiceError } from './models';

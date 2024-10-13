@@ -1,15 +1,14 @@
 <script lang="ts">
-	import Branches from '$lib/Branches/index.svelte';
+	import Branches from '$lib/components/branches.svelte';
 	import { page } from '$app/stores';
+	import { css } from '@pindoba/panda/css';
 </script>
 
-<div class="content">
+<div
+	class={css({
+		width: 'full',
+		height: 'full'
+	})}
+>
 	<Branches id={$page.params.id} />
 </div>
-
-<style>
-	.content {
-		width: 100%;
-		height: 100%;
-	}
-</style>

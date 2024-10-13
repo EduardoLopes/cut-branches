@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos, type RepoID } from '$lib/stores';
+	import { repos, type RepoID } from '$lib/stores/branches';
 
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
@@ -12,7 +12,7 @@
 	import { page } from '$app/stores';
 	import { css } from '@pindoba/panda/css';
 	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
-	import { createNotifications } from './stores/notifications';
+	import { createNotifications } from '../stores/notifications';
 
 	const sortBy = 'BRANCH_COUNT';
 

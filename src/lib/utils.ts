@@ -1,4 +1,4 @@
-import type { IBranch, IRepo } from '$lib/stores';
+import type { IBranch, IRepo } from '$lib/stores/branches';
 
 export const getRepoName = (root_path: string): string => {
 	if (root_path.lastIndexOf('\\')) {

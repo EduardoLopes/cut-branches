@@ -1,14 +1,13 @@
 <script lang="ts">
-	import type { IBranch } from '$lib/stores';
+	import type { IBranch } from '$lib/stores/branches';
 
-	import { repos } from '$lib/stores';
+	import { repos } from '$lib/stores/branches';
 	import Button from '@pindoba/svelte-button';
-	import Branch from '$lib/Branch/index.svelte';
+	import Branch from '$lib/components/branch.svelte';
 	import Icon from '@iconify/svelte';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { navigating, page } from '$app/stores';
 	import { fly } from 'svelte/transition';
-	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import debounce from 'just-debounce-it';

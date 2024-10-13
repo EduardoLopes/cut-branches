@@ -1,4 +1,4 @@
-import { repos, type RepoID } from '$lib/stores';
+import { repos, type RepoID } from '$lib/stores/branches';
 import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import type { ServiceError } from './models';
 import { invoke } from '@tauri-apps/api/tauri';

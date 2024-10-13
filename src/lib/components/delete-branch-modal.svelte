@@ -1,14 +1,12 @@
 <script lang="ts">
-	import { type IBranch, type RepoID } from '$lib/stores';
+	import { type IBranch, type RepoID } from '$lib/stores/branches';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { repos } from '$lib/stores';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { createSelected, selected } from '$lib/stores/selected.svelte';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import Branch from '$lib/Branch/index.svelte';
+	import Branch from '$lib/components/branch.svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { createNotifications } from '$lib/stores/notifications';
 	import { useQueryClient } from '@tanstack/svelte-query';
