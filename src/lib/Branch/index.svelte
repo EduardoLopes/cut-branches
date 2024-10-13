@@ -104,19 +104,23 @@
 					{/if}
 					{#if alert === 'protectedWords'}
 						<Alert feedback="warning">
-							You're selecting a branch with the name <strong>{data.name}</strong>, review and make
-							sure you really wanna delete this branch!
+							<div>
+								You're selecting a branch with the name <strong>{data.name}</strong>, review and
+								make sure you really wanna delete this branch!
+							</div>
 						</Alert>
 					{/if}
 					{#if alert === 'offensiveWords'}
 						<Alert feedback="danger">
-							The branch name <strong>master</strong> is offensive. Check out this
-							<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
-								>article</a
-							>
-							and make sure to change the branch name to <strong>main</strong>,
-							<strong>default</strong>,
-							<strong>truck</strong> or any other word that don't offend others!
+							<div>
+								The branch name <strong>master</strong> is offensive. Check out this
+								<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+									>article</a
+								>
+								and make sure to change the branch name to <strong>main</strong>,
+								<strong>default</strong>,
+								<strong>truck</strong> or any other word that don't offend others!
+							</div>
 						</Alert>
 					{/if}
 				</Group>

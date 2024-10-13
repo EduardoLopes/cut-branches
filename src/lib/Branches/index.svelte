@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IBranch, IRepo, RepoID } from '$lib/stores';
+	import type { IBranch } from '$lib/stores';
 
 	import { repos } from '$lib/stores';
 	import Button from '@pindoba/svelte-button';
@@ -13,30 +13,31 @@
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import debounce from 'just-debounce-it';
 	import Group from '@pindoba/svelte-group';
-	import { version } from '$app/environment';
 	import Loading from '@pindoba/svelte-loading';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
 	import Pagination from '@pindoba/svelte-pagination';
-	import { spring } from 'svelte/motion';
-	import { quintOut } from 'svelte/easing';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import { createNotifications } from '$lib/stores/notifications';
+	import { createSelected, selected } from '$lib/stores/selected.svelte';
 
 	// const branchesSpring = spring({ x: 0, opacity: 1 });
 	// branchesSpring.stiffness = 0.3;
 	// branchesSpring.damping = 0.9;
 	// branchesSpring.precision = 0.005;
 
-	let selected = $state<string[]>([]);
 	const notifications = createNotifications();
 
 	interface Props {
 		id: string | null;
 	}
 	const { id }: Props = $props();
+
+	let selectedManager = $derived(createSelected(id));
+
+	const selectedList = $derived(id ? $selected[id] ?? [] : []);
 
 	let searchInputElement: HTMLInputElement | null = null;
 
@@ -53,7 +54,6 @@
 
 	$effect(() => {
 		if ($navigating) {
-			selected = [];
 			clearSearch();
 		}
 	});
@@ -88,7 +88,9 @@
 		if (getBranchesQuery.data) {
 			goto(`/repos/${id}/delete`, {
 				state: {
-					branches: getBranchesQuery.data.branches.filter((item) => selected.includes(item.name))
+					branches: getBranchesQuery.data.branches.filter((item) =>
+						selectedList.includes(item.name)
+					)
 				}
 			});
 		}
@@ -271,6 +273,7 @@
 			</Group>
 		</Loading>
 	</div>
+
 	<!-- TOP BAR END -->
 	<Loading
 		isLoading={getBranchesQuery.isLoading}
@@ -344,7 +347,7 @@
 					>
 						{#if selectibleCount > 0}
 							{@const selectedLength = branches.filter((item) =>
-								selected.includes(item.name)
+								selectedList.includes(item.name)
 							).length}
 							{#key selectibleCount}
 								<div
@@ -365,14 +368,13 @@
 												selectedLength !== selectibleCount && selectedLength > 0;
 
 											if (indeterminate || selectedLength === 0) {
-												selected =
+												selectedManager.add(
 													branches
 														.map((item) => item.name)
-														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? [];
+														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
+												);
 											} else {
-												const allSelectedBranch = branches.map((item) => item.name);
-
-												selected = selected.filter((item) => !allSelectedBranch.includes(item));
+												selectedManager.clear();
 											}
 										}}
 										checked={selectedLength === selectibleCount}
@@ -398,7 +400,7 @@
 								<Button
 									feedback="danger"
 									size="sm"
-									disabled={selected.length === 0}
+									disabled={selectedList.length === 0}
 									onclick={handleDelete}
 								>
 									<Icon icon="ion:trash-outline" width="16px" height="16px" />
@@ -504,7 +506,7 @@
 											gap: 'md',
 											borderRadius: 'sm'
 										})}
-										class:selected={selected.includes(branch.name)}
+										class:selected={selectedList.includes(branch.name)}
 									>
 										<!-- Nice animation that has bad performance -->
 										<!-- in:fly={{
@@ -523,13 +525,13 @@
 												<Checkbox
 													id={`checkbox-${branch.name}`}
 													onclick={() => {
-														if (selected.includes(branch.name)) {
-															selected = selected.filter((item) => item !== branch.name);
+														if (selectedList.includes(branch.name)) {
+															selectedManager.remove(branch.name);
 														} else {
-															selected = [...selected, branch.name];
+															selectedManager.add([branch.name]);
 														}
 													}}
-													checked={selected.includes(branch.name)}
+													checked={selectedList.includes(branch.name)}
 												>
 													<div class={visuallyHidden()}>
 														{branch.name}
@@ -556,7 +558,7 @@
 											</div>
 										{/if}
 
-										<Branch data={branch} selected={selected.includes(branch.name)} />
+										<Branch data={branch} selected={selectedList.includes(branch.name)} />
 									</div>
 								{/each}
 							{/if}
