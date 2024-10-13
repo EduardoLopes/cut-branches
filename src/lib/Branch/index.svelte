@@ -10,13 +10,18 @@
 	import { resizeContainer } from '$lib/actions/resizeContainer';
 	import { css } from '@pindoba/panda/css';
 
-	export let data: IBranch;
-	export let selected = false;
-	export let disabled = false;
+	interface Props {
+		data: IBranch;
+		selected: boolean;
+		disabled?: boolean;
+	}
 
-	let id = $page.params.id;
-	let currentRepo: RepoID | undefined;
-	let protectedWords = [
+	let { data, selected, disabled }: Props = $props();
+
+	const id = $derived($page.params.id);
+	const currentRepo = $derived($repos.filter((item) => item.name === id)[0]);
+
+	const protectedWords = [
 		'develop',
 		'dev',
 		'stg',
@@ -29,17 +34,15 @@
 		'trunk'
 	];
 
-	onMount(() => {
-		currentRepo = $repos.filter((item) => item.name === id)[0];
-	});
-
-	$: alerts = Object.entries({
-		fullyMerged: data.fully_merged,
-		protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
-		offensiveWords: data.name.includes('master')
-	})
-		.filter((item) => item[1] === true)
-		.map((item) => item[0]);
+	const alerts = $derived(
+		Object.entries({
+			fullyMerged: data.fully_merged,
+			protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
+			offensiveWords: data.name.includes('master')
+		})
+			.filter((item) => item[1] === true)
+			.map((item) => item[0])
+	);
 </script>
 
 <div
@@ -91,7 +94,7 @@
 		{data.name}
 	</div>
 
-	<div class="info alert-group" use:resizeContainer>
+	<div class="info alert-group">
 		{#each alerts as alert (alert)}
 			<div
 				animate:flip={{ duration: 150 }}
