@@ -2,10 +2,10 @@
 	import Button from '@pindoba/svelte-button';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
-	import { useCreateRepositoryID } from './services/useCreateRepositoryID';
+	import { useCreateRepositoryID } from '../services/useCreateRepositoryID';
 	import { open } from '@tauri-apps/api/dialog';
 	import { css } from '@pindoba/panda/css';
-	import { createNotifications } from './stores/notifications';
+	import { createNotifications } from '../stores/notifications';
 
 	const notifications = createNotifications();
 

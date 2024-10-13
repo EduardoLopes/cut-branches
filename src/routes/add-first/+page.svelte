@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import AddButton from '$lib/AddButton.svelte';
+	import AddButton from '$lib/components/add-button.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { token } from '@pindoba/panda/tokens';
 </script>

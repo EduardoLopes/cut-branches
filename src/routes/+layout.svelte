@@ -8,7 +8,7 @@
 	} from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
 	import type { ServiceError } from '$lib/services/models';
-	import { repos } from '$lib/stores';
+	import { repos } from '$lib/stores/branches';
 	import { goto } from '$app/navigation';
 	import { navigating, page } from '$app/stores';
 	import { onMount } from 'svelte';

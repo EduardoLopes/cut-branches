@@ -1,13 +1,11 @@
 <script lang="ts">
-	import type { IBranch, RepoID } from '$lib/stores';
-	import { repos } from '$lib/stores';
-	import { onMount } from 'svelte';
+	import type { IBranch } from '$lib/stores/branches';
+	import { repos } from '$lib/stores/branches';
 	import { page } from '$app/stores';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { flip } from 'svelte/animate';
 	import { fly } from 'svelte/transition';
-	import { resizeContainer } from '$lib/actions/resizeContainer';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
