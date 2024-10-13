@@ -105,6 +105,7 @@
 </script>
 
 <ThemeModeSelectScript />
+
 <QueryClientProvider client={queryClient}>
 	<div>
 		<slot />
