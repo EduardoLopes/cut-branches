@@ -33,9 +33,7 @@
 
 	let selectedManager = $derived(createSelected(id));
 
-	const selectedList = $derived(id ? $selected[id] ?? [] : []);
-
-	let searchInputElement: HTMLInputElement | null = null;
+	const selectedList = $derived(id ? ($selected[id] ?? []) : []);
 
 	const oneMinute = 60000;
 

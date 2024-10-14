@@ -10,7 +10,7 @@
 	const notifications = createNotifications();
 
 	let createRepositoryIDMutation = useCreateRepositoryID({
-		onSuccess(data, variables, context) {
+		onSuccess(data) {
 			goto(`/repos/${data.id}`, {
 				state: {
 					path: data.path,
