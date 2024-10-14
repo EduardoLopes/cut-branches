@@ -255,16 +255,44 @@
 		>
 			<!-- ERRO MESSAGE -->
 			{#if getBranchesQuery.isError}
-				<div class="error" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-					<div>
+				<div
+					class={css({
+						display: 'grid',
+						placeItems: 'center',
+						height: '100%',
+						fontSize: '2rem',
+						flexDirection: 'column',
+						gap: '1.6rem'
+					})}
+					in:fly={{ y: -10 }}
+					out:fly|local={{ y: -10 }}
+				>
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'column',
+							alignItems: 'center',
+							gap: '1.6rem',
+							maxWidth: '500px',
+							textAlign: 'center'
+						})}
+					>
 						<Icon
 							icon="material-symbols:dangerous-rounded"
 							width="64px"
 							height="64px"
-							color="var(--color-danger-10)"
+							color={token('colors.danger.700')}
 						/>
 						<div class="message">{@html getBranchesQuery.error.message}</div>
-						<div class="description">{@html getBranchesQuery.error.description}</div>
+						<div
+							class={css({
+								fontSize: '1.8rem',
+								textAlign: 'center',
+								color: 'neutral.900'
+							})}
+						>
+							{@html getBranchesQuery.error.description}
+						</div>
 					</div>
 				</div>
 			{/if}
@@ -398,13 +426,33 @@
 					{/if}
 
 					{#if searchNoResultsFound}
-						<div class="search-no-found" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-							<div>
+						<div
+							class={css({
+								display: 'grid',
+								placeItems: 'center',
+								height: '100%',
+								fontSize: '2rem',
+								flexDirection: 'column',
+								gap: '1.6rem'
+							})}
+							in:fly={{ y: -10 }}
+							out:fly|local={{ y: -10 }}
+						>
+							<div
+								class={css({
+									display: 'flex',
+									flexDirection: 'column',
+									alignItems: 'center',
+									gap: '1.6rem',
+									maxWidth: '500px',
+									textAlign: 'center'
+								})}
+							>
 								<Icon
 									icon="material-symbols:search-off"
 									width="64px"
 									height="64px"
-									color="var(--color-warning-10)"
+									color={token('colors.danger.700')}
 								/>
 								<div>No results for <b>{deboucedSearchQuery}</b>!</div>
 							</div>
@@ -412,13 +460,33 @@
 					{/if}
 
 					{#if getBranchesQuery.data.branches.length === 0}
-						<div class="no-branches" in:fly={{ y: -10 }} out:fly|local={{ y: -10 }}>
-							<div>
+						<div
+							class={css({
+								display: 'grid',
+								placeItems: 'center',
+								height: '100%',
+								fontSize: '2rem',
+								flexDirection: 'column',
+								gap: '1.6rem'
+							})}
+							in:fly={{ y: -10 }}
+							out:fly|local={{ y: -10 }}
+						>
+							<div
+								class={css({
+									display: 'flex',
+									flexDirection: 'column',
+									alignItems: 'center',
+									gap: '1.6rem',
+									maxWidth: '500px',
+									textAlign: 'center'
+								})}
+							>
 								<Icon
 									icon="mdi:source-branch-remove"
 									width="64px"
 									height="64px"
-									color="var(--color-warning-10)"
+									color={token('colors.danger.700')}
 								/>
 								<div>This repository has no branches!</div>
 							</div>
@@ -595,32 +663,3 @@
 		<NotificationsPopover />
 	</div>
 </main>
-
-<style lang="scss">
-	.search-no-found,
-	.no-branches,
-	.error {
-		display: grid;
-		place-items: center;
-		height: 100%;
-		font-size: 2rem;
-		flex-direction: column;
-		gap: 1.6rem;
-		> div {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 1.6rem;
-			max-width: 500px;
-			text-align: center;
-		}
-	}
-
-	.error {
-		.description {
-			font-size: 1.8rem;
-			text-align: center;
-			color: var(--color-neutral-11);
-		}
-	}
-</style>
