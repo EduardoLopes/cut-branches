@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
 	import { useCreateRepositoryID } from '../services/useCreateRepositoryID';
-	import { open } from '@tauri-apps/api/dialog';
+	import { open } from '@tauri-apps/plugin-dialog';
 	import { css } from '@pindoba/panda/css';
 	import { createNotifications } from '../stores/notifications';
 

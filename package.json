@@ -67,8 +67,10 @@
 		"@pindoba/svelte-text-input": "link:../pindoba/packages/ui/svelte/text-input",
 		"@pindoba/svelte-theme-mode-select": "link:../pindoba/packages/blocks/svelte/theme-mode-select",
 		"@tanstack/svelte-query": "https://pkg.pr.new/@tanstack/svelte-query@ccce0b8",
-		"@tauri-apps/api": "^1.6.0",
-		"@tauri-apps/cli": "^1.6.2",
+		"@tauri-apps/api": "^2.0.2",
+		"@tauri-apps/cli": "^2.0.3",
+		"@tauri-apps/plugin-dialog": "~2",
+		"core": "link:@tauri-apps/api/core",
 		"date-fns": "^4.1.0",
 		"hash-it": "^6.0.0",
 		"just-debounce-it": "^3.2.0"
