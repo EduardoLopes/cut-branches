@@ -17,7 +17,7 @@
 		"story:dev": "histoire dev",
 		"story:build": "histoire build",
 		"story:preview": "histoire preview",
-		"update": "npx npm-check-updates -u && cd src-tauri && cargo update && cd ..",
+		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
 		"prepare": "panda codegen"
 	},
 	"devDependencies": {
