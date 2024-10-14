@@ -13,6 +13,7 @@
 	import { css } from '@pindoba/panda/css';
 	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
 	import { createNotifications } from '../stores/notifications';
+	import { open } from '@tauri-apps/plugin-dialog';
 
 	const notifications = createNotifications();
 
@@ -32,21 +33,17 @@
 	});
 
 	async function handleAddClick() {
-		const { open } = await import('@tauri-apps/api/dialog');
-
-		if (open) {
-			open({ directory: true })
-				.then(async (dir) => {
-					if (dir && typeof dir === 'string') {
-						createRepositoryIDMutation.mutate({
-							path: dir
-						});
-					}
-				})
-				.catch((error) => {
-					notifications.push({ feedback: 'danger', title: 'Error', message: error });
-				});
-		}
+		open({ directory: true })
+			.then(async (dir) => {
+				if (dir && typeof dir === 'string') {
+					createRepositoryIDMutation.mutate({
+						path: dir
+					});
+				}
+			})
+			.catch((error) => {
+				notifications.push({ feedback: 'danger', title: 'Error', message: error });
+			});
 	}
 
 	const items = $derived(

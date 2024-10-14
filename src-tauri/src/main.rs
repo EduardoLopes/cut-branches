@@ -262,6 +262,7 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             get_repo_info,
             path::get_root,

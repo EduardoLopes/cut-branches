@@ -1,4 +1,5 @@
 import type { IBranch, IRepo } from '$lib/stores/branches';
+import { invoke } from '@tauri-apps/api/core';
 
 export const getRepoName = (root_path: string): string => {
 	if (root_path.lastIndexOf('\\')) {
@@ -15,8 +16,6 @@ export interface ParserBranches {
 
 export const getRepoInfo = async (path: string) => {
 	if (!path) return;
-
-	const { invoke } = await import('@tauri-apps/api/tauri');
 
 	return invoke<string>('git_repo_dir', { path }).then((res) => {
 		if (res) {

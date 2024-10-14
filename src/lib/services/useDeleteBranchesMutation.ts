@@ -1,6 +1,6 @@
 import type { IBranch } from '$lib/stores/branches';
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api';
+import { invoke } from '@tauri-apps/api/core';
 import type { ServiceError } from './models';
 
 interface DeleteBranchesVariables {
