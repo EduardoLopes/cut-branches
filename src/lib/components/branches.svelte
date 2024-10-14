@@ -233,13 +233,13 @@
 		isLoading={getBranchesQuery.isLoading}
 		fillParent
 		passThrough={{
-			root: {
+			root: css.raw({
 				borderRadius: '0'
-			},
-			overlay: {
+			}),
+			overlay: css.raw({
 				borderRadius: '0',
 				border: 'none'
-			}
+			})
 		}}
 	>
 		<!-- GERAL -->
