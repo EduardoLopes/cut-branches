@@ -28,7 +28,6 @@ window.addEventListener('storage', () => {
 });
 
 export function createSelected(repository?: string | null) {
-	console.log({ repository });
 	const add = (branch: string[]) => {
 		if (repository) {
 			selected.update((value) => {

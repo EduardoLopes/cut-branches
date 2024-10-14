@@ -20,13 +20,9 @@
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import { createNotifications } from '$lib/stores/notifications';
-	import { createSelected, selected } from '$lib/stores/selected.svelte';
+	import { createSelected, selected } from '$lib/stores/selected';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
-
-	// const branchesSpring = spring({ x: 0, opacity: 1 });
-	// branchesSpring.stiffness = 0.3;
-	// branchesSpring.damping = 0.9;
-	// branchesSpring.precision = 0.005;
+	import { onMount, onDestroy } from 'svelte';
 
 	const notifications = createNotifications();
 
@@ -44,8 +40,7 @@
 	const oneMinute = 60000;
 
 	const currentRepo = $derived($repos.filter((item) => item.id === id)[0]);
-	let currentPath = $derived(currentRepo?.path);
-	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
+	const getBranchesQuery = getRepoByPath(() => currentRepo?.path ?? history.state.path, {
 		staleTime: oneMinute,
 		meta: {
 			showErrorNotification: false
@@ -95,7 +90,6 @@
 
 	const debounceSearchQuery = debounce((value: string) => {
 		deboucedSearchQuery = value;
-		console.log('debounced', value);
 	}, 300);
 
 	$effect(() => {
@@ -104,52 +98,20 @@
 
 	let currentPage = $state(1);
 	let itemsPerPage = $state(10);
-	let pageForward = $state(false);
-
-	function handleOnPageChange(currentPage: number, oldPage: number) {
-		pageForward = currentPage > oldPage;
-
-		// branchesSpring.set({ x: forward ? 50 : -50, opacity: 0.5 }, { hard: true });
-		// branchesSpring.update(
-		// 	(target, current) => {
-		// 		console.log({ target, current });
-		// 		return {
-		// 			x: Math.max(Math.min(current.x + (forward ? -50 : 50), 50), -50),
-		// 			opacity: current.opacity ? Math.max(current.opacity + 1, 1) : 0
-		// 		};
-		// 	},
-		// 	{
-		// 		soft: 0.5
-		// 	}
-		// );
-	}
-
-	// $effect(() => {
-	// 	lastPage = currentPage;
-
-	// 	if (Number.isInteger(currentPage)) {
-	// 		branchesSpring.set({ x: 30, opacity: 0 }, { hard: true });
-	// 		branchesSpring.set({ x: 0, opacity: 1 }, { soft: 0.2 });
-	// 		// branchesSpring.update(
-	// 		// 	(target, current) => {
-	// 		// 		return { x: 0, opacity: 1 };
-	// 		// 	},
-	// 		// 	{ soft: 1 }
-	// 		// );
-	// 	}
-	// });
 
 	let branches = $derived(
-		getBranchesQuery.data?.branches
-			.sort(sort)
-			.filter((item) =>
-				item.name.toLowerCase().trim().includes(deboucedSearchQuery.toLowerCase().trim())
-			) ?? []
+		getBranchesQuery.data
+			? [...getBranchesQuery.data.branches]
+					.sort(sort)
+					.filter((item) =>
+						item.name.toLowerCase().trim().includes(deboucedSearchQuery.toLowerCase().trim())
+					)
+			: []
 	);
 
 	let start = $derived(Math.max(0, itemsPerPage * (currentPage - 1)));
 	let end = $derived(start + itemsPerPage);
-	let paginatedBranches = $derived(branches.slice(start, end));
+	let paginatedBranches = $derived(branches?.slice(start, end));
 
 	$effect(() => {
 		if ($navigating) {
@@ -161,11 +123,11 @@
 	let selectibleCount = $derived(
 		Math.max(
 			0,
-			branches.filter((item) => item.name !== getBranchesQuery.data?.current_branch)?.length ?? 0
+			branches?.filter((item) => item.name !== getBranchesQuery.data?.current_branch)?.length ?? 0
 		)
 	);
 
-	let searchNoResultsFound = $derived(deboucedSearchQuery.length > 0 && branches.length === 0);
+	let searchNoResultsFound = $derived(deboucedSearchQuery.length > 0 && branches?.length === 0);
 
 	let lastUpdatedAtDate = $derived(
 		getBranchesQuery.dataUpdatedAt ? new Date(getBranchesQuery.dataUpdatedAt) : undefined
@@ -173,26 +135,32 @@
 
 	let lastUpdatedAt = $state<string | undefined>();
 
-	$effect(() => {
+	const updateLastUpdatedAt = () => {
 		if (lastUpdatedAtDate) {
 			lastUpdatedAt = intlFormatDistance(lastUpdatedAtDate, Date.now());
 		}
+	};
 
-		const interval = setInterval(() => {
-			if (lastUpdatedAtDate) {
-				lastUpdatedAt = intlFormatDistance(lastUpdatedAtDate, Date.now());
-			}
-		}, oneMinute);
+	let interval = $state<number | undefined>();
 
-		return () => {
-			clearInterval(interval);
-		};
+	onMount(() => {
+		interval = window.setInterval(updateLastUpdatedAt, oneMinute);
+	});
+
+	$effect(updateLastUpdatedAt);
+
+	onDestroy(() => {
+		clearInterval(interval);
 	});
 
 	const hasNoBranchesToDelete = $derived(
 		selectibleCount === 0 &&
 			getBranchesQuery.data?.branches.length !== 0 &&
 			deboucedSearchQuery.length === 0
+	);
+
+	const selectedLength = $derived(
+		branches?.filter((item) => selectedList.includes(item.name)).length ?? 0
 	);
 </script>
 
@@ -334,9 +302,6 @@
 						})}
 					>
 						{#if selectibleCount > 0}
-							{@const selectedLength = branches.filter((item) =>
-								selectedList.includes(item.name)
-							).length}
 							{#key selectibleCount}
 								<div
 									in:fly={{ x: -10 }}
@@ -358,7 +323,7 @@
 											if (indeterminate || selectedLength === 0) {
 												selectedManager.add(
 													branches
-														.map((item) => item.name)
+														?.map((item) => item.name)
 														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
 												);
 											} else {
@@ -568,10 +533,9 @@
 									})}
 								>
 									<Pagination
-										itemsTotal={branches?.length}
+										itemsTotal={branches?.length ?? 0}
 										bind:itemsPerPage
 										bind:currentPage
-										onChangePage={handleOnPageChange}
 									/>
 								</div>
 							{/if}
