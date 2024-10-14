@@ -24,10 +24,10 @@
 		}
 	});
 
-	async function handleAddClick() {
+	function handleAddClick() {
 		if (open) {
 			open({ directory: true })
-				.then(async (dir) => {
+				.then((dir) => {
 					if (dir && typeof dir === 'string') {
 						createRepositoryIDMutation.mutate({
 							path: dir

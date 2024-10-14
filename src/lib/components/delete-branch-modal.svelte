@@ -4,7 +4,7 @@
 	import { css } from '@pindoba/panda/css';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
-	import { createSelected, selected } from '$lib/stores/selected.svelte';
+	import { createSelected, selected } from '$lib/stores/selected';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import Branch from '$lib/components/branch.svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
@@ -54,6 +54,14 @@
 		}
 	});
 
+	let branches = $derived(
+		getBranchesQuery.data
+			? [...getBranchesQuery.data.branches]
+					.sort(sort)
+					.filter((item) => selectedList.includes(item.name))
+			: []
+	);
+
 	// current branch first
 	function sort(a: IBranch, b: IBranch) {
 		if (a.current) {
@@ -65,11 +73,6 @@
 		// a must be equal to b
 		return 0;
 	}
-
-	let branches = $derived(
-		getBranchesQuery.data?.branches.sort(sort).filter((item) => selectedList.includes(item.name)) ??
-			[]
-	);
 
 	function handleDelete() {
 		deleteMutation.mutate({
@@ -112,9 +115,7 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each getBranchesQuery.data?.branches
-			.sort(sort)
-			.filter((item) => selectedList.includes(item.name)) ?? [] as branch}
+		{#each branches as branch}
 			<div
 				class={css({
 					position: 'relative',
