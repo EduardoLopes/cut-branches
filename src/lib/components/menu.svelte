@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos, type RepoID } from '$lib/stores/branches';
+	import { repos } from '$lib/stores/branches';
 
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
@@ -14,20 +14,10 @@
 	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
 	import { createNotifications } from '../stores/notifications';
 
-	const sortBy = 'BRANCH_COUNT';
-
 	const notifications = createNotifications();
 
-	function handleSort(a: RepoID, b: RepoID) {
-		if (sortBy === 'BRANCH_COUNT') {
-			// TODO
-		}
-
-		return a.name.localeCompare(b.name);
-	}
-
 	const createRepositoryIDMutation = useCreateRepositoryID({
-		onSuccess(data, variables, context) {
+		onSuccess(data) {
 			goto(`/repos/${data.id}`, {
 				state: {
 					path: data.path,

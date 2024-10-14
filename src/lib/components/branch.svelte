@@ -1,7 +1,5 @@
 <script lang="ts">
 	import type { IBranch } from '$lib/stores/branches';
-	import { repos } from '$lib/stores/branches';
-	import { page } from '$app/stores';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { flip } from 'svelte/animate';
@@ -15,9 +13,6 @@
 	}
 
 	let { data, selected, disabled }: Props = $props();
-
-	const id = $derived($page.params.id);
-	const currentRepo = $derived($repos.filter((item) => item.name === id)[0]);
 
 	const protectedWords = [
 		'develop',

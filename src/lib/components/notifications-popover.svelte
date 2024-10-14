@@ -8,7 +8,7 @@
 	import Alert from '@pindoba/svelte-alert';
 	import { createNotifications } from '$lib/stores/notifications';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
-	import { fly, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
 
 	const { remove } = createNotifications();
@@ -26,7 +26,7 @@
 		}
 	}
 
-	const notificationsStoreunsubscribe = notifications.subscribe((value) => {
+	const notificationsStoreunsubscribe = notifications.subscribe(() => {
 		if (firstUpdate) {
 			open = true;
 

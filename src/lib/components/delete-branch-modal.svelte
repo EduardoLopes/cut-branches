@@ -22,7 +22,7 @@
 	let { currentRepo }: Props = $props();
 	const selectedManager = $derived(createSelected(currentRepo.id));
 	const oneMinute = 60000;
-	const selectedList = $derived(currentRepo.id ? $selected[currentRepo.id] ?? [] : []);
+	const selectedList = $derived(currentRepo.id ? ($selected[currentRepo.id] ?? []) : []);
 	let currentPath = $derived(currentRepo?.path);
 	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
 		staleTime: oneMinute,
