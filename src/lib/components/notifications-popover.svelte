@@ -140,7 +140,8 @@
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
-							gap: 'sm'
+							gap: 'sm',
+							width: 'full'
 						})}
 					>
 						<h3>{@html notification.title}</h3>
