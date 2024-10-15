@@ -165,10 +165,10 @@ async fn get_repo_info(path: String) -> Result<String, Error> {
     Ok(serde_json::to_string(&response).unwrap())
 }
 
-#[derive(serde::Serialize)]
-struct DeleteBranchesResponse {
-    branches: String,
-}
+// #[derive(serde::Serialize)]
+// struct DeleteBranchesResponse {
+//     branches: String,
+// }
 
 // This function checks if a branch exists in a git repository.
 // It receives a path to the repository and the name of the branch to be checked.
