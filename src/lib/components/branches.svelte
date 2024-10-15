@@ -23,6 +23,8 @@
 	import { createSelected, selected } from '$lib/stores/selected';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { onMount, onDestroy } from 'svelte';
+	import { createSearch } from '$lib/stores/search';
+	import TextInput from '@pindoba/svelte-text-input';
 
 	const notifications = createNotifications();
 
@@ -32,6 +34,7 @@
 	const { id }: Props = $props();
 
 	let selectedManager = $derived(createSelected(id));
+	let { query, ...search } = $derived(createSearch(id));
 
 	const selectedList = $derived(id ? ($selected[id] ?? []) : []);
 
@@ -42,12 +45,6 @@
 		staleTime: oneMinute,
 		meta: {
 			showErrorNotification: false
-		}
-	});
-
-	$effect(() => {
-		if ($navigating) {
-			clearSearch();
 		}
 	});
 
@@ -78,32 +75,21 @@
 	}
 
 	function clearSearch() {
-		searchQuery = '';
-		deboucedSearchQuery = '';
+		search.clear();
 		currentPage = 1;
 	}
-
-	let searchQuery = $state('');
-	let deboucedSearchQuery = $state('');
-
-	const debounceSearchQuery = debounce((value: string) => {
-		deboucedSearchQuery = value;
-	}, 300);
-
-	$effect(() => {
-		debounceSearchQuery(searchQuery);
-	});
 
 	let currentPage = $state(1);
 	let itemsPerPage = $state(10);
 
 	let branches = $derived(
 		getBranchesQuery.data
-			? [...getBranchesQuery.data.branches]
-					.sort(sort)
-					.filter((item) =>
-						item.name.toLowerCase().trim().includes(deboucedSearchQuery.toLowerCase().trim())
-					)
+			? [...getBranchesQuery.data.branches].sort(sort).filter((item) =>
+					item.name
+						.toLowerCase()
+						.trim()
+						.includes(($query ?? '').toLowerCase().trim())
+				)
 			: []
 	);
 
@@ -114,7 +100,6 @@
 	$effect(() => {
 		if ($navigating) {
 			currentPage = 1;
-			searchQuery = '';
 		}
 	});
 
@@ -125,7 +110,7 @@
 		)
 	);
 
-	let searchNoResultsFound = $derived(deboucedSearchQuery.length > 0 && branches?.length === 0);
+	let searchNoResultsFound = $derived(($query?.length ?? 0) > 0 && branches?.length === 0);
 
 	let lastUpdatedAtDate = $derived(
 		getBranchesQuery.dataUpdatedAt ? new Date(getBranchesQuery.dataUpdatedAt) : undefined
@@ -152,9 +137,7 @@
 	});
 
 	const hasNoBranchesToDelete = $derived(
-		selectibleCount === 0 &&
-			getBranchesQuery.data?.branches.length !== 0 &&
-			deboucedSearchQuery.length === 0
+		selectibleCount === 0 && getBranchesQuery.data?.branches.length !== 0 && $query?.length === 0
 	);
 
 	const selectedLength = $derived(
@@ -360,12 +343,12 @@
 									>
 										<div class={visuallyHidden()}>Select all</div>
 									</Checkbox>
-									{#if deboucedSearchQuery.length > 0}
+									{#if $query?.length ?? 0 > 0}
 										{selectedLength} / {selectibleCount}
 										{selectibleCount === 1 ? 'branch was' : 'branches were'} found
 									{/if}
 
-									{#if deboucedSearchQuery.length === 0}
+									{#if $query?.length === 0 || typeof $query === 'undefined'}
 										{selectedLength} / {selectibleCount} branches
 									{/if}
 								</div>
@@ -374,15 +357,32 @@
 					</div>
 
 					<div class="actions">
-						{#if selectibleCount > 0 && deboucedSearchQuery.length === 0}
-							<div in:fly|local={{ x: 15 }} out:fly|local={{ x: 15 }}>
+						{#if selectibleCount > 0 && selectedLength > 0}
+							<div>
 								<DeleteBranchModal {currentRepo} />
 							</div>
 						{/if}
 
-						{#if deboucedSearchQuery.length > 0 || searchNoResultsFound}
-							<div in:fly={{ x: 10 }}>
-								<Button emphasis="ghost" size="sm" onclick={clearSearch}>
+						{#if selectedLength === 0}
+							<Group>
+								<TextInput
+									heightSize="sm"
+									oninput={(event) => {
+										const target = event.target as HTMLInputElement;
+										search.set(String(target.value));
+										currentPage = 1;
+									}}
+									autocorrect="off"
+									placeholder="Search branches"
+									bind:value={$query}
+								/>
+								<Button
+									size="sm"
+									onclick={() => {
+										clearSearch();
+									}}
+									disabled={!$query}
+								>
 									<div
 										class={css({
 											display: 'flex',
@@ -391,10 +391,10 @@
 										})}
 									>
 										<Icon icon="mdi:clear" width="16px" height="16px" />
-										Clear search
+										<span class={visuallyHidden()}>Clear search</span>
 									</div>
 								</Button>
-							</div>
+							</Group>
 						{/if}
 					</div>
 				</div>
@@ -454,7 +454,7 @@
 									height="64px"
 									color={token('colors.danger.700')}
 								/>
-								<div>No results for <b>{deboucedSearchQuery}</b>!</div>
+								<div>No results for <b>{$query}</b>!</div>
 							</div>
 						</div>
 					{/if}
