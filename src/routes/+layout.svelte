@@ -17,28 +17,6 @@
 
 	const notifications = createNotifications();
 
-	function checkRedirect() {
-		if ($repos.length === 0) {
-			goto('/add-first');
-		}
-
-		// if is in any route that requires a repo id and the repo does not exist in the app anymore
-		const idExists = $repos.filter((item) => item.id === $page.params.id).length > 0;
-
-		if ($repos.length > 0 && !idExists) {
-			goto(`/repos/${$repos[0].id}`);
-		}
-	}
-
-	onMount(() => {
-		checkRedirect();
-	});
-
-	// checks every time route change
-	$: if ($navigating) checkRedirect();
-	// checks every time the repos store changes
-	$: if ($repos) checkRedirect();
-
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
 			if (mutation.meta?.showSuccessNotification) {
