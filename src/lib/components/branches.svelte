@@ -7,7 +7,6 @@
 	import Icon from '@iconify/svelte';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { navigating, page } from '$app/stores';
-	import { fly } from 'svelte/transition';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import debounce from 'just-debounce-it';
@@ -191,7 +190,6 @@
 					fontWeight: 'bold',
 					color: 'neutral.950'
 				})}
-				in:fly|local={{ x: -20 }}
 			>
 				{#if getBranchesQuery.data?.name}
 					{getBranchesQuery.data?.name}
@@ -247,8 +245,6 @@
 						flexDirection: 'column',
 						gap: '1.6rem'
 					})}
-					in:fly={{ y: -10 }}
-					out:fly|local={{ y: -10 }}
 				>
 					<div
 						class={css({
@@ -313,7 +309,6 @@
 						{#if selectibleCount > 0}
 							{#key selectibleCount}
 								<div
-									in:fly={{ x: -10 }}
 									class={css({
 										display: 'flex',
 										flexDirection: 'row',
@@ -409,7 +404,6 @@
 						flexDirection: 'column',
 						flexGrow: '1'
 					})}
-					in:fly|local={{ x: -30, duration: 150 }}
 				>
 					{#if hasNoBranchesToDelete}
 						<div
@@ -419,7 +413,6 @@
 								padding: 'md',
 								fontSize: 'lg'
 							})}
-							in:fly={{ x: -10 }}
 						>
 							This repository has no branches to delete.
 						</div>
@@ -435,8 +428,6 @@
 								flexDirection: 'column',
 								gap: '1.6rem'
 							})}
-							in:fly={{ y: -10 }}
-							out:fly|local={{ y: -10 }}
 						>
 							<div
 								class={css({
@@ -469,8 +460,6 @@
 								flexDirection: 'column',
 								gap: '1.6rem'
 							})}
-							in:fly={{ y: -10 }}
-							out:fly|local={{ y: -10 }}
 						>
 							<div
 								class={css({
@@ -644,7 +633,6 @@
 			>
 				{#key lastUpdatedAt}
 					<div
-						in:fly|local={{ x: 15 }}
 						class={css({
 							fontSize: 'sm',
 							_dark: {

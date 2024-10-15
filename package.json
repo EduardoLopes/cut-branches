@@ -69,7 +69,6 @@
 		"@tauri-apps/api": "^2.0.2",
 		"@tauri-apps/cli": "^2.0.3",
 		"@tauri-apps/plugin-dialog": "~2",
-		"core": "link:@tauri-apps/api/core",
 		"date-fns": "^4.1.0",
 		"hash-it": "^6.0.0",
 		"just-debounce-it": "^3.2.0"
