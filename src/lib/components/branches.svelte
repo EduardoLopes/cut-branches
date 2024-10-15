@@ -358,7 +358,7 @@
 							</div>
 						{/if}
 
-						{#if selectedLength === 0}
+						{#if selectedLength === 0 && !hasNoBranchesToDelete && !getBranchesQuery.isError}
 							<Group>
 								<TextInput
 									heightSize="sm"
