@@ -136,7 +136,8 @@
 			<Button
 				onclick={() => (showMore = !showMore)}
 				size="sm"
-				emphasis="neutral"
+				feedback="neutral"
+				emphasis={'secondary'}
 				class={css({
 					bottom: 0,
 					position: 'sticky',
