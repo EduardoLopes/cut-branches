@@ -10,12 +10,21 @@
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
+	import Notification from './notification.svelte';
+	import { isSameDay } from 'date-fns/isSameDay';
 
 	const { remove } = createNotifications();
 
 	let open = $state(false);
 	let timeoutID = $state(0);
 	let firstUpdate = $state(false);
+	let showMore = $state(false);
+
+	$effect(() => {
+		if (open === false) {
+			showMore = false;
+		}
+	});
 
 	function autoClose() {
 		if (open) {
@@ -41,6 +50,9 @@
 	onDestroy(() => {
 		notificationsStoreunsubscribe();
 	});
+
+	const lastNotification = $derived($notifications[0]);
+	const n = $derived($notifications.filter((item, index) => index !== 0));
 </script>
 
 <Popover
@@ -87,7 +99,7 @@
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
-			maxHeight: '400px',
+			maxHeight: '80vh',
 			height: 'fit-content',
 			gap: 'sm',
 			mx: '-md',
@@ -102,80 +114,38 @@
 		{#if $notifications.length === 0}
 			<p>You have no new notifications at the moment.</p>
 		{/if}
-		{#each $notifications as notification (notification.id)}
-			<div transition:slide|local={{ duration: 200 }}>
-				<Alert
-					feedback={notification.feedback}
-					class={css({
-						position: 'relative'
-					})}
-				>
-					{#if notification?.id}
-						<Button
-							shape="circle"
-							size="xs"
-							feedback="danger"
-							emphasis="ghost"
-							onclick={() => {
-								if (notification?.id) {
-									remove(notification?.id);
-								}
-							}}
-							passThrough={{
-								root: css.raw({
-									color: 'neutral.800',
-									p: '0'
-								})
-							}}
-							class={css({
-								position: 'absolute',
-								top: 'xxs',
-								right: 'xxs'
-							})}
-						>
-							<Icon icon="mi:close" width="12px" height="12px" />
-						</Button>
-					{/if}
-					<div
-						class={css({
-							display: 'flex',
-							flexDirection: 'column',
-							gap: 'sm',
-							width: 'full'
-						})}
-					>
-						<h3>{@html notification.title}</h3>
-						<p>
-							{@html notification.message}
-						</p>
 
-						{#if notification?.date}
-							<time
-								datetime={new Date(notification.date)?.toISOString()}
-								title={intlFormat(new Date(notification.date), {
-									year: 'numeric',
-									month: 'long',
-									day: 'numeric',
-									hour: 'numeric',
-									minute: 'numeric',
-									second: 'numeric'
-								})}
-							>
-								<div
-									class={css({
-										fontSize: 'sm',
-										width: 'full',
-										textAlign: 'right',
-										opacity: '0.5'
-									})}
-								>
-									{intlFormatDistance(new Date(notification.date), Date.now())}
-								</div>
-							</time>
-						{/if}
-					</div>
-				</Alert>
-			</div>
-		{/each}
+		{#if lastNotification}
+			<Notification {...lastNotification} />
+		{/if}
+
+		{#if showMore}
+			{#each n as notification, index (notification.id)}
+				{@const currentDate = notification?.date}
+				{@const previousDate = n[Math.max(0, index - 1)].date}
+
+				{#if currentDate && previousDate && !isSameDay(new Date(currentDate), new Date(previousDate))}
+					<h4>{intlFormatDistance(new Date(currentDate), Date.now())}</h4>
+				{/if}
+				<div transition:slide|local={{ duration: 200 }}>
+					<Notification {...notification} />
+				</div>
+			{/each}
+		{/if}
+		{#if $notifications.length > 0}
+			<Button
+				onclick={() => (showMore = !showMore)}
+				size="sm"
+				emphasis="neutral"
+				class={css({
+					bottom: 0,
+					position: 'sticky',
+					width: '90%',
+					margin: '0 auto'
+				})}
+			>
+				Show {showMore ? 'Less' : 'More'}
+			</Button>
+		{/if}
 	</div>
 </Popover>
