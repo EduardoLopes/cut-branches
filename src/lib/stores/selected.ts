@@ -49,12 +49,12 @@ export function createSelected(repository?: string | null) {
 		}
 	};
 
-	const remove = (branch: string) => {
+	const remove = (branches: string[]) => {
 		if (repository) {
 			selected.update((value) => {
 				const ids = value[repository] ?? [];
 
-				const newIds = ids.filter((item) => item !== branch);
+				const newIds = ids.filter((item) => !branches.includes(item));
 
 				return { ...value, ...{ [`${repository}`]: newIds } };
 			});

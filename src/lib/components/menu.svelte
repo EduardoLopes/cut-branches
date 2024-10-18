@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos } from '$lib/stores/branches';
+	import { repos } from '$lib/stores/repos';
 
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';

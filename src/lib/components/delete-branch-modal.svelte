@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { type IBranch, type RepoID } from '$lib/stores/branches';
+	import { type Branch, type Repository } from '$lib/stores/repos';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
-	import Button from '@pindoba/svelte-button';
+	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { createSelected, selected } from '$lib/stores/selected';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import Branch from '$lib/components/branch.svelte';
+	import BranchComponent from '$lib/components/branch.svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { createNotifications } from '$lib/stores/notifications';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -14,12 +14,13 @@
 	const client = useQueryClient();
 	const notifications = createNotifications();
 	interface Props {
-		currentRepo: RepoID;
+		currentRepo: Repository;
+		buttonProps?: Omit<ButtonProps, 'onclick'>;
 	}
 
 	let open = $state(false);
 
-	let { currentRepo }: Props = $props();
+	let { currentRepo, buttonProps }: Props = $props();
 	const selectedManager = $derived(createSelected(currentRepo.id));
 	const oneMinute = 60000;
 	const selectedList = $derived(currentRepo.id ? ($selected[currentRepo.id] ?? []) : []);
@@ -63,7 +64,7 @@
 	);
 
 	// current branch first
-	function sort(a: IBranch, b: IBranch) {
+	function sort(a: Branch, b: Branch) {
 		if (a.current) {
 			return -1;
 		}
@@ -125,7 +126,7 @@
 					borderRadius: 'sm'
 				})}
 			>
-				<Branch data={branch} selected={selectedList.includes(branch.name)} />
+				<BranchComponent data={branch} selected={selectedList.includes(branch.name)} />
 			</div>
 		{/each}
 	</div>
@@ -149,6 +150,7 @@
 	onclick={() => {
 		open = true;
 	}}
+	{...buttonProps}
 >
 	<Icon icon="ion:trash-outline" width="16px" height="16px" />
 	Delete

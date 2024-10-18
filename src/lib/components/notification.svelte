@@ -1,20 +1,23 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
-	import Alert from '@pindoba/svelte-alert';
+	import Alert, { type AlertProps } from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { createNotifications, type Notification } from '../stores/notifications';
 
-	type Props = Notification;
+	type Props = Notification & {
+		emphasis?: AlertProps['emphasis'];
+	};
 
-	const { feedback, id, title, message, date }: Props = $props();
+	const { feedback, id, title, message, emphasis, date }: Props = $props();
 
 	const { remove } = createNotifications();
 </script>
 
 <Alert
 	{feedback}
+	{emphasis}
 	class={css({
 		position: 'relative'
 	})}
