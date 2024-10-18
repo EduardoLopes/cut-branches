@@ -1,25 +1,25 @@
 import { get, writable } from 'svelte/store';
 
-export interface IBranch {
+export interface Branch {
 	name: string;
 	current: boolean;
 	fully_merged: boolean;
 }
-export interface IRepo {
+export interface Repository {
 	path: string;
-	branches: IBranch[];
+	branches: Branch[];
 	name: string;
 	current_branch: string;
 }
 
-export interface RepoID {
+export interface RepositoryDetails {
 	path: string;
 	id: string;
 	name: string;
 	branchesCount?: number;
 }
 
-export const repos = writable<RepoID[]>(
+export const repos = writable<RepositoryDetails[]>(
 	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('repos') ?? '[]') : []
 );
 

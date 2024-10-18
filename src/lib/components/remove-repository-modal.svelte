@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { type RepoID } from '$lib/stores/branches';
+	import { type Repository } from '$lib/stores/repos';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { repos } from '$lib/stores/branches';
+	import { repos } from '$lib/stores/repos';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 
 	interface Props {
-		currentRepo: RepoID;
+		currentRepo: Repository;
 	}
 
 	let open = $state(false);

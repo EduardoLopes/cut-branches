@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page, navigating } from '$app/stores';
-	import { repos } from '$lib/stores/branches';
+	import { repos } from '$lib/stores/repos';
 	import { onMount } from 'svelte';
 
 	function checkRedirect() {

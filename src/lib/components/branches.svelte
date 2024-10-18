@@ -1,9 +1,8 @@
 <script lang="ts">
-	import type { IBranch } from '$lib/stores/branches';
-
-	import { repos } from '$lib/stores/branches';
+	import type { Branch } from '$lib/stores/repos';
+	import { repos } from '$lib/stores/repos';
 	import Button from '@pindoba/svelte-button';
-	import Branch from '$lib/components/branch.svelte';
+	import BranchComponent from '$lib/components/branch.svelte';
 	import Icon from '@iconify/svelte';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { navigating, page } from '$app/stores';
@@ -48,7 +47,7 @@
 	});
 
 	// current branch first
-	function sort(a: IBranch, b: IBranch) {
+	function sort(a: Branch, b: Branch) {
 		if (a.current) {
 			return -1;
 		}
@@ -140,6 +139,12 @@
 	);
 
 	const selectedLength = $derived(
+		getBranchesQuery.data?.branches
+			?.filter((item) => item.name !== getBranchesQuery.data?.current_branch)
+			.filter((item) => selectedList.includes(item.name)).length ?? 0
+	);
+
+	const selectedSearchLength = $derived(
 		branches?.filter((item) => selectedList.includes(item.name)).length ?? 0
 	);
 </script>
@@ -319,28 +324,60 @@
 								>
 									<Checkbox
 										id="select-all"
-										indeterminate={selectedLength !== selectibleCount && selectedLength > 0}
+										indeterminate={selectedSearchLength !== selectibleCount &&
+											selectedSearchLength > 0}
 										onclick={() => {
 											const indeterminate =
-												selectedLength !== selectibleCount && selectedLength > 0;
+												selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
 
-											if (indeterminate || selectedLength === 0) {
+											if (indeterminate || selectedSearchLength === 0) {
 												selectedManager.add(
 													branches
 														?.map((item) => item.name)
 														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
 												);
 											} else {
-												selectedManager.clear();
+												selectedManager.remove(
+													branches
+														?.map((item) => item.name)
+														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
+												);
 											}
 										}}
-										checked={selectedLength === selectibleCount}
+										checked={selectedSearchLength === selectibleCount}
 									>
 										<div class={visuallyHidden()}>Select all</div>
 									</Checkbox>
 									{#if $query?.length ?? 0 > 0}
-										{selectedLength} / {selectibleCount}
-										{selectibleCount === 1 ? 'branch was' : 'branches were'} found
+										<div
+											class={css({
+												fontSize: 'md'
+											})}
+										>
+											<span
+												class={css({
+													color: 'neutral.950.contrast'
+												})}
+											>
+												{selectedLength}
+											</span>
+											are selected /
+											<span
+												class={css({
+													color: 'neutral.950.contrast'
+												})}
+											>
+												{selectibleCount}
+											</span>
+											{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
+											<strong
+												class={css({
+													color: 'primary.800'
+												})}
+											>
+												{$query?.trim()}
+											</strong>
+										</div>
 									{/if}
 
 									{#if $query?.length === 0 || typeof $query === 'undefined'}
@@ -351,14 +388,15 @@
 						{/if}
 					</div>
 
-					<div class="actions">
-						{#if selectibleCount > 0 && selectedLength > 0}
-							<div>
-								<DeleteBranchModal {currentRepo} />
-							</div>
-						{/if}
-
-						{#if selectedLength === 0 && !hasNoBranchesToDelete && !getBranchesQuery.isError}
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'row',
+							alignItems: 'center',
+							gap: 'md'
+						})}
+					>
+						{#if !hasNoBranchesToDelete && !getBranchesQuery.isError}
 							<Group>
 								<TextInput
 									heightSize="sm"
@@ -390,6 +428,11 @@
 									</div>
 								</Button>
 							</Group>
+						{/if}
+						{#if selectibleCount > 0}
+							<div>
+								<DeleteBranchModal {currentRepo} buttonProps={{ disabled: selectedLength === 0 }} />
+							</div>
 						{/if}
 					</div>
 				</div>
@@ -526,7 +569,7 @@
 													id={`checkbox-${branch.name}`}
 													onclick={() => {
 														if (selectedList.includes(branch.name)) {
-															selectedManager.remove(branch.name);
+															selectedManager.remove([branch.name]);
 														} else {
 															selectedManager.add([branch.name]);
 														}
@@ -558,7 +601,7 @@
 											</div>
 										{/if}
 
-										<Branch data={branch} selected={selectedList.includes(branch.name)} />
+										<BranchComponent data={branch} selected={selectedList.includes(branch.name)} />
 									</div>
 								{/each}
 							{/if}

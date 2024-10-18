@@ -1,4 +1,4 @@
-import { repos, type RepoID } from '$lib/stores/branches';
+import { repos, type Repository } from '$lib/stores/repos';
 import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import type { ServiceError } from './models';
 import { invoke } from '@tauri-apps/api/core';
@@ -9,7 +9,7 @@ interface RootPath {
 }
 
 type CreateRepositoryIDMutationOptions = CreateMutationOptions<
-	RepoID,
+	Repository,
 	ServiceError,
 	{ path: string },
 	unknown
@@ -33,7 +33,7 @@ export function useCreateRepositoryID(options?: CreateRepositoryIDMutationOption
 					name = root_path.substring(root_path.lastIndexOf('\\') + 1);
 				}
 
-				const data: RepoID = {
+				const data: Repository = {
 					path: root_path,
 					name,
 					id: String(resParser.id)
