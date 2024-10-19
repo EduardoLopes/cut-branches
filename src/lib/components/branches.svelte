@@ -293,13 +293,7 @@
 						flexShrink: '0',
 						position: 'sticky',
 						top: '0',
-						backdropFilter: 'blur(5px) saturate(3)',
-						_light: {
-							background: 'neutral.200/80'
-						},
-						_dark: {
-							background: 'neutral.50/80'
-						}
+						translucent: 'md'
 					})}
 				>
 					<div
@@ -399,6 +393,9 @@
 						{#if !hasNoBranchesToDelete && !getBranchesQuery.isError}
 							<Group>
 								<TextInput
+									class={css({
+										width: '130px'
+									})}
 									heightSize="sm"
 									oninput={(event) => {
 										const target = event.target as HTMLInputElement;
@@ -621,13 +618,7 @@
 								<div
 									class={css({
 										p: 'md',
-										backdropFilter: 'blur(5px) saturate(3)',
-										_light: {
-											background: 'neutral.200/80'
-										},
-										_dark: {
-											background: 'neutral.50/80'
-										}
+										translucent: 'md'
 									})}
 								>
 									<Pagination

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { IBranch } from '$lib/stores/branches';
+	import type { IBranch } from '$lib/stores/repos';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { flip } from 'svelte/animate';
