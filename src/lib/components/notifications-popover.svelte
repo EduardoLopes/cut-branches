@@ -104,7 +104,7 @@
 			flexDirection: 'column',
 			maxHeight: '80vh',
 			height: 'fit-content',
-			gap: 'sm',
+			gap: 'md',
 			mx: '-md',
 			mb: '-md',
 			borderRadius: 'md',
@@ -141,12 +141,15 @@
 				size="sm"
 				feedback="neutral"
 				emphasis={'secondary'}
-				class={css({
-					bottom: 0,
-					position: 'sticky',
-					width: '90%',
-					margin: '0 auto'
-				})}
+				passThrough={{
+					root: css.raw({
+						translucent: 'md',
+						bottom: '-md',
+						width: '100%',
+						boxShadow: '0 0 0 1px token(colors.neutral.alpha.300)',
+						position: 'sticky'
+					})
+				}}
 			>
 				Show {showMore ? 'Less' : 'More'}
 			</Button>
