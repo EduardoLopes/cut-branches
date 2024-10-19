@@ -66,6 +66,9 @@
 	onmouseleave={() => {
 		autoClose();
 	}}
+	closeButtonProps={{
+		autofocus: true
+	}}
 	class={css({
 		width: '400px'
 	})}
