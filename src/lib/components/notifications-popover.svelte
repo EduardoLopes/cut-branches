@@ -12,13 +12,14 @@
 	import { onDestroy, onMount } from 'svelte';
 	import Notification from './notification.svelte';
 	import { isSameDay } from 'date-fns/isSameDay';
+	import { he, pt } from 'date-fns/locale';
 
 	const { remove } = createNotifications();
 
-	let open = $state(false);
+	let open = $state(true);
 	let timeoutID = $state(0);
 	let firstUpdate = $state(false);
-	let showMore = $state(false);
+	let showMore = $state(true);
 
 	$effect(() => {
 		if (open === false) {
@@ -30,7 +31,7 @@
 		if (open) {
 			window.clearTimeout(timeoutID);
 			timeoutID = window.setTimeout(() => {
-				open = false;
+				open = true;
 			}, 2000);
 		}
 	}
@@ -72,6 +73,31 @@
 	class={css({
 		width: '400px'
 	})}
+	passThrough={{
+		header: css.raw({
+			translucent: 'md',
+			background: 'neutral.alpha.50',
+			position: 'sticky',
+			top: '0',
+			zIndex: '1',
+			pb: 'md'
+		}),
+		closeButton: css.raw({
+			translucent: 'md',
+			background: 'neutral.alpha.50'
+		}),
+		content: css.raw({
+			padding: '0',
+			gap: '0'
+		}),
+		wrapper: css.raw({
+			display: 'flex',
+			flexDirection: 'column',
+			gap: '0',
+			maxHeight: '80vh',
+			overflowY: 'auto'
+		})
+	}}
 >
 	{#snippet trigger(props: TriggerSnippetProps)}
 		<Button size="xs" shape="square" emphasis="ghost" {...props}>
@@ -101,17 +127,10 @@
 	<div
 		class={css({
 			display: 'flex',
-			flexDirection: 'column',
-			maxHeight: '80vh',
-			height: 'fit-content',
 			gap: 'md',
-			mx: '-md',
-			mb: '-md',
-			borderRadius: 'md',
-			overflowY: 'auto',
-			px: 'md',
-			pb: 'md',
-			pt: 'xxs'
+			padding: 'md',
+			pt: '0',
+			flexDirection: 'column'
 		})}
 	>
 		{#if $notifications.length === 0}
@@ -135,24 +154,25 @@
 				</div>
 			{/each}
 		{/if}
-		{#if $notifications.length > 0}
-			<Button
-				onclick={() => (showMore = !showMore)}
-				size="sm"
-				feedback="neutral"
-				emphasis={'secondary'}
-				passThrough={{
-					root: css.raw({
-						translucent: 'md',
-						bottom: '-md',
-						width: '100%',
-						boxShadow: '0 0 0 1px token(colors.neutral.alpha.300)',
-						position: 'sticky'
-					})
-				}}
-			>
-				Show {showMore ? 'Less' : 'More'}
-			</Button>
-		{/if}
 	</div>
+	{#if $notifications.length > 0}
+		<Button
+			onclick={() => (showMore = !showMore)}
+			size="sm"
+			feedback="neutral"
+			emphasis={'secondary'}
+			passThrough={{
+				root: css.raw({
+					translucent: 'md',
+					borderRadius: '0',
+					bottom: '0',
+					width: '100%',
+					boxShadow: '0 0 0 1px token(colors.neutral.alpha.300)',
+					position: 'sticky'
+				})
+			}}
+		>
+			Show {showMore ? 'Less' : 'More'}
+		</Button>
+	{/if}
 </Popover>
