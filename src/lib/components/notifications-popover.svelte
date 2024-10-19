@@ -16,10 +16,10 @@
 
 	const { remove } = createNotifications();
 
-	let open = $state(true);
+	let open = $state(false);
 	let timeoutID = $state(0);
 	let firstUpdate = $state(false);
-	let showMore = $state(true);
+	let showMore = $state(false);
 
 	$effect(() => {
 		if (open === false) {
@@ -31,7 +31,7 @@
 		if (open) {
 			window.clearTimeout(timeoutID);
 			timeoutID = window.setTimeout(() => {
-				open = true;
+				open = false;
 			}, 2000);
 		}
 	}
