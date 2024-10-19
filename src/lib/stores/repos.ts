@@ -5,21 +5,21 @@ export interface Branch {
 	current: boolean;
 	fully_merged: boolean;
 }
-export interface Repository {
+export interface RepositoryData {
 	path: string;
 	branches: Branch[];
 	name: string;
 	current_branch: string;
 }
 
-export interface RepositoryDetails {
+export interface Repository {
 	path: string;
 	id: string;
 	name: string;
 	branchesCount?: number;
 }
 
-export const repos = writable<RepositoryDetails[]>(
+export const repos = writable<Repository[]>(
 	typeof window !== 'undefined' ? JSON.parse(localStorage?.getItem('repos') ?? '[]') : []
 );
 

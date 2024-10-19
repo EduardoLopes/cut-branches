@@ -88,39 +88,33 @@
 	</div>
 
 	<div class="info alert-group">
-		{#each alerts as alert (alert)}
-			<div
-				animate:flip={{ duration: 150 }}
-				in:fly|local={{ y: -20, duration: 200 }}
-				out:fly|local={{ y: -10, duration: 50 }}
-			>
-				<Group direction="vertical" noBorder>
-					{#if alert === 'fullyMerged'}
-						<Alert>This branch is not fully merged into the current branch!</Alert>
-					{/if}
-					{#if alert === 'protectedWords'}
-						<Alert feedback="warning">
-							<div>
-								You're selecting a branch with the name <strong>{data.name}</strong>, review and
-								make sure you really wanna delete this branch!
-							</div>
-						</Alert>
-					{/if}
-					{#if alert === 'offensiveWords'}
-						<Alert feedback="danger">
-							<div>
-								The branch name <strong>master</strong> is offensive. Check out this
-								<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
-									>article</a
-								>
-								and make sure to change the branch name to <strong>main</strong>,
-								<strong>default</strong>,
-								<strong>truck</strong> or any other word that don't offend others!
-							</div>
-						</Alert>
-					{/if}
-				</Group>
-			</div>
-		{/each}
+		<Group direction="vertical" noBorder>
+			{#each alerts as alert (alert)}
+				{#if alert === 'fullyMerged'}
+					<Alert>This branch is not fully merged into the current branch!</Alert>
+				{/if}
+				{#if alert === 'protectedWords'}
+					<Alert feedback="warning">
+						<div>
+							You're selecting a branch with the name <strong>{data.name}</strong>, review and make
+							sure you really wanna delete this branch!
+						</div>
+					</Alert>
+				{/if}
+				{#if alert === 'offensiveWords'}
+					<Alert feedback="danger">
+						<div>
+							The branch name <strong>master</strong> is offensive. Check out this
+							<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"
+								>article</a
+							>
+							and make sure to change the branch name to <strong>main</strong>,
+							<strong>default</strong>,
+							<strong>truck</strong> or any other word that don't offend others!
+						</div>
+					</Alert>
+				{/if}
+			{/each}
+		</Group>
 	</div>
 </div>
