@@ -1,17 +1,9 @@
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
-import Icons from 'unplugin-icons/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-	plugins: [
-		sveltekit(),
-		Icons({
-			// experimental
-			compiler: 'raw'
-		})
-	],
-
+	plugins: [sveltekit()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	// prevent vite from obscuring rust errors
 	clearScreen: false,
