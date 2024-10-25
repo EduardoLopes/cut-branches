@@ -47,12 +47,12 @@
   "plugins": {},
   "app": {
     "windows": [
-      {
+      {	
         "fullscreen": false,
-        "height": 600,
+        "height": 740,
         "resizable": true,
-        "title": "cut-branches",
-        "width": 800
+        "title": "Cut branches",
+        "width": 960
       }
     ],
     "security": {
