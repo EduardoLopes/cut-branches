@@ -219,6 +219,10 @@
 				size: 'xs',
 				passThrough: {
 					root: css.raw({
+						'& svg': {
+							width: '14px',
+							height: '14px'
+						},
 						padding: 0,
 						_dark: {
 							color: 'primary.900'
