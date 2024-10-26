@@ -19,7 +19,7 @@
 		"story:preview": "histoire preview",
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
 		"prepare": "panda codegen && lefthook install",
-		"version-packages": "changeset version",
+		"version-packages": "git push && changeset version",
 		"release": "changeset tag",
 		"clean": "rm -rf dist && rm -rf node_modules"
 	},
