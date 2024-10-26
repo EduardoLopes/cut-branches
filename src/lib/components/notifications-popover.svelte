@@ -95,7 +95,8 @@
 			flexDirection: 'column',
 			gap: '0',
 			maxHeight: '80vh',
-			overflowY: 'auto'
+			overflowY: 'auto',
+			overflowX: 'hidden'
 		})
 	}}
 >
