@@ -1,6 +1,6 @@
 {
 	"name": "cut-branches",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"scripts": {
 		"dev:svelte": "vite dev",
 		"build:svelte": "vite build",
@@ -19,7 +19,7 @@
 		"story:preview": "histoire preview",
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
 		"prepare": "panda codegen && lefthook install",
-		"version-packages": "dotenv -- changeset version",
+		"version-packages": "changeset version",
 		"release": "changeset tag",
 		"clean": "rm -rf dist && rm -rf node_modules"
 	},
@@ -80,5 +80,10 @@
 		"hash-it": "^6.0.0",
 		"just-debounce-it": "^3.2.0"
 	},
-	"packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228"
+	"packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228",
+	"pnpm": {
+		"patchedDependencies": {
+			"@changesets/changelog-github@0.5.0": "patches/@changesets__changelog-github@0.5.0.patch"
+		}
+	}
 }

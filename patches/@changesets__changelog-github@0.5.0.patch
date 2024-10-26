@@ -1,0 +1,15 @@
+diff --git a/dist/changesets-changelog-github.cjs.js b/dist/changesets-changelog-github.cjs.js
+index f0ab3c46b9cd516ca5635e2e4dab079bac2908a6..e9df3e8d64847bf3d8a608a7e5b83f19ae6f318e 100644
+--- a/dist/changesets-changelog-github.cjs.js
++++ b/dist/changesets-changelog-github.cjs.js
+@@ -134,8 +134,8 @@ const changelogFunctions = {
+       };
+     })();
+     const users = usersFromSummary.length ? usersFromSummary.map(userFromSummary => `[@${userFromSummary}](https://github.com/${userFromSummary})`).join(", ") : links.user;
+-    const prefix = [links.pull === null ? "" : ` ${links.pull}`, links.commit === null ? "" : ` ${links.commit}`, users === null ? "" : ` Thanks ${users}!`].join("");
+-    return `\n\n-${prefix ? `${prefix} -` : ""} ${firstLine}\n${futureLines.map(l => `  ${l}`).join("\n")}`;
++    const prefix = [links.pull === null ? "" : ` ${links.pull}`, links.commit === null ? "" : ` ${links.commit}`].join("");
++    return `\n\n-${prefix ? `${prefix} -` : ""} ${firstLine} ${users === null ? "" : `(Thanks ${users})`}\n${futureLines.map(l => `  ${l}`).join("\n")}`;
+   }
+ };
+ 
