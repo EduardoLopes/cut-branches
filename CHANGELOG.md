@@ -1,5 +1,11 @@
 # cut-branches
 
+## 0.2.1
+
+### Patch Changes
+
+- 0fe0a79: chore: remove unplugin-icons
+
 ## 0.2.0
 
 ### Minor Changes
