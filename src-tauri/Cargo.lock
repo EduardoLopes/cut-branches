@@ -3480,15 +3480,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tauri"
-<<<<<<< HEAD
-version = "2.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd96d46534b10765ce0c6208f9451d98ea38636364a41b272d3610c70dd0e4c3"
-=======
 version = "2.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3889b392db6d32a105d3757230ea0220090b8f94c90d3e60b6c5eb91178ab1b"
->>>>>>> 7569b2c (chore: update deps)
 dependencies = [
  "anyhow",
  "bytes",
@@ -3674,15 +3668,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime-wry"
-<<<<<<< HEAD
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aaac63b65df8e85570993eaf93ae1dd73a6fb66d8bd99674ce65f41dc3c63e7d"
-=======
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "62fa2068e8498ad007b54d5773d03d57c3ff6dd96f8c8ce58beff44d0d5e0d30"
->>>>>>> 7569b2c (chore: update deps)
 dependencies = [
  "gtk",
  "http",
@@ -4809,21 +4797,9 @@ dependencies = [
 
 [[package]]
 name = "wry"
-<<<<<<< HEAD
-<<<<<<< HEAD
-version = "0.46.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "469a3765ecc3e8aa9ccdf3c5a52c82697ec03037cd60494488763880d31a1b3a"
-=======
-version = "0.46.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fa1c8c760041c64ce6be99f83d6cb55fe3fcd85a1ad46d32895f6e65cee87ba"
->>>>>>> ddfd3cb (chore: update deps)
-=======
 version = "0.46.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd5cdf57c66813d97601181349c63b96994b3074fc3d7a31a8cce96e968e3bbd"
->>>>>>> 7569b2c (chore: update deps)
 dependencies = [
  "base64 0.22.1",
  "block2",
