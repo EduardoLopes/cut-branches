@@ -1,6 +1,6 @@
 {
 	"name": "cut-branches",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"scripts": {
 		"dev:svelte": "vite dev",
 		"build:svelte": "vite build",
@@ -19,9 +19,12 @@
 		"story:preview": "histoire preview",
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
 		"prepare": "panda codegen && lefthook install",
+		"version-packages": "changeset version",
+		"release": "changeset tag",
 		"clean": "rm -rf dist && rm -rf node_modules"
 	},
 	"devDependencies": {
+		"@changesets/cli": "^2.27.9",
 		"@commitlint/cli": "^19.5.0",
 		"@commitlint/config-conventional": "^19.5.0",
 		"@iconify-json/lucide": "^1.2.10",
