@@ -1,6 +1,6 @@
 {
 	"$schema": "https://unpkg.com/@changesets/config@3.0.3/schema.json",
-	"changelog": "@changesets/cli/changelog",
+	"changelog": ["@changesets/changelog-github", { "repo": "eduardolopes/cut-branches" }],
 	"commit": ["./commit.cjs", { "customOption": true }],
 	"fixed": [],
 	"linked": [],
