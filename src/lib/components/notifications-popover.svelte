@@ -5,18 +5,13 @@
 	import Icon from '@iconify/svelte';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { notifications } from '$lib/stores/notifications';
-	import Alert from '@pindoba/svelte-alert';
-	import { createNotifications } from '$lib/stores/notifications';
-	import { intlFormat, intlFormatDistance } from 'date-fns';
+	import { intlFormatDistance } from 'date-fns';
 	import { slide } from 'svelte/transition';
 	import { onDestroy, onMount } from 'svelte';
 	import Notification from './notification.svelte';
 	import { isSameDay } from 'date-fns/isSameDay';
-	import { he, pt } from 'date-fns/locale';
 
-	const { remove } = createNotifications();
-
-	let open = $state(false);
+	let open = $state(true);
 	let timeoutID = $state(0);
 	let firstUpdate = $state(false);
 	let showMore = $state(false);
@@ -31,7 +26,7 @@
 		if (open) {
 			window.clearTimeout(timeoutID);
 			timeoutID = window.setTimeout(() => {
-				open = false;
+				open = true;
 			}, 2000);
 		}
 	}
@@ -53,7 +48,7 @@
 	});
 
 	const lastNotification = $derived($notifications[0]);
-	const n = $derived($notifications.filter((item, index) => index !== 0));
+	const n = $derived($notifications.filter((_item, index) => index !== 0));
 </script>
 
 <Popover
@@ -80,11 +75,17 @@
 			position: 'sticky',
 			top: '0',
 			zIndex: '1',
-			pb: 'md'
+			px: 'md',
+			py: 'xs'
+		}),
+		title: css.raw({
+			p: 0
 		}),
 		closeButton: css.raw({
 			translucent: 'md',
-			background: 'neutral.alpha.50'
+			background: 'neutral.alpha.50',
+			top: 'xs',
+			right: 'xs'
 		}),
 		content: css.raw({
 			padding: '0',
