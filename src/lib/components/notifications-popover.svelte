@@ -11,7 +11,7 @@
 	import Notification from './notification.svelte';
 	import { isSameDay } from 'date-fns/isSameDay';
 
-	let open = $state(true);
+	let open = $state(false);
 	let timeoutID = $state(0);
 	let firstUpdate = $state(false);
 	let showMore = $state(false);
@@ -26,7 +26,7 @@
 		if (open) {
 			window.clearTimeout(timeoutID);
 			timeoutID = window.setTimeout(() => {
-				open = true;
+				open = false;
 			}, 2000);
 		}
 	}
