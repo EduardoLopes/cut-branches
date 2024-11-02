@@ -1,8 +1,17 @@
 import { get, writable } from 'svelte/store';
 
+export interface Commit {
+	hash: string;
+	date: string;
+	message: string;
+	author: string;
+	email: string;
+}
+
 export interface Branch {
 	name: string;
 	current: boolean;
+	last_commit: Commit;
 	fully_merged: boolean;
 }
 export interface RepositoryData {

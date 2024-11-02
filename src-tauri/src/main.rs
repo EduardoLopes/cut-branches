@@ -14,11 +14,20 @@ use path::set_current_dir;
 use std::process::Command;
 
 use std::path::Path;
+#[derive(serde::Serialize)]
+pub struct Commit {
+    hash: String,
+    date: String,
+    message: String,
+    author: String,
+    email: String,
+}
 
 #[derive(serde::Serialize)]
-struct Branch {
+pub struct Branch {
     name: String,
     fully_merged: bool,
+    last_commit: Commit,
     current: bool,
 }
 
@@ -52,6 +61,91 @@ pub fn get_branches(path: &Path) -> Result<Vec<String>, Error> {
     Err(Error {
         message: format!(
             "We couldn't find branches in the path <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "no_branches".to_string(),
+    })
+}
+
+pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Error> {
+    set_current_dir(&path)?;
+
+    let result = Command::new("git")
+        .arg("for-each-ref")
+        .arg("--format=%(refname:short)|%(objectname)|%(committerdate)|%(contents:subject)|%(authorname)|%(authoremail)")
+        .arg("refs/heads/")
+        .output()
+        .map_err(|e| Error {
+            message: format!("Failed to execute git command: {}", e),
+            description: None,
+            kind: "command_execution_failed".to_string(),
+        })?;
+    let merged_result = Command::new("git")
+        .arg("branch")
+        .arg("--merged")
+        .output()
+        .map_err(|e| Error {
+            message: format!("Failed to execute git command: {}", e),
+            description: None,
+            kind: "command_execution_failed".to_string(),
+        })?;
+
+    let merged_branches = String::from_utf8(merged_result.stdout).map_err(|e| Error {
+        message: format!("Failed to parse stdout: {}", e),
+        description: None,
+        kind: "stdout_parse_failed".to_string(),
+    })?;
+
+    let merged_branches: Vec<String> = merged_branches
+        .split("\n")
+        .map(|s| s.trim().replace("* ", ""))
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    let stderr = String::from_utf8(result.stderr).map_err(|e| Error {
+        message: format!("Failed to parse stderr: {}", e),
+        description: None,
+        kind: "stderr_parse_failed".to_string(),
+    })?;
+
+    if result.status.success() {
+        let output = String::from_utf8(result.stdout).map_err(|e| Error {
+            message: format!("Failed to parse stdout: {}", e),
+            description: None,
+            kind: "stdout_parse_failed".to_string(),
+        })?;
+
+        let current_branch = get_current_branch(path)?;
+
+        let branches: Vec<Branch> = output
+            .trim()
+            .split("\n")
+            .map(|line| {
+                let parts: Vec<&str> = line.split("|").collect();
+                let branch_name = parts[0].to_string();
+
+                Branch {
+                    name: branch_name.clone(),
+                    fully_merged: merged_branches.contains(&branch_name),
+                    current: branch_name == current_branch,
+                    last_commit: Commit {
+                        hash: parts[1].to_string(),
+                        date: parts[2].to_string(),
+                        message: parts[3].to_string(),
+                        author: parts[4].to_string(),
+                        email: parts[5].to_string(),
+                    },
+                }
+            })
+            .collect();
+
+        return Ok(branches);
+    }
+
+    Err(Error {
+        message: format!(
+            "Couldn't retrieve branches with last commit info in the path <strong>{0}</strong>",
             path.display()
         ),
         description: Some(stderr),
@@ -123,6 +217,62 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
     })
 }
 
+pub fn get_last_commit_info(path: &Path, branch: &str) -> Result<Commit, Error> {
+    set_current_dir(&path)?;
+
+    let result = Command::new("git")
+        .arg("log")
+        .arg("-1")
+        .arg("--pretty=format:%H|%ad|%s|%an|%ae")
+        .arg(branch)
+        .output()
+        .map_err(|e| Error {
+            message: format!("Failed to execute git command: {}", e),
+            description: None,
+            kind: "command_execution_failed".to_string(),
+        })?;
+
+    let stderr = String::from_utf8(result.stderr).map_err(|e| Error {
+        message: format!("Failed to parse stderr: {}", e),
+        description: None,
+        kind: "stderr_parse_failed".to_string(),
+    })?;
+
+    if result.status.success() {
+        let commit_info = String::from_utf8(result.stdout).map_err(|e| Error {
+            message: format!("Failed to parse stdout: {}", e),
+            description: None,
+            kind: "stdout_parse_failed".to_string(),
+        })?;
+        let commit_info = commit_info.trim().split("|").collect::<Vec<_>>();
+
+        if commit_info.len() == 5 {
+            return Ok(Commit {
+                hash: commit_info[0].to_string(),
+                date: commit_info[1].to_string(),
+                message: commit_info[2].to_string(),
+                author: commit_info[3].to_string(),
+                email: commit_info[4].to_string(),
+            });
+        } else {
+            return Err(Error {
+                message: "Unexpected commit info format".to_string(),
+                description: Some(commit_info.join("|")),
+                kind: "unexpected_format".to_string(),
+            });
+        }
+    }
+
+    Err(Error {
+        message: format!(
+            "Couldn't find the last commit in the path <strong>{0}</strong>",
+            path.display()
+        ),
+        description: Some(stderr),
+        kind: "no_commit".to_string(),
+    })
+}
+
 // This function returns a JSON string with information about a git repository.
 // It receives a path to the repository.
 // It returns a Result containing a string with the JSON or an Error with a message, a description and a kind.
@@ -142,23 +292,12 @@ async fn get_repo_info(path: String) -> Result<String, Error> {
 
     path::set_current_dir(&raw_root_path)?;
 
-    let all_branches = get_branches(&raw_root_path)?;
-    let all_branches_no_merged: Vec<String> = get_branches_no_merged(&raw_root_path)?;
+    let branches = get_all_branches_with_last_commit(&raw_root_path)?;
     let current = get_current_branch(&raw_root_path)?;
-
-    let mut branches: Vec<Branch> = Vec::new();
-
-    for branch in &all_branches {
-        branches.push(Branch {
-            name: branch.to_string(),
-            fully_merged: all_branches_no_merged.contains(branch),
-            current: &current == branch,
-        });
-    }
 
     let response = GitDirResponse {
         root_path,
-        branches: branches,
+        branches,
         current_branch: current.to_string(),
     };
 
