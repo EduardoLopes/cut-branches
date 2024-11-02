@@ -194,8 +194,9 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
     set_current_dir(&path)?;
 
     let result = Command::new("git")
-        .arg("branch")
-        .arg("--show-current")
+        .arg("rev-parse")
+        .arg("--abbrev-ref")
+        .arg("HEAD")
         .output()
         .unwrap();
 
@@ -206,7 +207,6 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
         return Ok(current_branch);
     }
 
-    // we need to check what really happens when a git repo has no branches
     Err(Error {
         message: format!(
             "Couldn't find the current branch in the path <strong>{0}</strong>",
