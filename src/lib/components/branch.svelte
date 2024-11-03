@@ -149,7 +149,7 @@
 						gap: 'xxs',
 						pindobaTransition: 'fast'
 					})}
-					title={data.last_commit.email}
+					title={data.last_commit.email.replace(/^<|>$/g, '')}
 				>
 					<Icon icon="lucide:circle-user-round" width="16px" height="16px" />
 					{data.last_commit.author}
