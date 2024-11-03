@@ -169,7 +169,7 @@
 					<Icon icon="lucide:clock" width="16px" height="16px" />{intlFormatDistance(
 						data.last_commit.date,
 						Date.now(),
-						{ unit: 'month' }
+						{ unit: 'day' }
 					)}
 				</span>
 			</div>
