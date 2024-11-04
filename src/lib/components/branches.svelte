@@ -60,6 +60,12 @@
 				feedback: 'success'
 			});
 
+			selected.update((value) => {
+				const selectedBranches = id ? (value[id] ?? []) : [];
+				const newSelectedBranches = selectedBranches.filter((branch) => branch !== currentBranch);
+				return { ...value, ...{ [`${id}`]: newSelectedBranches } };
+			});
+
 			queryClient.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
 		}
 	});
