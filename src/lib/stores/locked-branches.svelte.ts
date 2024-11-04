@@ -1,3 +1,5 @@
+import { selected } from './selected';
+
 // Define an interface for the locked branches structure
 interface Locked {
 	[key: string]: string[];
@@ -53,6 +55,12 @@ class LockedBranches {
 			const uniqueIds = Array.from(new Set([...ids, ...branches]));
 			this.#locked = { ...this.#locked, [this.#repository]: uniqueIds };
 			this.#updateLocalStorage();
+
+			selected.update((value) => {
+				const selectedBranches = this.#repository ? (value[this.#repository] ?? []) : [];
+				const newSelectedBranches = selectedBranches.filter((branch) => !branches.includes(branch));
+				return { ...value, ...{ [`${this.#repository}`]: newSelectedBranches } };
+			});
 		}
 	}
 
