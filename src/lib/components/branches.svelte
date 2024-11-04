@@ -617,7 +617,8 @@
 													emphasis="secondary"
 													class={css({
 														width: '26px',
-														height: '26px'
+														height: '26px',
+														boxShadow: 'none'
 													})}
 													onclick={() => handleSwitchBranch(branch.name)}
 												>
