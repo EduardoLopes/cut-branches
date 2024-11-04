@@ -1,4 +1,4 @@
-import { selected } from './selected';
+import { getSelectedBranchesStore } from './selected-branches.svelte';
 
 // Define an interface for the locked branches structure
 interface Locked {
@@ -28,7 +28,19 @@ function getLocalStorage(): Locked {
  * Class to manage locked branches for a given repository.
  */
 class LockedBranches {
+	/**
+	 * A private property that holds the current repository state.
+	 * The state can be a string representing the repository or undefined.
+	 *
+	 * @private
+	 * @type {string | undefined}
+	 */
 	#repository = $state<string | undefined>();
+
+	/**
+	 * A private property that holds the state of locked branches.
+	 * The state is initialized with the value retrieved from local storage.
+	 */
 	#locked = $state(getLocalStorage());
 
 	/**
@@ -38,6 +50,7 @@ class LockedBranches {
 	 */
 	list = $derived(this.#repository ? (this.#locked[this.#repository] ?? []) : []);
 
+	// Constructor to initialize the repository
 	constructor(repository?: string) {
 		this.#repository = repository;
 	}
@@ -49,18 +62,20 @@ class LockedBranches {
 	 *
 	 * @param branches - An array of branch names to be added to the locked branches state.
 	 */
+	// Method to add branches to the locked branches state
 	add(branches: string[]) {
 		if (this.#repository) {
+			// Get the current list of locked branches for the repository
 			const ids = this.#locked[this.#repository] ?? [];
+			// Combine the current list with the new branches and remove duplicates
 			const uniqueIds = Array.from(new Set([...ids, ...branches]));
+			// Update the locked branches state
 			this.#locked = { ...this.#locked, [this.#repository]: uniqueIds };
+			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 
-			selected.update((value) => {
-				const selectedBranches = this.#repository ? (value[this.#repository] ?? []) : [];
-				const newSelectedBranches = selectedBranches.filter((branch) => !branches.includes(branch));
-				return { ...value, ...{ [`${this.#repository}`]: newSelectedBranches } };
-			});
+			const selected = getSelectedBranchesStore(this.#repository);
+			selected.remove(branches);
 		}
 	}
 
@@ -68,9 +83,12 @@ class LockedBranches {
 	 * Clears the locked branches for the current repository.
 	 * If a repository is specified, it sets the locked branches list for that repository to an empty array.
 	 */
+	// Method to clear the locked branches for the current repository
 	clear() {
 		if (this.#repository) {
+			// Set the locked branches list for the repository to an empty array
 			this.#locked = { ...this.#locked, [this.#repository]: [] };
+			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
 	}
@@ -82,11 +100,14 @@ class LockedBranches {
 	 */
 	remove(branches: string[]) {
 		if (this.#repository) {
+			// Get the current list of locked branches for the repository
 			const ids = this.#locked[this.#repository] ?? [];
+			// Filter out the branches to be removed
 			this.#locked = {
 				...this.#locked,
 				[this.#repository]: ids.filter((id: string) => !branches.includes(id))
 			};
+			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
 	}
@@ -107,22 +128,35 @@ class LockedBranches {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined') {
 			try {
+				// Set the 'locked' item in localStorage with the current state
 				localStorage?.setItem('locked', JSON.stringify(this.#locked));
 			} catch (error) {
+				// Log any errors that occur during setting localStorage
 				console.error('Error setting localStorage data:', error);
 			}
 		}
 	}
 }
 
+// Define an object to store instances of LockedBranches
 const instances: { [key: string]: LockedBranches } = {};
 
+/**
+ * Retrieves or creates an instance of the LockedBranches store for a given repository.
+ *
+ * @param repository - The name of the repository for which to get the LockedBranches store.
+ *                     If not provided, a new instance of LockedBranches is returned.
+ * @returns An instance of the LockedBranches store for the specified repository, or a new instance if no repository is specified.
+ */
 export function getLockedBranchesStore(repository?: string): LockedBranches {
 	if (repository) {
+		// If an instance for the repository does not exist, create one
 		if (!instances[repository]) {
 			instances[repository] = new LockedBranches(repository);
 		}
+		// Return the instance for the repository
 		return instances[repository];
 	}
+	// Return a new instance if no repository is specified
 	return new LockedBranches();
 }

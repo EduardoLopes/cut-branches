@@ -4,12 +4,12 @@
 	import { css } from '@pindoba/panda/css';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
-	import { createSelected, selected } from '$lib/stores/selected';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import BranchComponent from '$lib/components/branch.svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { createNotifications } from '$lib/stores/notifications';
 	import { useQueryClient } from '@tanstack/svelte-query';
+	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 
 	const client = useQueryClient();
 	const notifications = createNotifications();
@@ -21,9 +21,8 @@
 	let open = $state(false);
 
 	let { currentRepo, buttonProps }: Props = $props();
-	const selectedManager = $derived(createSelected(currentRepo.id));
+	const selected = getSelectedBranchesStore(currentRepo.id);
 	const oneMinute = 60000;
-	const selectedList = $derived(currentRepo.id ? ($selected[currentRepo.id] ?? []) : []);
 	let currentPath = $derived(currentRepo?.path);
 	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
 		staleTime: oneMinute,
@@ -32,7 +31,7 @@
 		}
 	});
 
-	const selectedCount = $derived(selectedList.length);
+	const selectedCount = $derived(selected.list.length);
 
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
@@ -49,7 +48,7 @@
 					.join('<br />')
 			});
 
-			selectedManager.clear();
+			selected.clear();
 
 			client.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
 		}
@@ -57,9 +56,7 @@
 
 	let branches = $derived(
 		getBranchesQuery.data
-			? [...getBranchesQuery.data.branches]
-					.sort(sort)
-					.filter((item) => selectedList.includes(item.name))
+			? [...getBranchesQuery.data.branches].sort(sort).filter((item) => selected.has(item.name))
 			: []
 	);
 
@@ -79,9 +76,7 @@
 		deleteMutation.mutate({
 			path: currentRepo?.path,
 			branches:
-				getBranchesQuery.data?.branches
-					.sort(sort)
-					.filter((item) => selectedList.includes(item.name)) ?? []
+				getBranchesQuery.data?.branches.sort(sort).filter((item) => selected.has(item.name)) ?? []
 		});
 
 		open = false;
@@ -126,7 +121,7 @@
 					borderRadius: 'sm'
 				})}
 			>
-				<BranchComponent data={branch} selected={selectedList.includes(branch.name)} />
+				<BranchComponent data={branch} selected={selected.has(branch.name)} />
 			</div>
 		{/each}
 	</div>

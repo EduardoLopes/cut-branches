@@ -17,7 +17,6 @@
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import { createNotifications } from '$lib/stores/notifications';
-	import { createSelected, selected } from '$lib/stores/selected';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { createSearch } from '$lib/stores/search';
@@ -27,6 +26,7 @@
 	import Markdown from 'svelte-exmarkdown';
 	import LockBranchToggle from './lock-branch-toggle.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
+	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 
 	const notifications = createNotifications();
 	const queryClient = useQueryClient();
@@ -36,11 +36,9 @@
 	}
 	const { id }: Props = $props();
 	const locked = getLockedBranchesStore(id);
+	const selected = getSelectedBranchesStore(id);
 
-	let selectedManager = $derived(createSelected(id));
 	let { query, ...search } = $derived(createSearch(id));
-
-	const selectedList = $derived(id ? ($selected[id] ?? []) : []);
 
 	const oneMinute = 60000;
 
@@ -60,11 +58,7 @@
 				feedback: 'success'
 			});
 
-			selected.update((value) => {
-				const selectedBranches = id ? (value[id] ?? []) : [];
-				const newSelectedBranches = selectedBranches.filter((branch) => branch !== currentBranch);
-				return { ...value, ...{ [`${id}`]: newSelectedBranches } };
-			});
+			selected.remove([currentBranch]);
 
 			queryClient.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
 		}
@@ -176,11 +170,11 @@
 	const selectedLength = $derived(
 		getBranchesQuery.data?.branches
 			?.filter((item) => item.name !== getBranchesQuery.data?.current_branch)
-			.filter((item) => selectedList.includes(item.name)).length ?? 0
+			.filter((item) => selected.has(item.name)).length ?? 0
 	);
 
 	const selectedSearchLength = $derived(
-		branches?.filter((item) => selectedList.includes(item.name)).length ?? 0
+		branches?.filter((item) => selected.has(item.name)).length ?? 0
 	);
 </script>
 
@@ -362,7 +356,7 @@
 												selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
 
 											if (indeterminate || selectedSearchLength === 0) {
-												selectedManager.add(
+												selected.add(
 													branches
 														?.map((item) => item.name)
 														.filter(
@@ -371,7 +365,7 @@
 														) ?? []
 												);
 											} else {
-												selectedManager.remove(
+												selected.remove(
 													branches
 														?.map((item) => item.name)
 														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
@@ -587,7 +581,7 @@
 											gap: 'md',
 											borderRadius: 'sm'
 										})}
-										class:selected={selectedList.includes(branch.name)}
+										class:selected={selected.has(branch.name)}
 									>
 										<!-- Nice animation that has bad performance -->
 										<!-- in:fly={{
@@ -613,13 +607,13 @@
 												<Checkbox
 													id={`checkbox-${branch.name}`}
 													onclick={() => {
-														if (selectedList.includes(branch.name)) {
-															selectedManager.remove([branch.name]);
+														if (selected.has(branch.name)) {
+															selected.remove([branch.name]);
 														} else {
-															selectedManager.add([branch.name]);
+															selected.add([branch.name]);
 														}
 													}}
-													checked={selectedList.includes(branch.name)}
+													checked={selected.has(branch.name)}
 													disabled={locked.has(branch.name)}
 												>
 													<div class={visuallyHidden()}>
@@ -667,7 +661,7 @@
 
 										<BranchComponent
 											data={branch}
-											selected={selectedList.includes(branch.name)}
+											selected={selected.has(branch.name)}
 											locked={locked.has(branch.name) &&
 												getBranchesQuery.data?.current_branch !== branch.name}
 										/>
