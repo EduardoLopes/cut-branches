@@ -304,6 +304,56 @@ async fn get_repo_info(path: String) -> Result<String, Error> {
     Ok(serde_json::to_string(&response).unwrap())
 }
 
+// This function switches to another branch in a git repository.
+// It receives a path to the repository and the name of the branch to switch to.
+// It returns a Result containing a string with the new current branch or an Error with a message, a description and a kind.
+#[tauri::command(async)]
+async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
+    let raw_path = Path::new(&path);
+
+    set_current_dir(&raw_path)?;
+
+    // Check if the branch exists
+    if !branch_exists(path.clone(), branch.clone()).unwrap() {
+        return Err(Error {
+            message: format!("Branch <strong>{0}</strong> not found", branch),
+            description: None,
+            kind: "branch_not_found".to_string(),
+        });
+    }
+
+    // Execute the git command to switch branches
+    let result = Command::new("git")
+        .arg("switch")
+        .arg(&branch)
+        .output()
+        .map_err(|e| Error {
+            message: format!("Failed to execute git command: {}", e),
+            description: None,
+            kind: "command_execution_failed".to_string(),
+        })?;
+
+    let stderr = String::from_utf8(result.stderr).map_err(|e| Error {
+        message: format!("Failed to parse stderr: {}", e),
+        description: None,
+        kind: "stderr_parse_failed".to_string(),
+    })?;
+
+    if result.status.success() {
+        let current_branch = get_current_branch(&raw_path)?;
+        return Ok(current_branch);
+    }
+
+    Err(Error {
+        message: format!(
+            "Couldn't switch to branch <strong>{0}</strong> in the path <strong>{1}</strong>",
+            branch, path
+        ),
+        description: Some(stderr),
+        kind: "switch_branch_failed".to_string(),
+    })
+}
+
 // #[derive(serde::Serialize)]
 // struct DeleteBranchesResponse {
 //     branches: String,
@@ -405,7 +455,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             get_repo_info,
             path::get_root,
-            delete_branches
+            delete_branches,
+            switch_branch
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -8,7 +8,6 @@
 	import { navigating, page } from '$app/stores';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
-	import debounce from 'just-debounce-it';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
 	import { css } from '@pindoba/panda/css';
@@ -23,8 +22,11 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { createSearch } from '$lib/stores/search';
 	import TextInput from '@pindoba/svelte-text-input';
+	import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
+	import { useQueryClient } from '@tanstack/svelte-query';
 
 	const notifications = createNotifications();
+	const queryClient = useQueryClient();
 
 	interface Props {
 		id: string | null;
@@ -45,6 +47,27 @@
 			showErrorNotification: false
 		}
 	});
+
+	const switchBranchMutation = createSwitchbranchMutation({
+		onSuccess: (currentBranch) => {
+			notifications.push({
+				title: 'Branch switched',
+				message: `Successfully switched to branch <strong>${currentBranch}</strong>`,
+				feedback: 'success'
+			});
+
+			queryClient.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
+		}
+	});
+
+	function handleSwitchBranch(branch: string) {
+		if (currentRepo?.path) {
+			switchBranchMutation.mutate({
+				path: currentRepo.path,
+				branch
+			});
+		}
+	}
 
 	// current branch first
 	function sort(a: Branch, b: Branch) {
@@ -267,7 +290,7 @@
 							height="64px"
 							color={token('colors.danger.700')}
 						/>
-						<div class="message">{@html getBranchesQuery.error.message}</div>
+						<div class="message">{getBranchesQuery.error.message}</div>
 						<div
 							class={css({
 								fontSize: '1.8rem',
@@ -275,7 +298,7 @@
 								color: 'neutral.900'
 							})}
 						>
-							{@html getBranchesQuery.error.description}
+							{getBranchesQuery.error.description}
 						</div>
 					</div>
 				</div>
@@ -342,6 +365,7 @@
 									>
 										<div class={visuallyHidden()}>Select all</div>
 									</Checkbox>
+
 									{#if $query?.length ?? 0 > 0}
 										<div
 											class={css({
@@ -561,7 +585,14 @@
 										}} -->
 
 										{#if getBranchesQuery.data?.current_branch !== branch.name}
-											<div class="checkbox">
+											<div
+												class={css({
+													display: 'flex',
+													flexDirection: 'column',
+													alignItems: 'center',
+													gap: 'md'
+												})}
+											>
 												<Checkbox
 													id={`checkbox-${branch.name}`}
 													onclick={() => {
@@ -577,6 +608,23 @@
 														{branch.name}
 													</div>
 												</Checkbox>
+												<Button
+													size="xs"
+													shape="square"
+													emphasis="secondary"
+													class={css({
+														width: '26px',
+														height: '26px'
+													})}
+													onclick={() => handleSwitchBranch(branch.name)}
+												>
+													<Icon
+														icon="octicon:feed-star-16"
+														width="12px"
+														height="12px"
+														color={token('colors.neutral.800')}
+													/>
+												</Button>
 											</div>
 										{/if}
 
