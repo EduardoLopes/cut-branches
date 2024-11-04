@@ -10,10 +10,11 @@
 	interface Props {
 		data: Branch;
 		selected: boolean;
+		locked?: boolean;
 		disabled?: boolean;
 	}
 
-	let { data, selected, disabled }: Props = $props();
+	let { data, selected, locked, disabled }: Props = $props();
 
 	const protectedWords = [
 		'develop',
@@ -64,7 +65,7 @@
 				background: 'colorPalette.100'
 			},
 			color: 'colorPalette.950.contrast',
-			'&.disabled': {
+			'&.disabled, &.locked': {
 				opacity: 0.5,
 				pointerEvents: 'none',
 				filter: 'grayscale(1)'
@@ -77,6 +78,7 @@
 			pindobaTransition: 'fast'
 		})}
 		class:disabled
+		class:locked
 		class:current={data.current}
 		class:selected
 		title={`${data.current ? 'Current branch ' : ''}`}

@@ -25,14 +25,17 @@
 	import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import Markdown from 'svelte-exmarkdown';
+	import LockBranchToggle from './lock-branch-toggle.svelte';
+	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 
 	const notifications = createNotifications();
 	const queryClient = useQueryClient();
 
 	interface Props {
-		id: string | null;
+		id?: string;
 	}
 	const { id }: Props = $props();
+	const locked = getLockedBranchesStore(id);
 
 	let selectedManager = $derived(createSelected(id));
 	let { query, ...search } = $derived(createSearch(id));
@@ -128,7 +131,9 @@
 	let selectibleCount = $derived(
 		Math.max(
 			0,
-			branches?.filter((item) => item.name !== getBranchesQuery.data?.current_branch)?.length ?? 0
+			branches?.filter(
+				(item) => item.name !== getBranchesQuery.data?.current_branch && !locked.has(item.name)
+			)?.length ?? 0
 		)
 	);
 
@@ -354,7 +359,10 @@
 												selectedManager.add(
 													branches
 														?.map((item) => item.name)
-														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
+														.filter(
+															(item) =>
+																item !== getBranchesQuery.data?.current_branch && !locked.has(item)
+														) ?? []
 												);
 											} else {
 												selectedManager.remove(
@@ -593,7 +601,7 @@
 													display: 'flex',
 													flexDirection: 'column',
 													alignItems: 'center',
-													gap: 'md'
+													gap: 'xs'
 												})}
 											>
 												<Checkbox
@@ -606,6 +614,7 @@
 														}
 													}}
 													checked={selectedList.includes(branch.name)}
+													disabled={locked.has(branch.name)}
 												>
 													<div class={visuallyHidden()}>
 														{branch.name}
@@ -622,13 +631,10 @@
 													})}
 													onclick={() => handleSwitchBranch(branch.name)}
 												>
-													<Icon
-														icon="octicon:feed-star-16"
-														width="12px"
-														height="12px"
-														color={token('colors.neutral.800')}
-													/>
+													<Icon icon="octicon:feed-star-16" width="12px" height="12px" />
+													<span class={visuallyHidden()}>Set as current</span>
 												</Button>
+												<LockBranchToggle repositoryID={id} branch={branch.name} />
 											</div>
 										{/if}
 
@@ -638,19 +644,27 @@
 													display: 'flex',
 													alignItems: 'center',
 													width: '100%',
-													marginLeft: '2px'
+													marginLeft: '2px',
+													flexDirection: 'column',
+													gap: 'sm'
 												})}
 											>
 												<Icon
 													icon="octicon:feed-star-16"
-													width="32px"
-													height="32px"
+													width="24px"
+													height="24px"
 													color={token('colors.primary.800')}
 												/>
+												<LockBranchToggle repositoryID={id} branch={branch.name} />
 											</div>
 										{/if}
 
-										<BranchComponent data={branch} selected={selectedList.includes(branch.name)} />
+										<BranchComponent
+											data={branch}
+											selected={selectedList.includes(branch.name)}
+											locked={locked.has(branch.name) &&
+												getBranchesQuery.data?.current_branch !== branch.name}
+										/>
 									</div>
 								{/each}
 							{/if}
