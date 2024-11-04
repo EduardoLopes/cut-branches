@@ -44,7 +44,7 @@
 				message: data
 					.map((item) => {
 						const s = item.replace('Deleted branch', '').split(' (was');
-						return `<strong>${s[0].trim()}</strong> (was ${s[1].trim()}`;
+						return `**${s[0].trim()}** (was ${s[1].trim()}`;
 					})
 					.join('<br />')
 			});

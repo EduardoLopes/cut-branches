@@ -24,6 +24,7 @@
 	import TextInput from '@pindoba/svelte-text-input';
 	import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
 	import { useQueryClient } from '@tanstack/svelte-query';
+	import Markdown from 'svelte-exmarkdown';
 
 	const notifications = createNotifications();
 	const queryClient = useQueryClient();
@@ -52,7 +53,7 @@
 		onSuccess: (currentBranch) => {
 			notifications.push({
 				title: 'Branch switched',
-				message: `Successfully switched to branch <strong>${currentBranch}</strong>`,
+				message: `Successfully switched to branch **${currentBranch}**`,
 				feedback: 'success'
 			});
 
@@ -87,7 +88,7 @@
 				if (getBranchesQuery.isSuccess) {
 					notifications.push({
 						title: 'Repository updated',
-						message: `The repository <strong>${getBranchesQuery.data?.name}</strong> was updated`,
+						message: `The repository **${getBranchesQuery.data?.name}** was updated`,
 						feedback: 'success'
 					});
 				}
@@ -290,16 +291,18 @@
 							height="64px"
 							color={token('colors.danger.700')}
 						/>
-						<div class="message">{getBranchesQuery.error.message}</div>
-						<div
-							class={css({
-								fontSize: '1.8rem',
-								textAlign: 'center',
-								color: 'neutral.900'
-							})}
-						>
-							{getBranchesQuery.error.description}
-						</div>
+						<div class="message"><Markdown md={getBranchesQuery.error.message} /></div>
+						{#if getBranchesQuery.error.description}
+							<div
+								class={css({
+									fontSize: '1.8rem',
+									textAlign: 'center',
+									color: 'neutral.900'
+								})}
+							>
+								<Markdown md={getBranchesQuery.error.description} />
+							</div>
+						{/if}
 					</div>
 				</div>
 			{/if}

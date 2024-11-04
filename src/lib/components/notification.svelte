@@ -5,6 +5,7 @@
 	import Button from '@pindoba/svelte-button';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { createNotifications, type Notification } from '../stores/notifications';
+	import Markdown from 'svelte-exmarkdown';
 
 	type Props = Notification & {
 		emphasis?: AlertProps['emphasis'];
@@ -56,10 +57,14 @@
 			width: 'full'
 		})}
 	>
-		<h3>{@html title}</h3>
-		<p>
-			{@html message}
-		</p>
+		{#if title}
+			<h3><Markdown md={title} /></h3>
+		{/if}
+		{#if message}
+			<p>
+				<Markdown md={message} />
+			</p>
+		{/if}
 
 		{#if date}
 			<time

@@ -60,7 +60,7 @@ pub fn get_branches(path: &Path) -> Result<Vec<String>, Error> {
     // we need to check what really happens when a git repo has no branches
     Err(Error {
         message: format!(
-            "We couldn't find branches in the path <strong>{0}</strong>",
+            "We couldn't find branches in the path **{0}**",
             path.display()
         ),
         description: Some(stderr),
@@ -145,7 +145,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
 
     Err(Error {
         message: format!(
-            "Couldn't retrieve branches with last commit info in the path <strong>{0}</strong>",
+            "Couldn't retrieve branches with last commit info in the path **{0}**",
             path.display()
         ),
         description: Some(stderr),
@@ -179,7 +179,7 @@ pub fn get_branches_no_merged(path: &Path) -> Result<Vec<String>, Error> {
     // we need to check what really happens when a git repo has no branches
     Err(Error {
         message: format!(
-            "Couldn't find branches not merged in the path <strong>{0}</strong>",
+            "Couldn't find branches not merged in the path **{0}**",
             path.display()
         ),
         description: Some(stderr),
@@ -209,7 +209,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
 
     Err(Error {
         message: format!(
-            "Couldn't find the current branch in the path <strong>{0}</strong>",
+            "Couldn't find the current branch in the path **{0}**",
             path.display()
         ),
         description: Some(stderr),
@@ -265,7 +265,7 @@ pub fn get_last_commit_info(path: &Path, branch: &str) -> Result<Commit, Error> 
 
     Err(Error {
         message: format!(
-            "Couldn't find the last commit in the path <strong>{0}</strong>",
+            "Couldn't find the last commit in the path **{0}**",
             path.display()
         ),
         description: Some(stderr),
@@ -316,7 +316,7 @@ async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
     // Check if the branch exists
     if !branch_exists(path.clone(), branch.clone()).unwrap() {
         return Err(Error {
-            message: format!("Branch <strong>{0}</strong> not found", branch),
+            message: format!("Branch **{0}** not found", branch),
             description: None,
             kind: "branch_not_found".to_string(),
         });
@@ -346,7 +346,7 @@ async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
 
     Err(Error {
         message: format!(
-            "Couldn't switch to branch <strong>{0}</strong> in the path <strong>{1}</strong>",
+            "Couldn't switch to branch **{0}** in the path **{1}**",
             branch, path
         ),
         description: Some(stderr),
@@ -412,10 +412,14 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
     if not_found_branches.len() > 0 {
         return Err(Error {
             message: format!(
-                "Branch{2} not found: <strong>{0}</strong>. The branch{3} <strong>{1}</strong> still exists",
+                "Branch{2} not found: **{0}**. The branch{3} **{1}** still exists",
                 not_found_branches.join(", "),
                 found_branches.join(", "),
-                if not_found_branches.len() == 1 { "" } else { "es" },
+                if not_found_branches.len() == 1 {
+                    ""
+                } else {
+                    "es"
+                },
                 if found_branches.len() == 1 { "" } else { "es" },
             ),
             description: None,
