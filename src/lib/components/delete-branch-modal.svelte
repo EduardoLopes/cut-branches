@@ -34,17 +34,18 @@
 
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
+			const m = data
+				.map((item) => {
+					const s = item.replace('Deleted branch', '').split(' (was');
+					return `- **${s[0].trim()}** (was ${s[1].trim()}`;
+				})
+				.join('\n\n');
 			notifications.push({
 				feedback: 'success',
 				title: `${data.length > 1 ? 'Branches' : 'Branch'} deleted from ${
 					currentRepo.name
 				} repository`,
-				message: data
-					.map((item) => {
-						const s = item.replace('Deleted branch', '').split(' (was');
-						return `**${s[0].trim()}** (was ${s[1].trim()}`;
-					})
-					.join('<br />')
+				message: m
 			});
 
 			selected.clear();

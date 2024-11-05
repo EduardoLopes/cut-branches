@@ -59,7 +59,14 @@
 			<h3><Markdown md={title} /></h3>
 		{/if}
 		{#if message}
-			<p>
+			<p
+				class={css({
+					'& ul': {
+						listStyle: 'inside',
+						lineHeight: '1.5'
+					}
+				})}
+			>
 				<Markdown md={message} />
 			</p>
 		{/if}
