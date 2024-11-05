@@ -4,51 +4,55 @@
 	import { css } from '@pindoba/panda/css';
 	import Icon from '@iconify/svelte';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { notifications } from '$lib/stores/notifications';
+	import { notifications } from '$lib/stores/notifications.svelte';
 	import { intlFormatDistance } from 'date-fns';
 	import { slide } from 'svelte/transition';
-	import { onDestroy, onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import Notification from './notification.svelte';
 	import { isSameDay } from 'date-fns/isSameDay';
 
 	let open = $state(false);
 	let timeoutID = $state(0);
-	let firstUpdate = $state(false);
 	let showMore = $state(false);
 
+	function handleOpen() {
+		open = true;
+		autoClose();
+	}
+
 	$effect(() => {
-		if (open === false) {
-			showMore = false;
+		if (open) {
+			untrack(autoClose);
+		}
+
+		if (!open) {
+			untrack(() => (showMore = false));
 		}
 	});
+
+	function handleClose() {
+		open = false;
+		showMore = false;
+	}
 
 	function autoClose() {
 		if (open) {
 			window.clearTimeout(timeoutID);
 			timeoutID = window.setTimeout(() => {
-				open = false;
+				handleClose();
 			}, 2000);
 		}
 	}
 
-	const notificationsStoreunsubscribe = notifications.subscribe(() => {
-		if (firstUpdate) {
-			open = true;
-
-			autoClose();
+	$effect(() => {
+		if (notifications.list.length > 0) {
+			untrack(handleOpen);
 		}
 	});
 
 	onMount(() => {
-		firstUpdate = true;
+		handleClose();
 	});
-
-	onDestroy(() => {
-		notificationsStoreunsubscribe();
-	});
-
-	const lastNotification = $derived($notifications[0]);
-	const n = $derived($notifications.filter((_item, index) => index !== 0));
 </script>
 
 <Popover
@@ -135,18 +139,18 @@
 			flexDirection: 'column'
 		})}
 	>
-		{#if $notifications.length === 0}
+		{#if notifications.list.length === 0}
 			<p>You have no new notifications at the moment.</p>
 		{/if}
 
-		{#if lastNotification}
-			<Notification {...lastNotification} />
+		{#if notifications.last && !showMore}
+			<Notification {...notifications.last} />
 		{/if}
 
 		{#if showMore}
-			{#each n as notification, index (notification.id)}
+			{#each notifications.list as notification, index (notification.id)}
 				{@const currentDate = notification?.date}
-				{@const previousDate = n[Math.max(0, index - 1)].date}
+				{@const previousDate = notifications.list[Math.max(0, index - 1)].date}
 
 				{#if currentDate && previousDate && !isSameDay(new Date(currentDate), new Date(previousDate))}
 					<h4>{intlFormatDistance(new Date(currentDate), Date.now())}</h4>
@@ -157,7 +161,7 @@
 			{/each}
 		{/if}
 	</div>
-	{#if $notifications.length > 0}
+	{#if notifications.list.length > 0}
 		<Button
 			onclick={() => (showMore = !showMore)}
 			size="sm"

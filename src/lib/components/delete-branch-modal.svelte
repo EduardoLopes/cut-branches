@@ -7,12 +7,11 @@
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import BranchComponent from '$lib/components/branch.svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
-	import { createNotifications } from '$lib/stores/notifications';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { notifications } from '$lib/stores/notifications.svelte';
 
 	const client = useQueryClient();
-	const notifications = createNotifications();
 	interface Props {
 		currentRepo: Repository;
 		buttonProps?: Omit<ButtonProps, 'onclick'>;

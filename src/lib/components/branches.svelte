@@ -16,7 +16,6 @@
 	import Pagination from '@pindoba/svelte-pagination';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
-	import { createNotifications } from '$lib/stores/notifications';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { onMount, onDestroy } from 'svelte';
 	import { createSearch } from '$lib/stores/search';
@@ -27,8 +26,7 @@
 	import LockBranchToggle from './lock-branch-toggle.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
-
-	const notifications = createNotifications();
+	import { notifications } from '$lib/stores/notifications.svelte';
 	const queryClient = useQueryClient();
 
 	interface Props {
@@ -87,14 +85,12 @@
 
 	function update_repo() {
 		if (currentRepo) {
-			getBranchesQuery.refetch().then(() => {
-				if (getBranchesQuery.isSuccess) {
-					notifications.push({
-						title: 'Repository updated',
-						message: `The repository **${getBranchesQuery.data?.name}** was updated`,
-						feedback: 'success'
-					});
-				}
+			getBranchesQuery.refetch().then((query) => {
+				notifications.push({
+					title: 'Repository updated',
+					message: `The repository **${query.data?.name}** was updated`,
+					feedback: 'success'
+				});
 			});
 		}
 	}

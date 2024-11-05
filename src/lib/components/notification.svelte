@@ -4,7 +4,7 @@
 	import Alert, { type AlertProps } from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
-	import { createNotifications, type Notification } from '../stores/notifications';
+	import { notifications, type Notification } from '../stores/notifications.svelte';
 	import Markdown from 'svelte-exmarkdown';
 
 	type Props = Notification & {
@@ -12,8 +12,6 @@
 	};
 
 	const { feedback, id, title, message, emphasis, date }: Props = $props();
-
-	const { remove } = createNotifications();
 </script>
 
 <Alert
@@ -31,7 +29,7 @@
 			emphasis="ghost"
 			onclick={() => {
 				if (id) {
-					remove(id);
+					notifications.remove(id);
 				}
 			}}
 			passThrough={{

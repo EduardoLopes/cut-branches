@@ -3,7 +3,13 @@ interface Selected {
 	[key: string]: string[];
 }
 
-// Function to retrieve selected branches data from localStorage
+/**
+ * Retrieves the 'selected' item from localStorage and parses it into a Selected object.
+ * If the code is not running in a browser environment or if there is an error during parsing,
+ * an empty object is returned.
+ *
+ * @returns {Selected} The parsed 'selected' item from localStorage, or an empty object if not available or an error occurs.
+ */
 function getLocalStorage(): Selected {
 	// Check if the code is running in a browser environment
 	if (typeof window !== 'undefined') {
@@ -23,7 +29,9 @@ function getLocalStorage(): Selected {
 }
 
 /**
- * Class to manage selected branches for a given repository.
+ * A class to manage the selected branches for a given repository.
+ * It provides methods to add, remove, clear, and check branches in the selected list,
+ * and persists the state in localStorage.
  */
 class SelectedBranches {
 	// Define a private state for the repository

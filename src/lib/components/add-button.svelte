@@ -5,9 +5,7 @@
 	import { useCreateRepositoryID } from '../services/useCreateRepositoryID';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { css } from '@pindoba/panda/css';
-	import { createNotifications } from '../stores/notifications';
-
-	const notifications = createNotifications();
+	import { notifications } from '$lib/stores/notifications.svelte';
 
 	let createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data) {

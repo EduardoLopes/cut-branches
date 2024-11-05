@@ -9,9 +9,7 @@
 	import { browser } from '$app/environment';
 	import type { ServiceError } from '$lib/services/models';
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
-	import { createNotifications } from '$lib/stores/notifications';
-
-	const notifications = createNotifications();
+	import { notifications } from '$lib/stores/notifications.svelte';
 
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {

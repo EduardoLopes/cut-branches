@@ -12,10 +12,8 @@
 	import { page } from '$app/stores';
 	import { css } from '@pindoba/panda/css';
 	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
-	import { createNotifications } from '../stores/notifications';
 	import { open } from '@tauri-apps/plugin-dialog';
-
-	const notifications = createNotifications();
+	import { notifications } from '$lib/stores/notifications.svelte';
 
 	const createRepositoryIDMutation = useCreateRepositoryID({
 		onSuccess(data) {
