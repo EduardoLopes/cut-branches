@@ -33,14 +33,16 @@
 		id?: string;
 	}
 	const { id }: Props = $props();
-	const locked = getLockedBranchesStore(id);
-	const selected = getSelectedBranchesStore(id);
 
 	let { query, ...search } = $derived(createSearch(id));
 
 	const oneMinute = 60000;
 
 	const currentRepo = $derived($repos.filter((item) => item.id === id)[0]);
+
+	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
+	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
+
 	const getBranchesQuery = getRepoByPath(() => currentRepo?.path ?? history.state.path, {
 		staleTime: oneMinute,
 		meta: {
