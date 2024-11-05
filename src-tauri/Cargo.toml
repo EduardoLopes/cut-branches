@@ -22,6 +22,7 @@ execute = "0.2.9"
 thiserror = "1.0.40"
 tokio = { version = "1.11.0", features = ["full"] }
 tauri-plugin-dialog = "2"
+tauri-plugin-shell = "2"
 
 
 [features]

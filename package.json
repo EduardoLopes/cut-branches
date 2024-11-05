@@ -76,6 +76,7 @@
 		"@tanstack/svelte-query": "https://pkg.pr.new/@tanstack/svelte-query@ccce0b8",
 		"@tauri-apps/api": "^2.0.3",
 		"@tauri-apps/plugin-dialog": "~2.0.1",
+		"@tauri-apps/plugin-shell": "~2",
 		"date-fns": "^4.1.0",
 		"hash-it": "^6.0.0",
 		"just-debounce-it": "^3.2.0",
