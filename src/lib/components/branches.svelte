@@ -616,20 +616,27 @@
 														{branch.name}
 													</div>
 												</Checkbox>
-												<Button
-													size="xs"
-													shape="square"
-													emphasis="secondary"
-													class={css({
-														width: '26px',
-														height: '26px',
-														boxShadow: 'none'
-													})}
-													onclick={() => handleSwitchBranch(branch.name)}
+												<Loading
+													isLoading={switchBranchMutation.variables?.branch === branch.name &&
+														switchBranchMutation.isPending}
 												>
-													<Icon icon="octicon:feed-star-16" width="12px" height="12px" />
-													<span class={visuallyHidden()}>Set as current</span>
-												</Button>
+													<Button
+														size="xs"
+														shape="square"
+														emphasis="secondary"
+														disabled={switchBranchMutation.variables?.branch !== branch.name &&
+															switchBranchMutation.isPending}
+														class={css({
+															width: '26px',
+															height: '26px',
+															boxShadow: 'none'
+														})}
+														onclick={() => handleSwitchBranch(branch.name)}
+													>
+														<Icon icon="octicon:feed-star-16" width="12px" height="12px" />
+														<span class={visuallyHidden()}>Set as current</span>
+													</Button>
+												</Loading>
 												<LockBranchToggle repositoryID={id} branch={branch.name} />
 											</div>
 										{/if}
