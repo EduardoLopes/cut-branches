@@ -14,6 +14,10 @@
 	let open = $state(false);
 	let timeoutID = $state(0);
 	let showMore = $state(false);
+	let observer: IntersectionObserver;
+	let sentinel: HTMLElement | null = $state(null);
+	let page = $state(1);
+	const pageSize = 10;
 
 	function handleOpen() {
 		open = true;
@@ -33,6 +37,7 @@
 	function handleClose() {
 		open = false;
 		showMore = false;
+		page = 1;
 	}
 
 	function autoClose() {
@@ -50,8 +55,36 @@
 		}
 	});
 
+	// Function to load more notifications
+	function loadMoreNotifications() {
+		// Simulate loading more notifications (replace with actual logic)
+		page++;
+	}
+
+	// Set up the Intersection Observer
+	function setupObserver() {
+		observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						loadMoreNotifications();
+					}
+				});
+			},
+			{
+				rootMargin: '0px',
+				threshold: 1.0
+			}
+		);
+
+		if (sentinel) {
+			observer.observe(sentinel);
+		}
+	}
+
 	onMount(() => {
 		handleClose();
+		setupObserver();
 	});
 </script>
 
@@ -148,7 +181,7 @@
 		{/if}
 
 		{#if showMore}
-			{#each notifications.list as notification, index (notification.id)}
+			{#each notifications.list.slice(0, page * pageSize) as notification, index (notification.id)}
 				{@const currentDate = notification?.date}
 				{@const previousDate = notifications.list[Math.max(0, index - 1)].date}
 
@@ -161,6 +194,7 @@
 			{/each}
 		{/if}
 	</div>
+	<div bind:this={sentinel}></div>
 	{#if notifications.list.length > 0}
 		<Button
 			onclick={() => (showMore = !showMore)}
