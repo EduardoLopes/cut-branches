@@ -27,6 +27,7 @@
 	$effect(() => {
 		if (open) {
 			untrack(autoClose);
+			page = 1;
 		}
 
 		if (!open) {
@@ -37,7 +38,6 @@
 	function handleClose() {
 		open = false;
 		showMore = false;
-		page = 1;
 	}
 
 	function autoClose() {
