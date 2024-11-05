@@ -23,10 +23,7 @@ impl Hash for RootPathResponse {
 
 pub fn set_current_dir(path: &Path) -> Result<(), Error> {
     env::set_current_dir(&path).map_err(|error| Error {
-        message: format!(
-            "Unable to access the path <strong>{0}</strong>",
-            path.display()
-        ),
+        message: format!("Unable to access the path **{0}**", path.display()),
         description: Some(error.to_string()),
         kind: "unable_to_access_dir".to_string(),
     })
@@ -49,8 +46,10 @@ pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
 
     Err(Error {
         message: format!(
-            "The path <strong style=\"word-break: break-all;\">{0}</strong> is not a git repository",
-            path.display()
+            "The folder **{}** is not a git repository",
+            path.file_name()
+                .unwrap_or_else(|| path.as_os_str())
+                .to_string_lossy()
         ),
         description: Some(stderr),
         kind: "is_not_git_repository".to_string(),
@@ -111,10 +110,7 @@ mod tests {
         // Test with an invalid git repository when the path doesn't exist
         let path = Path::new("/");
         let error = is_git_repository(&path).unwrap_err();
-        assert_eq!(
-            error.message,
-            "The path <strong>/</strong> is not a git repository"
-        );
+        assert_eq!(error.message, "The path **/** is not a git repository");
         assert_eq!(error.kind, "is_not_git_repository");
     }
 
@@ -130,10 +126,7 @@ mod tests {
         // Test with an invalid git repository when the path doesn't exist
         let path = String::from("/");
         let error = get_root(path).await.unwrap_err();
-        assert_eq!(
-            error.message,
-            "The path <strong>/</strong> is not a git repository"
-        );
+        assert_eq!(error.message, "The path **/** is not a git repository");
         assert_eq!(error.kind, "is_not_git_repository");
     }
 }
