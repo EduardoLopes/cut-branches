@@ -20,7 +20,7 @@
 	let open = $state(false);
 
 	let { currentRepo, buttonProps }: Props = $props();
-	const selected = getSelectedBranchesStore(currentRepo.id);
+	const selected = $derived(getSelectedBranchesStore(currentRepo.name));
 	const oneMinute = 60000;
 	let currentPath = $derived(currentRepo?.path);
 	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
