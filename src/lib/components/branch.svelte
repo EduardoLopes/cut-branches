@@ -106,20 +106,19 @@
 				flexDirection: 'column',
 				borderTopWidth: '1px',
 				borderTopColor: 'colorPalette.400',
-				borderTopStyle: 'solid',
-				color: 'colorPalette.800'
+				borderTopStyle: 'solid'
 			})}
 		>
 			<div
 				class={css({
 					fontSize: 'xs',
 					textTransform: 'uppercase',
-					color: 'colorPalette.600',
 					display: 'flex',
 					flexDirection: 'row',
 					alignItems: 'center',
 					gap: 'xxs',
-					pindobaTransition: 'fast'
+					pindobaTransition: 'fast',
+					pindobaTextColor: 'xs'
 				})}
 			>
 				<Icon icon="lucide:git-commit-horizontal" width="16px" height="16px" /> Last commit
@@ -138,8 +137,7 @@
 				class={css({
 					display: 'flex',
 					flexDirection: 'row',
-					gap: 'sm',
-					color: 'colorPalette.800'
+					gap: 'sm'
 				})}
 			>
 				<span
@@ -149,6 +147,7 @@
 						flexDirection: 'row',
 						alignItems: 'center',
 						gap: 'xxs',
+						pindobaTextColor: 'sm',
 						pindobaTransition: 'fast'
 					})}
 					title={data.last_commit.email.replace(/^<|>$/g, '')}
@@ -159,11 +158,11 @@
 				<span
 					class={css({
 						fontSize: 'sm',
-						color: 'colorPalette.700',
 						display: 'flex',
 						flexDirection: 'row',
 						alignItems: 'center',
 						gap: 'xxs',
+						pindobaTextColor: 'xl',
 						pindobaTransition: 'fast'
 					})}
 					title={formatDate(data.last_commit.date)}

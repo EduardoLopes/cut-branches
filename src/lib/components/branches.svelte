@@ -216,11 +216,8 @@
 		{#key getBranchesQuery.data?.name}
 			<h2
 				class={css({
-					fontSize: 'xl',
-					textAlign: 'left',
-					textTransform: 'uppercase',
-					fontWeight: 'bold',
-					color: 'neutral.950'
+					textStyle: '4xl',
+					textTransform: 'uppercase'
 				})}
 			>
 				{#if getBranchesQuery.data?.name}

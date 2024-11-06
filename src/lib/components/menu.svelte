@@ -105,9 +105,8 @@
 				_light: {
 					color: 'primary.800.contrast'
 				},
-				fontSize: 'lg',
-				margin: '0',
-				fontWeight: 'bold'
+				textStyle: '4xl',
+				margin: '0'
 			})}
 		>
 			Cut Branches
