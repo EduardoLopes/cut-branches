@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { Branch } from '$lib/stores/repos';
-	import { repos } from '$lib/stores/repos';
+	import type { Branch } from '$lib/stores/repos.svelte';
+	import { repositories } from '$lib/stores/repos.svelte';
 	import Button from '@pindoba/svelte-button';
 	import BranchComponent from '$lib/components/branch.svelte';
 	import Icon from '@iconify/svelte';
@@ -38,8 +38,7 @@
 
 	const oneMinute = 60000;
 
-	const currentRepo = $derived($repos.filter((item) => item.id === id)[0]);
-
+	const currentRepo = $derived(repositories.findById(id));
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 
@@ -126,14 +125,14 @@
 		}
 	});
 
-	let selectibleCount = $derived(
-		Math.max(
-			0,
-			branches?.filter(
-				(item) => item.name !== getBranchesQuery.data?.current_branch && !locked.has(item.name)
-			)?.length ?? 0
-		)
-	);
+	let selectibleCount = $derived.by(() => {
+		if (!branches || !getBranchesQuery.data) {
+			return 0;
+		}
+		return branches.filter(
+			(item) => item.name !== getBranchesQuery.data.current_branch && !locked.has(item.name)
+		).length;
+	});
 
 	let searchNoResultsFound = $derived(($query?.length ?? 0) > 0 && branches?.length === 0);
 
@@ -233,7 +232,9 @@
 					<span class={visuallyHidden()}>Update</span>
 				</Button>
 
-				<RemoveRepositoryModal {currentRepo} />
+				{#if currentRepo}
+					<RemoveRepositoryModal {currentRepo} />
+				{/if}
 			</Group>
 		</Loading>
 	</div>
@@ -456,7 +457,7 @@
 								</Button>
 							</Group>
 						{/if}
-						{#if selectibleCount > 0}
+						{#if selectibleCount > 0 && currentRepo}
 							<div>
 								<DeleteBranchModal {currentRepo} buttonProps={{ disabled: selectedLength === 0 }} />
 							</div>

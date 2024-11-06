@@ -1,4 +1,4 @@
-import { repos, type RepositoryData } from '$lib/stores/repos';
+import { repositories, type RepositoryData } from '$lib/stores/repos.svelte';
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 
 import { invoke } from '@tauri-apps/api/core';
@@ -33,16 +33,7 @@ export function getRepoByPath(
 					current_branch: resParser.current_branch
 				};
 
-				repos.update((items) => {
-					const repo = items.find((item) => item.path === data.path);
-
-					if (repo) {
-						repo.branchesCount = data.branches.length;
-					}
-
-					return [...items];
-				});
-
+				repositories.updateBranchesCount(data.path, data.branches.length);
 				return data;
 			});
 		},

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { repos } from '$lib/stores/repos';
+	import { repositories } from '$lib/stores/repos.svelte';
 
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
@@ -45,7 +45,7 @@
 	}
 
 	const items = $derived(
-		$repos.map((repo) => ({
+		repositories.list.map((repo) => ({
 			id: repo.id,
 			label: repo.name,
 			href: `/repos/${repo.id}`,
@@ -154,7 +154,7 @@
 				</Button>
 			</Loading>
 		</div>
-		{#if $repos}
+		{#if repositories.list.length > 0}
 			<Navigation
 				{items}
 				activeItem={$page.params.id}

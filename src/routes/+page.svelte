@@ -1,28 +1,32 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page, navigating } from '$app/stores';
-	import { repos } from '$lib/stores/repos';
+	import { repositories } from '$lib/stores/repos.svelte';
 	import { onMount } from 'svelte';
 
 	function checkRedirect() {
-		if ($repos.length === 0) {
+		console.log('redirecting to /add-first');
+
+		if (repositories.list.length === 0) {
 			goto('/add-first');
 		}
 
 		// if is in any route that requires a repo id and the repo does not exist in the app anymore
-		const idExists = $repos.filter((item) => item.id === $page.params.id).length > 0;
+		const idExists = Boolean(repositories.findById($page.params.id));
 
-		if ($repos.length > 0 && !idExists) {
-			goto(`/repos/${$repos[0].id}`);
+		if (repositories.first?.id && !idExists) {
+			goto(`/repos/${repositories.first.id}`);
 		}
 	}
+
+	$effect(() => {
+		// checks every time route change
+		if ($navigating || repositories.list) {
+			checkRedirect();
+		}
+	});
 
 	onMount(() => {
 		checkRedirect();
 	});
-
-	// checks every time route change
-	$: if ($navigating) checkRedirect();
-	// checks every time the repos store changes
-	$: if ($repos) checkRedirect();
 </script>

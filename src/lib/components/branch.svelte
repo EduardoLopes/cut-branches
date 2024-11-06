@@ -2,7 +2,7 @@
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { css } from '@pindoba/panda/css';
-	import type { Branch } from '$lib/stores/repos';
+	import type { Branch } from '$lib/stores/repos.svelte';
 	import { formatDate } from '$lib/utils/format-date';
 	import { intlFormatDistance } from 'date-fns';
 	import Icon from '@iconify/svelte';
@@ -162,7 +162,7 @@
 						flexDirection: 'row',
 						alignItems: 'center',
 						gap: 'xxs',
-						pindobaTextColor: 'xl',
+						pindobaTextColor: 'xs',
 						pindobaTransition: 'fast'
 					})}
 					title={formatDate(data.last_commit.date)}

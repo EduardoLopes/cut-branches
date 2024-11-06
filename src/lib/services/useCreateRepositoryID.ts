@@ -1,4 +1,4 @@
-import { repos, type Repository } from '$lib/stores/repos';
+import { repositories, type Repository } from '$lib/stores/repos.svelte';
 import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import type { ServiceError } from './models';
 import { invoke } from '@tauri-apps/api/core';
@@ -39,12 +39,9 @@ export function useCreateRepositoryID(options?: CreateRepositoryIDMutationOption
 					id: String(resParser.id)
 				};
 
-				repos.update((items) => {
-					items = items.filter((item) => item.id !== data.id);
-					items.push(data);
-
-					return items;
-				});
+				if (!repositories.findByPath(data.path)) {
+					repositories.add(data);
+				}
 
 				return data;
 			});

@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { type Repository } from '$lib/stores/repos';
+	import { type Repository } from '$lib/stores/repos.svelte';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { repos } from '$lib/stores/repos';
+	import { repositories } from '$lib/stores/repos.svelte';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import { goto } from '$app/navigation';
 
 	interface Props {
 		currentRepo: Repository;
@@ -16,9 +17,9 @@
 	let { currentRepo }: Props = $props();
 
 	function handleRemove() {
-		$repos = $repos.filter((item) => {
-			return item.id !== currentRepo?.id;
-		});
+		repositories.remove(currentRepo?.id);
+
+		goto(repositories.first?.id ? `/repos/${repositories.first?.id}` : `/add-first`);
 
 		open = false;
 	}

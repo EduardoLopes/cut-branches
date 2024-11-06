@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
-	import { repos } from '$lib/stores/repos';
+	import { repositories } from '$lib/stores/repos.svelte';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
@@ -13,9 +13,8 @@
 
 	let { branch, repositoryID }: Props = $props();
 
-	const currentRepo = $derived($repos.filter((item) => item.id === repositoryID)[0]);
-
-	const locked = $derived(getLockedBranchesStore(currentRepo.name));
+	const currentRepo = $derived(repositories.findById(repositoryID));
+	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 </script>
 
 <Button

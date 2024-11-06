@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { type Branch, type Repository } from '$lib/stores/repos';
+	import { type Branch, type Repository } from '$lib/stores/repos.svelte';
 	import Icon from '@iconify/svelte';
 	import { css } from '@pindoba/panda/css';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
