@@ -1,9 +1,9 @@
-import globals from 'globals';
 import pluginJs from '@eslint/js';
-import { configs as tsConfigs, parser as tsParser } from 'typescript-eslint';
-import svelte from 'eslint-plugin-svelte';
 import prettier from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
+import { configs as tsConfigs, parser as tsParser } from 'typescript-eslint';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -41,7 +41,16 @@ export default [
 					ignoreRestSiblings: true
 				}
 			],
-			'import/order': ['error', { 'newlines-between': 'always' }],
+			'import/order': [
+				'warn',
+				{
+					alphabetize: {
+						order: 'asc',
+						caseInsensitive: true
+					},
+					'newlines-between': 'always-and-inside-groups'
+				}
+			],
 			'import/no-unresolved': [
 				'error',
 				{
@@ -52,9 +61,6 @@ export default [
 			'import/no-named-as-default': 'off'
 		},
 		settings: {
-			'import/parsers': {
-				'@typescript-eslint/parser': ['.ts', '.tsx']
-			},
 			'import/resolver': {
 				typescript: {
 					alwaysTryTypes: true,
