@@ -401,7 +401,7 @@
 								flexDirection: 'column',
 								gridAutoRows: 'max-content',
 								gap: 'md',
-								padding: '16px',
+								padding: 'md',
 								paddingTop: '0',
 								zIndex: '0',
 								height: '100%',
@@ -414,30 +414,17 @@
 										class={css({
 											position: 'relative',
 											display: 'grid',
-											gridTemplateColumns: 'token(spacing.lg) auto',
-											gap: 'md',
+											gridTemplateColumns: 'auto 1fr',
+											gap: 'sm',
 											borderRadius: 'sm'
 										})}
 										class:selected={selected.has(branch.name)}
 									>
-										<!-- Nice animation that has bad performance -->
-										<!-- in:fly={{
-											x: -30,
-											duration: 150,
-											delay: 20 * (index + 1 / paginatedBranches.length)
-										}}
-										out:fly|local={{
-											x: -30,
-											duration: 150,
-											delay: 20 * (index + 1 / paginatedBranches.length)
-										}} -->
-
 										{#if currentRepo?.currentBranch !== branch.name}
 											<div
 												class={css({
 													display: 'flex',
 													flexDirection: 'column',
-													alignItems: 'center',
 													gap: 'xs'
 												})}
 											>

@@ -59,7 +59,6 @@
 	}
 </script>
 
-{JSON.stringify(search.list)}
 <div
 	class={css({
 		display: 'flex',
@@ -90,7 +89,7 @@
 						flexDirection: 'row',
 						alignItems: 'center',
 						height: '100%',
-						gap: 'md'
+						gap: 'sm'
 					})}
 				>
 					<Checkbox
@@ -125,7 +124,7 @@
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
-			gap: 'md'
+			gap: 'xs'
 		})}
 	>
 		<Group>
