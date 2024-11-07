@@ -13,7 +13,7 @@
 	interface Props extends ButtonProps {
 		icon?: string;
 		iconColor?: string;
-		visualltHiddenLabel?: boolean;
+		visuallyHiddenLabel?: boolean;
 	}
 
 	const {
@@ -21,7 +21,7 @@
 		emphasis = 'secondary',
 		icon = 'material-symbols:add-circle-outline-rounded',
 		iconColor = token('colors.primary.950'),
-		visualltHiddenLabel = false,
+		visuallyHiddenLabel = false,
 		...props
 	}: Props = $props();
 
@@ -78,9 +78,12 @@
 			gap: 'sm'
 		})}
 	>
-		{#if visualltHiddenLabel}
+		{#if visuallyHiddenLabel}
 			<span class={visuallyHidden()}>Add a git repository</span>
+		{:else}
+			<span>Add a git repository</span>
 		{/if}
+
 		<Icon {icon} width="20px" height="20px" color={iconColor} />
 	</div>
 </Button>
