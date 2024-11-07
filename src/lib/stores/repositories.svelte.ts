@@ -70,15 +70,18 @@ class RepositoriesStore {
 
 	/**
 	 * Adds a repository to the store.
-	 * If a repository with the same id already exists, it will not be added.
+	 * If a repository with the same id already exists, it will be updated.
 	 *
-	 * @param repo - The repository to add.
+	 * @param repo - The repository to add or update.
 	 */
 	add(repo: Repository) {
-		if (!this.#repositories.some((existingRepo) => existingRepo.id === repo.id)) {
+		const index = this.#repositories.findIndex((existingRepo) => existingRepo.id === repo.id);
+		if (index !== -1) {
+			this.#repositories[index] = repo;
+		} else {
 			this.#repositories = [...this.#repositories, repo];
-			this.#updateBranches();
 		}
+		this.#updateBranches();
 	}
 
 	/**
