@@ -18,7 +18,7 @@
 		"story:build": "histoire build",
 		"story:preview": "histoire preview",
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
-		"prepare": "panda codegen && lefthook install",
+		"prepare": "panda codegen && lefthook install && svelte-kit sync",
 		"version-packages": "git push && changeset version",
 		"release": "changeset tag",
 		"clean": "rm -rf dist && rm -rf node_modules"
@@ -40,6 +40,8 @@
 		"dotenv-cli": "^7.4.2",
 		"eslint": "^9.14.0",
 		"eslint-config-prettier": "^9.1.0",
+		"eslint-import-resolver-typescript": "^3.6.3",
+		"eslint-plugin-import": "^2.31.0",
 		"eslint-plugin-svelte": "^2.46.0",
 		"globals": "^15.12.0",
 		"lefthook": "^1.8.2",
