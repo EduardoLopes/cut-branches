@@ -32,27 +32,27 @@
 		if (repoQuery.data) {
 			goto(`/repos/${repoQuery.data.id}`);
 		}
-		untrack(() => {
-			// success
-			if (repoQuery.isSuccess) {
+		if (repoQuery.isSuccess) {
+			untrack(() => {
+				// success
 				notifications.push({
 					feedback: 'success',
 					title: 'Repository added',
 					message: `The repository ${repoQuery.data.name} was added successfully`
 				});
-			}
-		});
+			});
+		}
 
-		// error
-		untrack(() => {
-			if (repoQuery.isError) {
+		if (repoQuery.isError) {
+			// error
+			untrack(() => {
 				notifications.push({
 					feedback: 'danger',
 					title: repoQuery.error.message,
 					message: repoQuery.error.description
 				});
-			}
-		});
+			});
+		}
 	});
 
 	function handleAddClick() {

@@ -136,8 +136,10 @@
 				<AddButton
 					size="sm"
 					emphasis="secondary"
+					shape="square"
 					icon="material-symbols:add-rounded"
 					iconColor="token(colors.primary.600)"
+					visuallyHiddenLabel={true}
 					passThrough={{
 						root: css.raw({
 							background: 'transparent',
