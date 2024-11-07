@@ -1,6 +1,6 @@
 // Define an interface for the selected branches structure
 interface Selected {
-	[key: string]: string[];
+	[key: string]: Set<string>;
 }
 
 /**
@@ -17,7 +17,12 @@ function getLocalStorage(): Selected {
 			// Attempt to get the 'selected' item from localStorage
 			const data = localStorage?.getItem('selected');
 			// Parse and return the data if it exists, otherwise return an empty object
-			return data ? JSON.parse(data) : {};
+			const parsedData = data ? JSON.parse(data) : {};
+			// Convert arrays to Sets
+			Object.keys(parsedData).forEach((key) => {
+				parsedData[key] = new Set(parsedData[key]);
+			});
+			return parsedData;
 		} catch (error) {
 			// Log any errors that occur during parsing
 			console.error('Error parsing localStorage data:', error);
@@ -44,7 +49,9 @@ class SelectedBranches {
 	 *
 	 * @returns An array of locked branch names.
 	 */
-	list = $derived(this.#repository ? (this.#selected[this.#repository] ?? []) : []);
+	list = $derived(
+		this.#repository ? Array.from(this.#selected[this.#repository] ?? new Set()) : []
+	);
 
 	// Constructor to initialize the repository
 	constructor(repository?: string) {
@@ -61,11 +68,11 @@ class SelectedBranches {
 	add(branches: string[]) {
 		if (this.#repository) {
 			// Get the current list of selected branches for the repository
-			const ids = this.#selected[this.#repository] ?? [];
-			// Combine the current list with the new branches and remove duplicates
-			const uniqueIds = Array.from(new Set([...ids, ...branches]));
+			const ids = this.#selected[this.#repository] ?? new Set();
+			// Add new branches to the set to ensure uniqueness
+			branches.forEach((branch) => ids.add(branch));
 			// Update the selected branches state
-			this.#selected = { ...this.#selected, [this.#repository]: uniqueIds };
+			this.#selected = { ...this.#selected, [this.#repository]: ids };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -73,12 +80,12 @@ class SelectedBranches {
 
 	/**
 	 * Clears the selected branches for the current repository.
-	 * If a repository is specified, it sets the selected branches list for that repository to an empty array.
+	 * If a repository is specified, it sets the selected branches list for that repository to an empty set.
 	 */
 	clear() {
 		if (this.#repository) {
-			// Set the selected branches list for the repository to an empty array
-			this.#selected = { ...this.#selected, [this.#repository]: [] };
+			// Set the selected branches list for the repository to an empty set
+			this.#selected = { ...this.#selected, [this.#repository]: new Set() };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -92,12 +99,11 @@ class SelectedBranches {
 	remove(branches: string[]) {
 		if (this.#repository) {
 			// Get the current list of selected branches for the repository
-			const ids = this.#selected[this.#repository] ?? [];
-			// Filter out the branches to be removed
-			this.#selected = {
-				...this.#selected,
-				[this.#repository]: ids.filter((id: string) => !branches.includes(id))
-			};
+			const ids = this.#selected[this.#repository] ?? new Set();
+			// Remove the branches from the set
+			branches.forEach((branch) => ids.delete(branch));
+			// Update the selected branches state
+			this.#selected = { ...this.#selected, [this.#repository]: ids };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -110,7 +116,7 @@ class SelectedBranches {
 	 * @returns `true` if the branch is in the selected list, otherwise `false`.
 	 */
 	has(branch: string): boolean {
-		return this.#repository ? (this.#selected[this.#repository]?.includes(branch) ?? false) : false;
+		return this.#repository ? (this.#selected[this.#repository]?.has(branch) ?? false) : false;
 	}
 
 	/**
@@ -119,8 +125,13 @@ class SelectedBranches {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined') {
 			try {
+				// Convert Sets to arrays for storage
+				const dataToStore = { ...this.#selected };
+				Object.keys(dataToStore).forEach((key) => {
+					dataToStore[key] = Array.from(dataToStore[key]);
+				});
 				// Set the 'selected' item in localStorage with the current state
-				localStorage?.setItem('selected', JSON.stringify(this.#selected));
+				localStorage?.setItem('selected', JSON.stringify(dataToStore));
 			} catch (error) {
 				// Log any errors that occur during setting localStorage
 				console.error('Error setting localStorage data:', error);
