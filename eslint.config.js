@@ -57,8 +57,8 @@ export default [
 					ignore: ['\\$app.*$', '\\$service-worker.*$']
 				}
 			],
-			'import/no-duplicates': 'off',
-			'import/no-named-as-default': 'off'
+			'import/no-duplicates': 'warn',
+			'import/no-named-as-default': 'error'
 		},
 		settings: {
 			'import/resolver': {
@@ -79,7 +79,8 @@ export default [
 	{
 		files: ['**/*.svelte'],
 		rules: {
-			'import/no-named-as-default': 'off'
+			'import/no-named-as-default': 'off',
+			'import/no-duplicates': 'off'
 		},
 		languageOptions: {
 			parserOptions: {

@@ -4,8 +4,9 @@
 	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import { intlFormatDistance } from 'date-fns';
 	import { isSameDay } from 'date-fns/isSameDay';
-	import { untrack, onMount, slide } from 'svelte';
-	import Notification from './notification.svelte';
+	import { untrack, onMount } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import Notification from '$lib/components/notification.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';

@@ -2,7 +2,7 @@ import { getSelectedBranchesStore } from './selected-branches.svelte';
 
 // Define an interface for the locked branches structure
 interface Locked {
-	[key: string]: string[];
+	[key: string]: Set<string>;
 }
 
 // Function to retrieve locked branches data from localStorage
@@ -13,7 +13,13 @@ function getLocalStorage(): Locked {
 			// Attempt to get the 'locked' item from localStorage
 			const data = localStorage?.getItem('locked');
 			// Parse and return the data if it exists, otherwise return an empty object
-			return data ? JSON.parse(data) : {};
+			const parsedData = data ? JSON.parse(data) : {};
+			// Convert arrays to sets
+			const locked: Locked = {};
+			for (const key in parsedData) {
+				locked[key] = new Set(parsedData[key]);
+			}
+			return locked;
 		} catch (error) {
 			// Log any errors that occur during parsing
 			console.error('Error parsing localStorage data:', error);
@@ -48,7 +54,7 @@ class LockedBranches {
 	 *
 	 * @returns An array of locked branch names.
 	 */
-	list = $derived(this.#repository ? (this.#locked[this.#repository] ?? []) : []);
+	list = $derived(this.#repository ? Array.from(this.#locked[this.#repository] ?? []) : []);
 
 	// Constructor to initialize the repository
 	constructor(repository?: string) {
@@ -65,12 +71,12 @@ class LockedBranches {
 	// Method to add branches to the locked branches state
 	add(branches: string[]) {
 		if (this.#repository) {
-			// Get the current list of locked branches for the repository
-			const ids = this.#locked[this.#repository] ?? [];
-			// Combine the current list with the new branches and remove duplicates
-			const uniqueIds = Array.from(new Set([...ids, ...branches]));
+			// Get the current set of locked branches for the repository
+			const ids = this.#locked[this.#repository] ?? new Set<string>();
+			// Add new branches to the set
+			branches.forEach((branch) => ids.add(branch));
 			// Update the locked branches state
-			this.#locked = { ...this.#locked, [this.#repository]: uniqueIds };
+			this.#locked = { ...this.#locked, [this.#repository]: ids };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 
@@ -81,13 +87,13 @@ class LockedBranches {
 
 	/**
 	 * Clears the locked branches for the current repository.
-	 * If a repository is specified, it sets the locked branches list for that repository to an empty array.
+	 * If a repository is specified, it sets the locked branches list for that repository to an empty set.
 	 */
 	// Method to clear the locked branches for the current repository
 	clear() {
 		if (this.#repository) {
-			// Set the locked branches list for the repository to an empty array
-			this.#locked = { ...this.#locked, [this.#repository]: [] };
+			// Set the locked branches list for the repository to an empty set
+			this.#locked = { ...this.#locked, [this.#repository]: new Set<string>() };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -100,13 +106,12 @@ class LockedBranches {
 	 */
 	remove(branches: string[]) {
 		if (this.#repository) {
-			// Get the current list of locked branches for the repository
-			const ids = this.#locked[this.#repository] ?? [];
-			// Filter out the branches to be removed
-			this.#locked = {
-				...this.#locked,
-				[this.#repository]: ids.filter((id: string) => !branches.includes(id))
-			};
+			// Get the current set of locked branches for the repository
+			const ids = this.#locked[this.#repository] ?? new Set<string>();
+			// Remove the branches from the set
+			branches.forEach((branch) => ids.delete(branch));
+			// Update the locked branches state
+			this.#locked = { ...this.#locked, [this.#repository]: ids };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -119,7 +124,7 @@ class LockedBranches {
 	 * @returns `true` if the branch is in the locked list, otherwise `false`.
 	 */
 	has(branch: string): boolean {
-		return this.#repository ? (this.#locked[this.#repository]?.includes(branch) ?? false) : false;
+		return this.#repository ? (this.#locked[this.#repository]?.has(branch) ?? false) : false;
 	}
 
 	/**
@@ -128,8 +133,13 @@ class LockedBranches {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined') {
 			try {
+				// Convert sets to arrays for storage
+				const locked: { [key: string]: string[] } = {};
+				for (const key in this.#locked) {
+					locked[key] = Array.from(this.#locked[key]);
+				}
 				// Set the 'locked' item in localStorage with the current state
-				localStorage?.setItem('locked', JSON.stringify(this.#locked));
+				localStorage?.setItem('locked', JSON.stringify(locked));
 			} catch (error) {
 				// Log any errors that occur during setting localStorage
 				console.error('Error setting localStorage data:', error);
