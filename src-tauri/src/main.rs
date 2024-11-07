@@ -14,7 +14,7 @@ use path::set_current_dir;
 use std::process::Command;
 
 use std::path::Path;
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub struct Commit {
     hash: String,
     date: String,
@@ -23,7 +23,7 @@ pub struct Commit {
     email: String,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub struct Branch {
     name: String,
     fully_merged: bool,
@@ -302,7 +302,8 @@ async fn get_repo_info(path: String) -> Result<String, Error> {
 
     path::set_current_dir(&raw_root_path)?;
 
-    let branches = get_all_branches_with_last_commit(&raw_root_path)?;
+    let mut branches = get_all_branches_with_last_commit(&raw_root_path)?;
+    branches.sort_by(|a, b| b.current.cmp(&a.current));
     let current = get_current_branch(&raw_root_path)?;
 
     let repo_name = raw_root_path
@@ -347,7 +348,8 @@ async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
     set_current_dir(&raw_path)?;
 
     // Check if the branch exists
-    if !branch_exists(path.clone(), branch.clone()).unwrap() {
+    let branch_exists = branch_exists(path.clone(), branch.clone()).unwrap();
+    if !branch_exists {
         return Err(Error {
             message: format!("Branch **{0}** not found", branch),
             description: None,
