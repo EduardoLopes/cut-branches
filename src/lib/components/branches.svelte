@@ -5,14 +5,13 @@
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
-	import TextInput from '@pindoba/svelte-text-input';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
 	import { navigating, page } from '$app/stores';
 	import BranchComponent from '$lib/components/branch.svelte';
-	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
+	import BulkActions from '$lib/components/branches-bulk-actions.svelte';
 	import LockBranchToggle from '$lib/components/lock-branch-toggle.svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
@@ -26,6 +25,7 @@
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
+
 	const queryClient = useQueryClient();
 
 	interface Props {
@@ -296,161 +296,19 @@
 			{/if}
 			<!-- ERRO MESSAGE END -->
 			{#if !hasNoBranchesToDelete}
-				<!-- BULK ACTIONS -->
-				<div
-					class={css({
-						display: 'flex',
-						justifyContent: 'space-between',
-						alignItems: 'center',
-						padding: 'md',
-						zIndex: '10',
-						flexShrink: '0',
-						position: 'sticky',
-						top: '0',
-						translucent: 'md'
-					})}
-				>
-					<div
-						class={css({
-							display: 'flex',
-							flexDirection: 'row',
-							alignItems: 'center',
-							height: '100%',
-							gap: 'md'
-						})}
-					>
-						{#if selectibleCount > 0}
-							{#key selectibleCount}
-								<div
-									class={css({
-										display: 'flex',
-										flexDirection: 'row',
-										alignItems: 'center',
-										height: '100%',
-										gap: 'md'
-									})}
-								>
-									<Checkbox
-										id="select-all"
-										indeterminate={selectedSearchLength !== selectibleCount &&
-											selectedSearchLength > 0}
-										onclick={() => {
-											const indeterminate =
-												selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
-
-											if (indeterminate || selectedSearchLength === 0) {
-												selected.add(
-													branches
-														?.map((item) => item.name)
-														.filter(
-															(item) => item !== currentRepo?.currentBranch && !locked.has(item)
-														) ?? []
-												);
-											} else {
-												selected.remove(
-													branches
-														?.map((item) => item.name)
-														.filter((item) => item !== currentRepo?.currentBranch) ?? []
-												);
-											}
-										}}
-										checked={selectedSearchLength === selectibleCount}
-									>
-										<div class={visuallyHidden()}>Select all</div>
-									</Checkbox>
-
-									{#if $query?.length ?? 0 > 0}
-										<div
-											class={css({
-												fontSize: 'md'
-											})}
-										>
-											<span
-												class={css({
-													color: 'neutral.950.contrast'
-												})}
-											>
-												{selectedLength}
-											</span>
-											are selected /
-											<span
-												class={css({
-													color: 'neutral.950.contrast'
-												})}
-											>
-												{selectibleCount}
-											</span>
-											{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
-											<strong
-												class={css({
-													color: 'primary.800'
-												})}
-											>
-												{$query?.trim()}
-											</strong>
-										</div>
-									{/if}
-
-									{#if $query?.length === 0 || typeof $query === 'undefined'}
-										{selectedLength} / {selectibleCount} branches
-									{/if}
-								</div>
-							{/key}
-						{/if}
-					</div>
-
-					<div
-						class={css({
-							display: 'flex',
-							flexDirection: 'row',
-							alignItems: 'center',
-							gap: 'md'
-						})}
-					>
-						{#if !hasNoBranchesToDelete && !getBranchesQuery.isError}
-							<Group>
-								<TextInput
-									class={css({
-										width: '130px'
-									})}
-									heightSize="sm"
-									oninput={(event) => {
-										const target = event.target as HTMLInputElement;
-										search.set(String(target.value));
-										currentPage = 1;
-									}}
-									autocorrect="off"
-									placeholder="Search branches"
-									bind:value={$query}
-								/>
-								<Button
-									size="sm"
-									onclick={() => {
-										clearSearch();
-									}}
-									disabled={!$query}
-								>
-									<div
-										class={css({
-											display: 'flex',
-											alignItems: 'center',
-											gap: 'xs'
-										})}
-									>
-										<Icon icon="mdi:clear" width="16px" height="16px" />
-										<span class={visuallyHidden()}>Clear search</span>
-									</div>
-								</Button>
-							</Group>
-						{/if}
-						{#if selectibleCount > 0 && currentRepo}
-							<div>
-								<DeleteBranchModal {currentRepo} buttonProps={{ disabled: selectedLength === 0 }} />
-							</div>
-						{/if}
-					</div>
-				</div>
-				<!-- BULK ACTIONS END -->
+				<BulkActions
+					{currentRepo}
+					{selectibleCount}
+					{selectedLength}
+					{selectedSearchLength}
+					{branches}
+					query={$query}
+					onSearch={(value) => {
+						search.set(value);
+						currentPage = 1;
+					}}
+					onClearSearch={clearSearch}
+				/>
 			{/if}
 
 			{#if getBranchesQuery.isSuccess}
