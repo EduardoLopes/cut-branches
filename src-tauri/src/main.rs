@@ -32,10 +32,14 @@ pub struct Branch {
 }
 
 #[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 struct GitDirResponse {
-    root_path: String,
+    path: String,
     branches: Vec<Branch>,
     current_branch: String,
+    branches_count: usize,
+    name: String,
+    id: String,
 }
 
 // This function returns a vector of all branches in a git repository.
@@ -118,7 +122,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
 
         let current_branch = get_current_branch(path)?;
 
-        let branches: Vec<Branch> = output
+        let mut branches: Vec<Branch> = output
             .trim()
             .split("\n")
             .map(|line| {
@@ -139,6 +143,8 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
                 }
             })
             .collect();
+
+        branches.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
         return Ok(branches);
     }
@@ -282,10 +288,14 @@ async fn get_repo_info(path: String) -> Result<String, Error> {
 
     path::is_git_repository(&raw_path)?;
 
-    let unserialized_root_path: String = path::get_root(path).await?;
+    let unserialized_root_path: String = path::get_root(path.clone()).await?;
 
     let root_path = serde_json::from_str::<path::RootPathResponse>(&unserialized_root_path)
-        .unwrap()
+        .map_err(|e| Error {
+            message: format!("Failed to parse root path response: {}", e),
+            description: None,
+            kind: "parse_failed".to_string(),
+        })?
         .root_path;
 
     let raw_root_path = Path::new(&root_path);
@@ -295,13 +305,36 @@ async fn get_repo_info(path: String) -> Result<String, Error> {
     let branches = get_all_branches_with_last_commit(&raw_root_path)?;
     let current = get_current_branch(&raw_root_path)?;
 
+    let repo_name = raw_root_path
+        .file_name()
+        .ok_or_else(|| Error {
+            message: "Failed to get repository name".to_string(),
+            description: None,
+            kind: "repo_name_failed".to_string(),
+        })?
+        .to_str()
+        .ok_or_else(|| Error {
+            message: "Failed to convert repository name to string".to_string(),
+            description: None,
+            kind: "repo_name_failed".to_string(),
+        })?
+        .to_string();
+    let branches_count = branches.len();
+
     let response = GitDirResponse {
-        root_path,
+        path: root_path,
         branches,
         current_branch: current.to_string(),
+        branches_count,
+        name: repo_name.clone(),
+        id: repo_name,
     };
 
-    Ok(serde_json::to_string(&response).unwrap())
+    Ok(serde_json::to_string(&response).map_err(|e| Error {
+        message: format!("Failed to serialize response: {}", e),
+        description: None,
+        kind: "serialization_failed".to_string(),
+    })?)
 }
 
 // This function switches to another branch in a git repository.

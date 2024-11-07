@@ -60,15 +60,15 @@ function getLocalStorage(): Notification[] {
 		try {
 			// Attempt to get the 'selected' item from localStorage
 			const data = localStorage?.getItem('notifications');
-			// Parse and return the data if it exists, otherwise return an empty object
-			return data ? JSON.parse(data) : {};
+			// Parse and return the data if it exists, otherwise return an empty array
+			return data ? JSON.parse(data) : [];
 		} catch (error) {
 			// Log any errors that occur during parsing
 			console.error('Error parsing localStorage data:', error);
 			return [];
 		}
 	}
-	// Return an empty object if not in a browser environment
+	// Return an empty array if not in a browser environment
 	return [];
 }
 

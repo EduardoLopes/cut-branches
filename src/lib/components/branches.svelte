@@ -72,18 +72,6 @@
 		}
 	}
 
-	// current branch first
-	function sort(a: Branch, b: Branch) {
-		if (a.current) {
-			return -1;
-		}
-		if (b.current) {
-			return 1;
-		}
-		// a must be equal to b
-		return 0;
-	}
-
 	function update_repo() {
 		if (currentRepo) {
 			getBranchesQuery.refetch().then((query) => {
@@ -105,8 +93,8 @@
 	let itemsPerPage = $state(10);
 
 	let branches = $derived(
-		getBranchesQuery.data
-			? [...getBranchesQuery.data.branches].sort(sort).filter((item) =>
+		currentRepo
+			? currentRepo?.branches.filter((item) =>
 					item.name
 						.toLowerCase()
 						.trim()
@@ -126,11 +114,11 @@
 	});
 
 	let selectibleCount = $derived.by(() => {
-		if (!branches || !getBranchesQuery.data) {
+		if (!branches || !currentRepo) {
 			return 0;
 		}
 		return branches.filter(
-			(item) => item.name !== getBranchesQuery.data.current_branch && !locked.has(item.name)
+			(item) => item.name !== currentRepo.currentBranch && !locked.has(item.name)
 		).length;
 	});
 
@@ -161,12 +149,12 @@
 	});
 
 	const hasNoBranchesToDelete = $derived(
-		selectibleCount === 0 && getBranchesQuery.data?.branches.length !== 0 && $query?.length === 0
+		selectibleCount === 0 && currentRepo?.branches.length !== 0 && $query?.length === 0
 	);
 
 	const selectedLength = $derived(
-		getBranchesQuery.data?.branches
-			?.filter((item) => item.name !== getBranchesQuery.data?.current_branch)
+		currentRepo?.branches
+			?.filter((item) => item.name !== currentRepo?.currentBranch)
 			.filter((item) => selected.has(item.name)).length ?? 0
 	);
 
@@ -212,15 +200,15 @@
 			height: 'calc((token(spacing.xl)) * 2.5)'
 		})}
 	>
-		{#key getBranchesQuery.data?.name}
+		{#key currentRepo?.name}
 			<h2
 				class={css({
 					textStyle: '4xl',
 					textTransform: 'uppercase'
 				})}
 			>
-				{#if getBranchesQuery.data?.name}
-					{getBranchesQuery.data?.name}
+				{#if currentRepo?.name}
+					{currentRepo?.name}
 				{/if}
 			</h2>
 		{/key}
@@ -356,15 +344,14 @@
 													branches
 														?.map((item) => item.name)
 														.filter(
-															(item) =>
-																item !== getBranchesQuery.data?.current_branch && !locked.has(item)
+															(item) => item !== currentRepo?.currentBranch && !locked.has(item)
 														) ?? []
 												);
 											} else {
 												selected.remove(
 													branches
 														?.map((item) => item.name)
-														.filter((item) => item !== getBranchesQuery.data?.current_branch) ?? []
+														.filter((item) => item !== currentRepo?.currentBranch) ?? []
 												);
 											}
 										}}
@@ -521,7 +508,7 @@
 						</div>
 					{/if}
 
-					{#if getBranchesQuery.data.branches.length === 0}
+					{#if currentRepo?.branches.length === 0}
 						<div
 							class={css({
 								display: 'grid',
@@ -591,7 +578,7 @@
 											delay: 20 * (index + 1 / paginatedBranches.length)
 										}} -->
 
-										{#if getBranchesQuery.data?.current_branch !== branch.name}
+										{#if currentRepo?.currentBranch !== branch.name}
 											<div
 												class={css({
 													display: 'flex',
@@ -641,7 +628,7 @@
 											</div>
 										{/if}
 
-										{#if getBranchesQuery.data?.current_branch === branch.name}
+										{#if currentRepo?.currentBranch === branch.name}
 											<div
 												class={css({
 													display: 'flex',
@@ -665,8 +652,7 @@
 										<BranchComponent
 											data={branch}
 											selected={selected.has(branch.name)}
-											locked={locked.has(branch.name) &&
-												getBranchesQuery.data?.current_branch !== branch.name}
+											locked={locked.has(branch.name) && currentRepo?.currentBranch !== branch.name}
 										/>
 									</div>
 								{/each}
@@ -683,7 +669,7 @@
 						})}
 					>
 						<div class="bottom-toolbar">
-							{#if getBranchesQuery.data?.branches && !searchNoResultsFound}
+							{#if currentRepo?.branches && !searchNoResultsFound}
 								<div
 									class={css({
 										p: 'md',

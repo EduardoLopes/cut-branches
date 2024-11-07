@@ -6,7 +6,6 @@
 	import Navigation from '@pindoba/svelte-navigation';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import Icon from '@iconify/svelte';
-	import { useCreateRepositoryID } from '$lib/services/useCreateRepositoryID';
 	import { goto } from '$app/navigation';
 	import { version } from '$app/environment';
 	import { page } from '$app/stores';
@@ -14,19 +13,31 @@
 	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { notifications } from '$lib/stores/notifications.svelte';
+	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { untrack } from 'svelte';
 
-	const createRepositoryIDMutation = useCreateRepositoryID({
-		onSuccess(data) {
-			goto(`/repos/${data.id}`, {
+	let path = $state<string | undefined>('');
+	const repoQuery = getRepoByPath(() => path);
+
+	$effect(() => {
+		if (repoQuery.data) {
+			goto(`/repos/${repoQuery.data.id}`, {
 				state: {
-					path: data.path,
-					name: data.name,
-					id: data.id
+					path: repoQuery.data.path,
+					name: repoQuery.data.name,
+					id: repoQuery.data.id
 				}
 			});
-		},
-		meta: {
-			showErrorNotification: true
+		}
+
+		if (repoQuery.isError) {
+			untrack(() =>
+				notifications.push({
+					feedback: 'danger',
+					title: repoQuery.error.message,
+					message: repoQuery.error.description
+				})
+			);
 		}
 	});
 
@@ -34,9 +45,7 @@
 		open({ directory: true })
 			.then(async (dir) => {
 				if (dir && typeof dir === 'string') {
-					createRepositoryIDMutation.mutate({
-						path: dir
-					});
+					path = dir;
 				}
 			})
 			.catch((error) => {
@@ -137,7 +146,7 @@
 			>
 				Repositories
 			</h2>
-			<Loading isLoading={createRepositoryIDMutation.isPending}>
+			<Loading isLoading={repoQuery.isLoading}>
 				<Button
 					size="sm"
 					onclick={handleAddClick}
@@ -162,7 +171,13 @@
 				passThrough={{
 					root: css.raw({
 						bg: 'transparent',
-						padding: '0'
+						padding: '0',
+						maxHeight: 'calc(100vh - 146px)',
+						overflowY: 'auto',
+						mx: '-sm'
+					}),
+					itemsContainer: css.raw({
+						px: 'sm'
 					}),
 					item: css.raw({
 						color: 'neutral.800.contrast',

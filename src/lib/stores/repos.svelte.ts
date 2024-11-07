@@ -13,18 +13,13 @@ export interface Branch {
 	fully_merged: boolean;
 }
 
-export interface RepositoryData {
+export interface Repository {
 	path: string;
 	branches: Branch[];
 	name: string;
-	current_branch: string;
-}
-
-export interface Repository {
-	path: string;
+	currentBranch: string;
+	branchesCount: number;
 	id: string;
-	name: string;
-	branchesCount?: number;
 }
 
 /**
@@ -54,7 +49,7 @@ function getLocalStorage(): Repository[] {
  */
 class RepositoriesStore {
 	#repositories = $state(getLocalStorage());
-	list = $derived(this.#repositories);
+	list = $derived([...this.#repositories].sort((a, b) => a.name.localeCompare(b.name)));
 
 	constructor() {
 		window.addEventListener('storage', () => {
@@ -75,12 +70,15 @@ class RepositoriesStore {
 
 	/**
 	 * Adds a repository to the store.
+	 * If a repository with the same id already exists, it will not be added.
 	 *
 	 * @param repo - The repository to add.
 	 */
 	add(repo: Repository) {
-		this.#repositories = [...this.#repositories, repo];
-		this.#updateBranches();
+		if (!this.#repositories.some((existingRepo) => existingRepo.id === repo.id)) {
+			this.#repositories = [...this.#repositories, repo];
+			this.#updateBranches();
+		}
 	}
 
 	/**
@@ -90,17 +88,6 @@ class RepositoriesStore {
 	 */
 	remove(id: string) {
 		this.#repositories = this.#repositories.filter((repo) => repo.id !== id);
-		this.#updateBranches();
-	}
-
-	updateBranchesCount(path: string, count: number) {
-		this.#repositories = this.#repositories.map((item) => {
-			if (item.path === path) {
-				item.branchesCount = count;
-			}
-			return item;
-		});
-
 		this.#updateBranches();
 	}
 

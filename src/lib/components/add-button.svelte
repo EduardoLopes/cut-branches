@@ -2,23 +2,25 @@
 	import Button from '@pindoba/svelte-button';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
-	import { useCreateRepositoryID } from '../services/useCreateRepositoryID';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { css } from '@pindoba/panda/css';
 	import { notifications } from '$lib/stores/notifications.svelte';
+	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { repositories } from '$lib/stores/repos.svelte';
+	import { untrack } from 'svelte';
 
-	let createRepositoryIDMutation = useCreateRepositoryID({
-		onSuccess(data) {
-			goto(`/repos/${data.id}`, {
+	let path = $state<string | undefined>('');
+	const repoQuery = getRepoByPath(() => path);
+
+	$effect(() => {
+		if (repoQuery.data) {
+			goto(`/repos/${repoQuery.data.id}`, {
 				state: {
-					path: data.path,
-					name: data.name,
-					id: data.id
+					path: repoQuery.data.path,
+					name: repoQuery.data.name,
+					id: repoQuery.data.id
 				}
 			});
-		},
-		meta: {
-			showErrorNotification: true
 		}
 	});
 
@@ -27,9 +29,7 @@
 			open({ directory: true })
 				.then((dir) => {
 					if (dir && typeof dir === 'string') {
-						createRepositoryIDMutation.mutate({
-							path: dir
-						});
+						path = dir;
 					}
 				})
 				.catch((error) => {
