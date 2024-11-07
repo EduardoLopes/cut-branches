@@ -6,7 +6,7 @@
 	import TextInput from '@pindoba/svelte-text-input';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
-	import type { Branch, Repository } from '$lib/stores/repos.svelte';
+	import type { Branch, Repository } from '$lib/stores/repositories.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';

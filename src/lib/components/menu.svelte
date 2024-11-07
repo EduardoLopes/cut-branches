@@ -10,7 +10,7 @@
 	import AddButton from '$lib/components/add-button.svelte';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { repositories } from '$lib/stores/repos.svelte';
+	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { spacer } from '@pindoba/panda/patterns';
 

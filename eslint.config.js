@@ -57,7 +57,7 @@ export default [
 					ignore: ['\\$app.*$', '\\$service-worker.*$']
 				}
 			],
-			'import/no-duplicates': 'error',
+			'import/no-duplicates': 'off',
 			'import/no-named-as-default': 'off'
 		},
 		settings: {

@@ -19,7 +19,7 @@
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { repositories } from '$lib/stores/repos.svelte';
+	import { repositories } from '$lib/stores/repositories.svelte';
 	import { createSearch } from '$lib/stores/search';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';

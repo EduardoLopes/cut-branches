@@ -4,12 +4,12 @@
 	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import { intlFormatDistance } from 'date-fns';
 	import { isSameDay } from 'date-fns/isSameDay';
-	import { untrack, onMount , slide } from 'svelte';
+	import { untrack, onMount, slide } from 'svelte';
 	import Notification from './notification.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-	
+
 	let open = $state(false);
 	let timeoutID = $state(0);
 	let showMore = $state(false);

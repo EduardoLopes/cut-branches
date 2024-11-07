@@ -2,7 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
-	import { repositories } from '$lib/stores/repos.svelte';
+	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 

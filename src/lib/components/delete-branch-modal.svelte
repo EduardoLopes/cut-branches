@@ -7,7 +7,7 @@
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { type Branch, type Repository } from '$lib/stores/repos.svelte';
+	import { type Branch, type Repository } from '$lib/stores/repositories.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 

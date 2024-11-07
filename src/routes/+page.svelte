@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page, navigating } from '$app/stores';
-	import { repositories } from '$lib/stores/repos.svelte';
+	import { repositories } from '$lib/stores/repositories.svelte';
 
 	function checkRedirect() {
 		console.log('redirecting to /add-first');
