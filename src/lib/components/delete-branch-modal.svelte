@@ -23,7 +23,7 @@
 	const selected = $derived(getSelectedBranchesStore(currentRepo.name));
 	const oneMinute = 60000;
 	let currentPath = $derived(currentRepo?.path);
-	const getBranchesQuery = getRepoByPath(() => currentPath ?? history.state.path, {
+	const getBranchesQuery = getRepoByPath(() => currentPath, {
 		staleTime: oneMinute,
 		meta: {
 			showErrorNotification: false

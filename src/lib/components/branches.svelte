@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Branch } from '$lib/stores/repos.svelte';
 	import { repositories } from '$lib/stores/repos.svelte';
 	import Button from '@pindoba/svelte-button';
 	import BranchComponent from '$lib/components/branch.svelte';
@@ -42,7 +41,7 @@
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 
-	const getBranchesQuery = getRepoByPath(() => currentRepo?.path ?? history.state.path, {
+	const getBranchesQuery = getRepoByPath(() => currentRepo?.path, {
 		staleTime: oneMinute,
 		meta: {
 			showErrorNotification: false

@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { repositories } from '$lib/stores/repos.svelte';
-
-	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation from '@pindoba/svelte-navigation';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
@@ -10,11 +8,11 @@
 	import { version } from '$app/environment';
 	import { page } from '$app/stores';
 	import { css } from '@pindoba/panda/css';
-	import { spacer, visuallyHidden } from '@pindoba/panda/patterns';
-	import { open } from '@tauri-apps/plugin-dialog';
+	import { spacer } from '@pindoba/panda/patterns';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { untrack } from 'svelte';
+	import AddButton from '$lib/components/add-button.svelte';
 
 	let path = $state<string | undefined>('');
 	const repoQuery = getRepoByPath(() => path);
@@ -40,18 +38,6 @@
 			);
 		}
 	});
-
-	async function handleAddClick() {
-		open({ directory: true })
-			.then(async (dir) => {
-				if (dir && typeof dir === 'string') {
-					path = dir;
-				}
-			})
-			.catch((error) => {
-				notifications.push({ feedback: 'danger', title: 'Error', message: error });
-			});
-	}
 
 	const items = $derived(
 		repositories.list.map((repo) => ({
@@ -147,20 +133,18 @@
 				Repositories
 			</h2>
 			<Loading isLoading={repoQuery.isLoading}>
-				<Button
+				<AddButton
 					size="sm"
-					onclick={handleAddClick}
-					shape="square"
+					emphasis="secondary"
+					icon="material-symbols:add-rounded"
+					iconColor="token(colors.primary.600)"
 					passThrough={{
 						root: css.raw({
 							background: 'transparent',
-							boxShadow: '0 0 0 1px token(colors.primary.600)'
+							boxShadow: '0 0 0 1px token(colors.primary.700)'
 						})
 					}}
-				>
-					<Icon icon="material-symbols:add-rounded" width="24px" height="24px" />
-					<span class={visuallyHidden()}>Add repository</span>
-				</Button>
+				/>
 			</Loading>
 		</div>
 		{#if repositories.list.length > 0}
