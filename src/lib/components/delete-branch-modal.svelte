@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { type Branch, type Repository } from '$lib/stores/repos.svelte';
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/panda/css';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import BranchComponent from '$lib/components/branch.svelte';
-	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import BranchComponent from '$lib/components/branch.svelte';
+	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { notifications } from '$lib/stores/notifications.svelte';
+	import { type Branch, type Repository } from '$lib/stores/repos.svelte';
+	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { css } from '@pindoba/panda/css';
 
 	const client = useQueryClient();
 	interface Props {

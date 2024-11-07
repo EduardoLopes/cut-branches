@@ -1,14 +1,14 @@
 <script lang="ts">
-	import Button, { type ButtonProps } from '@pindoba/svelte-button';
-	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
+	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { css } from '@pindoba/panda/css';
-	import { notifications } from '$lib/stores/notifications.svelte';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import { token } from '@pindoba/panda/tokens';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { untrack } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { notifications } from '$lib/stores/notifications.svelte';
+	import { css } from '@pindoba/panda/css';
+	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import { token } from '@pindoba/panda/tokens';
 
 	interface Props extends ButtonProps {
 		icon?: string;

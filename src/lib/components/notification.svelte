@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/panda/css';
 	import Alert, { type AlertProps } from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
-	import { notifications, type Notification } from '../stores/notifications.svelte';
 	import Markdown from 'svelte-exmarkdown';
+	import { notifications, type Notification } from '../stores/notifications.svelte';
+	import { css } from '@pindoba/panda/css';
 
 	type Props = Notification & {
 		emphasis?: AlertProps['emphasis'];

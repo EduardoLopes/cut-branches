@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Branches from '$lib/components/branches.svelte';
 	import { page } from '$app/stores';
+	import Branches from '$lib/components/branches.svelte';
 	import { css } from '@pindoba/panda/css';
 </script>
 

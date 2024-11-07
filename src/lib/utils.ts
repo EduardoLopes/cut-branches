@@ -1,5 +1,5 @@
-import type { Branch, Repository } from '$lib/stores/repos.svelte';
 import { invoke } from '@tauri-apps/api/core';
+import type { Branch, Repository } from '$lib/stores/repos.svelte';
 
 export const getRepoName = (root_path: string): string => {
 	if (root_path.lastIndexOf('\\')) {

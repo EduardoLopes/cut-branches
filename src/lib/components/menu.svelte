@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { repositories } from '$lib/stores/repos.svelte';
+	import Icon from '@iconify/svelte';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation from '@pindoba/svelte-navigation';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
-	import Icon from '@iconify/svelte';
-	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import { version } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import AddButton from '$lib/components/add-button.svelte';
+	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { notifications } from '$lib/stores/notifications.svelte';
+	import { repositories } from '$lib/stores/repos.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { spacer } from '@pindoba/panda/patterns';
-	import { notifications } from '$lib/stores/notifications.svelte';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import { untrack } from 'svelte';
-	import AddButton from '$lib/components/add-button.svelte';
 
 	let path = $state<string | undefined>('');
 	const repoQuery = getRepoByPath(() => path);

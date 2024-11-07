@@ -9,7 +9,7 @@
 		"build:debug": "RUST_BACKTRACE=1 tauri build --debug",
 		"preview": "vite preview",
 		"lint": "eslint . --max-warnings 0",
-		"lint:fix": "eslint . --fix --max-warnings 0",
+		"lint:fix": "eslint . --fix",
 		"format:fix": "prettier --write .",
 		"format": "prettier --check .",
 		"check": "svelte-check",

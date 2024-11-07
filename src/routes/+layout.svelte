@@ -1,5 +1,6 @@
 <script lang="ts">
 	import '../app.css';
+	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import {
 		MutationCache,
 		QueryCache,
@@ -8,7 +9,6 @@
 	} from '@tanstack/svelte-query';
 	import { browser } from '$app/environment';
 	import type { ServiceError } from '$lib/services/models';
-	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import { notifications } from '$lib/stores/notifications.svelte';
 
 	const mutationCache = new MutationCache({

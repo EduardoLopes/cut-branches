@@ -1,11 +1,11 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
-	import { css } from '@pindoba/panda/css';
+	import { intlFormatDistance } from 'date-fns';
 	import type { Branch } from '$lib/stores/repos.svelte';
 	import { formatDate } from '$lib/utils/format-date';
-	import { intlFormatDistance } from 'date-fns';
-	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		data: Branch;
