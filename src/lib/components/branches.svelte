@@ -473,9 +473,7 @@
 											<div
 												class={css({
 													display: 'flex',
-													alignItems: 'center',
 													width: '100%',
-													marginLeft: '2px',
 													flexDirection: 'column',
 													gap: 'sm'
 												})}
