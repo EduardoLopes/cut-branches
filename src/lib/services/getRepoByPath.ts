@@ -10,15 +10,19 @@ export function getRepoByPath(
 		'queryKey' | 'queryFn'
 	>
 ) {
-	return createQuery<Repository, ServiceError, Repository, string[]>(() => ({
-		queryKey: ['branches', 'get-all', path() ?? ''],
-		queryFn: async () => {
-			return invoke<string>('get_repo_info', { path: path() }).then((res) => {
-				const resParser = JSON.parse(res) as Repository;
-				repositories.add(resParser);
-				return resParser;
-			});
-		},
+	const queryKey = ['branches', 'get-all', path() ?? ''];
+
+	const fetchRepositoryInfo = async (): Promise<Repository> => {
+		const repoPath = path();
+		const response = await invoke<string>('get_repo_info', { path: repoPath });
+		const repository = JSON.parse(response) as Repository;
+		repositories.add(repository);
+		return repository;
+	};
+
+	return createQuery(() => ({
+		queryKey,
+		queryFn: fetchRepositoryInfo,
 		enabled: !!path(),
 		...options
 	}));
