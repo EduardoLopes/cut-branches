@@ -7,6 +7,7 @@
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import type { Branch, Repository } from '$lib/stores/repositories.svelte';
+	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
@@ -17,7 +18,6 @@
 		selectedLength: number;
 		selectedSearchLength: number;
 		branches: Branch[];
-		query: string | undefined;
 		onSearch: (value: string) => void;
 		onClearSearch: () => void;
 	}
@@ -28,11 +28,11 @@
 		selectedLength,
 		selectedSearchLength,
 		branches,
-		query,
 		onSearch,
 		onClearSearch
 	}: Props = $props();
 
+	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 	const selected = getSelectedBranchesStore(currentRepo?.name);
 	const locked = getLockedBranchesStore(currentRepo?.name);
 
@@ -59,6 +59,7 @@
 	}
 </script>
 
+{JSON.stringify(search.list)}
 <div
 	class={css({
 		display: 'flex',
@@ -101,17 +102,17 @@
 						<div class={visuallyHidden()}>Select all</div>
 					</Checkbox>
 
-					{#if query?.length ?? 0 > 0}
+					{#if search.query?.length ?? 0 > 0}
 						<div class={css({ fontSize: 'md' })}>
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectedLength}</span>
 							are selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
 							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
-							<strong class={css({ color: 'primary.800' })}>{query?.trim()}</strong>
+							<strong class={css({ color: 'primary.800' })}>{search.query?.trim()}</strong>
 						</div>
 					{/if}
 
-					{#if query?.length === 0 || typeof query === 'undefined'}
+					{#if search.query?.length === 0 || typeof search.query === 'undefined'}
 						{selectedLength} / {selectibleCount} branches
 					{/if}
 				</div>
@@ -136,12 +137,13 @@
 				oninput={(event) => {
 					const target = event.target as HTMLInputElement;
 					onSearch(target.value);
+					search.set(target.value);
 				}}
 				autocorrect="off"
 				placeholder="Search branches"
-				value={query}
+				value={search.query}
 			/>
-			<Button size="sm" onclick={onClearSearch} disabled={!query}>
+			<Button size="sm" onclick={onClearSearch} disabled={!search.query}>
 				<div
 					class={css({
 						display: 'flex',

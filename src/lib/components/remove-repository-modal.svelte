@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { repositories } from '$lib/stores/repositories.svelte';
 	import { type Repository } from '$lib/stores/repositories.svelte';
+	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -16,12 +17,13 @@
 
 	let { currentRepo }: Props = $props();
 
+	const search = $derived(getSearchBranchesStore(currentRepo?.name));
+
 	function handleRemove() {
+		search.destroy();
 		repositories.remove(currentRepo?.id);
-
-		goto(repositories.first?.id ? `/repos/${repositories.first?.id}` : `/add-first`);
-
 		open = false;
+		goto(repositories.first?.id ? `/repos/${repositories.first?.id}` : `/add-first`);
 	}
 
 	function handleCancel() {

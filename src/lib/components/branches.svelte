@@ -20,7 +20,7 @@
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { repositories } from '$lib/stores/repositories.svelte';
-	import { createSearch } from '$lib/stores/search';
+	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
@@ -33,11 +33,10 @@
 	}
 	const { id }: Props = $props();
 
-	let { query, ...search } = $derived(createSearch(id));
-
 	const oneMinute = 60000;
 
 	const currentRepo = $derived(repositories.findById(id));
+	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 
@@ -97,7 +96,7 @@
 					item.name
 						.toLowerCase()
 						.trim()
-						.includes(($query ?? '').toLowerCase().trim())
+						.includes((search.query ?? '').toLowerCase().trim())
 				)
 			: []
 	);
@@ -121,7 +120,7 @@
 		).length;
 	});
 
-	let searchNoResultsFound = $derived(($query?.length ?? 0) > 0 && branches?.length === 0);
+	let searchNoResultsFound = $derived((search.query?.length ?? 0) > 0 && branches?.length === 0);
 
 	let lastUpdatedAtDate = $derived(
 		getBranchesQuery.dataUpdatedAt ? new Date(getBranchesQuery.dataUpdatedAt) : undefined
@@ -148,7 +147,7 @@
 	});
 
 	const hasNoBranchesToDelete = $derived(
-		selectibleCount === 0 && currentRepo?.branches.length !== 0 && $query?.length === 0
+		selectibleCount === 0 && currentRepo?.branches.length !== 0 && search.query?.length === 0
 	);
 
 	const selectedLength = $derived(
@@ -302,9 +301,7 @@
 					{selectedLength}
 					{selectedSearchLength}
 					{branches}
-					query={$query}
-					onSearch={(value) => {
-						search.set(value);
+					onSearch={() => {
 						currentPage = 1;
 					}}
 					onClearSearch={clearSearch}
@@ -360,7 +357,7 @@
 									height="64px"
 									color={token('colors.danger.700')}
 								/>
-								<div>No results for <b>{$query}</b>!</div>
+								<div>No results for <b>{search.query}</b>!</div>
 							</div>
 						</div>
 					{/if}
