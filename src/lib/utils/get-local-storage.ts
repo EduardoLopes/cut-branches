@@ -8,14 +8,11 @@
  * @returns The parsed item from localStorage, or the default value if not available or an error occurs.
  */
 export function getLocalStorage<T>(key: string, defaultValue: T): T {
-	if (typeof window !== 'undefined') {
-		try {
-			const data = localStorage?.getItem(key);
-			return data ? JSON.parse(data) : defaultValue;
-		} catch (error) {
-			console.error(`Error parsing localStorage data for key "${key}":`, error);
-			return defaultValue;
-		}
+	try {
+		const data = localStorage?.getItem(key);
+		return data ? JSON.parse(data) : defaultValue;
+	} catch (error) {
+		console.error(`Error parsing localStorage data for key "${key}":`, error);
+		return defaultValue;
 	}
-	return defaultValue;
 }
