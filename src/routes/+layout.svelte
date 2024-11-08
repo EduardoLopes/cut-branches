@@ -10,6 +10,7 @@
 	import { browser } from '$app/environment';
 	import type { ServiceError } from '$lib/services/models';
 	import { notifications } from '$lib/stores/notifications.svelte';
+	import { css } from '@pindoba/panda/css';
 
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
@@ -79,7 +80,14 @@
 <ThemeModeSelectScript />
 
 <QueryClientProvider client={queryClient}>
-	<div>
+	<div
+		class={css({
+			height: '100vh',
+			display: 'flex',
+			flexDirection: 'column',
+			overflow: 'hidden'
+		})}
+	>
 		<slot />
 	</div>
 </QueryClientProvider>

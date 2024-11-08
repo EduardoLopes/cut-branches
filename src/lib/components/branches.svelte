@@ -6,17 +6,16 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { intlFormat, intlFormatDistance } from 'date-fns';
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
 	import { navigating, page } from '$app/stores';
 	import BranchComponent from '$lib/components/branch.svelte';
 	import BulkActions from '$lib/components/branches-bulk-actions.svelte';
 	import LockBranchToggle from '$lib/components/lock-branch-toggle.svelte';
-	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
 	import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { globalStore } from '$lib/stores/global-store.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { repositories } from '$lib/stores/repositories.svelte';
@@ -59,6 +58,10 @@
 
 			queryClient.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
 		}
+	});
+
+	$effect(() => {
+		globalStore.lastUpdatedAt = new Date(getBranchesQuery.dataUpdatedAt);
 	});
 
 	function handleSwitchBranch(branch: string) {
@@ -122,25 +125,7 @@
 
 	let searchNoResultsFound = $derived((search.query?.length ?? 0) > 0 && branches?.length === 0);
 
-	let lastUpdatedAtDate = $derived(
-		getBranchesQuery.dataUpdatedAt ? new Date(getBranchesQuery.dataUpdatedAt) : undefined
-	);
-
-	let lastUpdatedAt = $state<string | undefined>();
-
-	const updateLastUpdatedAt = () => {
-		if (lastUpdatedAtDate) {
-			lastUpdatedAt = intlFormatDistance(lastUpdatedAtDate, Date.now());
-		}
-	};
-
 	let interval = $state<number | undefined>();
-
-	onMount(() => {
-		interval = window.setInterval(updateLastUpdatedAt, oneMinute);
-	});
-
-	$effect(updateLastUpdatedAt);
 
 	onDestroy(() => {
 		clearInterval(interval);
@@ -529,53 +514,4 @@
 			{/if}
 		</div>
 	</Loading>
-	<div
-		class={css({
-			_dark: {
-				background: 'primary.100',
-				borderTop: '1px dashed token(colors.primary.300)'
-			},
-			_light: {
-				background: 'primary.800',
-				borderTop: '1px dashed token(colors.primary.400)'
-			},
-			height: 'calc((token(spacing.sm)) * 2.5)',
-			p: 'token(spacing.xxs)',
-			display: 'flex',
-			justifyContent: 'flex-end',
-			alignItems: 'center',
-			gap: 'md'
-		})}
-	>
-		{#if lastUpdatedAt && lastUpdatedAtDate}
-			<time
-				datetime={lastUpdatedAtDate.toISOString()}
-				title={intlFormat(lastUpdatedAtDate, {
-					year: 'numeric',
-					month: 'long',
-					day: 'numeric',
-					hour: 'numeric',
-					minute: 'numeric',
-					second: 'numeric'
-				})}
-			>
-				{#key lastUpdatedAt}
-					<div
-						class={css({
-							fontSize: 'sm',
-							_dark: {
-								color: 'primary.900'
-							},
-							_light: {
-								color: 'primary.600'
-							}
-						})}
-					>
-						Last updated {lastUpdatedAt}
-					</div>
-				{/key}
-			</time>
-		{/if}
-		<NotificationsPopover />
-	</div>
 </main>

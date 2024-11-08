@@ -2,9 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation from '@pindoba/svelte-navigation';
-	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { untrack } from 'svelte';
-	import { version } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import AddButton from '$lib/components/add-button.svelte';
@@ -12,7 +10,6 @@
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
-	import { spacer } from '@pindoba/panda/patterns';
 
 	let path = $state<string | undefined>('');
 	const repoQuery = getRepoByPath(() => path);
@@ -177,60 +174,5 @@
 				}}
 			/>
 		{/if}
-	</div>
-
-	<div
-		class={css({
-			_dark: {
-				borderTop: '1px dashed token(colors.primary.300)',
-				background: 'primary.200'
-			},
-			_light: {
-				borderTop: '1px dashed token(colors.primary.700)',
-				background: 'primary.950'
-			},
-			display: 'flex',
-			justifyContent: 'center',
-			alignItems: 'center',
-			height: 'calc((token(spacing.sm)) * 2.5)',
-			p: 'token(spacing.xxs)'
-		})}
-	>
-		<div
-			class={css({
-				fontSize: 'sm',
-				_dark: {
-					color: 'primary.900'
-				},
-				_light: {
-					color: 'primary.600'
-				},
-				display: 'flex'
-			})}
-		>
-			v{version}
-		</div>
-		<div class={spacer()}></div>
-		<ThemeModeSelect
-			popoverProps={{ placement: 'top' }}
-			buttonProps={{
-				size: 'xs',
-				passThrough: {
-					root: css.raw({
-						'& svg': {
-							width: '14px',
-							height: '14px'
-						},
-						padding: 0,
-						_dark: {
-							color: 'primary.900'
-						},
-						_light: {
-							color: 'primary.600'
-						}
-					})
-				}
-			}}
-		/>
 	</div>
 </section>
