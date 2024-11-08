@@ -40,7 +40,7 @@ function getLocalStorage(): Selected {
  */
 class SelectedBranches {
 	// Define a private state for the repository
-	#repository = $state<string | undefined>();
+	#repository: string | undefined = undefined;
 	// Define a private state for the locked branches
 	#selected = $state(getLocalStorage());
 
@@ -49,9 +49,7 @@ class SelectedBranches {
 	 *
 	 * @returns An array of locked branch names.
 	 */
-	list = $derived(
-		this.#repository ? Array.from(this.#selected[this.#repository] ?? new Set()) : []
-	);
+	list = $derived(this.#repository ? [...this.#selected[this.#repository]] : []);
 
 	// Constructor to initialize the repository
 	constructor(repository?: string) {
@@ -72,7 +70,7 @@ class SelectedBranches {
 			// Add new branches to the set to ensure uniqueness
 			branches.forEach((branch) => ids.add(branch));
 			// Update the selected branches state
-			this.#selected = { ...this.#selected, [this.#repository]: ids };
+			this.#selected[this.#repository] = ids;
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -85,7 +83,7 @@ class SelectedBranches {
 	clear() {
 		if (this.#repository) {
 			// Set the selected branches list for the repository to an empty set
-			this.#selected = { ...this.#selected, [this.#repository]: new Set() };
+			this.#selected[this.#repository] = new Set();
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -103,7 +101,7 @@ class SelectedBranches {
 			// Remove the branches from the set
 			branches.forEach((branch) => ids.delete(branch));
 			// Update the selected branches state
-			this.#selected = { ...this.#selected, [this.#repository]: ids };
+			this.#selected[this.#repository] = ids;
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -116,7 +114,7 @@ class SelectedBranches {
 	 * @returns `true` if the branch is in the selected list, otherwise `false`.
 	 */
 	has(branch: string): boolean {
-		return this.#repository ? (this.#selected[this.#repository]?.has(branch) ?? false) : false;
+		return (this.#repository && this.#selected[this.#repository]?.has(branch)) || false;
 	}
 
 	/**
@@ -125,13 +123,13 @@ class SelectedBranches {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined') {
 			try {
-				// Convert Sets to arrays for storage
-				const dataToStore = { ...this.#selected };
-				Object.keys(dataToStore).forEach((key) => {
-					dataToStore[key] = Array.from(dataToStore[key]);
-				});
+				// Convert sets to arrays for storage
+				const selected: { [key: string]: string[] } = {};
+				for (const key in this.#selected) {
+					selected[key] = [...this.#selected[key]];
+				}
 				// Set the 'selected' item in localStorage with the current state
-				localStorage?.setItem('selected', JSON.stringify(dataToStore));
+				localStorage?.setItem('selected', JSON.stringify(selected));
 			} catch (error) {
 				// Log any errors that occur during setting localStorage
 				console.error('Error setting localStorage data:', error);
@@ -140,25 +138,7 @@ class SelectedBranches {
 	}
 }
 
-// Define an object to store instances of SelectedBranches
-const instances: { [key: string]: SelectedBranches } = {};
-
-/**
- * Retrieves or creates an instance of the SelectedBranches store for a given repository.
- *
- * @param repository - The name of the repository for which to get the SelectedBranches store.
- *                     If not provided, a new instance of SelectedBranches is returned.
- * @returns An instance of the SelectedBranches store for the specified repository, or a new instance if no repository is specified.
- */
 export function getSelectedBranchesStore(repository?: string): SelectedBranches {
-	if (repository) {
-		// If an instance for the repository does not exist, create one
-		if (!instances[repository]) {
-			instances[repository] = new SelectedBranches(repository);
-		}
-		// Return the instance for the repository
-		return instances[repository];
-	}
 	// Return a new instance if no repository is specified
-	return new SelectedBranches();
+	return new SelectedBranches(repository);
 }

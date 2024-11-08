@@ -1,4 +1,4 @@
-class GlobalStore {
+export class GlobalStore {
 	lastUpdatedAt = $state<Date | undefined>(undefined);
 }
 

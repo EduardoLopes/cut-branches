@@ -41,7 +41,7 @@ class LockedBranches {
 	 * @private
 	 * @type {string | undefined}
 	 */
-	#repository = $state<string | undefined>();
+	#repository: string | undefined = undefined;
 
 	/**
 	 * A private property that holds the state of locked branches.
@@ -97,6 +97,7 @@ class LockedBranches {
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
+		// No action if no repository is specified
 	}
 
 	/**
@@ -105,9 +106,9 @@ class LockedBranches {
 	 * @param branches - An array of branch names to be removed from the locked branches list.
 	 */
 	remove(branches: string[]) {
-		if (this.#repository) {
+		if (this.#repository && this.#locked[this.#repository]) {
 			// Get the current set of locked branches for the repository
-			const ids = this.#locked[this.#repository] ?? new Set<string>();
+			const ids = this.#locked[this.#repository];
 			// Remove the branches from the set
 			branches.forEach((branch) => ids.delete(branch));
 			// Update the locked branches state
@@ -115,6 +116,14 @@ class LockedBranches {
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
+		// No action if no repository is specified
+	}
+
+	/**
+	 * Updates locked from localStorage.
+	 */
+	update() {
+		this.#locked = getLocalStorage();
 	}
 
 	/**
@@ -124,7 +133,7 @@ class LockedBranches {
 	 * @returns `true` if the branch is in the locked list, otherwise `false`.
 	 */
 	has(branch: string): boolean {
-		return this.#repository ? (this.#locked[this.#repository]?.has(branch) ?? false) : false;
+		return !!this.#repository && this.#locked[this.#repository]?.has(branch);
 	}
 
 	/**
@@ -148,25 +157,6 @@ class LockedBranches {
 	}
 }
 
-// Define an object to store instances of LockedBranches
-const instances: { [key: string]: LockedBranches } = {};
-
-/**
- * Retrieves or creates an instance of the LockedBranches store for a given repository.
- *
- * @param repository - The name of the repository for which to get the LockedBranches store.
- *                     If not provided, a new instance of LockedBranches is returned.
- * @returns An instance of the LockedBranches store for the specified repository, or a new instance if no repository is specified.
- */
 export function getLockedBranchesStore(repository?: string): LockedBranches {
-	if (repository) {
-		// If an instance for the repository does not exist, create one
-		if (!instances[repository]) {
-			instances[repository] = new LockedBranches(repository);
-		}
-		// Return the instance for the repository
-		return instances[repository];
-	}
-	// Return a new instance if no repository is specified
-	return new LockedBranches();
+	return new LockedBranches(repository);
 }

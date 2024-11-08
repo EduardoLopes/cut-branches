@@ -20,6 +20,8 @@
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
 		"prepare": "panda codegen && lefthook install && svelte-kit sync",
 		"version-packages": "git push && changeset version",
+		"test": "vitest --run --coverage",
+		"test:watch": "vitest --watch --coverage",
 		"release": "changeset tag",
 		"clean": "rm -rf dist && rm -rf node_modules"
 	},
@@ -36,6 +38,7 @@
 		"@tauri-apps/cli": "^2.0.4",
 		"@typescript-eslint/eslint-plugin": "^8.13.0",
 		"@typescript-eslint/parser": "^8.13.0",
+		"@vitest/coverage-v8": "^2.1.4",
 		"csstype": "^3.1.3",
 		"dotenv-cli": "^7.4.2",
 		"eslint": "^9.14.0",
@@ -45,6 +48,8 @@
 		"eslint-plugin-svelte": "^2.46.0",
 		"eslint-plugin-unused-imports": "^4.1.4",
 		"globals": "^15.12.0",
+		"i": "^0.3.7",
+		"jsdom": "^25.0.1",
 		"lefthook": "^1.8.2",
 		"prettier": "~3.3.3",
 		"prettier-plugin-svelte": "^3.2.7",
@@ -54,7 +59,8 @@
 		"tslib": "^2.8.1",
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.13.0",
-		"vite": "^5.4.10"
+		"vite": "^5.4.10",
+		"vitest": "^2.1.4"
 	},
 	"type": "module",
 	"dependencies": {

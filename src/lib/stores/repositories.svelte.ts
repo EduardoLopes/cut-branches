@@ -47,7 +47,7 @@ function getLocalStorage(): Repository[] {
  * It provides methods to add, remove, clear, and retrieve repositories,
  * and persists the state in localStorage.
  */
-class RepositoriesStore {
+export class RepositoriesStore {
 	#repositories = $state(getLocalStorage());
 	list = $derived(this.#repositories);
 

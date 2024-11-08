@@ -17,7 +17,7 @@
 	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
 	interface Props {
-		children: Snippet;
+		children?: Snippet;
 	}
 
 	let { children }: Props = $props();
@@ -113,7 +113,7 @@
 			overflow: 'hidden'
 		})}
 	>
-		{@render children()}
+		{@render children?.()}
 
 		<Footer />
 	</div>

@@ -12,7 +12,7 @@ class SearchBranches {
 	 */
 	constructor(repository?: string) {
 		this.#repository = repository;
-		this.query = this.#getLocalStorage(); // Initialize query from localStorage
+		this.query = this.#getLocalStorage() ?? undefined; // Initialize query from localStorage
 
 		// Add event listener to update query when localStorage changes
 		window.addEventListener('storage', () => {
@@ -29,6 +29,13 @@ class SearchBranches {
 			this.query = value;
 			this.#updateLocalStorage(); // Update localStorage with new query
 		}
+	}
+
+	/**
+	 * Updates the search query from localStorage.
+	 */
+	update() {
+		this.query = this.#getLocalStorage();
 	}
 
 	/**
@@ -77,7 +84,11 @@ class SearchBranches {
 		if (typeof window !== 'undefined' && this.#repository) {
 			try {
 				// Store the query in localStorage
-				localStorage?.setItem(this.localStorageKey, JSON.stringify(this.query));
+				if (this.query !== undefined) {
+					localStorage?.setItem(this.localStorageKey, JSON.stringify(this.query));
+				} else {
+					localStorage?.removeItem(this.localStorageKey);
+				}
 			} catch (error) {
 				// Log error if setting localStorage fails
 				console.error('Error setting localStorage data:', error);
@@ -86,20 +97,6 @@ class SearchBranches {
 	}
 }
 
-const instances: { [key: string]: SearchBranches } = {}; // Object to store Search instances
-
-/**
- * Retrieves or creates a Search instance for a given repository.
- * @param {string} [repository] - The repository name.
- * @returns {SearchBranches} - The Search instance.
- */
 export function getSearchBranchesStore(repository?: string): SearchBranches {
-	if (repository) {
-		// Create a new instance if it doesn't exist
-		if (!instances[repository]) {
-			instances[repository] = new SearchBranches(repository);
-		}
-		return instances[repository];
-	}
-	return new SearchBranches(); // Return a new instance if no repository is provided
+	return new SearchBranches(repository); // Return a new instance if no repository is provided
 }

@@ -33,8 +33,8 @@
 	}: Props = $props();
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
-	const selected = getSelectedBranchesStore(currentRepo?.name);
-	const locked = getLockedBranchesStore(currentRepo?.name);
+	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
+	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 
 	function handleSelectAll() {
 		const indeterminate = selectedSearchLength !== selectibleCount && selectedSearchLength > 0;

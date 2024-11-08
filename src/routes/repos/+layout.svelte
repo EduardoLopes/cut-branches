@@ -3,7 +3,7 @@
 	import Menu from '$lib/components/menu.svelte';
 	import { css } from '@pindoba/panda/css';
 	interface Props {
-		children: Snippet;
+		children?: Snippet;
 	}
 
 	let { children }: Props = $props();
@@ -24,6 +24,6 @@
 		})}
 	>
 		<Menu />
-		{@render children()}
+		{@render children?.()}
 	</div>
 </div>

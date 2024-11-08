@@ -75,7 +75,7 @@ function getLocalStorage(): Notification[] {
 /**
  * Class representing a notifications store.
  */
-class Notifications {
+export class Notifications {
 	/**
 	 * List of notifications, initialized from local storage.
 	 */

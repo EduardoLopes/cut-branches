@@ -12,3 +12,5 @@ vite.config.ts.timestamp-*
 ## Panda
 styled-system
 styled-system-studio
+
+/coverage
