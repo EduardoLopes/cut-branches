@@ -1,5 +1,5 @@
-import { getLocalStorage } from '../utils';
 import { getSelectedBranchesStore } from './selected-branches.svelte';
+import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 // Define an interface for the locked branches structure
 interface Locked {

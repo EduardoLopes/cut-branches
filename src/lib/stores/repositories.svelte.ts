@@ -1,4 +1,4 @@
-import { getLocalStorage } from '../utils';
+import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export interface Commit {
 	hash: string;

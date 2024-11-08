@@ -1,4 +1,4 @@
-import { getLocalStorage } from '../utils';
+import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 /**
  * Represents a notification object.

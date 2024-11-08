@@ -1,4 +1,4 @@
-import { getLocalStorage } from '../utils';
+import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 class SearchBranches {
 	#repository: string | undefined; // Private property to store repository name

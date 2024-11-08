@@ -1,4 +1,4 @@
-import { getLocalStorage } from '../utils';
+import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 // Define an interface for the selected branches structure
 interface Selected {
