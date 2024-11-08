@@ -95,7 +95,8 @@
 					color: 'inherit',
 					fontWeight: 600,
 					pindobaTransition: 'fast'
-				})}>{data.name}</span
+				})}
+				data-testid="branch-name">{data.name}</span
 			>
 		</div>
 
@@ -129,6 +130,7 @@
 					color: 'colorPalette.950',
 					pindobaTransition: 'fast'
 				})}
+				data-testid="last-commit-message"
 			>
 				{data.last_commit.message}
 			</span>
@@ -151,6 +153,7 @@
 						pindobaTransition: 'fast'
 					})}
 					title={data.last_commit.email.replace(/^<|>$/g, '')}
+					data-testid="author-name"
 				>
 					<Icon icon="lucide:circle-user-round" width="16px" height="16px" />
 					{data.last_commit.author}
@@ -183,7 +186,7 @@
 						<Alert>This branch is not fully merged into the current branch!</Alert>
 					{/if}
 					{#if alert === 'protectedWords'}
-						<Alert feedback="warning">
+						<Alert feedback="warning" data-testid="protected-words-alert">
 							<div>
 								You're selecting a branch with the name <strong>{data.name}</strong>, review and
 								make sure you really wanna delete this branch!
@@ -191,7 +194,7 @@
 						</Alert>
 					{/if}
 					{#if alert === 'offensiveWords'}
-						<Alert feedback="danger">
+						<Alert feedback="danger" data-testid="offensive-words-alert">
 							<div>
 								The branch name <strong>master</strong> is offensive. Check out this
 								<a href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/" target="_blank"

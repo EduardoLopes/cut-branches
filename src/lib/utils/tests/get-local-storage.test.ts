@@ -18,7 +18,9 @@ describe('getLocalStorage', () => {
 
 	it('should return the default value if parsing fails', () => {
 		localStorage.setItem('testKey', 'invalidJSON');
+		const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		const result = getLocalStorage('testKey', 'defaultValue');
 		expect(result).toBe('defaultValue');
+		consoleErrorSpy.mockRestore();
 	});
 });

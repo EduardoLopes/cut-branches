@@ -70,7 +70,11 @@ export class RepositoriesStore {
 	add(repo: Repository) {
 		const index = this.#repositories.findIndex((existingRepo) => existingRepo.id === repo.id);
 		if (index !== -1) {
-			this.#repositories[index] = repo;
+			const existingRepo = this.#repositories[index];
+			this.#repositories[index] = {
+				...existingRepo,
+				...repo
+			};
 		} else {
 			this.#repositories = [...this.#repositories, repo].sort((a, b) =>
 				a.name.localeCompare(b.name)

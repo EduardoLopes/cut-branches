@@ -94,4 +94,64 @@ describe('RepositoriesStore', () => {
 		const storedValue = JSON.parse(localStorage.getItem('repositories') || '[]');
 		expect(storedValue).toEqual([repo2]);
 	});
+
+	it('should add branches to a repository', () => {
+		const branch = {
+			name: 'feature-branch',
+			current: false,
+			last_commit: {
+				hash: 'abc123',
+				date: '2023-01-01',
+				message: 'Initial commit',
+				author: 'Author Name',
+				email: 'author@example.com'
+			},
+			fully_merged: false
+		};
+		repo1.branches.push(branch);
+		repositories.add(repo1);
+		expect(repositories.first?.branches).toContainEqual(branch);
+	});
+
+	it('should update branches in a repository', () => {
+		const branch = {
+			name: 'feature-branch',
+			current: false,
+			last_commit: {
+				hash: 'abc123',
+				date: '2023-01-01',
+				message: 'Initial commit',
+				author: 'Author Name',
+				email: 'author@example.com'
+			},
+			fully_merged: false
+		};
+		repo1.branches.push(branch);
+		repositories.add(repo1);
+		const updatedBranch = { ...branch, name: 'updated-branch' };
+		repo1.branches[0] = updatedBranch;
+		repositories.add(repo1);
+
+		expect(repositories.first?.branches[0].name).toBe('updated-branch');
+	});
+
+	it('should remove branches from a repository', () => {
+		const branch = {
+			name: 'feature-branch',
+			current: false,
+			last_commit: {
+				hash: 'abc123',
+				date: '2023-01-01',
+				message: 'Initial commit',
+				author: 'Author Name',
+				email: 'author@example.com'
+			},
+			fully_merged: false
+		};
+		repo1.branches.push(branch);
+		repositories.add(repo1);
+		repo1.branches = [];
+		repositories.add(repo1);
+		expect(repositories.first?.branches.length).toBe(0);
+	});
 });
