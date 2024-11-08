@@ -1,3 +1,5 @@
+import { getLocalStorage } from '../utils';
+
 class SearchBranches {
 	#repository: string | undefined; // Private property to store repository name
 	query = $state<string | undefined>(); // State to store the search query
@@ -60,20 +62,7 @@ class SearchBranches {
 	 * @returns {string | undefined} - The stored data or undefined if not found.
 	 */
 	#getLocalStorage(): string | undefined {
-		// Check if window is defined and repository is provided
-		if (typeof window !== 'undefined' && this.#repository) {
-			try {
-				// Retrieve data from localStorage
-				const data = localStorage?.getItem(this.localStorageKey);
-				// Parse and return the data if it exists
-				return data ? JSON.parse(data) : undefined;
-			} catch (error) {
-				// Log error if parsing fails
-				console.error('Error parsing localStorage data:', error);
-				return undefined;
-			}
-		}
-		return undefined;
+		return getLocalStorage(this.localStorageKey, undefined);
 	}
 
 	/**

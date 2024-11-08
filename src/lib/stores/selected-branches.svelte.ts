@@ -1,3 +1,5 @@
+import { getLocalStorage } from '../utils';
+
 // Define an interface for the selected branches structure
 interface Selected {
 	[key: string]: Set<string>;
@@ -10,27 +12,12 @@ interface Selected {
  *
  * @returns {Selected} The parsed 'selected' item from localStorage, or an empty object if not available or an error occurs.
  */
-function getLocalStorage(): Selected {
-	// Check if the code is running in a browser environment
-	if (typeof window !== 'undefined') {
-		try {
-			// Attempt to get the 'selected' item from localStorage
-			const data = localStorage?.getItem('selected');
-			// Parse and return the data if it exists, otherwise return an empty object
-			const parsedData = data ? JSON.parse(data) : {};
-			// Convert arrays to Sets
-			Object.keys(parsedData).forEach((key) => {
-				parsedData[key] = new Set(parsedData[key]);
-			});
-			return parsedData;
-		} catch (error) {
-			// Log any errors that occur during parsing
-			console.error('Error parsing localStorage data:', error);
-			return {};
-		}
-	}
-	// Return an empty object if not in a browser environment
-	return {};
+function getSelectedBranchesFromLocalStorage(): Selected {
+	const parsedData: Selected = getLocalStorage('selected', {});
+	Object.keys(parsedData).forEach((key) => {
+		parsedData[key] = new Set(parsedData[key]);
+	});
+	return parsedData;
 }
 
 /**
@@ -42,7 +29,7 @@ class SelectedBranches {
 	// Define a private state for the repository
 	#repository: string | undefined = undefined;
 	// Define a private state for the locked branches
-	#selected = $state(getLocalStorage());
+	#selected = $state(getSelectedBranchesFromLocalStorage());
 
 	/**
 	 * Gets the list of locked branches for the current repository.

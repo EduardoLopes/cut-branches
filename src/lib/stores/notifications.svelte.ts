@@ -1,3 +1,5 @@
+import { getLocalStorage } from '../utils';
+
 /**
  * Represents a notification object.
  */
@@ -45,31 +47,8 @@ export function createNotificationObject(notification: Notification): Notificati
 	};
 }
 
-/**
- * Retrieves the notifications from localStorage.
- *
- * @returns {Notification[]} An array of notifications retrieved from localStorage.
- * If the code is not running in a browser environment or if there is an error
- * during parsing, an empty array is returned.
- *
- * @throws {Error} If there is an issue parsing the data from localStorage.
- */
-function getLocalStorage(): Notification[] {
-	// Check if the code is running in a browser environment
-	if (typeof window !== 'undefined') {
-		try {
-			// Attempt to get the 'selected' item from localStorage
-			const data = localStorage?.getItem('notifications');
-			// Parse and return the data if it exists, otherwise return an empty array
-			return data ? JSON.parse(data) : [];
-		} catch (error) {
-			// Log any errors that occur during parsing
-			console.error('Error parsing localStorage data:', error);
-			return [];
-		}
-	}
-	// Return an empty array if not in a browser environment
-	return [];
+function getNotificationsFromLocalStorage(): Notification[] {
+	return getLocalStorage('notifications', []);
 }
 
 /**
@@ -79,7 +58,7 @@ export class Notifications {
 	/**
 	 * List of notifications, initialized from local storage.
 	 */
-	list = $state<Notification[]>(getLocalStorage());
+	list = $state<Notification[]>(getNotificationsFromLocalStorage());
 
 	/**
 	 * The most recent notification, derived from the list.
@@ -94,7 +73,7 @@ export class Notifications {
 	 */
 	constructor() {
 		window.addEventListener('storage', () => {
-			this.list = getLocalStorage();
+			this.list = getNotificationsFromLocalStorage();
 		});
 	}
 

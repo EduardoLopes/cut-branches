@@ -1,3 +1,5 @@
+import { getLocalStorage } from '../utils';
+
 export interface Commit {
 	hash: string;
 	date: string;
@@ -29,17 +31,8 @@ export interface Repository {
  *
  * @returns {Repository[]} The parsed 'repositories' item from localStorage, or an empty array if not available or an error occurs.
  */
-function getLocalStorage(): Repository[] {
-	if (typeof window !== 'undefined') {
-		try {
-			const data = localStorage?.getItem('repositories');
-			return data ? JSON.parse(data) : [];
-		} catch (error) {
-			console.error('Error parsing localStorage data:', error);
-			return [];
-		}
-	}
-	return [];
+function getRepositoriesFromLocalStorage(): Repository[] {
+	return getLocalStorage('repositories', []);
 }
 
 /**
@@ -48,7 +41,7 @@ function getLocalStorage(): Repository[] {
  * and persists the state in localStorage.
  */
 export class RepositoriesStore {
-	#repositories = $state(getLocalStorage());
+	#repositories = $state(getRepositoriesFromLocalStorage());
 	list = $derived(this.#repositories);
 
 	constructor() {

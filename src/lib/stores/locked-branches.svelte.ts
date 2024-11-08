@@ -1,3 +1,4 @@
+import { getLocalStorage } from '../utils';
 import { getSelectedBranchesStore } from './selected-branches.svelte';
 
 // Define an interface for the locked branches structure
@@ -6,28 +7,13 @@ interface Locked {
 }
 
 // Function to retrieve locked branches data from localStorage
-function getLocalStorage(): Locked {
-	// Check if the code is running in a browser environment
-	if (typeof window !== 'undefined') {
-		try {
-			// Attempt to get the 'locked' item from localStorage
-			const data = localStorage?.getItem('locked');
-			// Parse and return the data if it exists, otherwise return an empty object
-			const parsedData = data ? JSON.parse(data) : {};
-			// Convert arrays to sets
-			const locked: Locked = {};
-			for (const key in parsedData) {
-				locked[key] = new Set(parsedData[key]);
-			}
-			return locked;
-		} catch (error) {
-			// Log any errors that occur during parsing
-			console.error('Error parsing localStorage data:', error);
-			return {};
-		}
+function getLockedBranchesFromLocalStorage(): Locked {
+	const parsedData: Locked = getLocalStorage('locked', {});
+	const locked: Locked = {};
+	for (const key in parsedData) {
+		locked[key] = new Set(parsedData[key]);
 	}
-	// Return an empty object if not in a browser environment
-	return {};
+	return locked;
 }
 
 /**
@@ -47,7 +33,7 @@ class LockedBranches {
 	 * A private property that holds the state of locked branches.
 	 * The state is initialized with the value retrieved from local storage.
 	 */
-	#locked = $state(getLocalStorage());
+	#locked = $state(getLockedBranchesFromLocalStorage());
 
 	/**
 	 * Gets the list of locked branches for the current repository.
@@ -123,7 +109,7 @@ class LockedBranches {
 	 * Updates locked from localStorage.
 	 */
 	update() {
-		this.#locked = getLocalStorage();
+		this.#locked = getLockedBranchesFromLocalStorage();
 	}
 
 	/**
