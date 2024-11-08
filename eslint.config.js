@@ -2,6 +2,7 @@ import pluginJs from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import svelte from 'eslint-plugin-svelte';
+import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 import { configs as tsConfigs, parser as tsParser } from 'typescript-eslint';
 
@@ -58,7 +59,20 @@ export default [
 				}
 			],
 			'import/no-duplicates': 'warn',
-			'import/no-named-as-default': 'error'
+			'import/no-named-as-default': 'error',
+			'unused-imports/no-unused-imports': 'error',
+			'unused-imports/no-unused-vars': [
+				'warn',
+				{
+					vars: 'all',
+					varsIgnorePattern: '^_',
+					args: 'after-used',
+					argsIgnorePattern: '^_'
+				}
+			]
+		},
+		plugins: {
+			'unused-imports': unusedImports
 		},
 		settings: {
 			'import/resolver': {
