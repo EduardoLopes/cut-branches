@@ -7,10 +7,20 @@
 		QueryClient,
 		QueryClientProvider
 	} from '@tanstack/svelte-query';
+	import { type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import Footer from '$lib/components/footer.svelte';
 	import type { ServiceError } from '$lib/services/models';
 	import { notifications } from '$lib/stores/notifications.svelte';
+	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
+	interface Props {
+		children: Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
@@ -75,6 +85,21 @@
 			}
 		}
 	});
+
+	$effect(() => {
+		if (repositories.list.length === 0) {
+			goto('/add-first');
+			return;
+		}
+
+		// if is in any route that requires a repo id and the repo does not exist in the app anymore
+		const idExists = Boolean(repositories.findById($page.params.id));
+
+		if (repositories.first?.id && !idExists) {
+			goto(`/repos/${repositories.first.id}`);
+			return;
+		}
+	});
 </script>
 
 <ThemeModeSelectScript />
@@ -88,6 +113,8 @@
 			overflow: 'hidden'
 		})}
 	>
-		<slot />
+		{@render children()}
+
+		<Footer />
 	</div>
 </QueryClientProvider>

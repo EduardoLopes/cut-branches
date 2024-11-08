@@ -23,7 +23,7 @@
 		search.destroy();
 		repositories.remove(currentRepo?.id);
 		open = false;
-		goto(repositories.first?.id ? `/repos/${repositories.first?.id}` : `/add-first`);
+		goto(repositories.list.length > 0 ? `/repos/${repositories.first?.id}` : `/add-first`);
 	}
 
 	function handleCancel() {

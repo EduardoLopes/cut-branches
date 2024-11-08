@@ -60,8 +60,9 @@
 		}
 	});
 
-	$effect(() => {
-		globalStore.lastUpdatedAt = new Date(getBranchesQuery.dataUpdatedAt);
+	onDestroy(() => {
+		clearInterval(interval);
+		globalStore.lastUpdatedAt = undefined;
 	});
 
 	function handleSwitchBranch(branch: string) {

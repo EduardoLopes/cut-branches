@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { notifications } from '$lib/stores/notifications.svelte';
+	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
@@ -29,9 +30,10 @@
 	const repoQuery = getRepoByPath(() => path);
 
 	$effect(() => {
-		if (repoQuery.data) {
+		if (repositories.findById(repoQuery.data?.id) && repoQuery.data) {
 			goto(`/repos/${repoQuery.data.id}`);
 		}
+
 		if (repoQuery.isSuccess) {
 			untrack(() => {
 				// success
@@ -59,7 +61,15 @@
 		if (open) {
 			open({ directory: true })
 				.then((dir) => {
-					if (dir && typeof dir === 'string') {
+					if (dir !== null) {
+						if (repositories.findByPath(dir)) {
+							const existingRepo = repositories.findByPath(dir);
+							notifications.push({
+								title: `Repository ${existingRepo?.name} already exists`,
+								feedback: 'warning'
+							});
+							return;
+						}
 						path = dir;
 					}
 				})

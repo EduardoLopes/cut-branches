@@ -1,7 +1,12 @@
-<script>
-	import Footer from '$lib/components/footer.svelte';
+<script lang="ts">
+	import { type Snippet } from 'svelte';
 	import Menu from '$lib/components/menu.svelte';
 	import { css } from '@pindoba/panda/css';
+	interface Props {
+		children: Snippet;
+	}
+
+	let { children }: Props = $props();
 </script>
 
 <div
@@ -19,7 +24,6 @@
 		})}
 	>
 		<Menu />
-		<slot />
+		{@render children()}
 	</div>
-	<Footer />
 </div>

@@ -45,7 +45,6 @@ class SearchBranches {
 	 * Removes the search query from localStorage.
 	 */
 	destroy() {
-		console.log('destroy', this.localStorageKey);
 		localStorage?.removeItem(this.localStorageKey); // Remove item from localStorage
 	}
 

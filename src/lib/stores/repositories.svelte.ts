@@ -49,7 +49,7 @@ function getLocalStorage(): Repository[] {
  */
 class RepositoriesStore {
 	#repositories = $state(getLocalStorage());
-	list = $derived([...this.#repositories].sort((a, b) => a.name.localeCompare(b.name)));
+	list = $derived(this.#repositories);
 
 	constructor() {
 		window.addEventListener('storage', () => {
@@ -79,7 +79,9 @@ class RepositoriesStore {
 		if (index !== -1) {
 			this.#repositories[index] = repo;
 		} else {
-			this.#repositories = [...this.#repositories, repo];
+			this.#repositories = [...this.#repositories, repo].sort((a, b) =>
+				a.name.localeCompare(b.name)
+			);
 		}
 		this.#updateBranches();
 	}
