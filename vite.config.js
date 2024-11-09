@@ -29,12 +29,12 @@ export default defineConfig({
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		environment: 'jsdom',
-		setupFiles: ['./vitest-setup.js'],
+		environment: 'happy-dom',
+		setupFiles: './vitest-setup.js',
 		globals: true,
 		coverage: {
 			include: ['src/**'],
-			provider: 'istanbul',
+			provider: 'v8',
 			exclude: [
 				...(vitestConfigDefaults.coverage.exclude || []),
 				'styled-system',
@@ -43,6 +43,9 @@ export default defineConfig({
 				'.svelte-kit',
 				'./*'
 			]
+		},
+		alias: {
+			'@testing-library/svelte': '@testing-library/svelte/svelte5'
 		}
 	}
 });

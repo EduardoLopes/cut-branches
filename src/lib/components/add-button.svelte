@@ -58,25 +58,23 @@
 	});
 
 	function handleAddClick() {
-		if (open) {
-			open({ directory: true })
-				.then((dir) => {
-					if (dir !== null) {
-						if (repositories.findByPath(dir)) {
-							const existingRepo = repositories.findByPath(dir);
-							notifications.push({
-								title: `Repository ${existingRepo?.name} already exists`,
-								feedback: 'warning'
-							});
-							return;
-						}
-						path = dir;
+		open({ directory: true })
+			.then((dir) => {
+				if (dir !== null) {
+					if (repositories.findByPath(dir)) {
+						const existingRepo = repositories.findByPath(dir);
+						notifications.push({
+							title: `Repository ${existingRepo?.name} already exists`,
+							feedback: 'warning'
+						});
+						return;
 					}
-				})
-				.catch((error) => {
-					notifications.push({ title: 'Error', message: error, feedback: 'danger' });
-				});
-		}
+					path = dir;
+				}
+			})
+			.catch((error) => {
+				notifications.push({ title: 'Error', message: error, feedback: 'danger' });
+			});
 	}
 </script>
 
@@ -94,6 +92,6 @@
 			<span>Add a git repository</span>
 		{/if}
 
-		<Icon {icon} width="20px" height="20px" color={iconColor} />
+		<Icon {icon} width="20px" height="20px" color={iconColor} data-testid="add-button-icon" />
 	</div>
 </Button>
