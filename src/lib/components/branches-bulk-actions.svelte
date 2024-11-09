@@ -15,7 +15,6 @@
 	interface Props {
 		currentRepo: Repository | undefined;
 		selectibleCount: number;
-		selectedLength: number;
 		selectedSearchLength: number;
 		branches: Branch[];
 		onSearch: (value: string) => void;
@@ -25,7 +24,6 @@
 	const {
 		currentRepo,
 		selectibleCount,
-		selectedLength,
 		selectedSearchLength,
 		branches,
 		onSearch,
@@ -35,6 +33,8 @@
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
+
+	const selectedLength = $derived(selected.list?.length);
 
 	function handleSelectAll() {
 		const indeterminate = selectedSearchLength !== selectibleCount && selectedSearchLength > 0;

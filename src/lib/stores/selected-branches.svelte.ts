@@ -37,7 +37,9 @@ class SelectedBranches {
 	 *
 	 * @returns An array of locked branch names.
 	 */
-	list = $derived(this.#repository ? [...this.#selected[this.#repository]] : []);
+	list = $derived(this.#repository ? Array.from(this.#selected[this.#repository] ?? []) : []);
+
+	length = $derived(this.list?.length ?? 0);
 
 	// Constructor to initialize the repository
 	constructor(repository?: string) {

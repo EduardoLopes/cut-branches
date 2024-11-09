@@ -136,12 +136,6 @@
 		selectibleCount === 0 && currentRepo?.branches.length !== 0 && search.query?.length === 0
 	);
 
-	const selectedLength = $derived(
-		currentRepo?.branches
-			?.filter((item) => item.name !== currentRepo?.currentBranch)
-			.filter((item) => selected.has(item.name)).length ?? 0
-	);
-
 	const selectedSearchLength = $derived(
 		branches?.filter((item) => selected.has(item.name)).length ?? 0
 	);
@@ -284,7 +278,6 @@
 				<BulkActions
 					{currentRepo}
 					{selectibleCount}
-					{selectedLength}
 					{selectedSearchLength}
 					{branches}
 					onSearch={() => {

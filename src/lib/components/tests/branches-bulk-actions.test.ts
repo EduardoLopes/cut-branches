@@ -55,7 +55,6 @@ describe('BranchesBulkActions Component', () => {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
-				selectedLength: 0,
 				selectedSearchLength: 0,
 				branches: mockRepo.branches,
 				onSearch: vi.fn(),
@@ -65,19 +64,25 @@ describe('BranchesBulkActions Component', () => {
 		expect(getByTestId('search-input')).toBeInTheDocument();
 	});
 
-	test('renders select all checkbox', () => {
+	test('selects all branches when select all checkbox is clicked', async () => {
+		const props = {
+			currentRepo: mockRepo,
+			selectibleCount: 2,
+			selectedSearchLength: 0,
+			branches: mockRepo.branches,
+			onSearch: vi.fn(),
+			onClearSearch: vi.fn()
+		};
+
 		const { getByTestId } = render(TestWrapper, {
-			props: testWrapperWithProps(BranchesBulkActions, {
-				currentRepo: mockRepo,
-				selectibleCount: 2,
-				selectedLength: 0,
-				selectedSearchLength: 0,
-				branches: mockRepo.branches,
-				onSearch: vi.fn(),
-				onClearSearch: vi.fn()
-			})
+			props: testWrapperWithProps(BranchesBulkActions, props)
 		});
-		expect(getByTestId('select-all-checkbox')).toBeInTheDocument();
+		const checkbox = getByTestId('select-all-checkbox');
+		await fireEvent.click(checkbox);
+
+		expect(getByTestId('selectible-count-info')).toHaveTextContent(
+			`${props.selectibleCount} / ${props.selectibleCount} branches`
+		);
 	});
 
 	test('calls onSearch when input changes', async () => {
@@ -86,7 +91,7 @@ describe('BranchesBulkActions Component', () => {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
-				selectedLength: 0,
+
 				selectedSearchLength: 0,
 				branches: mockRepo.branches,
 				onSearch,
@@ -104,7 +109,7 @@ describe('BranchesBulkActions Component', () => {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
-				selectedLength: 0,
+
 				selectedSearchLength: 0,
 				branches: mockRepo.branches,
 				onSearch: vi.fn(),
@@ -121,7 +126,6 @@ describe('BranchesBulkActions Component', () => {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
-				selectedLength: 0,
 				selectedSearchLength: 0,
 				branches: mockRepo.branches,
 				onSearch: vi.fn(),
@@ -138,7 +142,6 @@ describe('BranchesBulkActions Component', () => {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 1,
-				selectedLength: 0,
 				selectedSearchLength: 1,
 				branches: mockRepo.branches,
 				onSearch: vi.fn(),
