@@ -1,18 +1,29 @@
-<script lang="ts" generics="T extends Component">
-	import type { ComponentProps } from 'svelte';
-	// eslint-disable-next-line
-	import { type Component } from 'svelte';
+<script module lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	export function testWrapperWithProps<TComponent extends Component<any, any, any>>(
+		component: TComponent,
+		props: ComponentProps<TComponent>
+	) {
+		return {
+			component,
+			props
+		};
+	}
+</script>
+
+<script lang="ts">
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	import type { Component, ComponentProps } from 'svelte';
 	import Providers from './providers.svelte';
 
 	//TODO: the generics here are not working as expected
 	interface Props {
-		// eslint-disable-next-line
-		Component: T;
-		// eslint-disable-next-line
-		props?: ComponentProps<T>;
+		component: Component<any, any, any>;
+
+		props?: ComponentProps<any>;
 	}
 
-	const { Component: WrappedComponent, props }: Props = $props();
+	const { component: WrappedComponent, props }: Props = $props();
 </script>
 
 <Providers>

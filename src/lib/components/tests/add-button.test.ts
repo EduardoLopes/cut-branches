@@ -23,14 +23,14 @@ vi.mock('$app/stores', () => {
 describe('AddButton', () => {
 	test('renders correctly', () => {
 		const { getByText } = render(TestWrapper, {
-			props: { Component: AddButton }
+			props: { component: AddButton }
 		});
 		expect(getByText('Add a git repository')).toBeInTheDocument();
 	});
 
 	test('calls handleAddClick on button click', async () => {
 		const { getByRole } = render(TestWrapper, {
-			props: { Component: AddButton, props: { visuallyHiddenLabel: true } }
+			props: { component: AddButton, props: { visuallyHiddenLabel: true } }
 		});
 		const button = getByRole('button');
 		await fireEvent.click(button);
@@ -40,7 +40,7 @@ describe('AddButton', () => {
 
 	test('displays visually hidden label when visuallyHiddenLabel is true', () => {
 		const { container } = render(TestWrapper, {
-			props: { Component: AddButton, props: { visuallyHiddenLabel: true } }
+			props: { component: AddButton, props: { visuallyHiddenLabel: true } }
 		});
 		const span = container.querySelector('span');
 		expect(span).toHaveClass('sr_true');
@@ -48,7 +48,7 @@ describe('AddButton', () => {
 
 	test('calls open function on button click', async () => {
 		const { getByRole } = render(TestWrapper, {
-			props: { Component: AddButton, props: { visuallyHiddenLabel: false } }
+			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
 		});
 		const button = getByRole('button');
 		await fireEvent.click(button);
@@ -70,7 +70,7 @@ describe('AddButton', () => {
 		notifications.push = vi.fn();
 
 		const { getByRole } = render(TestWrapper, {
-			props: { Component: AddButton, props: { visuallyHiddenLabel: false } }
+			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
 		});
 		const button = getByRole('button');
 		await fireEvent.click(button);
@@ -107,7 +107,7 @@ describe('AddButton', () => {
 		repositories.add(mockRepo);
 
 		const { getByRole } = render(TestWrapper, {
-			props: { Component: AddButton, props: { visuallyHiddenLabel: false } }
+			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
 		});
 
 		const button = getByRole('button');
