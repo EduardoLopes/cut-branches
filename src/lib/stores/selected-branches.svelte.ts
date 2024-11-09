@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 // Define an interface for the selected branches structure
@@ -61,6 +62,13 @@ class SelectedBranches {
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
+	}
+
+	/**
+	 * Updates selected from localStorage.
+	 */
+	update() {
+		this.#selected = getSelectedBranchesFromLocalStorage();
 	}
 
 	/**
@@ -129,13 +137,16 @@ class SelectedBranches {
 const instances: { [key: string]: SelectedBranches } = {};
 
 export function getSelectedBranchesStore(repository?: string): SelectedBranches {
-	// If an instance for the repository does not exist, create one
-	if (repository && !instances[repository]) {
-		instances[repository] = new SelectedBranches(repository);
+	// Return existing instance or create a new one if it doesn't exist
+	if (!repository) {
+		return new SelectedBranches();
 	}
-	// Return the instance for the repository
-	if (repository) {
-		return instances[repository] || new SelectedBranches(repository);
-	}
-	return new SelectedBranches();
+	const instance =
+		instances[repository] ?? (instances[repository] = new SelectedBranches(repository));
+
+	untrack(() => {
+		instance.update();
+	});
+
+	return instance;
 }

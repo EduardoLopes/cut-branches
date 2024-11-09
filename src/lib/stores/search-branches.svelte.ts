@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 class SearchBranches {
@@ -90,13 +91,16 @@ class SearchBranches {
 const instances: { [key: string]: SearchBranches } = {};
 
 export function getSearchBranchesStore(repository?: string): SearchBranches {
-	// If an instance for the repository does not exist, create one
-	if (repository && !instances[repository]) {
-		instances[repository] = new SearchBranches(repository);
+	// Return existing instance or create a new one if it doesn't exist
+	if (!repository) {
+		return new SearchBranches();
 	}
-	// Return the instance for the repository
-	if (repository) {
-		return instances[repository];
-	}
-	return new SearchBranches();
+	const instance =
+		instances[repository] ?? (instances[repository] = new SearchBranches(repository));
+
+	untrack(() => {
+		instance.update();
+	});
+
+	return instance;
 }

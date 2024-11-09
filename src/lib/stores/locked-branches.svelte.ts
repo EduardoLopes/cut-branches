@@ -1,3 +1,4 @@
+import { untrack } from 'svelte';
 import { getSelectedBranchesStore } from './selected-branches.svelte';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
@@ -147,13 +148,17 @@ class LockedBranches {
 const instances: { [key: string]: LockedBranches } = {};
 
 export function getLockedBranchesStore(repository?: string): LockedBranches {
-	// If an instance for the repository does not exist, create one
-	if (repository && !instances[repository]) {
-		instances[repository] = new LockedBranches(repository);
+	// Return existing instance or create a new one if it doesn't exist
+	if (!repository) {
+		return new LockedBranches();
 	}
-	// Return the instance for the repository
-	if (repository) {
-		return instances[repository];
-	}
-	return new LockedBranches();
+
+	const instance =
+		instances[repository] ?? (instances[repository] = new LockedBranches(repository));
+
+	untrack(() => {
+		instance.update();
+	});
+
+	return instance;
 }
