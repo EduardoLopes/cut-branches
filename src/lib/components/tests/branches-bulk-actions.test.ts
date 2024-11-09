@@ -51,7 +51,7 @@ const mockRepo: Repository = {
 
 describe('BranchesBulkActions Component', () => {
 	test('renders search input', () => {
-		const { getByPlaceholderText } = render(TestWrapper, {
+		const { getByTestId } = render(TestWrapper, {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
@@ -62,11 +62,11 @@ describe('BranchesBulkActions Component', () => {
 				onClearSearch: vi.fn()
 			})
 		});
-		expect(getByPlaceholderText('Search branches')).toBeInTheDocument();
+		expect(getByTestId('search-input')).toBeInTheDocument();
 	});
 
 	test('renders select all checkbox', () => {
-		const { getByLabelText } = render(TestWrapper, {
+		const { getByTestId } = render(TestWrapper, {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
@@ -77,12 +77,12 @@ describe('BranchesBulkActions Component', () => {
 				onClearSearch: vi.fn()
 			})
 		});
-		expect(getByLabelText('Select all')).toBeInTheDocument();
+		expect(getByTestId('select-all-checkbox')).toBeInTheDocument();
 	});
 
 	test('calls onSearch when input changes', async () => {
 		const onSearch = vi.fn();
-		const { getByPlaceholderText } = render(TestWrapper, {
+		const { getByTestId } = render(TestWrapper, {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
@@ -93,14 +93,14 @@ describe('BranchesBulkActions Component', () => {
 				onClearSearch: vi.fn()
 			})
 		});
-		const input = getByPlaceholderText('Search branches');
+		const input = getByTestId('search-input');
 		await fireEvent.input(input, { target: { value: 'feature' } });
 		expect(onSearch).toHaveBeenCalledWith('feature');
 	});
 
 	test('calls onClearSearch when clear button is clicked', async () => {
 		const onClearSearch = vi.fn();
-		const { getByRole } = render(TestWrapper, {
+		const { getByTestId } = render(TestWrapper, {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
@@ -111,13 +111,13 @@ describe('BranchesBulkActions Component', () => {
 				onClearSearch
 			})
 		});
-		const button = getByRole('button', { name: /clear search/i });
+		const button = getByTestId('clear-search-button');
 		await fireEvent.click(button);
 		expect(onClearSearch).toHaveBeenCalled();
 	});
 
 	test('selects all branches when select all checkbox is clicked', async () => {
-		const { getByLabelText } = render(TestWrapper, {
+		const { getByTestId } = render(TestWrapper, {
 			props: testWrapperWithProps(BranchesBulkActions, {
 				currentRepo: mockRepo,
 				selectibleCount: 2,
@@ -128,8 +128,23 @@ describe('BranchesBulkActions Component', () => {
 				onClearSearch: vi.fn()
 			})
 		});
-		const checkbox = getByLabelText('Select all');
+		const checkbox = getByTestId('select-all-checkbox');
 		await fireEvent.click(checkbox);
 		expect(checkbox).toBeChecked();
+	});
+
+	test('renders correctly when selectibleCount is 1 and there is a search query', () => {
+		const { getByTestId } = render(TestWrapper, {
+			props: testWrapperWithProps(BranchesBulkActions, {
+				currentRepo: mockRepo,
+				selectibleCount: 1,
+				selectedLength: 0,
+				selectedSearchLength: 1,
+				branches: mockRepo.branches,
+				onSearch: vi.fn(),
+				onClearSearch: vi.fn()
+			})
+		});
+		expect(getByTestId('search-query-info')).toBeInTheDocument();
 	});
 });

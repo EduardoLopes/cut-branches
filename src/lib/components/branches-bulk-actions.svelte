@@ -71,6 +71,7 @@
 		top: '0',
 		translucent: 'md'
 	})}
+	data-testid="bulk-actions-container"
 >
 	<div
 		class={css({
@@ -80,6 +81,7 @@
 			height: '100%',
 			gap: 'md'
 		})}
+		data-testid="bulk-actions-left"
 	>
 		{#if selectibleCount > 0}
 			{#key selectibleCount}
@@ -91,18 +93,20 @@
 						height: '100%',
 						gap: 'sm'
 					})}
+					data-testid="select-all-container"
 				>
 					<Checkbox
 						id="select-all"
 						indeterminate={selectedSearchLength !== selectibleCount && selectedSearchLength > 0}
 						onclick={handleSelectAll}
 						checked={selectedSearchLength === selectibleCount}
+						data-testid="select-all-checkbox"
 					>
 						<div class={visuallyHidden()}>Select all</div>
 					</Checkbox>
 
 					{#if search.query?.length ?? 0 > 0}
-						<div class={css({ fontSize: 'md' })}>
+						<div class={css({ fontSize: 'md' })} data-testid="search-query-info">
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectedLength}</span>
 							are selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
@@ -112,7 +116,9 @@
 					{/if}
 
 					{#if search.query?.length === 0 || typeof search.query === 'undefined'}
-						{selectedLength} / {selectibleCount} branches
+						<div data-testid="selectible-count-info">
+							{selectedLength} / {selectibleCount} branches
+						</div>
 					{/if}
 				</div>
 			{/key}
@@ -126,6 +132,7 @@
 			alignItems: 'center',
 			gap: 'xs'
 		})}
+		data-testid="bulk-actions-right"
 	>
 		<Group>
 			<TextInput
@@ -141,8 +148,14 @@
 				autocorrect="off"
 				placeholder="Search branches"
 				value={search.query}
+				data-testid="search-input"
 			/>
-			<Button size="sm" onclick={onClearSearch} disabled={!search.query}>
+			<Button
+				size="sm"
+				onclick={onClearSearch}
+				disabled={!search.query}
+				data-testid="clear-search-button"
+			>
 				<div
 					class={css({
 						display: 'flex',
@@ -157,7 +170,7 @@
 		</Group>
 
 		{#if selectibleCount > 0 && currentRepo}
-			<div>
+			<div data-testid="delete-branch-modal">
 				<DeleteBranchModal {currentRepo} buttonProps={{ disabled: selectedLength === 0 }} />
 			</div>
 		{/if}
