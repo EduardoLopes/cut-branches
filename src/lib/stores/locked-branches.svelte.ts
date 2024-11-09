@@ -143,6 +143,17 @@ class LockedBranches {
 	}
 }
 
+// Define an object to store instances of the SelectedBranches class
+const instances: { [key: string]: LockedBranches } = {};
+
 export function getLockedBranchesStore(repository?: string): LockedBranches {
-	return new LockedBranches(repository);
+	// If an instance for the repository does not exist, create one
+	if (repository && !instances[repository]) {
+		instances[repository] = new LockedBranches(repository);
+	}
+	// Return the instance for the repository
+	if (repository) {
+		return instances[repository];
+	}
+	return new LockedBranches();
 }

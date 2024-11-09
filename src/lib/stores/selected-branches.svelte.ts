@@ -57,7 +57,7 @@ class SelectedBranches {
 			// Add new branches to the set to ensure uniqueness
 			branches.forEach((branch) => ids.add(branch));
 			// Update the selected branches state
-			this.#selected[this.#repository] = ids;
+			this.#selected = { ...this.#selected, [this.#repository]: ids };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -88,7 +88,7 @@ class SelectedBranches {
 			// Remove the branches from the set
 			branches.forEach((branch) => ids.delete(branch));
 			// Update the selected branches state
-			this.#selected[this.#repository] = ids;
+			this.#selected = { ...this.#selected, [this.#repository]: ids };
 			// Update the localStorage with the new state
 			this.#updateLocalStorage();
 		}
@@ -125,7 +125,17 @@ class SelectedBranches {
 	}
 }
 
+// Define an object to store instances of the SelectedBranches class
+const instances: { [key: string]: SelectedBranches } = {};
+
 export function getSelectedBranchesStore(repository?: string): SelectedBranches {
-	// Return a new instance if no repository is specified
-	return new SelectedBranches(repository);
+	// If an instance for the repository does not exist, create one
+	if (repository && !instances[repository]) {
+		instances[repository] = new SelectedBranches(repository);
+	}
+	// Return the instance for the repository
+	if (repository) {
+		return instances[repository] || new SelectedBranches(repository);
+	}
+	return new SelectedBranches();
 }

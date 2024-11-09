@@ -86,6 +86,17 @@ class SearchBranches {
 	}
 }
 
+// Define an object to store instances of the SelectedBranches class
+const instances: { [key: string]: SearchBranches } = {};
+
 export function getSearchBranchesStore(repository?: string): SearchBranches {
-	return new SearchBranches(repository); // Return a new instance if no repository is provided
+	// If an instance for the repository does not exist, create one
+	if (repository && !instances[repository]) {
+		instances[repository] = new SearchBranches(repository);
+	}
+	// Return the instance for the repository
+	if (repository) {
+		return instances[repository];
+	}
+	return new SearchBranches();
 }
