@@ -27,6 +27,9 @@ export default defineConfig({
 		// produce sourcemaps for debug builds
 		sourcemap: !!process.env.TAURI_DEBUG
 	},
+	define: {
+		__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
+	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 		environment: 'happy-dom',

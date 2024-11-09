@@ -2,7 +2,6 @@
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
-	import { version } from '$app/environment';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
 	import { globalStore } from '$lib/stores/global-store.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -76,7 +75,8 @@
 				display: 'flex'
 			})}
 		>
-			v{version}
+			<!-- eslint-disable-next-line -->
+			v{__APP_VERSION__}
 		</div>
 		<div class={spacer()}></div>
 		<ThemeModeSelect
