@@ -106,7 +106,7 @@
 					{#if search?.state?.length ?? 0 > 0}
 						<div class={css({ fontSize: 'md' })} data-testid="search-query-info">
 							<span class={css({ color: 'neutral.950.contrast' })}>{selected?.state.size}</span>
-							are selected /
+							{selected?.state.size === 1 ? 'is' : 'are'} selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
 							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
 							<strong class={css({ color: 'primary.800' })}>{search?.state?.trim()}</strong>
@@ -115,7 +115,8 @@
 
 					{#if search?.state?.length === 0 || typeof search?.state === 'undefined'}
 						<div data-testid="selectible-count-info">
-							{selected?.state.size} / {selectibleCount} branches
+							{selected?.state.size} / {selectibleCount}
+							{selectibleCount === 1 ? 'branch' : 'branches'}
 						</div>
 					{/if}
 				</div>
