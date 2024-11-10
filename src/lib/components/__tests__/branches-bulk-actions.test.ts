@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import BranchesBulkActions from '../branches-bulk-actions.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
-import type { Repository } from '$lib/stores/repositories.svelte';
+import type { Repository } from '$lib/stores/repository.svelte';
 
 const mockRepo: Repository = {
 	name: 'test-repo',

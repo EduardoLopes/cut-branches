@@ -7,10 +7,12 @@
  * @param defaultValue - The default value to return if the item is not available or an error occurs.
  * @returns The parsed item from localStorage, or the default value if not available or an error occurs.
  */
-export function getLocalStorage<T>(key: string, defaultValue: T): T {
+export function getLocalStorage<T>(key: string, defaultValue?: T) {
 	try {
 		const data = localStorage?.getItem(key);
-		return data ? JSON.parse(data) : defaultValue;
+		return data !== null && data !== undefined && data !== 'undefined'
+			? JSON.parse(data)
+			: defaultValue;
 	} catch (error) {
 		console.error(`Error parsing localStorage data for key "${key}":`, error);
 		return defaultValue;

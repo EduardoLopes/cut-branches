@@ -3,8 +3,8 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { goto } from '$app/navigation';
-	import { repositories } from '$lib/stores/repositories.svelte';
-	import { type Repository } from '$lib/stores/repositories.svelte';
+	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
+	import { type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
@@ -18,12 +18,18 @@
 	let { currentRepo }: Props = $props();
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
+	const repository = $derived(getRepositoryStore(currentRepo?.name));
 
 	function handleRemove() {
-		search.destroy();
-		repositories.remove(currentRepo?.id);
+		search?.set(undefined);
 		open = false;
-		goto(repositories.list.length > 0 ? `/repos/${repositories.first?.id}` : `/add-first`);
+
+		RepositoryStore.repositories?.delete([repository?.state?.name]);
+		repository?.clear();
+
+		const first = RepositoryStore.repositories?.list[0];
+
+		goto(first ? `/repos/${first}` : `/add-first`);
 	}
 
 	function handleCancel() {

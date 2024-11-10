@@ -6,7 +6,7 @@
 	import TextInput from '@pindoba/svelte-text-input';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
-	import type { Branch, Repository } from '$lib/stores/repositories.svelte';
+	import type { Branch, Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -34,19 +34,17 @@
 	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 
-	const selectedLength = $derived(selected.list?.length);
-
 	function handleSelectAll() {
 		const indeterminate = selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
 
 		if (indeterminate || selectedSearchLength === 0) {
 			const branchesToAdd = [];
 			for (const item of branches) {
-				if (item.name !== currentRepo?.currentBranch && !locked.has(item.name)) {
+				if (item.name !== currentRepo?.currentBranch && !locked?.has(item.name)) {
 					branchesToAdd.push(item.name);
 				}
 			}
-			selected.add(branchesToAdd);
+			selected?.add(branchesToAdd);
 		} else {
 			const branchesToRemove = [];
 			for (const item of branches) {
@@ -54,7 +52,7 @@
 					branchesToRemove.push(item.name);
 				}
 			}
-			selected.remove(branchesToRemove);
+			selected?.delete(branchesToRemove);
 		}
 	}
 </script>
@@ -105,19 +103,19 @@
 						<div class={visuallyHidden()}>Select all</div>
 					</Checkbox>
 
-					{#if search.query?.length ?? 0 > 0}
+					{#if search?.state?.length ?? 0 > 0}
 						<div class={css({ fontSize: 'md' })} data-testid="search-query-info">
-							<span class={css({ color: 'neutral.950.contrast' })}>{selectedLength}</span>
+							<span class={css({ color: 'neutral.950.contrast' })}>{selected?.state.size}</span>
 							are selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
 							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
-							<strong class={css({ color: 'primary.800' })}>{search.query?.trim()}</strong>
+							<strong class={css({ color: 'primary.800' })}>{search?.state?.trim()}</strong>
 						</div>
 					{/if}
 
-					{#if search.query?.length === 0 || typeof search.query === 'undefined'}
+					{#if search?.state?.length === 0 || typeof search?.state === 'undefined'}
 						<div data-testid="selectible-count-info">
-							{selectedLength} / {selectibleCount} branches
+							{selected?.state.size} / {selectibleCount} branches
 						</div>
 					{/if}
 				</div>
@@ -143,17 +141,17 @@
 				oninput={(event) => {
 					const target = event.target as HTMLInputElement;
 					onSearch(target.value);
-					search.set(target.value);
+					search?.set(target.value);
 				}}
 				autocorrect="off"
 				placeholder="Search branches"
-				value={search.query}
+				value={search?.state}
 				data-testid="search-input"
 			/>
 			<Button
 				size="sm"
 				onclick={onClearSearch}
-				disabled={!search.query}
+				disabled={!search?.state}
 				data-testid="clear-search-button"
 			>
 				<div
@@ -171,7 +169,7 @@
 
 		{#if selectibleCount > 0 && currentRepo}
 			<div data-testid="delete-branch-modal">
-				<DeleteBranchModal {currentRepo} buttonProps={{ disabled: selectedLength === 0 }} />
+				<DeleteBranchModal buttonProps={{ disabled: selected?.state.size === 0 }} />
 			</div>
 		{/if}
 	</div>

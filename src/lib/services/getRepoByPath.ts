@@ -1,7 +1,7 @@
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { ServiceError } from './models';
-import { repositories, type Repository } from '$lib/stores/repositories.svelte';
+import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
 
 export function getRepoByPath(
 	path: () => string | undefined,
@@ -15,7 +15,8 @@ export function getRepoByPath(
 		queryFn: async () => {
 			return invoke<string>('get_repo_info', { path: path() }).then((res) => {
 				const resParser = JSON.parse(res) as Repository;
-				repositories.add(resParser);
+				const repository = getRepositoryStore(resParser.name);
+				repository?.set(resParser);
 				return resParser;
 			});
 		},

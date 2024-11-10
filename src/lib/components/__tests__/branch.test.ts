@@ -1,6 +1,6 @@
 import { render } from '@testing-library/svelte';
 import BranchComponent from '../branch.svelte';
-import type { Branch } from '$lib/stores/repositories.svelte';
+import type { Branch } from '$lib/stores/repository.svelte';
 
 const mockBranch: Branch = {
 	name: 'feature/test-branch',

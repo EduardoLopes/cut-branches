@@ -79,6 +79,9 @@ importers:
       '@tauri-apps/plugin-shell':
         specifier: ~2
         version: 2.0.1
+      '@types/lodash':
+        specifier: ^4.17.13
+        version: 4.17.13
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -88,6 +91,9 @@ importers:
       just-debounce-it:
         specifier: ^3.2.0
         version: 3.2.0
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       svelte-exmarkdown:
         specifier: ^4.0.1
         version: 4.0.1(svelte@5.1.13)
@@ -1139,6 +1145,9 @@ packages:
 
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
+
+  '@types/lodash@4.17.13':
+    resolution: {integrity: sha512-lfx+dftrEZcdBPczf9d0Qv0x+j/rfNCMuC6OcfXmO8gkfeNAY88PgKUbvG56whcN23gc27yenwF6oJZXGFpYxg==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -4976,6 +4985,8 @@ snapshots:
   '@types/json-schema@7.0.15': {}
 
   '@types/json5@0.0.29': {}
+
+  '@types/lodash@4.17.13': {}
 
   '@types/mdast@4.0.4':
     dependencies:

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
+	import Loading from '@pindoba/svelte-loading';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { untrack } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { repositories } from '$lib/stores/repositories.svelte';
+	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
@@ -26,21 +26,31 @@
 		...props
 	}: Props = $props();
 
-	let path = $state<string | undefined>('');
+	let path = $state<string | undefined>(undefined);
 	const repoQuery = getRepoByPath(() => path);
 
 	$effect(() => {
-		if (repositories.findById(repoQuery.data?.id) && repoQuery.data) {
-			goto(`/repos/${repoQuery.data.id}`);
-		}
-
 		if (repoQuery.isSuccess) {
 			untrack(() => {
-				// success
+				path = undefined;
+				const repository = getRepositoryStore(repoQuery.data.name);
+
+				if (!repository?.state?.name) {
+					repository?.set(repoQuery.data);
+					// success
+					notifications.push({
+						feedback: 'success',
+						title: 'Repository added',
+						message: `The repository ${repoQuery.data.name} was added successfully`
+					});
+
+					return;
+				}
+
 				notifications.push({
-					feedback: 'success',
-					title: 'Repository added',
-					message: `The repository ${repoQuery.data.name} was added successfully`
+					feedback: 'warning',
+					title: 'Repository already exists',
+					message: `The repository ${repoQuery.data.name} already exists`
 				});
 			});
 		}
@@ -61,14 +71,6 @@
 		open({ directory: true })
 			.then((dir) => {
 				if (dir !== null) {
-					if (repositories.findByPath(dir)) {
-						const existingRepo = repositories.findByPath(dir);
-						notifications.push({
-							title: `Repository ${existingRepo?.name} already exists`,
-							feedback: 'warning'
-						});
-						return;
-					}
 					path = dir;
 				}
 			})
@@ -78,20 +80,22 @@
 	}
 </script>
 
-<Button onclick={handleAddClick} {size} {emphasis} {...props}>
-	<div
-		class={css({
-			display: 'flex',
-			alignItems: 'center',
-			gap: 'sm'
-		})}
-	>
-		{#if visuallyHiddenLabel}
-			<span class={visuallyHidden()}>Add a git repository</span>
-		{:else}
-			<span>Add a git repository</span>
-		{/if}
+<Loading isLoading={repoQuery.isLoading}>
+	<Button onclick={handleAddClick} {size} {emphasis} {...props}>
+		<div
+			class={css({
+				display: 'flex',
+				alignItems: 'center',
+				gap: 'sm'
+			})}
+		>
+			{#if visuallyHiddenLabel}
+				<span class={visuallyHidden()}>Add a git repository</span>
+			{:else}
+				<span>Add a git repository</span>
+			{/if}
 
-		<Icon {icon} width="20px" height="20px" color={iconColor} data-testid="add-button-icon" />
-	</div>
-</Button>
+			<Icon {icon} width="20px" height="20px" color={iconColor} data-testid="add-button-icon" />
+		</div>
+	</Button>
+</Loading>

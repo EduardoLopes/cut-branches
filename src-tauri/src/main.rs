@@ -397,22 +397,26 @@ async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
 // This function checks if a branch exists in a git repository.
 // It receives a path to the repository and the name of the branch to be checked.
 // It returns an Option containing a boolean indicating whether the branch exists or not.
-fn branch_exists(path: String, branch_name: String) -> Option<bool> {
+fn branch_exists(path: String, branch_name: String) -> Result<bool, Error> {
     let raw_path = Path::new(&path);
 
     // Set the current working directory to the repository path.
-    set_current_dir(&raw_path).unwrap();
+    set_current_dir(&raw_path)?;
 
     // Execute the git command to verify if the branch exists.
     let result = Command::new("git")
-        .arg("rev-parse")
+        .arg("show-ref")
         .arg("--verify")
-        .arg(&branch_name)
+        .arg(format!("refs/heads/{}", branch_name))
         .output()
-        .unwrap();
+        .map_err(|e| Error {
+            message: format!("Failed to execute git command: {}", e),
+            description: None,
+            kind: "command_execution_failed".to_string(),
+        })?;
 
-    // Return an Option containing a boolean indicating whether the branch exists or not.
-    Some(result.status.success())
+    // Return a Result containing a boolean indicating whether the branch exists or not.
+    Ok(result.status.success())
 }
 
 // This function deletes branches from a git repository.

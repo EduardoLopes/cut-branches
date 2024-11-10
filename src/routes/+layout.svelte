@@ -6,7 +6,7 @@
 	import { page } from '$app/stores';
 	import Footer from '$lib/components/footer.svelte';
 	import Providers from '$lib/components/providers.svelte';
-	import { repositories } from '$lib/stores/repositories.svelte';
+	import { RepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 	interface Props {
 		children?: Snippet;
@@ -14,15 +14,16 @@
 
 	let { children }: Props = $props();
 
+	const idExists = $derived(RepositoryStore.repositories?.has($page.params.id));
+
+	const first = $derived(RepositoryStore.repositories?.list[0]);
+
 	$effect(() => {
-		if (repositories.list.length === 0) {
+		if (RepositoryStore.repositories?.state.size === 0) {
 			goto('/add-first');
 		} else {
-			// if is in any route that requires a repo id and the repo does not exist in the app anymore
-			const idExists = Boolean(repositories.findById($page.params.id));
-
-			if (repositories.first?.id && !idExists) {
-				goto(`/repos/${repositories.first.id}`);
+			if (first && !idExists) {
+				goto(`/repos/${first}`);
 			}
 		}
 	});

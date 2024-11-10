@@ -3,13 +3,13 @@
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { intlFormatDistance } from 'date-fns';
-	import type { Branch } from '$lib/stores/repositories.svelte';
+	import type { Branch } from '$lib/stores/repository.svelte';
 	import { formatDate } from '$lib/utils/format-date';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		data: Branch;
-		selected: boolean;
+		selected?: boolean;
 		locked?: boolean;
 		disabled?: boolean;
 	}

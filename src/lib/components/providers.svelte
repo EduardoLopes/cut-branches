@@ -19,7 +19,7 @@
 
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
-			if (mutation.meta?.showSuccessNotification) {
+			if (mutation.meta?.showSuccessNotifiacation) {
 				const notificationInfo = mutation.meta?.notification as {
 					message: string;
 					description: string;

@@ -1,48 +1,33 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Loading from '@pindoba/svelte-loading';
-	import Navigation from '@pindoba/svelte-navigation';
+	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import { untrack } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import AddButton from '$lib/components/add-button.svelte';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
-	import { notifications } from '$lib/stores/notifications.svelte';
-	import { repositories } from '$lib/stores/repositories.svelte';
+	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 
-	let path = $state<string | undefined>('');
-	const repoQuery = getRepoByPath(() => path);
-
-	$effect(() => {
-		if (repoQuery.data) {
-			goto(`/repos/${repoQuery.data.id}`, {
-				state: {
-					path: repoQuery.data.path,
-					name: repoQuery.data.name,
-					id: repoQuery.data.id
-				}
-			});
-		}
-
-		if (repoQuery.isError) {
-			untrack(() =>
-				notifications.push({
-					feedback: 'danger',
-					title: repoQuery.error.message,
-					message: repoQuery.error.description
-				})
-			);
-		}
-	});
-
 	const items = $derived(
-		repositories.list.map((repo) => ({
-			id: repo.id,
-			label: repo.name,
-			href: `/repos/${repo.id}`,
-			badge: repo.branchesCount ? `${repo.branchesCount}` : undefined
-		}))
+		RepositoryStore.repositories.list
+			.map((repo) => {
+				return untrack(() => {
+					const repository = getRepositoryStore(repo);
+					if (repository?.state) {
+						return {
+							id: repository.state.id,
+							label: repository.state.name,
+							href: `/repos/${repository.state.name}`,
+							badge: repository.state.branchesCount
+								? `${repository.state.branchesCount}`
+								: undefined
+						} as NavigationItem;
+					}
+					return undefined;
+				});
+			})
+			.filter((item) => {
+				return !!item;
+			})
 	);
 </script>
 
@@ -129,24 +114,23 @@
 			>
 				Repositories
 			</h2>
-			<Loading isLoading={repoQuery.isLoading}>
-				<AddButton
-					size="sm"
-					emphasis="secondary"
-					shape="square"
-					icon="material-symbols:add-rounded"
-					iconColor="token(colors.primary.600)"
-					visuallyHiddenLabel={true}
-					passThrough={{
-						root: css.raw({
-							background: 'transparent',
-							boxShadow: '0 0 0 1px token(colors.primary.700)'
-						})
-					}}
-				/>
-			</Loading>
+
+			<AddButton
+				size="sm"
+				emphasis="secondary"
+				shape="square"
+				icon="material-symbols:add-rounded"
+				iconColor="token(colors.primary.600)"
+				visuallyHiddenLabel={true}
+				passThrough={{
+					root: css.raw({
+						background: 'transparent',
+						boxShadow: '0 0 0 1px token(colors.primary.700)'
+					})
+				}}
+			/>
 		</div>
-		{#if repositories.list.length > 0}
+		{#if items}
 			<Navigation
 				{items}
 				activeItem={$page.params.id}

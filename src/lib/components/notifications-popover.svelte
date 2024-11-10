@@ -181,7 +181,9 @@
 		{/if}
 
 		{#if showMore}
-			{#each notifications.list.slice(0, page * pageSize) as notification, index (notification.id)}
+			{#each [...notifications.list]
+				.reverse()
+				.slice(0, page * pageSize) as notification, index (notification.id)}
 				{@const currentDate = notification?.date}
 				{@const previousDate = notifications.list[Math.max(0, index - 1)].date}
 

@@ -6,7 +6,8 @@ import AddButton from '../add-button.svelte';
 import TestWrapper from '../test-wrapper.svelte';
 import { goto } from '$app/navigation';
 import { notifications } from '$lib/stores/notifications.svelte';
-import { repositories, type Repository } from '$lib/stores/repositories.svelte';
+import { type Repository } from '$lib/stores/repository.svelte';
+import { getRepositoryStore } from '$lib/stores/repository.svelte';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({
 	open: vi.fn().mockResolvedValue(Promise.resolve('/path/to/existing/repo'))
@@ -66,7 +67,6 @@ describe('AddButton', () => {
 			branchesCount: 0
 		};
 
-		repositories.findByPath = vi.fn().mockReturnValue(mockRepo);
 		notifications.push = vi.fn();
 
 		const { getByRole } = render(TestWrapper, {
@@ -104,7 +104,9 @@ describe('AddButton', () => {
 			})
 		}));
 
-		repositories.add(mockRepo);
+		const repository = getRepositoryStore(mockRepo.name);
+
+		repository?.set(mockRepo);
 
 		const { getByRole } = render(TestWrapper, {
 			props: { component: AddButton, props: { visuallyHiddenLabel: false } }

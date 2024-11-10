@@ -2,7 +2,6 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
-	import { repositories } from '$lib/stores/repositories.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -13,14 +12,13 @@
 
 	let { branch, repositoryID }: Props = $props();
 
-	const currentRepo = $derived(repositories.findById(repositoryID));
-	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
+	const locked = $derived(getLockedBranchesStore(repositoryID));
 </script>
 
 <Button
 	size="xs"
 	shape={'square'}
-	emphasis={locked.has(branch) ? 'primary' : 'secondary'}
+	emphasis={locked?.has(branch) ? 'primary' : 'secondary'}
 	class={css({
 		width: '26px',
 		height: '26px'
@@ -31,22 +29,22 @@
 		})
 	}}
 	onclick={() => {
-		if (locked.has(branch)) {
-			locked.remove([branch]);
+		if (locked?.has(branch)) {
+			locked?.delete([branch]);
 		} else {
-			locked.add([branch]);
+			locked?.add([branch]);
 		}
 	}}
 >
-	{#if locked.has(branch)}
+	{#if locked?.has(branch)}
 		<Icon icon="lucide:lock" width="12px" height="12px" />
 	{/if}
 
-	{#if !locked.has(branch)}
+	{#if !locked?.has(branch)}
 		<Icon icon="lucide:lock-open" width="12px" height="12px" />
 	{/if}
 
 	<span class={visuallyHidden()}>
-		{locked.has(branch) ? 'unlock' : 'lock'}
+		{locked?.has(branch) ? 'unlock' : 'lock'}
 	</span>
 </Button>

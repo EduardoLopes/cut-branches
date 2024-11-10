@@ -3,34 +3,25 @@
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
+	import { page } from '$app/stores';
 	import BranchComponent from '$lib/components/branch.svelte';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { type Branch, type Repository } from '$lib/stores/repositories.svelte';
+	import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 
 	const client = useQueryClient();
 	interface Props {
-		currentRepo: Repository;
 		buttonProps?: Omit<ButtonProps, 'onclick'>;
 	}
 
 	let open = $state(false);
 
-	let { currentRepo, buttonProps }: Props = $props();
-	const selected = $derived(getSelectedBranchesStore(currentRepo.name));
-	const oneMinute = 60000;
-	let currentPath = $derived(currentRepo?.path);
-	const getBranchesQuery = getRepoByPath(() => currentPath, {
-		staleTime: oneMinute,
-		meta: {
-			showErrorNotification: false
-		}
-	});
-
-	const selectedCount = $derived(selected.list.length);
+	let { buttonProps }: Props = $props();
+	const selected = $derived(getSelectedBranchesStore($page.params.id));
+	const repository = $derived(getRepositoryStore($page.params.id));
+	const selectedCount = $derived(selected?.list.length);
 
 	const deleteMutation = useDeleteBranchesMutation({
 		onSuccess(data) {
@@ -43,22 +34,17 @@
 			notifications.push({
 				feedback: 'success',
 				title: `${data.length > 1 ? 'Branches' : 'Branch'} deleted from ${
-					currentRepo.name
+					repository?.state?.name
 				} repository`,
 				message: m
 			});
 
-			selected.clear();
+			selected?.clear();
 
-			client.invalidateQueries({ queryKey: ['branches', 'get-all', currentRepo?.path] });
-		}
+			client.invalidateQueries({ queryKey: ['branches', 'get-all', repository?.state?.path] });
+		},
+		meta: { showErrorNotification: true }
 	});
-
-	let branches = $derived(
-		getBranchesQuery.data
-			? [...getBranchesQuery.data.branches].sort(sort).filter((item) => selected.has(item.name))
-			: []
-	);
 
 	// current branch first
 	function sort(a: Branch, b: Branch) {
@@ -72,12 +58,17 @@
 		return 0;
 	}
 
+	let branches = $derived(
+		[...(repository?.state?.branches ?? [])].sort(sort).filter((item) => selected?.has(item.name))
+	);
+
 	function handleDelete() {
-		deleteMutation.mutate({
-			path: currentRepo?.path,
-			branches:
-				getBranchesQuery.data?.branches.sort(sort).filter((item) => selected.has(item.name)) ?? []
-		});
+		if (repository?.state?.path) {
+			deleteMutation.mutate({
+				path: repository?.state?.path,
+				branches: branches.map((item) => item)
+			});
+		}
 
 		open = false;
 	}
@@ -98,7 +89,7 @@
 			class={css({
 				color: 'danger.800',
 				fontSize: 'lg'
-			})}>{currentRepo?.name}</strong
+			})}>{repository?.state?.name}</strong
 		>?
 	</p>
 
@@ -121,7 +112,7 @@
 					borderRadius: 'sm'
 				})}
 			>
-				<BranchComponent data={branch} selected={selected.has(branch.name)} />
+				<BranchComponent data={branch} selected={selected?.has(branch.name)} />
 			</div>
 		{/each}
 	</div>

@@ -29,7 +29,7 @@
 			emphasis="ghost"
 			onclick={() => {
 				if (id) {
-					notifications.remove(id);
+					notifications.delete([id]);
 				}
 			}}
 			passThrough={{
