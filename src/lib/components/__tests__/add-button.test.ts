@@ -10,7 +10,7 @@ import { type Repository } from '$lib/stores/repository.svelte';
 import { getRepositoryStore } from '$lib/stores/repository.svelte';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({
-	open: vi.fn().mockResolvedValue(Promise.resolve('/path/to/existing/repo'))
+	open: vi.fn().mockResolvedValue('/path/to/existing/repo')
 }));
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
@@ -20,6 +20,26 @@ vi.mock('$app/stores', () => {
 		page: readable({ params: { id: '123' } })
 	};
 });
+
+vi.mock('$lib/stores/notifications.svelte', () => ({
+	notifications: {
+		push: vi.fn()
+	}
+}));
+
+vi.mock('$lib/services/getRepoByPath', () => ({
+	getRepoByPath: vi.fn().mockReturnValue({
+		isSuccess: true,
+		data: {
+			id: '123',
+			name: 'Existing Repo',
+			path: '/path/to/existing/repo',
+			branches: [],
+			currentBranch: '',
+			branchesCount: 0
+		}
+	})
+}));
 
 describe('AddButton', () => {
 	test('renders correctly', () => {
@@ -67,17 +87,21 @@ describe('AddButton', () => {
 			branchesCount: 0
 		};
 
-		notifications.push = vi.fn();
+		const repository = getRepositoryStore(mockRepo.name);
+
+		repository?.set(mockRepo);
 
 		const { getByRole } = render(TestWrapper, {
 			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
 		});
+
 		const button = getByRole('button');
 		await fireEvent.click(button);
 
 		expect(notifications.push).toHaveBeenCalledWith({
-			title: `Repository ${mockRepo.name} already exists`,
-			feedback: 'warning'
+			feedback: 'warning',
+			title: 'Repository already exists',
+			message: `The repository ${mockRepo.name} already exists`
 		});
 	});
 
@@ -90,19 +114,6 @@ describe('AddButton', () => {
 			currentBranch: '',
 			branchesCount: 0
 		};
-
-		vi.mock('$lib/services/getRepoByPath', () => ({
-			getRepoByPath: vi.fn().mockReturnValue({
-				data: {
-					id: '123',
-					name: 'Existing Repo',
-					path: '/path/to/existing/repo',
-					branches: [],
-					currentBranch: '',
-					branchesCount: 0
-				}
-			})
-		}));
 
 		const repository = getRepositoryStore(mockRepo.name);
 
