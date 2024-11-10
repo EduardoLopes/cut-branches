@@ -40,7 +40,7 @@ export interface Notification {
  */
 export function createNotificationObject(notification: Notification): Notification {
 	return {
-		id: crypto.randomUUID(),
+		id: notification.id || crypto.randomUUID(),
 		feedback: 'default',
 		date: Date.now(),
 		...notification
