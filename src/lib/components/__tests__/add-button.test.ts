@@ -126,6 +126,6 @@ describe('AddButton', () => {
 		const button = getByRole('button');
 		await fireEvent.click(button);
 
-		expect(goto).toHaveBeenCalledWith(`/repos/${mockRepo.id}`);
+		expect(goto).toHaveBeenCalledWith(`/repos/${mockRepo.name}`);
 	});
 });
