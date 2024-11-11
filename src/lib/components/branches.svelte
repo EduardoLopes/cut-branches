@@ -43,6 +43,12 @@
 		staleTime: oneMinute
 	});
 
+	$effect(() => {
+		if (repository?.state?.path) {
+			globalStore.lastUpdatedAt = new Date(getBranchesQuery.dataUpdatedAt);
+		}
+	});
+
 	const switchBranchMutation = createSwitchbranchMutation({
 		onSuccess: (currentBranch) => {
 			notifications.push({
