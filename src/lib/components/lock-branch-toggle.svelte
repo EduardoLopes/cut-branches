@@ -35,13 +35,18 @@
 			locked?.add([branch]);
 		}
 	}}
+	data-testid="lock-toggle-button"
 >
 	{#if locked?.has(branch)}
-		<Icon icon="lucide:lock" width="12px" height="12px" />
+		<div data-testid="lock-icon">
+			<Icon icon="lucide:lock" width="12px" height="12px" />
+		</div>
 	{/if}
 
 	{#if !locked?.has(branch)}
-		<Icon icon="lucide:lock-open" width="12px" height="12px" />
+		<div data-testid="unlock-icon">
+			<Icon icon="lucide:lock-open" width="12px" height="12px" />
+		</div>
 	{/if}
 
 	<span class={visuallyHidden()}>
