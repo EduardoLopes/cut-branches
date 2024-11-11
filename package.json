@@ -35,7 +35,7 @@
 		"@sveltejs/adapter-static": "^3.0.6",
 		"@sveltejs/kit": "^2.8.0",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
-		"@tauri-apps/cli": "^2.0.4",
+		"@tauri-apps/cli": "^2.1.0",
 		"@testing-library/jest-dom": "^6.6.3",
 		"@testing-library/svelte": "^5.2.4",
 		"@typescript-eslint/eslint-plugin": "^8.13.0",
@@ -87,7 +87,7 @@
 		"@pindoba/svelte-text-input": "link:../pindoba/packages/ui/svelte/text-input",
 		"@pindoba/svelte-theme-mode-select": "link:../pindoba/packages/blocks/svelte/theme-mode-select",
 		"@tanstack/svelte-query": "https://pkg.pr.new/@tanstack/svelte-query@ccce0b8",
-		"@tauri-apps/api": "^2.0.3",
+		"@tauri-apps/api": "^2.1.0",
 		"@tauri-apps/plugin-dialog": "~2.0.1",
 		"@tauri-apps/plugin-shell": "~2",
 		"@types/lodash": "^4.17.13",
@@ -97,7 +97,7 @@
 		"lodash": "^4.17.21",
 		"svelte-exmarkdown": "^4.0.1"
 	},
-	"packageManager": "pnpm@9.12.2+sha512.22721b3a11f81661ae1ec68ce1a7b879425a1ca5b991c975b074ac220b187ce56c708fe5db69f4c962c989452eee76c82877f4ee80f474cebd61ee13461b6228",
+	"packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee",
 	"pnpm": {
 		"patchedDependencies": {
 			"@changesets/changelog-github@0.5.0": "patches/@changesets__changelog-github@0.5.0.patch"
