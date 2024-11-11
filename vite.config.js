@@ -39,9 +39,9 @@ export default defineConfig(({ mode }) => ({
 		setupFiles: './vitest-setup.js',
 		globals: true,
 		coverage: {
-			include: ['src/**'],
 			provider: 'v8',
 			all: true,
+			include: ['src/**/*.{js,ts,svelte}'],
 			exclude: [
 				...(vitestConfigDefaults.coverage.exclude || []),
 				'styled-system',
