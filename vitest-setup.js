@@ -27,3 +27,5 @@ window.IntersectionObserver = vi.fn().mockImplementation(() => ({
 HTMLDialogElement.prototype.show = vi.fn();
 HTMLDialogElement.prototype.showModal = vi.fn();
 HTMLDialogElement.prototype.close = vi.fn();
+
+vi.mock('$app/navigation', () => ({ goto: vi.fn() }));

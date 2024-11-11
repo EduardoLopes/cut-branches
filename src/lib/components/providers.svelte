@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import {
 		MutationCache,
 		QueryCache,
@@ -81,8 +80,6 @@
 		}
 	});
 </script>
-
-<ThemeModeSelectScript />
 
 <QueryClientProvider client={queryClient}>
 	{@render children?.()}

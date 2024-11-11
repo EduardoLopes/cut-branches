@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-
+	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import { type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -28,6 +28,8 @@
 		}
 	});
 </script>
+
+<ThemeModeSelectScript />
 
 <Providers>
 	<div
