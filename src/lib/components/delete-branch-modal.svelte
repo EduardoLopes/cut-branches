@@ -83,8 +83,9 @@
 	title="Delete branches"
 	aria-label="Delete branches"
 	aria-describedby="Delete branches"
+	data-testid="delete-branch-dialog"
 >
-	<p>
+	<p data-testid="delete-branch-dialog-question">
 		Are you sure you want these branches from the repository <strong
 			class={css({
 				color: 'danger.800',
@@ -124,8 +125,10 @@
 			gap: 'md'
 		})}
 	>
-		<Button emphasis="secondary" onclick={handleCancel}>Cancel</Button>
-		<Button feedback="danger" autofocus onclick={handleDelete}>Delete</Button>
+		<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-button">Cancel</Button>
+		<Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
+			>Delete</Button
+		>
 	</div>
 </Dialog>
 
@@ -137,6 +140,7 @@
 		open = true;
 	}}
 	{...buttonProps}
+	data-testid="open-dialog-button"
 >
 	<Icon icon="ion:trash-outline" width="16px" height="16px" />
 	Delete

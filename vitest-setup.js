@@ -1,16 +1,22 @@
 import '@testing-library/jest-dom/vitest';
-import { vi } from 'vitest';
+import * as matchers from '@testing-library/jest-dom/matchers';
+import { vi, expect } from 'vitest';
 
-window.matchMedia = vi.fn().mockImplementation((query) => ({
-	matches: false,
-	media: query,
-	onchange: null,
-	addListener: vi.fn(), // deprecated
-	removeListener: vi.fn(), // deprecated
-	addEventListener: vi.fn(),
-	removeEventListener: vi.fn(),
-	dispatchEvent: vi.fn()
-}));
+expect.extend(matchers);
+
+Object.defineProperty(window, 'matchMedia', {
+	writable: true,
+	value: (query) => ({
+		matches: false,
+		media: query,
+		onchange: null,
+		addListener: () => {}, // deprecated
+		removeListener: () => {}, // deprecated
+		addEventListener: () => {},
+		removeEventListener: () => {},
+		dispatchEvent: () => {}
+	})
+});
 
 window.IntersectionObserver = vi.fn().mockImplementation(() => ({
 	observe: vi.fn(),
@@ -18,4 +24,6 @@ window.IntersectionObserver = vi.fn().mockImplementation(() => ({
 	disconnect: vi.fn()
 }));
 
-console.log('Setup file executed');
+HTMLDialogElement.prototype.show = vi.fn();
+HTMLDialogElement.prototype.showModal = vi.fn();
+HTMLDialogElement.prototype.close = vi.fn();
