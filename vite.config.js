@@ -48,11 +48,13 @@ export default defineConfig(({ mode }) => ({
 				'src-tauri',
 				'build',
 				'.svelte-kit',
-				'./*'
+				'./*',
+				'./src/lib/components/test-wrapper.svelte'
 			]
 		},
 		alias: {
 			'@testing-library/svelte': '@testing-library/svelte/svelte5'
-		}
+		},
+		reporters: 'verbose'
 	}
 }));
