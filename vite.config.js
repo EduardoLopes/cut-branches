@@ -3,7 +3,7 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 import { configDefaults as vitestConfigDefaults } from 'vitest/config';
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	plugins: [sveltekit(), svelteTesting()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	// prevent vite from obscuring rust errors
@@ -30,14 +30,18 @@ export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
 	},
+	resolve: {
+		conditions: mode === 'test' ? ['browser'] : []
+	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
-		environment: 'happy-dom',
+		environment: 'jsdom',
 		setupFiles: './vitest-setup.js',
 		globals: true,
 		coverage: {
 			include: ['src/**'],
 			provider: 'v8',
+			all: true,
 			exclude: [
 				...(vitestConfigDefaults.coverage.exclude || []),
 				'styled-system',
@@ -51,4 +55,4 @@ export default defineConfig({
 			'@testing-library/svelte': '@testing-library/svelte/svelte5'
 		}
 	}
-});
+}));

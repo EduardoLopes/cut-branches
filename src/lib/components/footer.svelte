@@ -44,6 +44,7 @@
 		alignItems: 'center',
 		gap: 'md'
 	})}
+	data-testid="footer"
 >
 	<div
 		class={css({
@@ -62,6 +63,7 @@
 			width: '260px',
 			p: 'token(spacing.xxs)'
 		})}
+		data-testid="version-container"
 	>
 		<div
 			class={css({
@@ -74,6 +76,7 @@
 				},
 				display: 'flex'
 			})}
+			data-testid="app-version"
 		>
 			<!-- eslint-disable-next-line -->
 			v{__APP_VERSION__}
@@ -108,6 +111,7 @@
 			display: 'flex',
 			gap: 'xs'
 		})}
+		data-testid="last-updated-container"
 	>
 		{#if lastUpdatedAt && globalStore.lastUpdatedAt}
 			<time
@@ -120,6 +124,7 @@
 					minute: 'numeric',
 					second: 'numeric'
 				})}
+				data-testid="last-updated-time"
 			>
 				{#key lastUpdatedAt}
 					<div
@@ -132,6 +137,7 @@
 								color: 'primary.600'
 							}
 						})}
+						data-testid="last-updated-text"
 					>
 						Last updated {lastUpdatedAt}
 					</div>
