@@ -2,7 +2,7 @@
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	export function testWrapperWithProps<TComponent extends Component<any, any, any>>(
 		component: TComponent,
-		props: ComponentProps<TComponent>
+		props?: ComponentProps<TComponent>
 	) {
 		return {
 			component,
