@@ -42,6 +42,7 @@
 	title="Remove repository"
 	aria-label="Remove repository"
 	aria-describedby="Remove repository"
+	data-testid="remove-modal"
 >
 	<p>
 		Are you sure you want to remove the repository <strong
@@ -59,8 +60,10 @@
 			gap: 'md'
 		})}
 	>
-		<Button emphasis="secondary" onclick={handleCancel}>Cancel</Button>
-		<Button feedback="danger" autofocus onclick={handleRemove}>Remove</Button>
+		<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-remove">Cancel</Button>
+		<Button feedback="danger" autofocus onclick={handleRemove} data-testid="confirm-remove"
+			>Remove</Button
+		>
 	</div>
 </Dialog>
 
@@ -72,6 +75,7 @@
 		open = true;
 	}}
 	shape="square"
+	data-testid="open-remove-modal"
 >
 	<Icon icon="solar:close-circle-linear" width="24px" height="24px" />
 	<span class={visuallyHidden()}>Remove</span>
