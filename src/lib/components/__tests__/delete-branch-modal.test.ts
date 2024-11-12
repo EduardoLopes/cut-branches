@@ -80,7 +80,7 @@ describe('DeleteBranchModal Component', () => {
 
 	test('opens modal on button click', async () => {
 		const { getByTestId } = render(TestWrapper, {
-			props: { component: DeleteBranchModal }
+			props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
 		});
 		const button = getByTestId('open-dialog-button');
 		await fireEvent.click(button);
@@ -94,7 +94,7 @@ describe('DeleteBranchModal Component', () => {
 		const deleteMutate = useDeleteBranchesMutation();
 
 		const { getByTestId } = render(TestWrapper, {
-			props: { component: DeleteBranchModal }
+			props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
 		});
 		const button = getByTestId('open-dialog-button');
 		await fireEvent.click(button);
@@ -110,7 +110,7 @@ describe('DeleteBranchModal Component', () => {
 
 	test('calls handleCancel on cancel button click', async () => {
 		const { getByTestId, getByText } = render(TestWrapper, {
-			props: { component: DeleteBranchModal }
+			props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
 		});
 		const button = getByTestId('open-dialog-button');
 		await fireEvent.click(button);

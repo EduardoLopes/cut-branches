@@ -8,7 +8,7 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
-	import { navigating, page } from '$app/stores';
+	import { navigating } from '$app/stores';
 	import BranchComponent from '$lib/components/branch.svelte';
 	import BulkActions from '$lib/components/branches-bulk-actions.svelte';
 	import LockBranchToggle from '$lib/components/lock-branch-toggle.svelte';
@@ -197,7 +197,13 @@
 
 		<Loading isLoading={getBranchesQuery.isFetching}>
 			<Group direction="horizontal">
-				<Button emphasis="ghost" size="sm" onclick={update_repo} shape="square">
+				<Button
+					emphasis="ghost"
+					size="sm"
+					onclick={update_repo}
+					shape="square"
+					data-testid="update-button"
+				>
 					<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
 					<span class={visuallyHidden()}>Update</span>
 				</Button>
@@ -376,7 +382,7 @@
 					</div>
 				{/if}
 
-				{#key `${$page.params.id}${currentPage}`}
+				{#key `${id}${currentPage}`}
 					<div
 						class={css({
 							display: 'flex',
@@ -442,6 +448,7 @@
 														boxShadow: 'none'
 													})}
 													onclick={() => handleSwitchBranch(branch.name)}
+													data-testid="switch-button"
 												>
 													<Icon icon="octicon:feed-star-16" width="12px" height="12px" />
 													<span class={visuallyHidden()}>Set as current</span>

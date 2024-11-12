@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import * as matchers from '@testing-library/jest-dom/matchers';
-import { vi, expect } from 'vitest';
+import { vi, expect, afterEach } from 'vitest';
 
 expect.extend(matchers);
 
@@ -29,3 +29,7 @@ HTMLDialogElement.prototype.showModal = vi.fn();
 HTMLDialogElement.prototype.close = vi.fn();
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
+
+afterEach(() => {
+	vi.clearAllTimers();
+});

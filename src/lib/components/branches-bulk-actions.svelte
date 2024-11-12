@@ -170,7 +170,10 @@
 
 		{#if selectibleCount > 0 && currentRepo}
 			<div data-testid="delete-branch-modal">
-				<DeleteBranchModal buttonProps={{ disabled: selected?.state.size === 0 }} />
+				<DeleteBranchModal
+					id={currentRepo?.name}
+					buttonProps={{ disabled: selected?.state.size === 0 }}
+				/>
 			</div>
 		{/if}
 	</div>

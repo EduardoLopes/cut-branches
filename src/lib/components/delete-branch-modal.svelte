@@ -3,7 +3,6 @@
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { page } from '$app/stores';
 	import BranchComponent from '$lib/components/branch.svelte';
 	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
 	import { notifications } from '$lib/stores/notifications.svelte';
@@ -13,14 +12,15 @@
 
 	const client = useQueryClient();
 	interface Props {
+		id?: string;
 		buttonProps?: Omit<ButtonProps, 'onclick'>;
 	}
 
 	let open = $state(false);
 
-	let { buttonProps }: Props = $props();
-	const selected = $derived(getSelectedBranchesStore($page.params.id));
-	const repository = $derived(getRepositoryStore($page.params.id));
+	let { id, buttonProps }: Props = $props();
+	const selected = $derived(getSelectedBranchesStore(id));
+	const repository = $derived(getRepositoryStore(id));
 	const selectedCount = $derived(selected?.list.length);
 
 	const deleteMutation = useDeleteBranchesMutation({
