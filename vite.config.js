@@ -1,7 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
-import { configDefaults as vitestConfigDefaults } from 'vitest/config';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
 	plugins: [sveltekit(), svelteTesting()],
@@ -39,22 +38,14 @@ export default defineConfig(({ mode }) => ({
 		setupFiles: './vitest-setup.js',
 		globals: true,
 		coverage: {
+			enabled: true,
 			provider: 'v8',
 			all: true,
-			include: ['src/**/*.{js,ts,svelte}'],
-			exclude: [
-				...(vitestConfigDefaults.coverage.exclude || []),
-				'styled-system',
-				'src-tauri',
-				'build',
-				'.svelte-kit',
-				'./*',
-				'./src/lib/components/test-wrapper.svelte'
-			]
+			include: ['src/**']
 		},
 		alias: {
 			'@testing-library/svelte': '@testing-library/svelte/svelte5'
 		},
-		reporters: 'verbose'
+		reporters: ['default', 'html']
 	}
 }));
