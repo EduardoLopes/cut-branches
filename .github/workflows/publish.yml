@@ -45,6 +45,9 @@ jobs:
         shell: bash
         run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
+      - name: Install Dependencies
+        run: pnpm install
+
       - uses: actions/cache@v4
         name: Setup pnpm cache
         with:
