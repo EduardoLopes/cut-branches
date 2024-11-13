@@ -1,4 +1,5 @@
 import { untrack } from 'svelte';
+import { setLocalStorage } from './set-local-storage';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export class Store<T> {
@@ -33,7 +34,7 @@ export class Store<T> {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined' && this.#key) {
 			try {
-				localStorage?.setItem(this.localStorageKey, JSON.stringify(this.state));
+				setLocalStorage(this.localStorageKey, this.state);
 			} catch (error) {
 				console.error('Error setting localStorage data:', error);
 			}

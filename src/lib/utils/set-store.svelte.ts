@@ -2,6 +2,7 @@
 import { untrack } from 'svelte';
 // eslint-disable-next-line import/no-duplicates
 import { SvelteSet } from 'svelte/reactivity';
+import { setLocalStorage } from './set-local-storage';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export class SetStore<T> {
@@ -47,8 +48,7 @@ export class SetStore<T> {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined' && this.#key) {
 			try {
-				const stateArray = [...this.state];
-				localStorage?.setItem(this.localStorageKey, JSON.stringify(stateArray));
+				setLocalStorage(this.localStorageKey, [...this.state]);
 			} catch (error) {
 				console.error('Error setting localStorage data:', error);
 			}
