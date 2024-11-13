@@ -131,10 +131,10 @@
 						class={css({
 							fontSize: 'sm',
 							_dark: {
-								color: 'primary.900'
+								color: 'primary.800'
 							},
 							_light: {
-								color: 'primary.600'
+								color: 'primary.800.contrast'
 							}
 						})}
 						data-testid="last-updated-text"
