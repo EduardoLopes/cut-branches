@@ -17,56 +17,56 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0
       '@pindoba/panda':
-        specifier: link:../pindoba/packages/panda
-        version: link:../pindoba/packages/panda
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154
       '@pindoba/panda-preset':
-        specifier: link:../pindoba/packages/panda-preset
-        version: link:../pindoba/packages/panda-preset
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154
       '@pindoba/styles':
-        specifier: link:../pindoba/packages/styles
-        version: link:../pindoba/packages/styles
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
       '@pindoba/svelte-alert':
-        specifier: link:../pindoba/packages/ui/svelte/alert
-        version: link:../pindoba/packages/ui/svelte/alert
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-badge':
-        specifier: link:../pindoba/packages/ui/svelte/badge
-        version: link:../pindoba/packages/ui/svelte/badge
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-button':
-        specifier: link:../pindoba/packages/ui/svelte/button
-        version: link:../pindoba/packages/ui/svelte/button
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-checkbox':
-        specifier: link:../pindoba/packages/ui/svelte/checkbox
-        version: link:../pindoba/packages/ui/svelte/checkbox
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-dialog':
-        specifier: link:../pindoba/packages/ui/svelte/dialog
-        version: link:../pindoba/packages/ui/svelte/dialog
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-group':
-        specifier: link:../pindoba/packages/ui/svelte/group
-        version: link:../pindoba/packages/ui/svelte/group
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-loading':
-        specifier: link:../pindoba/packages/ui/svelte/loading
-        version: link:../pindoba/packages/ui/svelte/loading
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-navigation':
-        specifier: link:../pindoba/packages/ui/svelte/navigation
-        version: link:../pindoba/packages/ui/svelte/navigation
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-pagination':
-        specifier: link:../pindoba/packages/blocks/svelte/pagination
-        version: link:../pindoba/packages/blocks/svelte/pagination
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-popover':
-        specifier: link:../pindoba/packages/ui/svelte/popover
-        version: link:../pindoba/packages/ui/svelte/popover
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-radio':
-        specifier: link:../pindoba/packages/ui/svelte/radio
-        version: link:../pindoba/packages/ui/svelte/radio
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-select':
-        specifier: link:../pindoba/packages/ui/svelte/select
-        version: link:../pindoba/packages/ui/svelte/select
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-text-input':
-        specifier: link:../pindoba/packages/ui/svelte/text-input
-        version: link:../pindoba/packages/ui/svelte/text-input
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@pindoba/svelte-theme-mode-select':
-        specifier: link:../pindoba/packages/blocks/svelte/theme-mode-select
-        version: link:../pindoba/packages/blocks/svelte/theme-mode-select
+        specifier: alpha
+        version: 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
       '@tanstack/svelte-query':
         specifier: https://pkg.pr.new/@tanstack/svelte-query@ccce0b8
         version: https://pkg.pr.new/@tanstack/svelte-query@ccce0b8(svelte@5.1.16)
@@ -770,6 +770,15 @@ packages:
     resolution: {integrity: sha512-CXtq5nR4Su+2I47WPOlWud98Y5Lv8Kyxp2ukhgFx/eW6Blm18VXJO5WuQylPugRo8nbluoi6GvvxBLqHcvqUUw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@floating-ui/core@1.6.8':
+    resolution: {integrity: sha512-7XJ9cPU+yI2QeLS+FCSlqNFZJq8arvswefkZrYI1yQBbftw6FyrZOxYSh+9S7z7TpeWlRt9zJ5IhM1WIL334jA==}
+
+  '@floating-ui/dom@1.6.12':
+    resolution: {integrity: sha512-NP83c0HjokcGVEMeoStg317VD9W7eDlGK7457dMBANbKA6GJZdc7rjujdgqzTaz93jkGgc5P/jeWbaCHnMNc+w==}
+
+  '@floating-ui/utils@0.2.8':
+    resolution: {integrity: sha512-kym7SodPp8/wloecOpcmSnWJsK7M0E5Wg8UcFA+uO4B9s5d0ywXOEro/8HM9x0rW+TljRzul/14UYz3TleT3ig==}
+
   '@fontsource/fira-mono@5.1.0':
     resolution: {integrity: sha512-6+nftSKApXyN0I9FC5GJuG5TUCh+in5OehtrXRIsHJvq38Pm//oA1kZZYNdXv99JYzLzJ3lzsTAavmS+xGLGDw==}
 
@@ -895,12 +904,97 @@ packages:
   '@pandacss/types@0.47.1':
     resolution: {integrity: sha512-btJWO8jBRVdrZrygnSV7QgtAfhzs3903/Qy9CnG2h5TcAqVFRmntciv0wE7PbkOJoKY+U9VT7y1+0d49x+syNw==}
 
+  '@pindoba/panda-preset@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-teavHs/oALKOFxYJgp7eD8Naa7fSsvIR3bpXAKyl4xcO6FjxSJjWyTDlga7apLMgI+Nwm//oI3BPHShOyxntGg==}
+
+  '@pindoba/panda@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-NwKVK8dPqitF8V4788qpKy7a+kTybTF8nxZMD6UQlgkH4q4jK4N4aLzfkc7t611UJ4zeFJc5gXJwHc2MhKhAVA==}
+
+  '@pindoba/styles@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-hs4a/32cVdn19YiCKPIQdeULdQZkEbinwqvBR2rqIoYOaoUdMN4zmRMVj2ono/klQKOmrpp+vsF7EppZhURF/Q==}
+
+  '@pindoba/svelte-alert@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-wnx7qwbCN5HA6UTq2ty7kJSq+cFHrTlVSoAhFLP+Skf45bKmnZlJXU2QF1CMn9/5g7QuibSQrEqRZd1ryp5QFg==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-badge@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-G991Bsk7YJjUdtHdZHoAVrt24SXtbrmWt32hDtIgJHOJ948vwPqwNrwhefNxvst5vuolVPEzoxDMDDR4cPRpFg==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-button@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-HNpK/Bg5ngBCrdo+gMZwe+03GT5dutJcyhWCpaGdwYQO4z27yEm33aWtT7e75cq5IIZ77rj496JD51l4CHLK+A==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-checkbox@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-t7AJABWpIeI5K2ixh4cQgT1BC8sg6iV3TgwIRA1DAgjBQDEw4hstFLp283WH4ueoF9mEBxHaOzLY+SryZOemtQ==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-dialog@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-eKgR1GEqtSCeqSAMzUnBHjtIig93BhjIfGqH954drFSxSqTO0h/jeqyGmY9noSA6AB1Q5wTg2sGm2HG2Y1IdKQ==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-group@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-jxDNbR4+eHT6/OcJ9RrycyZv0bH+P1paXoLQm8ux35J7vm2MqF50k1AfkJclVW1ZF0AZo+wCbYvXpfrZ7qZoyw==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-loading@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-YgeyaHuLelvJajIhjcvcJ2t0mV+Dv3Rd2jCEqhDL/ovV8IUh7pX5GMn8iVOD9i4qGntjMmDjQRrskifrn8z/rg==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-navigation@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-Yh5uTQ5IiTBoUI8nwoE6erT8HD9x9paNv0P/qClrBXv17Uh4jKqMpV+E7uvyulbppIA6RNhThmfdh9QKDH7Oig==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-pagination@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-B0Y5O8LvoXDOSGBQCAKLNxy+zpV6dwQdQBg5rODDRcAN+R7yMpfRCzu/CDDZeqgDnAHKRpkaHY/yUFLa7NO9JA==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-popover@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-+D7wgQz02ufHhZpcSkxCxtYe/zhGkoJH/drb0CwnBiALX3Fbs6pJwz8DIAomzctwIMmDUkMqAkv0T7HfTDxe0A==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-radio@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-Jb72x8gCgyXynyujKf85CaZOs9QrYjcam5D5q9yztlQCZjVwscNdchNLldxPemDSyM/iTKXb61fJa5ymd83cOw==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-select@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-5nYKzni3DBCZ85B5DiLsybheO/sLEvz/GgqmjitSV/HPl90AtaUWuiNDevAJU+SApQpY8R3N1XKP/tvXA7e7Kw==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-text-input@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-xKjGs2uuIcxSvh4rBuLeNg8+xTCJMN9tTbAOICeMMkWca8uamfiLYdnpSDNSz3kNu52zH7t8FBBmFUYBcuHIJQ==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-pk+i6WWzihrx3+A7M4HFeJyW/t+qbH0dAqW8dIrELEwIUSCAbfwuyj82Log3p6ujDfvEW8X3kgLhpz6eWoUVyw==}
+    peerDependencies:
+      svelte: ^5.0.0-next.1
+
+  '@pindoba/utils@0.0.0-alpha-20241113033154':
+    resolution: {integrity: sha512-97Ft8v+ZnYmiFNj3VOXI4e6xu+91LfGnDbv9rpA9F4fr+A2i8FfsaOFzMqBzlbJzp/ZDRfKYEgWOVPoCWjadNw==}
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
   '@polka/url@1.0.0-next.28':
     resolution: {integrity: sha512-8LduaNlMZGwdZ6qWrKlfa+2M4gahzFkprZiAt2TF8uS0qQgBizKXpXURqvTJ4WtmupWxaLqjRb2UCTe72mu+Aw==}
+
+  '@radix-ui/colors@3.0.0':
+    resolution: {integrity: sha512-FUOsGBkHrYJwCSEtWRCIfQbZG7q1e6DgxCIOe1SUQzDe/7rXXeA47s8yCn6fuTNQAj1Zq4oTFi9Yjp3wzElcxg==}
 
   '@rollup/rollup-android-arm-eabi@4.25.0':
     resolution: {integrity: sha512-CC/ZqFZwlAIbU1wUPisHyV/XRc5RydFrNLtgl3dGYskdwPZdt4HERtKm50a/+DtTlKeCq9IXFEWR+P6blwjqBA==}
@@ -1524,6 +1618,10 @@ packages:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
     engines: {node: '>=12'}
 
+  clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
+    engines: {node: '>=6'}
+
   code-block-writer@12.0.0:
     resolution: {integrity: sha512-q4dMFMlXtKR3XNBHyMHt/3pwYNA69EDk00lloMOaaUMKPUXBw6lpXtbu3MMVG6/uOihGnRDOlkyqsONEUj60+w==}
 
@@ -1720,6 +1818,19 @@ packages:
 
   dom-accessibility-api@0.6.3:
     resolution: {integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==}
+
+  dom-serializer@2.0.0:
+    resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
+
+  domelementtype@2.3.0:
+    resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
+
+  domhandler@5.0.3:
+    resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
+    engines: {node: '>= 4'}
+
+  domutils@3.1.0:
+    resolution: {integrity: sha512-H78uMmQtI2AhgDJjWeQmHwJJ2bLPD3GMmO7Zja/ZZh84wkm+4ut+IUnUdRa8uCGX88DiVx1j6FRe1XfxEgjEZA==}
 
   dot-prop@5.3.0:
     resolution: {integrity: sha512-QM8q3zDe58hqUqjraQOmzZ1LIH9SWQJTlEKCH4kJ2oQvLZk7RbQXvtDM2XEq3fwkV9CCvvH4LA0AV+ogFsBM2Q==}
@@ -2207,6 +2318,9 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
+  htmlparser2@8.0.2:
+    resolution: {integrity: sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA==}
+
   http-proxy-agent@7.0.2:
     resolution: {integrity: sha512-T1gkAiYYDWYx3V5Bmyu7HcfcvL7mUrTWiM6yOfa3PIphViJ/gFPbvidQ+veqSOHci/PxBcDabeUNCzpOODJZig==}
     engines: {node: '>= 14'}
@@ -2325,6 +2439,10 @@ packages:
   is-plain-obj@4.1.0:
     resolution: {integrity: sha512-+Pgi+vMuUNkJyExiMBt5IlFoMyKnr5zhJ4Uspz58WOhBF5QoIZkFyNHIbBAtHwzVAgk5RtndVNsDRN61/mmDqg==}
     engines: {node: '>=12'}
+
+  is-plain-object@5.0.0:
+    resolution: {integrity: sha512-VRSzKkbMm5jMDoKLbltAkFQ5Qr7VDiTFGXxYFXXowVj387GeGNOCsOH6Msy00SGZ3Fp84b1Naa1psqgcCIEP5Q==}
+    engines: {node: '>=0.10.0'}
 
   is-potential-custom-element-name@1.0.1:
     resolution: {integrity: sha512-bCYeRA2rVibKZd+s2625gGnGF/t7DSqDs4dP7CrLA1m7jKWz6pps0LpYLJN8Q64HtmPKJ1hrN3nzPNKFEKOUiQ==}
@@ -2743,6 +2861,11 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
+  lucide-svelte@0.453.0:
+    resolution: {integrity: sha512-K+eE2ZeE00ThIEbAmZB3Hq0sVS+1ZLj+7nqtJvN0Xrh/KZnfnEChG+do80sctqXQEE+iG1dA2T+5fVcJS1awfA==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
+
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
@@ -3070,6 +3193,9 @@ packages:
     resolution: {integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==}
     engines: {node: '>=8'}
 
+  parse-srcset@1.0.2:
+    resolution: {integrity: sha512-/2qh0lav6CmI15FzA3i/2Bzk2zCgQhGMkvhOhKNcBVQ1ldgpbfiNTVslmooUmWJcADi1f1kIeynbDRVzNlfR6Q==}
+
   parse5@7.2.1:
     resolution: {integrity: sha512-BuBYQYlv1ckiPdQi/ohiivi9Sagc9JG+Ozs0r7b/0iK3sKmrb0b9FdWdBbOdx6hBCM/F9Ir82ofnBhtZOjCRPQ==}
 
@@ -3274,6 +3400,9 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  ramda@0.30.1:
+    resolution: {integrity: sha512-tEF5I22zJnuclswcZMc8bDIrwRHRzf+NqVEmqg50ShAZMP7MWeR/RGDthfM/p+BlqvF2fXAzpn8i+SJcYD3alw==}
+
   react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
@@ -3364,6 +3493,9 @@ packages:
 
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
+
+  sanitize-html@2.13.1:
+    resolution: {integrity: sha512-ZXtKq89oue4RP7abL9wp/9URJcqQNABB5GGJ2acW1sdO8JTVl92f4ygD7Yc9Ze09VAZhnt2zegeU0tbNsdcLYg==}
 
   saxes@6.0.0:
     resolution: {integrity: sha512-xAg7SOnEhrm5zI3puOOKyy1OMcMlIJZYNJY7xLBwSze0UjhPLnWfj2GF2EpT0jmzaJKIWKHLsaSSajf35bcYnA==}
@@ -3559,6 +3691,9 @@ packages:
   svelte@5.1.16:
     resolution: {integrity: sha512-QcY+om9r8+uTcSfeFuv8++ExdfwVCKeT+Y7GPSZ6rQPczvy62BMtvMoi0rScabgv+upGE5jxKjd7M4u23+AjGA==}
     engines: {node: '>=18'}
+
+  svg-tag-names@3.0.1:
+    resolution: {integrity: sha512-R5EDS44RQSOwwKIOOUZLKZggMeFL8fDSSZr1hVK5Z0KkyuGVOZfyepBZDkPu/aoL+hSOysxxvAk8uN4yN2LOMQ==}
 
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
@@ -4559,6 +4694,17 @@ snapshots:
     dependencies:
       levn: 0.4.1
 
+  '@floating-ui/core@1.6.8':
+    dependencies:
+      '@floating-ui/utils': 0.2.8
+
+  '@floating-ui/dom@1.6.12':
+    dependencies:
+      '@floating-ui/core': 1.6.8
+      '@floating-ui/utils': 0.2.8
+
+  '@floating-ui/utils@0.2.8': {}
+
   '@fontsource/fira-mono@5.1.0': {}
 
   '@humanfs/core@0.19.1': {}
@@ -4799,10 +4945,184 @@ snapshots:
 
   '@pandacss/types@0.47.1': {}
 
+  '@pindoba/panda-preset@0.0.0-alpha-20241113033154':
+    dependencies:
+      '@radix-ui/colors': 3.0.0
+
+  '@pindoba/panda@0.0.0-alpha-20241113033154':
+    dependencies:
+      '@pindoba/panda-preset': 0.0.0-alpha-20241113033154
+
+  '@pindoba/styles@0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)':
+    dependencies:
+      '@pandacss/dev': 0.47.1(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-alert@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      lucide-svelte: 0.453.0(svelte@5.1.16)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-badge@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-button@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-checkbox@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-dialog@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      lucide-svelte: 0.453.0(svelte@5.1.16)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-group@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-loading@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-navigation@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      clsx: 2.1.1
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-pagination@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/svelte-select': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/svelte-text-input': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      lucide-svelte: 0.453.0(svelte@5.1.16)
+      ramda: 0.30.1
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-popover@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@floating-ui/dom': 1.6.12
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/svelte-dialog': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-radio@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-select@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-text-input@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      '@pindoba/styles': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(typescript@5.6.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/svelte-group': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/svelte-popover': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/svelte-radio': 0.0.0-alpha-20241113033154(jsdom@25.0.1)(svelte@5.1.16)(typescript@5.6.3)
+      '@pindoba/utils': 0.0.0-alpha-20241113033154
+      lucide-svelte: 0.453.0(svelte@5.1.16)
+      svelte: 5.1.16
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/utils@0.0.0-alpha-20241113033154':
+    dependencies:
+      '@pindoba/panda': 0.0.0-alpha-20241113033154
+      sanitize-html: 2.13.1
+      svg-tag-names: 3.0.1
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
   '@polka/url@1.0.0-next.28': {}
+
+  '@radix-ui/colors@3.0.0': {}
 
   '@rollup/rollup-android-arm-eabi@4.25.0':
     optional: true
@@ -5491,6 +5811,8 @@ snapshots:
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
 
+  clsx@2.1.1: {}
+
   code-block-writer@12.0.0: {}
 
   color-convert@2.0.1:
@@ -5663,6 +5985,24 @@ snapshots:
   dom-accessibility-api@0.5.16: {}
 
   dom-accessibility-api@0.6.3: {}
+
+  dom-serializer@2.0.0:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      entities: 4.5.0
+
+  domelementtype@2.3.0: {}
+
+  domhandler@5.0.3:
+    dependencies:
+      domelementtype: 2.3.0
+
+  domutils@3.1.0:
+    dependencies:
+      dom-serializer: 2.0.0
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
 
   dot-prop@5.3.0:
     dependencies:
@@ -6278,6 +6618,13 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
+  htmlparser2@8.0.2:
+    dependencies:
+      domelementtype: 2.3.0
+      domhandler: 5.0.3
+      domutils: 3.1.0
+      entities: 4.5.0
+
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.1
@@ -6382,6 +6729,8 @@ snapshots:
   is-obj@2.0.0: {}
 
   is-plain-obj@4.1.0: {}
+
+  is-plain-object@5.0.0: {}
 
   is-potential-custom-element-name@1.0.1: {}
 
@@ -6749,6 +7098,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-svelte@0.453.0(svelte@5.1.16):
+    dependencies:
+      svelte: 5.1.16
 
   lz-string@1.5.0: {}
 
@@ -7237,6 +7590,8 @@ snapshots:
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
 
+  parse-srcset@1.0.2: {}
+
   parse5@7.2.1:
     dependencies:
       entities: 4.5.0
@@ -7389,6 +7744,8 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
+  ramda@0.30.1: {}
+
   react-is@17.0.2: {}
 
   read-yaml-file@1.1.0:
@@ -7518,6 +7875,15 @@ snapshots:
       is-regex: 1.1.4
 
   safer-buffer@2.1.2: {}
+
+  sanitize-html@2.13.1:
+    dependencies:
+      deepmerge: 4.3.1
+      escape-string-regexp: 4.0.0
+      htmlparser2: 8.0.2
+      is-plain-object: 5.0.0
+      parse-srcset: 1.0.2
+      postcss: 8.4.49
 
   saxes@6.0.0:
     dependencies:
@@ -7704,6 +8070,8 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.12
       zimmerframe: 1.1.2
+
+  svg-tag-names@3.0.1: {}
 
   symbol-tree@3.2.4: {}
 
