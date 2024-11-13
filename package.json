@@ -87,6 +87,7 @@
 		"@pindoba/svelte-select": "alpha",
 		"@pindoba/svelte-text-input": "alpha",
 		"@pindoba/svelte-theme-mode-select": "alpha",
+		"@radix-ui/colors": "^3.0.0",
 		"@tanstack/svelte-query": "https://pkg.pr.new/@tanstack/svelte-query@ccce0b8",
 		"@tauri-apps/api": "^2.1.1",
 		"@tauri-apps/plugin-dialog": "~2.0.1",

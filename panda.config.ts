@@ -1,5 +1,6 @@
 import { defineConfig } from '@pandacss/dev';
-import { pindobaPreset } from '@pindoba/panda-preset';
+import { getRadixColorsTokens, getSemanticTokens, pindobaPreset } from '@pindoba/panda-preset';
+import { grass, grassDark, grassA, grassDarkA } from '@radix-ui/colors';
 
 export default defineConfig({
 	// Whether to use css reset
@@ -18,8 +19,32 @@ export default defineConfig({
 
 	// Useful for theme customization
 	theme: {
-		extend: {}
+		extend: {
+			tokens: {
+				colors: {
+					...getRadixColorsTokens({
+						colorName: 'grass',
+						light: grass,
+						dark: grassDark,
+						lightAlpha: grassA,
+						darkAlpha: grassDarkA
+					})
+				}
+			},
+			semanticTokens: {
+				colors: {
+					contrast: {
+						value: {
+							base: `#fff`,
+							_light: `#000`
+						}
+					},
+					...getSemanticTokens('primary', 'grass')
+				}
+			}
+		}
 	},
+
 	presets: ['@pandacss/dev/presets', pindobaPreset],
 	jsxFramework: 'svelte',
 
