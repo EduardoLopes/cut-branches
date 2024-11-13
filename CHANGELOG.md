@@ -1,5 +1,11 @@
 # cut-branches
 
+## 0.3.2
+
+### Patch Changes
+
+- [`2c6a639`](https://github.com/EduardoLopes/cut-branches/commit/2c6a6393daf295bb11349016515ffd1f4485ac0c) - chore: update version to 0.3.1 in tauri configuration (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.3.1
 
 ### Patch Changes
