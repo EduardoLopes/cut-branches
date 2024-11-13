@@ -1,5 +1,13 @@
 # cut-branches
 
+## 0.3.1
+
+### Patch Changes
+
+- [`e9f983e`](https://github.com/EduardoLopes/cut-branches/commit/e9f983ecb2e23b8cba5adecb749d424e1f29dcbd) - style: update background color in branches component (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`c066f1f`](https://github.com/EduardoLopes/cut-branches/commit/c066f1f01508afd9dac60846c34ff674b0267676) - feat: update footer text color for improved contrast (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
 	"name": "cut-branches",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"scripts": {
 		"dev:svelte": "vite dev",
 		"build:svelte": "vite build",
@@ -23,7 +23,7 @@
 		"test": "vitest --run --coverage",
 		"test:watch": "vitest --watch --coverage",
 		"test:ui": "vitest --coverage --ui",
-		"release": "changeset tag && pnpm update-tauri-version",
+		"release": "pnpm update-tauri-version && changeset tag",
 		"clean": "rm -rf dist && rm -rf node_modules",
 		"update-tauri-version": "node scripts/update-tauri-version.mjs"
 	},
@@ -35,7 +35,7 @@
 		"@iconify/svelte": "^4.0.2",
 		"@pandacss/dev": "^0.47.1",
 		"@sveltejs/adapter-static": "^3.0.6",
-		"@sveltejs/kit": "^2.8.0",
+		"@sveltejs/kit": "^2.8.1",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@tauri-apps/cli": "^2.1.0",
 		"@testing-library/jest-dom": "^6.6.3",
@@ -43,8 +43,8 @@
 		"@typescript-eslint/eslint-plugin": "^8.14.0",
 		"@typescript-eslint/parser": "^8.14.0",
 		"@vitest/coverage-istanbul": "2.1.4",
-		"@vitest/coverage-v8": "^2.1.4",
-		"@vitest/ui": "^2.1.4",
+		"@vitest/coverage-v8": "^2.1.5",
+		"@vitest/ui": "^2.1.5",
 		"csstype": "^3.1.3",
 		"dotenv-cli": "^7.4.2",
 		"eslint": "^9.14.0",
@@ -66,7 +66,7 @@
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.14.0",
 		"vite": "^5.4.11",
-		"vitest": "^2.1.4"
+		"vitest": "^2.1.5"
 	},
 	"type": "module",
 	"dependencies": {
@@ -92,7 +92,7 @@
 		"@tanstack/svelte-query": "https://pkg.pr.new/@tanstack/svelte-query@ccce0b8",
 		"@tauri-apps/api": "^2.1.1",
 		"@tauri-apps/plugin-dialog": "~2.0.1",
-		"@tauri-apps/plugin-shell": "~2",
+		"@tauri-apps/plugin-shell": "~2.0.1",
 		"@types/lodash": "^4.17.13",
 		"date-fns": "^4.1.0",
 		"hash-it": "^6.0.0",
