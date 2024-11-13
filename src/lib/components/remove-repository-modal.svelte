@@ -19,13 +19,14 @@
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 	const repository = $derived(getRepositoryStore(currentRepo?.name));
-
+	const selected = $derived(getRepositoryStore(currentRepo?.name));
 	function handleRemove() {
-		search?.set(undefined);
 		open = false;
 
 		RepositoryStore.repositories?.delete([repository?.state?.name]);
 		repository?.clear();
+		search?.clear();
+		selected?.clear();
 
 		const first = RepositoryStore.repositories?.list[0];
 

@@ -1,6 +1,6 @@
 {
 	"name": "cut-branches",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"scripts": {
 		"dev:svelte": "vite dev",
 		"build:svelte": "vite build",

@@ -1,5 +1,13 @@
 # cut-branches
 
+## 0.3.1
+
+### Patch Changes
+
+- refactor: enhance remove-repository-modal by clearing search and selected repository states on removal
+
+- [`d2736c7`](https://github.com/EduardoLopes/cut-branches/commit/d2736c746a6b2e15eef4c19a452079df8488c116) - refactor: extract local storage logic into set-local-storage utility function (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.3.0
 
 ### Minor Changes
