@@ -1,19 +1,5 @@
 # cut-branches
 
-## 0.3.2
-
-### Patch Changes
-
-- [`2c6a639`](https://github.com/EduardoLopes/cut-branches/commit/2c6a6393daf295bb11349016515ffd1f4485ac0c) - chore: update version to 0.3.1 in tauri configuration (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
-
-## 0.3.1
-
-### Patch Changes
-
-- refactor: enhance remove-repository-modal by clearing search and selected repository states on removal
-
-- [`d2736c7`](https://github.com/EduardoLopes/cut-branches/commit/d2736c746a6b2e15eef4c19a452079df8488c116) - refactor: extract local storage logic into set-local-storage utility function (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
-
 ## 0.3.0
 
 ### Minor Changes
@@ -106,6 +92,12 @@
 - [`dfcbbd1`](https://github.com/EduardoLopes/cut-branches/commit/dfcbbd1a8b352375eabee80d8c9644e5bb0d9db2) - refactor(selected): remove deprecated selected store and integrate new selected branches store (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
 
 - [`afd4bc3`](https://github.com/EduardoLopes/cut-branches/commit/afd4bc32cd722d44a95a1d2e36e71bb2375d7aca) - feat(notifications-popover): tweak visuals (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- refactor: enhance remove-repository-modal by clearing search and selected repository states on removal
+
+- [`d2736c7`](https://github.com/EduardoLopes/cut-branches/commit/d2736c746a6b2e15eef4c19a452079df8488c116) - refactor: extract local storage logic into set-local-storage utility function (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`2c6a639`](https://github.com/EduardoLopes/cut-branches/commit/2c6a6393daf295bb11349016515ffd1f4485ac0c) - chore: update version to 0.3.1 in tauri configuration (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
 
 ## 0.2.2
 
