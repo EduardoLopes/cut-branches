@@ -9,11 +9,9 @@
 	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { token } from '@pindoba/panda/tokens';
 
 	interface Props extends ButtonProps {
 		icon?: string;
-		iconColor?: string;
 		visuallyHiddenLabel?: boolean;
 	}
 
@@ -21,7 +19,6 @@
 		size = 'lg',
 		emphasis = 'secondary',
 		icon = 'material-symbols:add-circle-outline-rounded',
-		iconColor = token('colors.primary.950'),
 		visuallyHiddenLabel = false,
 		...props
 	}: Props = $props();
@@ -95,7 +92,15 @@
 				<span>Add a git repository</span>
 			{/if}
 
-			<Icon {icon} width="20px" height="20px" color={iconColor} data-testid="add-button-icon" />
+			<Icon
+				{icon}
+				width="20px"
+				height="20px"
+				class={css({
+					color: 'primary.800.contrast'
+				})}
+				data-testid="add-button-icon"
+			/>
 		</div>
 	</Button>
 </Loading>
