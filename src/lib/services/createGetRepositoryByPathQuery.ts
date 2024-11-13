@@ -1,6 +1,5 @@
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
-import type { ServiceError } from './models';
 import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
 
 export function createGetRepositoryByPathQuery(

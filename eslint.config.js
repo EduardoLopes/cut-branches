@@ -25,7 +25,8 @@ export default [
 			'pnpm-lock.yaml',
 			'package-lock.json',
 			'yarn.lock',
-			'styled-system'
+			'styled-system',
+			'html'
 		]
 	},
 	{
@@ -100,6 +101,12 @@ export default [
 			parserOptions: {
 				parser: tsParser
 			}
+		}
+	},
+	{
+		files: ['**/*.ts', '**/*.svelte'],
+		rules: {
+			'no-undef': 'off'
 		}
 	}
 ];

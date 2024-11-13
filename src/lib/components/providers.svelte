@@ -7,7 +7,6 @@
 	} from '@tanstack/svelte-query';
 	import { type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
-	import type { ServiceError } from '$lib/services/models';
 	import { notifications } from '$lib/stores/notifications.svelte';
 
 	interface Props {

@@ -1,6 +1,5 @@
 import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
-import type { ServiceError } from './models';
 
 type CreateSwitchbranchMutationOptions = CreateMutationOptions<
 	string,
