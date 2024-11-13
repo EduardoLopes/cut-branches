@@ -13,6 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        node-version: [20]
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
@@ -50,7 +51,16 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: install frontend dependencies
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
         run: pnpm install
 
       - uses: tauri-apps/tauri-action@v0
