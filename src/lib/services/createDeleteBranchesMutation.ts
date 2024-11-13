@@ -15,7 +15,7 @@ type DeleteBranchesMutationOptions = CreateMutationOptions<
 	unknown
 >;
 
-export function useDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
+export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
 	return createMutation<string[], ServiceError, DeleteBranchesVariables>(() => ({
 		mutationKey: ['branches', 'delete'],
 		mutationFn: async (vars) => {

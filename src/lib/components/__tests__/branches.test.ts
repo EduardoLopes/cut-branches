@@ -1,8 +1,8 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import Branches from '../branches.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
+import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
 import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
-import { getRepoByPath } from '$lib/services/getRepoByPath';
 import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
 import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 
@@ -46,8 +46,8 @@ vi.mock('$lib/services/createSwitchBranchMutation', () => ({
 	})
 }));
 
-vi.mock('$lib/services/getRepoByPath', () => ({
-	getRepoByPath: vi.fn().mockReturnValue({
+vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
+	createGetRepositoryByPathQuery: vi.fn().mockReturnValue({
 		refetch: vi.fn().mockResolvedValue({
 			data: {
 				name: 'test-repo',
@@ -91,7 +91,6 @@ vi.mock('$lib/services/getRepoByPath', () => ({
 
 beforeEach(() => {
 	const repository = getRepositoryStore(mockRepository.name);
-	const _search = getSearchBranchesStore(mockRepository.name);
 	repository?.set(mockRepository);
 	vi.useFakeTimers();
 });
@@ -107,7 +106,7 @@ describe('Branches Component', () => {
 		const oneMinute = 60000;
 		const repository = getRepositoryStore(mockRepository.name);
 
-		const getRepoByPathQuery = getRepoByPath(() => repository?.state?.path, {
+		const getRepoByPathQuery = createGetRepositoryByPathQuery(() => repository?.state?.path, {
 			staleTime: oneMinute
 		});
 

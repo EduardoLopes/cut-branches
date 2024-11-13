@@ -4,7 +4,7 @@
 	import Loading from '@pindoba/svelte-loading';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { untrack } from 'svelte';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
+	import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -27,7 +27,7 @@
 	}: Props = $props();
 
 	let path = $state<string | undefined>(undefined);
-	const repoQuery = getRepoByPath(() => path);
+	const repoQuery = createGetRepositoryByPathQuery(() => path);
 
 	$effect(() => {
 		if (repoQuery.isSuccess) {

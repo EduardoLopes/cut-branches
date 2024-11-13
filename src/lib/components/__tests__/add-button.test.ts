@@ -27,8 +27,8 @@ vi.mock('$lib/stores/notifications.svelte', () => ({
 	}
 }));
 
-vi.mock('$lib/services/getRepoByPath', () => ({
-	getRepoByPath: vi.fn().mockReturnValue({
+vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
+	createGetRepositoryByPathQuery: vi.fn().mockReturnValue({
 		isSuccess: true,
 		data: {
 			id: '123',

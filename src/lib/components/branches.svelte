@@ -13,8 +13,8 @@
 	import BulkActions from '$lib/components/branches-bulk-actions.svelte';
 	import LockBranchToggle from '$lib/components/lock-branch-toggle.svelte';
 	import RemoveRepositoryModal from '$lib/components/remove-repository-modal.svelte';
+	import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
 	import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
-	import { getRepoByPath } from '$lib/services/getRepoByPath';
 	import { globalStore } from '$lib/stores/global-store.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
@@ -39,7 +39,7 @@
 	const locked = $derived(getLockedBranchesStore(id));
 	const selected = $derived(getSelectedBranchesStore(id));
 
-	const getBranchesQuery = getRepoByPath(() => repository?.state?.path, {
+	const getBranchesQuery = createGetRepositoryByPathQuery(() => repository?.state?.path, {
 		staleTime: oneMinute
 	});
 

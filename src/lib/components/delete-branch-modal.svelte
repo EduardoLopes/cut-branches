@@ -4,7 +4,7 @@
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import BranchComponent from '$lib/components/branch.svelte';
-	import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
+	import { createDeleteBranchesMutation } from '$lib/services/createDeleteBranchesMutation';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
@@ -23,7 +23,7 @@
 	const repository = $derived(getRepositoryStore(id));
 	const selectedCount = $derived(selected?.list.length);
 
-	const deleteMutation = useDeleteBranchesMutation({
+	const deleteMutation = createDeleteBranchesMutation({
 		onSuccess(data) {
 			const m = data
 				.map((item) => {

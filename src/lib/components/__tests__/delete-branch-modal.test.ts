@@ -2,7 +2,7 @@ import { render, fireEvent } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '../test-wrapper.svelte';
-import { useDeleteBranchesMutation } from '$lib/services/useDeleteBranchesMutation';
+import { createDeleteBranchesMutation } from '$lib/services/createDeleteBranchesMutation';
 import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
 import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 
@@ -12,18 +12,14 @@ vi.mock('$app/stores', () => {
 	};
 });
 
-vi.mock('$lib/services/useDeleteBranchesMutation', () => ({
-	useDeleteBranchesMutation: vi.fn()
-}));
-
 vi.mock('$lib/stores/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn()
 	}
 }));
 
-vi.mock('$lib/services/useDeleteBranchesMutation', () => ({
-	useDeleteBranchesMutation: vi.fn().mockReturnValue({
+vi.mock('$lib/services/createDeleteBranchesMutation', () => ({
+	createDeleteBranchesMutation: vi.fn().mockReturnValue({
 		mutate: vi.fn()
 	})
 }));
@@ -91,7 +87,7 @@ describe('DeleteBranchModal Component', () => {
 	});
 
 	test('calls handleDelete on delete button click', async () => {
-		const deleteMutate = useDeleteBranchesMutation();
+		const deleteMutate = createDeleteBranchesMutation();
 
 		const { getByTestId } = render(TestWrapper, {
 			props: { component: DeleteBranchModal, props: { id: 'test-repo' } }

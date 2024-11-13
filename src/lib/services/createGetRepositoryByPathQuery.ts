@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { ServiceError } from './models';
 import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
 
-export function getRepoByPath(
+export function createGetRepositoryByPathQuery(
 	path: () => string | undefined,
 	options?: Omit<
 		CreateQueryOptions<Repository, ServiceError, Repository, string[]>,
