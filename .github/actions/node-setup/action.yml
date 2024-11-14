@@ -6,7 +6,6 @@ runs:
   steps:
     - name: setup node
       uses: actions/setup-node@v4
-      shell: bash
       with:
         node-version: 'lts/*'
 

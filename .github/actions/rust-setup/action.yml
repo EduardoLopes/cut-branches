@@ -6,7 +6,6 @@ runs:
   steps:
     - name: install Rust stable
       uses: dtolnay/rust-toolchain@stable
-      shell: bash
       with:
         targets: ${{ inputs.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
