@@ -8,29 +8,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'lts/*'
-      - run: corepack enable
-
-      - name: Get pnpm store directory
-        id: pnpm-cache-dir
-        shell: bash
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - name: Install Dependencies
-        run: pnpm install
-
-      - name: Run Tests
-        run: pnpm test
+    uses: ./.github/workflows/test.yml
 
   publish-tauri:
     needs: test
