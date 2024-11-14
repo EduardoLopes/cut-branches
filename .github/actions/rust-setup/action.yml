@@ -11,6 +11,5 @@ runs:
 
     - name: Rust cache
       uses: swatinem/rust-cache@v2
-      shell: bash
       with:
         workspaces: './src-tauri -> target'
