@@ -18,7 +18,7 @@
 		"story:build": "histoire build",
 		"story:preview": "histoire preview",
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
-		"prepare": "panda codegen && lefthook install && svelte-kit sync",
+		"prepare": "svelte-kit sync && panda codegen && lefthook install",
 		"version-packages": "git push && changeset version",
 		"test": "vitest --run --coverage",
 		"test:watch": "vitest --watch --coverage",
