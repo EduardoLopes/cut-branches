@@ -11,6 +11,8 @@ jobs:
   setup:
     runs-on: ${{ inputs.platform }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
         with:
