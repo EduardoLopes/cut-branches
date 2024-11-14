@@ -6,17 +6,20 @@ runs:
   steps:
     - name: setup node
       uses: actions/setup-node@v4
+      shell: bash
       with:
         node-version: 'lts/*'
 
     - run: corepack enable
+      shell: bash
 
     - name: Get pnpm store directory
       id: pnpm-cache-dir
-      shell: bash
       run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+      shell: bash
 
     - uses: actions/cache@v4
+      shell: bash
       name: Setup pnpm cache
       with:
         path: ${{ steps.pnpm-cache-dir.outputs.STORE_PATH }}
@@ -26,3 +29,4 @@ runs:
 
     - name: Install Dependencies
       run: pnpm install
+      shell: bash

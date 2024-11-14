@@ -1,4 +1,4 @@
-name: 'Setup Rust'
+name: 'Rust Setup'
 description: 'Setup Rust environment'
 
 runs:
@@ -6,10 +6,12 @@ runs:
   steps:
     - name: install Rust stable
       uses: dtolnay/rust-toolchain@stable
+      shell: bash
       with:
         targets: ${{ inputs.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
     - name: Rust cache
       uses: swatinem/rust-cache@v2
+      shell: bash
       with:
         workspaces: './src-tauri -> target'
