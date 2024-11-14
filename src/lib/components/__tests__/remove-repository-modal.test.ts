@@ -8,6 +8,7 @@ import {
 	RepositoryStore,
 	type Repository
 } from '$lib/stores/repository.svelte';
+import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 
 const mockRepository: Repository = {
 	name: 'test-repo',
@@ -29,9 +30,22 @@ const mockRepository2: Repository = {
 
 vi.mock('$lib/stores/search-branches.svelte', () => ({
 	getSearchBranchesStore: vi.fn(() => ({
-		set: vi.fn()
+		set: vi.fn(),
+		clear: vi.fn()
 	}))
 }));
+
+beforeEach(() => {
+	getSearchBranchesStore(mockRepository?.name);
+	getRepositoryStore(mockRepository?.name);
+	const repository = getRepositoryStore(mockRepository?.name);
+	repository?.set(mockRepository);
+
+	getSearchBranchesStore(mockRepository2?.name);
+	getRepositoryStore(mockRepository2?.name);
+	const repository2 = getRepositoryStore(mockRepository2?.name);
+	repository2?.set(mockRepository);
+});
 
 describe('RemoveRepositoryModal', () => {
 	it('should open and close the modal', async () => {
