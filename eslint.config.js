@@ -12,6 +12,7 @@ export default [
 	{
 		ignores: [
 			'**/.svelte-kit',
+			'coverage',
 			'**/build',
 			'src-tauri',
 			'.DS_Store',
