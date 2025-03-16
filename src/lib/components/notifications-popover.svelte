@@ -51,7 +51,7 @@
 	 * @param format - The format string to use
 	 * @returns A formatted date string in the user's timezone
 	 */
-	function formatToUserTimezone(date: Date, format: string = 'yyyy-MM-dd'): string {
+	function formatToUserTimezone(date: Date, format = 'yyyy-MM-dd'): string {
 		try {
 			return formatInTimeZone(date, userTimeZone, format);
 		} catch (error) {
@@ -249,6 +249,8 @@
 	id={'notifications'}
 	title={'Notifications'}
 	placement="top"
+	data-testid="notifications"
+	data-open={open}
 	bind:open
 	onmouseenter={() => {
 		clearAutoCloseTimer();
