@@ -398,7 +398,8 @@
 						zIndex: '2',
 						boxShadow: '0 1px 0 token(colors.neutral.alpha.100)',
 						fontSize: 'sm',
-						fontWeight: 'semibold'
+						fontWeight: 'semibold',
+						textTransform: 'capitalize'
 					})}
 				>
 					{intlFormatDistance(
@@ -412,16 +413,17 @@
 						class={css({
 							fontWeight: 'normal',
 							fontSize: 'xs',
-							color: 'neutral.900'
+							color: 'neutral.900',
+							textTransform: 'capitalize'
 						})}
 					>
-						{intlFormatDistance(
+						({intlFormatDistance(
 							group.date,
 							new Date(formatToUserTimezone(new Date(), 'yyyy-MM-dd')),
 							{
 								unit: 'month'
 							}
-						)}
+						)})
 					</span>
 				</h4>
 
@@ -465,7 +467,6 @@
 	<div
 		bind:this={sentinel}
 		class={css({
-			height: '10px',
 			width: '100%'
 		})}
 		aria-hidden="true"
