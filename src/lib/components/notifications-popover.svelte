@@ -246,8 +246,8 @@
 </script>
 
 <Popover
-	id={'notifications'}
-	title={'Notifications'}
+	id="notifications"
+	title="Notifications"
 	placement="top"
 	data-testid="notifications"
 	data-open={open}
@@ -385,7 +385,7 @@
 				<Notification {...notifications.last} />
 			</div>
 		{:else if showMore}
-			{#each groupedNotifications as group}
+			{#each groupedNotifications as group (group.date.toISOString())}
 				<h4
 					class={css({
 						position: 'sticky',
@@ -477,7 +477,7 @@
 			onclick={() => (showMore = !showMore)}
 			size="sm"
 			feedback="neutral"
-			emphasis={'secondary'}
+			emphasis="secondary"
 			aria-expanded={showMore}
 			aria-controls="notifications-list"
 			passThrough={{

@@ -17,7 +17,7 @@
 
 <Button
 	size="xs"
-	shape={'square'}
+	shape="square"
 	emphasis={locked?.has(branch) ? 'primary' : 'secondary'}
 	class={css({
 		width: '26px',

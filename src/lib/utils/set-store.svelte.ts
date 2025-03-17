@@ -1,6 +1,4 @@
-// eslint-disable-next-line import/no-duplicates
 import { untrack } from 'svelte';
-// eslint-disable-next-line import/no-duplicates
 import { SvelteSet } from 'svelte/reactivity';
 import { setLocalStorage } from './set-local-storage';
 import { getLocalStorage } from '$lib/utils/get-local-storage';

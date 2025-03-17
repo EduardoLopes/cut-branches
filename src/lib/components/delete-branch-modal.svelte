@@ -103,7 +103,7 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each branches as branch}
+		{#each branches as branch (branch.name)}
 			<div
 				class={css({
 					position: 'relative',
