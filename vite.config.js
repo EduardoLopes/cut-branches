@@ -3,19 +3,35 @@ import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 
+const host = process.env.TAURI_DEV_HOST;
+
 export default defineConfig(({ mode }) => ({
 	plugins: [sveltekit(), svelteTesting()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
-	// prevent vite from obscuring rust errors
+	//
+	// 1. prevent vite from obscuring rust errors
 	clearScreen: false,
 	// tauri expects a fixed port, fail if that port is not available
 	server: {
 		port: 1420,
 		strictPort: true,
+		host: host || false,
+		hmr: host
+			? {
+					protocol: 'ws',
+					host,
+					port: 1421
+				}
+			: undefined,
 		fs: {
 			allow: ['styled-system']
+		},
+		watch: {
+			// 3. tell vite to ignore watching `src-tauri`
+			ignored: ['**/src-tauri/**']
 		}
 	},
+
 	// to make use of `TAURI_DEBUG` and other env variables
 	// https://tauri.studio/v1/api/config#buildconfig.beforedevcommand
 	envPrefix: ['VITE_', 'TAURI_'],
