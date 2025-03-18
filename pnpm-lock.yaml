@@ -36,7 +36,7 @@ importers:
         version: 0.0.0-alpha-20250104144451(jsdom@26.0.0)(svelte@5.23.1)(typescript@5.8.2)
       '@pindoba/svelte-checkbox':
         specifier: 0.0.0-alpha-20250104144451
-        version: 0.0.0-alpha-20250104144451(jsdom@26.0.0)(svelte@5.23.1)(typescript@5.8.2)
+        version: link:../pindoba/packages/ui/svelte/checkbox
       '@pindoba/svelte-dialog':
         specifier: 0.0.0-alpha-20250104144451
         version: 0.0.0-alpha-20250104144451(jsdom@26.0.0)(svelte@5.23.1)(typescript@5.8.2)
@@ -1018,11 +1018,6 @@ packages:
 
   '@pindoba/svelte-button@0.0.0-alpha-20250104144451':
     resolution: {integrity: sha512-NN2/XUc1c7PnKWOsK/wuFrJB+pZSokiUz1t9WDlD5dQ8XkzDhKbWvDvLpDIl+zP214/6fRw8/+l8djCDLO8wFA==}
-    peerDependencies:
-      svelte: ^5.0.0-next.1
-
-  '@pindoba/svelte-checkbox@0.0.0-alpha-20250104144451':
-    resolution: {integrity: sha512-7eZQr1Bs7JyH2ow1hyagbKEz90GeWbt+IkMuHwuGJvsPzkdzHeWyI6w0QL9h/IewWOBmyacjk2b3O4eOhh14Iw==}
     peerDependencies:
       svelte: ^5.0.0-next.1
 
@@ -5392,15 +5387,6 @@ snapshots:
       - typescript
 
   '@pindoba/svelte-button@0.0.0-alpha-20250104144451(jsdom@26.0.0)(svelte@5.23.1)(typescript@5.8.2)':
-    dependencies:
-      '@pindoba/panda': 0.0.0-alpha-20250104144451
-      '@pindoba/styles': 0.0.0-alpha-20250104144451(jsdom@26.0.0)(typescript@5.8.2)
-      svelte: 5.23.1
-    transitivePeerDependencies:
-      - jsdom
-      - typescript
-
-  '@pindoba/svelte-checkbox@0.0.0-alpha-20250104144451(jsdom@26.0.0)(svelte@5.23.1)(typescript@5.8.2)':
     dependencies:
       '@pindoba/panda': 0.0.0-alpha-20250104144451
       '@pindoba/styles': 0.0.0-alpha-20250104144451(jsdom@26.0.0)(typescript@5.8.2)

@@ -120,7 +120,6 @@
 				emphasis="secondary"
 				shape="square"
 				icon="material-symbols:add-rounded"
-				iconColor="token(colors.primary.600)"
 				visuallyHiddenLabel={true}
 				passThrough={{
 					root: css.raw({
@@ -130,7 +129,7 @@
 				}}
 			/>
 		</div>
-		{#if items}
+		{#if items.length > 0}
 			<Navigation
 				{items}
 				activeItem={$page.params.id}
@@ -157,6 +156,17 @@
 					})
 				}}
 			/>
+		{:else}
+			<p
+				class={css({
+					textAlign: 'center',
+					padding: 'md',
+					color: 'neutral.800.contrast',
+					opacity: 0.7
+				})}
+			>
+				No repositories
+			</p>
 		{/if}
 	</div>
 </section>

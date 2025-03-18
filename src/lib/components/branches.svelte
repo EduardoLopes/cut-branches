@@ -345,7 +345,7 @@
 								height="64px"
 								color={token('colors.danger.700')}
 							/>
-							<div>No results for <b>{search?.state}</b>!</div>
+							<div data-testid="no-results-message">No results for <b>{search?.state}</b>!</div>
 						</div>
 					</div>
 				{/if}
@@ -384,6 +384,7 @@
 
 				{#key `${id}${currentPage}`}
 					<div
+						role="list"
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
@@ -399,6 +400,7 @@
 						{#if paginatedBranches}
 							{#each paginatedBranches as branch (`${branch.name}-${currentPage}`)}
 								<div
+									role="listitem"
 									class={css({
 										position: 'relative',
 										display: 'grid',

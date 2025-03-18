@@ -8,28 +8,48 @@ import { globalStore } from '$lib/stores/global-store.svelte';
 vi.useFakeTimers();
 
 describe('Footer Component', () => {
-	beforeEach(() => {
-		globalStore.lastUpdatedAt = new Date();
+	describe('Time Display', () => {
+		beforeEach(() => {
+			globalStore.lastUpdatedAt = new Date();
+		});
+
+		test('displays "now" when just updated', async () => {
+			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
+			const lastUpdatedAt = getByTestId('last-updated-text');
+			expect(lastUpdatedAt).toHaveTextContent('Last updated now');
+		});
+
+		test('updates time display every second', async () => {
+			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
+			vi.advanceTimersByTime(10000);
+			await tick();
+			const lastUpdatedAt = getByTestId('last-updated-text');
+			expect(lastUpdatedAt).toHaveTextContent('Last updated 10 seconds ago');
+		});
+
+		test('displays minutes when more than 60 seconds have passed', async () => {
+			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
+			vi.advanceTimersByTime(120000); // 2 minutes
+			await tick();
+			const lastUpdatedAt = getByTestId('last-updated-text');
+			expect(lastUpdatedAt).toHaveTextContent('Last updated 2 minutes ago');
+		});
+
+		test('displays hours when more than 60 minutes have passed', async () => {
+			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
+			vi.advanceTimersByTime(7200000); // 2 hours
+			await tick();
+			const lastUpdatedAt = getByTestId('last-updated-text');
+			expect(lastUpdatedAt).toHaveTextContent('Last updated 2 hours ago');
+		});
 	});
 
-	test('updates time every second', async () => {
-		const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
-		vi.advanceTimersByTime(10000);
-		await tick();
-		const lastUpdatedAt = getByTestId('last-updated-text');
-		expect(lastUpdatedAt).toHaveTextContent('Last updated 10 seconds ago');
-	});
-
-	test('displays last updated time', async () => {
-		const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
-		const lastUpdatedAt = getByTestId('last-updated-text');
-		expect(lastUpdatedAt).toHaveTextContent('Last updated now');
-	});
-
-	test('does not display last updated time if not available', async () => {
-		globalStore.lastUpdatedAt = undefined;
-		const { queryByTestId } = render(TestWrapper, { props: { component: Footer } });
-		const lastUpdatedAt = queryByTestId('last-updated-text');
-		expect(lastUpdatedAt).not.toBeInTheDocument();
+	describe('UI State', () => {
+		test('does not display last updated time if not available', async () => {
+			globalStore.lastUpdatedAt = undefined;
+			const { queryByTestId } = render(TestWrapper, { props: { component: Footer } });
+			const lastUpdatedAt = queryByTestId('last-updated-text');
+			expect(lastUpdatedAt).not.toBeInTheDocument();
+		});
 	});
 });

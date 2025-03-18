@@ -8,9 +8,10 @@
 	interface Props {
 		branch: string;
 		repositoryID?: string;
+		disabled?: boolean;
 	}
 
-	let { branch, repositoryID }: Props = $props();
+	let { branch, repositoryID, disabled = false }: Props = $props();
 
 	const locked = $derived(getLockedBranchesStore(repositoryID));
 </script>
@@ -36,6 +37,8 @@
 		}
 	}}
 	data-testid="lock-toggle-button"
+	aria-label={locked?.has(branch) ? 'Unlock branch' : 'Lock branch'}
+	{disabled}
 >
 	{#if locked?.has(branch)}
 		<div data-testid="lock-icon">

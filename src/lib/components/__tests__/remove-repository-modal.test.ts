@@ -1,8 +1,9 @@
 import { render, fireEvent } from '@testing-library/svelte';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, vi, beforeEach } from 'vitest';
 import RemoveRepositoryModal from '../remove-repository-modal.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
 import { goto } from '$app/navigation';
+import { notifications } from '$lib/stores/notifications.svelte';
 import {
 	getRepositoryStore,
 	RepositoryStore,
@@ -28,88 +29,201 @@ const mockRepository2: Repository = {
 	id: '2'
 };
 
-vi.mock('$lib/stores/search-branches.svelte', () => ({
-	getSearchBranchesStore: vi.fn(() => ({
-		set: vi.fn(),
-		clear: vi.fn()
-	}))
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
 }));
 
-beforeEach(() => {
-	getSearchBranchesStore(mockRepository?.name);
-	getRepositoryStore(mockRepository?.name);
-	const repository = getRepositoryStore(mockRepository?.name);
-	repository?.set(mockRepository);
+vi.mock('$lib/stores/notifications.svelte', () => ({
+	notifications: {
+		push: vi.fn()
+	}
+}));
 
-	getSearchBranchesStore(mockRepository2?.name);
-	getRepositoryStore(mockRepository2?.name);
-	const repository2 = getRepositoryStore(mockRepository2?.name);
-	repository2?.set(mockRepository);
-});
+const mockSearchClear = vi.fn();
+const mockSearchSet = vi.fn();
+
+vi.mock('$lib/stores/search-branches.svelte', () => ({
+	getSearchBranchesStore: vi.fn().mockImplementation((name) => {
+		if (!name) return undefined;
+		return {
+			set: mockSearchSet,
+			clear: mockSearchClear,
+			state: undefined
+		};
+	})
+}));
 
 describe('RemoveRepositoryModal', () => {
-	it('should open and close the modal', async () => {
-		const { getByTestId, queryByTestId } = render(TestWrapper, {
-			props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
-		});
-
-		const openButton = getByTestId('open-remove-modal');
-		await fireEvent.click(openButton);
-
-		expect(queryByTestId('remove-modal')).toBeInTheDocument();
-
-		const cancelButton = getByTestId('cancel-remove');
-		await fireEvent.click(cancelButton);
-
-		expect(queryByTestId('remove-modal')).toBeInTheDocument();
-	});
-
-	it('should remove the repository', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
-		});
-
-		const openButton = getByTestId('open-remove-modal');
-		await fireEvent.click(openButton);
-
-		const removeButton = getByTestId('confirm-remove');
-		await fireEvent.click(removeButton);
-
+	beforeEach(() => {
+		getSearchBranchesStore(mockRepository?.name);
+		getRepositoryStore(mockRepository?.name);
 		const repository = getRepositoryStore(mockRepository?.name);
+		repository?.set(mockRepository);
 
-		expect(RepositoryStore.repositories?.has(mockRepository.name)).toBeFalsy();
-		expect(repository?.state).toBeUndefined();
+		getSearchBranchesStore(mockRepository2?.name);
+		getRepositoryStore(mockRepository2?.name);
+		const repository2 = getRepositoryStore(mockRepository2?.name);
+		repository2?.set(mockRepository2);
+
+		// Reset mocks between tests
+		vi.clearAllMocks();
 	});
 
-	it('should navigate to "first" repository', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+	describe('Modal Rendering', () => {
+		test('renders with correct initial state', () => {
+			const { getByText } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			expect(getByText('Remove repository')).toBeInTheDocument();
 		});
 
-		const repository = getRepositoryStore(mockRepository2?.name);
+		test('renders repository name in modal content', async () => {
+			const { getByTestId, getByText } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
 
-		repository?.set(mockRepository2);
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
 
-		const openButton = getByTestId('open-remove-modal');
-		await fireEvent.click(openButton);
-
-		const removeButton = getByTestId('confirm-remove');
-		await fireEvent.click(removeButton);
-
-		expect(goto).toHaveBeenCalledWith('/repos/test-repo-2');
+			expect(getByText(/Are you sure you want to remove/)).toHaveTextContent(mockRepository.name);
+		});
 	});
 
-	it('should navigate to "add-first"', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+	describe('Modal Interaction', () => {
+		test('should open and close the modal', async () => {
+			const { getByTestId, queryByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
+
+			expect(queryByTestId('remove-modal')).toBeInTheDocument();
+
+			const cancelButton = getByTestId('cancel-remove');
+			await fireEvent.click(cancelButton);
+
+			// Modal should still be in the document but closed
+			expect(queryByTestId('remove-modal')).toBeInTheDocument();
 		});
 
-		const openButton = getByTestId('open-remove-modal');
-		await fireEvent.click(openButton);
+		test('closes modal after repository removal', async () => {
+			const { getByTestId, queryByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
 
-		const removeButton = getByTestId('confirm-remove');
-		await fireEvent.click(removeButton);
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
 
-		expect(goto).toHaveBeenCalledWith('/add-first');
+			const removeButton = getByTestId('confirm-remove');
+			await fireEvent.click(removeButton);
+
+			// Modal should be closed
+			expect(queryByTestId('remove-modal')).not.toHaveAttribute('open');
+		});
+	});
+
+	describe('Repository Removal', () => {
+		test('should remove the repository from store', async () => {
+			const { getByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
+
+			const removeButton = getByTestId('confirm-remove');
+			await fireEvent.click(removeButton);
+
+			const repository = getRepositoryStore(mockRepository?.name);
+
+			expect(RepositoryStore.repositories?.has(mockRepository.name)).toBeFalsy();
+			expect(repository?.state).toBeUndefined();
+		});
+
+		test('clears the search store for removed repository', async () => {
+			const searchStore = getSearchBranchesStore(mockRepository?.name);
+
+			// Ensure searchStore exists (matches mock implementation in the setup)
+			expect(searchStore).toBeDefined();
+
+			const { getByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
+
+			const removeButton = getByTestId('confirm-remove');
+			await fireEvent.click(removeButton);
+
+			expect(searchStore?.clear).toHaveBeenCalled();
+		});
+
+		test('shows notification after repository removal', async () => {
+			const { getByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
+
+			const removeButton = getByTestId('confirm-remove');
+			await fireEvent.click(removeButton);
+
+			expect(notifications.push).toHaveBeenCalledWith({
+				title: expect.stringContaining('Repository removed'),
+				message: expect.stringContaining(mockRepository.name),
+				feedback: 'success'
+			});
+		});
+	});
+
+	describe('Navigation', () => {
+		test('should navigate to another repository if available', async () => {
+			const { getByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			const repository = getRepositoryStore(mockRepository2?.name);
+			repository?.set(mockRepository2);
+
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
+
+			const removeButton = getByTestId('confirm-remove');
+			await fireEvent.click(removeButton);
+
+			expect(goto).toHaveBeenCalledWith('/repos/test-repo-2');
+		});
+
+		test('should navigate to add-first when no repositories remain', async () => {
+			// Reset mocks
+			vi.clearAllMocks();
+
+			// Make sure repository stores are cleared properly
+			RepositoryStore.repositories?.clear();
+
+			// Set up only the test repository
+			const store = getRepositoryStore(mockRepository?.name);
+			store?.set(mockRepository);
+
+			// Verify setup
+			expect(RepositoryStore.repositories?.list).toHaveLength(1);
+			expect(RepositoryStore.repositories?.has(mockRepository2?.name)).toBeFalsy();
+
+			const { getByTestId } = render(TestWrapper, {
+				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+			});
+
+			const openButton = getByTestId('open-remove-modal');
+			await fireEvent.click(openButton);
+
+			const removeButton = getByTestId('confirm-remove');
+			await fireEvent.click(removeButton);
+
+			expect(goto).toHaveBeenCalledWith('/add-first');
+		});
 	});
 });

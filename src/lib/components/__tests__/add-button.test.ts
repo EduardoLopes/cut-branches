@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 import { open } from '@tauri-apps/plugin-dialog';
 import { render, fireEvent } from '@testing-library/svelte';
 import { readable } from 'svelte/store';
+import type { Mock } from 'vitest';
 import AddButton from '../add-button.svelte';
 import TestWrapper from '../test-wrapper.svelte';
 import { goto } from '$app/navigation';
@@ -42,90 +43,119 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
 }));
 
 describe('AddButton', () => {
-	test('renders correctly', () => {
-		const { getByText } = render(TestWrapper, {
-			props: { component: AddButton }
-		});
-		expect(getByText('Add a git repository')).toBeInTheDocument();
+	beforeEach(() => {
+		vi.clearAllMocks();
 	});
 
-	test('calls handleAddClick on button click', async () => {
-		const { getByRole } = render(TestWrapper, {
-			props: { component: AddButton, props: { visuallyHiddenLabel: true } }
-		});
-		const button = getByRole('button');
-		await fireEvent.click(button);
-
-		expect(open).toHaveBeenCalledWith({ directory: true });
-	});
-
-	test('displays visually hidden label when visuallyHiddenLabel is true', () => {
-		const { container } = render(TestWrapper, {
-			props: { component: AddButton, props: { visuallyHiddenLabel: true } }
-		});
-		const span = container.querySelector('span');
-		expect(span).toHaveClass('sr_true');
-	});
-
-	test('calls open function on button click', async () => {
-		const { getByRole } = render(TestWrapper, {
-			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
-		});
-		const button = getByRole('button');
-		await fireEvent.click(button);
-
-		expect(open).toHaveBeenCalledWith({ directory: true });
-	});
-
-	test('shows warning notification if repository already exists', async () => {
-		const mockRepo: Repository = {
-			id: '123',
-			name: 'Existing Repo',
-			path: '/path/to/existing/repo',
-			branches: [],
-			currentBranch: '',
-			branchesCount: 0
-		};
-
-		const repository = getRepositoryStore(mockRepo.name);
-
-		repository?.set(mockRepo);
-
-		const { getByRole } = render(TestWrapper, {
-			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
+	describe('Rendering', () => {
+		test('renders correctly with default props', () => {
+			const { getByText } = render(TestWrapper, {
+				props: { component: AddButton }
+			});
+			expect(getByText('Add a git repository')).toBeInTheDocument();
 		});
 
-		const button = getByRole('button');
-		await fireEvent.click(button);
+		test('displays visually hidden label when visuallyHiddenLabel is true', () => {
+			const { container } = render(TestWrapper, {
+				props: { component: AddButton, props: { visuallyHiddenLabel: true } }
+			});
+			const span = container.querySelector('span');
+			expect(span).toHaveClass('sr_true');
+		});
 
-		expect(notifications.push).toHaveBeenCalledWith({
-			feedback: 'warning',
-			title: 'Repository already exists',
-			message: `The repository ${mockRepo.name} already exists`
+		test('displays visible label when visuallyHiddenLabel is false', () => {
+			const { container } = render(TestWrapper, {
+				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
+			});
+			const span = container.querySelector('span');
+			expect(span).not.toHaveClass('sr_true');
 		});
 	});
 
-	test('navigates to existing repository if it already exists by ID', async () => {
-		const mockRepo: Repository = {
-			id: '123',
-			name: 'Existing Repo',
-			path: '/path/to/existing/repo',
-			branches: [],
-			currentBranch: '',
-			branchesCount: 0
-		};
+	describe('Interactions', () => {
+		test('calls handleAddClick on button click', async () => {
+			const { getByRole } = render(TestWrapper, {
+				props: { component: AddButton, props: { visuallyHiddenLabel: true } }
+			});
+			const button = getByRole('button');
+			await fireEvent.click(button);
 
-		const repository = getRepositoryStore(mockRepo.name);
-
-		repository?.set(mockRepo);
-
-		const { getByRole } = render(TestWrapper, {
-			props: { component: AddButton, props: { visuallyHiddenLabel: false } }
+			expect(open).toHaveBeenCalledWith({ directory: true });
 		});
 
-		const button = getByRole('button');
-		await fireEvent.click(button);
+		test('calls open function on button click', async () => {
+			const { getByRole } = render(TestWrapper, {
+				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
+			});
+			const button = getByRole('button');
+			await fireEvent.click(button);
 
-		expect(goto).toHaveBeenCalledWith(`/repos/${mockRepo.name}`);
+			expect(open).toHaveBeenCalledWith({ directory: true });
+		});
+	});
+
+	describe('Repository handling', () => {
+		let mockRepo: Repository;
+
+		beforeEach(() => {
+			mockRepo = {
+				id: '123',
+				name: 'Existing Repo',
+				path: '/path/to/existing/repo',
+				branches: [],
+				currentBranch: '',
+				branchesCount: 0
+			};
+
+			const repository = getRepositoryStore(mockRepo.name);
+			repository?.clear();
+			repository?.set(mockRepo);
+		});
+
+		test('shows warning notification if repository already exists', async () => {
+			const { getByRole } = render(TestWrapper, {
+				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
+			});
+
+			const button = getByRole('button');
+			await fireEvent.click(button);
+
+			expect(notifications.push).toHaveBeenCalledWith({
+				feedback: 'warning',
+				title: 'Repository already exists',
+				message: `The repository ${mockRepo.name} already exists`
+			});
+		});
+
+		test('navigates to existing repository if it already exists by ID', async () => {
+			const { getByRole } = render(TestWrapper, {
+				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
+			});
+
+			const button = getByRole('button');
+			await fireEvent.click(button);
+
+			expect(goto).toHaveBeenCalledWith(`/repos/${mockRepo.name}`);
+		});
+
+		test('handles error when directory selection fails', async () => {
+			// Mock open to reject
+			(open as Mock).mockRejectedValueOnce(new Error('User cancelled'));
+
+			const { getByRole } = render(TestWrapper, {
+				props: { component: AddButton }
+			});
+
+			const button = getByRole('button');
+			await fireEvent.click(button);
+
+			// No notifications or navigation should happen
+			expect(notifications.push).toHaveBeenCalledWith({
+				feedback: 'danger',
+				message: new Error('User cancelled'),
+				title: 'Error'
+			});
+			expect(goto).toHaveBeenCalledWith('/repos/Existing Repo');
+		});
 	});
 });

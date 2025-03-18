@@ -82,6 +82,8 @@
 		class:current={data.current}
 		class:selected
 		title={`${data.current ? 'Current branch ' : ''}`}
+		data-selected={selected}
+		data-testid={`branch-item-${data.name}`}
 	>
 		<div
 			class={css({

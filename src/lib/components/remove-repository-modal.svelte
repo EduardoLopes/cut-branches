@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { goto } from '$app/navigation';
+	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
 	import { type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
@@ -23,10 +24,19 @@
 	function handleRemove() {
 		open = false;
 
-		RepositoryStore.repositories?.delete([repository?.state?.name]);
+		const repoName = repository?.state?.name || currentRepo?.name;
+
+		RepositoryStore.repositories?.delete([repoName]);
 		repository?.clear();
 		search?.clear();
 		selected?.clear();
+
+		// Show notification about repository removal
+		notifications.push({
+			title: 'Repository removed',
+			message: `The repository ${repoName} has been removed`,
+			feedback: 'success'
+		});
 
 		const first = RepositoryStore.repositories?.list[0];
 
