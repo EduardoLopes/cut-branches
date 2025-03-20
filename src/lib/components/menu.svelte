@@ -140,7 +140,8 @@
 						padding: '0',
 						maxHeight: 'calc(100vh - 146px)',
 						overflowY: 'auto',
-						mx: '-sm'
+						mx: '-sm',
+						backdropFilter: 'none'
 					}),
 					itemsContainer: css.raw({
 						px: 'sm'
