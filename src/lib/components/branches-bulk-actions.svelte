@@ -37,22 +37,33 @@
 	function handleSelectAll() {
 		const indeterminate = selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
 
+		// If we have no selected branches or some (but not all) are selected, we need to select all
 		if (indeterminate || selectedSearchLength === 0) {
-			const branchesToAdd = [];
-			for (const item of branches) {
-				if (item.name !== currentRepo?.currentBranch && !locked?.has(item.name)) {
-					branchesToAdd.push(item.name);
+			// For better performance, create a tempSet to batch operations
+			const tempSet = new Set<string>();
+
+			// First, add all existing selections to maintain them
+			if (selected?.state) {
+				// Use for...of instead of forEach for better performance
+				for (const branch of selected.state) {
+					tempSet.add(branch);
 				}
 			}
-			selected?.add(branchesToAdd);
+
+			// Then add all branches that should be selected
+			for (let i = 0, len = branches.length; i < len; i++) {
+				const branch = branches[i];
+				if (branch.name !== currentRepo?.currentBranch && !locked?.has(branch.name)) {
+					tempSet.add(branch.name);
+				}
+			}
+
+			// Clear current selections and add the complete set at once
+			selected?.clear();
+			selected?.add([...tempSet]);
 		} else {
-			const branchesToRemove = [];
-			for (const item of branches) {
-				if (item.name !== currentRepo?.currentBranch) {
-					branchesToRemove.push(item.name);
-				}
-			}
-			selected?.delete(branchesToRemove);
+			// If all are selected, we need to deselect all
+			selected?.clear();
 		}
 	}
 </script>
