@@ -150,7 +150,7 @@
 		display: 'flex',
 		flexDirection: 'column',
 		_light: {
-			background: 'neutral.300'
+			background: 'neutral.400'
 		},
 		_dark: {
 			background: 'neutral.50'

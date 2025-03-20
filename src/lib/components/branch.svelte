@@ -57,23 +57,23 @@
 		class={css({
 			borderRadius: 'md',
 			borderWidth: '1px',
-			borderColor: 'colorPalette.400',
-			_light: {
-				background: 'colorPalette.50'
-			},
-			_dark: {
-				background: 'colorPalette.100'
-			},
-			color: 'colorPalette.950.contrast',
+			borderColor: 'colorPalette.600',
+			colorPalette: 'neutral',
+			background: 'colorPalette.200',
 			'&.disabled, &.locked': {
 				opacity: 0.5,
 				pointerEvents: 'none',
 				filter: 'grayscale(1)'
 			},
 			'&.selected': {
-				background: 'danger.200',
 				borderColor: 'danger.800',
-				borderStyle: 'dashed'
+				borderStyle: 'dashed',
+				colorPalette: 'danger'
+			},
+			'&.current': {
+				borderColor: 'primary.600',
+				colorPalette: 'primary',
+				background: 'neutral.200'
 			},
 			pindobaTransition: 'fast'
 		})}
@@ -89,12 +89,26 @@
 			class={css({
 				padding: 'md',
 				display: 'flex',
-				flexDirection: 'column'
+				flexDirection: 'column',
+				_light: {
+					background: 'neutral.50'
+				},
+				_dark: {
+					background: 'neutral.300'
+				},
+				borderTopRadius: 'md',
+				'.current &': {
+					color: 'primary.800'
+				},
+				'.selected &': {
+					background: 'danger.400',
+					borderColor: 'danger.800',
+					color: 'danger.950.contrast'
+				}
 			})}
 		>
 			<span
 				class={css({
-					color: 'inherit',
 					fontWeight: 600,
 					pindobaTransition: 'fast'
 				})}
@@ -108,8 +122,11 @@
 				display: 'flex',
 				flexDirection: 'column',
 				borderTopWidth: '1px',
-				borderTopColor: 'colorPalette.400',
-				borderTopStyle: 'solid'
+				borderTopColor: 'neutral.400',
+				borderTopStyle: 'solid',
+				'.selected &': {
+					borderTopColor: 'colorPalette.400'
+				}
 			})}
 		>
 			<div
@@ -121,16 +138,23 @@
 					alignItems: 'center',
 					gap: 'xxs',
 					pindobaTransition: 'fast',
-					pindobaTextColor: 'xs'
+					color: 'neutral.950',
+					fontWeight: 'bold'
 				})}
 			>
-				<Icon icon="lucide:git-commit-horizontal" width="16px" height="16px" /> Last commit
+				<Icon
+					class={css({ color: 'colorPalette.950' })}
+					icon="lucide:git-commit-horizontal"
+					width="16px"
+					height="16px"
+				/> Last commit
 			</div>
 			<span
 				class={css({
 					fontSize: 'sm',
-					color: 'colorPalette.950',
-					pindobaTransition: 'fast'
+					color: 'neutral.950',
+					pindobaTransition: 'fast',
+					pt: 'xs'
 				})}
 				data-testid="last-commit-message"
 			>
@@ -151,8 +175,8 @@
 						flexDirection: 'row',
 						alignItems: 'center',
 						gap: 'xxs',
-						pindobaTextColor: 'sm',
-						pindobaTransition: 'fast'
+						pindobaTransition: 'fast',
+						color: 'neutral.900'
 					})}
 					title={data.last_commit.email.replace(/^<|>$/g, '')}
 					data-testid="author-name"
@@ -167,8 +191,8 @@
 						flexDirection: 'row',
 						alignItems: 'center',
 						gap: 'xxs',
-						pindobaTextColor: 'xs',
-						pindobaTransition: 'fast'
+						pindobaTransition: 'fast',
+						color: 'neutral.900'
 					})}
 					title={formatDate(data.last_commit.date)}
 				>
