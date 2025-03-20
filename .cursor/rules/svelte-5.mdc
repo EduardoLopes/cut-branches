@@ -1,0 +1,148 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Svelte 5
+
+I'm using svelte 5 instead of svelte 4 here is an overview of the changes.
+
+## Overview of Changes
+
+Svelte 5 introduces several major changes that modernize the framework:
+
+1. **Runes**: Special compiler-recognized symbols that provide explicit control over reactivity
+2. **Snippets**: Reusable chunks of markup inside components
+3. **HTML-first approach**: Event handlers use standard DOM attributes
+
+## Runes
+
+Runes are special functions prefixed with `$` that control reactivity. All runes must be imported from 'svelte'.
+
+```js
+import { $state, $derived, $effect, $props, $inspect, $slots } from 'svelte';
+```
+
+### Core Runes
+
+| Rune | Purpose | Replaces in Svelte 4 |
+|------|---------|----------------------|
+| `$state(value)` | Declares reactive state | `let value` |
+| `$derived(expression)` | Computed values | `$: derived = expression` |
+| `$effect(callback)` | Side effects when dependencies change | `$: { /* side effects */ }` |
+| `$props(definition)` | Declare component props | `export let prop` |
+| `$inspect(value)` | Debug reactivity | N/A |
+| `$slots()` | Access component slots | `$$slots` |
+
+### Examples
+
+**Component with state:**
+```svelte
+<script>
+  import { $state, $derived, $effect } from 'svelte';
+  
+  let count = $state(0);
+  let doubled = $derived(count * 2);
+  
+  $effect(() => {
+    console.log(`Count changed to ${count}`);
+  });
+</script>
+
+<button onclick={() => count++}>Increment: {count} (doubled: {doubled})</button>
+```
+
+**Component with props:**
+```svelte
+<script>
+  import { $props } from 'svelte';
+  
+  const { name = 'world', greeting = 'Hello' } = $props();
+</script>
+
+<h1>{greeting}, {name}!</h1>
+```
+
+## Snippets
+
+Snippets let you define reusable chunks of markup within a component.
+
+```svelte
+<script>
+  import { $state } from 'svelte';
+  
+  let items = $state(['Apple', 'Banana', 'Cherry']);
+  
+  // Define a snippet that can be reused
+  let Item = $snippet(item => {
+    return `<li class="item">{item}</li>`;
+  });
+</script>
+
+<ul>
+  {#each items as item}
+    {@render Item(item)}
+  {/each}
+</ul>
+
+<!-- Also used elsewhere -->
+<div class="highlights">
+  {@render Item(items[0])}
+</div>
+```
+
+## Event Handling
+
+Event handlers now use standard HTML attributes rather than Svelte-specific directives.
+
+### Svelte 4 vs. Svelte 5:
+
+**Svelte 4:**
+```svelte
+<button on:click={handler}>Click me</button>
+<input on:input|preventDefault={handler} />
+```
+
+**Svelte 5:**
+```svelte
+<button onclick={handler}>Click me</button>
+<input oninput={e => { e.preventDefault(); handler(e); }} />
+```
+
+## Migration Guide
+
+### Automated Migration
+
+Use the official migration tool to help convert Svelte 4 code to Svelte 5:
+
+```bash
+npx svelte-migrate@latest runes ./src
+```
+
+### Manual Migration Steps
+
+1. **Update imports**:
+   - Add rune imports from 'svelte'
+
+2. **Convert reactive declarations**:
+   - `let count = 0; $: doubled = count * 2;` → `let count = $state(0); let doubled = $derived(count * 2);`
+
+3. **Convert event handlers**:
+   - `on:event` → `onevent`
+
+4. **Convert props**:
+   - `export let prop;` → `const { prop } = $props();`
+
+5. **Convert lifecycle methods**:
+   - `onMount(() => {})` → `$effect(() => {})`
+   - `onDestroy(() => {})` → `$effect(() => () => {})`
+
+## Backward Compatibility
+
+Svelte 5 includes a compatibility layer that supports most Svelte 4 syntax. You can migrate components gradually while mixing old and new syntax in your application.
+
+## Additional Resources
+
+- [Official Svelte 5 Documentation](mdc:https:/svelte.dev/docs)
+- [Svelte 5 Migration Guide](mdc:https:/svelte.dev/docs/migrating-to-svelte-5)
+- [Interactive Runes Tutorial](mdc:https:/learn.svelte.dev/tutorial/runes)
