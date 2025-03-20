@@ -451,8 +451,9 @@
 													})}
 													onclick={() => handleSwitchBranch(branch.name)}
 													data-testid="switch-button"
+													title="Set as current"
 												>
-													<Icon icon="octicon:feed-star-16" width="12px" height="12px" />
+													<Icon icon="lucide:map-pin" width="14px" height="14px" />
 													<span class={visuallyHidden()}>Set as current</span>
 												</Button>
 											</Loading>
@@ -469,12 +470,14 @@
 												gap: 'sm'
 											})}
 										>
-											<Icon
-												icon="octicon:feed-star-16"
-												width="24px"
-												height="24px"
-												color={token('colors.primary.800')}
-											/>
+											<span title="Current branch">
+												<Icon
+													icon="lucide:map-pin"
+													width="24px"
+													height="24px"
+													color={token('colors.primary.800')}
+												/>
+											</span>
 											<LockBranchToggle repositoryID={id} branch={branch.name} />
 										</div>
 									{/if}

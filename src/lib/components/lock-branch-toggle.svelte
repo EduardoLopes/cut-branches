@@ -42,13 +42,13 @@
 >
 	{#if locked?.has(branch)}
 		<div data-testid="lock-icon">
-			<Icon icon="lucide:lock" width="12px" height="12px" />
+			<Icon icon="lucide:lock" width="14px" height="14px" />
 		</div>
 	{/if}
 
 	{#if !locked?.has(branch)}
 		<div data-testid="unlock-icon">
-			<Icon icon="lucide:lock-open" width="12px" height="12px" />
+			<Icon icon="lucide:lock-open" width="14px" height="14px" />
 		</div>
 	{/if}
 
