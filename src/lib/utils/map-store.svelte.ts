@@ -1,10 +1,14 @@
 import { untrack } from 'svelte';
 import { SvelteMap } from 'svelte/reactivity';
-import { setLocalStorage } from './set-local-storage';
+import { z } from 'zod';
+import { setValidatedLocalStorage } from './set-validated-local-storage';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export class MapStore<K, V> {
 	private static instances: { [key: string]: MapStore<unknown, unknown> } = {};
+	private keySchema: z.ZodSchema<K>;
+	private valueSchema: z.ZodSchema<V>;
+	private entriesSchema: z.ZodSchema<[K, V][]>;
 
 	#key: string | undefined = undefined;
 	get localStorageKey() {
@@ -14,8 +18,13 @@ export class MapStore<K, V> {
 
 	list = $derived<V[]>(Array.from(this.state.values()));
 
-	constructor(key?: string) {
+	constructor(key?: string, keySchema?: z.ZodSchema<K>, valueSchema?: z.ZodSchema<V>) {
 		this.#key = key;
+		// Default schemas allow any data type if not provided
+		this.keySchema = keySchema || (z.any() as z.ZodSchema<K>);
+		this.valueSchema = valueSchema || (z.any() as z.ZodSchema<V>);
+		// Create a schema for the array of entries
+		this.entriesSchema = z.array(z.tuple([this.keySchema, this.valueSchema]));
 
 		this.updateFromLocalStorage();
 	}
@@ -50,7 +59,11 @@ export class MapStore<K, V> {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined' && this.#key) {
 			try {
-				setLocalStorage(this.localStorageKey, [...this.state.entries()]);
+				const entries = [...this.state.entries()];
+				const result = setValidatedLocalStorage(this.localStorageKey, entries, this.entriesSchema);
+				if (!result.success) {
+					console.error('Error validating or storing map data:', result.error);
+				}
 			} catch (error) {
 				console.error('Error setting localStorage data:', error);
 			}
@@ -62,14 +75,30 @@ export class MapStore<K, V> {
 		return new SvelteMap(parsedData);
 	}
 
-	public static getInstance<K, V>(...args: (string | number)[]): MapStore<K, V> {
+	public static getInstance<K, V>(
+		...args: (string | number | z.ZodSchema<K> | z.ZodSchema<V>)[]
+	): MapStore<K, V> {
+		// Extract schemas if provided
+		let keySchema: z.ZodSchema<K> | undefined;
+		let valueSchema: z.ZodSchema<V> | undefined;
+
+		// Check for schemas in the last two arguments
+		if (
+			args.length >= 2 &&
+			args[args.length - 2] instanceof z.ZodSchema &&
+			args[args.length - 1] instanceof z.ZodSchema
+		) {
+			valueSchema = args.pop() as z.ZodSchema<V>;
+			keySchema = args.pop() as z.ZodSchema<K>;
+		}
+
 		const storageKey = args.join('_');
 		if (!storageKey) {
 			throw new Error('a storage_key name must be provided');
 		}
 
 		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new MapStore<K, V>(storageKey);
+			this.instances[storageKey] = new MapStore<K, V>(storageKey, keySchema, valueSchema);
 			untrack(() => {
 				this.instances[storageKey].updateFromLocalStorage();
 			});

@@ -1,9 +1,11 @@
 import { untrack } from 'svelte';
-import { setLocalStorage } from './set-local-storage';
+import { z } from 'zod';
+import { setValidatedLocalStorage } from './set-validated-local-storage';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export class Store<T> {
 	private static instances: { [key: string]: Store<unknown> } = {};
+	private schema: z.ZodSchema<T>;
 
 	#key: string | undefined = undefined;
 	get localStorageKey() {
@@ -11,8 +13,10 @@ export class Store<T> {
 	}
 	state = $state<T | undefined>(this.#getLocalStorage());
 
-	constructor(key?: string) {
+	constructor(key?: string, schema?: z.ZodSchema<T>) {
 		this.#key = key;
+		// Default schema allows any data type if not provided
+		this.schema = schema || (z.any() as z.ZodSchema<T>);
 
 		this.updateFromLocalStorage();
 	}
@@ -34,7 +38,10 @@ export class Store<T> {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined' && this.#key) {
 			try {
-				setLocalStorage(this.localStorageKey, this.state);
+				const result = setValidatedLocalStorage(this.localStorageKey, this.state, this.schema);
+				if (!result.success) {
+					console.error('Error validating or storing data:', result.error);
+				}
 			} catch (error) {
 				console.error('Error setting localStorage data:', error);
 			}
@@ -46,14 +53,20 @@ export class Store<T> {
 		return parsedData;
 	}
 
-	public static getInstance<T>(...args: (string | number)[]): Store<T> {
+	public static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): Store<T> {
+		// Extract schema if provided as last argument
+		let schema: z.ZodSchema<T> | undefined;
+		if (args.length && args[args.length - 1] instanceof z.ZodSchema) {
+			schema = args.pop() as z.ZodSchema<T>;
+		}
+
 		const storageKey = args.join('_');
 		if (!storageKey) {
 			throw new Error('a storage_key name must be provided');
 		}
 
 		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new this<T>(storageKey);
+			this.instances[storageKey] = new this<T>(storageKey, schema);
 			untrack(() => {
 				this.instances[storageKey].updateFromLocalStorage();
 			});

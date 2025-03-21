@@ -1,10 +1,13 @@
 import { untrack } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
-import { setLocalStorage } from './set-local-storage';
+import { z } from 'zod';
+import { setValidatedLocalStorage } from './set-validated-local-storage';
 import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export class SetStore<T> {
 	private static instances: { [key: string]: SetStore<unknown> } = {};
+	private itemSchema: z.ZodSchema<T>;
+	private arraySchema: z.ZodSchema<T[]>;
 
 	#key: string | undefined = undefined;
 	get localStorageKey() {
@@ -14,8 +17,12 @@ export class SetStore<T> {
 
 	list = $derived(Array.from(this.state));
 
-	constructor(key?: string) {
+	constructor(key?: string, itemSchema?: z.ZodSchema<T>) {
 		this.#key = key;
+		// Default schema allows any data type if not provided
+		this.itemSchema = itemSchema || (z.any() as z.ZodSchema<T>);
+		// Create a schema for the array of items
+		this.arraySchema = z.array(this.itemSchema);
 
 		this.updateFromLocalStorage();
 	}
@@ -46,7 +53,11 @@ export class SetStore<T> {
 	#updateLocalStorage() {
 		if (typeof window !== 'undefined' && this.#key) {
 			try {
-				setLocalStorage(this.localStorageKey, [...this.state]);
+				const items = [...this.state];
+				const result = setValidatedLocalStorage(this.localStorageKey, items, this.arraySchema);
+				if (!result.success) {
+					console.error('Error validating or storing set data:', result.error);
+				}
 			} catch (error) {
 				console.error('Error setting localStorage data:', error);
 			}
@@ -58,14 +69,20 @@ export class SetStore<T> {
 		return new SvelteSet(parsedData);
 	}
 
-	public static getInstance<T>(...args: (string | number)[]): SetStore<T> {
+	public static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): SetStore<T> {
+		// Extract schema if provided as last argument
+		let itemSchema: z.ZodSchema<T> | undefined;
+		if (args.length && args[args.length - 1] instanceof z.ZodSchema) {
+			itemSchema = args.pop() as z.ZodSchema<T>;
+		}
+
 		const storageKey = args.join('_');
 		if (!storageKey) {
-			throw new Error('a atorage_key name must be provided');
+			throw new Error('a storage_key name must be provided');
 		}
 
 		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new SetStore<T>(storageKey);
+			this.instances[storageKey] = new SetStore<T>(storageKey, itemSchema);
 			untrack(() => {
 				this.instances[storageKey].updateFromLocalStorage();
 			});
