@@ -1,0 +1,78 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Svelte 5 Vitest Testing Guidelines
+
+These guidelines describe how to write effective and maintainable tests for Svelte 5 components using Vitest and `@testing-library/svelte`.
+
+## General Structure
+
+* **`describe` Blocks:**
+    * Use `describe` blocks to group related tests. This provides context and improves readability.
+    * Structure `describe` blocks to reflect the component's functionality or features.
+* **`it` or `test` Blocks:**
+    * Use `it` or `test` blocks for individual test cases.
+    * Write clear and descriptive test descriptions that explain what is being tested.
+* **`beforeEach` and `afterEach`:**
+    * Use `beforeEach` to set up common test data or component instances.
+    * Use `afterEach` to clean up resources or reset state after each test.
+
+## Testing Libraries and Assertions
+
+* **`@testing-library/svelte`:**
+    * Use `@testing-library/svelte` for rendering components and interacting with the DOM.
+    * Utilize its query functions (e.g., `getByRole`, `getByText`, `getByLabelText`) to select elements.
+    * Prefer `getByRole` for accessibility.
+    * Use `fireEvent` to simulate user interactions like clicks, input changes, and keyboard events.
+* **Vitest `expect`:**
+    * Use `expect` from Vitest for making assertions about component behavior and rendered output.
+    * Use appropriate matchers (e.g., `toBeInTheDocument`, `toHaveTextContent`, `toHaveBeenCalled`).
+
+## Commands
+
+### Run all tests with coverage report
+
+```bash
+pnpm test
+```
+
+### Run for a single file
+
+```bash
+pnpm test -- [FILE_PATH]
+```
+
+## Best Practices
+
+* **Test Behavior, Not Implementation:**
+    * Focus on testing the component's behavior and interactions from a user's perspective, not its internal implementation details.
+* **Independent Tests:**
+    * Write tests that are independent and do not rely on external state or side effects.
+* **Asynchronous Updates:**
+    * Use `await tick()` after state changes or DOM updates to ensure they are reflected in the test. Svelte updates are asynchronous and this is crucial.
+* **Store Interactions:**
+    * Mock store interactions appropriately using `vi.mock` or create testing stores to isolate components.
+* **Accessibility:**
+    * Test for accessibility using `@testing-library/svelte`'s accessibility helpers.
+* **Edge Cases and Error Handling:**
+    * Cover edge cases and error handling scenarios to ensure component robustness.
+* **Mocking:**
+    * `vi.mock` is to be used for mocking modules.
+    * `vi.spyOn` is to be used to spy on functions and assert calls.
+    * `vi.fn` is to be used to create mock functions.
+* **DOM Element Selection:**
+    * Prefer `getByRole` for accessibility reasons.
+    * Use `getByLabelText` for input fields.
+    * Use `getByText` when selecting based off of presented text.
+* **Comments:**
+    * Include comments to explain complex test logic or reasoning.
+* **Coverage:**
+    * **For every test, execute the test coverage command (`pnpm test`).**
+    * **Analyze the uncovered lines in the coverage report.**
+    * **Write additional tests to cover every conditional branch and ensure 100% branch coverage.** This will greatly reduce the chance of regressions, and increase the quality of the tests.
+
+## Example
+
+For reference, check the path `src`/lib/components/__tests__` 
