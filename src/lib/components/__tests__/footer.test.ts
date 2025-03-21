@@ -9,8 +9,12 @@ vi.useFakeTimers();
 
 describe('Footer Component', () => {
 	describe('Time Display', () => {
+		const fixedDate = new Date('2023-01-01T12:00:00Z');
+
 		beforeEach(() => {
-			globalStore.lastUpdatedAt = new Date();
+			// Use a fixed date for consistent test results
+			vi.setSystemTime(fixedDate);
+			globalStore.lastUpdatedAt = new Date(fixedDate);
 		});
 
 		test('displays "now" when just updated', async () => {
