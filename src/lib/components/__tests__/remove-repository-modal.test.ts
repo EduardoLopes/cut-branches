@@ -182,12 +182,27 @@ describe('RemoveRepositoryModal', () => {
 
 	describe('Navigation', () => {
 		test('should navigate to another repository if available', async () => {
+			// Clear mock calls to ensure clean state
+			vi.clearAllMocks();
+
+			// Clear any existing repositories
+			RepositoryStore.repositories?.clear();
+
+			// Add both repositories to the store
+			const firstRepo = getRepositoryStore(mockRepository?.name);
+			firstRepo?.set(mockRepository);
+
+			const secondRepo = getRepositoryStore(mockRepository2?.name);
+			secondRepo?.set(mockRepository2);
+
+			// Verify setup
+			expect(RepositoryStore.repositories?.list).toHaveLength(2);
+			expect(RepositoryStore.repositories?.has(mockRepository?.name)).toBeTruthy();
+			expect(RepositoryStore.repositories?.has(mockRepository2?.name)).toBeTruthy();
+
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
 			});
-
-			const repository = getRepositoryStore(mockRepository2?.name);
-			repository?.set(mockRepository2);
 
 			const openButton = getByTestId('open-remove-modal');
 			await fireEvent.click(openButton);
@@ -195,6 +210,7 @@ describe('RemoveRepositoryModal', () => {
 			const removeButton = getByTestId('confirm-remove');
 			await fireEvent.click(removeButton);
 
+			// After removing the first repository, it should navigate to the second one
 			expect(goto).toHaveBeenCalledWith('/repos/test-repo-2');
 		});
 
