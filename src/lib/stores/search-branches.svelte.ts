@@ -1,9 +1,13 @@
+import { z } from 'zod';
 import { Store } from '../utils/store.svelte';
+
+// Schema for search terms (string or undefined)
+const searchSchema = z.string().optional();
 
 export function getSearchBranchesStore(repository?: string) {
 	if (!repository) {
 		return;
 	}
 
-	return Store.getInstance<string | undefined>('search', repository);
+	return Store.getInstance<string | undefined>(['search', repository], searchSchema);
 }

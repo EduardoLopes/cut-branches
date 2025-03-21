@@ -22,6 +22,10 @@ describe('MapStore', () => {
 		['key3', 'value3']
 	] as [string, string][];
 
+	// Define schemas for testing
+	const stringKeySchema = z.string();
+	const stringValueSchema = z.string();
+
 	beforeEach(() => {
 		// Reset mocks
 		vi.resetAllMocks();
@@ -45,9 +49,9 @@ describe('MapStore', () => {
 	});
 
 	it('should initialize with data from localStorage', () => {
-		const store = new MapStore<string, string>(testKey);
+		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(`store_${testKey}`, {});
+		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(`store_${testKey}`, []);
 		expect(store.get('key1')).toBe('value1');
 		expect(store.get('key2')).toBe('value2');
 		expect(store.get('key3')).toBe('value3');
@@ -55,7 +59,7 @@ describe('MapStore', () => {
 	});
 
 	it('should set values and update localStorage', () => {
-		const store = new MapStore<string, string>(testKey);
+		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 		const newKey = 'key4';
 		const newValue = 'value4';
 
@@ -73,7 +77,7 @@ describe('MapStore', () => {
 	});
 
 	it('should delete values and update localStorage', () => {
-		const store = new MapStore<string, string>(testKey);
+		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 
 		store.delete(['key1']);
 
@@ -83,21 +87,21 @@ describe('MapStore', () => {
 	});
 
 	it('should check if a key exists', () => {
-		const store = new MapStore<string, string>(testKey);
+		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 
 		expect(store.has('key1')).toBe(true);
 		expect(store.has('nonexistent')).toBe(false);
 	});
 
 	it('should get a value by key', () => {
-		const store = new MapStore<string, string>(testKey);
+		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 
 		expect(store.get('key1')).toBe('value1');
 		expect(store.get('nonexistent')).toBeUndefined();
 	});
 
 	it('should clear all entries', () => {
-		const store = new MapStore<string, string>(testKey);
+		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 
 		store.clear();
 
@@ -131,8 +135,16 @@ describe('MapStore', () => {
 	});
 
 	it('should maintain singleton instances using getInstance', () => {
-		const store1 = MapStore.getInstance<string, string>(testKey);
-		const store2 = MapStore.getInstance<string, string>(testKey);
+		const store1 = MapStore.getInstance<string, string>(
+			testKey,
+			stringKeySchema,
+			stringValueSchema
+		);
+		const store2 = MapStore.getInstance<string, string>(
+			testKey,
+			stringKeySchema,
+			stringValueSchema
+		);
 
 		expect(store1).toBe(store2); // Same instance should be returned
 	});
@@ -152,5 +164,32 @@ describe('MapStore', () => {
 
 		// Check that schemas were correctly extracted and passed to getCommonInstance
 		expect(result).toEqual([keySchema, valueSchema]);
+	});
+
+	it('should validate values with schemas', () => {
+		// Specifically check schema validation
+		const keySchema = z.string().min(3);
+		const valueSchema = z.string().email();
+
+		const store = new MapStore<string, string>('validation-test', keySchema, valueSchema);
+
+		// Valid entries
+		store.set('validKey', 'test@example.com');
+		expect(store.get('validKey')).toBe('test@example.com');
+
+		// Invalid key
+		expect(() => store.set('ab', 'test@example.com')).toThrow();
+
+		// Invalid value
+		expect(() => store.set('validKey', 'not-an-email')).toThrow();
+	});
+
+	it('should maintain singleton behavior', () => {
+		// Two instances with the same key should reference the same store
+		const store1 = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
+		const store2 = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
+
+		store1.set('singleton-test', 'singleton-value');
+		expect(store2.get('singleton-test')).toBe('singleton-value');
 	});
 });

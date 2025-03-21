@@ -7,16 +7,27 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 	private valueSchema: z.ZodSchema<V>;
 	private entriesSchema: z.ZodSchema<[K, V][]>;
 
-	constructor(key?: string, keySchema?: z.ZodSchema<K>, valueSchema?: z.ZodSchema<V>) {
-		super(key);
-		// Default schemas allow any data type if not provided
-		this.keySchema = keySchema || (z.any() as z.ZodSchema<K>);
-		this.valueSchema = valueSchema || (z.any() as z.ZodSchema<V>);
+	constructor(key: string, keySchema: z.ZodSchema<K>, valueSchema: z.ZodSchema<V>) {
+		super(key, z.array(z.tuple([keySchema, valueSchema])));
+		this.keySchema = keySchema;
+		this.valueSchema = valueSchema;
 		// Create a schema for the array of entries
 		this.entriesSchema = z.array(z.tuple([this.keySchema, this.valueSchema]));
+
+		// Ensure singleton behavior by registering instance
+		const instanceKey = `map_store_${key}`;
+		if (!AbstractStore.instances[instanceKey]) {
+			AbstractStore.instances[instanceKey] = this;
+		} else {
+			return AbstractStore.instances[instanceKey] as unknown as MapStore<K, V>;
+		}
 	}
 
 	set(key: K, value: V) {
+		// Validate key and value against schemas
+		this.keySchema.parse(key);
+		this.valueSchema.parse(value);
+
 		this.state.set(key, value);
 		this.updateStorage();
 	}
@@ -55,31 +66,16 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 	}
 
 	protected getDefaultValue(): unknown {
-		return {};
+		return [];
 	}
 
 	public static getInstance<K, V>(
-		...args: (string | number | z.ZodSchema<K> | z.ZodSchema<V>)[]
+		key: string | number | (string | number)[],
+		keySchema: z.ZodSchema<K>,
+		valueSchema: z.ZodSchema<V>
 	): MapStore<K, V> {
-		// Extract schemas if provided
-		let keySchema: z.ZodSchema<K> | undefined;
-		let valueSchema: z.ZodSchema<V> | undefined;
-
-		// Check for schemas in the last two arguments
-		if (
-			args.length >= 2 &&
-			args[args.length - 2] instanceof z.ZodSchema &&
-			args[args.length - 1] instanceof z.ZodSchema
-		) {
-			valueSchema = args.pop() as z.ZodSchema<V>;
-			keySchema = args.pop() as z.ZodSchema<K>;
-		}
-
-		const schemaArgs = [keySchema, valueSchema].filter(Boolean);
-		const keyParts = args.filter((arg) => typeof arg === 'string' || typeof arg === 'number') as (
-			| string
-			| number
-		)[];
+		const keyParts = Array.isArray(key) ? key : [key];
+		const schemaArgs = [keySchema, valueSchema];
 
 		return AbstractStore.getCommonInstance(
 			MapStore as unknown as new (key: string, ...args: unknown[]) => MapStore<K, V>,

@@ -6,10 +6,9 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 	private itemSchema: z.ZodSchema<T>;
 	private arraySchema: z.ZodSchema<T[]>;
 
-	constructor(key?: string, itemSchema?: z.ZodSchema<T>) {
-		super(key);
-		// Default schema allows any data type if not provided
-		this.itemSchema = itemSchema || (z.any() as z.ZodSchema<T>);
+	constructor(key: string, itemSchema: z.ZodSchema<T>) {
+		super(key, itemSchema);
+		this.itemSchema = itemSchema;
 		// Create a schema for the array of items
 		this.arraySchema = z.array(this.itemSchema);
 	}
@@ -52,18 +51,12 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 		return [];
 	}
 
-	public static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): SetStore<T> {
-		// Extract schema if provided as last argument
-		let itemSchema: z.ZodSchema<T> | undefined;
-		if (args.length && args[args.length - 1] instanceof z.ZodSchema) {
-			itemSchema = args.pop() as z.ZodSchema<T>;
-		}
-
-		const schemaArgs = itemSchema ? [itemSchema] : [];
-		const keyParts = args.filter((arg) => typeof arg === 'string' || typeof arg === 'number') as (
-			| string
-			| number
-		)[];
+	public static getInstance<T>(
+		key: string | number | (string | number)[],
+		itemSchema: z.ZodSchema<T>
+	): SetStore<T> {
+		const keyParts = Array.isArray(key) ? key : [key];
+		const schemaArgs = [itemSchema];
 
 		return AbstractStore.getCommonInstance(
 			SetStore as unknown as new (key: string, ...args: unknown[]) => SetStore<T>,

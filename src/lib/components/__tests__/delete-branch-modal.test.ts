@@ -134,8 +134,8 @@ describe('DeleteBranchModal Component', () => {
 
 		// Skip this test as it appears to be timing-related in Svelte 5
 		// The modal state change doesn't seem to properly propagate in the test environment
-		test.skip('closes modal on cancel button click', async () => {
-			const { getByTestId, queryByTestId } = render(TestWrapper, {
+		test('closes modal on cancel button click', async () => {
+			const { getByTestId } = render(TestWrapper, {
 				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
 			});
 			const button = getByTestId('open-dialog-button');
@@ -147,10 +147,11 @@ describe('DeleteBranchModal Component', () => {
 			// In Svelte 5, state updates might not propagate immediately in the test environment
 			await new Promise((resolve) => setTimeout(resolve, 100));
 
-			// This assertion does not reliably pass in the test environment
-			// even though the functionality works in the actual application
-			const dialogQuestion = queryByTestId('delete-branch-dialog-question');
-			expect(dialogQuestion).toBeFalsy();
+			// Instead of checking for the dialog to be removed from the DOM,
+			// we'll check if the dialog's open attribute has been set to false
+			// This is more aligned with how Svelte 5 handles dialog state
+			const dialog = getByTestId('delete-branch-dialog');
+			expect(dialog.getAttribute('open')).toBeFalsy();
 		});
 	});
 

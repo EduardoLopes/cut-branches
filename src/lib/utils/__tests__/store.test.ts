@@ -17,6 +17,7 @@ vi.mock('../set-validated-local-storage', () => ({
 describe('Store', () => {
 	const testKey = 'test-store';
 	const testData = 'test-value';
+	const stringSchema = z.string();
 
 	beforeEach(() => {
 		// Reset mocks
@@ -41,7 +42,7 @@ describe('Store', () => {
 	});
 
 	it('should initialize with data from localStorage', () => {
-		const store = new Store<string>(testKey);
+		const store = new Store<string>(testKey, stringSchema);
 
 		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
@@ -53,37 +54,35 @@ describe('Store', () => {
 	});
 
 	it('should set value and update localStorage', () => {
-		const store = new Store<string>(testKey);
+		const store = new Store<string>(testKey, stringSchema);
 		const newValue = 'new-value';
 
 		store.set(newValue);
 
-		// Note: We now expect the schema to be a ZodAny instance
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			newValue,
-			expect.any(Object)
+			stringSchema
 		);
 		expect(store.get()).toBe(newValue);
 	});
 
 	it('should clear value', () => {
-		const store = new Store<string>(testKey);
+		const store = new Store<string>(testKey, stringSchema);
 
 		store.clear();
 
 		expect(store.get()).toBeUndefined();
 		expect(store.list).toEqual([]);
-		// Note: We now expect the schema to be a ZodAny instance
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			undefined,
-			expect.any(Object)
+			stringSchema
 		);
 	});
 
 	it('should update from localStorage', () => {
-		const store = new Store<string>(testKey);
+		const store = new Store<string>(testKey, stringSchema);
 		const newData = 'updated-value';
 
 		// Change the mock return value
@@ -115,8 +114,8 @@ describe('Store', () => {
 	});
 
 	it('should maintain singleton instances using getInstance', () => {
-		const store1 = Store.getInstance<string>([testKey]);
-		const store2 = Store.getInstance<string>([testKey]);
+		const store1 = Store.getInstance<string>([testKey], stringSchema);
+		const store2 = Store.getInstance<string>([testKey], stringSchema);
 
 		expect(store1).toBe(store2); // Same instance should be returned
 	});
@@ -146,7 +145,7 @@ describe('Store', () => {
 	it('should handle undefined values', () => {
 		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(undefined);
 
-		const store = new Store<string>(testKey);
+		const store = new Store<string>(testKey, stringSchema);
 
 		expect(store.get()).toBeUndefined();
 		expect(store.list).toEqual([]);

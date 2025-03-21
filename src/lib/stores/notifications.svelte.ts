@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { MapStore } from '$lib/utils/map-store.svelte';
 
 /**
@@ -31,6 +32,15 @@ export interface Notification {
 	date?: number;
 }
 
+// Define schema for notification objects
+const notificationSchema = z.object({
+	message: z.string().optional(),
+	id: z.string().optional(),
+	title: z.string().optional(),
+	feedback: z.enum(['success', 'danger', 'warning', 'default']).optional(),
+	date: z.number().optional()
+});
+
 /**
  * Creates a new notification object by merging the provided notification
  * with additional default properties.
@@ -49,7 +59,7 @@ export function createNotificationObject(notification: Notification): Notificati
 
 export class NotificationStore extends MapStore<string, Notification> {
 	constructor(repository: string) {
-		super(repository);
+		super(repository, z.string(), notificationSchema);
 	}
 
 	get last() {

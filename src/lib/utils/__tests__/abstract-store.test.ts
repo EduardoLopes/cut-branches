@@ -8,9 +8,9 @@ import * as setValidatedLocalStorageModule from '../set-validated-local-storage'
 class TestStore<T> extends AbstractStore<T, Set<T>> {
 	protected itemSchema: z.ZodSchema<T[]>;
 
-	constructor(key?: string, itemSchema?: z.ZodSchema<T>) {
-		super(key);
-		this.itemSchema = z.array(itemSchema || z.any());
+	constructor(key: string, itemSchema: z.ZodSchema<T> = z.any() as z.ZodSchema<T>) {
+		super(key, z.array(itemSchema));
+		this.itemSchema = z.array(itemSchema);
 	}
 
 	add(item: T) {
@@ -43,10 +43,22 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 		return [];
 	}
 
-	static getInstance<T>(...keyParts: (string | number)[]): TestStore<T> {
+	static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): TestStore<T> {
+		// Extract schema if provided as last argument
+		let itemSchema: z.ZodSchema<T> | undefined;
+		if (args.length && args[args.length - 1] instanceof z.ZodSchema) {
+			itemSchema = args.pop() as z.ZodSchema<T>;
+		}
+
+		const schemaArgs = itemSchema ? [itemSchema] : [z.any() as z.ZodSchema<T>];
+		const keyParts = args.filter((arg) => typeof arg === 'string' || typeof arg === 'number') as (
+			| string
+			| number
+		)[];
+
 		return AbstractStore.getCommonInstance(
 			TestStore as unknown as new (key: string, ...args: unknown[]) => TestStore<T>,
-			[],
+			schemaArgs,
 			keyParts
 		);
 	}
@@ -64,6 +76,7 @@ vi.mock('../set-validated-local-storage', () => ({
 describe('AbstractStore', () => {
 	const testKey = 'test-store';
 	const testData = ['item1', 'item2', 'item3'];
+	const testSchema = z.string();
 
 	beforeEach(() => {
 		// Reset mocks
@@ -88,7 +101,7 @@ describe('AbstractStore', () => {
 	});
 
 	it('should initialize with data from localStorage', () => {
-		const store = new TestStore<string>(testKey);
+		const store = new TestStore<string>(testKey, testSchema);
 
 		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(`store_${testKey}`, []);
 		expect(Array.from(store.state)).toEqual(testData);
@@ -96,7 +109,7 @@ describe('AbstractStore', () => {
 	});
 
 	it('should update localStorage when adding items', () => {
-		const store = new TestStore<string>(testKey);
+		const store = new TestStore<string>(testKey, testSchema);
 		const newItem = 'item4';
 
 		store.add(newItem);
@@ -109,7 +122,7 @@ describe('AbstractStore', () => {
 	});
 
 	it('should clear all items', () => {
-		const store = new TestStore<string>(testKey);
+		const store = new TestStore<string>(testKey, testSchema);
 
 		store.clear();
 
@@ -122,7 +135,7 @@ describe('AbstractStore', () => {
 	});
 
 	it('should update from localStorage', () => {
-		const store = new TestStore<string>(testKey);
+		const store = new TestStore<string>(testKey, testSchema);
 		const newData = ['updated1', 'updated2'];
 
 		// Change the mock return value
@@ -136,9 +149,9 @@ describe('AbstractStore', () => {
 
 	it('should maintain singleton instances using getCommonInstance', () => {
 		// @ts-expect-error - accessing static method for testing with the concrete TestStore
-		const store1 = AbstractStore.getCommonInstance(TestStore, [], ['singleton-test']);
+		const store1 = AbstractStore.getCommonInstance(TestStore, [testSchema], ['singleton-test']);
 		// @ts-expect-error - accessing static method for testing with the concrete TestStore
-		const store2 = AbstractStore.getCommonInstance(TestStore, [], ['singleton-test']);
+		const store2 = AbstractStore.getCommonInstance(TestStore, [testSchema], ['singleton-test']);
 
 		expect(store1).toBe(store2); // Same instance should be returned
 	});
@@ -154,7 +167,7 @@ describe('AbstractStore', () => {
 			error: new Error('Storage error')
 		});
 
-		const store = new TestStore<string>(testKey);
+		const store = new TestStore<string>(testKey, testSchema);
 		store.add('new-item');
 
 		expect(console.error).toHaveBeenCalled();
@@ -165,7 +178,7 @@ describe('AbstractStore', () => {
 
 	it('should use default key if no key parts provided', () => {
 		// @ts-expect-error - accessing static method for testing with the concrete TestStore
-		const _store = AbstractStore.getCommonInstance(TestStore, []);
+		const _store = AbstractStore.getCommonInstance(TestStore, [testSchema]);
 
 		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith('store_teststore', []);
 	});

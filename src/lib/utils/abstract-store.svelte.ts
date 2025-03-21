@@ -6,17 +6,17 @@ import { getLocalStorage } from '$lib/utils/get-local-storage';
 export abstract class AbstractStore<T, C> {
 	protected static instances: { [key: string]: AbstractStore<unknown, unknown> } = {};
 
-	#key: string | undefined = undefined;
+	#key: string;
 	get localStorageKey() {
 		return `store_${this.#key}`;
 	}
 
-	state: C;
+	state = $state<C>(undefined as unknown as C);
 	list = $derived(this.getAsList());
 
 	constructor(
-		key?: string,
-		protected schema?: z.ZodSchema<unknown>
+		key: string,
+		protected schema: z.ZodSchema<unknown>
 	) {
 		this.#key = key;
 		this.state = this.#getLocalStorage();
@@ -33,7 +33,7 @@ export abstract class AbstractStore<T, C> {
 	}
 
 	#updateLocalStorage() {
-		if (typeof window !== 'undefined' && this.#key) {
+		if (typeof window !== 'undefined') {
 			try {
 				const data = this.getStorableData();
 				const result = setValidatedLocalStorage(this.localStorageKey, data, this.getDataSchema());
@@ -73,6 +73,11 @@ export abstract class AbstractStore<T, C> {
 
 		if (!storageKey) {
 			throw new Error('a storage_key name must be provided');
+		}
+
+		// Check that at least one schema was provided
+		if (!args.length) {
+			throw new Error('a schema must be provided');
 		}
 
 		if (!this.instances[storageKey]) {

@@ -4,10 +4,9 @@ import { AbstractStore } from './abstract-store.svelte';
 export class Store<T = unknown> extends AbstractStore<T, T | undefined> {
 	private valueSchema: z.ZodSchema<T>;
 
-	constructor(key?: string, schema?: z.ZodSchema<T>) {
-		const finalSchema = schema || (z.any() as z.ZodSchema<T>);
-		super(key, finalSchema);
-		this.valueSchema = finalSchema;
+	constructor(key: string, schema: z.ZodSchema<T>) {
+		super(key, schema);
+		this.valueSchema = schema;
 	}
 
 	get() {
@@ -44,11 +43,11 @@ export class Store<T = unknown> extends AbstractStore<T, T | undefined> {
 	}
 
 	static getInstance<T>(
-		key?: string | number | (string | number)[],
-		schema?: z.ZodSchema<T>
+		key: string | number | (string | number)[],
+		schema: z.ZodSchema<T>
 	): Store<T> {
 		const keyParts = key ? (Array.isArray(key) ? key : [key]) : [];
-		const args = schema ? [schema] : [];
+		const args = [schema];
 
 		return AbstractStore.getCommonInstance(
 			Store as unknown as new (key: string, ...constructorArgs: unknown[]) => Store<T>,
