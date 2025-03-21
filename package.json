@@ -97,7 +97,8 @@
 		"hash-it": "^6.0.0",
 		"just-debounce-it": "^3.2.0",
 		"lodash": "^4.17.21",
-		"svelte-exmarkdown": "^4.0.3"
+		"svelte-exmarkdown": "^4.0.3",
+		"zod": "^3.24.2"
 	},
 	"pnpm": {
 		"patchedDependencies": {
