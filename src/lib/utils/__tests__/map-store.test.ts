@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { z } from 'zod';
 import { AbstractStore } from '../abstract-store.svelte';
-import * as getLocalStorageModule from '../get-local-storage';
+import * as getValidatedLocalStorageModule from '../get-validated-local-storage';
 import { MapStore } from '../map-store.svelte';
 import * as setValidatedLocalStorageModule from '../set-validated-local-storage';
 
 // Mock the storage modules
-vi.mock('../get-local-storage', () => ({
-	getLocalStorage: vi.fn()
+vi.mock('../get-validated-local-storage', () => ({
+	getValidatedLocalStorage: vi.fn()
 }));
 
 vi.mock('../set-validated-local-storage', () => ({
@@ -16,13 +16,11 @@ vi.mock('../set-validated-local-storage', () => ({
 
 describe('MapStore', () => {
 	const testKey = 'test-map-store';
-	const testData = [
+	const testData: [string, string][] = [
 		['key1', 'value1'],
 		['key2', 'value2'],
 		['key3', 'value3']
-	] as [string, string][];
-
-	// Define schemas for testing
+	];
 	const stringKeySchema = z.string();
 	const stringValueSchema = z.string();
 
@@ -30,8 +28,11 @@ describe('MapStore', () => {
 		// Reset mocks
 		vi.resetAllMocks();
 
-		// Mock getLocalStorage to return test data
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(testData);
+		// Mock getValidatedLocalStorage to return test data
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: testData
+		});
 
 		// Mock setValidatedLocalStorage to return success
 		vi.mocked(setValidatedLocalStorageModule.setValidatedLocalStorage).mockReturnValue({
@@ -51,7 +52,11 @@ describe('MapStore', () => {
 	it('should initialize with data from localStorage', () => {
 		const store = new MapStore<string, string>(testKey, stringKeySchema, stringValueSchema);
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(`store_${testKey}`, []);
+		expect(getValidatedLocalStorageModule.getValidatedLocalStorage).toHaveBeenCalledWith(
+			`store_${testKey}`,
+			expect.any(Object),
+			[]
+		);
 		expect(store.get('key1')).toBe('value1');
 		expect(store.get('key2')).toBe('value2');
 		expect(store.get('key3')).toBe('value3');
@@ -64,8 +69,6 @@ describe('MapStore', () => {
 		const newValue = 'value4';
 
 		store.set(newKey, newValue);
-
-		// Create expected data with the new entry
 		const expectedData = [...testData, [newKey, newValue]];
 
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
@@ -118,10 +121,13 @@ describe('MapStore', () => {
 		const keySchema = z.string();
 		const valueSchema = z.number();
 
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue([
-			['num1', 1],
-			['num2', 2]
-		]);
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: [
+				['num1', 1],
+				['num2', 2]
+			]
+		});
 
 		const store = new MapStore<string, number>(testKey, keySchema, valueSchema);
 

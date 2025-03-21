@@ -1,7 +1,7 @@
 import { untrack } from 'svelte';
 import { z } from 'zod';
+import { getValidatedLocalStorage } from './get-validated-local-storage';
 import { setValidatedLocalStorage } from './set-validated-local-storage';
-import { getLocalStorage } from '$lib/utils/get-local-storage';
 
 export abstract class AbstractStore<T, C> {
 	protected static instances: { [key: string]: AbstractStore<unknown, unknown> } = {};
@@ -36,7 +36,8 @@ export abstract class AbstractStore<T, C> {
 		if (typeof window !== 'undefined') {
 			try {
 				const data = this.getStorableData();
-				const result = setValidatedLocalStorage(this.localStorageKey, data, this.getDataSchema());
+				const dataSchema = this.getDataSchema() || this.schema;
+				const result = setValidatedLocalStorage(this.localStorageKey, data, dataSchema);
 				if (!result.success) {
 					console.error(`Error validating or storing ${this.constructor.name} data:`, result.error);
 				}
@@ -48,8 +49,18 @@ export abstract class AbstractStore<T, C> {
 
 	#getLocalStorage(): C {
 		const defaultValue = this.getDefaultValue();
-		const data = getLocalStorage(this.localStorageKey, defaultValue);
-		return this.createCollection(data);
+		const dataSchema = this.getDataSchema() || this.schema;
+		const result = getValidatedLocalStorage(this.localStorageKey, dataSchema, defaultValue);
+
+		if (!result.success) {
+			console.error(
+				`Error validating localStorage data for ${this.constructor.name}:`,
+				result.error
+			);
+			return this.createCollection(defaultValue);
+		}
+
+		return this.createCollection(result.data);
 	}
 
 	protected updateStorage() {

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { z } from 'zod';
 import { AbstractStore } from '../abstract-store.svelte';
-import * as getLocalStorageModule from '../get-local-storage';
+import * as getValidatedLocalStorageModule from '../get-validated-local-storage';
 import * as setValidatedLocalStorageModule from '../set-validated-local-storage';
 
 // Create a concrete implementation of AbstractStore for testing
@@ -65,8 +65,8 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 }
 
 // Mock the storage modules
-vi.mock('../get-local-storage', () => ({
-	getLocalStorage: vi.fn()
+vi.mock('../get-validated-local-storage', () => ({
+	getValidatedLocalStorage: vi.fn()
 }));
 
 vi.mock('../set-validated-local-storage', () => ({
@@ -82,8 +82,11 @@ describe('AbstractStore', () => {
 		// Reset mocks
 		vi.resetAllMocks();
 
-		// Mock getLocalStorage to return test data
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(testData);
+		// Mock getValidatedLocalStorage to return test data
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: testData
+		});
 
 		// Mock setValidatedLocalStorage to return success
 		vi.mocked(setValidatedLocalStorageModule.setValidatedLocalStorage).mockReturnValue({
@@ -103,7 +106,11 @@ describe('AbstractStore', () => {
 	it('should initialize with data from localStorage', () => {
 		const store = new TestStore<string>(testKey, testSchema);
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(`store_${testKey}`, []);
+		expect(getValidatedLocalStorageModule.getValidatedLocalStorage).toHaveBeenCalledWith(
+			`store_${testKey}`,
+			expect.any(Object),
+			[]
+		);
 		expect(Array.from(store.state)).toEqual(testData);
 		expect(store.list).toEqual(testData);
 	});
@@ -139,11 +146,18 @@ describe('AbstractStore', () => {
 		const newData = ['updated1', 'updated2'];
 
 		// Change the mock return value
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(newData);
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: newData
+		});
 
 		store.updateFromLocalStorage();
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(`store_${testKey}`, []);
+		expect(getValidatedLocalStorageModule.getValidatedLocalStorage).toHaveBeenCalledWith(
+			`store_${testKey}`,
+			expect.any(Object),
+			[]
+		);
 		expect(Array.from(store.state)).toEqual(newData);
 	});
 
@@ -180,6 +194,10 @@ describe('AbstractStore', () => {
 		// @ts-expect-error - accessing static method for testing with the concrete TestStore
 		const _store = AbstractStore.getCommonInstance(TestStore, [testSchema]);
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith('store_teststore', []);
+		expect(getValidatedLocalStorageModule.getValidatedLocalStorage).toHaveBeenCalledWith(
+			'store_teststore',
+			expect.any(Object),
+			[]
+		);
 	});
 });

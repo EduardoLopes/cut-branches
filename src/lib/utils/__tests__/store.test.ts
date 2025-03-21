@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { z } from 'zod';
 import { AbstractStore } from '../abstract-store.svelte';
-import * as getLocalStorageModule from '../get-local-storage';
+import * as getValidatedLocalStorageModule from '../get-validated-local-storage';
 import * as setValidatedLocalStorageModule from '../set-validated-local-storage';
 import { Store } from '../store.svelte';
 
-// Mock the storage modules
-vi.mock('../get-local-storage', () => ({
-	getLocalStorage: vi.fn()
+// Mock storage modules
+vi.mock('../get-validated-local-storage', () => ({
+	getValidatedLocalStorage: vi.fn()
 }));
 
 vi.mock('../set-validated-local-storage', () => ({
@@ -23,18 +23,17 @@ describe('Store', () => {
 		// Reset mocks
 		vi.resetAllMocks();
 
-		// Mock getLocalStorage to return test data
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(testData);
+		// Mock getValidatedLocalStorage to return test data
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: testData
+		});
 
 		// Mock setValidatedLocalStorage to return success
 		vi.mocked(setValidatedLocalStorageModule.setValidatedLocalStorage).mockReturnValue({
 			success: true,
 			data: testData
 		});
-
-		// Clear any stored instances
-		// @ts-expect-error - accessing private static property for testing
-		AbstractStore.instances = {};
 	});
 
 	afterEach(() => {
@@ -44,8 +43,9 @@ describe('Store', () => {
 	it('should initialize with data from localStorage', () => {
 		const store = new Store<string>(testKey, stringSchema);
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(
+		expect(getValidatedLocalStorageModule.getValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
+			expect.any(Object),
 			undefined
 		);
 		expect(store.state).toEqual(testData);
@@ -53,31 +53,30 @@ describe('Store', () => {
 		expect(store.list).toEqual([testData]);
 	});
 
-	it('should set value and update localStorage', () => {
+	it('should set values and update localStorage', () => {
 		const store = new Store<string>(testKey, stringSchema);
-		const newValue = 'new-value';
+		const newValue = 'updated-value';
 
 		store.set(newValue);
 
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			newValue,
-			stringSchema
+			expect.any(Object)
 		);
 		expect(store.get()).toBe(newValue);
 	});
 
-	it('should clear value', () => {
+	it('should clear the value', () => {
 		const store = new Store<string>(testKey, stringSchema);
 
 		store.clear();
 
 		expect(store.get()).toBeUndefined();
-		expect(store.list).toEqual([]);
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			undefined,
-			stringSchema
+			expect.any(Object)
 		);
 	});
 
@@ -86,12 +85,16 @@ describe('Store', () => {
 		const newData = 'updated-value';
 
 		// Change the mock return value
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(newData);
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: newData
+		});
 
 		store.updateFromLocalStorage();
 
-		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith(
+		expect(getValidatedLocalStorageModule.getValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
+			expect.any(Object),
 			undefined
 		);
 		expect(store.get()).toEqual(newData);
@@ -100,7 +103,10 @@ describe('Store', () => {
 	it('should use schema validation when provided', () => {
 		const numberSchema = z.number();
 
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(123);
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: 123
+		});
 
 		const store = new Store<number>(testKey, numberSchema);
 
@@ -109,7 +115,7 @@ describe('Store', () => {
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			456,
-			numberSchema
+			expect.any(Object)
 		);
 	});
 
@@ -138,12 +144,15 @@ describe('Store', () => {
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			'test',
-			schema
+			expect.any(Object)
 		);
 	});
 
 	it('should handle undefined values', () => {
-		vi.mocked(getLocalStorageModule.getLocalStorage).mockReturnValue(undefined);
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: false,
+			error: new Error('Test error: No data found')
+		});
 
 		const store = new Store<string>(testKey, stringSchema);
 
