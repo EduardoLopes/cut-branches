@@ -18,7 +18,7 @@
 		"changeset": "changeset",
 		"prepare": "svelte-kit sync && panda codegen && lefthook install",
 		"version-packages": "git push && changeset version",
-		"test": "vitest --run --coverage",
+		"test": "vitest --run --coverage --silent",
 		"test:watch": "vitest --watch --coverage",
 		"test:ui": "vitest --coverage --ui",
 		"release": "pnpm update-tauri-version && changeset tag",
