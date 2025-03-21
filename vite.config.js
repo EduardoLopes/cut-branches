@@ -58,7 +58,8 @@ export default defineConfig(({ mode }) => ({
 			enabled: true,
 			provider: 'v8',
 			all: true,
-			include: ['src/**']
+			include: ['src/**'],
+			exclude: ['src/routes/**']
 		},
 		alias: {
 			'@testing-library/svelte': '@testing-library/svelte/svelte5'
