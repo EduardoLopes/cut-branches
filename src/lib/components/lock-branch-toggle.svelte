@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
+	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -13,6 +14,7 @@
 
 	let { branch, repositoryID, disabled = false }: Props = $props();
 
+	const selected = $derived(getSelectedBranchesStore(repositoryID));
 	const locked = $derived(getLockedBranchesStore(repositoryID));
 </script>
 
@@ -34,6 +36,7 @@
 			locked?.delete([branch]);
 		} else {
 			locked?.add([branch]);
+			selected?.delete([branch]);
 		}
 	}}
 	data-testid="lock-toggle-button"
