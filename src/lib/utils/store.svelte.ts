@@ -1,77 +1,59 @@
-import { untrack } from 'svelte';
 import { z } from 'zod';
-import { setValidatedLocalStorage } from './set-validated-local-storage';
-import { getLocalStorage } from '$lib/utils/get-local-storage';
+import { AbstractStore } from './abstract-store.svelte';
 
-export class Store<T> {
-	private static instances: { [key: string]: Store<unknown> } = {};
-	private schema: z.ZodSchema<T>;
-
-	#key: string | undefined = undefined;
-	get localStorageKey() {
-		return `store_${this.#key}`;
-	}
-	state = $state<T | undefined>(this.#getLocalStorage());
+export class Store<T = unknown> extends AbstractStore<T, T | undefined> {
+	private valueSchema: z.ZodSchema<T>;
 
 	constructor(key?: string, schema?: z.ZodSchema<T>) {
-		this.#key = key;
-		// Default schema allows any data type if not provided
-		this.schema = schema || (z.any() as z.ZodSchema<T>);
-
-		this.updateFromLocalStorage();
+		const finalSchema = schema || (z.any() as z.ZodSchema<T>);
+		super(key, finalSchema);
+		this.valueSchema = finalSchema;
 	}
 
-	set(value: T) {
-		this.state = value;
-		this.#updateLocalStorage();
+	get() {
+		return this.state;
 	}
 
-	updateFromLocalStorage() {
-		this.state = this.#getLocalStorage();
+	set(val: T) {
+		this.state = val;
+		this.updateStorage();
 	}
 
-	clear() {
+	doClear(): void {
 		this.state = undefined;
-		this.#updateLocalStorage();
 	}
 
-	#updateLocalStorage() {
-		if (typeof window !== 'undefined' && this.#key) {
-			try {
-				const result = setValidatedLocalStorage(this.localStorageKey, this.state, this.schema);
-				if (!result.success) {
-					console.error('Error validating or storing data:', result.error);
-				}
-			} catch (error) {
-				console.error('Error setting localStorage data:', error);
-			}
-		}
+	getStorableData() {
+		return this.state;
 	}
 
-	#getLocalStorage(): T {
-		const parsedData: T = getLocalStorage(this.localStorageKey);
-		return parsedData;
+	getDataSchema(): z.ZodSchema<unknown> {
+		return this.valueSchema;
 	}
 
-	public static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): Store<T> {
-		// Extract schema if provided as last argument
-		let schema: z.ZodSchema<T> | undefined;
-		if (args.length && args[args.length - 1] instanceof z.ZodSchema) {
-			schema = args.pop() as z.ZodSchema<T>;
-		}
+	createCollection(data: unknown): T | undefined {
+		return data as T;
+	}
 
-		const storageKey = args.join('_');
-		if (!storageKey) {
-			throw new Error('a storage_key name must be provided');
-		}
+	protected getAsList(): T[] {
+		return this.state !== undefined ? [this.state] : [];
+	}
 
-		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new this<T>(storageKey, schema);
-			untrack(() => {
-				this.instances[storageKey].updateFromLocalStorage();
-			});
-		}
+	protected getDefaultValue(): unknown {
+		return undefined;
+	}
 
-		return this.instances[storageKey] as Store<T>;
+	static getInstance<T>(
+		key?: string | number | (string | number)[],
+		schema?: z.ZodSchema<T>
+	): Store<T> {
+		const keyParts = key ? (Array.isArray(key) ? key : [key]) : [];
+		const args = schema ? [schema] : [];
+
+		return AbstractStore.getCommonInstance(
+			Store as unknown as new (key: string, ...constructorArgs: unknown[]) => Store<T>,
+			args,
+			keyParts
+		);
 	}
 }

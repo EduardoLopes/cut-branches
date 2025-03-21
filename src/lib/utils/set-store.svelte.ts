@@ -1,72 +1,55 @@
-import { untrack } from 'svelte';
 import { SvelteSet } from 'svelte/reactivity';
 import { z } from 'zod';
-import { setValidatedLocalStorage } from './set-validated-local-storage';
-import { getLocalStorage } from '$lib/utils/get-local-storage';
+import { AbstractStore } from './abstract-store.svelte';
 
-export class SetStore<T> {
-	private static instances: { [key: string]: SetStore<unknown> } = {};
+export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 	private itemSchema: z.ZodSchema<T>;
 	private arraySchema: z.ZodSchema<T[]>;
 
-	#key: string | undefined = undefined;
-	get localStorageKey() {
-		return `store_${this.#key}`;
-	}
-	state = this.#getLocalStorage();
-
-	list = $derived(Array.from(this.state));
-
 	constructor(key?: string, itemSchema?: z.ZodSchema<T>) {
-		this.#key = key;
+		super(key);
 		// Default schema allows any data type if not provided
 		this.itemSchema = itemSchema || (z.any() as z.ZodSchema<T>);
 		// Create a schema for the array of items
 		this.arraySchema = z.array(this.itemSchema);
-
-		this.updateFromLocalStorage();
 	}
 
 	add(items: T[]) {
 		items.forEach((item) => this.state.add(item));
-		this.#updateLocalStorage();
+		this.updateStorage();
 	}
 
 	delete(items: T[]) {
 		items.forEach((item) => this.state.delete(item));
-		this.#updateLocalStorage();
-	}
-
-	updateFromLocalStorage() {
-		this.state = this.#getLocalStorage();
-	}
-
-	clear() {
-		this.state.clear();
-		this.#updateLocalStorage();
+		this.updateStorage();
 	}
 
 	has(item: T): boolean {
 		return this.state.has(item);
 	}
 
-	#updateLocalStorage() {
-		if (typeof window !== 'undefined' && this.#key) {
-			try {
-				const items = [...this.state];
-				const result = setValidatedLocalStorage(this.localStorageKey, items, this.arraySchema);
-				if (!result.success) {
-					console.error('Error validating or storing set data:', result.error);
-				}
-			} catch (error) {
-				console.error('Error setting localStorage data:', error);
-			}
-		}
+	protected getAsList(): T[] {
+		return Array.from(this.state);
 	}
 
-	#getLocalStorage(): SvelteSet<T> {
-		const parsedData: T[] = getLocalStorage(this.localStorageKey, []);
-		return new SvelteSet(parsedData);
+	protected getStorableData(): T[] {
+		return [...this.state];
+	}
+
+	protected getDataSchema(): z.ZodSchema<T[]> {
+		return this.arraySchema;
+	}
+
+	protected createCollection(data: unknown): SvelteSet<T> {
+		return new SvelteSet(data as T[]);
+	}
+
+	protected doClear(): void {
+		this.state.clear();
+	}
+
+	protected getDefaultValue(): unknown {
+		return [];
 	}
 
 	public static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): SetStore<T> {
@@ -76,18 +59,16 @@ export class SetStore<T> {
 			itemSchema = args.pop() as z.ZodSchema<T>;
 		}
 
-		const storageKey = args.join('_');
-		if (!storageKey) {
-			throw new Error('a storage_key name must be provided');
-		}
+		const schemaArgs = itemSchema ? [itemSchema] : [];
+		const keyParts = args.filter((arg) => typeof arg === 'string' || typeof arg === 'number') as (
+			| string
+			| number
+		)[];
 
-		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new SetStore<T>(storageKey, itemSchema);
-			untrack(() => {
-				this.instances[storageKey].updateFromLocalStorage();
-			});
-		}
-
-		return this.instances[storageKey] as SetStore<T>;
+		return AbstractStore.getCommonInstance(
+			SetStore as unknown as new (key: string, ...args: unknown[]) => SetStore<T>,
+			schemaArgs,
+			keyParts
+		) as SetStore<T>;
 	}
 }
