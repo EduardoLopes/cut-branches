@@ -78,7 +78,13 @@
 		flexShrink: '0',
 		position: 'sticky',
 		top: '0',
-		translucent: 'md'
+		translucent: 'md',
+		_light: {
+			borderBottom: '1px solid token(colors.neutral.400)'
+		},
+		_dark: {
+			borderBottom: '1px solid token(colors.neutral.200)'
+		}
 	})}
 	data-testid="bulk-actions-container"
 >

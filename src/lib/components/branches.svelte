@@ -145,101 +145,134 @@
 	);
 </script>
 
-<main
+<div
 	class={css({
-		display: 'flex',
-		flexDirection: 'column',
-		_light: {
-			background: 'neutral.400'
-		},
-		_dark: {
-			background: 'neutral.50'
-		},
 		overflow: 'hidden',
 		position: 'relative',
-		height: '100%'
+		height: 'calc(100vh - 30px)',
+		padding: 'md',
+		pl: 0
 	})}
 >
-	<!-- TOP BAR -->
-	<div
+	<main
 		class={css({
 			display: 'flex',
-			position: 'sticky',
-			justifyContent: 'space-between',
-			top: '0',
-			_dark: {
-				background: 'neutral.100',
-				borderBottom: '1px dashed token(colors.neutral.300)'
-			},
+			flexDirection: 'column',
+			overflow: 'hidden',
+			position: 'relative',
+			height: '100%',
+
+			borderRadius: 'md',
 			_light: {
-				background: 'neutral.50',
-				borderBottom: '1px dashed token(colors.neutral.400)'
+				background: 'neutral.50'
 			},
-			alignItems: 'center',
-			zIndex: '20',
-			flexShrink: '0',
-			px: 'md',
-			height: 'calc((token(spacing.xl)) * 2.5)'
+			_dark: {
+				background: 'neutral.100'
+			}
 		})}
 	>
-		{#key repository?.state?.name}
-			<h2
-				class={css({
-					textStyle: '4xl',
-					textTransform: 'uppercase'
-				})}
-			>
-				{#if repository?.state?.name}
-					{repository?.state?.name}
-				{/if}
-			</h2>
-		{/key}
-
-		<Loading isLoading={getBranchesQuery.isFetching}>
-			<Group direction="horizontal">
-				<Button
-					emphasis="ghost"
-					size="sm"
-					onclick={update_repo}
-					shape="square"
-					data-testid="update-button"
-				>
-					<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
-					<span class={visuallyHidden()}>Update</span>
-				</Button>
-
-				{#if repository?.state}
-					<RemoveRepositoryModal currentRepo={repository?.state} />
-				{/if}
-			</Group>
-		</Loading>
-	</div>
-
-	<!-- TOP BAR END -->
-	<Loading
-		isLoading={getBranchesQuery.isLoading}
-		fillParent
-		passThrough={{
-			root: css.raw({
-				borderRadius: '0'
-			}),
-			overlay: css.raw({
-				borderRadius: '0',
-				border: 'none'
-			})
-		}}
-	>
-		<!-- GERAL -->
+		<!-- TOP BAR -->
 		<div
 			class={css({
 				display: 'flex',
-				flexDirection: 'column',
-				width: '100%',
-				height: 'calc(100vh - (token(spacing.sm) * 2.5 + token(spacing.xl) * 2.5))',
-				overflowY: 'auto',
-				overflowX: 'hidden'
+				position: 'sticky',
+				justifyContent: 'space-between',
+				top: '0',
+				alignItems: 'center',
+				zIndex: '20',
+				flexShrink: '0',
+				px: 'md',
+				height: 'calc((token(spacing.xl)) * 2.5)'
 			})}
 		>
+			{#key repository?.state?.name}
+				<h2
+					class={css({
+						textStyle: '4xl',
+						textTransform: 'uppercase'
+					})}
+				>
+					{#if repository?.state?.name}
+						{repository?.state?.name}
+					{/if}
+				</h2>
+			{/key}
+
+			<Loading isLoading={getBranchesQuery.isFetching}>
+				<Group direction="horizontal">
+					<Button
+						emphasis="ghost"
+						size="sm"
+						onclick={update_repo}
+						shape="square"
+						data-testid="update-button"
+					>
+						<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
+						<span class={visuallyHidden()}>Update</span>
+					</Button>
+
+					{#if repository?.state}
+						<RemoveRepositoryModal currentRepo={repository?.state} />
+					{/if}
+				</Group>
+			</Loading>
+		</div>
+		<!-- TOP BAR END -->
+
+		<Loading
+			isLoading={getBranchesQuery.isLoading}
+			fillParent
+			passThrough={{
+				root: css.raw({
+					borderRadius: '0',
+					flexGrow: '1',
+					height: 'calc(100% - 60px)',
+					_dark: {
+						background: 'neutral.100'
+					},
+					_light: {
+						background: 'neutral.50'
+					},
+					px: 'md',
+					pb: 'md'
+				}),
+				overlay: css.raw({
+					borderRadius: '0',
+					border: 'none'
+				}),
+				content: css.raw({
+					display: 'flex',
+					flexGrow: '1',
+					flexDirection: 'column',
+					width: '100%',
+					height: 'auto',
+					overflowY: 'auto',
+					overflowX: 'hidden',
+					borderRadius: 'md',
+					_light: {
+						background: 'neutral.200'
+					},
+					_dark: {
+						background: 'neutral.50'
+					}
+				})
+			}}
+		>
+			<!-- GERAL -->
+
+			{#if !hasNoBranchesToDelete}
+				<BulkActions
+					currentRepo={repository?.state}
+					{selectibleCount}
+					{selectedSearchLength}
+					{branches}
+					onSearch={() => {
+						currentPage = 1;
+					}}
+					onClearSearch={clearSearch}
+				/>
+			{/if}
+
 			<!-- ERRO MESSAGE -->
 			{#if getBranchesQuery.isError}
 				<div
@@ -284,239 +317,221 @@
 				</div>
 			{/if}
 			<!-- ERRO MESSAGE END -->
-			{#if !hasNoBranchesToDelete}
-				<BulkActions
-					currentRepo={repository?.state}
-					{selectibleCount}
-					{selectedSearchLength}
-					{branches}
-					onSearch={() => {
-						currentPage = 1;
-					}}
-					onClearSearch={clearSearch}
-				/>
+
+			{#if hasNoBranchesToDelete}
+				<div
+					class={css({
+						display: 'flex',
+						alignItems: 'center',
+						padding: 'md',
+						fontSize: 'md'
+					})}
+				>
+					This repository has no branches to delete.
+				</div>
+			{/if}
+
+			{#if searchNoResultsFound}
+				<div
+					class={css({
+						display: 'grid',
+						placeItems: 'center',
+						height: '100%',
+						fontSize: '2rem',
+						flexDirection: 'column',
+						gap: '1.6rem'
+					})}
+				>
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'column',
+							alignItems: 'center',
+							gap: '1.6rem',
+							maxWidth: '500px',
+							textAlign: 'center'
+						})}
+					>
+						<Icon
+							icon="material-symbols:search-off"
+							width="64px"
+							height="64px"
+							color={token('colors.danger.700')}
+						/>
+						<div data-testid="no-results-message">No results for <b>{search?.state}</b>!</div>
+					</div>
+				</div>
+			{/if}
+
+			{#if repository?.state?.branches.length === 0}
+				<div
+					class={css({
+						display: 'grid',
+						placeItems: 'center',
+						height: '100%',
+						fontSize: '2rem',
+						flexDirection: 'column',
+						gap: '1.6rem'
+					})}
+				>
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'column',
+							alignItems: 'center',
+							gap: '1.6rem',
+							maxWidth: '500px',
+							textAlign: 'center'
+						})}
+					>
+						<Icon
+							icon="mdi:source-branch-remove"
+							width="64px"
+							height="64px"
+							color={token('colors.danger.700')}
+						/>
+						<div>This repository has no branches!</div>
+					</div>
+				</div>
 			{/if}
 
 			<!-- BRANCHES -->
+			{#key `${id}${currentPage}`}
+				<div
+					role="list"
+					class={css({
+						display: 'flex',
+						flexDirection: 'column',
+						gap: 'md',
+						padding: 'md',
+						zIndex: '0',
+						width: 'full'
+					})}
+				>
+					{#if paginatedBranches}
+						{#each paginatedBranches as branch (`${branch.name}-${currentPage}`)}
+							<div
+								role="listitem"
+								class={css({
+									position: 'relative',
+									display: 'grid',
+									gridTemplateColumns: 'auto 1fr',
+									gap: 'sm',
+									borderRadius: 'sm'
+								})}
+								class:selected={selected?.has(branch.name)}
+							>
+								{#if repository?.state?.currentBranch !== branch.name}
+									<div
+										class={css({
+											display: 'flex',
+											flexDirection: 'column',
+											gap: 'xs'
+										})}
+									>
+										<Checkbox
+											id={`checkbox-${branch.name}`}
+											onclick={() => {
+												if (selected?.has(branch.name)) {
+													selected?.delete([branch.name]);
+												} else {
+													selected?.add([branch.name]);
+												}
+											}}
+											checked={selected?.has(branch.name)}
+											disabled={locked?.has(branch.name)}
+										>
+											<div class={visuallyHidden()}>
+												{branch.name}
+											</div>
+										</Checkbox>
+										<Loading
+											isLoading={switchBranchMutation.variables?.branch === branch.name &&
+												switchBranchMutation.isPending}
+										>
+											<Button
+												size="xs"
+												shape="square"
+												emphasis="secondary"
+												disabled={switchBranchMutation.variables?.branch !== branch.name &&
+													switchBranchMutation.isPending}
+												class={css({
+													width: '26px',
+													height: '26px',
+													boxShadow: 'none'
+												})}
+												onclick={() => handleSwitchBranch(branch.name)}
+												data-testid="switch-button"
+												title="Set as current"
+											>
+												<Icon icon="lucide:map-pin" width="14px" height="14px" />
+												<span class={visuallyHidden()}>Set as current</span>
+											</Button>
+										</Loading>
+										<LockBranchToggle repositoryID={id} branch={branch.name} />
+									</div>
+								{/if}
+
+								{#if repository?.state?.currentBranch === branch.name}
+									<div
+										class={css({
+											display: 'flex',
+											width: '100%',
+											flexDirection: 'column',
+											gap: 'sm'
+										})}
+									>
+										<span title="Current branch">
+											<Icon
+												icon="lucide:map-pin"
+												width="24px"
+												height="24px"
+												color={token('colors.primary.800')}
+											/>
+										</span>
+										<LockBranchToggle repositoryID={id} branch={branch.name} />
+									</div>
+								{/if}
+
+								<BranchComponent
+									data={branch}
+									selected={selected?.has(branch.name) ?? false}
+									locked={locked?.has(branch.name) &&
+										repository?.state?.currentBranch !== branch.name}
+								/>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			{/key}
+			<!-- BRANCHES END -->
+
 			<div
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
-					flexGrow: '1'
+					marginTop: 'auto',
+					bottom: 0,
+					position: 'sticky',
+					_light: {
+						borderTop: '1px solid token(colors.neutral.400)'
+					},
+					_dark: {
+						borderTop: '1px solid token(colors.neutral.200)'
+					}
 				})}
 			>
-				{#if hasNoBranchesToDelete}
+				{#if repository?.state?.branches && !searchNoResultsFound}
 					<div
 						class={css({
-							display: 'flex',
-							alignItems: 'center',
-							padding: 'md',
-							fontSize: 'md'
+							p: 'md',
+							translucent: 'md'
 						})}
 					>
-						This repository has no branches to delete.
+						<Pagination itemsTotal={branches?.length ?? 0} bind:itemsPerPage bind:currentPage />
 					</div>
 				{/if}
-
-				{#if searchNoResultsFound}
-					<div
-						class={css({
-							display: 'grid',
-							placeItems: 'center',
-							height: '100%',
-							fontSize: '2rem',
-							flexDirection: 'column',
-							gap: '1.6rem'
-						})}
-					>
-						<div
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								alignItems: 'center',
-								gap: '1.6rem',
-								maxWidth: '500px',
-								textAlign: 'center'
-							})}
-						>
-							<Icon
-								icon="material-symbols:search-off"
-								width="64px"
-								height="64px"
-								color={token('colors.danger.700')}
-							/>
-							<div data-testid="no-results-message">No results for <b>{search?.state}</b>!</div>
-						</div>
-					</div>
-				{/if}
-
-				{#if repository?.state?.branches.length === 0}
-					<div
-						class={css({
-							display: 'grid',
-							placeItems: 'center',
-							height: '100%',
-							fontSize: '2rem',
-							flexDirection: 'column',
-							gap: '1.6rem'
-						})}
-					>
-						<div
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								alignItems: 'center',
-								gap: '1.6rem',
-								maxWidth: '500px',
-								textAlign: 'center'
-							})}
-						>
-							<Icon
-								icon="mdi:source-branch-remove"
-								width="64px"
-								height="64px"
-								color={token('colors.danger.700')}
-							/>
-							<div>This repository has no branches!</div>
-						</div>
-					</div>
-				{/if}
-
-				{#key `${id}${currentPage}`}
-					<div
-						role="list"
-						class={css({
-							display: 'flex',
-							flexDirection: 'column',
-							gridAutoRows: 'max-content',
-							gap: 'md',
-							padding: 'md',
-							paddingTop: '0',
-							zIndex: '0',
-							height: '100%',
-							width: 'full'
-						})}
-					>
-						{#if paginatedBranches}
-							{#each paginatedBranches as branch (`${branch.name}-${currentPage}`)}
-								<div
-									role="listitem"
-									class={css({
-										position: 'relative',
-										display: 'grid',
-										gridTemplateColumns: 'auto 1fr',
-										gap: 'sm',
-										borderRadius: 'sm'
-									})}
-									class:selected={selected?.has(branch.name)}
-								>
-									{#if repository?.state?.currentBranch !== branch.name}
-										<div
-											class={css({
-												display: 'flex',
-												flexDirection: 'column',
-												gap: 'xs'
-											})}
-										>
-											<Checkbox
-												id={`checkbox-${branch.name}`}
-												onclick={() => {
-													if (selected?.has(branch.name)) {
-														selected?.delete([branch.name]);
-													} else {
-														selected?.add([branch.name]);
-													}
-												}}
-												checked={selected?.has(branch.name)}
-												disabled={locked?.has(branch.name)}
-											>
-												<div class={visuallyHidden()}>
-													{branch.name}
-												</div>
-											</Checkbox>
-											<Loading
-												isLoading={switchBranchMutation.variables?.branch === branch.name &&
-													switchBranchMutation.isPending}
-											>
-												<Button
-													size="xs"
-													shape="square"
-													emphasis="secondary"
-													disabled={switchBranchMutation.variables?.branch !== branch.name &&
-														switchBranchMutation.isPending}
-													class={css({
-														width: '26px',
-														height: '26px',
-														boxShadow: 'none'
-													})}
-													onclick={() => handleSwitchBranch(branch.name)}
-													data-testid="switch-button"
-													title="Set as current"
-												>
-													<Icon icon="lucide:map-pin" width="14px" height="14px" />
-													<span class={visuallyHidden()}>Set as current</span>
-												</Button>
-											</Loading>
-											<LockBranchToggle repositoryID={id} branch={branch.name} />
-										</div>
-									{/if}
-
-									{#if repository?.state?.currentBranch === branch.name}
-										<div
-											class={css({
-												display: 'flex',
-												width: '100%',
-												flexDirection: 'column',
-												gap: 'sm'
-											})}
-										>
-											<span title="Current branch">
-												<Icon
-													icon="lucide:map-pin"
-													width="24px"
-													height="24px"
-													color={token('colors.primary.800')}
-												/>
-											</span>
-											<LockBranchToggle repositoryID={id} branch={branch.name} />
-										</div>
-									{/if}
-
-									<BranchComponent
-										data={branch}
-										selected={selected?.has(branch.name) ?? false}
-										locked={locked?.has(branch.name) &&
-											repository?.state?.currentBranch !== branch.name}
-									/>
-								</div>
-							{/each}
-						{/if}
-					</div>
-				{/key}
-
-				<div
-					class={css({
-						display: 'flex',
-						flexDirection: 'column',
-						bottom: 0,
-						position: 'sticky'
-					})}
-				>
-					<div class="bottom-toolbar">
-						{#if repository?.state?.branches && !searchNoResultsFound}
-							<div
-								class={css({
-									p: 'md',
-									translucent: 'md'
-								})}
-							>
-								<Pagination itemsTotal={branches?.length ?? 0} bind:itemsPerPage bind:currentPage />
-							</div>
-						{/if}
-					</div>
-				</div>
 			</div>
-			<!-- BRANCHES END -->
-		</div>
-	</Loading>
-</main>
+		</Loading>
+	</main>
+</div>

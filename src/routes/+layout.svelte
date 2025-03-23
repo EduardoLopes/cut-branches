@@ -37,7 +37,13 @@
 			height: '100vh',
 			display: 'flex',
 			flexDirection: 'column',
-			overflow: 'hidden'
+			overflow: 'hidden',
+			_light: {
+				background: 'neutral.200'
+			},
+			_dark: {
+				background: 'neutral.50'
+			}
 		})}
 	>
 		{@render children?.()}

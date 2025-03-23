@@ -17,7 +17,7 @@
 
 	const {
 		size = 'lg',
-		emphasis = 'secondary',
+		emphasis = 'primary',
 		icon = 'material-symbols:add-circle-outline-rounded',
 		visuallyHiddenLabel = false,
 		...props
@@ -92,15 +92,7 @@
 				<span>Add a git repository</span>
 			{/if}
 
-			<Icon
-				{icon}
-				width="20px"
-				height="20px"
-				class={css({
-					color: 'primary.800.contrast'
-				})}
-				data-testid="add-button-icon"
-			/>
+			<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
 		</div>
 	</Button>
 </Loading>

@@ -59,7 +59,12 @@
 			borderWidth: '1px',
 			borderColor: 'colorPalette.600',
 			colorPalette: 'neutral',
-			background: 'colorPalette.200',
+			_light: {
+				background: 'neutral.50'
+			},
+			_dark: {
+				background: 'neutral.100'
+			},
 			'&.disabled, &.locked': {
 				opacity: 0.5,
 				pointerEvents: 'none',
@@ -72,8 +77,7 @@
 			},
 			'&.current': {
 				borderColor: 'primary.600',
-				colorPalette: 'primary',
-				background: 'neutral.200'
+				colorPalette: 'primary'
 			},
 			pindobaTransition: 'fast'
 		})}
@@ -88,22 +92,16 @@
 		<div
 			class={css({
 				padding: 'md',
+				pb: 'xxs',
 				display: 'flex',
 				flexDirection: 'column',
-				_light: {
-					background: 'neutral.50'
-				},
-				_dark: {
-					background: 'neutral.300'
-				},
 				borderTopRadius: 'md',
 				'.current &': {
 					color: 'primary.800'
 				},
 				'.selected &': {
-					background: 'danger.400',
 					borderColor: 'danger.800',
-					color: 'danger.950.contrast'
+					color: 'danger.800'
 				}
 			})}
 		>
@@ -118,15 +116,13 @@
 
 		<div
 			class={css({
-				p: 'md',
+				p: 'sm',
+				m: 'md',
+				mt: '0',
 				display: 'flex',
 				flexDirection: 'column',
-				borderTopWidth: '1px',
-				borderTopColor: 'neutral.400',
-				borderTopStyle: 'solid',
-				'.selected &': {
-					borderTopColor: 'colorPalette.400'
-				}
+				background: 'neutral.200',
+				borderRadius: 'md'
 			})}
 		>
 			<div
@@ -143,7 +139,7 @@
 				})}
 			>
 				<Icon
-					class={css({ color: 'colorPalette.950' })}
+					class={css({ color: 'neutral.950' })}
 					icon="lucide:git-commit-horizontal"
 					width="16px"
 					height="16px"
