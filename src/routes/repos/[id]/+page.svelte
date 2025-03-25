@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import Branches from '$lib/components/branches.svelte';
+	import { page } from '$app/state';
+	import Repository from '$lib/components/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 </script>
 
@@ -10,5 +10,5 @@
 		height: 'full'
 	})}
 >
-	<Branches id={$page.params.id} />
+	<Repository id={page.params.id} />
 </div>

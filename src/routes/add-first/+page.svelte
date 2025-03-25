@@ -42,10 +42,5 @@
 			Cut Branches
 		</h1>
 	</div>
-	<AddButton
-		size="lg"
-		emphasis="secondary"
-		icon="material-symbols:add-circle-outline-rounded"
-		iconColor="#fff"
-	/>
+	<AddButton size="lg" emphasis="secondary" icon="material-symbols:add-circle-outline-rounded" />
 </div>

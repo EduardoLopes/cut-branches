@@ -2,9 +2,8 @@
 
 declare module 'carbon-icons-svelte/*';
 
-declare const __APP_VERSION__: string;
-
 declare global {
+	declare const __APP_VERSION__: string;
 	interface ServiceError {
 		message: string;
 		kind: string;

@@ -144,8 +144,7 @@ describe('createGetRepositoryByPathQuery', () => {
 
 	it('should pass custom options to createQuery', () => {
 		const pathFn = () => mockPath;
-		const onSuccessMock = vi.fn();
-		createGetRepositoryByPathQuery(pathFn, { onSuccess: onSuccessMock });
+		createGetRepositoryByPathQuery(pathFn, { enabled: false });
 
 		// Get the query config from the createQuery call
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -153,6 +152,6 @@ describe('createGetRepositoryByPathQuery', () => {
 		const config = createQueryArg();
 
 		// Check that our custom option is passed through
-		expect(config.onSuccess).toBe(onSuccessMock);
+		expect(config.enabled).toBe(false);
 	});
 });
