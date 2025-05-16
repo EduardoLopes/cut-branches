@@ -344,12 +344,13 @@ describe('BranchesBulkActions Component', () => {
 				selectedSearchLength: 2
 			};
 
-			const { getByTestId } = render(TestWrapper, {
+			const { getByRole } = render(TestWrapper, {
 				props: testWrapperWithProps(BranchesBulkActions, props)
 			});
 
-			const checkbox = getByTestId('select-all-checkbox') as HTMLInputElement;
-			expect(checkbox.indeterminate).toBe(true);
+			// Select the input element by its role
+			const checkbox = getByRole('checkbox', { name: /select all/i }) as HTMLInputElement;
+			expect(checkbox.getAttribute('aria-checked')).toBe('mixed');
 		});
 	});
 

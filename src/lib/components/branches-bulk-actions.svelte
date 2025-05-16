@@ -4,6 +4,7 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Group from '@pindoba/svelte-group';
 	import TextInput from '@pindoba/svelte-text-input';
+	import type { HTMLAttributes } from 'svelte/elements';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import type { Branch, Repository } from '$lib/stores/repository.svelte';
@@ -12,7 +13,7 @@
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
-	interface Props {
+	interface Props extends HTMLAttributes<HTMLDivElement> {
 		currentRepo: Repository | undefined;
 		selectibleCount: number;
 		selectedSearchLength: number;
@@ -27,7 +28,8 @@
 		selectedSearchLength,
 		branches,
 		onSearch,
-		onClearSearch
+		onClearSearch,
+		...rest
 	}: Props = $props();
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
@@ -87,6 +89,7 @@
 		}
 	})}
 	data-testid="bulk-actions-container"
+	{...rest}
 >
 	<div
 		class={css({
