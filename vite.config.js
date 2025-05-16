@@ -32,29 +32,6 @@ export default defineConfig(({ mode }) => ({
 		}
 	},
 
-	// Disable optimization for all @pindoba packages
-	optimizeDeps: {
-		exclude: [
-			'@pindoba/panda',
-			'@pindoba/panda-preset',
-			'@pindoba/styles',
-			'@pindoba/svelte-alert',
-			'@pindoba/svelte-badge',
-			'@pindoba/svelte-button',
-			'@pindoba/svelte-checkbox',
-			'@pindoba/svelte-dialog',
-			'@pindoba/svelte-group',
-			'@pindoba/svelte-loading',
-			'@pindoba/svelte-navigation',
-			'@pindoba/svelte-pagination',
-			'@pindoba/svelte-popover',
-			'@pindoba/svelte-radio',
-			'@pindoba/svelte-select',
-			'@pindoba/svelte-text-input',
-			'@pindoba/svelte-theme-mode-select'
-		]
-	},
-
 	// to make use of `TAURI_DEBUG` and other env variables
 	// https://tauri.studio/v1/api/config#buildconfig.beforedevcommand
 	envPrefix: ['VITE_', 'TAURI_'],
