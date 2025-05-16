@@ -54,42 +54,86 @@ export function getValidatedLocalStorage<T>(
 		// Handle case where no data is found
 		if (storedData === undefined) {
 			if (defaultValue !== undefined) {
-				// If default value is provided, validate it against schema
+				// If default value is provided, try to validate it against schema
 				try {
 					const validatedDefault = schema.parse(defaultValue);
 					return { success: true, data: validatedDefault };
-				} catch (error) {
-					// Handle invalid default value
-					if (error instanceof z.ZodError) {
-						console.error('Default value validation error:', error.format());
-						return { success: false, error };
+				} catch (defaultValidationError) {
+					console.error(
+						`Default value validation error for key "${key}": The provided default value is invalid according to the schema.`,
+						defaultValidationError instanceof z.ZodError
+							? defaultValidationError.format()
+							: defaultValidationError
+					);
+
+					// Since the provided defaultValue is invalid, try to see if 'undefined' is a valid state as a fallback.
+					try {
+						const validatedUndefined = schema.parse(undefined);
+						console.warn(
+							`For key "${key}", falling back to 'undefined' because the provided default value was invalid.`
+						);
+						return { success: true, data: validatedUndefined };
+					} catch {
+						// If 'undefined' is also not allowed by the schema, then no valid value can be established.
+						console.error(
+							`For key "${key}", cannot fall back to 'undefined' as it's also not permitted by the schema. The original default value was also invalid.`
+						);
+						return {
+							success: false,
+							error:
+								defaultValidationError instanceof Error
+									? defaultValidationError
+									: new Error(String(defaultValidationError))
+						};
 					}
-					return {
-						success: false,
-						error: error instanceof Error ? error : new Error(String(error))
-					};
 				}
 			}
 
-			// Return error if no data and no default value
-			return {
-				success: false,
-				error: new Error(`No data found for key "${key}" in localStorage`)
-			};
+			// If no data found and no default value, try to parse undefined with the schema
+			try {
+				const validatedUndefined = schema.parse(undefined);
+				// If schema.parse(undefined) succeeds, it means undefined is a valid state according to the schema
+				return { success: true, data: validatedUndefined };
+			} catch {
+				// If schema.parse(undefined) fails, then undefined is not allowed by the schema.
+				// This is a genuine case of "no data found, and undefined is not a valid state for this schema".
+				return {
+					success: false,
+					error: new Error(
+						`No data found for key "${key}" in localStorage, and the schema does not permit 'undefined' as a value.`
+					)
+				};
+			}
 		}
 
 		// Validate the retrieved data against the schema
-		const validatedData = schema.parse(storedData);
-		return { success: true, data: validatedData };
+		try {
+			const validatedData = schema.parse(storedData);
+			return { success: true, data: validatedData };
+		} catch (error) {
+			// If validation fails but we have a default value, use it
+			if (defaultValue !== undefined) {
+				console.warn(`Validation failed for "${key}", using default value`);
+				return { success: true, data: defaultValue as T };
+			}
+			throw error; // Re-throw to be caught by outer catch
+		}
 	} catch (error) {
 		// Handle Zod validation errors
 		if (error instanceof z.ZodError) {
 			console.error('Validation error for localStorage data:', error.format());
+			// Return default value if available, even if validation fails
+			if (defaultValue !== undefined) {
+				return { success: true, data: defaultValue as T };
+			}
 			return { success: false, error };
 		}
 
 		// Handle other errors
 		console.error('Error in getValidatedLocalStorage:', error);
+		if (defaultValue !== undefined) {
+			return { success: true, data: defaultValue as T };
+		}
 		return {
 			success: false,
 			error: error instanceof Error ? error : new Error(String(error))

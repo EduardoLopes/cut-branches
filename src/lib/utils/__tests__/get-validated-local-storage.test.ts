@@ -85,7 +85,9 @@ describe('getValidatedLocalStorage', () => {
 		expect(result.success).toBe(false);
 		expect(result.data).toBeUndefined();
 		expect(result.error).toBeInstanceOf(Error);
-		expect(result.error?.message).toBe('No data found for key "user-prefs" in localStorage');
+		expect(result.error?.message).toBe(
+			`No data found for key "user-prefs" in localStorage, and the schema does not permit 'undefined' as a value.`
+		);
 
 		// Verify getLocalStorage was called correctly
 		expect(getLocalStorageModule.getLocalStorage).toHaveBeenCalledWith('user-prefs', undefined);
@@ -133,7 +135,7 @@ describe('getValidatedLocalStorage', () => {
 
 		// Verify error was logged
 		expect(console.error).toHaveBeenCalledWith(
-			'Default value validation error:',
+			'Default value validation error for key "user-prefs": The provided default value is invalid according to the schema.',
 			expect.any(Object)
 		);
 	});
