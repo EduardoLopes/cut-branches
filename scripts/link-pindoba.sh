@@ -1,16 +1,16 @@
-pnpm link ../pindoba/packages/ui/svelte/alert
-pnpm link ../pindoba/packages/ui/svelte/badge
-pnpm link ../pindoba/packages/ui/svelte/button
-pnpm link ../pindoba/packages/ui/svelte/checkbox
-pnpm link ../pindoba/packages/ui/svelte/dialog
-pnpm link ../pindoba/packages/ui/svelte/group
-pnpm link ../pindoba/packages/ui/svelte/loading
-pnpm link ../pindoba/packages/ui/svelte/navigation
-pnpm link ../pindoba/packages/ui/svelte/popover
-pnpm link ../pindoba/packages/ui/svelte/radio
-pnpm link ../pindoba/packages/ui/svelte/select
-pnpm link ../pindoba/packages/ui/svelte/text-input
-
-pnpm link ../pindoba/packages/blocks/svelte/pagination
-pnpm link ../pindoba/packages/blocks/svelte/theme-mode-select
+pnpm link \
+  ../pindoba/packages/ui/svelte/alert \
+  ../pindoba/packages/ui/svelte/badge \
+  ../pindoba/packages/ui/svelte/button \
+  ../pindoba/packages/ui/svelte/checkbox \
+  ../pindoba/packages/ui/svelte/dialog \
+  ../pindoba/packages/ui/svelte/group \
+  ../pindoba/packages/ui/svelte/loading \
+  ../pindoba/packages/ui/svelte/navigation \
+  ../pindoba/packages/ui/svelte/popover \
+  ../pindoba/packages/ui/svelte/radio \
+  ../pindoba/packages/ui/svelte/select \
+  ../pindoba/packages/ui/svelte/text-input \
+  ../pindoba/packages/blocks/svelte/pagination \
+  ../pindoba/packages/blocks/svelte/theme-mode-select
 
