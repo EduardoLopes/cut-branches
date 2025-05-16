@@ -65,7 +65,11 @@
 					item.name
 						.toLowerCase()
 						.trim()
-						.includes((search?.state ?? '').toLowerCase().trim())
+						.includes(
+							String(search?.state || '')
+								.toLowerCase()
+								.trim()
+						)
 				)
 			: []
 	);
@@ -131,7 +135,7 @@
 		<!-- TOP BAR -->
 		{#if repository?.state}
 			<RepositoryHeader
-				repositoryId={repository?.state.id}
+				repositoryId={repository?.state?.id}
 				isLoading={getBranchesQuery.isFetching}
 				onUpdate={update_repo}
 			/>
