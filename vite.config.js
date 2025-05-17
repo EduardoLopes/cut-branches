@@ -5,7 +5,7 @@ import { defineConfig } from 'vite';
 
 const host = process.env.TAURI_DEV_HOST;
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
 	plugins: [sveltekit(), svelteTesting()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => ({
 		__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
 	},
 	resolve: {
-		conditions: mode === 'test' ? ['browser'] : []
+		conditions: ['module', 'browser', 'development|production']
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
@@ -66,4 +66,4 @@ export default defineConfig(({ mode }) => ({
 		},
 		reporters: ['default', 'html']
 	}
-}));
+});
