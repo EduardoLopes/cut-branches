@@ -7,6 +7,7 @@
 	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
 	import { type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
+	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -20,16 +21,19 @@
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 	const repository = $derived(getRepositoryStore(currentRepo?.name));
-	const selected = $derived(getRepositoryStore(currentRepo?.name));
+	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 	function handleRemove() {
 		open = false;
 
 		const repoName = repository?.state?.name || currentRepo?.name;
 
-		RepositoryStore.repositories?.delete([repoName]);
-		repository?.clear();
-		search?.clear();
+		// Clear stores first
 		selected?.clear();
+		search?.clear();
+		repository?.clear();
+
+		// Then remove from repository store
+		RepositoryStore.repositories?.delete([repoName]);
 
 		// Show notification about repository removal
 		notifications.push({
