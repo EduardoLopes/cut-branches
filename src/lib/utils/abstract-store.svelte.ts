@@ -16,7 +16,8 @@ export abstract class AbstractStore<T, C> {
 
 	constructor(
 		key: string,
-		protected schema: z.ZodSchema<unknown>
+		protected schema: z.ZodSchema<unknown>,
+		protected defaultValue?: unknown
 	) {
 		this.#key = key;
 		this.state = this.#getLocalStorage();
@@ -72,12 +73,15 @@ export abstract class AbstractStore<T, C> {
 	protected abstract getDataSchema(): z.ZodSchema<unknown>;
 	protected abstract createCollection(data: unknown): C;
 	protected abstract doClear(): void;
-	protected abstract getDefaultValue(): unknown;
+	protected getDefaultValue(): unknown {
+		return this.defaultValue;
+	}
 
 	protected static getCommonInstance<S extends AbstractStore<unknown, unknown>>(
 		ctor: new (key: string, ...constructorArgs: unknown[]) => S,
 		args: unknown[],
-		keyParts: (string | number)[] = []
+		keyParts: (string | number)[] = [],
+		defaultValue?: unknown
 	): S {
 		// Extract the storage key from the provided key parts
 		const storageKey = keyParts.length ? keyParts.join('_') : this.getDefaultKey(ctor);
@@ -92,7 +96,7 @@ export abstract class AbstractStore<T, C> {
 		}
 
 		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new ctor(storageKey, ...args);
+			this.instances[storageKey] = new ctor(storageKey, ...args, defaultValue);
 			untrack(() => {
 				this.instances[storageKey].updateFromLocalStorage();
 			});

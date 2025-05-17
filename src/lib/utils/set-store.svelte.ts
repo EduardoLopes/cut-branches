@@ -6,11 +6,13 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 	private itemSchema: z.ZodSchema<T>;
 	private arraySchema: z.ZodSchema<T[]>;
 
-	constructor(key: string, itemSchema: z.ZodSchema<T>) {
-		super(key, itemSchema);
+	constructor(key: string, itemSchema: z.ZodSchema<T>, defaultValue: unknown = []) {
+		// For SetStore, we need to use the array schema as the primary schema for validation
+		const arraySchema = z.array(itemSchema);
+		super(key, arraySchema, defaultValue);
+
 		this.itemSchema = itemSchema;
-		// Create a schema for the array of items
-		this.arraySchema = z.array(this.itemSchema);
+		this.arraySchema = arraySchema;
 	}
 
 	add(items: T[]) {
@@ -47,13 +49,10 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 		this.state.clear();
 	}
 
-	protected getDefaultValue(): unknown {
-		return [];
-	}
-
 	public static getInstance<T>(
 		key: string | number | (string | number)[],
-		itemSchema: z.ZodSchema<T>
+		itemSchema: z.ZodSchema<T>,
+		defaultValue: unknown = []
 	): SetStore<T> {
 		const keyParts = Array.isArray(key) ? key : [key];
 		const schemaArgs = [itemSchema];
@@ -61,7 +60,8 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 		return AbstractStore.getCommonInstance(
 			SetStore as unknown as new (key: string, ...args: unknown[]) => SetStore<T>,
 			schemaArgs,
-			keyParts
+			keyParts,
+			defaultValue
 		) as SetStore<T>;
 	}
 }

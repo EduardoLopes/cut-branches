@@ -54,20 +54,21 @@ const repositorySchema = z
 	})
 	.optional();
 
-// Schema for repository names
-const repositoryNameSchema = z.string().optional();
+// Schema for repository names (array of strings or undefined)
+const repositoryNameSchema = z.string();
 
 // Repository store cache to maintain singleton instances
 const repositoryStoreCache: Record<string, RepositoryStore> = {};
 
 export class RepositoryStore extends Store<Repository | undefined> {
 	constructor(repository: string) {
-		super(repository, repositorySchema);
+		super(repository, repositorySchema, undefined);
 	}
 
-	static repositories = SetStore.getInstance<string | undefined>(
+	static repositories = SetStore.getInstance<string>(
 		['repositories'],
-		repositoryNameSchema
+		repositoryNameSchema,
+		[] as string[]
 	);
 
 	set(value?: Repository) {

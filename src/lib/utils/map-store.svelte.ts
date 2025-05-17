@@ -7,12 +7,19 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 	private valueSchema: z.ZodSchema<V>;
 	private entriesSchema: z.ZodSchema<[K, V][]>;
 
-	constructor(key: string, keySchema: z.ZodSchema<K>, valueSchema: z.ZodSchema<V>) {
-		super(key, z.array(z.tuple([keySchema, valueSchema])));
+	constructor(
+		key: string,
+		keySchema: z.ZodSchema<K>,
+		valueSchema: z.ZodSchema<V>,
+		defaultValue: unknown = []
+	) {
+		// Create a schema for the array of entries
+		const entriesSchema = z.array(z.tuple([keySchema, valueSchema]));
+		super(key, entriesSchema, defaultValue);
+
 		this.keySchema = keySchema;
 		this.valueSchema = valueSchema;
-		// Create a schema for the array of entries
-		this.entriesSchema = z.array(z.tuple([this.keySchema, this.valueSchema]));
+		this.entriesSchema = entriesSchema;
 
 		// Ensure singleton behavior by registering instance
 		const instanceKey = `map_store_${key}`;
@@ -65,14 +72,11 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 		this.state.clear();
 	}
 
-	protected getDefaultValue(): unknown {
-		return [];
-	}
-
 	public static getInstance<K, V>(
 		key: string | number | (string | number)[],
 		keySchema: z.ZodSchema<K>,
-		valueSchema: z.ZodSchema<V>
+		valueSchema: z.ZodSchema<V>,
+		defaultValue: unknown = []
 	): MapStore<K, V> {
 		const keyParts = Array.isArray(key) ? key : [key];
 		const schemaArgs = [keySchema, valueSchema];
@@ -80,7 +84,8 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 		return AbstractStore.getCommonInstance(
 			MapStore as unknown as new (key: string, ...args: unknown[]) => MapStore<K, V>,
 			schemaArgs,
-			keyParts
+			keyParts,
+			defaultValue
 		) as MapStore<K, V>;
 	}
 }

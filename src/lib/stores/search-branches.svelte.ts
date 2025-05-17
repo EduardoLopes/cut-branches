@@ -9,5 +9,5 @@ export function getSearchBranchesStore(repository?: string) {
 		return;
 	}
 
-	return Store.getInstance<string | undefined>(['search', repository], searchSchema);
+	return Store.getInstance<string | undefined>(['search', repository], searchSchema, undefined);
 }

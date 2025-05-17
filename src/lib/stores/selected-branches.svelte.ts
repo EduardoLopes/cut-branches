@@ -9,5 +9,5 @@ export function getSelectedBranchesStore(repository?: string) {
 		return;
 	}
 
-	return SetStore.getInstance<string>(['selected', repository], branchNameSchema);
+	return SetStore.getInstance<string>(['selected', repository], branchNameSchema, []);
 }

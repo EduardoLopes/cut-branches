@@ -9,5 +9,5 @@ export function getLockedBranchesStore(repository?: string) {
 		return;
 	}
 
-	return SetStore.getInstance<string>(['locked', repository], branchNameSchema);
+	return SetStore.getInstance<string>(['locked', repository], branchNameSchema, []);
 }

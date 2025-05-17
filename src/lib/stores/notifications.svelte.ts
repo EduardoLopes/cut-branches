@@ -59,7 +59,7 @@ export function createNotificationObject(notification: Notification): Notificati
 
 export class NotificationStore extends MapStore<string, Notification> {
 	constructor(repository: string) {
-		super(repository, z.string(), notificationSchema);
+		super(repository, z.string(), notificationSchema, []);
 	}
 
 	get last() {
