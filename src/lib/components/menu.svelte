@@ -143,10 +143,6 @@
 							backdropFilter: 'none',
 							padding: '0',
 							background: 'transparent'
-						}),
-						itemsContainer: css.raw({
-							background: 'transparent',
-							gap: 'xxs'
 						})
 					}}
 				/>
