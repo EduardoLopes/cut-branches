@@ -19,25 +19,21 @@ jobs:
       matrix:
         node-version: [20]
         include:
-          - platform: 'macos-latest'
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
-            name: macos-arm64
-          - platform: 'macos-latest'
+          - platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
-            name: macos-x64
           - platform: 'ubuntu-22.04'
             args: ''
-            name: linux
           - platform: 'windows-latest'
             args: ''
-            name: windows
 
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
 
       - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
@@ -53,9 +49,8 @@ jobs:
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUST_BACKTRACE: 1
         with:
-          tagName: cut_branches-v__VERSION__
+          tagName: cut_branches-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'Cut Branches v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: false

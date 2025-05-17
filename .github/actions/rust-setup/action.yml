@@ -1,11 +1,9 @@
 name: 'Rust Setup'
 description: 'Setup Rust environment'
-
 inputs:
   platform:
-    description: 'The platform to build for'
     required: true
-
+    description: 'The build platform'
 runs:
   using: 'composite'
   steps:
