@@ -106,22 +106,6 @@
 	"pnpm": {
 		"patchedDependencies": {
 			"@changesets/changelog-github@0.5.1": "patches/@changesets__changelog-github@0.5.1.patch"
-		},
-		"overrides": {
-			"@pindoba/svelte-alert": "link:../pindoba/packages/ui/svelte/alert",
-			"@pindoba/svelte-badge": "link:../pindoba/packages/ui/svelte/badge",
-			"@pindoba/svelte-button": "link:../pindoba/packages/ui/svelte/button",
-			"@pindoba/svelte-checkbox": "link:../pindoba/packages/ui/svelte/checkbox",
-			"@pindoba/svelte-dialog": "link:../pindoba/packages/ui/svelte/dialog",
-			"@pindoba/svelte-group": "link:../pindoba/packages/ui/svelte/group",
-			"@pindoba/svelte-loading": "link:../pindoba/packages/ui/svelte/loading",
-			"@pindoba/svelte-navigation": "link:../pindoba/packages/ui/svelte/navigation",
-			"@pindoba/svelte-popover": "link:../pindoba/packages/ui/svelte/popover",
-			"@pindoba/svelte-radio": "link:../pindoba/packages/ui/svelte/radio",
-			"@pindoba/svelte-select": "link:../pindoba/packages/ui/svelte/select",
-			"@pindoba/svelte-text-input": "link:../pindoba/packages/ui/svelte/text-input",
-			"@pindoba/svelte-pagination": "link:../pindoba/packages/blocks/svelte/pagination",
-			"@pindoba/svelte-theme-mode-select": "link:../pindoba/packages/blocks/svelte/theme-mode-select"
 		}
 	},
 	"packageManager": "pnpm@10.6.4+sha512.da3d715bfd22a9a105e6e8088cfc7826699332ded60c423b14ec613a185f1602206702ff0fe4c438cb15c979081ce4cb02568e364b15174503a63c7a8e2a5f6c"
