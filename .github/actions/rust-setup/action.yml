@@ -1,13 +1,18 @@
 name: 'Rust Setup'
 description: 'Setup Rust environment'
 
+inputs:
+  platform:
+    description: 'The platform to build for'
+    required: true
+
 runs:
   using: 'composite'
   steps:
     - name: install Rust stable
       uses: dtolnay/rust-toolchain@stable
       with:
-        targets: ${{ inputs.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+        targets: ${{ inputs.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || (inputs.platform == 'ubuntu-22.04' && 'x86_64-unknown-linux-gnu' || '') }}
 
     - name: Rust cache
       uses: swatinem/rust-cache@v2

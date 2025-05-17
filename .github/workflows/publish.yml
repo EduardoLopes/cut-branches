@@ -47,6 +47,8 @@ jobs:
 
       - name: setup-rust
         uses: ./.github/actions/rust-setup
+        with:
+          platform: ${{ matrix.platform }}
 
       - uses: tauri-apps/tauri-action@v0
         env:
