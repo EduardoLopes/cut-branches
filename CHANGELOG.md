@@ -1,5 +1,11 @@
 # cut-branches
 
+## 0.4.1
+
+### Patch Changes
+
+- [`44d2f82`](https://github.com/EduardoLopes/cut-branches/commit/44d2f828c3044c1c102b41a544ca704456ced0cf) - chore(svelte-config): update static adapter configuration (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.4.0
 
 ### Minor Changes
