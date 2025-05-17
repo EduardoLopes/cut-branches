@@ -184,7 +184,13 @@
 				translucent: 'md',
 				bottom: '0',
 				position: 'sticky',
-				mt: 'auto'
+				mt: 'auto',
+				_dark: {
+					borderTop: '1px solid token(colors.neutral.200)'
+				},
+				_light: {
+					borderTop: '1px solid token(colors.neutral.400)'
+				}
 			})}
 		>
 			<Pagination itemsTotal={branches?.length ?? 0} bind:itemsPerPage bind:currentPage />
