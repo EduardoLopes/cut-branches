@@ -123,13 +123,19 @@ describe('Branch Component', () => {
 
 	describe('Merge Status', () => {
 		test('renders fully merged alert when fully_merged is true and current is false', () => {
-			const fullyMergedBranch = { ...mockBranch, fully_merged: true };
-			const { getByText } = render(BranchComponent, {
+			const fullyMergedBranch = { ...mockBranch, fully_merged: true, name: 'merged-branch' };
+			const { getByText, container } = render(BranchComponent, {
 				props: { data: fullyMergedBranch, selected: false }
 			});
 			expect(
 				getByText('This branch is not fully merged into the current branch!')
 			).toBeInTheDocument();
+
+			const alertElement = container.querySelector('#branch-merged-branch-alert-fullyMerged');
+			expect(alertElement).toBeInTheDocument();
+			expect(alertElement?.textContent).toContain(
+				'This branch is not fully merged into the current branch!'
+			);
 		});
 
 		test('renders fully merged alert when fully_merged is true and current is true', () => {

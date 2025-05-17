@@ -83,6 +83,41 @@ describe('resizeContainer action', () => {
 		expect(container.style.height).toBe(`${expectedHeight}px`); // 100 + 150 + 75 = 325
 	});
 
+	it('should update height when mutation observer is triggered', () => {
+		let capturedCallback: MutationCallback | undefined;
+		const mockObserve = vi.fn();
+		const mockDisconnect = vi.fn();
+
+		const mockMutationObserver = vi
+			.spyOn(globalThis, 'MutationObserver')
+			.mockImplementation((callback: MutationCallback) => {
+				capturedCallback = callback;
+				return {
+					observe: mockObserve,
+					disconnect: mockDisconnect,
+					takeRecords: vi.fn(),
+					unobserve: vi.fn()
+				};
+			});
+
+		resizeAction.destroy(); // Destroy previous action that used the original observer
+		resizeAction = resizeContainer(container); // Action now uses mocked observer
+
+		// Update a child's height, which should eventually trigger the observer
+		Object.defineProperty(child1, 'offsetHeight', { value: 50, configurable: true });
+
+		// Manually trigger the captured callback
+		if (capturedCallback) {
+			capturedCallback([], mockMutationObserver.mock.instances[0] as unknown as MutationObserver);
+		} else {
+			throw new Error('MutationObserver callback was not captured');
+		}
+
+		// Check if the height was updated
+		const newExpectedHeight = child1.offsetHeight + child2.offsetHeight;
+		expect(container.style.height).toBe(`${newExpectedHeight}px`); // 50 + 150 = 200
+	});
+
 	it('should disconnect observer on destroy', () => {
 		const disconnectSpy = vi.spyOn(MutationObserver.prototype, 'disconnect');
 
