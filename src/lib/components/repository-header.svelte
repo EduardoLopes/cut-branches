@@ -60,7 +60,7 @@
 			</Button>
 
 			{#if repository?.state}
-				<RemoveRepositoryModal currentRepo={repository.state} />
+				<RemoveRepositoryModal currentRepo={repository?.state} />
 			{/if}
 		</Group>
 	</Loading>
