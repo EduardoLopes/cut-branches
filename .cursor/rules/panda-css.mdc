@@ -1,0 +1,109 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Panda CSS Best Practices
+
+## Dynamic Styling
+
+When dealing with dynamic styles in Panda CSS, follow these guidelines:
+
+1. **Avoid Runtime Values in Style Objects**
+   ```typescript
+   // ❌ Bad: Panda can't determine the value at build-time
+   css({
+     color: dynamicColor
+   })
+
+   // ✅ Good: Use data attributes
+   css({
+     '&[data-state="active"]': {
+       color: 'red.500'
+     }
+   })
+   ```
+
+2. **Use Data Attributes for Dynamic States**
+   ```typescript
+   // ✅ Good: Parent element with data attribute
+   <div data-state={isActive ? 'active' : 'inactive'}>
+     <div class={css({
+       '&[data-state="active"] &': {
+         color: 'red.500'
+       }
+     })} />
+   </div>
+   ```
+
+3. **Use Recipes for Complex Variants**
+   ```typescript
+   // ✅ Good: Define variants using recipes
+   const buttonRecipe = cva({
+     base: {
+       padding: 'md',
+       borderRadius: 'md'
+     },
+     variants: {
+       size: {
+         sm: { padding: 'sm' },
+         lg: { padding: 'lg' }
+       }
+     }
+   })
+   ```
+
+4. **Use CSS Custom Properties for Runtime Values**
+   ```typescript
+   // ✅ Good: Use CSS variables for runtime values
+   css({
+     color: 'var(--dynamic-color)'
+   })
+   style={{
+     '--dynamic-color': token(`colors.${color}`)
+   }}
+   ```
+
+5. **Keep Style Objects Static**
+   ```typescript
+   // ❌ Bad: Dynamic style object
+   css({
+     marginBottom: showMore ? '0' : 'md'
+   })
+
+   // ✅ Good: Static style with data attribute
+   css({
+     marginBottom: 'md',
+     '&[data-show-more="true"] &': {
+       marginBottom: '0'
+     }
+   })
+   ```
+
+## Best Practices
+
+1. **Use Static CSS When Possible**
+   - Define all possible states upfront
+   - Use data attributes to toggle between states
+   - Keep style objects static and predictable
+
+2. **Use Recipes for Reusable Components**
+   - Define variants using recipes
+   - Use default variants
+   - Keep recipes focused and single-purpose
+
+3. **Use CSS Custom Properties**
+   - For truly dynamic values that can't be predefined
+   - Use token() function to reference design tokens
+   - Keep the number of dynamic properties minimal
+
+4. **Use Data Attributes**
+   - For state management
+   - For conditional styling
+   - For parent-child style relationships
+
+5. **Avoid**
+   - Runtime values in style objects
+   - Dynamic style object generation
+   - Complex conditional logic in style objects
+   - Referencing variables from other files in style objects
