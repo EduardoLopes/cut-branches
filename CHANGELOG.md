@@ -1,5 +1,77 @@
 # cut-branches
 
+## 0.4.0
+
+### Minor Changes
+
+- [`a6acbe8`](https://github.com/EduardoLopes/cut-branches/commit/a6acbe8cd39043c23936a04d3ea9d8ae790a25c5) - feat(local-storage): integrate Zod schema validation into store classes and tests (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`343d42a`](https://github.com/EduardoLopes/cut-branches/commit/343d42a1ed7d28c7f75795762b436bd7bc67ce1d) - chore(dependencies): update to Vite 6 and Svelte plugin versions and refine Vite configuration conditions (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`eaaad5b`](https://github.com/EduardoLopes/cut-branches/commit/eaaad5ba9af210dc49e5ea02582e717629ad343f) - feat(local-storage): implement AbstractStore class and refactor MapStore, SetStore, and Store to extend it (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`d316b3e`](https://github.com/EduardoLopes/cut-branches/commit/d316b3e31e459d1bb0120fafdcf5804489333d88) - feat: change visual so the light and dark theme looks better (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`5bec744`](https://github.com/EduardoLopes/cut-branches/commit/5bec7444f1a46cad983081629f6fadcb495fafbb) - feat(lock-branch-toggle): remove branch from selected when locked (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`9930fed`](https://github.com/EduardoLopes/cut-branches/commit/9930fed69954f1cd36af47cf7fac5ddeb49beb04) - chore: update eslint-plugin-svelte, fix errors and warnings (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`dbca928`](https://github.com/EduardoLopes/cut-branches/commit/dbca9284307982ea17065d740a0123ce4148a668) - chore: update most front-end dependencies (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`ca4ed9e`](https://github.com/EduardoLopes/cut-branches/commit/ca4ed9e50fe5e099104211105f206bce53e6163f) - feat(notifications-popover): make the code robust and add more unit tests (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`7bdbafe`](https://github.com/EduardoLopes/cut-branches/commit/7bdbafe45d34630bcedf3d43197699a9c52ad735) - chore(package): update dependencies and remove optimization exclusion for @pindoba packages in Vite configuration (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+### Patch Changes
+
+- [`5458589`](https://github.com/EduardoLopes/cut-branches/commit/5458589d9bc27213bbe7f82d83f12ca2329504c0) - feat(menu): tweak visual (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`b0db4a5`](https://github.com/EduardoLopes/cut-branches/commit/b0db4a5e8343442f988666d38280935f8e610afc) - chore(package): update test script to run vitest in silent mode (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`f6577ae`](https://github.com/EduardoLopes/cut-branches/commit/f6577aece36d5e39b0b3140dd8dd9723084d9588) - refactor(local-storage): replace getLocalStorage with getValidatedLocalStorage in AbstractStore and update related tests (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`da031e3`](https://github.com/EduardoLopes/cut-branches/commit/da031e3e1f6df840463832c9c1c945138f7c2574) - feat(local-storage): integrate Zod schema validation into MapStore, SetStore, and Store classes (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`3c860d7`](https://github.com/EduardoLopes/cut-branches/commit/3c860d75e0db0e00270cd3ec7ab012fce93be726) - refactor(remove-repository-modal): update selected branches store usage and clear order in removal process (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`9211b29`](https://github.com/EduardoLopes/cut-branches/commit/9211b29ae93a4565243d11fac462c299002b35d6) - feat(notifications-popover): improved styling (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`6d04e5e`](https://github.com/EduardoLopes/cut-branches/commit/6d04e5e7e68c69281c05b42b78bb712b97875fa4) - feat(branch): optimize select all functionality in branches bulk actions component for improved performance (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`4d6fabf`](https://github.com/EduardoLopes/cut-branches/commit/4d6fabfccb35014e260213c006e9775e3978e0f2) - test(branches-bulk-actions): update checkbox selection test to use role and aria-checked attribute (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`59a5812`](https://github.com/EduardoLopes/cut-branches/commit/59a58120b1a9e2ba90c25ab22b11f08c295b357c) - feat(local-storage): enhance setLocalStorage function with validation, error handling, and improved documentation (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`af91da6`](https://github.com/EduardoLopes/cut-branches/commit/af91da613b44e02c474b0b32482995d1b66108a1) - fix(repository-header): ensure safe access to repository state in RemoveRepositoryModal (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`a2cfe13`](https://github.com/EduardoLopes/cut-branches/commit/a2cfe13ec14580b3838b9c9f4fe704f177b57f54) - feat(branch): replace Branches component with new Repository component (divide into parts) (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`4ab43c0`](https://github.com/EduardoLopes/cut-branches/commit/4ab43c0ca1f7594cdbd763d56ddb148e47aafaab) - feat(branch): update branch component styles for improved visual (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`a9927f5`](https://github.com/EduardoLopes/cut-branches/commit/a9927f512138f4a8dc0fa2744fc8209f66984d9c) - refactor(store): add default value parameter to store constructors for improved initialization (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`5a8fb1f`](https://github.com/EduardoLopes/cut-branches/commit/5a8fb1f878b3ecbd8dac53ec74c8a81e2dd13201) - style(branch-list): add dark and light mode border styles for improved UI consistency (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`b95ee71`](https://github.com/EduardoLopes/cut-branches/commit/b95ee7123f1667b1948e7d0f4fa90b391c55b341) - fix(get-validated-local-storage): improve error handling and validation fallback for undefined values (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`37aa27c`](https://github.com/EduardoLopes/cut-branches/commit/37aa27ca9c545ad6f0349ad1e99df0e9358a7f6a) - fix(repository): ensure safe access to repository state and improve search functionality (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`5fca95b`](https://github.com/EduardoLopes/cut-branches/commit/5fca95b2e4cbe59e55f81779b1dbd219b6727d68) - chore: update deps (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`e9b9c13`](https://github.com/EduardoLopes/cut-branches/commit/e9b9c135d66027a1d302750b34316c87585e5d10) - feat(local-storage): add setValidatedLocalStorage function for schema validation and storage (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`cb5e323`](https://github.com/EduardoLopes/cut-branches/commit/cb5e3237179fe8c4ebd09f36e04027ab666be1a8) - feat(local-storage): add getValidatedLocalStorage function for retrieving and validating localStorage data with Zod schema (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`ca26dc0`](https://github.com/EduardoLopes/cut-branches/commit/ca26dc0785efd93a866d53c50d0ec0e13e389b13) - fix(add-button): don't try to add a repository twice (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`584b0e6`](https://github.com/EduardoLopes/cut-branches/commit/584b0e6a313536f21f8026004c3a16911aafd001) - feat(branch): enhance branch component layout and style (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`ec33a97`](https://github.com/EduardoLopes/cut-branches/commit/ec33a97b04e753de2e34e1522276badf6c11cd96) - test: add more tests (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`4f07adc`](https://github.com/EduardoLopes/cut-branches/commit/4f07adc5a78bcebf3142add448bff8655fa35513) - feat(local-storage): enhance getLocalStorage function with improved error handling (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`e45c2c1`](https://github.com/EduardoLopes/cut-branches/commit/e45c2c1256a932b55afe10da48577c4dabc524c4) - feat(branch): replace icons in branch component and adjust sizes for better visibility (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.3.1
 
 ### Patch Changes
