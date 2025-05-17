@@ -7,7 +7,9 @@ const config = {
 	preprocess: [vitePreprocess()],
 	kit: {
 		version: { name: pkg.version },
-		adapter: staticAdapter(),
+		adapter: staticAdapter({
+			strict: false
+		}),
 		alias: {
 			'@pindoba/panda': './styled-system/*'
 		}
