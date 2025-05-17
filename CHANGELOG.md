@@ -1,5 +1,11 @@
 # cut-branches
 
+## 0.4.2
+
+### Patch Changes
+
+- [`773fe72`](https://github.com/EduardoLopes/cut-branches/commit/773fe726e2188c9544a9a8dadd04a87bba68fd79) - chore: update publish workflow (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.4.1
 
 ### Patch Changes

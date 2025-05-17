@@ -42,7 +42,7 @@
   },
   "productName": "cut-branches",
   "mainBinaryName": "cut-branches",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "identifier": "com.cut-branches.dev",
   "plugins": {},
   "app": {
