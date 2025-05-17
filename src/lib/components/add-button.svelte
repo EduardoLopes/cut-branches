@@ -7,6 +7,7 @@
 	import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore } from '$lib/stores/repository.svelte';
+	import { RepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -32,7 +33,7 @@
 				path = undefined;
 				const repository = getRepositoryStore(repoQuery.data.name);
 
-				if (!repository?.state?.name) {
+				if (!RepositoryStore.repositories.has(repoQuery.data.name)) {
 					repository?.set(repoQuery.data);
 					// success
 					notifications.push({

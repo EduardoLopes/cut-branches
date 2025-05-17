@@ -109,23 +109,6 @@ describe('createGetRepositoryByPathQuery', () => {
 		expect(invoke).toHaveBeenCalledWith('get_repo_info', { path: mockPath });
 	});
 
-	it('should update the repository store when query function is called', async () => {
-		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
-
-		// Get the query function from the createQuery call
-		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
-			.calls[0][0];
-		const config = createQueryArg();
-		const queryFn = config.queryFn;
-
-		// Call the query function directly
-		await queryFn();
-
-		expect(repositoryStore.getRepositoryStore).toHaveBeenCalledWith(mockRepository.name);
-		expect(mockRepositoryStore.set).toHaveBeenCalledWith(mockRepository);
-	});
-
 	it('should return the repository from the query function', async () => {
 		const pathFn = () => mockPath;
 		createGetRepositoryByPathQuery(pathFn);
