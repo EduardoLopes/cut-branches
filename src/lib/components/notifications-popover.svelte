@@ -251,6 +251,7 @@
 	placement="top"
 	data-testid="notifications"
 	data-open={open}
+	data-show-more={showMore}
 	bind:open
 	onmouseenter={() => {
 		clearAutoCloseTimer();
@@ -274,7 +275,19 @@
 			top: '0',
 			zIndex: '1',
 			px: 'md',
-			py: 'xs'
+			py: 'xs',
+			marginBottom: 'md',
+			'[data-show-more="true"] &': {
+				marginBottom: '0'
+			},
+			'[data-show-more="false"] &': {
+				_dark: {
+					borderBottom: '1px solid token(colors.neutral.200)'
+				},
+				_light: {
+					borderBottom: '1px solid token(colors.neutral.400)'
+				}
+			}
 		}),
 		title: css.raw({
 			p: 0
@@ -385,68 +398,83 @@
 				<Notification {...notifications.last} />
 			</div>
 		{:else if showMore}
-			{#each groupedNotifications as group (group.date.toISOString())}
-				<h4
-					class={css({
-						position: 'sticky',
-						top: 16,
-						background: 'neutral.alpha.50',
-						translucent: 'md',
-						px: 'md',
-						py: 'xs',
-						margin: '0',
-						zIndex: '2',
-						boxShadow: '0 1px 0 token(colors.neutral.alpha.100)',
-						fontSize: 'sm',
-						fontWeight: 'semibold',
-						textTransform: 'capitalize'
-					})}
-				>
-					{intlFormatDistance(
-						group.date,
-						new Date(formatToUserTimezone(new Date(), 'yyyy-MM-dd')),
-						{
-							unit: 'day'
-						}
-					)}
-					<span
+			<div
+				class={css({
+					position: 'sticky',
+					top: '0'
+				})}
+			>
+				{#each groupedNotifications as group (group.date.toISOString())}
+					<h4
 						class={css({
-							fontWeight: 'normal',
-							fontSize: 'xs',
-							color: 'neutral.900',
-							textTransform: 'capitalize'
+							position: 'sticky',
+							top: '46px',
+							background: 'neutral.alpha.50',
+							translucent: 'md',
+							px: 'md',
+							py: 'xs',
+							margin: '0',
+							zIndex: '1',
+							_dark: {
+								borderBottom: '1px solid token(colors.neutral.200)',
+								borderTop: '1px solid token(colors.neutral.200)'
+							},
+							_light: {
+								borderBottom: '1px solid token(colors.neutral.400)',
+								borderTop: '1px solid token(colors.neutral.400)'
+							},
+							fontSize: 'sm',
+							fontWeight: 'semibold',
+							textTransform: 'capitalize',
+							marginBottom: 'md'
 						})}
 					>
-						({intlFormatDistance(
+						{intlFormatDistance(
 							group.date,
 							new Date(formatToUserTimezone(new Date(), 'yyyy-MM-dd')),
 							{
-								unit: 'month'
+								unit: 'day'
 							}
-						)})
-					</span>
-				</h4>
-
-				<div
-					class={css({
-						px: 'md',
-						pb: 'md',
-						display: 'flex',
-						flexDirection: 'column',
-						gap: 'md'
-					})}
-				>
-					{#each group.notifications as notification (notification.id)}
-						<div
+						)}
+						<span
 							class={css({
-								zIndex: '0'
+								fontWeight: 'normal',
+								fontSize: 'xs',
+								color: 'neutral.900',
+								textTransform: 'capitalize'
 							})}
 						>
-							<Notification {...notification} />
-						</div>
-					{/each}
-				</div>
-			{/each}
+							({intlFormatDistance(
+								group.date,
+								new Date(formatToUserTimezone(new Date(), 'yyyy-MM-dd')),
+								{
+									unit: 'month'
+								}
+							)})
+						</span>
+					</h4>
+
+					<div
+						class={css({
+							px: 'md',
+							pb: 'md',
+							display: 'flex',
+							flexDirection: 'column',
+							gap: 'md'
+						})}
+					>
+						{#each group.notifications as notification (notification.id)}
+							<div
+								class={css({
+									zIndex: '0'
+								})}
+							>
+								<Notification {...notification} />
+							</div>
+						{/each}
+					</div>
+				{/each}
+			</div>
 
 			{#if isLoading}
 				<div
