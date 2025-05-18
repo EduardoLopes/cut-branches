@@ -23,6 +23,7 @@ thiserror = "1.0.40"
 tokio = { version = "1.11.0", features = ["full"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 
 [features]

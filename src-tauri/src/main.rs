@@ -493,6 +493,8 @@ async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, 
 }
 
 fn main() {
+    let _ = fix_path_env::fix();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
