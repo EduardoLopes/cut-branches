@@ -4,6 +4,9 @@ inputs:
   platform:
     required: true
     description: 'The build platform'
+  cache_key_discriminator:
+    required: true
+    description: 'A string to make the rust cache key unique, e.g., target arguments or platform.'
 runs:
   using: 'composite'
   steps:
@@ -16,3 +19,4 @@ runs:
       uses: swatinem/rust-cache@v2
       with:
         workspaces: './src-tauri -> target'
+        key: rustcache-${{ runner.os }}-${{ inputs.cache_key_discriminator }}-${{ hashFiles('**/Cargo.lock') }}

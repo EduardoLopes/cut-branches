@@ -43,6 +43,7 @@ jobs:
         uses: ./.github/actions/rust-setup
         with:
           platform: ${{ matrix.platform }}
+          cache_key_discriminator: ${{ matrix.args || matrix.platform }}
 
       - uses: tauri-apps/tauri-action@v0
         env:
