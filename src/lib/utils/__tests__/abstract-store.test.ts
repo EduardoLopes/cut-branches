@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { AbstractStore } from '../abstract-store.svelte';
 import * as getValidatedLocalStorageModule from '../get-validated-local-storage';
 import * as setValidatedLocalStorageModule from '../set-validated-local-storage';
 
 // Create a concrete implementation of AbstractStore for testing
 class TestStore<T> extends AbstractStore<T, Set<T>> {
-	protected itemSchema: z.ZodSchema<T[]>;
+	protected itemSchema: z.ZodType<T[]>;
 
-	constructor(key: string, itemSchema: z.ZodSchema<T> = z.any() as z.ZodSchema<T>) {
+	constructor(key: string, itemSchema: z.ZodType<T> = z.any() as z.ZodType<T>) {
 		super(key, z.array(itemSchema));
 		this.itemSchema = z.array(itemSchema);
 	}
@@ -26,7 +26,7 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 		return [...this.state];
 	}
 
-	protected getDataSchema(): z.ZodSchema<T[]> {
+	protected getDataSchema(): z.ZodType<T[]> {
 		return this.itemSchema;
 	}
 
@@ -43,14 +43,14 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 		return [];
 	}
 
-	static getInstance<T>(...args: (string | number | z.ZodSchema<T>)[]): TestStore<T> {
+	static getInstance<T>(...args: (string | number | z.ZodType<T>)[]): TestStore<T> {
 		// Extract schema if provided as last argument
-		let itemSchema: z.ZodSchema<T> | undefined;
-		if (args.length && args[args.length - 1] instanceof z.ZodSchema) {
-			itemSchema = args.pop() as z.ZodSchema<T>;
+		let itemSchema: z.ZodType<T> | undefined;
+		if (args.length && args[args.length - 1] instanceof z.ZodType) {
+			itemSchema = args.pop() as z.ZodType<T>;
 		}
 
-		const schemaArgs = itemSchema ? [itemSchema] : [z.any() as z.ZodSchema<T>];
+		const schemaArgs = itemSchema ? [itemSchema] : [z.any() as z.ZodType<T>];
 		const keyParts = args.filter((arg) => typeof arg === 'string' || typeof arg === 'number') as (
 			| string
 			| number

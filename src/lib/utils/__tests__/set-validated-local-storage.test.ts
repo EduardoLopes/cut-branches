@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { setLocalStorage } from '../set-local-storage';
 import { setValidatedLocalStorage } from '../set-validated-local-storage';
 

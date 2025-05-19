@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { setLocalStorage } from './set-local-storage';
 
 /**
@@ -16,7 +16,7 @@ export interface ValidatedStorageResult<T> {
  * @template T - The type of the value being stored
  * @param {string} key - The localStorage key
  * @param {unknown} value - The value to store (will be validated)
- * @param {z.ZodSchema<T>} schema - Zod schema to validate the value against
+ * @param {z.ZodType<T>} schema - Zod schema to validate the value against
  * @returns {ValidatedStorageResult<T>} - Result object with success status and error/data
  *
  * @example
@@ -45,7 +45,7 @@ export interface ValidatedStorageResult<T> {
 export function setValidatedLocalStorage<T>(
 	key: string,
 	value: unknown,
-	schema: z.ZodSchema<T>
+	schema: z.ZodType<T>
 ): ValidatedStorageResult<T> {
 	try {
 		// Validate the data against the schema

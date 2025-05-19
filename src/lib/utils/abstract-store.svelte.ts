@@ -1,5 +1,5 @@
 import { untrack } from 'svelte';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { getValidatedLocalStorage } from './get-validated-local-storage';
 import { setValidatedLocalStorage } from './set-validated-local-storage';
 
@@ -16,7 +16,7 @@ export abstract class AbstractStore<T, C> {
 
 	constructor(
 		key: string,
-		protected schema: z.ZodSchema<unknown>,
+		protected schema: z.ZodType<unknown>,
 		protected defaultValue?: unknown
 	) {
 		this.#key = key;
@@ -70,7 +70,7 @@ export abstract class AbstractStore<T, C> {
 
 	protected abstract getAsList(): T[];
 	protected abstract getStorableData(): unknown;
-	protected abstract getDataSchema(): z.ZodSchema<unknown>;
+	protected abstract getDataSchema(): z.ZodType<unknown>;
 	protected abstract createCollection(data: unknown): C;
 	protected abstract doClear(): void;
 	protected getDefaultValue(): unknown {

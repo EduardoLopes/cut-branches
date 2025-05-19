@@ -1,16 +1,16 @@
 import { SvelteMap } from 'svelte/reactivity';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { AbstractStore } from './abstract-store.svelte';
 
 export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
-	private keySchema: z.ZodSchema<K>;
-	private valueSchema: z.ZodSchema<V>;
-	private entriesSchema: z.ZodSchema<[K, V][]>;
+	private keySchema: z.ZodType<K>;
+	private valueSchema: z.ZodType<V>;
+	private entriesSchema: z.ZodType<[K, V][]>;
 
 	constructor(
 		key: string,
-		keySchema: z.ZodSchema<K>,
-		valueSchema: z.ZodSchema<V>,
+		keySchema: z.ZodType<K>,
+		valueSchema: z.ZodType<V>,
 		defaultValue: unknown = []
 	) {
 		// Create a schema for the array of entries
@@ -60,7 +60,7 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 		return [...this.state.entries()];
 	}
 
-	protected getDataSchema(): z.ZodSchema<[K, V][]> {
+	protected getDataSchema(): z.ZodType<[K, V][]> {
 		return this.entriesSchema;
 	}
 
@@ -74,8 +74,8 @@ export class MapStore<K, V> extends AbstractStore<V, SvelteMap<K, V>> {
 
 	public static getInstance<K, V>(
 		key: string | number | (string | number)[],
-		keySchema: z.ZodSchema<K>,
-		valueSchema: z.ZodSchema<V>,
+		keySchema: z.ZodType<K>,
+		valueSchema: z.ZodType<V>,
 		defaultValue: unknown = []
 	): MapStore<K, V> {
 		const keyParts = Array.isArray(key) ? key : [key];

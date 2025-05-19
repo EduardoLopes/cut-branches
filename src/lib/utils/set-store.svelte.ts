@@ -1,12 +1,12 @@
 import { SvelteSet } from 'svelte/reactivity';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { AbstractStore } from './abstract-store.svelte';
 
 export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
-	private itemSchema: z.ZodSchema<T>;
-	private arraySchema: z.ZodSchema<T[]>;
+	private itemSchema: z.ZodType<T>;
+	private arraySchema: z.ZodType<T[]>;
 
-	constructor(key: string, itemSchema: z.ZodSchema<T>, defaultValue: unknown = []) {
+	constructor(key: string, itemSchema: z.ZodType<T>, defaultValue: unknown = []) {
 		// For SetStore, we need to use the array schema as the primary schema for validation
 		const arraySchema = z.array(itemSchema);
 		super(key, arraySchema, defaultValue);
@@ -37,7 +37,7 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 		return [...this.state];
 	}
 
-	protected getDataSchema(): z.ZodSchema<T[]> {
+	protected getDataSchema(): z.ZodType<T[]> {
 		return this.arraySchema;
 	}
 
@@ -51,7 +51,7 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 
 	public static getInstance<T>(
 		key: string | number | (string | number)[],
-		itemSchema: z.ZodSchema<T>,
+		itemSchema: z.ZodType<T>,
 		defaultValue: unknown = []
 	): SetStore<T> {
 		const keyParts = Array.isArray(key) ? key : [key];

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { getLocalStorage } from './get-local-storage';
 
 /**
@@ -15,7 +15,7 @@ export interface ValidatedStorageResult<T> {
  *
  * @template T - The type of the value being retrieved
  * @param {string} key - The localStorage key
- * @param {z.ZodSchema<T>} schema - Zod schema to validate the retrieved value against
+ * @param {z.ZodType<T>} schema - Zod schema to validate the retrieved value against
  * @param {T} [defaultValue] - Optional default value to use if data is not found or invalid
  * @returns {ValidatedStorageResult<T>} - Result object with success status and error/data
  *
@@ -44,7 +44,7 @@ export interface ValidatedStorageResult<T> {
  */
 export function getValidatedLocalStorage<T>(
 	key: string,
-	schema: z.ZodSchema<T>,
+	schema: z.ZodType<T>,
 	defaultValue?: T
 ): ValidatedStorageResult<T> {
 	try {

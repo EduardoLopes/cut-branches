@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { Store } from '../utils/store.svelte';
 import { goto } from '$app/navigation';
 import { SetStore } from '$lib/utils/set-store.svelte';

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { AbstractStore } from '../abstract-store.svelte';
 import * as getValidatedLocalStorageModule from '../get-validated-local-storage';
 import { MapStore } from '../map-store.svelte';

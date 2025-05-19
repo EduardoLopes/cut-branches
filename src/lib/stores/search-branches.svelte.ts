@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { Store } from '../utils/store.svelte';
 
 // Schema for search terms (string or undefined)
