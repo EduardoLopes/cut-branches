@@ -2,6 +2,10 @@ name: 'test'
 
 on:
   push:
+    branches:
+      - '**' # Run on pushes to all branches
+    tags-ignore:
+      - '**' # Ignore all tags
   workflow_call:
 
 jobs:
