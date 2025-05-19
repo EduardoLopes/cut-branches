@@ -19,8 +19,10 @@ jobs:
         include:
           - platform: 'macos-latest' # for Arm based macs (M1 and above).
             args: '--target aarch64-apple-darwin'
+            apple_signing: true
           - platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
+            apple_signing: true
           - platform: 'ubuntu-22.04'
             args: ''
           - platform: 'windows-latest'
@@ -45,9 +47,35 @@ jobs:
           platform: ${{ matrix.platform }}
           cache_key_discriminator: ${{ matrix.args || matrix.platform }}
 
+      - name: Import Apple Developer Certificate
+        if: matrix.apple_signing == true
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }} # You'll need to add this secret to your repository
+        run: |
+          echo $APPLE_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          CERT_ID=$(security find-identity -v -p codesigning build.keychain | grep "Apple Distribution" | head -n 1 | awk -F'"' '{print $2}')
+          if [ -z "$CERT_ID" ]; then
+            CERT_ID=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application" | head -n 1 | awk -F'"' '{print $2}')
+          fi
+          if [ -z "$CERT_ID" ]; then
+            echo "No suitable signing certificate found."
+            exit 1
+          fi
+          echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_SIGNING_IDENTITY: ${{ env.APPLE_SIGNING_IDENTITY }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         with:
           tagName: cut_branches-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'Cut Branches v__VERSION__'
