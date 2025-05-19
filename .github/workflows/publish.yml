@@ -60,12 +60,11 @@ jobs:
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
           security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
-          CERT_ID=$(security find-identity -v -p codesigning build.keychain | grep "Apple Distribution" | head -n 1 | awk -F'"' '{print $2}')
+          CERT_ID=$(security find-identity -v -p codesigning build.keychain | grep "Eduardo Lopes's CA" | head -n 1 | awk -F'"' '{print $2}')
           if [ -z "$CERT_ID" ]; then
-            CERT_ID=$(security find-identity -v -p codesigning build.keychain | grep "Developer ID Application" | head -n 1 | awk -F'"' '{print $2}')
-          fi
-          if [ -z "$CERT_ID" ]; then
-            echo "No suitable signing certificate found."
+            echo "No suitable signing certificate found. Expected common name: 'Eduardo Lopes's CA'."
+            echo "Found identities:"
+            security find-identity -v -p codesigning build.keychain # Print all identities for debugging
             exit 1
           fi
           echo "APPLE_SIGNING_IDENTITY=$CERT_ID" >> $GITHUB_ENV
