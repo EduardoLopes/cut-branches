@@ -66,7 +66,7 @@
 	});
 
 	function handleAddClick() {
-		open({ directory: true })
+		open({ directory: true, multiple: false })
 			.then((dir) => {
 				if (dir !== null) {
 					path = dir;

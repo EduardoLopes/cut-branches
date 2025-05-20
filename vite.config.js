@@ -59,7 +59,15 @@ export default defineConfig({
 			provider: 'v8',
 			all: true,
 			include: ['src/**'],
-			exclude: ['src/routes/**', 'src/lib/components/providers.svelte', 'src/**/*.d.ts']
+			exclude: [
+				'src/lib/components/providers.svelte',
+				'src/**/*.d.ts',
+				'src/routes/+layout.svelte',
+				'src/routes/+layout.ts',
+				'src/routes/+page.svelte',
+				'src/routes/repos/**/+layout.ts',
+				'src/routes/repos/**/+page.svelte'
+			]
 		},
 		alias: {
 			'@testing-library/svelte': '@testing-library/svelte/svelte5'
