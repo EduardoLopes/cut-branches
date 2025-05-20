@@ -5,7 +5,7 @@
 	import { type Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Footer from '$lib/components/footer.svelte';
 	import Providers from '$lib/components/providers.svelte';
 	import { RepositoryStore } from '$lib/stores/repository.svelte';
@@ -23,7 +23,7 @@
 		RepositoryStore.loadRepositories();
 	});
 
-	const idExists = $derived(RepositoryStore.repositories?.has($page.params.id));
+	const idExists = $derived(RepositoryStore.repositories?.has(page.params.id));
 
 	const first = $derived(RepositoryStore.repositories?.list[0]);
 

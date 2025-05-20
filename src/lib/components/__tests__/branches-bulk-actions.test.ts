@@ -1,5 +1,4 @@
 import { render, fireEvent } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
 import BranchesBulkActions from '../branches-bulk-actions.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
 import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
@@ -7,9 +6,9 @@ import type { Repository } from '$lib/stores/repository.svelte';
 import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 
-vi.mock('$app/stores', () => {
+vi.mock('$app/state', () => {
 	return {
-		page: readable({ params: { id: 'test-repo' } })
+		page: { params: { id: 'test-repo' } }
 	};
 });
 

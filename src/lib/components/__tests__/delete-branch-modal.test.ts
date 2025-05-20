@@ -1,5 +1,4 @@
 import { render, fireEvent } from '@testing-library/svelte';
-import { readable } from 'svelte/store';
 import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
@@ -9,9 +8,9 @@ import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
 import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 
 // Mock dependencies
-vi.mock('$app/stores', () => {
+vi.mock('$app/state', () => {
 	return {
-		page: readable({ params: { id: 'test-repo' } })
+		page: { params: { id: 'test-repo' } }
 	};
 });
 
