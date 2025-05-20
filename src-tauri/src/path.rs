@@ -58,7 +58,7 @@ pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
             Error::new(
                 format!("Failed to parse stdout: {}", e),
                 "stdout_parse_failed",
-                None,
+                Some(format!("Error parsing git command output to UTF-8: {}", e)),
             )
         })?;
         Ok(output_str.trim() == "true")
@@ -123,7 +123,10 @@ pub async fn get_root(path: String) -> Result<String, Error> {
                     .to_string_lossy()
             ),
             "is_not_git_repository",
-            None,
+            Some(format!(
+                "The path **{}** does not contain a .git directory",
+                raw_path.display()
+            )),
         ));
     }
 
@@ -158,7 +161,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
             Error::new(
                 format!("Failed to parse stderr: {}", e),
                 "stderr_parse_failed",
-                None,
+                Some(format!("Error parsing git error output to UTF-8: {}", e)),
             )
         })?;
 
@@ -176,7 +179,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
         Error::new(
             format!("Failed to parse stdout: {}", e),
             "stdout_parse_failed",
-            None,
+            Some(format!("Error parsing root path output to UTF-8: {}", e)),
         )
     })?;
 
@@ -189,7 +192,10 @@ pub async fn get_root(path: String) -> Result<String, Error> {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
-            None,
+            Some(format!(
+                "Error converting the root path response to JSON: {}",
+                e
+            )),
         )
     })?)
 }

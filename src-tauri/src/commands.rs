@@ -27,7 +27,10 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
                     .to_string_lossy()
             ),
             "is_not_git_repository",
-            None,
+            Some(format!(
+                "The path **{}** does not contain a .git directory",
+                raw_path.display()
+            )),
         ));
     }
 
@@ -38,7 +41,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
             Error::new(
                 format!("Failed to parse root path response: {}", e),
                 "parse_failed",
-                None,
+                Some(format!("Error parsing root path JSON: {}", e)),
             )
         })?
         .root_path;
@@ -55,7 +58,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
             Error::new(
                 "Failed to get repository name".to_string(),
                 "repo_name_failed",
-                None,
+                Some("Could not extract the repository name from the file path".to_string()),
             )
         })?
         .to_str()
@@ -63,7 +66,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
             Error::new(
                 "Failed to convert repository name to string".to_string(),
                 "repo_name_failed",
-                None,
+                Some("Repository name contains invalid UTF-8 characters".to_string()),
             )
         })?
         .to_string();
@@ -82,7 +85,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
-            None,
+            Some(format!("Error converting to JSON: {}", e)),
         )
     })?)
 }
@@ -121,7 +124,10 @@ pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Stri
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
-            None,
+            Some(format!(
+                "Error converting the deleted branches list to JSON: {}",
+                e
+            )),
         )
     })?)
 }

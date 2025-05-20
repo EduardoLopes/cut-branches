@@ -88,7 +88,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
         Error::new(
             format!("Failed to parse stdout: {}", e),
             "stdout_parse_failed",
-            None,
+            Some(format!("Error parsing git branches output to UTF-8: {}", e)),
         )
     })?;
 
@@ -102,7 +102,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
         Error::new(
             format!("Failed to parse stderr: {}", e),
             "stderr_parse_failed",
-            None,
+            Some(format!("Error parsing git error output to UTF-8: {}", e)),
         )
     })?;
 
@@ -111,7 +111,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
             Error::new(
                 format!("Failed to parse stdout: {}", e),
                 "stdout_parse_failed",
-                None,
+                Some(format!("Error parsing git command output to UTF-8: {}", e)),
             )
         })?;
 
@@ -191,7 +191,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
         Error::new(
             format!("Failed to parse stderr: {}", e),
             "stderr_parse_failed",
-            None,
+            Some(format!("Error parsing git error output to UTF-8: {}", e)),
         )
     })?;
 
@@ -201,7 +201,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
                 Error::new(
                     format!("Failed to parse stdout: {}", e),
                     "stdout_parse_failed",
-                    None,
+                    Some(format!("Error parsing current branch name to UTF-8: {}", e)),
                 )
             })?
             .trim()
@@ -250,7 +250,7 @@ pub fn get_last_commit_info(path: &Path, branch: &str) -> Result<Commit, Error> 
         Error::new(
             format!("Failed to parse stderr: {}", e),
             "stderr_parse_failed",
-            None,
+            Some(format!("Error parsing git error output to UTF-8: {}", e)),
         )
     })?;
 
@@ -259,7 +259,7 @@ pub fn get_last_commit_info(path: &Path, branch: &str) -> Result<Commit, Error> 
             Error::new(
                 format!("Failed to parse stdout: {}", e),
                 "stdout_parse_failed",
-                None,
+                Some(format!("Error parsing commit info to UTF-8: {}", e)),
             )
         })?;
         let commit_info = commit_info.trim().split('|').collect::<Vec<_>>();
@@ -322,7 +322,10 @@ pub fn switch_branch(path: &Path, branch: &str) -> Result<String, Error> {
         return Err(Error::new(
             format!("Branch **{0}** not found", branch),
             "branch_not_found",
-            None,
+            Some(format!(
+                "The branch '{}' does not exist in the repository",
+                branch
+            )),
         ));
     }
 
@@ -352,7 +355,7 @@ pub fn switch_branch(path: &Path, branch: &str) -> Result<String, Error> {
         Error::new(
             format!("Failed to parse stderr: {}", e),
             "stderr_parse_failed",
-            None,
+            Some(format!("Error parsing git error output to UTF-8: {}", e)),
         )
     })?;
 
@@ -398,7 +401,10 @@ pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<String>, 
                 if found_branches.len() == 1 { "" } else { "es" },
             ),
             "branches_not_found",
-            None,
+            Some(format!(
+                "Cannot find the following branches: {}",
+                not_found_branches.join(", ")
+            )),
         ));
     }
 
@@ -433,7 +439,7 @@ pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<String>, 
         Error::new(
             format!("Failed to parse stdout: {}", e),
             "stdout_parse_failed",
-            None,
+            Some(format!("Error parsing git command output to UTF-8: {}", e)),
         )
     })?;
 
@@ -441,7 +447,7 @@ pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<String>, 
         Error::new(
             format!("Failed to parse stderr: {}", e),
             "stderr_parse_failed",
-            None,
+            Some(format!("Error parsing git error output to UTF-8: {}", e)),
         )
     })?;
 

@@ -56,10 +56,12 @@
 		}
 
 		if (repoQuery.isError) {
-			notifications.push({
-				feedback: 'danger',
-				title: repoQuery.error.message,
-				message: repoQuery.error.description
+			untrack(() => {
+				notifications.push({
+					feedback: 'danger',
+					title: repoQuery.error.message,
+					message: repoQuery.error.description
+				});
 			});
 		}
 	});
