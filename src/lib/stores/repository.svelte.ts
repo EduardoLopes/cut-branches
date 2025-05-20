@@ -59,9 +59,6 @@ const repositorySchema = z
 // Schema for repository names list
 const repositoriesListSchema = z.array(z.string());
 
-// Repository store cache to maintain singleton instances
-const repositoryStoreCache: Record<string, RepositoryStore> = {};
-
 export class RepositoryStore extends Store<Repository | undefined> {
 	constructor(repository: string) {
 		super(repository, repositorySchema, undefined);
@@ -70,14 +67,7 @@ export class RepositoryStore extends Store<Repository | undefined> {
 	// Create a static reactive Set to store repository names
 	static _repositoriesSet = new SvelteSet<string>();
 
-	// Initialize repositories from localStorage
-	static {
-		// We'll initialize in a separate method to call it explicitly
-		// after the component is mounted
-		if (typeof window !== 'undefined') {
-			RepositoryStore.loadRepositories();
-		}
-	}
+	// No static initializer block - we'll use explicit initialization instead
 
 	// Explicit method to load repositories that can be called when needed
 	static loadRepositories() {
@@ -180,6 +170,9 @@ export class RepositoryStore extends Store<Repository | undefined> {
 		super.clear();
 	}
 }
+
+// Repository store cache to maintain singleton instances
+const repositoryStoreCache: Record<string, RepositoryStore> = {};
 
 // Creates or retrieves a RepositoryStore instance
 export function getRepositoryStore(repository?: string) {
