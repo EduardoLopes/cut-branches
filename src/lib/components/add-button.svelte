@@ -25,12 +25,15 @@
 	}: Props = $props();
 
 	let path = $state<string | undefined>(undefined);
-	const repoQuery = createGetRepositoryByPathQuery(() => path);
+	const repoQuery = createGetRepositoryByPathQuery(() => path, {
+		meta: {
+			showErrorNotification: true
+		}
+	});
 
 	$effect(() => {
 		if (repoQuery.isSuccess) {
 			untrack(() => {
-				path = undefined;
 				const repository = getRepositoryStore(repoQuery.data.name);
 
 				if (!RepositoryStore.repositories.has(repoQuery.data.name)) {
@@ -44,7 +47,6 @@
 
 					return;
 				}
-
 				notifications.push({
 					feedback: 'warning',
 					title: 'Repository already exists',
@@ -54,13 +56,10 @@
 		}
 
 		if (repoQuery.isError) {
-			// error
-			untrack(() => {
-				notifications.push({
-					feedback: 'danger',
-					title: repoQuery.error.message,
-					message: repoQuery.error.description
-				});
+			notifications.push({
+				feedback: 'danger',
+				title: repoQuery.error.message,
+				message: repoQuery.error.description
 			});
 		}
 	});

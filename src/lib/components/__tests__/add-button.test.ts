@@ -2,8 +2,9 @@ import '@testing-library/jest-dom';
 import { open } from '@tauri-apps/plugin-dialog';
 import { render, fireEvent, waitFor } from '@testing-library/svelte';
 // Import all Svelte-related modules in one place
-import { readable } from 'svelte/store';
+import { tick } from 'svelte';
 import type { Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddButton from '../add-button.svelte';
 import TestWrapper from '../test-wrapper.svelte';
 import { goto } from '$app/navigation';
@@ -18,9 +19,9 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 
-vi.mock('$app/stores', () => {
+vi.mock('$app/state', () => {
 	return {
-		page: readable({ params: { id: '123' } })
+		page: { params: { id: '123' } }
 	};
 });
 
@@ -411,6 +412,156 @@ describe('AddButton', () => {
 			const button = getByRole('button');
 			await fireEvent.click(button);
 			await waitFor(() => expect(mockLoadingQueryResult.isLoading).toBe(true));
+		});
+	});
+
+	describe('handleAddClick function', () => {
+		it('should set path and add repository when directory is selected', async () => {
+			// Reset all mocks
+			vi.clearAllMocks();
+
+			// Create mock repository data
+			const mockRepo = {
+				id: '789',
+				name: 'Test Repo',
+				path: '/test/directory',
+				branches: [],
+				currentBranch: '',
+				branchesCount: 0
+			};
+
+			// Mock successful directory selection
+			vi.mocked(open).mockResolvedValue('/test/directory');
+
+			// Mock repository has check to return false (repo doesn't exist yet)
+			vi.mocked(RepositoryStore.repositories.has).mockReturnValue(false);
+
+			// Mock successful repository query
+			(createGetRepositoryByPathQuery as Mock).mockReturnValue({
+				isSuccess: true,
+				isLoading: false,
+				isError: false,
+				data: mockRepo,
+				error: null
+			});
+
+			const { getByRole } = render(AddButton);
+
+			// Click the button to trigger handleAddClick
+			await fireEvent.click(getByRole('button'));
+
+			// Wait for promises to resolve
+			await tick();
+
+			// Verify open was called with the correct parameters
+			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
+
+			// Verify the repository was added successfully via notification
+			await waitFor(() => {
+				expect(notifications.push).toHaveBeenCalledWith({
+					feedback: 'success',
+					title: 'Repository added',
+					message: `The repository ${mockRepo.name} was added successfully`
+				});
+			});
+		});
+
+		it('should not set path when no directory is selected', async () => {
+			// Reset all mocks first
+			vi.clearAllMocks();
+
+			// Mock no directory selection (null return)
+			vi.mocked(open).mockResolvedValue(null);
+
+			// Mock query to ensure it doesn't return successful state when path is null
+			(createGetRepositoryByPathQuery as Mock).mockReturnValueOnce({
+				isSuccess: false,
+				isLoading: false,
+				isError: false,
+				data: null,
+				error: null
+			});
+
+			const { getByRole } = render(AddButton);
+
+			// Click the button to trigger handleAddClick
+			await fireEvent.click(getByRole('button'));
+
+			// Wait for promises to resolve
+			await tick();
+
+			// Verify open was called
+			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
+
+			// Verify no notification was pushed (since this is not an error case)
+			expect(notifications.push).not.toHaveBeenCalled();
+		});
+
+		it('should show error notification when directory selection fails', async () => {
+			// Mock error when opening directory dialog
+			const mockError = new Error('Failed to open directory');
+			vi.mocked(open).mockRejectedValue(mockError);
+
+			const { getByRole } = render(AddButton);
+
+			// Click the button to trigger handleAddClick
+			await fireEvent.click(getByRole('button'));
+
+			// Wait for promises to resolve
+			await tick();
+
+			// Verify open was called
+			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
+
+			// Verify notification was pushed with the error
+			expect(notifications.push).toHaveBeenCalledWith({
+				title: 'Error',
+				message: mockError,
+				feedback: 'danger'
+			});
+		});
+
+		it('should show error notification when repository is not a valid git repository', async () => {
+			// Reset all mocks
+			vi.clearAllMocks();
+
+			// Mock successful directory selection
+			vi.mocked(open).mockResolvedValue('/invalid/git/repo');
+
+			// Mock repository query to return an error
+			const errorMessage = 'Repository not found';
+			const errorDescription = 'The folder my-vue-app is not a git repository';
+
+			(createGetRepositoryByPathQuery as Mock).mockReturnValue({
+				isSuccess: false,
+				isLoading: false,
+				isError: true,
+				data: null,
+				error: {
+					message: errorMessage,
+					description: errorDescription
+				}
+			});
+
+			const { getByRole } = render(AddButton);
+
+			// Click the button to trigger handleAddClick
+			await fireEvent.click(getByRole('button'));
+
+			// Wait for promises to resolve
+			await tick();
+
+			// Verify open was called
+			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
+
+			// Verify notification was pushed with the error
+			await waitFor(() => {
+				expect(notifications.push).toHaveBeenCalledWith({
+					feedback: 'danger',
+					title: errorMessage,
+					message: errorDescription
+				});
+			});
 		});
 	});
 });
