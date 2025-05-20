@@ -70,7 +70,10 @@
 		if (repository?.state?.path) {
 			deleteMutation.mutate({
 				path: repository?.state?.path,
-				branches: branches.map((item) => item)
+				branches: branches.map((item) => ({
+					name: item.name,
+					current: item.current
+				}))
 			});
 		}
 

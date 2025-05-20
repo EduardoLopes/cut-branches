@@ -7,7 +7,7 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import Branch from '$lib/components/branch.svelte';
 	import LockBranchToggle from '$lib/components/lock-branch-toggle.svelte';
-	import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
+	import { createSwitchBranchMutation } from '$lib/services/createSwitchBranchMutation';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore, type Branch as BranchType } from '$lib/stores/repository.svelte';
@@ -30,7 +30,7 @@
 	const locked = $derived(getLockedBranchesStore(repositoryID));
 	const selected = $derived(getSelectedBranchesStore(repositoryID));
 
-	const switchBranchMutation = createSwitchbranchMutation({
+	const switchBranchMutation = createSwitchBranchMutation({
 		onSuccess: (currentBranch) => {
 			notifications.push({
 				title: 'Branch switched',

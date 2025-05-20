@@ -50,6 +50,34 @@
 			.filter((item) => item[1] === true)
 			.map((item) => item[0])
 	);
+
+	// Safe date formatting function to handle invalid dates
+	function safeFormatDate(dateStr: string): string {
+		try {
+			// Check if the date is valid
+			const date = new Date(dateStr);
+			if (isNaN(date.getTime())) {
+				throw new Error('Invalid date');
+			}
+			return formatDate(date);
+		} catch {
+			return 'Unknown date';
+		}
+	}
+
+	// Safe relative date formatting function
+	function safeFormatRelativeDate(dateStr: string): string {
+		try {
+			// Check if the date is valid
+			const date = new Date(dateStr);
+			if (isNaN(date.getTime())) {
+				throw new Error('Invalid date');
+			}
+			return intlFormatDistance(date, Date.now(), { unit: 'day' });
+		} catch {
+			return 'Unknown';
+		}
+	}
 </script>
 
 <div class={colorPalette} id={`branch-${data.name}-container`}>
@@ -201,7 +229,7 @@
 						pindobaTransition: 'fast',
 						color: 'neutral.900'
 					})}
-					title={formatDate(data.lastCommit.date)}
+					title={safeFormatDate(data.lastCommit.date)}
 					id={`branch-${data.name}-date`}
 				>
 					<Icon
@@ -209,7 +237,7 @@
 						width="16px"
 						height="16px"
 						id={`branch-${data.name}-date-icon`}
-					/>{intlFormatDistance(data.lastCommit.date, Date.now(), { unit: 'day' })}
+					/>{safeFormatRelativeDate(data.lastCommit.date)}
 				</span>
 			</div>
 		</div>

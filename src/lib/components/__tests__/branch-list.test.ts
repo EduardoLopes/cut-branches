@@ -14,7 +14,7 @@ interface MutationOptions {
 vi.mock('$lib/services/createSwitchBranchMutation', () => {
 	const mutate = vi.fn();
 	return {
-		createSwitchbranchMutation: (options: MutationOptions) => {
+		createSwitchBranchMutation: (options: MutationOptions) => {
 			if (options && options.onSuccess) {
 				// Call onSuccess immediately to test the callback
 				setTimeout(() => options.onSuccess?.('test-branch'), 0);

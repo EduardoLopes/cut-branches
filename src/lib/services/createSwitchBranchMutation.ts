@@ -1,55 +1,60 @@
 import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
-
-// Define the expected Tauri error structure
-interface TauriError {
-	message: string;
-	kind?: string;
-	description?: string;
-	[key: string]: unknown;
-}
+import { z } from 'zod';
+import {
+	type ServiceError,
+	type SwitchBranchVariables,
+	SwitchBranchInputSchema,
+	handleTauriError
+} from './common';
 
 type CreateSwitchbranchMutationOptions = CreateMutationOptions<
 	string,
 	ServiceError,
-	{ path: string; branch: string },
+	SwitchBranchVariables,
 	unknown
 >;
 
-export function createSwitchbranchMutation(options?: CreateSwitchbranchMutationOptions) {
+export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationOptions) {
 	return createMutation(() => ({
 		mutationKey: ['switch-branch'],
-		mutationFn: async ({ path, branch }) => {
-			if (!path) {
-				const serviceError: ServiceError = {
-					message: 'No path provided',
-					kind: 'missing_path',
-					description: 'A repository path is required to switch branches'
-				};
-				throw serviceError;
-			}
-
+		mutationFn: async (vars) => {
 			try {
-				const res = await invoke<string>('switch_branch', { path, branch });
+				// Check for empty path first (to match test expectations)
+				if (!vars.path) {
+					throw {
+						message: 'No path provided',
+						kind: 'missing_path',
+						description: 'A repository path is required to switch branches'
+					} as ServiceError;
+				}
+
+				// Validate input
+				const validatedInput = SwitchBranchInputSchema.parse(vars);
+
+				const res = await invoke<string>('switch_branch', {
+					path: validatedInput.path,
+					branch: validatedInput.branch
+				});
 				return res;
 			} catch (error) {
-				// Check if it's a structured error from Tauri
-				if (typeof error === 'object' && error !== null) {
-					const tauriError = error as TauriError;
-					const serviceError: ServiceError = {
-						message: tauriError.message || 'Failed to switch branch',
-						kind: tauriError.kind || 'unknown_error',
-						description: tauriError.description || 'An unexpected error occurred'
-					};
-					throw serviceError;
+				// Handle validation errors
+				if (error instanceof z.ZodError) {
+					const errorMessage = error.errors.map((e) => e.message).join('; ');
+					throw {
+						message: 'Invalid input data',
+						kind: 'validation_error',
+						description: errorMessage
+					} as ServiceError;
 				}
-				// If it's not a structured error, throw a generic one
-				const serviceError: ServiceError = {
-					message: 'Failed to switch branch',
-					kind: 'unknown_error',
-					description: String(error)
-				};
-				throw serviceError;
+
+				// Handle service errors that we explicitly threw
+				if (typeof error === 'object' && error !== null && 'kind' in error) {
+					throw error as ServiceError;
+				}
+
+				// Handle Tauri errors
+				throw handleTauriError(error);
 			}
 		},
 		...options

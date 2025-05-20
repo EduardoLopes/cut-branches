@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 import Repository from '../repository.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
 import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
-import { createSwitchbranchMutation } from '$lib/services/createSwitchBranchMutation';
+import { createSwitchBranchMutation } from '$lib/services/createSwitchBranchMutation';
 import {
 	getRepositoryStore,
 	type Repository as RepositoryType
@@ -45,7 +45,7 @@ const mockedRepo: RepositoryType = {
 };
 
 vi.mock('$lib/services/createSwitchBranchMutation', () => ({
-	createSwitchbranchMutation: vi.fn().mockReturnValue({
+	createSwitchBranchMutation: vi.fn().mockReturnValue({
 		mutate: vi.fn()
 	})
 }));
@@ -181,7 +181,7 @@ describe('Repository Component', () => {
 			const switchButton = getByTestId('switch-button');
 			await fireEvent.click(switchButton);
 
-			const switchBranchMutation = createSwitchbranchMutation();
+			const switchBranchMutation = createSwitchBranchMutation();
 
 			expect(switchBranchMutation.mutate).toHaveBeenCalledWith({
 				path: mockedRepo.path,
@@ -204,7 +204,7 @@ describe('Repository Component', () => {
 			const switchButton = getByTestId('switch-button');
 			await fireEvent.click(switchButton);
 
-			const switchBranchMutation = createSwitchbranchMutation();
+			const switchBranchMutation = createSwitchBranchMutation();
 
 			expect(switchBranchMutation.mutate).toHaveBeenCalledWith({
 				path: mockedRepo.path,
@@ -279,7 +279,7 @@ describe('Repository Component', () => {
 	describe('UI Elements', () => {
 		test('disables switch button when current branch is selected', () => {
 			const mockMutate = vi.fn();
-			(createSwitchbranchMutation as Mock).mockReturnValueOnce({
+			(createSwitchBranchMutation as Mock).mockReturnValueOnce({
 				mutate: mockMutate,
 				isPending: true,
 				variables: {
@@ -303,7 +303,7 @@ describe('Repository Component', () => {
 
 		test('enables switch button when non-current branch is selected', () => {
 			const mockMutate = vi.fn();
-			(createSwitchbranchMutation as Mock).mockReturnValueOnce({
+			(createSwitchBranchMutation as Mock).mockReturnValueOnce({
 				mutate: mockMutate
 			});
 

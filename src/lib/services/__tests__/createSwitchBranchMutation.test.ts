@@ -1,14 +1,14 @@
 import * as svelteQuery from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createSwitchbranchMutation } from '../createSwitchBranchMutation';
+import { createSwitchBranchMutation } from '../createSwitchBranchMutation';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn()
 }));
 
-describe('createSwitchbranchMutation', () => {
+describe('createSwitchBranchMutation', () => {
 	const mockPath = '/path/to/repo';
 	const mockBranch = 'feature/new-branch';
 	const mockSuccessResponse = 'Switched to branch feature/new-branch';
@@ -47,7 +47,7 @@ describe('createSwitchbranchMutation', () => {
 	});
 
 	it('should create a mutation with the correct configuration', () => {
-		createSwitchbranchMutation();
+		createSwitchBranchMutation();
 
 		expect(svelteQuery.createMutation).toHaveBeenCalled();
 		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
@@ -59,7 +59,7 @@ describe('createSwitchbranchMutation', () => {
 	});
 
 	it('should call invoke with correct parameters when mutation function is called', async () => {
-		createSwitchbranchMutation();
+		createSwitchBranchMutation();
 
 		// Get the mutation function from the createMutation call
 		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
@@ -77,7 +77,7 @@ describe('createSwitchbranchMutation', () => {
 	});
 
 	it('should return the response from invoke when mutation function is called', async () => {
-		createSwitchbranchMutation();
+		createSwitchBranchMutation();
 
 		// Get the mutation function from the createMutation call
 		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
@@ -92,7 +92,7 @@ describe('createSwitchbranchMutation', () => {
 	});
 
 	it('should reject if no path is provided when mutation function is called', async () => {
-		createSwitchbranchMutation();
+		createSwitchBranchMutation();
 
 		// Get the mutation function from the createMutation call
 		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
@@ -112,7 +112,7 @@ describe('createSwitchbranchMutation', () => {
 		const mockError = new Error('Failed to switch branch');
 		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
 
-		createSwitchbranchMutation();
+		createSwitchBranchMutation();
 
 		// Get the mutation function from the createMutation call
 		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
@@ -130,7 +130,7 @@ describe('createSwitchbranchMutation', () => {
 
 	it('should pass custom options to createMutation', () => {
 		const onSuccessMock = vi.fn();
-		createSwitchbranchMutation({ onSuccess: onSuccessMock });
+		createSwitchBranchMutation({ onSuccess: onSuccessMock });
 
 		// Get the mutation function from the createMutation call
 		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
