@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import AddButton from '$lib/components/add-button.svelte';
 	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
@@ -8,6 +9,12 @@
 
 	// Create a reactive variable to track the repositories list
 	const repoList = $derived(RepositoryStore.repositories.list);
+
+	// Add an onMount to ensure repositories are loaded
+	onMount(() => {
+		// This will ensure repository stores are loaded and initialized
+		RepositoryStore.loadRepositories();
+	});
 
 	// This function gets the repository menu items by mapping through the repository list
 	const getItems = $derived.by(() => {

@@ -16,15 +16,14 @@ vi.mock('$lib/stores/repository.svelte', () => {
 
 	return {
 		RepositoryStore: {
+			loadRepositories: vi.fn(),
 			repositories: {
-				state: {
-					size: repoNames.length,
-					has: (key: string) => repoNames.includes(key),
-					add: vi.fn(),
-					delete: vi.fn(),
-					clear: vi.fn(),
-					forEach: (callback: (value: string) => void) => repoNames.forEach(callback)
-				},
+				size: repoNames.length,
+				has: (key: string) => repoNames.includes(key),
+				add: vi.fn(),
+				delete: vi.fn(),
+				clear: vi.fn(),
+				forEach: (callback: (value: string) => void) => repoNames.forEach(callback),
 				get list() {
 					return repoNames;
 				}

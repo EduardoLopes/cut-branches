@@ -3,6 +3,7 @@
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { type Snippet } from 'svelte';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import Footer from '$lib/components/footer.svelte';
@@ -16,12 +17,18 @@
 
 	let { children }: Props = $props();
 
+	// Add onMount to ensure repositories are loaded when the app starts
+	onMount(() => {
+		// This ensures repositories data is loaded from localStorage
+		RepositoryStore.loadRepositories();
+	});
+
 	const idExists = $derived(RepositoryStore.repositories?.has($page.params.id));
 
 	const first = $derived(RepositoryStore.repositories?.list[0]);
 
 	$effect(() => {
-		if (RepositoryStore.repositories?.state.size === 0) {
+		if (RepositoryStore.repositories?.list.length === 0) {
 			goto('/add-first');
 		} else {
 			if (first && !idExists) {

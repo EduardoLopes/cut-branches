@@ -1,7 +1,9 @@
+import { SvelteSet } from 'svelte/reactivity';
 import { z } from 'zod/v4';
+import { getValidatedLocalStorage } from '../utils/get-validated-local-storage';
+import { setValidatedLocalStorage } from '../utils/set-validated-local-storage';
 import { Store } from '../utils/store.svelte';
 import { goto } from '$app/navigation';
-import { SetStore } from '$lib/utils/set-store.svelte';
 
 export interface Commit {
 	hash: string;
@@ -54,8 +56,8 @@ const repositorySchema = z
 	})
 	.optional();
 
-// Schema for repository names (array of strings or undefined)
-const repositoryNameSchema = z.string();
+// Schema for repository names list
+const repositoriesListSchema = z.array(z.string());
 
 // Repository store cache to maintain singleton instances
 const repositoryStoreCache: Record<string, RepositoryStore> = {};
@@ -65,11 +67,91 @@ export class RepositoryStore extends Store<Repository | undefined> {
 		super(repository, repositorySchema, undefined);
 	}
 
-	static repositories = SetStore.getInstance<string>(
-		['repositories'],
-		repositoryNameSchema,
-		[] as string[]
-	);
+	// Create a static reactive Set to store repository names
+	static _repositoriesSet = new SvelteSet<string>();
+
+	// Initialize repositories from localStorage
+	static {
+		// We'll initialize in a separate method to call it explicitly
+		// after the component is mounted
+		if (typeof window !== 'undefined') {
+			RepositoryStore.loadRepositories();
+		}
+	}
+
+	// Explicit method to load repositories that can be called when needed
+	static loadRepositories() {
+		try {
+			// Load repository names list using validated localStorage
+			const result = getValidatedLocalStorage('repositories_list', repositoriesListSchema, []);
+
+			if (result.success && result.data) {
+				// Clear existing data to avoid duplicates
+				RepositoryStore._repositoriesSet.clear();
+
+				// Add each repository name and ensure its store is initialized
+				result.data.forEach((name) => {
+					RepositoryStore._repositoriesSet.add(name);
+					// Create/get the store to ensure it's available
+					getRepositoryStore(name);
+				});
+			} else if (result.error) {
+				console.error('Error loading repositories list:', result.error);
+			}
+		} catch (error) {
+			console.error('Failed to load repositories from localStorage:', error);
+		}
+	}
+
+	// Helper to save repositories to localStorage
+	private static saveRepositories() {
+		try {
+			const repoArray = Array.from(RepositoryStore._repositoriesSet);
+
+			// Use validated localStorage to store repositories list
+			const result = setValidatedLocalStorage(
+				'repositories_list',
+				repoArray,
+				repositoriesListSchema
+			);
+
+			if (!result.success) {
+				console.error('Error saving repositories list:', result.error);
+			}
+		} catch (error) {
+			console.error('Failed to save repositories to localStorage:', error);
+		}
+	}
+
+	// Provide a static getter that gives reactive access to the repositories
+	static get repositories() {
+		return {
+			// Convert to array for consistent access and reactivity tracking
+			get list() {
+				return Array.from(RepositoryStore._repositoriesSet);
+			},
+
+			// Methods to modify the reactive collection
+			add(names: string[]) {
+				names.forEach((name) => RepositoryStore._repositoriesSet.add(name));
+				RepositoryStore.saveRepositories();
+			},
+
+			delete(names: string[]) {
+				names.forEach((name) => RepositoryStore._repositoriesSet.delete(name));
+				RepositoryStore.saveRepositories();
+			},
+
+			has(name: string) {
+				return RepositoryStore._repositoriesSet.has(name);
+			},
+
+			clear() {
+				RepositoryStore._repositoriesSet.clear();
+				RepositoryStore.saveRepositories();
+			}
+		};
+	}
 
 	set(value?: Repository) {
 		const oldName = this.state?.name; // Capture state *before* super.set
