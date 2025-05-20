@@ -25,6 +25,8 @@ tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
+[dev-dependencies]
+tempfile = "3.3"
 
 [features]
 # by default Tauri runs in production mode

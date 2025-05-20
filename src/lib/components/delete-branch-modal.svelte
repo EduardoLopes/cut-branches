@@ -41,7 +41,11 @@
 
 			selected?.clear();
 
-			client.invalidateQueries({ queryKey: ['branches', 'get-all', repository?.state?.path] });
+			// Force a complete refresh of the repository data
+			client.invalidateQueries({
+				queryKey: ['branches', 'get-all', repository?.state?.path],
+				refetchType: 'all'
+			});
 		},
 		meta: { showErrorNotification: true }
 	});

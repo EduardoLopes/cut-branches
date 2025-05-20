@@ -10,38 +10,38 @@ import {
 } from '$lib/stores/repository.svelte';
 import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 
-const mockRepository: RepositoryType = {
+const mockedRepo: RepositoryType = {
+	id: '123',
 	name: 'test-repo',
-	path: '/path/to/test-repo',
+	path: '/path/to/repo',
+	currentBranch: 'main',
+	branchesCount: 2,
 	branches: [
 		{
 			name: 'main',
 			current: true,
-			last_commit: {
+			lastCommit: {
 				hash: 'abc123',
 				message: 'Initial commit',
-				date: '2023-01-01',
-				author: 'John Doe',
-				email: 'john.doe@example.com'
+				author: 'Test User',
+				email: 'user@example.com',
+				date: new Date().toISOString()
 			},
-			fully_merged: true
+			fullyMerged: true
 		},
 		{
-			name: 'feature/test-branch',
+			name: 'feature/test',
 			current: false,
-			last_commit: {
-				hash: 'abc124',
-				message: 'Initial commit 2',
-				date: '2023-02-01',
-				author: 'John Doe 2',
-				email: 'john.doe2@example.com'
+			lastCommit: {
+				hash: 'def456',
+				message: 'Add feature',
+				author: 'Test User',
+				email: 'user@example.com',
+				date: new Date().toISOString()
 			},
-			fully_merged: false
+			fullyMerged: false
 		}
-	],
-	currentBranch: 'main',
-	branchesCount: 0,
-	id: '1'
+	]
 };
 
 vi.mock('$lib/services/createSwitchBranchMutation', () => ({
@@ -60,26 +60,26 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
 					{
 						name: 'main',
 						current: true,
-						last_commit: {
+						lastCommit: {
 							hash: 'abc123',
 							message: 'Initial commit',
-							date: '2023-01-01',
 							author: 'John Doe',
-							email: 'john.doe@example.com'
+							email: 'john.doe@example.com',
+							date: '2023-01-01'
 						},
-						fully_merged: true
+						fullyMerged: true
 					},
 					{
 						name: 'feature/test-branch',
 						current: false,
-						last_commit: {
+						lastCommit: {
 							hash: 'abc124',
 							message: 'Initial commit 2',
-							date: '2023-02-01',
 							author: 'John Doe 2',
-							email: 'john.doe2@example.com'
+							email: 'john.doe2@example.com',
+							date: '2023-02-01'
 						},
-						fully_merged: false
+						fullyMerged: false
 					}
 				],
 				currentBranch: 'main',
@@ -94,10 +94,10 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
 }));
 
 beforeEach(() => {
-	const repository = getRepositoryStore(mockRepository.name);
-	repository?.set(mockRepository);
+	const repository = getRepositoryStore(mockedRepo.name);
+	repository?.set(mockedRepo);
 
-	const searchStore = getSearchBranchesStore(mockRepository.name)!;
+	const searchStore = getSearchBranchesStore(mockedRepo.name)!;
 	searchStore?.clear();
 	vi.useFakeTimers();
 	vi.clearAllMocks();
@@ -108,12 +108,12 @@ describe('Repository Component', () => {
 		test('updates the repository when update button is clicked', async () => {
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
 			const oneMinute = 60000;
-			const repository = getRepositoryStore(mockRepository.name);
+			const repository = getRepositoryStore(mockedRepo.name);
 
 			const getRepoByPathQuery = createGetRepositoryByPathQuery(() => repository?.state?.path, {
 				staleTime: oneMinute
@@ -128,18 +128,18 @@ describe('Repository Component', () => {
 			// For this test, we'll focus on the branches which are easier to test
 			const { getByText } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
 			// Check for branches which should be rendered correctly
 			expect(
-				getByText(mockRepository.branches[0].name, {
+				getByText(mockedRepo.branches[0].name, {
 					selector: 'span'
 				})
 			).toBeInTheDocument();
 			expect(
-				getByText(mockRepository.branches[1].name, {
+				getByText(mockedRepo.branches[1].name, {
 					selector: 'span'
 				})
 			).toBeInTheDocument();
@@ -159,7 +159,7 @@ describe('Repository Component', () => {
 
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
@@ -175,7 +175,7 @@ describe('Repository Component', () => {
 		test('handles branch switching when switch button is clicked', async () => {
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 			const switchButton = getByTestId('switch-button');
@@ -184,20 +184,20 @@ describe('Repository Component', () => {
 			const switchBranchMutation = createSwitchbranchMutation();
 
 			expect(switchBranchMutation.mutate).toHaveBeenCalledWith({
-				path: mockRepository.path,
-				branch: mockRepository.branches[1].name
+				path: mockedRepo.path,
+				branch: mockedRepo.branches[1].name
 			});
 		});
 
 		test('selects the correct branch for switching', async () => {
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
 			// First select a branch using test ID instead of role
-			const featureBranchItem = getByTestId('branch-item-feature/test-branch');
+			const featureBranchItem = getByTestId('branch-item-feature/test');
 			await fireEvent.click(featureBranchItem);
 
 			// Then click switch
@@ -207,8 +207,8 @@ describe('Repository Component', () => {
 			const switchBranchMutation = createSwitchbranchMutation();
 
 			expect(switchBranchMutation.mutate).toHaveBeenCalledWith({
-				path: mockRepository.path,
-				branch: mockRepository.branches[1].name
+				path: mockedRepo.path,
+				branch: mockedRepo.branches[1].name
 			});
 		});
 	});
@@ -217,14 +217,14 @@ describe('Repository Component', () => {
 		test('clears the search when clear button is clicked', async () => {
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
 			const clearSearchButton = getByTestId('clear-search-button');
 			await fireEvent.click(clearSearchButton);
 
-			const searchStore = getSearchBranchesStore(mockRepository.name)!;
+			const searchStore = getSearchBranchesStore(mockedRepo.name)!;
 			expect(searchStore?.state).toBe(undefined);
 		});
 
@@ -232,41 +232,41 @@ describe('Repository Component', () => {
 			// Mock the search filtering behavior
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
 			// Verify feature branch is rendered
-			expect(getByTestId('branch-item-feature/test-branch')).toBeInTheDocument();
+			expect(getByTestId('branch-item-feature/test')).toBeInTheDocument();
 
 			// Directly modify repository branches to simulate filtering
-			const repository = getRepositoryStore(mockRepository.name);
-			const filteredBranches = mockRepository.branches.filter((b) => b.name.includes('feature'));
+			const repository = getRepositoryStore(mockedRepo.name);
+			const filteredBranches = mockedRepo.branches.filter((b) => b.name.includes('feature'));
 			repository?.set({
-				...mockRepository,
+				...mockedRepo,
 				branches: filteredBranches
 			});
 
 			// Verify the feature branch is still rendered
-			expect(getByTestId('branch-item-feature/test-branch')).toBeInTheDocument();
+			expect(getByTestId('branch-item-feature/test')).toBeInTheDocument();
 		});
 
 		test('shows no results message when search has no matches', async () => {
 			// Setup with empty branches for "no results" scenario
 			const emptyRepository = {
-				...mockRepository,
+				...mockedRepo,
 				branches: []
 			};
 
-			const repository = getRepositoryStore(mockRepository.name);
+			const repository = getRepositoryStore(mockedRepo.name);
 			repository?.set(emptyRepository);
 
-			const searchStore = getSearchBranchesStore(mockRepository.name)!;
+			const searchStore = getSearchBranchesStore(mockedRepo.name)!;
 			searchStore?.set('nonexistent');
 
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
@@ -283,13 +283,13 @@ describe('Repository Component', () => {
 				mutate: mockMutate,
 				isPending: true,
 				variables: {
-					branch: mockRepository.branches[0].name
+					branch: mockedRepo.branches[0].name
 				}
 			});
 
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
@@ -309,12 +309,12 @@ describe('Repository Component', () => {
 
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(Repository, {
-					id: mockRepository.name
+					id: mockedRepo.name
 				})
 			});
 
 			// Select a non-current branch using test ID
-			const featureBranchItem = getByTestId('branch-item-feature/test-branch');
+			const featureBranchItem = getByTestId('branch-item-feature/test');
 			fireEvent.click(featureBranchItem);
 
 			const switchButton = getByTestId('switch-button');

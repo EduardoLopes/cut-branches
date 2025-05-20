@@ -13,28 +13,28 @@ describe('createDeleteBranchesMutation', () => {
 	const mockPath = '/path/to/repo';
 	const mockBranches: Branch[] = [
 		{
-			name: 'feature/branch1',
+			name: 'branch-1',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'abc123',
-				date: new Date().toISOString(),
-				message: 'Initial commit',
+				date: '2023-01-01',
+				message: 'Commit 1',
 				author: 'Test User',
 				email: 'test@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		},
 		{
-			name: 'feature/branch2',
+			name: 'branch-2',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'def456',
-				date: new Date().toISOString(),
-				message: 'Second commit',
+				date: '2023-01-02',
+				message: 'Commit 2',
 				author: 'Test User',
 				email: 'test@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		}
 	];
 	const mockSuccessResponse = JSON.stringify([
@@ -118,7 +118,11 @@ describe('createDeleteBranchesMutation', () => {
 		const mutationFn = config.mutationFn;
 
 		// Call the mutation function directly and expect it to reject
-		await expect(mutationFn({ path: mockPath, branches: mockBranches })).rejects.toThrow(mockError);
+		await expect(mutationFn({ path: mockPath, branches: mockBranches })).rejects.toEqual({
+			message: 'Failed to delete branches',
+			kind: 'unknown_error',
+			description: 'An unexpected error occurred'
+		});
 	});
 
 	it('should pass custom options to createMutation', () => {

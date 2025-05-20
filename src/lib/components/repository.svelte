@@ -11,7 +11,7 @@
 	import { globalStore } from '$lib/stores/global-store.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { getRepositoryStore } from '$lib/stores/repository.svelte';
+	import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -35,6 +35,24 @@
 	$effect(() => {
 		if (repository?.state?.path) {
 			globalStore.lastUpdatedAt = new Date(getBranchesQuery.dataUpdatedAt);
+		}
+	});
+
+	$effect(() => {
+		if (getBranchesQuery.data && repository) {
+			// Compare important properties individually to ensure changes are detected
+			const currentState = repository.state;
+			const queryData = getBranchesQuery.data;
+
+			// Only update if there's a meaningful change
+			if (
+				!currentState ||
+				currentState.branchesCount !== queryData.branchesCount ||
+				currentState.branches.length !== queryData.branches.length ||
+				currentState.currentBranch !== queryData.currentBranch
+			) {
+				repository.set(queryData as Repository);
+			}
 		}
 	});
 

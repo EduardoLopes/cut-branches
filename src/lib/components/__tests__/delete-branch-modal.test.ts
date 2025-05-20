@@ -31,40 +31,40 @@ vi.mock('$lib/services/createDeleteBranchesMutation', () => ({
 // Test data
 const mockBranches: Branch[] = [
 	{
-		name: 'main',
-		current: true,
-		last_commit: {
-			hash: 'abc123',
-			date: '2023-01-01',
-			message: 'Initial commit',
-			author: 'John Doe',
-			email: 'john@example.com'
-		},
-		fully_merged: false
-	},
-	{
 		name: 'feature-1',
 		current: false,
-		last_commit: {
-			hash: 'def456',
-			date: '2023-01-02',
-			message: 'Add feature 1',
-			author: 'Jane Doe',
-			email: 'jane@example.com'
+		lastCommit: {
+			hash: 'abc123',
+			date: '2023-01-01',
+			message: 'Test commit',
+			author: 'Test User',
+			email: 'test@example.com'
 		},
-		fully_merged: false
+		fullyMerged: false
 	},
 	{
 		name: 'feature-2',
 		current: false,
-		last_commit: {
+		lastCommit: {
+			hash: 'def456',
+			date: '2023-01-02',
+			message: 'Another commit',
+			author: 'Test User',
+			email: 'test@example.com'
+		},
+		fullyMerged: false
+	},
+	{
+		name: 'main',
+		current: true,
+		lastCommit: {
 			hash: 'ghi789',
 			date: '2023-01-03',
-			message: 'Add feature 2',
-			author: 'Alice Smith',
-			email: 'alice@example.com'
+			message: 'Current branch commit',
+			author: 'Test User',
+			email: 'test@example.com'
 		},
-		fully_merged: true
+		fullyMerged: true
 	}
 ];
 

@@ -14,8 +14,8 @@ export interface Commit {
 export interface Branch {
 	name: string;
 	current: boolean;
-	last_commit: Commit;
-	fully_merged: boolean;
+	lastCommit: Commit;
+	fullyMerged: boolean;
 }
 
 export interface Repository {
@@ -39,8 +39,8 @@ const commitSchema = z.object({
 const branchSchema = z.object({
 	name: z.string(),
 	current: z.boolean(),
-	last_commit: commitSchema,
-	fully_merged: z.boolean()
+	lastCommit: commitSchema,
+	fullyMerged: z.boolean()
 });
 
 const repositorySchema = z
@@ -72,15 +72,22 @@ export class RepositoryStore extends Store<Repository | undefined> {
 	);
 
 	set(value?: Repository) {
+		const oldName = this.state?.name; // Capture state *before* super.set
+
 		super.set(value);
 
 		if (value?.name) {
-			goto(`/repos/${value.name}`);
-			RepositoryStore.repositories.add([value.name]);
-		} else {
-			if (this.state?.name) {
-				RepositoryStore.repositories.delete([this.state?.name]);
+			// Only navigate if the name is new or different from the old one.
+			// This prevents re-navigation when just refreshing data for the same repository.
+			if (value.name !== oldName) {
+				goto(`/repos/${value.name}`);
 			}
+			RepositoryStore.repositories.add([value.name]);
+		} else if (oldName) {
+			// If value is undefined (repository cleared) and there was an old name,
+			// remove it from the set of repositories.
+			// Consider if navigation to a default page (e.g., '/') is needed here.
+			RepositoryStore.repositories.delete([oldName]);
 		}
 	}
 

@@ -23,38 +23,38 @@ const mockRepo: Repository = {
 		{
 			name: 'main',
 			current: true,
-			last_commit: {
+			lastCommit: {
 				hash: 'abc123',
 				date: '2023-01-01',
 				message: 'Initial commit',
 				author: 'John Doe',
 				email: 'john@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		},
 		{
 			name: 'feature-1',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'def456',
 				date: '2023-01-02',
 				message: 'Add feature 1',
 				author: 'Jane Doe',
 				email: 'jane@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		},
 		{
 			name: 'feature-2',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'ghi789',
 				date: '2023-01-03',
 				message: 'Add feature 2',
 				author: 'Jim Doe',
 				email: 'jim@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		}
 	]
 };

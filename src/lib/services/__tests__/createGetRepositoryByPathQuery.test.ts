@@ -17,25 +17,25 @@ vi.mock('$lib/stores/repository.svelte', () => ({
 describe('createGetRepositoryByPathQuery', () => {
 	const mockPath = '/path/to/repo';
 	const mockRepository: Repository = {
-		path: mockPath,
+		path: '/path/to/repository',
 		branches: [
 			{
 				name: 'main',
 				current: true,
-				last_commit: {
+				lastCommit: {
 					hash: 'abc123',
-					date: new Date().toISOString(),
+					date: '2023-01-01',
 					message: 'Initial commit',
-					author: 'Test User',
-					email: 'test@example.com'
+					author: 'John Doe',
+					email: 'john@example.com'
 				},
-				fully_merged: true
+				fullyMerged: true
 			}
 		],
 		name: 'test-repo',
 		currentBranch: 'main',
 		branchesCount: 1,
-		id: '123'
+		id: '1'
 	};
 
 	const mockRepositoryStore = {

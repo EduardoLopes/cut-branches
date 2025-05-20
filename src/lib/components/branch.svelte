@@ -43,7 +43,7 @@
 
 	const alerts = $derived(
 		Object.entries({
-			fullyMerged: data.fully_merged,
+			fullyMerged: data.fullyMerged,
 			protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
 			offensiveWords: data.name.includes('master')
 		})
@@ -158,7 +158,7 @@
 				data-testid="last-commit-message"
 				id={`branch-${data.name}-commit-message`}
 			>
-				{data.last_commit.message}
+				{data.lastCommit.message}
 			</span>
 
 			<div
@@ -179,7 +179,7 @@
 						pindobaTransition: 'fast',
 						color: 'neutral.900'
 					})}
-					title={data.last_commit.email.replace(/^<|>$/g, '')}
+					title={data.lastCommit.email.replace(/^<|>$/g, '')}
 					data-testid="author-name"
 					id={`branch-${data.name}-author`}
 				>
@@ -189,7 +189,7 @@
 						height="16px"
 						id={`branch-${data.name}-author-icon`}
 					/>
-					{data.last_commit.author}
+					{data.lastCommit.author}
 				</span>
 				<span
 					class={css({
@@ -201,7 +201,7 @@
 						pindobaTransition: 'fast',
 						color: 'neutral.900'
 					})}
-					title={formatDate(data.last_commit.date)}
+					title={formatDate(data.lastCommit.date)}
 					id={`branch-${data.name}-date`}
 				>
 					<Icon
@@ -209,7 +209,7 @@
 						width="16px"
 						height="16px"
 						id={`branch-${data.name}-date-icon`}
-					/>{intlFormatDistance(data.last_commit.date, Date.now(), { unit: 'day' })}
+					/>{intlFormatDistance(data.lastCommit.date, Date.now(), { unit: 'day' })}
 				</span>
 			</div>
 		</div>

@@ -40,7 +40,10 @@
 
 			selected?.delete([currentBranch]);
 
-			queryClient.invalidateQueries({ queryKey: ['branches', 'get-all', repository?.state?.path] });
+			queryClient.invalidateQueries({
+				queryKey: ['branches', 'get-all', repository?.state?.path],
+				refetchType: 'all'
+			});
 		},
 		meta: { showErrorNotification: true }
 	});

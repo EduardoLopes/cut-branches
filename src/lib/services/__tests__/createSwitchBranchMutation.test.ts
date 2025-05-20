@@ -101,7 +101,11 @@ describe('createSwitchbranchMutation', () => {
 		const mutationFn = config.mutationFn;
 
 		// Call the mutation function directly with empty path
-		await expect(mutationFn({ path: '', branch: mockBranch })).rejects.toBe('No path provided');
+		await expect(mutationFn({ path: '', branch: mockBranch })).rejects.toEqual({
+			message: 'No path provided',
+			kind: 'missing_path',
+			description: 'A repository path is required to switch branches'
+		});
 	});
 
 	it('should handle invoke errors when mutation function is called', async () => {
@@ -117,7 +121,11 @@ describe('createSwitchbranchMutation', () => {
 		const mutationFn = config.mutationFn;
 
 		// Call the mutation function directly
-		await expect(mutationFn({ path: mockPath, branch: mockBranch })).rejects.toThrow(mockError);
+		await expect(mutationFn({ path: mockPath, branch: mockBranch })).rejects.toEqual({
+			message: 'Failed to switch branch',
+			kind: 'unknown_error',
+			description: 'An unexpected error occurred'
+		});
 	});
 
 	it('should pass custom options to createMutation', () => {

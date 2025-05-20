@@ -4,3 +4,68 @@ pub struct Error {
     pub kind: String,
     pub description: Option<String>,
 }
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)?;
+        if let Some(desc) = &self.description {
+            write!(f, " ({})", desc)?;
+        }
+        Ok(())
+    }
+}
+
+impl std::error::Error for Error {}
+
+impl Error {
+    pub fn new(message: String, kind: &str, description: Option<String>) -> Self {
+        Self {
+            message,
+            kind: kind.to_string(),
+            description,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_error_creation() {
+        // Test creating an error with a description
+        let error = Error::new(
+            "Test error message".to_string(),
+            "test_error",
+            Some("Error description".to_string()),
+        );
+
+        assert_eq!(error.message, "Test error message");
+        assert_eq!(error.kind, "test_error");
+        assert_eq!(error.description, Some("Error description".to_string()));
+
+        // Test creating an error without a description
+        let error = Error::new("Test error message".to_string(), "test_error", None);
+
+        assert_eq!(error.message, "Test error message");
+        assert_eq!(error.kind, "test_error");
+        assert_eq!(error.description, None);
+    }
+
+    #[test]
+    fn test_error_display() {
+        // Test display formatting with description
+        let error = Error::new(
+            "Test error message".to_string(),
+            "test_error",
+            Some("Error description".to_string()),
+        );
+
+        assert_eq!(error.to_string(), "Test error message (Error description)");
+
+        // Test display formatting without description
+        let error = Error::new("Test error message".to_string(), "test_error", None);
+
+        assert_eq!(error.to_string(), "Test error message");
+    }
+}

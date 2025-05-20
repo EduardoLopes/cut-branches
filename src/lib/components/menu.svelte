@@ -1,34 +1,36 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
-	import { untrack } from 'svelte';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import AddButton from '$lib/components/add-button.svelte';
 	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 
-	const items = $derived(
-		RepositoryStore.repositories.list
-			.map((repo) => {
-				return untrack(() => {
-					const repository = getRepositoryStore(repo);
-					if (repository?.state) {
-						return {
-							id: repository.state.id,
-							label: repository.state.name,
-							href: `/repos/${repository.state.name}`,
-							badge: repository.state.branchesCount
-								? `${repository.state.branchesCount}`
-								: undefined
-						} as NavigationItem;
-					}
-					return undefined;
-				});
+	// Create a reactive variable to track the repositories list
+	const repoList = $derived(RepositoryStore.repositories.list);
+
+	// This function gets the repository menu items by mapping through the repository list
+	const getItems = () => {
+		return repoList
+			.map((repoName) => {
+				const repository = getRepositoryStore(repoName);
+				if (repository?.state) {
+					return {
+						id: repository.state.id,
+						label: repository.state.name,
+						href: `/repos/${repository.state.name}`,
+						badge: repository.state.branchesCount ? `${repository.state.branchesCount}` : undefined
+					} as NavigationItem;
+				}
+				return undefined;
 			})
 			.filter((item) => {
 				return !!item;
-			})
-	);
+			});
+	};
+
+	// Create a reactive list of menu items that will update when repository states change
+	const items = $derived(getItems());
 </script>
 
 <section
@@ -134,7 +136,7 @@
 			{#if items.length > 0}
 				<Navigation
 					{items}
-					activeItem={$page.params.id}
+					activeItem={page.params.id}
 					direction="vertical"
 					passThrough={{
 						root: css.raw({

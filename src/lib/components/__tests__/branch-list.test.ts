@@ -71,50 +71,50 @@ function createMockBranches(): Branch[] {
 		{
 			name: 'feature/test-branch',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'abc123',
-				message: 'Test commit',
-				author: 'Test User',
-				email: '<test@example.com>',
-				date: new Date().toISOString()
+				date: '2023-01-01',
+				message: 'Commit 1',
+				author: 'Author 1',
+				email: 'author1@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		},
 		{
 			name: 'selected-branch',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'def456',
-				message: 'Selected branch commit',
-				author: 'Test User',
-				email: '<test@example.com>',
-				date: new Date().toISOString()
+				date: '2023-01-02',
+				message: 'Commit 2',
+				author: 'Author 2',
+				email: 'author2@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		},
 		{
 			name: 'locked-branch',
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: 'ghi789',
-				message: 'Locked branch commit',
-				author: 'Test User',
-				email: '<test@example.com>',
-				date: new Date().toISOString()
+				date: '2023-01-03',
+				message: 'Commit 3',
+				author: 'Author 3',
+				email: 'author3@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		},
 		{
 			name: 'current-branch',
 			current: true,
-			last_commit: {
+			lastCommit: {
 				hash: 'jkl012',
-				message: 'Current branch commit',
-				author: 'Test User',
-				email: '<test@example.com>',
-				date: new Date().toISOString()
+				date: '2023-01-04',
+				message: 'Commit 4',
+				author: 'Author 4',
+				email: 'author4@example.com'
 			},
-			fully_merged: false
+			fullyMerged: false
 		}
 	];
 }
@@ -151,14 +151,14 @@ describe('BranchList Component', () => {
 		const manyBranches = Array.from({ length: 15 }, (_, i) => ({
 			name: `branch-${i + 1}`,
 			current: false,
-			last_commit: {
+			lastCommit: {
 				hash: `hash-${i + 1}`,
+				date: `2023-01-${i + 1}`,
 				message: `Commit ${i + 1}`,
 				author: 'Test User',
-				email: '<test@example.com>',
-				date: new Date().toISOString()
+				email: '<test@example.com>'
 			},
-			fully_merged: false
+			fullyMerged: false
 		}));
 
 		const { getByText } = render(BranchListComponent, {

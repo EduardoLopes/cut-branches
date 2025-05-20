@@ -1,69 +1,70 @@
 import { render } from '@testing-library/svelte';
-import BranchComponent from '../branch.svelte';
-import type { Branch } from '$lib/stores/repository.svelte';
+import { describe, expect, test } from 'vitest';
+import Branch from '../branch.svelte';
+import type { Branch as BranchType } from '$lib/stores/repository.svelte';
 
-const mockBranch: Branch = {
+const mockBranch: BranchType = {
 	name: 'feature/test-branch',
 	current: false,
-	last_commit: {
-		hash: 'abc123',
-		message: 'Initial commit',
-		author: 'John Doe',
-		email: '<john.doe@example.com>',
-		date: new Date().toISOString()
+	lastCommit: {
+		hash: 'abcdef',
+		date: new Date().toISOString(),
+		message: 'Test commit message',
+		author: 'Test Author',
+		email: 'test@example.com'
 	},
-	fully_merged: false
+	fullyMerged: false
 };
 
 describe('Branch Component', () => {
 	describe('Basic Rendering', () => {
 		test('renders branch name', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(getByTestId('branch-name')).toBeInTheDocument();
 		});
 
 		test('renders last commit message', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(getByTestId('last-commit-message')).toBeInTheDocument();
 		});
 
 		test('renders author name', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(getByTestId('author-name')).toBeInTheDocument();
 		});
 
 		test('renders correct branch name text', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(getByTestId('branch-name').textContent).toBe(mockBranch.name);
 		});
 
 		test('renders correct commit message text', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
-			expect(getByTestId('last-commit-message').textContent).toBe(mockBranch.last_commit.message);
+			expect(getByTestId('last-commit-message').textContent).toBe(mockBranch.lastCommit.message);
 		});
 
 		test('renders correct author name text', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
-			expect(getByTestId('author-name').textContent).toBe(` ${mockBranch.last_commit.author}`);
+			expect(getByTestId('author-name').textContent).toBe(` ${mockBranch.lastCommit.author}`);
 		});
 	});
 
 	describe('Protected and Offensive Words', () => {
 		test('renders alerts for protected words', () => {
 			const protectedBranch = { ...mockBranch, name: 'main' };
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: protectedBranch, selected: true }
 			});
 			expect(getByTestId('protected-words-alert')).toBeInTheDocument();
@@ -71,14 +72,14 @@ describe('Branch Component', () => {
 
 		test('renders alerts for offensive words', () => {
 			const offensiveBranch = { ...mockBranch, name: 'master' };
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: offensiveBranch, selected: true }
 			});
 			expect(getByTestId('offensive-words-alert')).toBeInTheDocument();
 		});
 
 		test('does not render alerts when no protected or offensive words are present', () => {
-			const { queryByTestId } = render(BranchComponent, {
+			const { queryByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(queryByTestId('protected-words-alert')).not.toBeInTheDocument();
@@ -87,7 +88,7 @@ describe('Branch Component', () => {
 
 		test('renders protected word alert with appropriate message', () => {
 			const protectedBranch = { ...mockBranch, name: 'main' };
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: protectedBranch, selected: true }
 			});
 			const alertElement = getByTestId('protected-words-alert');
@@ -96,7 +97,7 @@ describe('Branch Component', () => {
 
 		test('renders offensive word alert with appropriate message', () => {
 			const offensiveBranch = { ...mockBranch, name: 'master' };
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: offensiveBranch, selected: true }
 			});
 			const alertElement = getByTestId('offensive-words-alert');
@@ -106,7 +107,7 @@ describe('Branch Component', () => {
 
 	describe('Current Branch Indicator', () => {
 		test('does not render current branch title when current is false', () => {
-			const { queryByTitle } = render(BranchComponent, {
+			const { queryByTitle } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(queryByTitle('Current branch')).not.toBeInTheDocument();
@@ -114,7 +115,7 @@ describe('Branch Component', () => {
 
 		test('renders current branch title when current is true', () => {
 			const currentBranch = { ...mockBranch, current: true };
-			const { getByTitle } = render(BranchComponent, {
+			const { getByTitle } = render(Branch, {
 				props: { data: currentBranch, selected: false }
 			});
 			expect(getByTitle('Current branch')).toBeInTheDocument();
@@ -122,9 +123,9 @@ describe('Branch Component', () => {
 	});
 
 	describe('Merge Status', () => {
-		test('renders fully merged alert when fully_merged is true and current is false', () => {
-			const fullyMergedBranch = { ...mockBranch, fully_merged: true, name: 'merged-branch' };
-			const { getByText, container } = render(BranchComponent, {
+		test('renders fully merged alert when fullyMerged is true and current is false', () => {
+			const fullyMergedBranch = { ...mockBranch, fullyMerged: true, name: 'merged-branch' };
+			const { getByText, container } = render(Branch, {
 				props: { data: fullyMergedBranch, selected: false }
 			});
 			expect(
@@ -138,9 +139,9 @@ describe('Branch Component', () => {
 			);
 		});
 
-		test('renders fully merged alert when fully_merged is true and current is true', () => {
-			const fullyMergedCurrentBranch = { ...mockBranch, fully_merged: true, current: true };
-			const { queryByText } = render(BranchComponent, {
+		test('renders fully merged alert when fullyMerged is true and current is true', () => {
+			const fullyMergedCurrentBranch = { ...mockBranch, fullyMerged: true, current: true };
+			const { queryByText } = render(Branch, {
 				props: { data: fullyMergedCurrentBranch, selected: false }
 			});
 			expect(
@@ -148,8 +149,8 @@ describe('Branch Component', () => {
 			).not.toBeInTheDocument();
 		});
 
-		test('does not render fully merged alert when fully_merged is false and current is false', () => {
-			const { queryByText } = render(BranchComponent, {
+		test('does not render fully merged alert when fullyMerged is false and current is false', () => {
+			const { queryByText } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			expect(
@@ -160,7 +161,7 @@ describe('Branch Component', () => {
 
 	describe('Selection State', () => {
 		test('applies selected styling when selected prop is true', () => {
-			const { getByTestId } = render(BranchComponent, {
+			const { getByTestId } = render(Branch, {
 				props: { data: mockBranch, selected: true }
 			});
 			// Check for selected class or styling indicators
@@ -169,7 +170,7 @@ describe('Branch Component', () => {
 		});
 
 		test('does not apply selected styling when selected prop is false', () => {
-			const { container } = render(BranchComponent, {
+			const { container } = render(Branch, {
 				props: { data: mockBranch, selected: false }
 			});
 			// Check that selected class or styling indicators are not present

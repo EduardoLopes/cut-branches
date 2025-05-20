@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
+	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -8,6 +9,7 @@
 	import Providers from '$lib/components/providers.svelte';
 	import { RepositoryStore } from '$lib/stores/repository.svelte';
 	import { css } from '@pindoba/panda/css';
+
 	interface Props {
 		children?: Snippet;
 	}
@@ -32,6 +34,7 @@
 <ThemeModeSelectScript />
 
 <Providers>
+	<SvelteQueryDevtools />
 	<div
 		class={css({
 			height: '100vh',

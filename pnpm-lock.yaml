@@ -137,6 +137,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^5.0.3
         version: 5.0.3(svelte@5.30.2)(vite@6.3.5(@types/node@22.15.18)(jiti@2.4.2)(lightningcss@1.29.3))
+      '@tanstack/svelte-query-devtools':
+        specifier: ^5.76.0
+        version: 5.76.0(@tanstack/svelte-query@https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473(svelte@5.30.2))(svelte@5.30.2)
       '@tauri-apps/cli':
         specifier: ^2.5.0
         version: 2.5.0
@@ -1052,6 +1055,16 @@ packages:
   '@tanstack/query-core@https://pkg.pr.new/TanStack/query/@tanstack/query-core@8c9ce998d84573adafedcbac4488159cd75e2473':
     resolution: {tarball: https://pkg.pr.new/TanStack/query/@tanstack/query-core@8c9ce998d84573adafedcbac4488159cd75e2473}
     version: 5.66.2
+
+  '@tanstack/query-devtools@5.76.0':
+    resolution: {integrity: sha512-1p92nqOBPYVqVDU0Ua5nzHenC6EGZNrLnB2OZphYw8CNA1exuvI97FVgIKON7Uug3uQqvH/QY8suUKpQo8qHNQ==}
+
+  '@tanstack/svelte-query-devtools@5.76.0':
+    resolution: {integrity: sha512-pRyk7UEMezYC9Ue0kOBPh+/A5COyDPihMTkUPif66hN8P9yN7U7IbNw1g7770XbDIufyVfboibFyv7moLhOwXw==}
+    version: 5.76.0
+    peerDependencies:
+      '@tanstack/svelte-query': ^5.76.0
+      svelte: ^3.54.0 || ^4.0.0 || ^5.0.0
 
   '@tanstack/svelte-query@https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473':
     resolution: {tarball: https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473}
@@ -5173,6 +5186,15 @@ snapshots:
       - supports-color
 
   '@tanstack/query-core@https://pkg.pr.new/TanStack/query/@tanstack/query-core@8c9ce998d84573adafedcbac4488159cd75e2473': {}
+
+  '@tanstack/query-devtools@5.76.0': {}
+
+  '@tanstack/svelte-query-devtools@5.76.0(@tanstack/svelte-query@https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473(svelte@5.30.2))(svelte@5.30.2)':
+    dependencies:
+      '@tanstack/query-devtools': 5.76.0
+      '@tanstack/svelte-query': https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473(svelte@5.30.2)
+      esm-env: 1.2.2
+      svelte: 5.30.2
 
   '@tanstack/svelte-query@https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473(svelte@5.30.2)':
     dependencies:
