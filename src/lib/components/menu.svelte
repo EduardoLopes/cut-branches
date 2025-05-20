@@ -11,7 +11,7 @@
 
 	// This function gets the repository menu items by mapping through the repository list
 	const getItems = $derived.by(() => {
-		return repoList
+		const mappedAndFilteredItems = repoList
 			.map((repoName) => {
 				const repository = getRepositoryStore(repoName);
 				if (repository?.state) {
@@ -25,13 +25,14 @@
 				}
 				return undefined;
 			})
-
-			.filter((item) => {
+			.filter((item): item is NavigationItem => {
 				return !!item;
-			})
-			.sort((a, b) => {
-				return a.label.localeCompare(b.label);
 			});
+
+		// Use spread syntax to create a new array before sorting
+		return [...mappedAndFilteredItems].sort((a, b) => {
+			return a.label.localeCompare(b.label);
+		});
 	});
 
 	// Create a reactive list of menu items that will update when repository states change
