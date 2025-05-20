@@ -4,14 +4,14 @@ import { getValidatedLocalStorage } from './get-validated-local-storage';
 import { setValidatedLocalStorage } from './set-validated-local-storage';
 
 export abstract class AbstractStore<T, C> {
-	protected static instances: { [key: string]: AbstractStore<unknown, unknown> } = {};
+	protected static instances: Record<string, AbstractStore<unknown, unknown>> = {};
 
 	#key: string;
 	get localStorageKey() {
 		return `store_${this.#key}`;
 	}
 
-	state = $state<C>(undefined as unknown as C);
+	state = $state<C | undefined>(undefined);
 	list = $derived(this.getAsList());
 
 	constructor(
@@ -77,7 +77,7 @@ export abstract class AbstractStore<T, C> {
 		return this.defaultValue;
 	}
 
-	protected static getCommonInstance<S extends AbstractStore<unknown, unknown>>(
+	protected static getCommonInstance<S extends AbstractStore<T, C>, T, C>(
 		ctor: new (key: string, ...constructorArgs: unknown[]) => S,
 		args: unknown[],
 		keyParts: (string | number)[] = [],

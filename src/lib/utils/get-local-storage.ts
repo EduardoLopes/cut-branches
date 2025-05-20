@@ -33,7 +33,7 @@ export function getLocalStorage<T>(key: string, defaultValue?: T): T | undefined
 		}
 
 		// Parse the data and return it
-		return JSON.parse(data) as T;
+		return JSON.parse(data);
 	} catch (error) {
 		// Handle different types of errors
 		if (error instanceof SyntaxError) {

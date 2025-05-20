@@ -1,12 +1,8 @@
 import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
-import {
-	type ServiceError,
-	type SwitchBranchVariables,
-	SwitchBranchInputSchema,
-	handleTauriError
-} from './common';
+import { type SwitchBranchVariables, SwitchBranchInputSchema } from './common';
+import { createError } from '$lib/utils/error-utils';
 
 type CreateSwitchbranchMutationOptions = CreateMutationOptions<
 	string,
@@ -22,11 +18,11 @@ export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationO
 			try {
 				// Check for empty path first (to match test expectations)
 				if (!vars.path) {
-					throw {
+					throw createError({
 						message: 'No path provided',
 						kind: 'missing_path',
 						description: 'A repository path is required to switch branches'
-					} as ServiceError;
+					});
 				}
 
 				// Validate input
@@ -41,20 +37,15 @@ export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationO
 				// Handle validation errors
 				if (error instanceof z.ZodError) {
 					const errorMessage = error.errors.map((e) => e.message).join('; ');
-					throw {
+					throw createError({
 						message: 'Invalid input data',
 						kind: 'validation_error',
 						description: errorMessage
-					} as ServiceError;
+					});
 				}
 
 				// Handle service errors that we explicitly threw
-				if (typeof error === 'object' && error !== null && 'kind' in error) {
-					throw error as ServiceError;
-				}
-
-				// Handle Tauri errors
-				throw handleTauriError(error);
+				throw createError(error);
 			}
 		},
 		...options

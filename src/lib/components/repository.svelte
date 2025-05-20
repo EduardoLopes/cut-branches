@@ -11,7 +11,7 @@
 	import { globalStore } from '$lib/stores/global-store.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
+	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { isEmptyString, ensureString } from '$lib/utils/string-utils';
@@ -53,7 +53,7 @@
 				currentState.branches.length !== queryData.branches.length ||
 				currentState.currentBranch !== queryData.currentBranch
 			) {
-				repository.set(queryData as Repository);
+				repository.set(queryData);
 			}
 		}
 	});

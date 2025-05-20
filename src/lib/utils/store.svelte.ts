@@ -1,44 +1,6 @@
+import { mergeDeepRight } from 'ramda';
 import { z } from 'zod/v4';
 import { AbstractStore } from './abstract-store.svelte';
-
-/**
- * Deep merge utility function that recursively merges source into target
- */
-function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial<T>): T {
-	const output = { ...target } as T;
-
-	if (isObject(target) && isObject(source)) {
-		Object.keys(source).forEach((key) => {
-			const sourceValue = source[key as keyof typeof source];
-			const targetValue = target[key as keyof typeof target];
-
-			if (isObject(sourceValue)) {
-				if (!(key in target)) {
-					output[key as keyof T] = sourceValue as T[keyof T];
-				} else if (isObject(targetValue)) {
-					output[key as keyof T] = deepMerge(
-						targetValue as Record<string, unknown>,
-						sourceValue as Record<string, unknown>
-					) as T[keyof T];
-				} else {
-					output[key as keyof T] = sourceValue as T[keyof T];
-				}
-			} else if (sourceValue !== undefined) {
-				output[key as keyof T] = sourceValue as T[keyof T];
-			}
-		});
-	}
-
-	return output;
-}
-
-/**
- * Check if value is an object
- */
-function isObject(item: unknown): item is Record<string, unknown> {
-	return item !== null && typeof item === 'object' && !Array.isArray(item);
-}
-
 /**
  * A reactive store that can be used with Svelte 4 or Svelte 5.
  * In Svelte 5, it can be used with the new reactivity system.
@@ -73,7 +35,7 @@ export class Store<T = unknown> extends AbstractStore<T, T | undefined> {
 	 */
 	update(partialState: Partial<T>) {
 		if (typeof this.state === 'object' && this.state !== null) {
-			this.state = deepMerge(
+			this.state = mergeDeepRight(
 				this.state as unknown as Record<string, unknown>,
 				partialState as unknown as Record<string, unknown>
 			) as T;

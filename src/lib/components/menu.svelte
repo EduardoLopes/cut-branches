@@ -17,7 +17,7 @@
 	});
 
 	// This function gets the repository menu items by mapping through the repository list
-	const getItems = $derived.by(() => {
+	const getItems = $derived.by<NavigationItem[]>(() => {
 		const mappedAndFilteredItems = repoList
 			.map((repoName) => {
 				const repository = getRepositoryStore(repoName);
@@ -28,11 +28,11 @@
 						href: `/repos/${repository.state.name}`,
 						badge:
 							repository.state.branchesCount > 0 ? `${repository.state.branchesCount}` : undefined
-					} as NavigationItem;
+					} satisfies NavigationItem;
 				}
 				return undefined;
 			})
-			.filter((item): item is NavigationItem => {
+			.filter((item) => {
 				return !!item;
 			});
 

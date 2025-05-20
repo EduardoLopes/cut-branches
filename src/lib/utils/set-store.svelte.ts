@@ -16,37 +16,37 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 	}
 
 	add(items: T[]) {
-		items.forEach((item) => this.state.add(item));
+		items.forEach((item) => this.state?.add(item));
 		this.updateStorage();
 	}
 
 	delete(items: T[]) {
-		items.forEach((item) => this.state.delete(item));
+		items.forEach((item) => this.state?.delete(item));
 		this.updateStorage();
 	}
 
 	has(item: T): boolean {
-		return this.state.has(item);
+		return this.state?.has(item) ?? false;
 	}
 
 	protected getAsList(): T[] {
-		return Array.from(this.state);
+		return Array.from(this.state ?? []);
 	}
 
 	protected getStorableData(): T[] {
-		return [...this.state];
+		return [...(this.state ?? [])];
 	}
 
 	protected getDataSchema(): z.ZodType<T[]> {
 		return this.arraySchema;
 	}
 
-	protected createCollection(data: unknown): SvelteSet<T> {
-		return new SvelteSet(data as T[]);
+	protected createCollection(data: T[]): SvelteSet<T> {
+		return new SvelteSet(data);
 	}
 
 	protected doClear(): void {
-		this.state.clear();
+		this.state?.clear();
 	}
 
 	public static getInstance<T>(
@@ -58,7 +58,7 @@ export class SetStore<T> extends AbstractStore<T, SvelteSet<T>> {
 		const schemaArgs = [itemSchema];
 
 		return AbstractStore.getCommonInstance(
-			SetStore as unknown as new (key: string, ...args: unknown[]) => SetStore<T>,
+			SetStore as new (key: string, ...args: unknown[]) => SetStore<T>,
 			schemaArgs,
 			keyParts,
 			defaultValue

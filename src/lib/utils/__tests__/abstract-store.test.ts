@@ -14,16 +14,16 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 	}
 
 	add(item: T) {
-		this.state.add(item);
+		this.state?.add(item);
 		this.updateStorage();
 	}
 
 	protected getAsList(): T[] {
-		return Array.from(this.state);
+		return Array.from(this.state ?? []);
 	}
 
 	protected getStorableData(): T[] {
-		return [...this.state];
+		return [...(this.state ?? [])];
 	}
 
 	protected getDataSchema(): z.ZodType<T[]> {
@@ -35,7 +35,7 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 	}
 
 	protected doClear(): void {
-		this.state.clear();
+		this.state?.clear();
 	}
 
 	// Add default value methods
@@ -111,7 +111,7 @@ describe('AbstractStore', () => {
 			expect.any(Object),
 			[]
 		);
-		expect(Array.from(store.state)).toEqual(testData);
+		expect(Array.from(store.state ?? [])).toEqual(testData);
 		expect(store.list).toEqual(testData);
 	});
 
@@ -133,7 +133,7 @@ describe('AbstractStore', () => {
 
 		store.clear();
 
-		expect(store.state.size).toBe(0);
+		expect(store.state?.size).toBe(0);
 		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
 			`store_${testKey}`,
 			[],
@@ -158,7 +158,7 @@ describe('AbstractStore', () => {
 			expect.any(Object),
 			[]
 		);
-		expect(Array.from(store.state)).toEqual(newData);
+		expect(Array.from(store.state ?? [])).toEqual(newData);
 	});
 
 	it('should maintain singleton instances using getCommonInstance', () => {

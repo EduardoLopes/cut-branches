@@ -77,4 +77,22 @@ export class NotificationStore extends MapStore<string, Notification> {
 	}
 }
 
+export function isNotification(value: unknown): value is Notification {
+	return typeof value === 'object' && value !== null && 'message' in value;
+}
+
+export function getNotification(value: unknown): Notification {
+	if (isNotification(value)) {
+		return value;
+	}
+
+	// Handle case where value is not a proper Notification
+	return {
+		message:
+			typeof value === 'object' && value !== null && 'message' in value
+				? String(value.message)
+				: 'Unknown error'
+	};
+}
+
 export const notifications = new NotificationStore('notifications');

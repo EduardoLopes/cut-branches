@@ -1,12 +1,8 @@
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
-import {
-	type ServiceError,
-	type DeleteBranchesVariables,
-	DeleteBranchesInputSchema,
-	handleTauriError
-} from './common';
+import { type DeleteBranchesVariables, DeleteBranchesInputSchema } from './common';
+import { createError } from '$lib/utils/error-utils';
 
 type DeleteBranchesMutationOptions = CreateMutationOptions<
 	string[],
@@ -27,11 +23,11 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 				const validatedInput = DeleteBranchesInputSchema.parse(vars);
 
 				if (validatedInput.branches.length === 0) {
-					throw {
+					throw createError({
 						message: 'No branches selected',
 						kind: 'missing_branches',
 						description: 'Please select at least one branch to delete'
-					} as ServiceError;
+					});
 				}
 
 				const res = await invoke<string>('delete_branches', {
@@ -48,20 +44,15 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 				// Handle specific validation errors
 				if (error instanceof z.ZodError) {
 					const errorMessage = error.errors.map((e) => e.message).join('; ');
-					throw {
+					throw createError({
 						message: 'Invalid input data',
 						kind: 'validation_error',
 						description: errorMessage
-					} as ServiceError;
+					});
 				}
 
 				// Handle service errors that we explicitly threw
-				if (typeof error === 'object' && error !== null && 'kind' in error) {
-					throw error as ServiceError;
-				}
-
-				// Handle Tauri errors
-				throw handleTauriError(error);
+				throw createError(error);
 			}
 		},
 		...options

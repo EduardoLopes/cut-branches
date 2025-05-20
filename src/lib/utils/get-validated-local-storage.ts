@@ -114,7 +114,7 @@ export function getValidatedLocalStorage<T>(
 			// If validation fails but we have a default value, use it
 			if (defaultValue !== undefined) {
 				console.warn(`Validation failed for "${key}", using default value`);
-				return { success: true, data: defaultValue as T };
+				return { success: true, data: defaultValue };
 			}
 			throw error; // Re-throw to be caught by outer catch
 		}
@@ -124,7 +124,7 @@ export function getValidatedLocalStorage<T>(
 			console.error('Validation error for localStorage data:', error.format());
 			// Return default value if available, even if validation fails
 			if (defaultValue !== undefined) {
-				return { success: true, data: defaultValue as T };
+				return { success: true, data: defaultValue };
 			}
 			return { success: false, error };
 		}
@@ -132,7 +132,7 @@ export function getValidatedLocalStorage<T>(
 		// Handle other errors
 		console.error('Error in getValidatedLocalStorage:', error);
 		if (defaultValue !== undefined) {
-			return { success: true, data: defaultValue as T };
+			return { success: true, data: defaultValue };
 		}
 		return {
 			success: false,

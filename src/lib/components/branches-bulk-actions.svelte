@@ -128,8 +128,8 @@
 
 					{#if search?.state?.length ?? 0 > 0}
 						<div class={css({ fontSize: 'md' })} data-testid="search-query-info">
-							<span class={css({ color: 'neutral.950.contrast' })}>{selected?.state.size}</span>
-							{selected?.state.size === 1 ? 'is' : 'are'} selected /
+							<span class={css({ color: 'neutral.950.contrast' })}>{selected?.state?.size}</span>
+							{selected?.state?.size === 1 ? 'is' : 'are'} selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
 							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
 							<strong class={css({ color: 'primary.800' })}>
@@ -143,7 +143,7 @@
 					{#if isEmptyString(search?.state)}
 						<div data-testid="selectible-count-info">
 							{formatString('{selected} / {total} {label}', {
-								selected: selected?.state.size ?? 0,
+								selected: selected?.state?.size ?? 0,
 								total: selectibleCount,
 								label: selectibleCount === 1 ? 'branch' : 'branches'
 							})}
@@ -170,10 +170,13 @@
 				})}
 				heightSize="sm"
 				oninput={(event) => {
-					const target = event.target as HTMLInputElement;
-					onSearch(target.value);
-					search?.set(target.value);
-					searchToggle.set(true);
+					const target = event.target;
+
+					if (target instanceof HTMLInputElement) {
+						onSearch(target.value);
+						search?.set(target.value);
+						searchToggle.set(true);
+					}
 				}}
 				autocorrect="off"
 				placeholder="Search branches"
@@ -203,7 +206,7 @@
 			<div data-testid="delete-branch-modal">
 				<DeleteBranchModal
 					id={currentRepo?.name}
-					buttonProps={{ disabled: selected?.state.size === 0 }}
+					buttonProps={{ disabled: selected?.state?.size === 0 }}
 				/>
 			</div>
 		{/if}

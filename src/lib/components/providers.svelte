@@ -7,7 +7,8 @@
 	} from '@tanstack/svelte-query';
 	import { type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
-	import { notifications } from '$lib/stores/notifications.svelte';
+	import { getNotification, notifications } from '$lib/stores/notifications.svelte';
+	import { createError } from '$lib/utils/error-utils';
 
 	interface Props {
 		children?: Snippet;
@@ -18,25 +19,30 @@
 	const mutationCache = new MutationCache({
 		onSuccess: (_data, _variabled, _context, mutation) => {
 			if (mutation.meta?.showSuccessNotifiacation) {
-				const notificationInfo = mutation.meta?.notification as {
-					message: string;
-					description: string;
-				};
+				const notificationInfo = getNotification(mutation.meta?.notification);
 
 				if (notificationInfo.message) {
 					notifications.push({
 						feedback: 'success',
-						title: notificationInfo.message,
-						message: notificationInfo.description
+						title: notificationInfo.title,
+						message: notificationInfo.message
 					});
 				}
 			}
 		},
 		onError: (error, _variabled, _context, mutation) => {
-			const e = error as unknown as ServiceError;
+			const e = createError(error);
 
 			if (mutation.meta?.showErrorNotification) {
-				notifications.push({ feedback: 'danger', title: e.message, message: e.description });
+				const notificationInfo = getNotification(mutation.meta?.notification);
+
+				if (notificationInfo.message) {
+					notifications.push({
+						feedback: 'danger',
+						title: notificationInfo.title ?? e.message,
+						message: notificationInfo.message ?? e.description
+					});
+				}
 			}
 		}
 	});
@@ -44,25 +50,30 @@
 	const queryCache = new QueryCache({
 		onSuccess: (_, query) => {
 			if (query.meta?.showSuccessNotification) {
-				const notificationInfo = query.meta?.notification as {
-					message: string;
-					description: string;
-				};
+				const notificationInfo = getNotification(query.meta?.notification);
 
 				if (notificationInfo.message) {
 					notifications.push({
 						feedback: 'success',
-						title: notificationInfo.message,
-						message: notificationInfo.description
+						title: notificationInfo.title,
+						message: notificationInfo.message
 					});
 				}
 			}
 		},
 		onError: (error, query) => {
-			const e = error as unknown as ServiceError;
+			const e = createError(error);
 
 			if (query.meta?.showErrorNotification) {
-				notifications.push({ feedback: 'danger', title: e.message, message: e.description });
+				const notificationInfo = getNotification(query.meta?.notification);
+
+				if (notificationInfo.message) {
+					notifications.push({
+						feedback: 'danger',
+						title: notificationInfo.title ?? e.message,
+						message: notificationInfo.message ?? e.description
+					});
+				}
 			}
 		}
 	});

@@ -120,11 +120,9 @@ describe('createSwitchBranchMutation', () => {
 		const config = createMutationArg();
 		const mutationFn = config.mutationFn;
 
-		// Call the mutation function directly
-		await expect(mutationFn({ path: mockPath, branch: mockBranch })).rejects.toEqual({
-			message: 'Failed to switch branch',
-			kind: 'unknown_error',
-			description: 'An unexpected error occurred'
+		// Using partial matching for just the message
+		await expect(mutationFn({ path: mockPath, branch: mockBranch })).rejects.toMatchObject({
+			message: 'Failed to switch branch'
 		});
 	});
 

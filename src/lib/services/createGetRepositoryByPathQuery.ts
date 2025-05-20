@@ -1,7 +1,8 @@
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
-import { type ServiceError, type Repository, RepositorySchema, handleTauriError } from './common';
+import { type Repository, RepositorySchema } from './common';
+import { createError } from '$lib/utils/error-utils';
 import { isValidDate } from '$lib/utils/validation-utils';
 
 export function createGetRepositoryByPathQuery(
@@ -18,11 +19,11 @@ export function createGetRepositoryByPathQuery(
 				// Validate path
 				const currentPath = path();
 				if (!currentPath) {
-					throw {
+					throw createError({
 						message: 'No path provided',
 						kind: 'missing_path',
 						description: 'A repository path is required to fetch repository data'
-					} as ServiceError;
+					});
 				}
 
 				const res = await invoke<string>('get_repo_info', { path: currentPath });
@@ -65,20 +66,15 @@ export function createGetRepositoryByPathQuery(
 						})
 						.join('; ');
 
-					throw {
+					throw createError({
 						message: 'Invalid repository data',
 						kind: 'validation_error',
 						description: errorMessage
-					} as ServiceError;
-				}
-
-				// Handle service errors that we explicitly threw
-				if (typeof error === 'object' && error !== null && 'kind' in error) {
-					throw error as ServiceError;
+					});
 				}
 
 				// Handle Tauri errors
-				throw handleTauriError(error);
+				throw createError(error);
 			}
 		},
 		enabled: !!path(),

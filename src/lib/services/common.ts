@@ -1,25 +1,5 @@
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import type { Repository as RepoType, Branch as BranchType } from '$lib/stores/repository.svelte';
-
-// Common error schema
-export const TauriErrorSchema = z
-	.object({
-		message: z.string(),
-		kind: z.string().optional(),
-		description: z.string().optional()
-	})
-	.passthrough();
-
-export type TauriError = z.infer<typeof TauriErrorSchema>;
-
-// Service error schema
-export const ServiceErrorSchema = z.object({
-	message: z.string(),
-	kind: z.string(),
-	description: z.string()
-});
-
-export type ServiceError = z.infer<typeof ServiceErrorSchema>;
 
 // Commit schema
 export const CommitSchema = z.object({
@@ -43,15 +23,13 @@ export const BranchSchema = z
 export type Branch = BranchType;
 
 // Repository schema
-export const RepositorySchema = z
-	.object({
-		branches: z.array(BranchSchema),
-		path: z.string(),
-		name: z.string(),
-		currentBranch: z.string(),
-		id: z.string()
-	})
-	.passthrough();
+export const RepositorySchema = z.object({
+	branches: z.array(BranchSchema),
+	path: z.string(),
+	name: z.string(),
+	currentBranch: z.string(),
+	id: z.string()
+});
 
 export type Repository = RepoType;
 
@@ -78,26 +56,3 @@ export const SwitchBranchInputSchema = z.object({
 });
 
 export type SwitchBranchVariables = z.infer<typeof SwitchBranchInputSchema>;
-
-// Standardized error handling for Tauri invocations
-export function handleTauriError(error: unknown): ServiceError {
-	// Check if it's a structured error from Tauri
-	if (typeof error === 'object' && error !== null) {
-		const result = TauriErrorSchema.safeParse(error);
-		if (result.success) {
-			const tauriError = result.data;
-			return {
-				message: tauriError.message || 'An operation failed',
-				kind: tauriError.kind || 'unknown_error',
-				description: tauriError.description || 'An unexpected error occurred'
-			};
-		}
-	}
-
-	// If it's not a structured error or parsing failed, return a generic error
-	return {
-		message: 'Operation failed',
-		kind: 'unknown_error',
-		description: String(error)
-	};
-}
