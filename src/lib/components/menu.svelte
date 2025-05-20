@@ -10,7 +10,7 @@
 	const repoList = $derived(RepositoryStore.repositories.list);
 
 	// This function gets the repository menu items by mapping through the repository list
-	const getItems = () => {
+	const getItems = $derived.by(() => {
 		return repoList
 			.map((repoName) => {
 				const repository = getRepositoryStore(repoName);
@@ -19,7 +19,8 @@
 						id: repository.state.id,
 						label: repository.state.name,
 						href: `/repos/${repository.state.name}`,
-						badge: repository.state.branchesCount ? `${repository.state.branchesCount}` : undefined
+						badge:
+							repository.state.branchesCount > 0 ? `${repository.state.branchesCount}` : undefined
 					} as NavigationItem;
 				}
 				return undefined;
@@ -27,10 +28,10 @@
 			.filter((item) => {
 				return !!item;
 			});
-	};
+	});
 
 	// Create a reactive list of menu items that will update when repository states change
-	const items = $derived(getItems());
+	const items = $derived(getItems);
 </script>
 
 <section

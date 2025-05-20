@@ -46,7 +46,7 @@ describe('LockBranchToggle Component', () => {
 				}
 			});
 			const button = getByTestId('lock-toggle-button');
-			expect(button).toHaveAttribute('aria-label', 'Unlock branch');
+			expect(button).toHaveAttribute('aria-label', 'unlock branch test-branch');
 		});
 
 		test('has correct aria-label when branch is unlocked', () => {
@@ -57,7 +57,7 @@ describe('LockBranchToggle Component', () => {
 				}
 			});
 			const button = getByTestId('lock-toggle-button');
-			expect(button).toHaveAttribute('aria-label', 'Lock branch');
+			expect(button).toHaveAttribute('aria-label', 'lock branch test-branch');
 		});
 	});
 

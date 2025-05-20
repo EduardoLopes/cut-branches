@@ -8,6 +8,7 @@
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { ensureString, formatString } from '$lib/utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
 	const client = useQueryClient();
@@ -28,14 +29,19 @@
 			const m = data
 				.map((item) => {
 					const s = item.replace('Deleted branch', '').split(' (was');
-					return `- **${s[0].trim()}** (was ${s[1].trim()}`;
+					return formatString('- **{name}** (was {hash}', {
+						name: ensureString(s[0]).trim(),
+						hash: ensureString(s[1]).trim()
+					});
 				})
 				.join('\n\n');
+
 			notifications.push({
 				feedback: 'success',
-				title: `${data.length > 1 ? 'Branches' : 'Branch'} deleted from ${
-					repository?.state?.name
-				} repository`,
+				title: formatString('{type} deleted from {repo} repository', {
+					type: data.length > 1 ? 'Branches' : 'Branch',
+					repo: ensureString(repository?.state?.name)
+				}),
 				message: m
 			});
 

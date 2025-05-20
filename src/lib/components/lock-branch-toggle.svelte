@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { formatString } from '$lib/utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -40,7 +41,10 @@
 		}
 	}}
 	data-testid="lock-toggle-button"
-	aria-label={locked?.has(branch) ? 'Unlock branch' : 'Lock branch'}
+	aria-label={formatString('{action} branch {name}', {
+		action: locked?.has(branch) ? 'unlock' : 'lock',
+		name: branch
+	})}
 	{disabled}
 >
 	{#if locked?.has(branch)}
@@ -56,6 +60,9 @@
 	{/if}
 
 	<span class={visuallyHidden()}>
-		{locked?.has(branch) ? 'unlock' : 'lock'}
+		{formatString('{action} branch {name}', {
+			action: locked?.has(branch) ? 'unlock' : 'lock',
+			name: branch
+		})}
 	</span>
 </Button>

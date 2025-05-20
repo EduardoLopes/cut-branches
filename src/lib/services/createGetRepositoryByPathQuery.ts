@@ -2,6 +2,7 @@ import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
 import { type ServiceError, type Repository, RepositorySchema, handleTauriError } from './common';
+import { isValidDate } from '$lib/utils/validation-utils';
 
 export function createGetRepositoryByPathQuery(
 	path: () => string | undefined,
@@ -33,7 +34,7 @@ export function createGetRepositoryByPathQuery(
 				// Process branches to ensure valid dates
 				const processedBranches = parsedData.branches.map((branch) => {
 					// If lastCommit.date is empty or invalid, use current date
-					if (!branch.lastCommit?.date) {
+					if (!branch.lastCommit?.date || !isValidDate(branch.lastCommit.date)) {
 						return {
 							...branch,
 							lastCommit: {
@@ -43,20 +44,7 @@ export function createGetRepositoryByPathQuery(
 						};
 					}
 
-					// Validate date string - if invalid, replace with current date
-					try {
-						// Test if date is valid by attempting to create a Date object
-						new Date(branch.lastCommit.date).toISOString();
-						return branch;
-					} catch {
-						return {
-							...branch,
-							lastCommit: {
-								...(branch.lastCommit ?? {}),
-								date: new Date().toISOString()
-							}
-						};
-					}
+					return branch;
 				});
 
 				// Create the repository with processed branches and branch count
@@ -70,7 +58,13 @@ export function createGetRepositoryByPathQuery(
 			} catch (error) {
 				// Handle validation errors
 				if (error instanceof z.ZodError) {
-					const errorMessage = error.errors.map((e) => e.message).join('; ');
+					const errorMessage = error.errors
+						.map((e) => {
+							const path = e.path.join('.');
+							return path ? `${path}: ${e.message}` : e.message;
+						})
+						.join('; ');
+
 					throw {
 						message: 'Invalid repository data',
 						kind: 'validation_error',

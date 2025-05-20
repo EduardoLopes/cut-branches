@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Markdown from 'svelte-exmarkdown';
+	import { ensureString } from '$lib/utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 	import { token } from '@pindoba/panda/tokens';
 
@@ -17,6 +18,9 @@
 		iconColor = token('colors.danger.700'),
 		testId
 	}: Props = $props();
+
+	// Ensure message is a string
+	const safeMessage = ensureString(message);
 </script>
 
 <div
@@ -40,6 +44,6 @@
 		})}
 	>
 		<Icon {icon} width="64px" height="64px" color={iconColor} />
-		<div class="message" data-testid={testId}><Markdown md={message} /></div>
+		<div class="message" data-testid={testId}><Markdown md={safeMessage} /></div>
 	</div>
 </div>

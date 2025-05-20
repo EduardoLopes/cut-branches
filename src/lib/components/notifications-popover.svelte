@@ -9,13 +9,14 @@
 	import Button from '@pindoba/svelte-button';
 	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import { intlFormatDistance } from 'date-fns';
-	import { formatInTimeZone } from 'date-fns-tz';
 	import { untrack, onMount, onDestroy } from 'svelte';
 	import Notification from '$lib/components/notification.svelte';
 	import {
 		notifications,
 		type Notification as NotificationType
 	} from '$lib/stores/notifications.svelte';
+	import { formatToUserTimezone, toUserTimezone } from '$lib/utils/date-utils';
+	import { isValidDate } from '$lib/utils/validation-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -46,22 +47,6 @@
 	const userTimeZone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
 
 	/**
-	 * Formats a date in the user's timezone
-	 * @param date - The date to format
-	 * @param format - The format string to use
-	 * @returns A formatted date string in the user's timezone
-	 */
-	function formatToUserTimezone(date: Date, format = 'yyyy-MM-dd'): string {
-		try {
-			return formatInTimeZone(date, userTimeZone, format);
-		} catch (error) {
-			console.error('Error formatting date:', error);
-			// Fallback to ISO string if formatting fails
-			return date.toISOString().split('T')[0];
-		}
-	}
-
-	/**
 	 * Groups notifications by date in the user's timezone
 	 * @returns An array of notification groups sorted by date (newest first)
 	 */
@@ -76,11 +61,12 @@
 			const groups: Record<string, NotificationType[]> = {};
 
 			reversedNotifications.forEach((notification) => {
-				if (!notification.date) return;
+				if (!notification.date || !isValidDate(notification.date)) return;
 
-				const date = new Date(notification.date);
-				// Use the user's timezone to create the date key
-				const dateKey = formatToUserTimezone(date);
+				// Use our toUserTimezone utility to handle timezone conversion
+				const userTimezoneDate = toUserTimezone(notification.date, userTimeZone);
+				// Format the date for grouping
+				const dateKey = formatToUserTimezone(userTimezoneDate, 'yyyy-MM-dd', userTimeZone);
 
 				if (!groups[dateKey]) {
 					groups[dateKey] = [];
@@ -92,7 +78,8 @@
 			// Convert to array of objects with date and notifications
 			return Object.entries(groups)
 				.map(([dateKey, groupNotifications]) => ({
-					date: new Date(dateKey),
+					// Use our toUserTimezone utility to create the date object
+					date: toUserTimezone(dateKey, userTimeZone),
 					notifications: groupNotifications
 				}))
 				.sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date, newest first
@@ -429,13 +416,9 @@
 							marginBottom: 'md'
 						})}
 					>
-						{intlFormatDistance(
-							group.date,
-							new Date(formatToUserTimezone(new Date(), 'yyyy-MM-dd')),
-							{
-								unit: 'day'
-							}
-						)}
+						{intlFormatDistance(group.date, toUserTimezone(new Date(), userTimeZone), {
+							unit: 'day'
+						})}
 						<span
 							class={css({
 								fontWeight: 'normal',
@@ -444,13 +427,9 @@
 								textTransform: 'capitalize'
 							})}
 						>
-							({intlFormatDistance(
-								group.date,
-								new Date(formatToUserTimezone(new Date(), 'yyyy-MM-dd')),
-								{
-									unit: 'month'
-								}
-							)})
+							({intlFormatDistance(group.date, toUserTimezone(new Date(), userTimeZone), {
+								unit: 'month'
+							})})
 						</span>
 					</h4>
 

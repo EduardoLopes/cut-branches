@@ -8,6 +8,8 @@
 	import { type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { formatString, ensureString } from '$lib/utils/string-utils';
+	import { debounce } from '$lib/utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -25,7 +27,7 @@
 	function handleRemove() {
 		open = false;
 
-		const repoName = repository?.state?.name || currentRepo?.name;
+		const repoName = ensureString(repository?.state?.name || currentRepo?.name);
 
 		// Clear stores first
 		selected?.clear();
@@ -38,7 +40,7 @@
 		// Show notification about repository removal
 		notifications.push({
 			title: 'Repository removed',
-			message: `The repository ${repoName} has been removed`,
+			message: formatString('The repository {name} has been removed', { name: repoName }),
 			feedback: 'success'
 		});
 
@@ -86,9 +88,9 @@
 	emphasis="ghost"
 	size="sm"
 	feedback="danger"
-	onclick={() => {
+	onclick={debounce(() => {
 		open = true;
-	}}
+	}, 200)}
 	shape="square"
 	data-testid="open-remove-modal"
 >

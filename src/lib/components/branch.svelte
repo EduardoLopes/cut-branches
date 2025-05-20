@@ -2,9 +2,9 @@
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
-	import { intlFormatDistance } from 'date-fns';
 	import type { Branch } from '$lib/stores/repository.svelte';
-	import { formatDate } from '$lib/utils/format-date';
+	import { safeFormatDate, safeFormatRelativeDate } from '$lib/utils/date-utils';
+	import { cleanEmailString, containsAnyWord, formatString } from '$lib/utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
@@ -44,40 +44,12 @@
 	const alerts = $derived(
 		Object.entries({
 			fullyMerged: data.fullyMerged,
-			protectedWords: protectedWords.some((item) => data.name.includes(item)) && selected,
+			protectedWords: containsAnyWord(data.name, protectedWords) && selected,
 			offensiveWords: data.name.includes('master')
 		})
 			.filter((item) => item[1] === true)
 			.map((item) => item[0])
 	);
-
-	// Safe date formatting function to handle invalid dates
-	function safeFormatDate(dateStr: string): string {
-		try {
-			// Check if the date is valid
-			const date = new Date(dateStr);
-			if (isNaN(date.getTime())) {
-				throw new Error('Invalid date');
-			}
-			return formatDate(date);
-		} catch {
-			return 'Unknown date';
-		}
-	}
-
-	// Safe relative date formatting function
-	function safeFormatRelativeDate(dateStr: string): string {
-		try {
-			// Check if the date is valid
-			const date = new Date(dateStr);
-			if (isNaN(date.getTime())) {
-				throw new Error('Invalid date');
-			}
-			return intlFormatDistance(date, Date.now(), { unit: 'day' });
-		} catch {
-			return 'Unknown';
-		}
-	}
 </script>
 
 <div class={colorPalette} id={`branch-${data.name}-container`}>
@@ -117,7 +89,7 @@
 		class:locked
 		class:current={data.current}
 		class:selected
-		title={`${data.current ? 'Current branch ' : ''}`}
+		title={data.current ? 'Current branch' : formatString('{name}', { name: data.name })}
 		data-selected={selected}
 		data-testid={`branch-item-${data.name}`}
 		id={`branch-${data.name}-card`}
@@ -207,7 +179,7 @@
 						pindobaTransition: 'fast',
 						color: 'neutral.900'
 					})}
-					title={data.lastCommit.email.replace(/^<|>$/g, '')}
+					title={cleanEmailString(data.lastCommit.email)}
 					data-testid="author-name"
 					id={`branch-${data.name}-author`}
 				>
@@ -237,7 +209,7 @@
 						width="16px"
 						height="16px"
 						id={`branch-${data.name}-date-icon`}
-					/>{safeFormatRelativeDate(data.lastCommit.date)}
+					/>{safeFormatRelativeDate(data.lastCommit.date, { unit: 'day' })}
 				</span>
 			</div>
 		</div>
@@ -246,38 +218,39 @@
 			<Group direction="vertical" noBorder id={`branch-${data.name}-alerts-group`}>
 				{#each alerts as alert (alert)}
 					{#if alert === 'fullyMerged' && !data.current}
-						<Alert id={`branch-${data.name}-alert-${alert}`}
-							>This branch is not fully merged into the current branch!</Alert
-						>
-					{/if}
-					{#if alert === 'protectedWords'}
-						<Alert
-							feedback="warning"
-							data-testid="protected-words-alert"
-							id={`branch-${data.name}-alert-${alert}`}
-						>
-							<div id={`branch-${data.name}-alert-${alert}-content`}>
-								You're selecting a branch with the name <strong>{data.name}</strong>, review and
-								make sure you really wanna delete this branch!
+						<Alert id={`branch-${data.name}-alert-${alert}`}>
+							<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
+								<Icon icon="lucide:info" />
+								<span>This branch is not fully merged into the current branch!</span>
 							</div>
 						</Alert>
-					{/if}
-					{#if alert === 'offensiveWords'}
+					{:else if alert === 'protectedWords'}
 						<Alert
-							feedback="danger"
-							data-testid="offensive-words-alert"
 							id={`branch-${data.name}-alert-${alert}`}
+							data-testid="protected-words-alert"
+							feedback="danger"
 						>
-							<div id={`branch-${data.name}-alert-${alert}-content`}>
-								The branch name <strong>master</strong> is offensive. Check out this
-								<a
-									href="https://sfconservancy.org/news/2020/jun/23/gitbranchname/"
-									target="_blank"
-									id={`branch-${data.name}-alert-${alert}-link`}>article</a
+							<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
+								<Icon icon="lucide:alert-triangle" />
+								<span
+									>{formatString('This branch contains protected words ({name})', {
+										name: data.name
+									})}</span
 								>
-								and make sure to change the branch name to <strong>main</strong>,
-								<strong>default</strong>,
-								<strong>truck</strong> or any other word that don't offend others!
+							</div>
+						</Alert>
+					{:else if alert === 'offensiveWords'}
+						<Alert
+							id={`branch-${data.name}-alert-${alert}`}
+							data-testid="offensive-words-alert"
+							feedback="warning"
+						>
+							<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
+								<Icon icon="lucide:info" />
+								<span
+									>This branch contains potentially offensive words (e.g. 'master'). Consider
+									renaming it to align with inclusive terminology.</span
+								>
 							</div>
 						</Alert>
 					{/if}

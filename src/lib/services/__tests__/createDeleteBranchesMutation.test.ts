@@ -125,6 +125,74 @@ describe('createDeleteBranchesMutation', () => {
 		});
 	});
 
+	// Test for empty branches array (lines 30-35)
+	it('should throw an error when no branches are selected', async () => {
+		createDeleteBranchesMutation();
+
+		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+			.mock.calls[0][0];
+		const config = createMutationArg();
+		const mutationFn = config.mutationFn;
+
+		// Call the mutation function with empty branches array
+		await expect(mutationFn({ path: mockPath, branches: [] })).rejects.toMatchObject({
+			message: 'No branches selected',
+			kind: 'missing_branches',
+			description: 'Please select at least one branch to delete'
+		});
+
+		// Verify that invoke was not called
+		expect(invoke).not.toHaveBeenCalled();
+	});
+
+	// Test for Zod validation errors (lines 50-56)
+	it('should handle Zod validation errors', async () => {
+		createDeleteBranchesMutation();
+
+		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+			.mock.calls[0][0];
+		const config = createMutationArg();
+		const mutationFn = config.mutationFn;
+
+		// Call the mutation function with invalid data to trigger Zod error
+		// Missing required 'path' property
+		const invalidInput = { branches: mockBranches };
+
+		await expect(mutationFn(invalidInput as { branches: Branch[] })).rejects.toMatchObject({
+			message: 'Invalid input data',
+			kind: 'validation_error',
+			description: expect.any(String)
+		});
+
+		// Verify that invoke was not called
+		expect(invoke).not.toHaveBeenCalled();
+	});
+
+	// Test for Tauri errors (lines 60-61)
+	it('should handle Tauri errors properly', async () => {
+		// Setup a mock Tauri error with specific format
+		const tauriError = {
+			__TAURI_ERROR__: true,
+			message: 'Git operation failed',
+			stack: 'Error stack trace'
+		};
+		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(tauriError);
+
+		createDeleteBranchesMutation();
+
+		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+			.mock.calls[0][0];
+		const config = createMutationArg();
+		const mutationFn = config.mutationFn;
+
+		// Call the mutation function and expect it to handle the Tauri error
+		await expect(mutationFn({ path: mockPath, branches: mockBranches })).rejects.toMatchObject({
+			message: 'Git operation failed',
+			kind: 'unknown_error',
+			description: expect.any(String)
+		});
+	});
+
 	it('should pass custom options to createMutation', () => {
 		const onSuccessMock = vi.fn();
 		createDeleteBranchesMutation({ onSuccess: onSuccessMock });

@@ -14,6 +14,8 @@
 	import { getRepositoryStore, type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { isEmptyString, ensureString } from '$lib/utils/string-utils';
+	import { createToggle } from '$lib/utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
@@ -73,21 +75,17 @@
 		}
 	}
 
+	const searchToggle = createToggle(false);
+
 	function clearSearch() {
 		search?.clear();
+		searchToggle.reset();
 	}
 
 	let branches = $derived(
 		repository?.state
 			? repository?.state?.branches.filter((item) =>
-					item.name
-						.toLowerCase()
-						.trim()
-						.includes(
-							String(search?.state || '')
-								.toLowerCase()
-								.trim()
-						)
+					item.name.toLowerCase().trim().includes(ensureString(search?.state).toLowerCase().trim())
 				)
 			: []
 	);
@@ -115,9 +113,7 @@
 		clearInterval(interval);
 	});
 
-	const hasNoBranchesToDelete = $derived(
-		selectibleCount === 0 && (search?.state ?? '')?.length === 0
-	);
+	const hasNoBranchesToDelete = $derived(selectibleCount === 0 && isEmptyString(search?.state));
 
 	const selectedSearchLength = $derived(
 		branches?.filter((item) => selected?.has(item.name)).length ?? 0

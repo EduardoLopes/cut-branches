@@ -10,6 +10,8 @@
 	import type { Branch, Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import { isEmptyString, formatString } from '$lib/utils/string-utils';
+	import { createToggle } from '$lib/utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -35,6 +37,7 @@
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
+	const searchToggle = createToggle(false);
 
 	function handleSelectAll() {
 		const indeterminate = selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
@@ -129,14 +132,21 @@
 							{selected?.state.size === 1 ? 'is' : 'are'} selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
 							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
-							<strong class={css({ color: 'primary.800' })}>{search?.state?.trim()}</strong>
+							<strong class={css({ color: 'primary.800' })}>
+								{formatString('{query}', {
+									query: search?.state ? search.state.trim() : ''
+								})}
+							</strong>
 						</div>
 					{/if}
 
-					{#if search?.state?.length === 0 || typeof search?.state === 'undefined'}
+					{#if isEmptyString(search?.state)}
 						<div data-testid="selectible-count-info">
-							{selected?.state.size} / {selectibleCount}
-							{selectibleCount === 1 ? 'branch' : 'branches'}
+							{formatString('{selected} / {total} {label}', {
+								selected: selected?.state.size ?? 0,
+								total: selectibleCount,
+								label: selectibleCount === 1 ? 'branch' : 'branches'
+							})}
 						</div>
 					{/if}
 				</div>
@@ -163,6 +173,7 @@
 					const target = event.target as HTMLInputElement;
 					onSearch(target.value);
 					search?.set(target.value);
+					searchToggle.set(true);
 				}}
 				autocorrect="off"
 				placeholder="Search branches"
