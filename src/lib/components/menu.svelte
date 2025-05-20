@@ -25,8 +25,12 @@
 				}
 				return undefined;
 			})
+
 			.filter((item) => {
 				return !!item;
+			})
+			.sort((a, b) => {
+				return a.label.localeCompare(b.label);
 			});
 	});
 
