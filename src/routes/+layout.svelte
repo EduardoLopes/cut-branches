@@ -1,7 +1,6 @@
 <script lang="ts">
 	import '../app.css';
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
-	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { type Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -41,7 +40,6 @@
 <ThemeModeSelectScript />
 
 <Providers>
-	<SvelteQueryDevtools />
 	<div
 		class={css({
 			height: '100vh',

@@ -7,6 +7,18 @@ import { globalStore } from '$lib/stores/global-store.svelte';
 
 vi.useFakeTimers();
 
+vi.mock('@tanstack/svelte-query-devtools', () => ({
+	SvelteQueryDevtools: vi.fn().mockImplementation(() => ({
+		$$: {
+			capture: () => {},
+			on: () => {},
+			render: () => {}
+		},
+		$destroy: () => {},
+		$set: () => {}
+	}))
+}));
+
 describe('Footer Component', () => {
 	describe('Time Display', () => {
 		const fixedDate = new Date('2023-01-01T12:00:00Z');

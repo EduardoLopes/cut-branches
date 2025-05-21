@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
+	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
 	import NotificationsPopover from '$lib/components/notifications-popover.svelte';
@@ -109,7 +110,8 @@
 		class={css({
 			p: 'token(spacing.xxs)',
 			display: 'flex',
-			gap: 'xs'
+			gap: 'xs',
+			alignItems: 'center'
 		})}
 		data-testid="last-updated-container"
 	>
@@ -145,5 +147,33 @@
 			</time>
 		{/if}
 		<NotificationsPopover />
+		{#if import.meta.env.DEV}
+			<div
+				class={css({
+					width: '20px',
+					height: '20px',
+					'& .tsqd-open-btn-container': {
+						position: 'relative !important',
+						width: '20px',
+						height: '20px',
+						left: '0',
+						top: '0',
+						padding: '0 !important',
+						transition: 'fast',
+						_hover: {
+							filter: 'brightness(1.3)'
+						},
+						_focus: {
+							filter: 'brightness(1.3)'
+						},
+						_active: {
+							filter: 'brightness(0.8)'
+						}
+					}
+				})}
+			>
+				<SvelteQueryDevtools />
+			</div>
+		{/if}
 	</div>
 </div>
