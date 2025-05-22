@@ -34,3 +34,32 @@ fn main() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_fix_path_env() {
+        // Test that fix_path_env does not panic
+        let result = fix_path_env::fix();
+        // We can't really test the result as it depends on the environment,
+        // but we can ensure it doesn't panic
+        assert!(result.is_ok() || result.is_err());
+    }
+
+    #[test]
+    fn test_handlers_exist() {
+        // Verify that the command modules and functions exist
+        // This doesn't directly test the Tauri builder, but ensures
+        // that all the handlers we reference in main() are valid
+        use crate::commands;
+        use crate::path;
+
+        // Test that we can access the command functions
+        let _ = commands::get_repo_info;
+        let _ = commands::switch_branch;
+        let _ = commands::delete_branches;
+        let _ = commands::is_commit_reachable;
+        let _ = commands::restore_deleted_branch;
+        let _ = path::get_root;
+    }
+}

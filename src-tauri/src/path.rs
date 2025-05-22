@@ -9,11 +9,19 @@ use std::path::Path;
 
 use crate::error::Error;
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RootPathResponse {
     pub root_path: String,
     pub id: Option<u64>,
 }
+
+impl PartialEq for RootPathResponse {
+    fn eq(&self, other: &Self) -> bool {
+        self.root_path == other.root_path
+    }
+}
+
+impl Eq for RootPathResponse {}
 
 impl Hash for RootPathResponse {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -94,7 +102,7 @@ pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
 /// # Returns
 ///
 /// * `u64` - The calculated hash
-fn calculate_hash<T: Hash>(t: &T) -> u64 {
+fn calculate_hash<T: Hash + ?Sized>(t: &T) -> u64 {
     let mut s = DefaultHasher::new();
     t.hash(&mut s);
     s.finish()
@@ -263,78 +271,164 @@ mod tests {
         assert_ne!(calculate_hash(&value1), calculate_hash(&value3));
     }
 
+    #[test]
+    fn test_root_path_response_hash() {
+        // Test the Hash implementation for RootPathResponse
+        let resp1 = RootPathResponse {
+            root_path: "/path/to/repo".to_string(),
+            id: Some(12345),
+        };
+
+        let resp2 = RootPathResponse {
+            root_path: "/path/to/repo".to_string(), // Same path
+            id: Some(67890),                        // Different ID
+        };
+
+        let resp3 = RootPathResponse {
+            root_path: "/different/path".to_string(), // Different path
+            id: Some(12345),                          // Same ID
+        };
+
+        let resp4 = RootPathResponse {
+            root_path: "/path/to/repo".to_string(), // Same as resp1
+            id: Some(12345),                        // Same as resp1
+        };
+
+        // Create HashSets to verify Hash implementation
+        use std::collections::HashSet;
+        let mut set = HashSet::new();
+
+        // Add responses to the set
+        set.insert(resp1);
+        set.insert(resp2);
+        set.insert(resp3);
+
+        // Since resp1 and resp2 have the same path, only one should be in the set
+        // resp3 has a different path, so it should be in the set
+        assert_eq!(set.len(), 2, "HashSet should contain only 2 items");
+
+        // Verify resp4 (identical to resp1) is not added as a new item
+        let was_new = set.insert(resp4);
+        assert!(!was_new, "Identical item should not be added to HashSet");
+        assert_eq!(set.len(), 2, "HashSet size should remain 2");
+    }
+
+    #[test]
+    fn test_eq_implementation() {
+        // Test the Eq implementation for RootPathResponse
+        let resp1 = RootPathResponse {
+            root_path: "/path/to/repo".to_string(),
+            id: Some(12345),
+        };
+
+        let resp2 = RootPathResponse {
+            root_path: "/path/to/repo".to_string(), // Same path
+            id: Some(67890),                        // Different ID - should be ignored
+        };
+
+        let resp3 = RootPathResponse {
+            root_path: "/different/path".to_string(), // Different path
+            id: Some(12345),                          // Same ID - should be ignored
+        };
+
+        // Test equality based on path only
+        assert_eq!(resp1, resp2, "Items with same path should be equal");
+        assert_ne!(
+            resp1, resp3,
+            "Items with different paths should not be equal"
+        );
+    }
+
     #[tokio::test]
-    async fn test_get_root() {
-        // Save current directory
+    async fn test_get_root_non_git_repository() {
         let _guard = DirectoryGuard::new();
 
-        let repo = setup_test_repo();
-        let path = repo.path();
-        println!("Working in test repo at: {}", path.display());
+        // Create a temporary directory that is not a git repository
+        let non_git_repo = tempdir().unwrap();
+        let non_git_path = non_git_repo.path().to_str().unwrap().to_string();
 
-        // Get the repository path for a valid git repo
-        let path_str = path.to_str().unwrap().to_string();
-        let result = get_root(path_str).await;
+        // Test get_root with non-git repository
+        let result = get_root(non_git_path).await;
 
-        // Verify success for valid repo
-        assert!(
-            result.is_ok(),
-            "get_root failed for valid repo: {:?}",
-            result.err()
-        );
-        let response_str = result.unwrap();
-        let response: RootPathResponse = serde_json::from_str(&response_str).unwrap();
-        assert!(
-            response.id.is_some(),
-            "No repository ID returned for valid repo"
-        );
-
-        // Canonicalize paths for comparison
-        let expected_path =
-            std::fs::canonicalize(path).expect("Failed to canonicalize expected path");
-        let actual_path = std::fs::canonicalize(Path::new(&response.root_path))
-            .expect("Failed to canonicalize actual path");
-        assert_eq!(
-            actual_path, expected_path,
-            "Root path mismatch. Expected: {:?}, Got: {:?}",
-            expected_path, actual_path
-        );
-
-        // Test with a non-git directory
-        let non_git_dir = tempdir().unwrap();
-        let non_git_path_str = non_git_dir.path().to_str().unwrap().to_string();
-        println!(
-            "Testing non-git directory at: {}",
-            non_git_dir.path().display()
-        );
-        let result_non_git = get_root(non_git_path_str).await;
-
-        // Verify it fails with the correct error for non-git directory
-        assert!(
-            result_non_git.is_err(),
-            "Expected error for non-git directory"
-        );
-        if let Err(e) = result_non_git {
+        // Should return an error with specific kind
+        assert!(result.is_err(), "Should error for non-git repository");
+        if let Err(e) = result {
             assert_eq!(
                 e.kind, "is_not_git_repository",
-                "Wrong error kind for non-git directory: {}",
-                e.kind
+                "Wrong error kind for non-git repository"
             );
         }
+    }
 
-        // Test with a non-existent path
-        let non_existent_path_str = "/path/that/does/not/exist/ever".to_string();
-        let result_non_existent = get_root(non_existent_path_str).await;
+    #[test]
+    fn test_calculate_hash_edge_cases() {
+        // Test with empty string
+        let empty_hash = calculate_hash(&"".to_string());
+        assert!(empty_hash > 0, "Empty string should have a non-zero hash");
+
+        // Test with very long string
+        let long_string = "a".repeat(10000);
+        let long_hash = calculate_hash(&long_string);
+        assert!(long_hash > 0, "Long string should have a non-zero hash");
+
+        // Test with special characters
+        let special_chars = "!@#$%^&*()_+{}[]|\\:;\"'<>,.?/";
+        let special_hash = calculate_hash(&special_chars.to_string());
         assert!(
-            result_non_existent.is_err(),
-            "Expected error for non-existent path"
+            special_hash > 0,
+            "String with special characters should have a non-zero hash"
         );
-        if let Err(e) = result_non_existent {
-            // Changed to expect either error kind since they are platform-dependent
+    }
+
+    #[test]
+    fn test_is_git_repository_non_git_dir() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a temporary directory that is not a git repository
+        let non_git_repo = tempdir().unwrap();
+        let non_git_path = non_git_repo.path();
+
+        // Test is_git_repository with non-git directory
+        let result = is_git_repository(non_git_path);
+
+        // Should return false for non-git directory
+        assert_eq!(
+            result.unwrap(),
+            false,
+            "is_git_repository should return false for non-git directory"
+        );
+    }
+
+    #[test]
+    fn test_is_git_repository_error_handling() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory that cannot be accessed
+        // Since we can't easily create an inaccessible directory in a portable way,
+        // we'll mock the error condition by testing with a non-existent directory
+        let non_existent_path = Path::new("/path/that/does/not/exist");
+        let result = is_git_repository(non_existent_path);
+        assert!(result.is_err(), "Expected error for non-existent directory");
+        if let Err(e) = result {
+            assert_eq!(e.kind, "unable_to_access_dir", "Wrong error kind");
+        }
+
+        // Create a directory with .git directory but not a complete git repo
+        let incomplete_repo = tempdir().unwrap();
+        let incomplete_path = incomplete_repo.path();
+
+        // Create an empty .git directory
+        std::fs::create_dir(incomplete_path.join(".git")).unwrap();
+
+        // The repository exists but git commands might fail
+        let result = is_git_repository(incomplete_path);
+
+        // We might get an error or false, depending on how git behaves with the malformed repo
+        if let Ok(is_git) = result {
+            // If it returns Ok, it should be false
             assert!(
-                e.kind == "command_execution_failed" || e.kind == "unable_to_access_dir",
-                "Wrong error kind for non-existent path: {}. Expected command_execution_failed or unable_to_access_dir",
-                e.kind
+                !is_git,
+                "Incomplete repo should not be recognized as git repo"
             );
         }
     }

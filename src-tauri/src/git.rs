@@ -1258,4 +1258,254 @@ mod tests {
         assert!(skip_result.success);
         assert!(skip_result.skipped);
     }
+
+    #[test]
+    fn test_get_all_branches_with_last_commit_errors() {
+        let _guard = DirectoryGuard::new();
+
+        // Test with a non-git directory
+        let temp_dir = tempfile::tempdir().unwrap();
+        let non_git_path = temp_dir.path();
+        let result = get_all_branches_with_last_commit(non_git_path);
+        assert!(result.is_err(), "Expected error for non-git directory");
+
+        // Create a malformed .git directory to test different error paths
+        let malformed_repo = tempfile::tempdir().unwrap();
+        let malformed_path = malformed_repo.path();
+        std::fs::create_dir(malformed_path.join(".git")).unwrap();
+
+        // Run the function with the malformed repo
+        let result = get_all_branches_with_last_commit(malformed_path);
+        assert!(result.is_err(), "Expected error for malformed git repo");
+    }
+
+    #[test]
+    fn test_get_current_branch_errors() {
+        let _guard = DirectoryGuard::new();
+
+        // Test with a non-git directory
+        let temp_dir = tempfile::tempdir().unwrap();
+        let non_git_path = temp_dir.path();
+        let result = get_current_branch(non_git_path);
+        assert!(result.is_err(), "Expected error for non-git directory");
+    }
+
+    #[test]
+    fn test_branch_exists_errors() {
+        let _guard = DirectoryGuard::new();
+
+        // Test with a non-git directory
+        let temp_dir = tempfile::tempdir().unwrap();
+        let non_git_path = temp_dir.path();
+        let result = branch_exists(non_git_path, "main");
+        // This should still return a result as it's just checking existence
+        assert!(
+            result.is_ok(),
+            "branch_exists should handle non-git directories"
+        );
+        assert!(
+            !result.unwrap(),
+            "Branch should not exist in non-git directory"
+        );
+
+        // Create a malformed .git directory to test different error paths
+        let malformed_repo = tempfile::tempdir().unwrap();
+        let malformed_path = malformed_repo.path();
+        std::fs::create_dir(malformed_path.join(".git")).unwrap();
+
+        // Run the function with the malformed repo
+        let result = branch_exists(malformed_path, "main");
+        assert!(
+            result.is_ok(),
+            "branch_exists should handle malformed repos"
+        );
+        assert!(
+            !result.unwrap(),
+            "Branch should not exist in malformed repo"
+        );
+    }
+
+    #[test]
+    fn test_is_commit_reachable_comprehensive() {
+        let _guard = DirectoryGuard::new();
+
+        // Test with a non-git directory
+        let non_git_dir = tempfile::tempdir().unwrap();
+        let non_git_path = non_git_dir.path();
+        // Use a known valid SHA format for this part of the test, even if it won't be found
+        let dummy_sha = "0123456789abcdef0123456789abcdef01234567";
+        let result = is_commit_reachable(non_git_path, dummy_sha);
+        // Check that the operation itself was Ok (git command ran, or attempted to run)
+        assert!(
+            result.is_ok(),
+            "is_commit_reachable should return Ok even for non-git directories if git command can be attempted"
+        );
+        // Check that the commit was not found (or git command failed meaningfully resulting in false)
+        assert!(
+            !result.unwrap(), 
+            "is_commit_reachable should return false for non-git directories or if commit not found"
+        );
+
+        // Setup a git repository for further tests
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get the current commit hash
+        let commit_output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let full_sha = String::from_utf8(commit_output.stdout)
+            .unwrap()
+            .trim()
+            .to_string();
+
+        // Test with abbreviated SHA (first 7 characters)
+        let short_sha = full_sha[..7].to_string();
+        let result = is_commit_reachable(path, &short_sha);
+        assert!(
+            result.is_ok(),
+            "is_commit_reachable should handle short SHA"
+        );
+        assert!(result.unwrap(), "Short SHA should be reachable");
+
+        // Test with completely non-existent SHA (valid format but doesn't exist)
+        let non_existent_sha = "0123456789abcdef0123456789abcdef01234567";
+        let result = is_commit_reachable(path, non_existent_sha);
+        assert!(
+            result.is_ok(),
+            "is_commit_reachable should handle non-existent SHA"
+        );
+        assert!(!result.unwrap(), "Non-existent SHA should not be reachable");
+
+        // Test with malformed SHA (invalid format)
+        let malformed_sha = "not-a-sha";
+        let result = is_commit_reachable(path, malformed_sha);
+        assert!(
+            result.is_ok(),
+            "is_commit_reachable should handle malformed SHA"
+        );
+        assert!(!result.unwrap(), "Malformed SHA should not be reachable");
+
+        // Test with empty string
+        let empty_sha = "";
+        let result = is_commit_reachable(path, empty_sha);
+        assert!(
+            result.is_ok(),
+            "is_commit_reachable should handle empty SHA"
+        );
+        assert!(!result.unwrap(), "Empty SHA should not be reachable");
+
+        // Test error handling with a path that's not a git repository
+        let non_git_dir_for_error_test = tempfile::tempdir().unwrap();
+        let non_git_path_for_error_test = non_git_dir_for_error_test.path();
+        let result_non_git_error = is_commit_reachable(non_git_path_for_error_test, &full_sha);
+        assert!(
+            result_non_git_error.is_ok(),
+            "is_commit_reachable should return Ok for non-git directories if git command can be attempted"
+        );
+        assert!(
+            !result_non_git_error.unwrap(),
+            "is_commit_reachable should return false when path is not a git dir or commit not found"
+        );
+    }
+
+    #[test]
+    fn test_restore_deleted_branch_with_overwrite() {
+        let _guard = DirectoryGuard::new();
+
+        // Set up a git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get current commit SHA
+        let commit_output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(commit_output.stdout)
+            .unwrap()
+            .trim()
+            .to_string();
+
+        // Create a branch to test with
+        assert!(Command::new("git")
+            .args(["branch", "test-overwrite"])
+            .current_dir(path)
+            .status()
+            .unwrap()
+            .success());
+
+        // Get the current branch
+        let original_branch = get_current_branch(path).unwrap();
+
+        // Create a second branch that will conflict
+        assert!(Command::new("git")
+            .args(["branch", "conflict-branch"])
+            .current_dir(path)
+            .status()
+            .unwrap()
+            .success());
+
+        // Delete the test branch
+        assert!(Command::new("git")
+            .args(["branch", "-D", "test-overwrite"])
+            .current_dir(path)
+            .status()
+            .unwrap()
+            .success());
+
+        // Try to restore and create with the same name as an existing branch (conflict)
+        let branch_info = RestoreBranchInput {
+            original_name: "test-overwrite".to_string(),
+            target_name: "conflict-branch".to_string(), // This name already exists
+            commit_sha: commit_sha.clone(),
+            conflict_resolution: Some(ConflictResolution::Overwrite),
+        };
+
+        let result = restore_deleted_branch(path, &branch_info);
+        assert!(result.is_ok(), "Should succeed with overwrite resolution");
+
+        let restore_result = result.unwrap();
+        assert!(
+            restore_result.success,
+            "Restoration should succeed with overwrite"
+        );
+        assert_eq!(
+            restore_result.branch_name, "conflict-branch",
+            "Branch name should be the conflicting name"
+        );
+
+        // Verify we now have the branch
+        let branches_output = Command::new("git")
+            .args(["branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let branches_list = String::from_utf8(branches_output.stdout).unwrap();
+        assert!(
+            branches_list.contains("conflict-branch"),
+            "Branch should exist"
+        );
+
+        // Test with Skip conflict resolution
+        let branch_info = RestoreBranchInput {
+            original_name: "test-overwrite".to_string(),
+            target_name: "conflict-branch".to_string(), // This name already exists
+            commit_sha: commit_sha,
+            conflict_resolution: Some(ConflictResolution::Skip),
+        };
+
+        let result = restore_deleted_branch(path, &branch_info);
+        assert!(result.is_ok(), "Should succeed with skip resolution");
+
+        let restore_result = result.unwrap();
+        assert!(
+            restore_result.success,
+            "Restoration should report successful with skip"
+        );
+        assert!(restore_result.skipped, "Should report skipped");
+    }
 }

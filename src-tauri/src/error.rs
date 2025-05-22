@@ -68,4 +68,23 @@ mod tests {
 
         assert_eq!(error.to_string(), "Test error message");
     }
+
+    #[test]
+    fn test_error_as_std_error() {
+        // Test that our Error implements std::error::Error
+        let error = Error::new(
+            "Test error message".to_string(),
+            "test_error",
+            Some("Error description".to_string()),
+        );
+
+        // Check that the error can be used as a Box<dyn std::error::Error>
+        let std_error: Box<dyn std::error::Error> = Box::new(error);
+
+        // Verify we can get the error message from the std error
+        assert_eq!(
+            std_error.to_string(),
+            "Test error message (Error description)"
+        );
+    }
 }
