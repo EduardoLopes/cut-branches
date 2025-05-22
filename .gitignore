@@ -15,3 +15,7 @@ styled-system-studio
 
 /coverage
 /html
+# Tarpaulin coverage files
+tarpaulin-report.html
+/src-tauri/tarpaulin-report.html
+/src-tauri/target/tarpaulin/

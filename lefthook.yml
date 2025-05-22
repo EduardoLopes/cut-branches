@@ -15,7 +15,7 @@ pre-commit:
       run: pnpm vitest related {staged_files} --run --silent --coverage=false
     tauri-tests:
       glob: '*.rs'
-      run: pnpm test:cargo
+      run: pnpm test:cargo:coverage:fail
 
 commit-msg:
   scripts:

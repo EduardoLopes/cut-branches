@@ -27,6 +27,7 @@ fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 [dev-dependencies]
 tempfile = "3.3"
+cargo-tarpaulin = "0.32"
 
 [features]
 # by default Tauri runs in production mode
@@ -35,3 +36,8 @@ default = ["custom-protocol"]
 # this feature is used for production builds where `devPath` points to the filesystem
 # DO NOT remove this
 custom-protocol = ["tauri/custom-protocol"]
+
+# Custom script aliases
+[package.metadata.scripts]
+coverage = "cargo tarpaulin --out Html"
+coverage-open = "scripts/coverage.sh"

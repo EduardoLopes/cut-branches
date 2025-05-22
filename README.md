@@ -34,6 +34,40 @@ Build the application for production:
 pnpm run build
 ```
 
+## Testing and Coverage
+
+### Running Rust Tests
+
+To run the Rust tests:
+
+```bash
+cd src-tauri
+cargo test
+```
+
+### Running Test Coverage
+
+We use [cargo-tarpaulin](https://github.com/xd009642/tarpaulin) for Rust code coverage:
+
+```bash
+# Install cargo-tarpaulin
+cargo install cargo-tarpaulin
+
+# From the src-tauri directory, run coverage
+cd src-tauri
+
+# Basic coverage commands:
+cargo make coverage       # Generate HTML report
+cargo make coverage-open  # Generate and open HTML report
+cargo make coverage-fail  # Set a minimum coverage threshold (50%)
+
+# Detailed coverage commands:
+cargo make coverage-verbose   # Show verbose terminal output with line coverage
+cargo make coverage-detailed  # Output detailed line-by-line analysis with count
+```
+
+The HTML report will be saved to `tarpaulin-report.html` in the `src-tauri` directory.
+
 ## Usage
 
 1. Open the application and select your git repository
@@ -57,3 +91,4 @@ You may need to enter your administrator password to confirm.
 - Svelte 5
 - Tauri
 - Panda CSS
+- Rust
