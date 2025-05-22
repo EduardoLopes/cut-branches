@@ -3,8 +3,9 @@ import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '../test-wrapper.svelte';
+import type { Branch } from '$lib/services/common';
 import { createDeleteBranchesMutation } from '$lib/services/createDeleteBranchesMutation';
-import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
+import { getRepositoryStore } from '$lib/stores/repository.svelte';
 import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 
 // Mock dependencies
@@ -33,7 +34,8 @@ const mockBranches: Branch[] = [
 		name: 'feature-1',
 		current: false,
 		lastCommit: {
-			hash: 'abc123',
+			sha: 'abc123',
+			shortSha: 'abc123'.substring(0, 7),
 			date: '2023-01-01',
 			message: 'Test commit',
 			author: 'Test User',
@@ -45,7 +47,8 @@ const mockBranches: Branch[] = [
 		name: 'feature-2',
 		current: false,
 		lastCommit: {
-			hash: 'def456',
+			sha: 'def456',
+			shortSha: 'def456'.substring(0, 7),
 			date: '2023-01-02',
 			message: 'Another commit',
 			author: 'Test User',
@@ -57,7 +60,8 @@ const mockBranches: Branch[] = [
 		name: 'main',
 		current: true,
 		lastCommit: {
-			hash: 'ghi789',
+			sha: 'ghi789',
+			shortSha: 'ghi789'.substring(0, 7),
 			date: '2023-01-03',
 			message: 'Current branch commit',
 			author: 'Test User',
@@ -167,17 +171,25 @@ describe('DeleteBranchModal Component', () => {
 			const deleteButton = getByTestId('delete-button');
 			await fireEvent.click(deleteButton);
 
-			expect(deleteMutate.mutate).toHaveBeenCalledWith(
-				expect.objectContaining({
-					path: '/path/to/repo',
-					branches: expect.arrayContaining([
-						expect.objectContaining({
-							name: 'feature-1',
-							current: false
-						})
-					])
-				})
-			);
+			// Check that mutate was called
+			expect(deleteMutate.mutate).toHaveBeenCalled();
+
+			// Get first call arguments
+			const callArgs = (deleteMutate.mutate as Mock).mock.calls[0];
+
+			// First argument should be the branches/path object
+			expect(callArgs[0]).toEqual({
+				path: '/path/to/repo',
+				branches: [
+					{
+						name: 'feature-1',
+						current: false
+					}
+				]
+			});
+
+			// Second argument should have onSuccess function
+			expect(callArgs[1]).toHaveProperty('onSuccess');
 		});
 
 		test('handles multiple branch deletion', async () => {
@@ -197,15 +209,29 @@ describe('DeleteBranchModal Component', () => {
 			const deleteButton = getByTestId('delete-button');
 			await fireEvent.click(deleteButton);
 
-			expect(deleteMutate.mutate).toHaveBeenCalledWith(
-				expect.objectContaining({
-					path: '/path/to/repo',
-					branches: expect.arrayContaining([
-						expect.objectContaining({ name: 'feature-1' }),
-						expect.objectContaining({ name: 'feature-2' })
-					])
-				})
-			);
+			// Check that mutate was called
+			expect(deleteMutate.mutate).toHaveBeenCalled();
+
+			// Get first call arguments
+			const callArgs = (deleteMutate.mutate as Mock).mock.calls[0];
+
+			// First argument should be the branches/path object
+			expect(callArgs[0]).toEqual({
+				path: '/path/to/repo',
+				branches: [
+					{
+						name: 'feature-1',
+						current: false
+					},
+					{
+						name: 'feature-2',
+						current: false
+					}
+				]
+			});
+
+			// Second argument should have onSuccess function
+			expect(callArgs[1]).toHaveProperty('onSuccess');
 		});
 
 		test('prevents deletion of current branch', async () => {
@@ -234,13 +260,21 @@ describe('DeleteBranchModal Component', () => {
 			expect(mockMutate).toHaveBeenCalled();
 
 			// Get the first argument of the first call
-			const callArgs = mockMutate.mock.calls[0][0];
+			const callArgs = mockMutate.mock.calls[0];
 
-			// Update test to expect the actual behavior (which appears to include current branch)
-			expect(callArgs).toMatchObject({
+			// First argument should be the branches/path object
+			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
-				branches: expect.arrayContaining([expect.objectContaining({ name: 'main' })])
+				branches: [
+					{
+						name: 'main',
+						current: true
+					}
+				]
 			});
+
+			// Second argument should have onSuccess function
+			expect(callArgs[1]).toHaveProperty('onSuccess');
 		});
 	});
 });

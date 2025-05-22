@@ -3,12 +3,9 @@ import { describe, expect, vi, beforeEach } from 'vitest';
 import RemoveRepositoryModal from '../remove-repository-modal.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
 import { goto } from '$app/navigation';
+import type { Repository } from '$lib/services/common';
 import { notifications } from '$lib/stores/notifications.svelte';
-import {
-	getRepositoryStore,
-	RepositoryStore,
-	type Repository
-} from '$lib/stores/repository.svelte';
+import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
 import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 
 const mockRepository: Repository = {

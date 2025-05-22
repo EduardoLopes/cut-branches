@@ -2,7 +2,7 @@ import * as svelteQuery from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDeleteBranchesMutation } from '../createDeleteBranchesMutation';
-import type { Branch } from '$lib/stores/repository.svelte';
+import type { Branch } from '$lib/services/common';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
@@ -16,7 +16,8 @@ describe('createDeleteBranchesMutation', () => {
 			name: 'branch-1',
 			current: false,
 			lastCommit: {
-				hash: 'abc123',
+				sha: 'abc123',
+				shortSha: 'abc123'.substring(0, 7),
 				date: '2023-01-01',
 				message: 'Commit 1',
 				author: 'Test User',
@@ -28,7 +29,8 @@ describe('createDeleteBranchesMutation', () => {
 			name: 'branch-2',
 			current: false,
 			lastCommit: {
-				hash: 'def456',
+				sha: 'def456',
+				shortSha: 'def456'.substring(0, 7),
 				date: '2023-01-02',
 				message: 'Commit 2',
 				author: 'Test User',
@@ -38,8 +40,42 @@ describe('createDeleteBranchesMutation', () => {
 		}
 	];
 	const mockSuccessResponse = JSON.stringify([
-		'Deleted branch feature/branch1',
-		'Deleted branch feature/branch2'
+		{
+			branch: {
+				name: 'branch-1',
+				lastCommit: {
+					sha: 'abc123',
+					shortSha: 'abc123'.substring(0, 7),
+					date: '2023-01-01',
+					message: 'Initial commit',
+					author: 'Test User',
+					email: 'test@example.com'
+				},
+				current: false,
+				fullyMerged: true,
+				isRemote: false,
+				isLocked: false
+			},
+			raw_output: 'Deleted branch feature/branch1'
+		},
+		{
+			branch: {
+				name: 'branch-2',
+				lastCommit: {
+					sha: 'def456',
+					shortSha: 'def456'.substring(0, 7),
+					date: '2023-01-02',
+					message: 'Second commit',
+					author: 'Test User',
+					email: 'test@example.com'
+				},
+				current: false,
+				fullyMerged: true,
+				isRemote: false,
+				isLocked: false
+			},
+			raw_output: 'Deleted branch feature/branch2'
+		}
 	]);
 	const mockMutationResult = {
 		mutate: vi.fn(),
@@ -102,7 +138,44 @@ describe('createDeleteBranchesMutation', () => {
 		const result = await mutationFn({ path: mockPath, branches: mockBranches });
 
 		// Verify the result is processed correctly
-		expect(result).toEqual(['Deleted branch feature/branch1', 'Deleted branch feature/branch2']);
+		expect(result).toEqual([
+			{
+				branch: {
+					name: 'branch-1',
+					lastCommit: {
+						sha: 'abc123',
+						shortSha: 'abc123'.substring(0, 7),
+						date: '2023-01-01',
+						message: 'Initial commit',
+						author: 'Test User',
+						email: 'test@example.com'
+					},
+					current: false,
+					fullyMerged: true,
+					isRemote: false,
+					isLocked: false
+				},
+				raw_output: 'Deleted branch feature/branch1'
+			},
+			{
+				branch: {
+					name: 'branch-2',
+					lastCommit: {
+						sha: 'def456',
+						shortSha: 'def456'.substring(0, 7),
+						date: '2023-01-02',
+						message: 'Second commit',
+						author: 'Test User',
+						email: 'test@example.com'
+					},
+					current: false,
+					fullyMerged: true,
+					isRemote: false,
+					isLocked: false
+				},
+				raw_output: 'Deleted branch feature/branch2'
+			}
+		]);
 	});
 
 	it('should handle invoke errors when mutation function is called', async () => {

@@ -2,7 +2,7 @@ import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 import BranchListComponent from '../branch-list.svelte';
-import type { Branch } from '$lib/stores/repository.svelte';
+import type { Branch } from '$lib/services/common';
 
 // Define interface for onSuccess callback options
 interface MutationOptions {
@@ -72,7 +72,8 @@ function createMockBranches(): Branch[] {
 			name: 'feature/test-branch',
 			current: false,
 			lastCommit: {
-				hash: 'abc123',
+				sha: 'abc123',
+				shortSha: 'abc123'.substring(0, 7),
 				date: '2023-01-01',
 				message: 'Commit 1',
 				author: 'Author 1',
@@ -84,7 +85,8 @@ function createMockBranches(): Branch[] {
 			name: 'selected-branch',
 			current: false,
 			lastCommit: {
-				hash: 'def456',
+				sha: 'def456',
+				shortSha: 'def456'.substring(0, 7),
 				date: '2023-01-02',
 				message: 'Commit 2',
 				author: 'Author 2',
@@ -96,7 +98,8 @@ function createMockBranches(): Branch[] {
 			name: 'locked-branch',
 			current: false,
 			lastCommit: {
-				hash: 'ghi789',
+				sha: 'ghi789',
+				shortSha: 'ghi789'.substring(0, 7),
 				date: '2023-01-03',
 				message: 'Commit 3',
 				author: 'Author 3',
@@ -108,7 +111,8 @@ function createMockBranches(): Branch[] {
 			name: 'current-branch',
 			current: true,
 			lastCommit: {
-				hash: 'jkl012',
+				sha: 'jkl012',
+				shortSha: 'jkl012'.substring(0, 7),
 				date: '2023-01-04',
 				message: 'Commit 4',
 				author: 'Author 4',
@@ -152,7 +156,8 @@ describe('BranchList Component', () => {
 			name: `branch-${i + 1}`,
 			current: false,
 			lastCommit: {
-				hash: `hash-${i + 1}`,
+				sha: `hash-${i + 1}`,
+				shortSha: `hash-${i + 1}`.substring(0, 7),
 				date: `2023-01-${i + 1}`,
 				message: `Commit ${i + 1}`,
 				author: 'Test User',

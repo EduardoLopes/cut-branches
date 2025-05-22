@@ -4,12 +4,14 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Group from '@pindoba/svelte-group';
 	import TextInput from '@pindoba/svelte-text-input';
+	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
+	import type { Branch, Repository } from '$lib/services/common';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
-	import type { Branch, Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import type { SetStore } from '$lib/utils/set-store.svelte';
 	import { isEmptyString, formatString } from '$lib/utils/string-utils';
 	import { createToggle } from '$lib/utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
@@ -22,6 +24,8 @@
 		branches: Branch[];
 		onSearch: (value: string) => void;
 		onClearSearch: () => void;
+		actionsSnippet?: Snippet<[Repository, Set<string> | undefined, number]>;
+		selectedStore?: SetStore<string>;
 	}
 
 	const {
@@ -31,11 +35,13 @@
 		branches,
 		onSearch,
 		onClearSearch,
+		actionsSnippet,
+		selectedStore,
 		...rest
 	}: Props = $props();
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
-	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
+	const selected = $derived(selectedStore ?? getSelectedBranchesStore(currentRepo?.name));
 	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
 	const searchToggle = createToggle(false);
 
@@ -72,6 +78,12 @@
 		}
 	}
 </script>
+
+{#snippet defaultActionsSnippet(repo: Repository, selectedBranches: Set<string> | undefined)}
+	<div data-testid="delete-branch-modal">
+		<DeleteBranchModal id={repo?.name} buttonProps={{ disabled: selectedBranches?.size === 0 }} />
+	</div>
+{/snippet}
 
 <div
 	class={css({
@@ -202,13 +214,12 @@
 			</Button>
 		</Group>
 
-		{#if selectibleCount > 0 && currentRepo}
-			<div data-testid="delete-branch-modal">
-				<DeleteBranchModal
-					id={currentRepo?.name}
-					buttonProps={{ disabled: selected?.state?.size === 0 }}
-				/>
-			</div>
+		{#if currentRepo}
+			{#if actionsSnippet}
+				{@render actionsSnippet(currentRepo, selected?.state, selectedSearchLength)}
+			{:else}
+				{@render defaultActionsSnippet(currentRepo, selected?.state)}
+			{/if}
 		{/if}
 	</div>
 </div>

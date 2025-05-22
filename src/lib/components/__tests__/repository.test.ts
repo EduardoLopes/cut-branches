@@ -2,12 +2,10 @@ import { render, fireEvent } from '@testing-library/svelte';
 import type { Mock } from 'vitest';
 import Repository from '../repository.svelte';
 import TestWrapper, { testWrapperWithProps } from '../test-wrapper.svelte';
+import type { Repository as RepositoryType, Branch } from '$lib/services/common';
 import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
 import { createSwitchBranchMutation } from '$lib/services/createSwitchBranchMutation';
-import {
-	getRepositoryStore,
-	type Repository as RepositoryType
-} from '$lib/stores/repository.svelte';
+import { getRepositoryStore } from '$lib/stores/repository.svelte';
 import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 
 const mockedRepo: RepositoryType = {
@@ -21,7 +19,8 @@ const mockedRepo: RepositoryType = {
 			name: 'main',
 			current: true,
 			lastCommit: {
-				hash: 'abc123',
+				sha: 'abc123',
+				shortSha: 'abc123'.substring(0, 7),
 				message: 'Initial commit',
 				author: 'Test User',
 				email: 'user@example.com',
@@ -33,7 +32,8 @@ const mockedRepo: RepositoryType = {
 			name: 'feature/test',
 			current: false,
 			lastCommit: {
-				hash: 'def456',
+				sha: 'def456',
+				shortSha: 'def456'.substring(0, 7),
 				message: 'Add feature',
 				author: 'Test User',
 				email: 'user@example.com',
@@ -61,7 +61,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
 						name: 'main',
 						current: true,
 						lastCommit: {
-							hash: 'abc123',
+							sha: 'abc123',
+							shortSha: 'abc123'.substring(0, 7),
 							message: 'Initial commit',
 							author: 'John Doe',
 							email: 'john.doe@example.com',
@@ -73,7 +74,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
 						name: 'feature/test-branch',
 						current: false,
 						lastCommit: {
-							hash: 'abc124',
+							sha: 'abc124',
+							shortSha: 'abc124'.substring(0, 7),
 							message: 'Initial commit 2',
 							author: 'John Doe 2',
 							email: 'john.doe2@example.com',
@@ -241,7 +243,9 @@ describe('Repository Component', () => {
 
 			// Directly modify repository branches to simulate filtering
 			const repository = getRepositoryStore(mockedRepo.name);
-			const filteredBranches = mockedRepo.branches.filter((b) => b.name.includes('feature'));
+			const filteredBranches = mockedRepo.branches.filter((b: Branch) =>
+				b.name.includes('feature')
+			);
 			repository?.set({
 				...mockedRepo,
 				branches: filteredBranches

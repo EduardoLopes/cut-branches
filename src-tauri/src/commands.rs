@@ -119,15 +119,70 @@ pub async fn switch_branch(path: String, branch: String) -> Result<String, Error
 #[tauri::command(async)]
 pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, Error> {
     let raw_path = Path::new(&path);
-    let deleted_branches = crate::git::delete_branches(raw_path, &branches)?;
-    Ok(serde_json::to_string(&deleted_branches).map_err(|e| {
+    let deleted_branch_infos: Vec<crate::git::DeletedBranchInfo> =
+        crate::git::delete_branches(raw_path, &branches)?;
+
+    Ok(serde_json::to_string(&deleted_branch_infos).map_err(|e| {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!(
-                "Error converting the deleted branches list to JSON: {}",
+                "Error converting the deleted branches information to JSON: {}",
                 e
             )),
+        )
+    })?)
+}
+
+/// Command to check if a commit SHA is reachable in a git repository.
+///
+/// # Arguments
+///
+/// * `path` - Path to the git repository
+/// * `commit_sha` - The commit SHA to check
+///
+/// # Returns
+///
+/// * `Result<String, Error>` - A JSON string with the reachability status or an error
+#[tauri::command(async)]
+pub async fn is_commit_reachable(path: String, commit_sha: String) -> Result<String, Error> {
+    let raw_path = Path::new(&path);
+    let is_reachable = crate::git::is_commit_reachable(raw_path, &commit_sha)?;
+
+    let response = serde_json::json!({ "is_reachable": is_reachable });
+
+    Ok(serde_json::to_string(&response).map_err(|e| {
+        Error::new(
+            format!("Failed to serialize response: {}", e),
+            "serialization_failed",
+            Some(format!("Error converting to JSON: {}", e)),
+        )
+    })?)
+}
+
+/// Command to restore a deleted branch in a git repository.
+///
+/// # Arguments
+///
+/// * `path` - Path to the git repository
+/// * `branch_info` - Information about the branch to restore
+///
+/// # Returns
+///
+/// * `Result<String, Error>` - A JSON string with the restoration result or an error
+#[tauri::command(async)]
+pub async fn restore_deleted_branch(
+    path: String,
+    branch_info: crate::git::RestoreBranchInput,
+) -> Result<String, Error> {
+    let raw_path = Path::new(&path);
+    let result = crate::git::restore_deleted_branch(raw_path, &branch_info)?;
+
+    Ok(serde_json::to_string(&result).map_err(|e| {
+        Error::new(
+            format!("Failed to serialize response: {}", e),
+            "serialization_failed",
+            Some(format!("Error converting to JSON: {}", e)),
         )
     })?)
 }
@@ -159,7 +214,7 @@ mod tests {
         );
         let branch = &response.branches[0];
         assert!(!branch.name.is_empty(), "Branch has no name");
-        assert!(!branch.last_commit.hash.is_empty(), "No commit hash");
+        assert!(!branch.last_commit.sha.is_empty(), "No commit SHA");
         assert!(!branch.last_commit.message.is_empty(), "No commit message");
         assert_eq!(
             branch.last_commit.message, "Initial commit",
@@ -293,8 +348,13 @@ mod tests {
             "Failed to delete branch: {:?}",
             result.err()
         );
-        let deleted_branches: Vec<String> = serde_json::from_str(&result.unwrap()).unwrap();
+        let deleted_branches: Vec<crate::git::DeletedBranchInfo> =
+            serde_json::from_str(&result.unwrap()).unwrap();
         assert!(!deleted_branches.is_empty(), "No branches were deleted");
+        assert_eq!(
+            deleted_branches[0].branch.name, "branch-to-delete",
+            "Expected branch-to-delete to be deleted"
+        );
         let output = Command::new("git")
             .args(["branch"])
             .current_dir(path)
@@ -305,6 +365,124 @@ mod tests {
             !branches_output_after_delete.contains("branch-to-delete"),
             "Branch still exists after deletion: {}",
             branches_output_after_delete
+        );
+    }
+
+    #[tokio::test]
+    async fn test_is_commit_reachable_command() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get the current commit hash
+        let output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        let path_str = path.to_str().unwrap().to_string();
+
+        // Test with a valid commit SHA
+        let result = is_commit_reachable(path_str.clone(), commit_sha).await;
+        assert!(
+            result.is_ok(),
+            "is_commit_reachable command failed: {:?}",
+            result.err()
+        );
+        let response: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
+        assert!(
+            response["is_reachable"].as_bool().unwrap(),
+            "The current HEAD commit should be reachable"
+        );
+
+        // Test with an invalid commit SHA
+        let invalid_sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef".to_string();
+        let result = is_commit_reachable(path_str, invalid_sha).await;
+        assert!(result.is_ok());
+        let response: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
+        assert!(
+            !response["is_reachable"].as_bool().unwrap(),
+            "A non-existent commit should not be reachable"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_restore_deleted_branch_command() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get the current commit hash
+        let output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        // Create a test branch to delete
+        let _ = Command::new("git")
+            .args(["branch", "test-branch-to-restore"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        // Delete the branch
+        let _ = Command::new("git")
+            .args(["branch", "-D", "test-branch-to-restore"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        // Verify the branch is gone
+        let branch_check = Command::new("git")
+            .args(["show-ref", "--verify", "refs/heads/test-branch-to-restore"])
+            .current_dir(path)
+            .status()
+            .unwrap();
+        assert!(
+            !branch_check.success(),
+            "Branch should not exist before restoration"
+        );
+
+        // Create branch_info for restoration
+        let branch_info = crate::git::RestoreBranchInput {
+            original_name: "test-branch-to-restore".to_string(),
+            target_name: "test-branch-to-restore".to_string(),
+            commit_sha: commit_sha.clone(),
+            conflict_resolution: None,
+        };
+
+        let path_str = path.to_str().unwrap().to_string();
+
+        // Test the command
+        let result = restore_deleted_branch(path_str, branch_info).await;
+        assert!(
+            result.is_ok(),
+            "restore_deleted_branch command failed: {:?}",
+            result.err()
+        );
+
+        // Parse the result
+        let result_json: crate::git::RestoreBranchResult =
+            serde_json::from_str(&result.unwrap()).unwrap();
+        assert!(
+            result_json.success,
+            "Branch restoration should be successful"
+        );
+        assert_eq!(result_json.branch_name, "test-branch-to-restore");
+
+        // Verify the branch now exists
+        let branch_check = Command::new("git")
+            .args(["show-ref", "--verify", "refs/heads/test-branch-to-restore"])
+            .current_dir(path)
+            .status()
+            .unwrap();
+        assert!(
+            branch_check.success(),
+            "Branch should exist after restoration"
         );
     }
 }

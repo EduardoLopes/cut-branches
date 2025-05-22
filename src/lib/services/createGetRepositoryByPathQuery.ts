@@ -2,17 +2,17 @@ import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
 import { type Repository, RepositorySchema } from './common';
-import { createError } from '$lib/utils/error-utils';
+import { createError, type AppError } from '$lib/utils/error-utils';
 import { isValidDate } from '$lib/utils/validation-utils';
 
 export function createGetRepositoryByPathQuery(
 	path: () => string | undefined,
 	options?: Omit<
-		CreateQueryOptions<Repository, ServiceError, Repository, string[]>,
+		CreateQueryOptions<Repository, AppError, Repository, string[]>,
 		'queryKey' | 'queryFn'
 	>
 ) {
-	return createQuery<Repository, ServiceError, Repository, string[]>(() => ({
+	return createQuery<Repository, AppError, Repository, string[]>(() => ({
 		queryKey: ['branches', 'get-all', path() ?? ''],
 		queryFn: async () => {
 			try {

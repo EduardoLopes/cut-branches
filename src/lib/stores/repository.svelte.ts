@@ -4,64 +4,14 @@ import { getValidatedLocalStorage } from '../utils/get-validated-local-storage';
 import { setValidatedLocalStorage } from '../utils/set-validated-local-storage';
 import { Store } from '../utils/store.svelte';
 import { goto } from '$app/navigation';
-
-export interface Commit {
-	hash: string;
-	date: string;
-	message: string;
-	author: string;
-	email: string;
-}
-
-export interface Branch {
-	name: string;
-	current: boolean;
-	lastCommit: Commit;
-	fullyMerged: boolean;
-}
-
-export interface Repository {
-	path: string;
-	branches: Branch[];
-	name: string;
-	currentBranch: string;
-	branchesCount: number;
-	id: string;
-}
-
-// Define Zod schemas
-const commitSchema = z.object({
-	hash: z.string(),
-	date: z.string(),
-	message: z.string(),
-	author: z.string(),
-	email: z.string()
-});
-
-const branchSchema = z.object({
-	name: z.string(),
-	current: z.boolean(),
-	lastCommit: commitSchema,
-	fullyMerged: z.boolean()
-});
-
-const repositorySchema = z
-	.object({
-		path: z.string(),
-		branches: z.array(branchSchema),
-		name: z.string(),
-		currentBranch: z.string(),
-		branchesCount: z.number(),
-		id: z.string()
-	})
-	.optional();
+import { RepositorySchema, type Repository } from '$lib/services/common';
 
 // Schema for repository names list
 const repositoriesListSchema = z.array(z.string());
 
 export class RepositoryStore extends Store<Repository | undefined> {
 	constructor(repository: string) {
-		super(repository, repositorySchema, undefined);
+		super(repository, RepositorySchema, undefined);
 	}
 
 	// Create a static reactive Set to store repository names

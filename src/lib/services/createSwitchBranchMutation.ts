@@ -2,11 +2,11 @@ import { type CreateMutationOptions, createMutation } from '@tanstack/svelte-que
 import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
 import { type SwitchBranchVariables, SwitchBranchInputSchema } from './common';
-import { createError } from '$lib/utils/error-utils';
+import { createError, type AppError } from '$lib/utils/error-utils';
 
 type CreateSwitchbranchMutationOptions = CreateMutationOptions<
 	string,
-	ServiceError,
+	AppError,
 	SwitchBranchVariables,
 	unknown
 >;

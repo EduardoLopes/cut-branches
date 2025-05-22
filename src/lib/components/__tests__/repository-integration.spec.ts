@@ -87,7 +87,10 @@ vi.mock('$lib/components/branch-list.svelte', () => ({
 			div.appendChild(branchEl);
 		});
 
-		options.target.appendChild(div);
+		// Ensure target exists before appending
+		if (options && options.target) {
+			options.target.appendChild(div);
+		}
 
 		return {
 			$$: { ctx: {} },
@@ -103,7 +106,11 @@ vi.mock('$lib/components/repository-header.svelte', () => ({
 			const header = document.createElement('div');
 			header.setAttribute('data-testid', 'mock-repository-header');
 			header.textContent = 'Repository Header';
-			options.target.appendChild(header);
+
+			// Ensure target exists before appending
+			if (options && options.target) {
+				options.target.appendChild(header);
+			}
 
 			return {
 				$$: { ctx: {} },
@@ -136,7 +143,11 @@ vi.mock('$lib/components/branches-bulk-actions.svelte', () => ({
 		});
 
 		div.appendChild(deleteButton);
-		options.target.appendChild(div);
+
+		// Ensure target exists before appending
+		if (options && options.target) {
+			options.target.appendChild(div);
+		}
 
 		return {
 			$$: { ctx: {} },

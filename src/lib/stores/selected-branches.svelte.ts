@@ -11,3 +11,11 @@ export function getSelectedBranchesStore(repository?: string) {
 
 	return SetStore.getInstance<string>(['selected', repository], branchNameSchema, []);
 }
+
+export function getSelectedDeletedBranchesStore(repository?: string) {
+	if (!repository) {
+		return;
+	}
+
+	return SetStore.getInstance<string>(['selected-deleted', repository], branchNameSchema, []);
+}

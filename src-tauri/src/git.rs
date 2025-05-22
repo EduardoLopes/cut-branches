@@ -4,16 +4,18 @@ use std::process::Command;
 
 use crate::error::Error;
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Commit {
-    pub hash: String,
+    pub sha: String,
+    pub short_sha: String,
     pub date: String,
     pub message: String,
     pub author: String,
     pub email: String,
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct Branch {
     pub name: String,
     #[serde(rename = "fullyMerged")]
@@ -34,6 +36,12 @@ pub struct GitDirResponse {
     pub branches_count: usize,
     pub name: String,
     pub id: String,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+pub struct DeletedBranchInfo {
+    pub branch: Branch,
+    pub raw_output: String,
 }
 
 pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Error> {
@@ -138,7 +146,12 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
                     fully_merged: merged_branches.contains(&branch_name),
                     current: branch_name == current_branch,
                     last_commit: Commit {
-                        hash: parts[1].to_string(),
+                        sha: parts[1].to_string(),
+                        short_sha: if parts[1].len() >= 7 {
+                            parts[1][0..7].to_string()
+                        } else {
+                            parts[1].to_string()
+                        },
                         date: parts[2].to_string(),
                         message: parts[3].to_string(),
                         author: parts[4].to_string(),
@@ -266,7 +279,12 @@ pub fn get_last_commit_info(path: &Path, branch: &str) -> Result<Commit, Error> 
 
         if commit_info.len() == 5 {
             return Ok(Commit {
-                hash: commit_info[0].to_string(),
+                sha: commit_info[0].to_string(),
+                short_sha: if commit_info[0].len() >= 7 {
+                    commit_info[0][0..7].to_string()
+                } else {
+                    commit_info[0].to_string()
+                },
                 date: commit_info[1].to_string(),
                 message: commit_info[2].to_string(),
                 author: commit_info[3].to_string(),
@@ -375,7 +393,7 @@ pub fn switch_branch(path: &Path, branch: &str) -> Result<String, Error> {
     ))
 }
 
-pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<String>, Error> {
+pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<DeletedBranchInfo>, Error> {
     let mut not_found_branches: Vec<String> = Vec::new();
     let mut found_branches: Vec<String> = Vec::new();
 
@@ -459,14 +477,398 @@ pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<String>, 
         ));
     }
 
-    let branches_deleted = stdout
+    // Parse the output into structured data
+    let deleted_branches: Vec<DeletedBranchInfo> = stdout
         .trim()
         .split('\n')
         .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
-        .collect::<Vec<_>>();
+        .map(|output_line| {
+            // Parse "Deleted branch branch_name (was commit_hash)."
+            let raw_output = output_line.to_string();
+            let branch_name = if let Some(name_part) = output_line.strip_prefix("Deleted branch ") {
+                if let Some(end_idx) = name_part.find(" (was ") {
+                    name_part[..end_idx].to_string()
+                } else {
+                    name_part.to_string()
+                }
+            } else {
+                "unknown".to_string()
+            };
 
-    Ok(branches_deleted)
+            let commit_hash = if let Some(idx) = output_line.find(" (was ") {
+                let hash_part = &output_line[idx + 6..]; // Skip " (was "
+                if let Some(end_idx) = hash_part.find(")") {
+                    hash_part[..end_idx].to_string()
+                } else {
+                    "unknown".to_string()
+                }
+            } else {
+                "unknown".to_string()
+            };
+
+            // Get commit information - we use unwrap here but in a better implementation we would handle
+            // errors properly. For now, we'll fall back to a default commit if there's an error.
+            let commit = match get_last_commit_info(path, &commit_hash) {
+                Ok(commit_info) => commit_info,
+                Err(_) => Commit {
+                    sha: commit_hash.clone(),
+                    short_sha: if commit_hash.len() >= 7 {
+                        commit_hash[0..7].to_string()
+                    } else {
+                        "unknown".to_string()
+                    },
+                    date: "unknown".to_string(),
+                    message: "Commit information not available".to_string(),
+                    author: "unknown".to_string(),
+                    email: "unknown".to_string(),
+                },
+            };
+
+            DeletedBranchInfo {
+                branch: Branch {
+                    name: branch_name,
+                    fully_merged: false,
+                    last_commit: commit,
+                    current: false,
+                },
+                raw_output,
+            }
+        })
+        .collect();
+
+    Ok(deleted_branches)
+}
+
+pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, Error> {
+    let result = Command::new("git")
+        .arg("cat-file")
+        .arg("-e")
+        .arg(format!("{}^{{commit}}", commit_sha))
+        .current_dir(path)
+        .output()
+        .map_err(|e: std::io::Error| match e.kind() {
+            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
+                format!("Unable to access the path **{}**: {}", path.display(), e),
+                "unable_to_access_dir",
+                Some(e.to_string()),
+            ),
+            _ => Error::new(
+                format!(
+                    "Failed to execute git command for path {}: {}",
+                    path.display(),
+                    e
+                ),
+                "command_execution_failed",
+                Some(e.to_string()),
+            ),
+        })?;
+
+    // If the command was successful, the commit exists and is reachable
+    Ok(result.status.success())
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+#[serde(rename_all = "PascalCase")]
+pub enum ConflictResolution {
+    Overwrite,
+    Rename,
+    Skip,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RestoreBranchInput {
+    pub original_name: String,
+    pub target_name: String,
+    pub commit_sha: String,
+    pub conflict_resolution: Option<ConflictResolution>,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RestoreBranchResult {
+    pub success: bool,
+    pub branch_name: String,
+    pub message: String,
+    pub requires_user_action: bool,
+    pub conflict_details: Option<ConflictDetails>,
+    pub skipped: bool,
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct ConflictDetails {
+    pub original_name: String,
+    pub conflicting_name: String,
+}
+
+pub fn restore_deleted_branch(
+    path: &Path,
+    branch_info: &RestoreBranchInput,
+) -> Result<RestoreBranchResult, Error> {
+    // First check if the commit exists and is reachable
+    if !is_commit_reachable(path, &branch_info.commit_sha)? {
+        return Ok(RestoreBranchResult {
+            success: false,
+            branch_name: branch_info.original_name.clone(),
+            message: format!(
+                "Commit SHA **'{}'** is not reachable in the repository",
+                branch_info.commit_sha
+            ),
+            requires_user_action: false,
+            conflict_details: None,
+            skipped: false,
+        });
+    }
+
+    // Check if target name exists
+    let target_exists = branch_exists(path, &branch_info.target_name)?;
+
+    // If there's no conflict, proceed with restoration
+    if !target_exists {
+        let result = Command::new("git")
+            .arg("branch")
+            .arg(&branch_info.target_name)
+            .arg(&branch_info.commit_sha)
+            .current_dir(path)
+            .output()
+            .map_err(|e: std::io::Error| match e.kind() {
+                ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
+                    format!("Unable to access the path **{}**: {}", path.display(), e),
+                    "unable_to_access_dir",
+                    Some(e.to_string()),
+                ),
+                _ => Error::new(
+                    format!(
+                        "Failed to execute git command for path **'{}'**: {}",
+                        path.display(),
+                        e
+                    ),
+                    "command_execution_failed",
+                    Some(e.to_string()),
+                ),
+            })?;
+
+        if result.status.success() {
+            return Ok(RestoreBranchResult {
+                success: true,
+                branch_name: branch_info.target_name.clone(),
+                message: format!("Branch '{}' restored successfully", branch_info.target_name),
+                requires_user_action: false,
+                conflict_details: None,
+                skipped: false,
+            });
+        } else {
+            let stderr = String::from_utf8(result.stderr).map_err(|e| {
+                Error::new(
+                    format!("Failed to parse stderr: {}", e),
+                    "stderr_parse_failed",
+                    Some(format!("Error parsing git error output to UTF-8: {}", e)),
+                )
+            })?;
+
+            return Ok(RestoreBranchResult {
+                success: false,
+                branch_name: branch_info.target_name.clone(),
+                message: format!("Failed to restore branch: {}", stderr),
+                requires_user_action: false,
+                conflict_details: None,
+                skipped: false,
+            });
+        }
+    }
+
+    // Handle name conflict
+    if let Some(resolution) = &branch_info.conflict_resolution {
+        match resolution {
+            ConflictResolution::Overwrite => {
+                // First delete the existing branch
+                let delete_result = Command::new("git")
+                    .arg("branch")
+                    .arg("-D")
+                    .arg(&branch_info.target_name)
+                    .current_dir(path)
+                    .output()
+                    .map_err(|e: std::io::Error| match e.kind() {
+                        ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
+                            format!("Unable to access the path **{}**: {}", path.display(), e),
+                            "unable_to_access_dir",
+                            Some(e.to_string()),
+                        ),
+                        _ => Error::new(
+                            format!(
+                                "Failed to execute git command for path **'{}'**: {}",
+                                path.display(),
+                                e
+                            ),
+                            "command_execution_failed",
+                            Some(e.to_string()),
+                        ),
+                    })?;
+
+                if !delete_result.status.success() {
+                    let stderr = String::from_utf8(delete_result.stderr).map_err(|e| {
+                        Error::new(
+                            format!("Failed to parse stderr: {}", e),
+                            "stderr_parse_failed",
+                            Some(format!("Error parsing git error output to UTF-8: {}", e)),
+                        )
+                    })?;
+
+                    return Ok(RestoreBranchResult {
+                        success: false,
+                        branch_name: branch_info.target_name.clone(),
+                        message: format!("Failed to overwrite existing branch: **'{}'**", stderr),
+                        requires_user_action: false,
+                        conflict_details: None,
+                        skipped: false,
+                    });
+                }
+
+                // Then create new branch
+                let create_result = Command::new("git")
+                    .arg("branch")
+                    .arg(&branch_info.target_name)
+                    .arg(&branch_info.commit_sha)
+                    .current_dir(path)
+                    .output()
+                    .map_err(|e: std::io::Error| match e.kind() {
+                        ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
+                            format!("Unable to access the path **{}**: {}", path.display(), e),
+                            "unable_to_access_dir",
+                            Some(e.to_string()),
+                        ),
+                        _ => Error::new(
+                            format!(
+                                "Failed to execute git command for path **'{}'**: {}",
+                                path.display(),
+                                e
+                            ),
+                            "command_execution_failed",
+                            Some(e.to_string()),
+                        ),
+                    })?;
+
+                if create_result.status.success() {
+                    return Ok(RestoreBranchResult {
+                        success: true,
+                        branch_name: branch_info.target_name.clone(),
+                        message: format!(
+                            "Branch '{}' overwritten successfully",
+                            branch_info.target_name
+                        ),
+                        requires_user_action: false,
+                        conflict_details: None,
+                        skipped: false,
+                    });
+                } else {
+                    let stderr = String::from_utf8(create_result.stderr).map_err(|e| {
+                        Error::new(
+                            format!("Failed to parse stderr: {}", e),
+                            "stderr_parse_failed",
+                            Some(format!("Error parsing git error output to UTF-8: {}", e)),
+                        )
+                    })?;
+
+                    return Ok(RestoreBranchResult {
+                        success: false,
+                        branch_name: branch_info.target_name.clone(),
+                        message: format!("Failed to create branch after overwrite: {}", stderr),
+                        requires_user_action: false,
+                        conflict_details: None,
+                        skipped: false,
+                    });
+                }
+            }
+            ConflictResolution::Rename => {
+                // Create branch with new name
+                let result = Command::new("git")
+                    .arg("branch")
+                    .arg(&branch_info.target_name)
+                    .arg(&branch_info.commit_sha)
+                    .current_dir(path)
+                    .output()
+                    .map_err(|e: std::io::Error| match e.kind() {
+                        ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
+                            format!("Unable to access the path **{}**: {}", path.display(), e),
+                            "unable_to_access_dir",
+                            Some(e.to_string()),
+                        ),
+                        _ => Error::new(
+                            format!(
+                                "Failed to execute git command for path **'{}'**: {}",
+                                path.display(),
+                                e
+                            ),
+                            "command_execution_failed",
+                            Some(e.to_string()),
+                        ),
+                    })?;
+
+                if result.status.success() {
+                    return Ok(RestoreBranchResult {
+                        success: true,
+                        branch_name: branch_info.target_name.clone(),
+                        message: format!(
+                            "Branch restored with name **'{}'**",
+                            branch_info.target_name
+                        ),
+                        requires_user_action: false,
+                        conflict_details: None,
+                        skipped: false,
+                    });
+                } else {
+                    let stderr = String::from_utf8(result.stderr).map_err(|e| {
+                        Error::new(
+                            format!("Failed to parse stderr: {}", e),
+                            "stderr_parse_failed",
+                            Some(format!("Error parsing git error output to UTF-8: {}", e)),
+                        )
+                    })?;
+
+                    return Ok(RestoreBranchResult {
+                        success: false,
+                        branch_name: branch_info.target_name.clone(),
+                        message: format!(
+                            "Failed to restore branch with new name: **'{}'**",
+                            stderr
+                        ),
+                        requires_user_action: false,
+                        conflict_details: None,
+                        skipped: false,
+                    });
+                }
+            }
+            ConflictResolution::Skip => {
+                return Ok(RestoreBranchResult {
+                    success: true,
+                    branch_name: branch_info.target_name.clone(),
+                    message: format!(
+                        "Skipped restoration of branch **'{}'**",
+                        branch_info.target_name
+                    ),
+                    requires_user_action: false,
+                    conflict_details: None,
+                    skipped: true,
+                });
+            }
+        }
+    } else {
+        // No conflict resolution provided, require user action
+        return Ok(RestoreBranchResult {
+            success: false,
+            branch_name: branch_info.target_name.clone(),
+            message: format!(
+                "Branch name **'{}'** already exists",
+                branch_info.target_name
+            ),
+            requires_user_action: true,
+            conflict_details: Some(ConflictDetails {
+                original_name: branch_info.original_name.clone(),
+                conflicting_name: branch_info.target_name.clone(),
+            }),
+            skipped: false,
+        });
+    }
 }
 
 #[cfg(test)]
@@ -565,8 +967,8 @@ mod tests {
 
         // Verify commit information exists
         assert!(
-            !current.unwrap().last_commit.hash.is_empty(),
-            "Commit hash is empty"
+            !current.unwrap().last_commit.sha.is_empty(),
+            "Commit SHA is empty"
         );
         assert!(
             !current.unwrap().last_commit.message.is_empty(),
@@ -736,5 +1138,124 @@ mod tests {
             "Branch still exists after deletion: {}",
             branches_output_after_delete
         );
+    }
+
+    #[test]
+    fn test_is_commit_reachable() {
+        // Save current directory
+        let _guard = DirectoryGuard::new();
+
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get the current commit hash
+        let output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        // Test with a valid commit SHA
+        let result = is_commit_reachable(path, &commit_sha);
+        assert!(result.is_ok());
+        assert!(
+            result.unwrap(),
+            "The current HEAD commit should be reachable"
+        );
+
+        // Test with an invalid commit SHA
+        let invalid_sha = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+        let result = is_commit_reachable(path, invalid_sha);
+        assert!(result.is_ok());
+        assert!(
+            !result.unwrap(),
+            "A non-existent commit should not be reachable"
+        );
+    }
+
+    #[test]
+    fn test_restore_deleted_branch() {
+        // Save current directory
+        let _guard = DirectoryGuard::new();
+
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get the current commit hash
+        let output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        // Create a test branch to delete
+        let _ = Command::new("git")
+            .args(["branch", "test-branch-to-delete"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        // Verify the branch exists
+        assert!(branch_exists(path, "test-branch-to-delete").unwrap());
+
+        // Delete the branch
+        let _ = Command::new("git")
+            .args(["branch", "-D", "test-branch-to-delete"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        // Verify the branch is gone
+        assert!(!branch_exists(path, "test-branch-to-delete").unwrap());
+
+        // Test restoring the branch
+        let restore_input = RestoreBranchInput {
+            original_name: "test-branch-to-delete".to_string(),
+            target_name: "test-branch-to-delete".to_string(),
+            commit_sha: commit_sha.clone(),
+            conflict_resolution: None,
+        };
+
+        let result = restore_deleted_branch(path, &restore_input);
+        assert!(result.is_ok());
+        let restore_result = result.unwrap();
+        assert!(restore_result.success);
+        assert_eq!(restore_result.branch_name, "test-branch-to-delete");
+        assert!(!restore_result.skipped);
+
+        // Verify the branch is back
+        assert!(branch_exists(path, "test-branch-to-delete").unwrap());
+
+        // Test conflict handling
+        let conflict_input = RestoreBranchInput {
+            original_name: "test-branch-to-delete".to_string(),
+            target_name: "test-branch-to-delete".to_string(),
+            commit_sha: commit_sha.clone(),
+            conflict_resolution: None,
+        };
+
+        let result = restore_deleted_branch(path, &conflict_input);
+        assert!(result.is_ok());
+        let conflict_result = result.unwrap();
+        assert!(!conflict_result.success);
+        assert!(conflict_result.requires_user_action);
+        assert!(conflict_result.conflict_details.is_some());
+        assert!(!conflict_result.skipped);
+
+        // Test skip conflict resolution
+        let skip_input = RestoreBranchInput {
+            original_name: "test-branch-to-delete".to_string(),
+            target_name: "test-branch-to-delete".to_string(),
+            commit_sha: commit_sha.clone(),
+            conflict_resolution: Some(ConflictResolution::Skip),
+        };
+
+        let result = restore_deleted_branch(path, &skip_input);
+        assert!(result.is_ok());
+        let skip_result = result.unwrap();
+        assert!(skip_result.success);
+        assert!(skip_result.skipped);
     }
 }

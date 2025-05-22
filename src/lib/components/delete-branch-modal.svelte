@@ -2,11 +2,14 @@
 	import Icon from '@iconify/svelte';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import BranchComponent from '$lib/components/branch.svelte';
+	import type { Branch } from '$lib/services/common';
 	import { createDeleteBranchesMutation } from '$lib/services/createDeleteBranchesMutation';
+	import { getDeletedBranchesStore } from '$lib/stores/deleted-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { getRepositoryStore, type Branch } from '$lib/stores/repository.svelte';
+	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { ensureString, formatString } from '$lib/utils/string-utils';
 	import { css } from '@pindoba/panda/css';
@@ -28,10 +31,9 @@
 		onSuccess(data) {
 			const m = data
 				.map((item) => {
-					const s = item.replace('Deleted branch', '').split(' (was');
-					return formatString('- **{name}** (was {hash}', {
-						name: ensureString(s[0]).trim(),
-						hash: ensureString(s[1]).trim()
+					return formatString('- **{name}** (was {sha})', {
+						name: ensureString(item.branch.name).trim(),
+						sha: ensureString(item.branch.lastCommit.shortSha).trim()
 					});
 				})
 				.join('\n\n');
@@ -74,16 +76,29 @@
 
 	function handleDelete() {
 		if (repository?.state?.path) {
-			deleteMutation.mutate({
-				path: repository?.state?.path,
-				branches: branches.map((item) => ({
-					name: item.name,
-					current: item.current
-				}))
-			});
-		}
+			deleteMutation.mutate(
+				{
+					path: repository.state.path,
+					branches: branches.map((item) => ({
+						name: item.name,
+						current: item.current
+					}))
+				},
+				{
+					onSuccess: (data) => {
+						// Log deleted branches to the deleted branches store
+						const deletedBranchesStore = getDeletedBranchesStore(repository.state?.id);
+						if (deletedBranchesStore && repository.state?.path) {
+							data.forEach((deletedBranch) => {
+								deletedBranchesStore.addDeletedBranch(deletedBranch.branch);
+							});
+						}
 
-		open = false;
+						open = false;
+					}
+				}
+			);
+		}
 	}
 
 	function handleCancel() {
@@ -97,6 +112,7 @@
 	aria-label="Delete branches"
 	aria-describedby="Delete branches"
 	data-testid="delete-branch-dialog"
+	showCloseButton={!deleteMutation.isPending}
 >
 	<p data-testid="delete-branch-dialog-question">
 		Are you sure you want these branches from the repository <strong
@@ -116,7 +132,7 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each branches as branch (branch.name)}
+		{#each branches as branch (`${branch.name}-${branch.lastCommit.sha}`)}
 			<div
 				class={css({
 					position: 'relative',
@@ -138,10 +154,17 @@
 			gap: 'md'
 		})}
 	>
-		<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-button">Cancel</Button>
-		<Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
-			>Delete</Button
+		<Button
+			emphasis="secondary"
+			onclick={handleCancel}
+			data-testid="cancel-button"
+			disabled={deleteMutation.isPending}>Cancel</Button
 		>
+		<Loading isLoading={deleteMutation.isPending}>
+			<Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
+				>Delete</Button
+			>
+		</Loading>
 	</div>
 </Dialog>
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getRepositoryStore, RepositoryStore } from '../repository.svelte';
-import type { Repository } from '../repository.svelte';
 import { goto } from '$app/navigation';
+import type { Repository } from '$lib/services/common';
 
 vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
@@ -110,15 +110,28 @@ describe('RepositoryStore', () => {
 		const repository = 'test-repo';
 		const store = new RepositoryStore(repository);
 
-		// Set to undefined (null would work similarly)
+		// First set a value to store.state with an actual repository
+		const repoData = {
+			name: 'repo-name',
+			path: '/path/to/repo',
+			branches: [],
+			currentBranch: 'main',
+			branchesCount: 0,
+			id: 'unique-id'
+		};
+		store.set(repoData);
+
+		// Reset mocks
+		vi.clearAllMocks();
+
+		// Now set to undefined (null would work similarly)
 		store.set(undefined);
 
 		// Should not call goto when setting undefined
 		expect(goto).not.toHaveBeenCalled();
 
-		// Shouldn't interact with repositories
-		expect(mockSetStore.add).not.toHaveBeenCalled();
-		expect(mockSetStore.delete).not.toHaveBeenCalled();
+		// Should delete the previous repository name
+		expect(mockSetStore.delete).toHaveBeenCalledWith(['repo-name']);
 	});
 
 	it('should delete repository from repositories when setting a repo without a name', () => {

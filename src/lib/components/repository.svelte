@@ -1,34 +1,56 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
 	import { onDestroy } from 'svelte';
+	import RestoreDeletedBranchModal from './restore-deleted-branch-modal.svelte';
 	import { navigating } from '$app/state';
 	import BranchList from '$lib/components/branch-list.svelte';
 	import BulkActions from '$lib/components/branches-bulk-actions.svelte';
 	import EmptyState from '$lib/components/empty-state.svelte';
 	import ErrorMessage from '$lib/components/error-message.svelte';
 	import RepositoryHeader from '$lib/components/repository-header.svelte';
+	import type { Branch, Repository } from '$lib/services/common';
 	import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
+	import { getDeletedBranchesStore } from '$lib/stores/deleted-branches.svelte';
 	import { globalStore } from '$lib/stores/global-store.svelte';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
-	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import {
+		getSelectedBranchesStore,
+		getSelectedDeletedBranchesStore
+	} from '$lib/stores/selected-branches.svelte';
 	import { isEmptyString, ensureString } from '$lib/utils/string-utils';
 	import { createToggle } from '$lib/utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		id?: string;
+		branchesType?: 'current' | 'deleted'; // Type of branches to display
+		allowLocking?: boolean; // Whether branches can be locked
+		allowSelection?: boolean; // Whether branches can be selected
+		allowSetCurrent?: boolean; // Whether branches can be set as current
 	}
-	const { id }: Props = $props();
+
+	const {
+		id,
+		branchesType = 'current',
+		allowLocking = true,
+		allowSelection = true,
+		allowSetCurrent = true
+	}: Props = $props();
 
 	const oneMinute = 60000;
 
 	const repository = $derived(getRepositoryStore(id));
 	const search = $derived(getSearchBranchesStore(id));
 	const locked = $derived(getLockedBranchesStore(id));
-	const selected = $derived(getSelectedBranchesStore(id));
+	const selectedBranchesStore = $derived(getSelectedBranchesStore(id));
+	const selectedDeletedBranchesStore = $derived(getSelectedDeletedBranchesStore(id));
+	const selected = $derived(
+		branchesType === 'current' ? selectedBranchesStore : selectedDeletedBranchesStore
+	);
+	const deletedBranchesStore = $derived(getDeletedBranchesStore(id));
 
 	const getBranchesQuery = createGetRepositoryByPathQuery(() => repository?.state?.path, {
 		staleTime: oneMinute
@@ -84,10 +106,21 @@
 
 	let branches = $derived(
 		repository?.state
-			? repository?.state?.branches.filter((item) =>
+			? repository?.state?.branches.filter((item: Branch) =>
 					item.name.toLowerCase().trim().includes(ensureString(search?.state).toLowerCase().trim())
 				)
 			: []
+	);
+
+	let deletedBranches = $derived(deletedBranchesStore?.state?.branches ?? []);
+
+	// Filter deleted branches by search term if needed
+	let filteredDeletedBranches = $derived(
+		branchesType === 'deleted' && search?.state
+			? deletedBranches.filter((item) =>
+					item.name.toLowerCase().trim().includes(ensureString(search?.state).toLowerCase().trim())
+				)
+			: deletedBranches
 	);
 
 	$effect(() => {
@@ -97,15 +130,23 @@
 	});
 
 	let selectibleCount = $derived.by(() => {
+		if (branchesType === 'deleted') {
+			return filteredDeletedBranches.filter((item) => item.isReachable !== false).length;
+		}
+
 		if (!branches || !repository?.state) {
 			return 0;
 		}
 		return branches.filter(
-			(item) => item.name !== repository?.state?.currentBranch && !locked?.has(item.name)
+			(item: Branch) =>
+				item.name !== repository?.state?.currentBranch && (!locked?.has(item.name) || !allowLocking)
 		).length;
 	});
 
-	let searchNoResultsFound = $derived((search?.state?.length ?? 0) > 0 && branches?.length === 0);
+	let searchNoResultsFound = $derived(
+		(search?.state?.length ?? 0) > 0 &&
+			(branchesType === 'current' ? branches?.length === 0 : filteredDeletedBranches.length === 0)
+	);
 
 	let interval = $state<number | undefined>();
 
@@ -113,12 +154,34 @@
 		clearInterval(interval);
 	});
 
-	const hasNoBranchesToDelete = $derived(selectibleCount === 0 && isEmptyString(search?.state));
+	const hasNoBranchesToDelete = $derived(
+		branchesType === 'current'
+			? selectibleCount === 0 && isEmptyString(search?.state)
+			: filteredDeletedBranches.length === 0
+	);
 
 	const selectedSearchLength = $derived(
-		branches?.filter((item) => selected?.has(item.name)).length ?? 0
+		branchesType === 'current'
+			? (branches?.filter((item: Branch) => selectedBranchesStore?.has(item.name)).length ?? 0)
+			: (filteredDeletedBranches.filter((item) => selectedDeletedBranchesStore?.has(item.name))
+					.length ?? 0)
 	);
+
+	// Determine which branches to display
+	let displayBranches = $derived(branchesType === 'current' ? branches : filteredDeletedBranches);
 </script>
+
+{#snippet restoreDeletedBranchModalSnippet(
+	repo: Repository,
+	selectedBranches: Set<string> | undefined
+)}
+	<div data-testid="delete-branch-modal">
+		<RestoreDeletedBranchModal
+			repoId={repo?.name}
+			buttonProps={{ disabled: selectedBranches?.size === 0 }}
+		/>
+	</div>
+{/snippet}
 
 <div
 	class={css({
@@ -128,6 +191,7 @@
 		padding: 'md',
 		pl: 0
 	})}
+	class:deleted={branchesType === 'deleted'}
 >
 	<main
 		class={css({
@@ -136,7 +200,6 @@
 			overflow: 'hidden',
 			position: 'relative',
 			height: '100%',
-
 			borderRadius: 'md',
 			_light: {
 				background: 'neutral.50'
@@ -152,6 +215,13 @@
 				repositoryId={repository?.state?.id}
 				isLoading={getBranchesQuery.isFetching}
 				onUpdate={update_repo}
+				title={branchesType === 'deleted'
+					? `Restore branches from ${repository?.state?.name.toLocaleUpperCase()}`
+					: undefined}
+				showBackButton={branchesType === 'deleted'}
+				showRestoreButton={branchesType === 'current'}
+				showUpdateButton={branchesType === 'current'}
+				showRemoveButton={branchesType === 'current'}
 			/>
 		{/if}
 		<!-- TOP BAR END -->
@@ -186,6 +256,17 @@
 					overflowY: 'auto',
 					overflowX: 'hidden',
 					borderRadius: 'md',
+					border: '1px solid',
+					borderColor: 'transparent',
+					'.deleted &': {
+						borderColor: 'danger.600',
+						_light: {
+							background: 'danger.200'
+						},
+						_dark: {
+							background: 'danger.50'
+						}
+					},
 					_light: {
 						background: 'neutral.200'
 					},
@@ -197,16 +278,20 @@
 		>
 			<!-- GERAL -->
 
-			{#if !hasNoBranchesToDelete}
+			{#if allowSelection}
 				<BulkActions
 					currentRepo={repository?.state}
-					{selectibleCount}
+					selectibleCount={branchesType === 'current'
+						? selectibleCount
+						: filteredDeletedBranches.length}
 					{selectedSearchLength}
-					{branches}
+					branches={branchesType === 'current' ? branches : filteredDeletedBranches}
 					onSearch={() => {
 						// Reset page on search
 					}}
 					onClearSearch={clearSearch}
+					actionsSnippet={branchesType === 'deleted' ? restoreDeletedBranchModalSnippet : undefined}
+					selectedStore={selected}
 				/>
 			{/if}
 
@@ -219,7 +304,7 @@
 			{/if}
 			<!-- ERRO MESSAGE END -->
 
-			{#if hasNoBranchesToDelete}
+			{#if hasNoBranchesToDelete && branchesType === 'current'}
 				<div
 					class={css({
 						display: 'flex',
@@ -236,17 +321,25 @@
 				<EmptyState message={`No results for **${search?.state}**!`} testId="no-results-message" />
 			{/if}
 
-			{#if repository?.state?.branches.length === 0}
+			{#if branchesType === 'current' && repository?.state?.branches.length === 0}
 				<EmptyState message="This repository has no branches!" icon="mdi:source-branch-remove" />
 			{/if}
 
+			{#if branchesType === 'deleted' && filteredDeletedBranches.length === 0 && !searchNoResultsFound}
+				<EmptyState message="No deleted branches found!" icon="mdi:source-branch-remove" />
+			{/if}
+
 			<!-- BRANCHES -->
-			{#key `${id}`}
-				{#if repository?.state && !getBranchesQuery.isError && !searchNoResultsFound && repository?.state?.branches.length > 0}
+			{#key `${id}-${branchesType}`}
+				{#if repository?.state && !getBranchesQuery.isError && !searchNoResultsFound && displayBranches.length > 0}
 					<BranchList
-						{branches}
-						currentBranch={repository?.state?.currentBranch}
+						branches={displayBranches}
+						currentBranch={branchesType === 'current' ? repository?.state?.currentBranch : ''}
 						repositoryID={id}
+						{allowLocking}
+						{allowSelection}
+						{allowSetCurrent}
+						selectedStore={selected}
 					/>
 				{/if}
 			{/key}

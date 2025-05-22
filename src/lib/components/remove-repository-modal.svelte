@@ -3,9 +3,9 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { goto } from '$app/navigation';
+	import type { Repository } from '$lib/services/common';
 	import { notifications } from '$lib/stores/notifications.svelte';
 	import { getRepositoryStore, RepositoryStore } from '$lib/stores/repository.svelte';
-	import { type Repository } from '$lib/stores/repository.svelte';
 	import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
 	import { formatString, ensureString } from '$lib/utils/string-utils';

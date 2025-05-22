@@ -1,26 +1,33 @@
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
-import { z } from 'zod';
-import { type DeleteBranchesVariables, DeleteBranchesInputSchema } from './common';
-import { createError } from '$lib/utils/error-utils';
+import { z } from 'zod/v4';
+import { type DeleteBranchesVariables, BranchSchema, DeleteBranchesInputSchema } from './common';
+import { createError, type AppError } from '$lib/utils/error-utils';
 
 type DeleteBranchesMutationOptions = CreateMutationOptions<
-	string[],
-	ServiceError,
+	DeletedBranchInfo[],
+	AppError,
 	DeleteBranchesVariables,
 	unknown
 >;
 
 // Response schema for delete branches
-const DeleteBranchesResponseSchema = z.array(z.string());
+const DeletedBranchInfoSchema = z.object({
+	branch: BranchSchema,
+	raw_output: z.string()
+});
+
+type DeletedBranchInfo = z.infer<typeof DeletedBranchInfoSchema>;
+
+const DeleteBranchesResponseSchema = z.array(DeletedBranchInfoSchema);
 
 export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
-	return createMutation<string[], ServiceError, DeleteBranchesVariables>(() => ({
+	return createMutation<DeletedBranchInfo[], AppError, DeleteBranchesVariables>(() => ({
 		mutationKey: ['branches', 'delete'],
 		mutationFn: async (vars) => {
 			try {
 				// Validate input
-				const validatedInput = DeleteBranchesInputSchema.parse(vars);
+				const validatedInput = await DeleteBranchesInputSchema.parseAsync(vars);
 
 				if (validatedInput.branches.length === 0) {
 					throw createError({
@@ -37,20 +44,11 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 
 				// Validate response
 				const parsedResponse = JSON.parse(res);
-				const validatedResponse = DeleteBranchesResponseSchema.parse(parsedResponse);
 
-				return validatedResponse.map((item) => item.trim());
+				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(parsedResponse);
+
+				return validatedResponse;
 			} catch (error) {
-				// Handle specific validation errors
-				if (error instanceof z.ZodError) {
-					const errorMessage = error.errors.map((e) => e.message).join('; ');
-					throw createError({
-						message: 'Invalid input data',
-						kind: 'validation_error',
-						description: errorMessage
-					});
-				}
-
 				// Handle service errors that we explicitly threw
 				throw createError(error);
 			}

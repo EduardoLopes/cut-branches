@@ -1,14 +1,16 @@
 import { z } from 'zod/v4';
-import type { Repository as RepoType, Branch as BranchType } from '$lib/stores/repository.svelte';
 
 // Commit schema
 export const CommitSchema = z.object({
-	hash: z.string(),
+	sha: z.string(),
+	shortSha: z.string(),
 	date: z.string(),
 	message: z.string(),
 	author: z.string(),
 	email: z.string()
 });
+
+export type Commit = z.infer<typeof CommitSchema>;
 
 // Branch schema
 export const BranchSchema = z
@@ -16,11 +18,13 @@ export const BranchSchema = z
 		name: z.string(),
 		current: z.boolean(),
 		lastCommit: CommitSchema,
-		fullyMerged: z.boolean()
+		fullyMerged: z.boolean(),
+		deletedAt: z.string().optional(),
+		isReachable: z.boolean().optional()
 	})
 	.passthrough();
 
-export type Branch = BranchType;
+export type Branch = z.infer<typeof BranchSchema>;
 
 // Repository schema
 export const RepositorySchema = z.object({
@@ -28,10 +32,11 @@ export const RepositorySchema = z.object({
 	path: z.string(),
 	name: z.string(),
 	currentBranch: z.string(),
+	branchesCount: z.number(),
 	id: z.string()
 });
 
-export type Repository = RepoType;
+export type Repository = z.infer<typeof RepositorySchema>;
 
 // Simple branch schema for delete operations
 export const SimpleBranchSchema = z.object({

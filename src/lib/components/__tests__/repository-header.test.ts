@@ -3,7 +3,7 @@ import { tick } from 'svelte';
 import type { Writable } from 'svelte/store';
 import { vi } from 'vitest';
 import RepositoryHeader from '../repository-header.svelte';
-import type { Repository, Branch } from '$lib/stores/repository.svelte';
+import type { Repository, Branch } from '$lib/services/common';
 
 // Define a type for our mock store that includes the .state property
 interface MockRepositoryStoreType extends Writable<Repository | null> {

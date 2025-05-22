@@ -2,8 +2,8 @@ import * as svelteQuery from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createGetRepositoryByPathQuery } from '../createGetRepositoryByPathQuery';
+import type { Repository } from '$lib/services/common';
 import * as repositoryStore from '$lib/stores/repository.svelte';
-import type { Repository } from '$lib/stores/repository.svelte';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
@@ -28,7 +28,8 @@ describe('createGetRepositoryByPathQuery', () => {
 				name: 'main',
 				current: true,
 				lastCommit: {
-					hash: 'abc123',
+					sha: 'abc123',
+					shortSha: 'abc123'.substring(0, 7),
 					date: '2023-01-01',
 					message: 'Initial commit',
 					author: 'John Doe',
@@ -269,7 +270,8 @@ describe('createGetRepositoryByPathQuery', () => {
 				{
 					...mockRepository.branches[0],
 					lastCommit: {
-						hash: 'abc123',
+						sha: 'abc123',
+						shortSha: 'abc123'.substring(0, 7),
 						date: '', // Empty date should trigger the replacement logic
 						message: 'Initial commit',
 						author: 'John Doe',
@@ -301,9 +303,9 @@ describe('createGetRepositoryByPathQuery', () => {
 		expect(new Date(result.branches[0].lastCommit.date).getTime()).not.toBeNaN();
 	});
 
-	// Test for line 64 - error object with custom kind but not a ServiceError
+	// Test for line 64 - error object with custom kind but not a AppError
 	it('should handle error objects with custom kind property', async () => {
-		// Create a custom error with a kind property but not a complete ServiceError
+		// Create a custom error with a kind property but not a complete AppError
 		const customError = {
 			kind: 'custom_error',
 			message: 'Custom error message',

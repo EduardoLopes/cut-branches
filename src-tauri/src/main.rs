@@ -12,7 +12,9 @@ mod path;
 #[cfg(test)]
 pub mod test_utils;
 
-use commands::{delete_branches, get_repo_info, switch_branch};
+use commands::{
+    delete_branches, get_repo_info, is_commit_reachable, restore_deleted_branch, switch_branch,
+};
 use path::get_root;
 
 fn main() {
@@ -25,7 +27,9 @@ fn main() {
             get_root,
             get_repo_info,
             switch_branch,
-            delete_branches
+            delete_branches,
+            is_commit_reachable,
+            restore_deleted_branch
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

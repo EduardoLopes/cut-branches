@@ -2,7 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
-	import type { Branch } from '$lib/stores/repository.svelte';
+	import type { Branch } from '$lib/services/common';
 	import { safeFormatDate, safeFormatRelativeDate } from '$lib/utils/date-utils';
 	import { cleanEmailString, containsAnyWord, formatString } from '$lib/utils/string-utils';
 	import { css } from '@pindoba/panda/css';
@@ -52,9 +52,11 @@
 	);
 </script>
 
-<div class={colorPalette} id={`branch-${data.name}-container`}>
-	<div
-		class={css({
+<div
+	id={`branch-${data.name}-container`}
+	class={[
+		colorPalette,
+		css({
 			display: 'flex',
 			flexDirection: 'column',
 			borderRadius: 'md',
@@ -84,91 +86,134 @@
 				colorPalette: 'primary'
 			},
 			pindobaTransition: 'fast'
+		})
+	]}
+	class:disabled
+	class:locked
+	class:current={data.current}
+	class:selected
+	title={data.current ? 'Current branch' : formatString('{name}', { name: data.name })}
+	data-selected={selected}
+	data-testid={`branch-item-${data.name}`}
+>
+	<div
+		class={css({
+			display: 'flex',
+			flexDirection: 'column',
+			'.current &': {
+				color: 'primary.800'
+			},
+			'.selected &': {
+				borderColor: 'danger.800',
+				color: 'danger.800'
+			}
 		})}
-		class:disabled
-		class:locked
-		class:current={data.current}
-		class:selected
-		title={data.current ? 'Current branch' : formatString('{name}', { name: data.name })}
-		data-selected={selected}
-		data-testid={`branch-item-${data.name}`}
-		id={`branch-${data.name}-card`}
+		id={`branch-${data.name}-title-container`}
+	>
+		<span
+			class={css({
+				fontWeight: 600,
+				pindobaTransition: 'fast'
+			})}
+			data-testid="branch-name"
+			id={`branch-${data.name}-name`}>{data.name}</span
+		>
+	</div>
+
+	<div
+		class={css({
+			display: 'flex',
+			flexDirection: 'column',
+			borderRadius: 'md'
+		})}
+		id={`branch-${data.name}-commit-container`}
 	>
 		<div
 			class={css({
+				fontSize: 'xs',
+				textTransform: 'uppercase',
 				display: 'flex',
-				flexDirection: 'column',
-				'.current &': {
-					color: 'primary.800'
-				},
-				'.selected &': {
-					borderColor: 'danger.800',
-					color: 'danger.800'
-				}
+				flexDirection: 'row',
+				alignItems: 'center',
+				gap: 'xxs',
+				pindobaTransition: 'fast',
+				color: 'neutral.600',
+				fontWeight: 'bold'
 			})}
-			id={`branch-${data.name}-title-container`}
+			id={`branch-${data.name}-commit-label`}
 		>
-			<span
-				class={css({
-					fontWeight: 600,
-					pindobaTransition: 'fast'
-				})}
-				data-testid="branch-name"
-				id={`branch-${data.name}-name`}>{data.name}</span
-			>
+			<Icon
+				class={css({ color: 'neutral.800' })}
+				icon="lucide:git-commit-horizontal"
+				width="16px"
+				height="16px"
+				id={`branch-${data.name}-commit-icon`}
+			/> Last commit
 		</div>
+		<span
+			class={css({
+				fontSize: 'sm',
+				color: 'neutral.950',
+				pindobaTransition: 'fast',
+				mb: 'xs'
+			})}
+			data-testid="last-commit-message"
+			id={`branch-${data.name}-commit-message`}
+		>
+			{data.lastCommit.message}
+		</span>
 
 		<div
 			class={css({
 				display: 'flex',
-				flexDirection: 'column',
-				borderRadius: 'md'
+				flexDirection: 'row',
+				gap: 'sm'
 			})}
-			id={`branch-${data.name}-commit-container`}
+			id={`branch-${data.name}-commit-details`}
 		>
-			<div
+			<span
 				class={css({
-					fontSize: 'xs',
-					textTransform: 'uppercase',
+					fontSize: 'sm',
 					display: 'flex',
 					flexDirection: 'row',
 					alignItems: 'center',
 					gap: 'xxs',
 					pindobaTransition: 'fast',
-					color: 'neutral.600',
-					fontWeight: 'bold'
+					color: 'neutral.900'
 				})}
-				id={`branch-${data.name}-commit-label`}
+				title={cleanEmailString(data.lastCommit.email)}
+				data-testid="author-name"
+				id={`branch-${data.name}-author`}
 			>
 				<Icon
-					class={css({ color: 'neutral.800' })}
-					icon="lucide:git-commit-horizontal"
+					icon="lucide:circle-user-round"
 					width="16px"
 					height="16px"
-					id={`branch-${data.name}-commit-icon`}
-				/> Last commit
-			</div>
+					id={`branch-${data.name}-author-icon`}
+				/>
+				{data.lastCommit.author}
+			</span>
 			<span
 				class={css({
 					fontSize: 'sm',
-					color: 'neutral.950',
-					pindobaTransition: 'fast',
-					mb: 'xs'
-				})}
-				data-testid="last-commit-message"
-				id={`branch-${data.name}-commit-message`}
-			>
-				{data.lastCommit.message}
-			</span>
-
-			<div
-				class={css({
 					display: 'flex',
 					flexDirection: 'row',
-					gap: 'sm'
+					alignItems: 'center',
+					gap: 'xxs',
+					pindobaTransition: 'fast',
+					color: 'neutral.900'
 				})}
-				id={`branch-${data.name}-commit-details`}
+				title={safeFormatDate(data.lastCommit.date)}
+				id={`branch-${data.name}-date`}
 			>
+				<Icon
+					icon="lucide:clock"
+					width="16px"
+					height="16px"
+					id={`branch-${data.name}-date-icon`}
+				/>{safeFormatRelativeDate(data.lastCommit.date, { unit: 'day' })}
+			</span>
+			{#if data.deletedAt}
 				<span
 					class={css({
 						fontSize: 'sm',
@@ -176,86 +221,60 @@
 						flexDirection: 'row',
 						alignItems: 'center',
 						gap: 'xxs',
-						pindobaTransition: 'fast',
-						color: 'neutral.900'
+						color: 'danger.800',
+						marginLeft: 'auto'
 					})}
-					title={cleanEmailString(data.lastCommit.email)}
-					data-testid="author-name"
-					id={`branch-${data.name}-author`}
+					title={safeFormatDate(data.deletedAt)}
+					id={`branch-${data.name}-deleted-at`}
 				>
-					<Icon
-						icon="lucide:circle-user-round"
-						width="16px"
-						height="16px"
-						id={`branch-${data.name}-author-icon`}
-					/>
-					{data.lastCommit.author}
+					<Icon icon="lucide:trash" width="16px" height="16px" />
+					Deleted At {safeFormatRelativeDate(data.deletedAt)}
 				</span>
-				<span
-					class={css({
-						fontSize: 'sm',
-						display: 'flex',
-						flexDirection: 'row',
-						alignItems: 'center',
-						gap: 'xxs',
-						pindobaTransition: 'fast',
-						color: 'neutral.900'
-					})}
-					title={safeFormatDate(data.lastCommit.date)}
-					id={`branch-${data.name}-date`}
-				>
-					<Icon
-						icon="lucide:clock"
-						width="16px"
-						height="16px"
-						id={`branch-${data.name}-date-icon`}
-					/>{safeFormatRelativeDate(data.lastCommit.date, { unit: 'day' })}
-				</span>
-			</div>
+			{/if}
 		</div>
-
-		{#if alerts.length > 0 && !(alerts.length === 1 && alerts[0] === 'fullyMerged' && data.current)}
-			<Group direction="vertical" noBorder id={`branch-${data.name}-alerts-group`}>
-				{#each alerts as alert (alert)}
-					{#if alert === 'fullyMerged' && !data.current}
-						<Alert id={`branch-${data.name}-alert-${alert}`}>
-							<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-								<Icon icon="lucide:info" />
-								<span>This branch is not fully merged into the current branch!</span>
-							</div>
-						</Alert>
-					{:else if alert === 'protectedWords'}
-						<Alert
-							id={`branch-${data.name}-alert-${alert}`}
-							data-testid="protected-words-alert"
-							feedback="danger"
-						>
-							<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-								<Icon icon="lucide:alert-triangle" />
-								<span
-									>{formatString('This branch contains protected words ({name})', {
-										name: data.name
-									})}</span
-								>
-							</div>
-						</Alert>
-					{:else if alert === 'offensiveWords'}
-						<Alert
-							id={`branch-${data.name}-alert-${alert}`}
-							data-testid="offensive-words-alert"
-							feedback="warning"
-						>
-							<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-								<Icon icon="lucide:info" />
-								<span
-									>This branch contains potentially offensive words (e.g. 'master'). Consider
-									renaming it to align with inclusive terminology.</span
-								>
-							</div>
-						</Alert>
-					{/if}
-				{/each}
-			</Group>
-		{/if}
 	</div>
+
+	{#if alerts.length > 0 && !(alerts.length === 1 && alerts[0] === 'fullyMerged' && data.current)}
+		<Group direction="vertical" noBorder id={`branch-${data.name}-alerts-group`}>
+			{#each alerts as alert (alert)}
+				{#if alert === 'fullyMerged' && !data.current}
+					<Alert id={`branch-${data.name}-alert-${alert}`}>
+						<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
+							<Icon icon="lucide:info" />
+							<span>This branch is not fully merged into the current branch!</span>
+						</div>
+					</Alert>
+				{:else if alert === 'protectedWords'}
+					<Alert
+						id={`branch-${data.name}-alert-${alert}`}
+						data-testid="protected-words-alert"
+						feedback="danger"
+					>
+						<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
+							<Icon icon="lucide:alert-triangle" />
+							<span
+								>{formatString('This branch contains protected words ({name})', {
+									name: data.name
+								})}</span
+							>
+						</div>
+					</Alert>
+				{:else if alert === 'offensiveWords'}
+					<Alert
+						id={`branch-${data.name}-alert-${alert}`}
+						data-testid="offensive-words-alert"
+						feedback="warning"
+					>
+						<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
+							<Icon icon="lucide:info" />
+							<span
+								>This branch contains potentially offensive words (e.g. 'master'). Consider renaming
+								it to align with inclusive terminology.</span
+							>
+						</div>
+					</Alert>
+				{/if}
+			{/each}
+		</Group>
+	{/if}
 </div>

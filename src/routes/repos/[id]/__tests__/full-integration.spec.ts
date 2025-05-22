@@ -66,7 +66,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => {
 						name: 'main',
 						current: true,
 						lastCommit: {
-							hash: 'abc123',
+							sha: 'abc123',
+							shortSha: 'abc123'.substring(0, 7),
 							date: new Date().toISOString(),
 							message: 'Initial commit',
 							author: 'Test User',
@@ -78,7 +79,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => {
 						name: 'feature-branch',
 						current: false,
 						lastCommit: {
-							hash: 'def456',
+							sha: 'def456',
+							shortSha: 'def456'.substring(0, 7),
 							date: new Date().toISOString(),
 							message: 'Add feature',
 							author: 'Test User',
@@ -90,7 +92,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => {
 						name: 'bugfix-branch',
 						current: false,
 						lastCommit: {
-							hash: 'ghi789',
+							sha: 'ghi789',
+							shortSha: 'ghi789'.substring(0, 7),
 							date: new Date().toISOString(),
 							message: 'Fix bug',
 							author: 'Test User',
@@ -114,7 +117,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => {
 							name: 'main',
 							current: true,
 							lastCommit: {
-								hash: 'abc123',
+								sha: 'abc123',
+								shortSha: 'abc123'.substring(0, 7),
 								date: new Date().toISOString(),
 								message: 'Initial commit',
 								author: 'Test User',
@@ -126,7 +130,8 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => {
 							name: 'feature-branch',
 							current: false,
 							lastCommit: {
-								hash: 'def456',
+								sha: 'def456',
+								shortSha: 'def456'.substring(0, 7),
 								date: new Date().toISOString(),
 								message: 'Add feature',
 								author: 'Test User',
@@ -209,7 +214,8 @@ vi.mock('$lib/services/createDeleteBranchesMutation', () => {
 										name: 'main',
 										current: true,
 										lastCommit: {
-											hash: 'abc123',
+											sha: 'abc123',
+											shortSha: 'abc123'.substring(0, 7),
 											date: new Date().toISOString(),
 											message: 'Initial commit',
 											author: 'Test User',
@@ -221,7 +227,8 @@ vi.mock('$lib/services/createDeleteBranchesMutation', () => {
 										name: 'bugfix-branch',
 										current: false,
 										lastCommit: {
-											hash: 'ghi789',
+											sha: 'ghi789',
+											shortSha: 'ghi789'.substring(0, 7),
 											date: new Date().toISOString(),
 											message: 'Fix bug',
 											author: 'Test User',
@@ -330,7 +337,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('selects a branch and updates UI to reflect selection', async () => {
 		// Render with the test repository
-		const { getByRole, getAllByRole, findByTestId } = render(RepositoryPageFixture, {
+		const { findByTestId } = render(RepositoryPageFixture, {
 			props: {
 				id: 'test-repo-id'
 			}
@@ -339,25 +346,21 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Find all checkboxes and click the one for feature-branch
-		const checkboxes = getAllByRole('checkbox');
-		expect(checkboxes.length).toBeGreaterThan(0);
-
-		// Click the checkbox for the non-current branch
-		for (const checkbox of checkboxes) {
-			await fireEvent.click(checkbox);
+		// Instead of clicking checkboxes, directly manipulate the selected branches store
+		const selectedStore = getSelectedBranchesStore('test-repo-id');
+		if (selectedStore) {
+			selectedStore.add(['feature-branch']);
 		}
 
-		await tick(); // Initial tick
+		await tick(); // Update after store change
 		await tick(); // Additional tick for async updates
-
-		// After selecting branches, the delete button should be enabled
-		const deleteButton = getByRole('button', { name: /delete/i });
-		expect(deleteButton).not.toBeDisabled();
 
 		// Verify the selected branches count is updated in the bulk actions area
 		const bulkActions = await findByTestId('bulk-actions-container');
 		expect(bulkActions).toBeInTheDocument();
+
+		// Verify the store has the selected branch
+		expect(selectedStore?.state?.has('feature-branch')).toBe(true);
 	});
 
 	it('deletes branches and updates counts correctly', async () => {

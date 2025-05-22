@@ -8,9 +8,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddButton from '../add-button.svelte';
 import TestWrapper from '../test-wrapper.svelte';
 import { goto } from '$app/navigation';
+import type { Repository } from '$lib/services/common';
 import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
 import { notifications } from '$lib/stores/notifications.svelte';
-import { type Repository } from '$lib/stores/repository.svelte';
 import { RepositoryStore } from '$lib/stores/repository.svelte';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({

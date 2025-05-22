@@ -7,11 +7,13 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import Branch from '$lib/components/branch.svelte';
 	import LockBranchToggle from '$lib/components/lock-branch-toggle.svelte';
+	import type { Branch as BranchType } from '$lib/services/common';
 	import { createSwitchBranchMutation } from '$lib/services/createSwitchBranchMutation';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
 	import { notifications } from '$lib/stores/notifications.svelte';
-	import { getRepositoryStore, type Branch as BranchType } from '$lib/stores/repository.svelte';
+	import { getRepositoryStore } from '$lib/stores/repository.svelte';
 	import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+	import type { SetStore } from '$lib/utils/set-store.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
@@ -20,15 +22,27 @@
 		branches: BranchType[];
 		currentBranch?: string;
 		repositoryID?: string;
+		allowLocking?: boolean;
+		allowSelection?: boolean;
+		allowSetCurrent?: boolean;
+		selectedStore?: SetStore<string>;
 	}
 
-	const { branches = [], currentBranch = '', repositoryID }: Props = $props();
+	const {
+		branches = [],
+		currentBranch = '',
+		repositoryID,
+		allowLocking = true,
+		allowSelection = true,
+		allowSetCurrent = true,
+		selectedStore
+	}: Props = $props();
 
 	const queryClient = useQueryClient();
 
 	const repository = $derived(getRepositoryStore(repositoryID));
 	const locked = $derived(getLockedBranchesStore(repositoryID));
-	const selected = $derived(getSelectedBranchesStore(repositoryID));
+	const selected = $derived(selectedStore ?? getSelectedBranchesStore(repositoryID));
 
 	const switchBranchMutation = createSwitchBranchMutation({
 		onSuccess: (currentBranch) => {
@@ -92,7 +106,7 @@
 		})}
 	>
 		{#if paginatedBranches}
-			{#each paginatedBranches as branch (`${branch.name}-${currentPage}`)}
+			{#each paginatedBranches as branch (`${branch.name}-${branch.lastCommit.sha}`)}
 				<div
 					role="listitem"
 					class={css({
@@ -112,40 +126,48 @@
 								gap: 'xs'
 							})}
 						>
-							<Checkbox
-								id={`checkbox-${branch.name}`}
-								onclick={() => handleToggleSelect(branch.name)}
-								checked={selected?.has(branch.name)}
-								disabled={locked?.has(branch.name)}
-							>
-								<div class={visuallyHidden()}>
-									{branch.name}
-								</div>
-							</Checkbox>
-							<Loading
-								isLoading={switchBranchMutation.variables?.branch === branch.name &&
-									switchBranchMutation.isPending}
-							>
-								<Button
-									size="xs"
-									shape="square"
-									emphasis="secondary"
-									disabled={switchBranchMutation.variables?.branch !== branch.name &&
-										switchBranchMutation.isPending}
-									class={css({
-										width: '26px',
-										height: '26px',
-										boxShadow: 'none'
-									})}
-									onclick={() => handleSwitchBranch(branch.name)}
-									data-testid="switch-button"
-									title="Set as current"
+							{#if allowSelection}
+								<Checkbox
+									id={`checkbox-${branch.name}`}
+									onclick={() => handleToggleSelect(branch.name)}
+									checked={selected?.has(branch.name)}
+									disabled={locked?.has(branch.name)}
 								>
-									<Icon icon="lucide:map-pin" width="14px" height="14px" />
-									<span class={visuallyHidden()}>Set as current</span>
-								</Button>
-							</Loading>
-							<LockBranchToggle {repositoryID} branch={branch.name} />
+									<div class={visuallyHidden()}>
+										{branch.name}
+									</div>
+								</Checkbox>
+							{/if}
+
+							{#if allowSetCurrent}
+								<Loading
+									isLoading={switchBranchMutation.variables?.branch === branch.name &&
+										switchBranchMutation.isPending}
+								>
+									<Button
+										size="xs"
+										shape="square"
+										emphasis="secondary"
+										disabled={switchBranchMutation.variables?.branch !== branch.name &&
+											switchBranchMutation.isPending}
+										class={css({
+											width: '26px',
+											height: '26px',
+											boxShadow: 'none'
+										})}
+										onclick={() => handleSwitchBranch(branch.name)}
+										data-testid="switch-button"
+										title="Set as current"
+									>
+										<Icon icon="lucide:map-pin" width="14px" height="14px" />
+										<span class={visuallyHidden()}>Set as current</span>
+									</Button>
+								</Loading>
+							{/if}
+
+							{#if allowLocking}
+								<LockBranchToggle {repositoryID} branch={branch.name} />
+							{/if}
 						</div>
 					{/if}
 
@@ -166,7 +188,9 @@
 									color={token('colors.primary.800')}
 								/>
 							</span>
-							<LockBranchToggle {repositoryID} branch={branch.name} />
+							{#if allowLocking}
+								<LockBranchToggle {repositoryID} branch={branch.name} />
+							{/if}
 						</div>
 					{/if}
 

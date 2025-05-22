@@ -1,13 +1,14 @@
 import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import Branch from '../branch.svelte';
-import type { Branch as BranchType } from '$lib/stores/repository.svelte';
+import type { Branch as BranchType } from '$lib/services/common';
 
 const mockBranch: BranchType = {
 	name: 'feature/test-branch',
 	current: false,
 	lastCommit: {
-		hash: 'abcdef',
+		sha: 'abcdef',
+		shortSha: 'abcdef'.substring(0, 7),
 		date: new Date().toISOString(),
 		message: 'Test commit message',
 		author: 'Test Author',

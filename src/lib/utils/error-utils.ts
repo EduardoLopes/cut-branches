@@ -41,6 +41,19 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 	const defaultMessage = options?.defaultMessage || 'Unknown error';
 	const extraProps = options?.extra ?? ({} as T);
 
+	if (error instanceof z.ZodError) {
+		const errorMessage = z.prettifyError(error);
+
+		throw createErrorObject(
+			{
+				message: error.message,
+				kind: error.name,
+				description: errorMessage
+			},
+			extraProps
+		);
+	}
+
 	// Already an AppError object - return as is with any extra properties
 	if (
 		error !== null &&
