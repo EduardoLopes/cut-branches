@@ -123,8 +123,10 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "cargo-tarpaulin",
+ "chrono",
  "execute",
  "fix-path-env",
+ "git2",
  "serde",
  "serde_json",
  "tauri",

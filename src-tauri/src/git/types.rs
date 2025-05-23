@@ -69,6 +69,7 @@ pub struct RestoreBranchResult {
     pub requires_user_action: bool,
     pub conflict_details: Option<ConflictDetails>,
     pub skipped: bool,
+    pub branch: Option<Branch>,
 }
 
 #[derive(Serialize, Deserialize)]

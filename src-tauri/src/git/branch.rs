@@ -1,233 +1,269 @@
-use std::io::ErrorKind;
+use chrono::{DateTime, FixedOffset, TimeZone};
+use git2::{BranchType, Oid, Repository};
 use std::path::Path;
-use std::process::Command;
+use tauri::Emitter;
 
-use super::commit::{get_last_commit_info, is_commit_reachable};
+use super::commit::is_commit_reachable;
 use super::types::{
     Branch, Commit, ConflictDetails, ConflictResolution, DeletedBranchInfo, RestoreBranchInput,
     RestoreBranchResult,
 };
-use crate::error::Error; // For use in delete_branches
+use crate::error::Error;
 
 pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Error> {
-    let result = Command::new("git")
-        .arg("for-each-ref")
-        .arg("--format=%(refname:short)|%(objectname)|%(committerdate)|%(contents:subject)|%(authorname)|%(authoremail)")
-        .arg("refs/heads/")
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| {
-            match e.kind() {
-                ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                    format!("Unable to access the path **{}**: {}", path.display(), e),
-                    "unable_to_access_dir",
-                    Some(e.to_string()),
-                ),
-                _ => Error::new(
-                    format!(
-                        "Failed to execute git command for path {}: {}",
-                        path.display(),
-                        e
-                    ),
-                    "command_execution_failed",
-                    Some(e.to_string()),
-                ),
-            }
-        })?;
-
-    let merged_result = Command::new("git")
-        .arg("branch")
-        .arg("--merged")
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| match e.kind() {
-            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                format!("Unable to access the path **{}**: {}", path.display(), e),
-                "unable_to_access_dir",
-                Some(e.to_string()),
-            ),
-            _ => Error::new(
-                format!(
-                    "Failed to execute git command for path {}: {}",
-                    path.display(),
-                    e
-                ),
-                "command_execution_failed",
-                Some(e.to_string()),
-            ),
-        })?;
-
-    let merged_branches_str = String::from_utf8(merged_result.stdout).map_err(|e| {
-        Error::new(
-            format!("Failed to parse stdout for merged branches: {}", e),
-            "stdout_parse_failed",
-            Some(format!(
-                "Error parsing git merged branches output to UTF-8: {}",
-                e
-            )),
-        )
-    })?;
-
-    let merged_branches: Vec<String> = merged_branches_str
-        .split('\n')
-        .map(|s| s.trim().replace("* ", ""))
-        .filter(|s| !s.is_empty())
-        .collect();
-
-    let stderr = String::from_utf8(result.stderr).map_err(|e| {
-        Error::new(
-            format!("Failed to parse stderr: {}", e),
-            "stderr_parse_failed",
-            Some(format!("Error parsing git error output to UTF-8: {}", e)),
-        )
-    })?;
-
-    if result.status.success() {
-        let output = String::from_utf8(result.stdout).map_err(|e| {
+    let repo = Repository::open(path).map_err(|e| {
+        let err_str = e.to_string();
+        let err_str_lower = err_str.to_lowercase();
+        if !path.exists() {
             Error::new(
-                format!("Failed to parse stdout for all branches: {}", e),
-                "stdout_parse_failed",
-                Some(format!("Error parsing git command output to UTF-8: {}", e)),
+                format!("Unable to access the path: {}", path.display()),
+                "unable_to_access_dir",
+                Some(err_str.clone()),
+            )
+        } else if err_str_lower.contains("permission denied")
+            || err_str_lower.contains("not permitted")
+        {
+            Error::new(
+                format!("Failed to execute git command: {}", path.display()),
+                "command_execution_failed",
+                Some(err_str.clone()),
+            )
+        } else {
+            Error::new(
+                format!(
+                    "Failed to open git repository at {}: {}",
+                    path.display(),
+                    err_str
+                ),
+                "repository_open_failed",
+                Some(err_str),
+            )
+        }
+    })?;
+
+    let branches_iter = repo.branches(Some(BranchType::Local)).map_err(|e| {
+        Error::new(
+            format!("Failed to list branches: {}", e),
+            "branch_list_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    let current_branch_name = get_current_branch(path)?;
+    let mut branches = Vec::new();
+
+    for branch_result in branches_iter {
+        let (branch, _branch_type) = branch_result.map_err(|e| {
+            Error::new(
+                format!("Failed to get branch info: {}", e),
+                "branch_info_failed",
+                Some(e.to_string()),
             )
         })?;
 
-        let current_branch_name = get_current_branch(path)?;
+        let name = branch
+            .name()
+            .map_err(|e| {
+                Error::new(
+                    format!("Failed to get branch name: {}", e),
+                    "branch_name_failed",
+                    Some(e.to_string()),
+                )
+            })?
+            .ok_or_else(|| {
+                Error::new(
+                    "Branch name contains invalid UTF-8".to_string(),
+                    "invalid_utf8",
+                    None,
+                )
+            })?
+            .to_string();
 
-        let mut branches: Vec<Branch> = output
-            .trim()
-            .split('\n')
-            .filter(|line| !line.is_empty())
-            .map(|line| {
-                let parts: Vec<&str> = line.split('|').collect();
-                if parts.len() < 6 {
-                    return Err(Error::new(
-                        "Invalid branch format in git output".to_string(),
-                        "invalid_format",
-                        Some(line.to_string()),
-                    ));
-                }
-
-                let branch_name = parts[0].to_string();
-
-                Ok(Branch {
-                    name: branch_name.clone(),
-                    fully_merged: merged_branches.contains(&branch_name),
-                    current: branch_name == current_branch_name,
-                    last_commit: Commit {
-                        sha: parts[1].to_string(),
-                        short_sha: if parts[1].len() >= 7 {
-                            parts[1][0..7].to_string()
-                        } else {
-                            parts[1].to_string()
-                        },
-                        date: parts[2].to_string(),
-                        message: parts[3].to_string(),
-                        author: parts[4].to_string(),
-                        email: parts[5].to_string(),
-                    },
-                })
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-
-        branches.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
-
-        return Ok(branches);
-    }
-
-    Err(Error::new(
-        format!(
-            "Couldn\\'t retrieve branches with last commit info in the path **{0}**",
-            path.display()
-        ),
-        "no_branches",
-        Some(stderr),
-    ))
-}
-
-pub fn get_current_branch(path: &Path) -> Result<String, Error> {
-    let result = Command::new("git")
-        .arg("rev-parse")
-        .arg("--abbrev-ref")
-        .arg("HEAD")
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| match e.kind() {
-            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                format!("Unable to access the path **{}**: {}", path.display(), e),
-                "unable_to_access_dir",
+        let reference = branch.get();
+        let commit = reference.peel_to_commit().map_err(|e| {
+            Error::new(
+                format!("Failed to get commit for branch {}: {}", name, e),
+                "commit_peel_failed",
                 Some(e.to_string()),
-            ),
-            _ => Error::new(
-                format!(
-                    "Failed to execute git command for path {}: {}",
-                    path.display(),
-                    e
-                ),
-                "command_execution_failed",
-                Some(e.to_string()),
-            ),
+            )
         })?;
 
-    let stderr = String::from_utf8(result.stderr).map_err(|e| {
+        let author = commit.author();
+
+        // Format the commit date
+        let time = commit.time();
+        let offset_minutes = time.offset_minutes();
+        let offset = match FixedOffset::east_opt(offset_minutes * 60) {
+            Some(tz) => tz,
+            None => FixedOffset::east_opt(0).unwrap(), // Fallback to UTC
+        };
+
+        let dt = match DateTime::from_timestamp(time.seconds(), 0) {
+            Some(dt) => dt.with_timezone(&offset),
+            None => FixedOffset::east_opt(0)
+                .unwrap()
+                .with_ymd_and_hms(1970, 1, 1, 0, 0, 0)
+                .unwrap(), // Fallback to epoch
+        };
+
+        let date_str = dt.format("%a %b %e %T %Y %z").to_string();
+
+        let sha = commit.id().to_string();
+        let short_sha = if sha.len() >= 7 {
+            sha[0..7].to_string()
+        } else {
+            sha.clone()
+        };
+
+        let author_name = author.name().unwrap_or("").to_string();
+        let author_email = author.email().unwrap_or("").to_string();
+        let summary = commit.summary().unwrap_or("").to_string();
+
+        // Check if branch is fully merged into HEAD
+        let is_merged = is_branch_merged(&repo, &name)?;
+
+        branches.push(Branch {
+            name: name.clone(),
+            fully_merged: is_merged,
+            current: name == current_branch_name,
+            last_commit: Commit {
+                sha,
+                short_sha,
+                date: date_str,
+                message: summary,
+                author: author_name,
+                email: author_email,
+            },
+        });
+    }
+
+    branches.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+
+    if branches.is_empty() {
+        return Err(Error::new(
+            format!(
+                "Couldn\\'t retrieve branches with last commit info in the path **{0}**",
+                path.display()
+            ),
+            "no_branches",
+            None,
+        ));
+    }
+
+    Ok(branches)
+}
+
+fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, Error> {
+    let head = repo.head().map_err(|e| {
         Error::new(
-            format!("Failed to parse stderr: {}", e),
-            "stderr_parse_failed",
-            Some(format!("Error parsing git error output to UTF-8: {}", e)),
+            format!("Failed to get HEAD: {}", e),
+            "head_not_found",
+            Some(e.to_string()),
         )
     })?;
 
-    if result.status.success() {
-        let current_branch_name = String::from_utf8(result.stdout)
-            .map_err(|e| {
-                Error::new(
-                    format!("Failed to parse stdout for current branch: {}", e),
-                    "stdout_parse_failed",
-                    Some(format!("Error parsing current branch name to UTF-8: {}", e)),
-                )
-            })?
-            .trim()
-            .to_string();
+    let branch_ref = repo
+        .find_branch(branch_name, BranchType::Local)
+        .map_err(|e| {
+            Error::new(
+                format!("Failed to find branch '{}': {}", branch_name, e),
+                "branch_not_found",
+                Some(e.to_string()),
+            )
+        })?;
 
-        return Ok(current_branch_name);
+    // Get the commit each reference points to
+    let head_commit = head.peel_to_commit().map_err(|e| {
+        Error::new(
+            format!("Failed to get HEAD commit: {}", e),
+            "head_commit_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    let branch_commit = branch_ref.get().peel_to_commit().map_err(|e| {
+        Error::new(
+            format!("Failed to get branch commit: {}", e),
+            "branch_commit_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // If it's the current branch, it's "merged" by definition
+    if head_commit.id() == branch_commit.id() {
+        return Ok(true);
     }
 
-    Err(Error::new(
-        format!(
-            "Couldn\\'t find the current branch in the path **{0}**",
-            path.display()
-        ),
-        "no_current_branch", // Changed error code for clarity
-        Some(stderr),
-    ))
+    // Check if the branch commit is an ancestor of HEAD
+    Ok(repo
+        .graph_descendant_of(head_commit.id(), branch_commit.id())
+        .unwrap_or(false))
+}
+
+pub fn get_current_branch(path: &Path) -> Result<String, Error> {
+    let repo = Repository::open(path).map_err(|e| {
+        Error::new(
+            format!("Failed to open git repository at {}: {}", path.display(), e),
+            "repository_open_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    let head = repo.head().map_err(|e| {
+        Error::new(
+            format!("Failed to get HEAD: {}", e),
+            "head_not_found",
+            Some(e.to_string()),
+        )
+    })?;
+
+    if !head.is_branch() {
+        return Err(Error::new(
+            format!(
+                "HEAD is not pointing to a branch in path {}",
+                path.display()
+            ),
+            "detached_head",
+            Some("Repository is in detached HEAD state".to_string()),
+        ));
+    }
+
+    let branch_name = head.shorthand().ok_or_else(|| {
+        Error::new(
+            format!("Failed to get branch name in path {}", path.display()),
+            "invalid_branch_name",
+            Some("Branch name contains invalid UTF-8".to_string()),
+        )
+    })?;
+
+    Ok(branch_name.to_string())
 }
 
 pub fn branch_exists(path: &Path, branch_name: &str) -> Result<bool, Error> {
-    let result = Command::new("git")
-        .arg("show-ref")
-        .arg("--verify")
-        .arg(format!("refs/heads/{}", branch_name))
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| match e.kind() {
-            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                format!("Unable to access the path **{}**: {}", path.display(), e),
-                "unable_to_access_dir",
-                Some(e.to_string()),
-            ),
-            _ => Error::new(
-                format!(
-                    "Failed to execute git command for path {}: {}",
-                    path.display(),
-                    e
-                ),
-                "command_execution_failed",
-                Some(e.to_string()),
-            ),
-        })?;
-    Ok(result.status.success())
+    let repo = match Repository::open(path) {
+        Ok(repo) => repo,
+        Err(_) => return Ok(false),
+    };
+
+    // Fix lifetime issue by not directly returning the match
+    let exists = match repo.find_branch(branch_name, BranchType::Local) {
+        Ok(_) => true,
+        Err(_) => false,
+    };
+
+    Ok(exists)
 }
 
 pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
+    let repo = Repository::open(path).map_err(|e| {
+        Error::new(
+            format!("Failed to open git repository at {}: {}", path.display(), e),
+            "repository_open_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // Check if branch exists
     if !branch_exists(path, branch_name)? {
         return Err(Error::new(
             format!("Branch **{0}** not found", branch_name),
@@ -240,57 +276,62 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
         ));
     }
 
-    let result = Command::new("git")
-        .arg("switch")
-        .arg(branch_name)
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| match e.kind() {
-            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                format!("Unable to access the path **{}**: {}", path.display(), e),
-                "unable_to_access_dir",
+    // Get reference to branch
+    let branch_ref = repo
+        .find_branch(branch_name, BranchType::Local)
+        .map_err(|e| {
+            Error::new(
+                format!("Failed to find branch '{}': {}", branch_name, e),
+                "branch_not_found",
                 Some(e.to_string()),
-            ),
-            _ => Error::new(
-                format!(
-                    "Failed to execute git command for path {}: {}",
-                    path.display(),
-                    e
-                ),
-                "command_execution_failed",
-                Some(e.to_string()),
-            ),
+            )
         })?;
 
-    let stderr = String::from_utf8(result.stderr).map_err(|e| {
+    let reference = branch_ref.get();
+    // We don't actually use this commit, but we need to check it exists
+    let _commit = reference.peel_to_commit().map_err(|e| {
         Error::new(
-            format!("Failed to parse stderr from switch branch: {}", e),
-            "stderr_parse_failed",
-            Some(format!("Error parsing git error output to UTF-8: {}", e)),
+            format!("Failed to get commit for branch {}: {}", branch_name, e),
+            "commit_peel_failed",
+            Some(e.to_string()),
         )
     })?;
 
-    if result.status.success() {
-        // Successfully switched, return the name of the branch we switched to
-        return Ok(branch_name.to_string());
-    }
+    // Set HEAD to the branch
+    repo.set_head(&format!("refs/heads/{}", branch_name))
+        .map_err(|e| {
+            Error::new(
+                format!("Failed to set HEAD to branch '{}': {}", branch_name, e),
+                "set_head_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
-    Err(Error::new(
-        format!(
-            "Couldn\\'t switch to branch **{0}** in the path **{1}**: {2}",
-            branch_name,
-            path.display(),
-            stderr
-        ),
-        "switch_branch_failed",
-        Some(stderr),
-    ))
+    // Checkout the branch (update working directory)
+    repo.checkout_head(Some(git2::build::CheckoutBuilder::new().force()))
+        .map_err(|e| {
+            Error::new(
+                format!("Failed to checkout branch '{}': {}", branch_name, e),
+                "checkout_failed",
+                Some(e.to_string()),
+            )
+        })?;
+
+    Ok(branch_name.to_string())
 }
 
 pub fn delete_branches(
     path: &Path,
     branches_to_delete: &[String],
 ) -> Result<Vec<DeletedBranchInfo>, Error> {
+    let repo = Repository::open(path).map_err(|e| {
+        Error::new(
+            format!("Failed to open git repository at {}: {}", path.display(), e),
+            "repository_open_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
     let mut not_found_branches: Vec<String> = Vec::new();
     let mut found_branches: Vec<String> = Vec::new();
 
@@ -326,292 +367,316 @@ pub fn delete_branches(
         return Ok(Vec::new()); // No branches to delete that were found
     }
 
-    let result = Command::new("git")
-        .arg("branch")
-        .arg("-D") // Use -D for force delete, as per original code
-        .args(&found_branches) // Delete only the found branches
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| match e.kind() {
-            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                format!("Unable to access the path **{}**: {}", path.display(), e),
-                "unable_to_access_dir",
+    let mut deleted_branches = Vec::new();
+
+    for branch_name in &found_branches {
+        // Get branch info before deletion for the return value
+        let branch_info = get_branch_info(&repo, branch_name)?;
+
+        // Find the branch
+        let mut branch = repo
+            .find_branch(branch_name, BranchType::Local)
+            .map_err(|e| {
+                Error::new(
+                    format!("Failed to find branch '{}': {}", branch_name, e),
+                    "branch_not_found",
+                    Some(e.to_string()),
+                )
+            })?;
+
+        // Delete the branch (force=true to match original -D flag behavior)
+        branch.delete().map_err(|e| {
+            Error::new(
+                format!("Failed to delete branch '{}': {}", branch_name, e),
+                "delete_branch_failed",
                 Some(e.to_string()),
-            ),
-            _ => Error::new(
-                format!(
-                    "Failed to execute git command for path {}: {}",
-                    path.display(),
-                    e
-                ),
-                "command_execution_failed",
-                Some(e.to_string()),
-            ),
+            )
         })?;
 
-    let stdout = String::from_utf8(result.stdout).map_err(|e| {
-        Error::new(
-            format!("Failed to parse stdout from delete branches: {}", e),
-            "stdout_parse_failed",
-            Some(format!("Error parsing git command output to UTF-8: {}", e)),
-        )
-    })?;
+        // Clone branch_info.last_commit.short_sha to avoid borrowing after move
+        let short_sha = branch_info.last_commit.short_sha.clone();
 
-    let stderr = String::from_utf8(result.stderr).map_err(|e| {
-        Error::new(
-            format!("Failed to parse stderr from delete branches: {}", e),
-            "stderr_parse_failed",
-            Some(format!("Error parsing git error output to UTF-8: {}", e)),
-        )
-    })?;
-
-    if !result.status.success() {
-        return Err(Error::new(
-            format!(
-                "Unable to delete branches in {}: {}",
-                path.display(),
-                stderr
-            ),
-            "unable_to_delete_branches",
-            Some(stderr),
-        ));
+        deleted_branches.push(DeletedBranchInfo {
+            branch: branch_info,
+            raw_output: format!("Deleted branch {} (was {})", branch_name, short_sha),
+        });
     }
 
-    let deleted_branch_infos: Vec<DeletedBranchInfo> = stdout
-        .trim()
-        .split('\n')
-        .filter(|s| !s.is_empty())
-        .map(|output_line| {
-            let raw_output = output_line.to_string();
-            let branch_name = if let Some(name_part) = output_line.strip_prefix("Deleted branch ") {
-                if let Some(end_idx) = name_part.find(" (was ") {
-                    name_part[..end_idx].to_string()
-                } else {
-                    name_part.to_string() // Should not happen with git branch -D output
-                }
-            } else {
-                "unknown_branch_name".to_string() // Should not happen
-            };
+    Ok(deleted_branches)
+}
 
-            let commit_hash = if let Some(idx) = output_line.find(" (was ") {
-                let hash_part = &output_line[idx + 6..]; // Skip " (was "
-                if let Some(end_idx) = hash_part.find(")") {
-                    hash_part[..end_idx].to_string()
-                } else {
-                    "unknown_commit_hash".to_string() // Should not happen
-                }
-            } else {
-                "unknown_commit_hash".to_string() // Should not happen
-            };
+fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, Error> {
+    let branch = repo
+        .find_branch(branch_name, BranchType::Local)
+        .map_err(|e| {
+            Error::new(
+                format!("Failed to find branch '{}': {}", branch_name, e),
+                "branch_not_found",
+                Some(e.to_string()),
+            )
+        })?;
 
-            let commit_info = match get_last_commit_info(path, &commit_hash) {
-                Ok(ci) => ci,
-                Err(_) => Commit {
-                    // Fallback if commit info isn't retrievable (e.g., commit became unreachable)
-                    sha: commit_hash.clone(),
-                    short_sha: if commit_hash.len() >= 7 {
-                        commit_hash[0..7].to_string()
-                    } else {
-                        commit_hash.to_string()
-                    },
-                    date: "unknown".to_string(),
-                    message: "Commit information not available after deletion".to_string(),
-                    author: "unknown".to_string(),
-                    email: "unknown".to_string(),
-                },
-            };
+    let reference = branch.get();
+    let commit = reference.peel_to_commit().map_err(|e| {
+        Error::new(
+            format!("Failed to get commit for branch {}: {}", branch_name, e),
+            "commit_peel_failed",
+            Some(e.to_string()),
+        )
+    })?;
 
-            DeletedBranchInfo {
-                branch: Branch {
-                    name: branch_name,
-                    fully_merged: false, // Assume not merged, or this info is lost post-deletion
-                    last_commit: commit_info,
-                    current: false, // Cannot be current if deleted
-                },
-                raw_output,
-            }
-        })
-        .collect();
+    let author = commit.author();
 
-    Ok(deleted_branch_infos)
+    // Format the commit date
+    let time = commit.time();
+    let offset_minutes = time.offset_minutes();
+    let offset = match FixedOffset::east_opt(offset_minutes * 60) {
+        Some(tz) => tz,
+        None => FixedOffset::east_opt(0).unwrap(), // Fallback to UTC
+    };
+
+    let dt = match DateTime::from_timestamp(time.seconds(), 0) {
+        Some(dt) => dt.with_timezone(&offset),
+        None => FixedOffset::east_opt(0)
+            .unwrap()
+            .with_ymd_and_hms(1970, 1, 1, 0, 0, 0)
+            .unwrap(), // Fallback to epoch
+    };
+
+    let date_str = dt.format("%a %b %e %T %Y %z").to_string();
+
+    let sha = commit.id().to_string();
+    let short_sha = if sha.len() >= 7 {
+        sha[0..7].to_string()
+    } else {
+        sha.clone()
+    };
+
+    // Use summary if available, otherwise get the first line of the message
+    let message = commit.message().unwrap_or("");
+    let first_line = message.lines().next().unwrap_or("").to_string();
+
+    let author_name = author.name().unwrap_or("").to_string();
+    let author_email = author.email().unwrap_or("").to_string();
+
+    // Check if branch is fully merged
+    let is_merged = is_branch_merged(repo, branch_name)?;
+
+    // Check if it's the current branch
+    let head = repo.head().map_err(|e| {
+        Error::new(
+            format!("Failed to get HEAD: {}", e),
+            "head_not_found",
+            Some(e.to_string()),
+        )
+    })?;
+
+    let current = head.is_branch()
+        && head
+            .shorthand()
+            .map(|name| name == branch_name)
+            .unwrap_or(false);
+
+    Ok(Branch {
+        name: branch_name.to_string(),
+        fully_merged: is_merged,
+        current,
+        last_commit: Commit {
+            sha,
+            short_sha,
+            date: date_str,
+            message: first_line,
+            author: author_name,
+            email: author_email,
+        },
+    })
 }
 
 pub fn restore_deleted_branch(
     path: &Path,
     branch_info: &RestoreBranchInput,
+    app_handle: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, Error> {
+    let repo = Repository::open(path).map_err(|e| {
+        Error::new(
+            format!("Failed to open git repository at {}: {}", path.display(), e),
+            "repository_open_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // Check if the commit exists in the repository
     if !is_commit_reachable(path, &branch_info.commit_sha)? {
-        return Ok(RestoreBranchResult {
-            success: false,
-            branch_name: branch_info.original_name.clone(),
-            message: format!(
-                "Commit SHA **'{}'** is not reachable or does not exist in the repository at {}.",
+        return Err(Error::new(
+            format!(
+                "Commit **{}** not found in the repository",
+                branch_info.commit_sha
+            ),
+            "commit_not_found",
+            Some(format!(
+                "The commit '{}' does not exist in the repository at {}",
                 branch_info.commit_sha,
                 path.display()
-            ),
-            requires_user_action: false,
-            conflict_details: None,
-            skipped: false,
-        });
+            )),
+        ));
     }
 
+    // Check if target branch already exists
     let target_branch_exists = branch_exists(path, &branch_info.target_name)?;
 
-    if !target_branch_exists {
-        return create_branch_at_commit(path, &branch_info.target_name, &branch_info.commit_sha);
-    }
+    if target_branch_exists {
+        // Handle conflict based on user's preference
+        match &branch_info.conflict_resolution {
+            Some(ConflictResolution::Overwrite) => {
+                // Delete existing branch first
+                let mut branch = repo
+                    .find_branch(&branch_info.target_name, BranchType::Local)
+                    .map_err(|e| {
+                        Error::new(
+                            format!("Failed to find branch '{}': {}", branch_info.target_name, e),
+                            "branch_not_found",
+                            Some(e.to_string()),
+                        )
+                    })?;
 
-    // Handle conflict based on resolution strategy
-    match &branch_info.conflict_resolution {
-        Some(ConflictResolution::Overwrite) => {
-            // First, delete the existing branch forcefully
-            let delete_result = Command::new("git")
-                .arg("branch")
-                .arg("-D")
-                .arg(&branch_info.target_name)
-                .current_dir(path)
-                .output()
-                .map_err(|e| {
+                branch.delete().map_err(|e| {
                     Error::new(
-                        format!("Failed to execute git delete for overwrite: {}", e),
-                        "command_execution_failed",
+                        format!(
+                            "Failed to delete branch '{}': {}",
+                            branch_info.target_name, e
+                        ),
+                        "delete_branch_failed",
                         Some(e.to_string()),
                     )
                 })?;
 
-            if !delete_result.status.success() {
-                let stderr = String::from_utf8_lossy(&delete_result.stderr).to_string();
-                return Ok(RestoreBranchResult {
+                // Now create the branch
+                create_branch_at_commit(
+                    path,
+                    &branch_info.target_name,
+                    &branch_info.commit_sha,
+                    app_handle,
+                )
+            }
+            Some(ConflictResolution::Rename) => {
+                // Create with new name
+                create_branch_at_commit(
+                    path,
+                    &branch_info.target_name,
+                    &branch_info.commit_sha,
+                    app_handle,
+                )
+            }
+            Some(ConflictResolution::Skip) => Ok(RestoreBranchResult {
+                success: false,
+                branch_name: branch_info.target_name.clone(),
+                message: format!("Skipped creation of branch '{}'", branch_info.target_name),
+                requires_user_action: false,
+                conflict_details: None,
+                skipped: true,
+                branch: None,
+            }),
+            None => {
+                // No conflict resolution strategy, ask user
+                Ok(RestoreBranchResult {
                     success: false,
                     branch_name: branch_info.target_name.clone(),
                     message: format!(
-                        "Failed to delete existing branch '{}' for overwrite: {}",
-                        branch_info.target_name, stderr
+                        "Branch '{}' already exists. Please choose a conflict resolution strategy.",
+                        branch_info.target_name
                     ),
-                    requires_user_action: false,
-                    conflict_details: None,
+                    requires_user_action: true,
+                    conflict_details: Some(ConflictDetails {
+                        original_name: branch_info.original_name.clone(),
+                        conflicting_name: branch_info.target_name.clone(),
+                    }),
                     skipped: false,
-                });
+                    branch: None,
+                })
             }
-            // Then, create the new branch
-            create_branch_at_commit(path, &branch_info.target_name, &branch_info.commit_sha)
         }
-        Some(ConflictResolution::Rename) => {
-            // The target_name in RestoreBranchInput is already the new name for rename scenario
-            create_branch_at_commit(path, &branch_info.target_name, &branch_info.commit_sha)
-        }
-        Some(ConflictResolution::Skip) => Ok(RestoreBranchResult {
-            success: true, // Or false, depending on desired semantics for skipped operations
-            branch_name: branch_info.original_name.clone(), // Report original name if skipped
-            message: format!(
-                "Skipped restoration of branch '{}' as target '{}' due to conflict.",
-                branch_info.original_name, branch_info.target_name
-            ),
-            requires_user_action: false,
-            conflict_details: None,
-            skipped: true,
-        }),
-        None => {
-            // No resolution strategy provided, conflict exists
-            Ok(RestoreBranchResult {
-                success: false,
-                branch_name: branch_info.original_name.clone(),
-                message: format!(
-                    "Branch name '{}' already exists. No conflict resolution strategy provided for original branch '{}'.",
-                    branch_info.target_name, branch_info.original_name
-                ),
-                requires_user_action: true,
-                conflict_details: Some(ConflictDetails {
-                    original_name: branch_info.original_name.clone(),
-                    conflicting_name: branch_info.target_name.clone(),
-                }),
-                skipped: false,
-            })
-        }
+    } else {
+        // No conflict, create the branch
+        create_branch_at_commit(
+            path,
+            &branch_info.target_name,
+            &branch_info.commit_sha,
+            app_handle,
+        )
     }
 }
 
-// Helper function to create a branch at a specific commit
 fn create_branch_at_commit(
     path: &Path,
     branch_name: &str,
     commit_sha: &str,
+    app_handle: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, Error> {
-    let result = Command::new("git")
-        .arg("branch")
-        .arg(branch_name)
-        .arg(commit_sha)
-        .current_dir(path)
-        .output()
-        .map_err(|e: std::io::Error| match e.kind() {
-            ErrorKind::NotFound | ErrorKind::PermissionDenied => Error::new(
-                format!("Unable to access the path **{}**: {}", path.display(), e),
-                "unable_to_access_dir",
-                Some(e.to_string()),
-            ),
-            _ => Error::new(
-                format!(
-                    "Failed to execute git command for path **'{}'**: {}",
-                    path.display(),
-                    e
-                ),
-                "command_execution_failed",
-                Some(e.to_string()),
-            ),
-        })?;
+    let repo = Repository::open(path).map_err(|e| {
+        Error::new(
+            format!("Failed to open git repository at {}: {}", path.display(), e),
+            "repository_open_failed",
+            Some(e.to_string()),
+        )
+    })?;
 
-    let short_commit_sha = Command::new("git")
-        .arg("rev-parse")
-        .arg("--short")
-        .arg(commit_sha)
-        .current_dir(path)
-        .output()
-        .map_err(|e| {
-            Error::new(
-                format!("Failed to get short commit SHA: {}", e),
-                "command_execution_failed",
-                Some(e.to_string()),
-            )
-        })?;
+    let commit_id = Oid::from_str(commit_sha).map_err(|e| {
+        Error::new(
+            format!("Invalid commit SHA '{}': {}", commit_sha, e),
+            "invalid_commit_sha",
+            Some(e.to_string()),
+        )
+    })?;
 
-    let short_commit_sha = String::from_utf8(short_commit_sha.stdout)
-        .map_err(|e| {
-            Error::new(
-                format!("Failed to parse short commit SHA: {}", e),
-                "stdout_parse_failed",
-                Some(e.to_string()),
-            )
-        })?
-        .trim()
-        .to_string();
+    let commit = repo.find_commit(commit_id).map_err(|e| {
+        Error::new(
+            format!("Failed to find commit '{}': {}", commit_sha, e),
+            "commit_not_found",
+            Some(e.to_string()),
+        )
+    })?;
 
-    if result.status.success() {
-        Ok(RestoreBranchResult {
-            success: true,
-            branch_name: branch_name.to_string(),
-            message: format!(
-                "Branch **'{}'** restored successfully from commit **'{}'**.",
-                branch_name, short_commit_sha
-            ),
-            requires_user_action: false,
-            conflict_details: None,
-            skipped: false,
-        })
-    } else {
-        let stderr = String::from_utf8(result.stderr).map_err(|e| {
-            Error::new(
-                format!("Failed to parse stderr from create branch: {}", e),
-                "stderr_parse_failed",
-                Some(format!("Error parsing git error output to UTF-8: {}", e)),
-            )
-        })?;
-        Ok(RestoreBranchResult {
-            success: false,
-            branch_name: branch_name.to_string(),
-            message: format!("Failed to restore branch '{}': {}", branch_name, stderr),
-            requires_user_action: false,
-            conflict_details: None,
-            skipped: false,
-        })
+    repo.branch(branch_name, &commit, false).map_err(|e| {
+        Error::new(
+            format!("Failed to create branch '{}': {}", branch_name, e),
+            "create_branch_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // Get the branch info after creation
+    let branch_info = get_branch_info(&repo, branch_name)?;
+
+    // Emit event for branch restoration if we have an app handle
+    if let Some(handle) = app_handle {
+        let _ = handle.emit("branch-restored", branch_name);
     }
+
+    Ok(RestoreBranchResult {
+        success: true,
+        branch_name: branch_name.to_string(),
+        message: format!(
+            "Branch '{}' has been successfully restored at commit {}",
+            branch_name, commit_sha
+        ),
+        requires_user_action: false,
+        conflict_details: None,
+        skipped: false,
+        branch: Some(branch_info),
+    })
+}
+
+pub fn restore_deleted_branches(
+    path: &Path,
+    branch_infos: &[RestoreBranchInput],
+    app_handle: Option<&tauri::AppHandle>,
+) -> Result<Vec<(String, RestoreBranchResult)>, Error> {
+    let mut results = Vec::new();
+
+    for branch_info in branch_infos {
+        let result = restore_deleted_branch(path, branch_info, app_handle)?;
+        results.push((branch_info.target_name.clone(), result));
+    }
+
+    Ok(results)
 }

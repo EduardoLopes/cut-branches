@@ -17,6 +17,12 @@ impl std::fmt::Display for Error {
 
 impl std::error::Error for Error {}
 
+impl From<Error> for String {
+    fn from(error: Error) -> String {
+        error.message
+    }
+}
+
 impl Error {
     pub fn new(message: String, kind: &str, description: Option<String>) -> Self {
         Self {

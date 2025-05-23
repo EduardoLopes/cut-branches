@@ -12,7 +12,7 @@ pub use types::{DeletedBranchInfo, GitDirResponse, RestoreBranchInput};
 
 pub use branch::{
     delete_branches, get_all_branches_with_last_commit, get_current_branch, restore_deleted_branch,
-    switch_branch,
+    restore_deleted_branches, switch_branch,
 };
 
 pub use commit::is_commit_reachable;
