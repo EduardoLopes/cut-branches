@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
+	import Markdown from 'svelte-exmarkdown';
 	import type { Branch } from '$lib/services/common';
 	import { safeFormatDate, safeFormatRelativeDate } from '$lib/utils/date-utils';
 	import { cleanEmailString, containsAnyWord, formatString } from '$lib/utils/string-utils';
@@ -160,7 +161,7 @@
 			data-testid="last-commit-message"
 			id={`branch-${data.name}-commit-message`}
 		>
-			{data.lastCommit.message}
+			<Markdown md={data.lastCommit.message} />
 		</span>
 
 		<div
