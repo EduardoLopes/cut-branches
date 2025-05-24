@@ -24,6 +24,7 @@ jobs:
         run: rustup component add rustfmt
 
       - name: Check formatting
+        working-directory: src-tauri
         run: cargo fmt --all -- --check
 
   clippy:
@@ -41,6 +42,7 @@ jobs:
         run: rustup component add clippy
 
       - name: Clippy
+        working-directory: src-tauri
         run: cargo clippy -- -D warnings
 
   test:
@@ -55,4 +57,5 @@ jobs:
           cache_key_discriminator: test
 
       - name: Run tests
+        working-directory: src-tauri
         run: cargo test --all-features
