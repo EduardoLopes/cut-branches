@@ -18,7 +18,7 @@ jobs:
         uses: ./.github/actions/node-setup
 
       - name: Check formatting
-        run: pnpm format:check
+        run: pnpm format
 
   svelte-check:
     runs-on: ubuntu-latest
