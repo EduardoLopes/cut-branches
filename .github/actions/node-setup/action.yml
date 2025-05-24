@@ -10,7 +10,8 @@ runs:
         node-version: 'lts/*'
         cache: 'pnpm'
 
-    - run: corepack enable
+    - name: Enable corepack
+      run: corepack enable
       shell: bash
 
     - name: Get pnpm store directory
