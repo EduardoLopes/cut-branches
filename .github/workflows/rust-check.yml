@@ -32,6 +32,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: ./.github/actions/node-setup
+
+      - name: Build frontend
+        run: pnpm run build:svelte
+
       - name: Setup Rust
         uses: ./.github/actions/rust-setup
         with:
