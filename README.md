@@ -47,26 +47,36 @@ cargo test
 
 ### Running Test Coverage
 
-We use [cargo-tarpaulin](https://github.com/xd009642/tarpaulin) for Rust code coverage:
+We use source-based code coverage via LLVM for accurate coverage reporting. First, make sure you have the LLVM tools installed:
 
 ```bash
-# Install cargo-tarpaulin
-cargo install cargo-tarpaulin
-
-# From the src-tauri directory, run coverage
-cd src-tauri
-
-# Basic coverage commands:
-cargo make coverage       # Generate HTML report
-cargo make coverage-open  # Generate and open HTML report
-cargo make coverage-fail  # Set a minimum coverage threshold (50%)
-
-# Detailed coverage commands:
-cargo make coverage-verbose   # Show verbose terminal output with line coverage
-cargo make coverage-detailed  # Output detailed line-by-line analysis with count
+rustup component add llvm-tools
 ```
 
-The HTML report will be saved to `tarpaulin-report.html` in the `src-tauri` directory.
+Then you can run coverage analysis:
+
+```bash
+cd src-tauri
+
+# Quick coverage check in terminal
+cargo llvm-cov
+
+# Generate HTML report
+cargo llvm-cov --html
+
+# Generate and open HTML report in browser (macOS/Linux)
+cargo llvm-cov --html && open target/llvm-cov/html/index.html
+
+# Show detailed coverage with missing lines
+cargo llvm-cov --show-missing
+```
+
+The HTML report will be generated in `src-tauri/target/llvm-cov/html/index.html`. This report provides:
+
+- Line-by-line coverage analysis
+- Branch coverage information
+- Function coverage details
+- Source code visualization with coverage highlighting
 
 ## Usage
 

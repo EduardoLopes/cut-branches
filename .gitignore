@@ -19,3 +19,4 @@ styled-system-studio
 tarpaulin-report.html
 /src-tauri/tarpaulin-report.html
 /src-tauri/target/tarpaulin/
+/src-tauri/lcov.info

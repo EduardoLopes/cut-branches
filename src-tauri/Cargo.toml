@@ -29,7 +29,6 @@ chrono = "0.4"
 
 [dev-dependencies]
 tempfile = "3.3"
-cargo-tarpaulin = "0.32"
 
 [features]
 # by default Tauri runs in production mode
@@ -41,5 +40,5 @@ custom-protocol = ["tauri/custom-protocol"]
 
 # Custom script aliases
 [package.metadata.scripts]
-coverage = "cargo tarpaulin --out Html"
-coverage-open = "scripts/coverage.sh"
+coverage = "cargo llvm-cov --html"
+coverage-open = "cargo llvm-cov --html && open target/llvm-cov/html/index.html"
