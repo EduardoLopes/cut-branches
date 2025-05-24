@@ -22,7 +22,7 @@
 		"test:watch": "vitest --watch --coverage",
 		"test:ui": "vitest --coverage --ui",
 		"test:cargo": "cargo test --manifest-path src-tauri/Cargo.toml",
-		"test:cargo:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml --lcov --output-path src-tauri/lcov.info",
+		"test:cargo:coverage": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml",
 		"test:cargo:coverage:html": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml --html",
 		"test:cargo:coverage:open": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml --html && open src-tauri/target/llvm-cov/html/index.html",
 		"test:cargo:coverage:text": "cargo llvm-cov --manifest-path src-tauri/Cargo.toml --text",

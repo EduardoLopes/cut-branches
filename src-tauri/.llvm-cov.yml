@@ -1,0 +1,5 @@
+ignore:
+  - "src/**/test.rs"
+  - "src/**/test_utils.rs"
+  - "src/**/*_test.rs"
+  - "src/**/*_tests.rs" 

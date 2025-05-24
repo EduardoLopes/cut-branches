@@ -29,6 +29,7 @@ chrono = "0.4"
 
 [dev-dependencies]
 tempfile = "3.3"
+tokio-test = "0.4.3"
 
 [features]
 # by default Tauri runs in production mode
@@ -42,3 +43,6 @@ custom-protocol = ["tauri/custom-protocol"]
 [package.metadata.scripts]
 coverage = "cargo llvm-cov --html"
 coverage-open = "cargo llvm-cov --html && open target/llvm-cov/html/index.html"
+
+[package.metadata.llvm-cov]
+ignore-filename-regex = "(test|test_utils).rs$"

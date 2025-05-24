@@ -432,4 +432,788 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn test_is_git_repository_command_execution_error_basic() {
+        let _guard = DirectoryGuard::new();
+
+        // Test with a path that exists but where git command execution fails
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create an invalid git repository state that will cause command execution to fail
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let result = is_git_repository(path);
+        assert!(result.is_ok()); // The function should handle invalid UTF-8 gracefully
+        assert!(!result.unwrap()); // Should return false for invalid repository
+    }
+
+    #[test]
+    fn test_get_root_error_cases() {
+        let _guard = DirectoryGuard::new();
+
+        // Test with invalid UTF-8 in git command output
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+        std::fs::create_dir(path.join(".git")).unwrap();
+
+        // Create an invalid git config that will cause UTF-8 parsing errors
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+        }
+    }
+
+    #[test]
+    fn test_get_root_command_execution_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with no permissions to test command execution error
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a git repository
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "ref: refs/heads/main").unwrap();
+
+        // Make the directory unreadable (Unix only)
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(path).unwrap().permissions();
+            perms.set_mode(0o000);
+            std::fs::set_permissions(path, perms).unwrap();
+        }
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        if cfg!(unix) {
+            assert!(result.is_err());
+            if let Err(e) = result {
+                assert!(
+                    e.kind == "unable_to_access_dir" || e.kind == "command_execution_failed",
+                    "Unexpected error kind: {}",
+                    e.kind
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_get_root_utf8_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that git will try to read
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        // The function should handle invalid UTF-8 gracefully
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert!(
+                e.kind == "stdout_parse_failed"
+                    || e.kind == "stderr_parse_failed"
+                    || e.kind == "git_command_failed"
+                    || e.kind == "is_not_git_repository",
+                "Unexpected error kind: {}",
+                e.kind
+            );
+        }
+    }
+
+    #[test]
+    fn test_get_root_git_command_failure() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Corrupt the git repository to cause git command failure
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_serialization_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that git will try to read
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_is_git_repository_command_execution_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        let result = is_git_repository(path);
+        // The function should return Ok(false) for invalid repositories
+        assert!(result.is_ok());
+        assert!(!result.unwrap());
+    }
+
+    #[test]
+    fn test_get_root_with_invalid_utf8() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that git will try to read
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert!(
+                e.kind == "stdout_parse_failed"
+                    || e.kind == "stderr_parse_failed"
+                    || e.kind == "git_command_failed"
+                    || e.kind == "is_not_git_repository",
+                "Unexpected error kind: {}",
+                e.kind
+            );
+        }
+    }
+
+    #[test]
+    fn test_is_git_repository_command_execution_error_with_other_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent git executable
+        let result = Command::new("non_existent_git")
+            .arg("rev-parse")
+            .arg("--is-inside-work-tree")
+            .current_dir(path)
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        if err.kind() != ErrorKind::NotFound && err.kind() != ErrorKind::PermissionDenied {
+            let result = is_git_repository(path);
+            assert!(result.is_err());
+            if let Err(e) = result {
+                assert_eq!(e.kind, "command_execution_failed");
+                assert!(e.message.contains("Failed to execute git command for path"));
+            }
+        }
+    }
+
+    #[test]
+    fn test_get_root_stdout_parse_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stdout parse error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_stderr_parse_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stderr parse error
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "git_command_failed");
+            assert!(e.message.contains("Git command failed for path"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_serialization_error_with_invalid_json() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file that will cause a serialization error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_is_git_repository_command_execution_error_with_io_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent git executable
+        let result = Command::new("git")
+            .arg("rev-parse")
+            .arg("--is-inside-work-tree")
+            .current_dir("/path/that/does/not/exist") // This will cause an IO error
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        if err.kind() != ErrorKind::NotFound && err.kind() != ErrorKind::PermissionDenied {
+            let result = is_git_repository(path);
+            assert!(result.is_err());
+            if let Err(e) = result {
+                assert_eq!(e.kind, "command_execution_failed");
+                assert!(e.message.contains("Failed to execute git command for path"));
+            }
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_stdout_parse_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stdout parse error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_stderr_parse_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stderr parse error
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "git_command_failed");
+            assert!(e.message.contains("Git command failed for path"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_serialization_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file that will cause a serialization error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_is_git_repository_stdout_parse_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stdout parse error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let result = is_git_repository(path);
+        assert!(result.is_ok()); // The function should handle invalid UTF-8 gracefully
+        assert!(!result.unwrap()); // Should return false for invalid repository
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent git executable
+        let result = Command::new("non_existent_git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir(path)
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        if err.kind() != ErrorKind::NotFound && err.kind() != ErrorKind::PermissionDenied {
+            let path_str = path.to_str().unwrap().to_string();
+            let result = tokio_test::block_on(get_root(path_str));
+            assert!(result.is_err());
+            if let Err(e) = result {
+                assert_eq!(e.kind, "command_execution_failed");
+                assert!(e.message.contains("Failed to execute git command for path"));
+            }
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_not_found() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent git executable
+        let result = Command::new("non_existent_git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir(path)
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::NotFound);
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_permission_denied() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Make the directory unreadable (Unix only)
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(path).unwrap().permissions();
+            perms.set_mode(0o000);
+            std::fs::set_permissions(path, perms).unwrap();
+        }
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "unable_to_access_dir");
+            assert!(e.message.contains("Unable to access the path"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_other() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent path
+        let result = Command::new("git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir("/path/that/does/not/exist") // This will cause an IO error
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::NotFound);
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_stderr_parse_error_and_not_git_repo() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stderr parse error
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "git_command_failed");
+            assert!(e.message.contains("Git command failed for path"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_serialization_error_json() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file that will cause a serialization error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_and_not_git_repo() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent git executable
+        let result = Command::new("non_existent_git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir(path)
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::NotFound);
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_and_permission_denied() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Make the directory unreadable (Unix only)
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(path).unwrap().permissions();
+            perms.set_mode(0o000);
+            std::fs::set_permissions(path, perms).unwrap();
+        }
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "unable_to_access_dir");
+            assert!(e.message.contains("Unable to access the path"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_and_other_error() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent path
+        let result = Command::new("git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir("/path/that/does/not/exist") // This will cause an IO error
+            .output();
+
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::NotFound);
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_stdout_parse_error_and_invalid_utf8() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file with invalid UTF-8 that will cause a stdout parse error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_serialization_error_and_invalid_json() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a valid git repository
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Create a file that will cause a serialization error
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_and_other_error_with_stderr() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
+        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
+
+        // Mock a command execution error by using a non-existent path
+        let result = Command::new("git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        assert!(!result.status.success());
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        assert!(stderr.contains("not a git repository"));
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert_eq!(e.kind, "is_not_git_repository");
+            assert!(e.message.contains("is not a git repository"));
+        }
+    }
+
+    #[test]
+    fn test_get_root_with_command_execution_error_and_other_error_with_stderr_and_invalid_utf8() {
+        let _guard = DirectoryGuard::new();
+
+        // Create a directory with an invalid git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+
+        // Create a .git directory with invalid content that will cause a command execution error
+        std::fs::create_dir(path.join(".git")).unwrap();
+        std::fs::write(path.join(".git/config"), b"\xFF\xFF\xFF\xFF").unwrap();
+        std::fs::write(path.join(".git/HEAD"), b"\xFF\xFF\xFF\xFF").unwrap();
+
+        // Mock a command execution error by using a non-existent path
+        let result = Command::new("git")
+            .arg("rev-parse")
+            .arg("--show-toplevel")
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        assert!(!result.status.success());
+        let stderr = String::from_utf8_lossy(&result.stderr);
+        assert!(stderr.contains("not a git repository"));
+
+        let path_str = path.to_str().unwrap().to_string();
+        let result = tokio_test::block_on(get_root(path_str));
+        assert!(result.is_err());
+        if let Err(e) = result {
+            assert!(
+                e.kind == "is_not_git_repository" || e.kind == "git_command_failed",
+                "Unexpected error kind: {}",
+                e.kind
+            );
+            assert!(
+                e.message.contains("is not a git repository")
+                    || e.message.contains("Git command failed for path"),
+                "Unexpected error message: {}",
+                e.message
+            );
+        }
+    }
 }
