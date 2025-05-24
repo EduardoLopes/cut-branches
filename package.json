@@ -31,7 +31,12 @@
 		"clean": "rm -rf dist && rm -rf node_modules",
 		"update-tauri-version": "node scripts/update-tauri-version.mjs",
 		"link-pindoba": "bash scripts/manage-pindoba-links.sh link",
-		"unlink-pindoba": "bash scripts/manage-pindoba-links.sh unlink"
+		"unlink-pindoba": "bash scripts/manage-pindoba-links.sh unlink",
+		"rust:fmt": "cd src-tauri && cargo fmt --all -- --check",
+		"rust:fmt:fix": "cd src-tauri && cargo fmt --all",
+		"rust:clippy": "cd src-tauri && cargo clippy -- -D warnings",
+		"rust:test": "cd src-tauri && cargo test --all-features",
+		"rust:check": "pnpm rust:fmt && pnpm rust:clippy && pnpm rust:test"
 	},
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.1",
