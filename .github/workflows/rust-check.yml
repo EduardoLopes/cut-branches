@@ -14,11 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install GTK dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgobject-2.0-dev
-
       - name: Setup Rust
         uses: ./.github/actions/rust-setup
         with:
@@ -37,11 +32,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install GTK dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libgdk-pixbuf2.0-dev libglib2.0-dev libgobject-2.0-dev
-
       - name: Setup Rust
         uses: ./.github/actions/rust-setup
         with:
@@ -59,11 +49,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install GTK dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libgdk-pixbuf2.0-dev libglib2.0-dev libgobject-2.0-dev
 
       - name: Setup Rust
         uses: ./.github/actions/rust-setup
