@@ -23,7 +23,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
                 "The folder **{}** is not a git repository",
                 raw_path
                     .file_name()
-                    .unwrap_or_else(|| raw_path.as_os_str())
+                    .unwrap_or(raw_path.as_os_str())
                     .to_string_lossy()
             ),
             "is_not_git_repository",
@@ -81,13 +81,13 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
         id: repo_name,
     };
 
-    Ok(serde_json::to_string(&response).map_err(|e| {
+    serde_json::to_string(&response).map_err(|e| {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!("Error converting to JSON: {}", e)),
         )
-    })?)
+    })
 }
 
 /// Command to switch to another branch in a git repository.
@@ -122,7 +122,7 @@ pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Stri
     let deleted_branch_infos: Vec<crate::git::DeletedBranchInfo> =
         crate::git::delete_branches(raw_path, &branches)?;
 
-    Ok(serde_json::to_string(&deleted_branch_infos).map_err(|e| {
+    serde_json::to_string(&deleted_branch_infos).map_err(|e| {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
@@ -131,7 +131,7 @@ pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Stri
                 e
             )),
         )
-    })?)
+    })
 }
 
 /// Command to check if a commit SHA is reachable in a git repository.
@@ -151,13 +151,13 @@ pub async fn is_commit_reachable(path: String, commit_sha: String) -> Result<Str
 
     let response = serde_json::json!({ "is_reachable": is_reachable });
 
-    Ok(serde_json::to_string(&response).map_err(|e| {
+    serde_json::to_string(&response).map_err(|e| {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!("Error converting to JSON: {}", e)),
         )
-    })?)
+    })
 }
 
 /// Command to restore a deleted branch in a git repository.
@@ -179,7 +179,7 @@ pub async fn restore_deleted_branch(
 ) -> Result<String, String> {
     let raw_path = Path::new(&path);
     let result = crate::git::restore_deleted_branch(raw_path, &branch_info, Some(&app))?;
-    Ok(serde_json::to_string(&result).map_err(|e| e.to_string())?)
+    serde_json::to_string(&result).map_err(|e| e.to_string())
 }
 
 /// Command to restore multiple deleted branches in a git repository.
@@ -201,7 +201,7 @@ pub async fn restore_deleted_branches(
 ) -> Result<String, String> {
     let raw_path = Path::new(&path);
     let results = crate::git::restore_deleted_branches(raw_path, &branch_infos, Some(&app))?;
-    Ok(serde_json::to_string(&results).map_err(|e| e.to_string())?)
+    serde_json::to_string(&results).map_err(|e| e.to_string())
 }
 
 #[cfg(test)]

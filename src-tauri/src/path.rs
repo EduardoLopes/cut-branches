@@ -127,7 +127,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
                 "The folder **{}** is not a git repository",
                 raw_path
                     .file_name()
-                    .unwrap_or_else(|| raw_path.as_os_str())
+                    .unwrap_or(raw_path.as_os_str())
                     .to_string_lossy()
             ),
             "is_not_git_repository",
@@ -196,7 +196,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
         id: Some(calculate_hash(&rootpath.to_string())),
     };
 
-    Ok(serde_json::to_string(&response).map_err(|e| {
+    serde_json::to_string(&response).map_err(|e| {
         Error::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
@@ -205,7 +205,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
                 e
             )),
         )
-    })?)
+    })
 }
 
 #[cfg(test)]

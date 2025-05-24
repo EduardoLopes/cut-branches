@@ -14,9 +14,6 @@ pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, Error>
     };
 
     // Use revparse_single to handle both full and short SHA hashes
-    let result = match repo.revparse_single(commit_sha) {
-        Ok(_) => true,
-        Err(_) => false,
-    };
+    let result = repo.revparse_single(commit_sha).is_ok();
     Ok(result)
 }

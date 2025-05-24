@@ -246,10 +246,7 @@ pub fn branch_exists(path: &Path, branch_name: &str) -> Result<bool, Error> {
     };
 
     // Fix lifetime issue by not directly returning the match
-    let exists = match repo.find_branch(branch_name, BranchType::Local) {
-        Ok(_) => true,
-        Err(_) => false,
-    };
+    let exists = repo.find_branch(branch_name, BranchType::Local).is_ok();
 
     Ok(exists)
 }
