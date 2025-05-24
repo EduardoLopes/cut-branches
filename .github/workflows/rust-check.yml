@@ -1,0 +1,58 @@
+name: Rust check
+
+on:
+  push:
+    branches:
+      - '**' # Run on pushes to all branches
+    tags-ignore:
+      - '**' # Ignore all tags
+  workflow_call:
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          platform: ubuntu-latest
+          cache_key_discriminator: fmt
+
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          platform: ubuntu-latest
+          cache_key_discriminator: clippy
+
+      - name: Install clippy
+        run: rustup component add clippy
+
+      - name: Clippy
+        run: cargo clippy -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: ./.github/actions/rust-setup
+        with:
+          platform: ubuntu-latest
+          cache_key_discriminator: test
+
+      - name: Run tests
+        run: cargo test --all-features

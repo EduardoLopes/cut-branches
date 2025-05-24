@@ -8,6 +8,7 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: 'lts/*'
+        cache: 'pnpm'
 
     - run: corepack enable
       shell: bash
@@ -18,13 +19,23 @@ runs:
       shell: bash
 
     - uses: actions/cache@v4
-      name: Setup pnpm cache
+      name: Setup pnpm store cache
       with:
         path: ${{ steps.pnpm-cache-dir.outputs.STORE_PATH }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
 
+    - uses: actions/cache@v4
+      name: Cache node_modules
+      with:
+        path: |
+          **/node_modules
+          !**/node_modules/.cache
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-modules-
+
     - name: Install Dependencies
-      run: pnpm install
+      run: pnpm install --frozen-lockfile
       shell: bash

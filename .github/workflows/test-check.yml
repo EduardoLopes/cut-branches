@@ -1,0 +1,54 @@
+name: 'Svelte check'
+
+on:
+  push:
+    branches:
+      - '**' # Run on pushes to all branches
+    tags-ignore:
+      - '**' # Ignore all tags
+  workflow_call:
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: node-setup
+        uses: ./.github/actions/node-setup
+
+      - name: Check formatting
+        run: pnpm format:check
+
+  svelte-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: node-setup
+        uses: ./.github/actions/node-setup
+
+      - name: Run Svelte check
+        run: pnpm svelte-check
+
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: node-setup
+        uses: ./.github/actions/node-setup
+
+      - name: Run ESLint
+        run: pnpm lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: node-setup
+        uses: ./.github/actions/node-setup
+
+      - name: Run Tests
+        run: pnpm test
