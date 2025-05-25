@@ -4,10 +4,6 @@ pub mod branch;
 pub mod commit;
 pub mod types;
 
-// Conditionally compile the tests module only when testing
-#[cfg(test)]
-pub mod tests;
-
 pub use types::{DeletedBranchInfo, GitDirResponse, RestoreBranchInput};
 
 pub use branch::{
