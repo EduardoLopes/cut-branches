@@ -1,94 +1,6 @@
 use std::path::Path;
 
 use crate::error::Error;
-use crate::git::GitDirResponse;
-use crate::path::RootPathResponse;
-
-/// Command to get information about a git repository.
-///
-/// # Arguments
-///
-/// * `path` - Path to the git repository
-///
-/// # Returns
-///
-/// * `Result<String, Error>` - A JSON string with repository information or an error
-#[tauri::command(async)]
-pub async fn get_repo_info(path: String) -> Result<String, Error> {
-    let raw_path = Path::new(&path);
-
-    if !crate::path::is_git_repository(raw_path)? {
-        return Err(Error::new(
-            format!(
-                "The folder **{}** is not a git repository",
-                raw_path
-                    .file_name()
-                    .unwrap_or(raw_path.as_os_str())
-                    .to_string_lossy()
-            ),
-            "is_not_git_repository",
-            Some(format!(
-                "The path **{}** does not contain a .git directory",
-                raw_path.display()
-            )),
-        ));
-    }
-
-    let unserialized_root_path: String = crate::path::get_root(path.clone()).await?;
-
-    let root_path = serde_json::from_str::<RootPathResponse>(&unserialized_root_path)
-        .map_err(|e| {
-            Error::new(
-                format!("Failed to parse root path response: {}", e),
-                "parse_failed",
-                Some(format!("Error parsing root path JSON: {}", e)),
-            )
-        })?
-        .root_path;
-
-    let raw_root_path = Path::new(&root_path);
-
-    let mut branches = crate::git::get_all_branches_with_last_commit(raw_root_path)?;
-    branches.sort_by(|a, b| b.current.cmp(&a.current));
-    let current = crate::git::get_current_branch(raw_root_path)?;
-
-    let repo_name = raw_root_path
-        .file_name()
-        .ok_or_else(|| {
-            Error::new(
-                "Failed to get repository name".to_string(),
-                "repo_name_failed",
-                Some("Could not extract the repository name from the file path".to_string()),
-            )
-        })?
-        .to_str()
-        .ok_or_else(|| {
-            Error::new(
-                "Failed to convert repository name to string".to_string(),
-                "repo_name_failed",
-                Some("Repository name contains invalid UTF-8 characters".to_string()),
-            )
-        })?
-        .to_string();
-    let branches_count = branches.len();
-
-    let response = GitDirResponse {
-        path: root_path,
-        branches,
-        current_branch: current.to_string(),
-        branches_count,
-        name: repo_name.clone(),
-        id: repo_name,
-    };
-
-    serde_json::to_string(&response).map_err(|e| {
-        Error::new(
-            format!("Failed to serialize response: {}", e),
-            "serialization_failed",
-            Some(format!("Error converting to JSON: {}", e)),
-        )
-    })
-}
 
 /// Command to switch to another branch in a git repository.
 ///
@@ -130,32 +42,6 @@ pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Stri
                 "Error converting the deleted branches information to JSON: {}",
                 e
             )),
-        )
-    })
-}
-
-/// Command to check if a commit SHA is reachable in a git repository.
-///
-/// # Arguments
-///
-/// * `path` - Path to the git repository
-/// * `commit_sha` - The commit SHA to check
-///
-/// # Returns
-///
-/// * `Result<String, Error>` - A JSON string with the reachability status or an error
-#[tauri::command(async)]
-pub async fn is_commit_reachable(path: String, commit_sha: String) -> Result<String, Error> {
-    let raw_path = Path::new(&path);
-    let is_reachable = crate::git::is_commit_reachable(raw_path, &commit_sha)?;
-
-    let response = serde_json::json!({ "is_reachable": is_reachable });
-
-    serde_json::to_string(&response).map_err(|e| {
-        Error::new(
-            format!("Failed to serialize response: {}", e),
-            "serialization_failed",
-            Some(format!("Error converting to JSON: {}", e)),
         )
     })
 }
@@ -208,90 +94,7 @@ pub async fn restore_deleted_branches(
 mod tests {
     use super::*;
     use crate::test_utils::{setup_test_repo, DirectoryGuard};
-    use std::fs;
     use std::process::Command;
-
-    #[tokio::test]
-    async fn test_get_repo_info() {
-        let _guard = DirectoryGuard::new();
-        let repo = setup_test_repo();
-        let path = repo.path();
-        std::env::set_current_dir(path)
-            .expect(&format!("Failed to set current directory to {:?}", path));
-        let path_str = path.to_str().unwrap().to_string();
-        let result = get_repo_info(path_str).await;
-        assert!(result.is_ok(), "get_repo_info failed: {:?}", result.err());
-        let response_str = result.unwrap();
-        let response: GitDirResponse = serde_json::from_str(&response_str).unwrap();
-        assert_eq!(response.branches_count, 1, "Expected 1 branch");
-        assert!(!response.branches.is_empty(), "No branches returned");
-        assert!(!response.current_branch.is_empty(), "No current branch");
-        assert!(
-            response.branches[0].current,
-            "First branch should be current"
-        );
-        let branch = &response.branches[0];
-        assert!(!branch.name.is_empty(), "Branch has no name");
-        assert!(!branch.last_commit.sha.is_empty(), "No commit SHA");
-        assert!(!branch.last_commit.message.is_empty(), "No commit message");
-        assert_eq!(
-            branch.last_commit.message, "Initial commit",
-            "Unexpected commit message"
-        );
-        assert_eq!(branch.last_commit.author, "Test User", "Unexpected author");
-        let expected_email = "test@example.com";
-        let mut actual_email = branch.last_commit.email.clone();
-        if actual_email.starts_with('<') && actual_email.ends_with('>') {
-            actual_email = actual_email
-                .trim_start_matches('<')
-                .trim_end_matches('>')
-                .to_string();
-        }
-        assert_eq!(
-            actual_email, expected_email,
-            "Unexpected email. Expected: {}, Got: {}",
-            expected_email, actual_email
-        );
-    }
-
-    #[tokio::test]
-    async fn test_get_repo_info_errors() {
-        let _guard = DirectoryGuard::new();
-
-        // Test with a non-git directory
-        let temp_dir = tempfile::tempdir().unwrap();
-        let path_str = temp_dir.path().to_str().unwrap().to_string();
-
-        let result = get_repo_info(path_str).await;
-        assert!(result.is_err(), "Expected error for non-git directory");
-        if let Err(e) = result {
-            assert_eq!(
-                e.kind, "is_not_git_repository",
-                "Wrong error kind for non-git directory: {}",
-                e.kind
-            );
-        }
-
-        // Test with invalid path
-        let invalid_path = "/path/that/does/not/exist".to_string();
-        let result = get_repo_info(invalid_path).await;
-        assert!(result.is_err(), "Expected error for invalid path");
-
-        // Test with a corrupted git repo (to trigger different error paths)
-        let corrupt_repo_dir = tempfile::tempdir().unwrap();
-        let corrupt_path = corrupt_repo_dir.path();
-
-        // Create fake .git directory to pass the is_git_repository check but fail on actual git operations
-        fs::create_dir(corrupt_path.join(".git")).unwrap();
-
-        // Create a malformed git config
-        let config_path = corrupt_path.join(".git/config");
-        fs::write(config_path, "This is not a valid git config").unwrap();
-
-        let corrupt_path_str = corrupt_path.to_str().unwrap().to_string();
-        let result = get_repo_info(corrupt_path_str).await;
-        assert!(result.is_err(), "Expected error for corrupted git repo");
-    }
 
     #[tokio::test]
     async fn test_switch_branch() {
@@ -425,59 +228,6 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn test_is_commit_reachable_command_detail() {
-        let _guard = DirectoryGuard::new();
-
-        // Setup test repository
-        let repo = setup_test_repo();
-        let path = repo.path();
-
-        // Get the current commit hash
-        let commit_hash = Command::new("git")
-            .args(["rev-parse", "HEAD"])
-            .current_dir(path)
-            .output()
-            .unwrap();
-        let commit_sha = String::from_utf8(commit_hash.stdout)
-            .unwrap()
-            .trim()
-            .to_string();
-
-        // Get the path as string
-        let path_str = path.to_str().unwrap().to_string();
-
-        // Test is_commit_reachable with valid commit
-        let result = is_commit_reachable(path_str.clone(), commit_sha.clone()).await;
-
-        assert!(
-            result.is_ok(),
-            "is_commit_reachable should succeed for valid commit"
-        );
-        let result_json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
-        assert!(
-            result_json["is_reachable"].as_bool().unwrap(),
-            "Valid commit should be reachable"
-        );
-
-        // Test with invalid commit
-        let result = is_commit_reachable(
-            path_str.clone(),
-            "0000000000000000000000000000000000000000".to_string(),
-        )
-        .await;
-
-        assert!(
-            result.is_ok(),
-            "is_commit_reachable should succeed for invalid commit"
-        );
-        let result_json: serde_json::Value = serde_json::from_str(&result.unwrap()).unwrap();
-        assert!(
-            !result_json["is_reachable"].as_bool().unwrap(),
-            "Invalid commit should not be reachable"
-        );
-    }
-
     /*
     #[tokio::test]
     async fn test_restore_deleted_branch_command_detail() {
@@ -485,26 +235,6 @@ mod tests {
         // See Tauri documentation for details on AppHandle and testing.
     }
     */
-
-    #[tokio::test]
-    async fn test_get_repo_info_parse_errors() {
-        let _guard = DirectoryGuard::new();
-
-        // Create a mock RootPathResponse with invalid JSON
-        let repo = setup_test_repo();
-        let path = repo.path();
-        std::env::set_current_dir(path)
-            .expect(&format!("Failed to set current directory to {:?}", path));
-        // Create a corrupted git configuration to test parsing errors
-        let test_dir = tempfile::tempdir().unwrap();
-        let test_path = test_dir.path();
-        fs::create_dir(test_path.join(".git")).unwrap();
-        // Let it pass is_git_repository but fail at later steps
-
-        let test_path_str = test_path.to_str().unwrap().to_string();
-        let result = get_repo_info(test_path_str).await;
-        assert!(result.is_err(), "Expected error for corrupted git repo");
-    }
 
     #[tokio::test]
     async fn test_switch_branch_command() {
@@ -531,12 +261,12 @@ mod tests {
         assert!(result.is_ok(), "switch_branch should succeed");
 
         // Verify we're on the new branch
-        let current_branch = Command::new("git")
+        let current_branch_output = Command::new("git")
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
             .unwrap();
-        let current_branch = String::from_utf8(current_branch.stdout)
+        let current_branch = String::from_utf8(current_branch_output.stdout)
             .unwrap()
             .trim()
             .to_string();
