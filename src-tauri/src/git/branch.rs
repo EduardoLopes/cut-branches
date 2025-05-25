@@ -1091,4 +1091,291 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn test_restore_deleted_branches() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get current commit SHA
+        let commit_output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(commit_output.stdout)
+            .unwrap()
+            .trim()
+            .to_string();
+
+        // Create and delete test branches
+        let branch_names = vec!["test-branch-1", "test-branch-2", "test-branch-3"];
+        for branch_name in &branch_names {
+            Command::new("git")
+                .args(["branch", branch_name, &commit_sha])
+                .current_dir(path)
+                .output()
+                .unwrap();
+            Command::new("git")
+                .args(["branch", "-D", branch_name])
+                .current_dir(path)
+                .output()
+                .unwrap();
+        }
+
+        // Create restore inputs
+        let restore_inputs: Vec<RestoreBranchInput> = branch_names
+            .iter()
+            .map(|name| RestoreBranchInput {
+                original_name: name.to_string(),
+                target_name: name.to_string(),
+                commit_sha: commit_sha.clone(),
+                conflict_resolution: None,
+            })
+            .collect();
+
+        // Test successful restore of all branches
+        let result = restore_deleted_branches(path, &restore_inputs, None);
+        assert!(result.is_ok(), "Restore failed: {:?}", result.err());
+        let restore_results = result.unwrap();
+        assert_eq!(restore_results.len(), branch_names.len());
+
+        // Verify all branches were restored successfully
+        for (name, result) in restore_results {
+            assert!(
+                result.success,
+                "Branch {} restore failed: {}",
+                name, result.message
+            );
+            assert!(!result.skipped);
+            assert!(branch_exists(path, &name).unwrap());
+        }
+
+        // Test restore with conflicts
+        let conflict_inputs = vec![
+            RestoreBranchInput {
+                original_name: "conflict-original-1".to_string(),
+                target_name: branch_names[0].to_string(), // This now exists
+                commit_sha: commit_sha.clone(),
+                conflict_resolution: None,
+            },
+            RestoreBranchInput {
+                original_name: "conflict-original-2".to_string(),
+                target_name: branch_names[1].to_string(), // This now exists
+                commit_sha: commit_sha.clone(),
+                conflict_resolution: Some(ConflictResolution::Skip),
+            },
+        ];
+
+        let result = restore_deleted_branches(path, &conflict_inputs, None);
+        assert!(
+            result.is_ok(),
+            "Restore with conflicts failed: {:?}",
+            result.err()
+        );
+        let conflict_results = result.unwrap();
+        assert_eq!(conflict_results.len(), conflict_inputs.len());
+
+        // Verify conflict handling
+        for (_name, result) in conflict_results {
+            if result.conflict_details.is_some() {
+                assert!(!result.success);
+                assert!(result.requires_user_action);
+            } else if result.skipped {
+                assert!(result.message.contains("Skipped creation of branch"));
+            }
+        }
+
+        // Test restore with overwrite
+        let overwrite_inputs = vec![
+            RestoreBranchInput {
+                original_name: "overwrite-original-1".to_string(),
+                target_name: branch_names[0].to_string(), // This exists
+                commit_sha: commit_sha.clone(),
+                conflict_resolution: Some(ConflictResolution::Overwrite),
+            },
+            RestoreBranchInput {
+                original_name: "overwrite-original-2".to_string(),
+                target_name: branch_names[1].to_string(), // This exists
+                commit_sha: commit_sha.clone(),
+                conflict_resolution: Some(ConflictResolution::Overwrite),
+            },
+        ];
+
+        let result = restore_deleted_branches(path, &overwrite_inputs, None);
+        assert!(
+            result.is_ok(),
+            "Restore with overwrite failed: {:?}",
+            result.err()
+        );
+        let overwrite_results = result.unwrap();
+        assert_eq!(overwrite_results.len(), overwrite_inputs.len());
+
+        // Verify overwrite handling
+        for (name, result) in overwrite_results {
+            assert!(
+                result.success,
+                "Overwrite failed for {}: {}",
+                name, result.message
+            );
+            assert!(!result.skipped);
+            assert!(branch_exists(path, &name).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_restore_deleted_branches_errors() {
+        let _guard = DirectoryGuard::new();
+        let temp_dir = tempfile::tempdir().unwrap();
+        let non_git_path = temp_dir.path();
+
+        let restore_inputs = vec![RestoreBranchInput {
+            original_name: "test-branch".to_string(),
+            target_name: "test-branch".to_string(),
+            commit_sha: "invalid-sha".to_string(),
+            conflict_resolution: None,
+        }];
+
+        // Test with non-git directory
+        let result = restore_deleted_branches(non_git_path, &restore_inputs, None);
+        assert!(result.is_err(), "Expected error for non-git directory");
+
+        // Test with invalid commit SHA
+        let repo = setup_test_repo();
+        let path = repo.path();
+        let result = restore_deleted_branches(path, &restore_inputs, None);
+        assert!(result.is_err(), "Expected error for invalid commit SHA");
+    }
+
+    #[test]
+    fn test_restore_deleted_branch_errors() {
+        let _guard = DirectoryGuard::new();
+        let temp_dir = tempfile::tempdir().unwrap();
+        let non_git_path = temp_dir.path();
+
+        // Test with non-git directory
+        let restore_input = RestoreBranchInput {
+            original_name: "test-branch".to_string(),
+            target_name: "test-branch".to_string(),
+            commit_sha: "invalid-sha".to_string(),
+            conflict_resolution: None,
+        };
+
+        let result = restore_deleted_branch(non_git_path, &restore_input, None);
+        assert!(result.is_err(), "Expected error for non-git directory");
+        if let Err(e) = result {
+            assert!(
+                e.message.contains("Failed to open git repository"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "repository_open_failed");
+        }
+
+        // Test with invalid commit SHA
+        let repo = setup_test_repo();
+        let path = repo.path();
+        let result = restore_deleted_branch(path, &restore_input, None);
+        assert!(result.is_err(), "Expected error for invalid commit SHA");
+        if let Err(e) = result {
+            assert!(
+                e.message
+                    .contains("Commit **invalid-sha** not found in the repository"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "commit_not_found");
+        }
+
+        // Test with non-existent commit
+        let restore_input = RestoreBranchInput {
+            original_name: "test-branch".to_string(),
+            target_name: "test-branch".to_string(),
+            commit_sha: "0000000000000000000000000000000000000000".to_string(),
+            conflict_resolution: None,
+        };
+
+        let result = restore_deleted_branch(path, &restore_input, None);
+        assert!(result.is_err(), "Expected error for non-existent commit");
+        if let Err(e) = result {
+            assert!(
+                e.message.contains("Commit **0000000000000000000000000000000000000000** not found in the repository"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "commit_not_found");
+        }
+
+        // Test with malformed repository
+        let malformed_repo = tempfile::tempdir().unwrap();
+        let malformed_path = malformed_repo.path();
+        std::fs::create_dir(malformed_path.join(".git")).unwrap();
+
+        let result = restore_deleted_branch(malformed_path, &restore_input, None);
+        assert!(result.is_err(), "Expected error for malformed repository");
+        if let Err(e) = result {
+            assert!(
+                e.message.contains("Failed to open git repository"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "repository_open_failed");
+        }
+
+        // Test with permission denied
+        #[cfg(unix)]
+        {
+            use std::fs;
+            use std::os::unix::fs::PermissionsExt;
+            let temp_dir_perm = tempfile::tempdir().unwrap();
+            let no_permission_path = temp_dir_perm.path();
+            let mut perms = fs::metadata(no_permission_path).unwrap().permissions();
+            perms.set_mode(0o000); // Remove all permissions
+            fs::set_permissions(no_permission_path, perms).unwrap();
+
+            let result = restore_deleted_branch(no_permission_path, &restore_input, None);
+            assert!(result.is_err(), "Expected error for permission denied");
+            if let Err(e) = result {
+                assert!(
+                    e.message.contains("Failed to open git repository")
+                        || e.message.contains("Failed to execute git command"),
+                    "Unexpected error message: {}",
+                    e.message
+                );
+                assert!(e.kind == "repository_open_failed" || e.kind == "command_execution_failed");
+            }
+        }
+
+        // Test with invalid branch name
+        let repo = setup_test_repo();
+        let path = repo.path();
+        let commit_output = Command::new("git")
+            .args(["rev-parse", "HEAD"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let commit_sha = String::from_utf8(commit_output.stdout)
+            .unwrap()
+            .trim()
+            .to_string();
+
+        let invalid_branch_input = RestoreBranchInput {
+            original_name: "test branch with spaces".to_string(), // Invalid branch name with spaces
+            target_name: "test branch with spaces".to_string(),
+            commit_sha: commit_sha.clone(),
+            conflict_resolution: None,
+        };
+
+        let result = restore_deleted_branch(path, &invalid_branch_input, None);
+        assert!(result.is_err(), "Expected error for invalid branch name");
+        if let Err(e) = result {
+            assert!(
+                e.message.contains("Failed to create branch"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "create_branch_failed");
+        }
+    }
 }
