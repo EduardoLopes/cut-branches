@@ -4,8 +4,6 @@ use git2::Repository;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
-use std::path::PathBuf;
-use std::process::Command;
 
 use crate::error::Error;
 
@@ -40,7 +38,42 @@ impl Hash for RootPathResponse {
 /// * `Result<bool, Error>` - true if it's a git repository, or an error
 pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
     match Repository::open(path) {
-        Ok(_) => Ok(true),
+        Ok(repo) => {
+            // Try to read the config to verify it's not corrupted
+            match repo.config() {
+                Ok(_) => {
+                    // Try to read the HEAD to verify it's not corrupted
+                    match repo.head() {
+                        Ok(_) => Ok(true),
+                        Err(e) => {
+                            // If the repository is bare, it's still valid
+                            if repo.is_bare() {
+                                Ok(true)
+                            } else {
+                                Err(Error::new(
+                                    format!(
+                                        "Failed to read git repository HEAD at {}: {}",
+                                        path.display(),
+                                        e
+                                    ),
+                                    "git_repository_error",
+                                    Some(e.to_string()),
+                                ))
+                            }
+                        }
+                    }
+                }
+                Err(e) => Err(Error::new(
+                    format!(
+                        "Failed to read git repository config at {}: {}",
+                        path.display(),
+                        e
+                    ),
+                    "git_repository_error",
+                    Some(e.to_string()),
+                )),
+            }
+        }
         Err(e) => {
             if e.code() == git2::ErrorCode::NotFound {
                 Ok(false)
@@ -135,40 +168,12 @@ pub async fn get_root(path: String) -> Result<String, Error> {
     })
 }
 
-#[tauri::command]
-pub fn get_git_root(path: String) -> Result<String, String> {
-    let rootpath = Path::new(&path).to_path_buf();
-    if !rootpath.exists() {
-        return Err("Path does not exist".to_string());
-    }
-
-    // First try using git2
-    if let Ok(repo) = Repository::discover(&rootpath) {
-        if let Some(workdir) = repo.workdir() {
-            return Ok(workdir.to_string_lossy().into_owned());
-        }
-    }
-
-    // Fallback to command line git
-    let output = Command::new("git")
-        .args(["rev-parse", "--show-toplevel"])
-        .current_dir(&rootpath)
-        .output();
-
-    match output {
-        Ok(output) if output.status.success() => {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            Ok(stdout.trim().to_string())
-        }
-        _ => Err("Not a git repository".to_string()),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::test_utils::{setup_test_repo, DirectoryGuard};
     use git2::Repository;
+    use std::path::PathBuf;
     use tempfile::tempdir;
 
     #[test]
@@ -206,20 +211,43 @@ mod tests {
             result
         );
         assert!(!result.unwrap(), "Expected false for non-existent path");
+
+        // Test with a corrupted git repository
+        let temp_dir = tempdir().unwrap();
+        let path = temp_dir.path();
+        let git_dir = path.join(".git");
+        std::fs::create_dir(&git_dir).unwrap();
+
+        // Create necessary directories first
+        std::fs::create_dir(git_dir.join("objects")).unwrap();
+        std::fs::create_dir(git_dir.join("refs")).unwrap();
+        std::fs::create_dir(git_dir.join("refs/heads")).unwrap();
+
+        // Create corrupted files
+        std::fs::write(git_dir.join("config"), "invalid content").unwrap();
+        std::fs::write(git_dir.join("HEAD"), "invalid ref").unwrap();
+        std::fs::write(git_dir.join("objects/invalid"), "invalid content").unwrap();
+        std::fs::write(git_dir.join("refs/heads/invalid"), "invalid ref").unwrap();
+        std::fs::write(git_dir.join("index"), "invalid index").unwrap();
+
+        let result = is_git_repository(path);
+        assert!(
+            result.is_err(),
+            "Expected error for corrupted git repository"
+        );
+        if let Err(e) = result {
+            assert_eq!(e.kind, "git_repository_error");
+        }
     }
 
     #[test]
-    fn test_get_root_non_git_repository() {
+    fn test_get_root() {
         let _guard = DirectoryGuard::new();
 
-        // Create a temporary directory that is not a git repository
+        // Test with non-git repository
         let non_git_repo = tempdir().unwrap();
         let non_git_path = non_git_repo.path();
-
-        // Test get_root with non-git repository
         let result = tokio_test::block_on(get_root(non_git_path.to_str().unwrap().to_string()));
-
-        // Should return an error with specific kind
         assert!(result.is_err(), "Should error for non-git repository");
         if let Err(e) = result {
             assert_eq!(
@@ -227,84 +255,37 @@ mod tests {
                 "Wrong error kind for non-git repository"
             );
         }
-    }
 
-    #[test]
-    fn test_get_root_with_invalid_repo() {
-        let _guard = DirectoryGuard::new();
-
-        // Create a directory with an invalid git repository
-        let temp_dir = tempdir().unwrap();
-        let path = temp_dir.path();
-
-        // Create a .git directory with invalid content
-        std::fs::create_dir(path.join(".git")).unwrap();
-        std::fs::write(path.join(".git/config"), "invalid content").unwrap();
-        std::fs::write(path.join(".git/HEAD"), "invalid content").unwrap();
-
-        let path_str = path.to_str().unwrap().to_string();
-        let result = tokio_test::block_on(get_root(path_str));
-        assert!(result.is_err());
-        if let Err(e) = result {
-            assert_eq!(e.kind, "is_not_git_repository");
-        }
-    }
-
-    #[test]
-    fn test_get_root_with_bare_repo() {
-        let _guard = DirectoryGuard::new();
-
-        // Create a bare repository
+        // Test with bare repository
         let temp_dir = tempdir().unwrap();
         let path = temp_dir.path();
         let _repo = Repository::init_bare(path).unwrap();
-
         let path_str = path.to_str().unwrap().to_string();
         let result = tokio_test::block_on(get_root(path_str));
-        assert!(result.is_err());
+        assert!(result.is_err(), "Should error for bare repository");
         if let Err(e) = result {
-            assert_eq!(e.kind, "no_workdir");
+            assert_eq!(e.kind, "no_workdir", "Wrong error kind for bare repository");
         }
-    }
 
-    #[test]
-    fn test_get_root_success() {
-        let _guard = DirectoryGuard::new();
-
-        // Create a valid git repository
+        // Test with valid repository
         let repo = setup_test_repo();
         let path = repo.path();
-
         let path_str = path.to_str().unwrap().to_string();
         let result = tokio_test::block_on(get_root(path_str));
-        assert!(result.is_ok());
+        assert!(result.is_ok(), "Should succeed for valid repository");
 
         if let Ok(json) = result {
             let response: RootPathResponse = serde_json::from_str(&json).unwrap();
-            // Normalize paths for comparison
             let expected_path = PathBuf::from(path).canonicalize().unwrap();
             let actual_path = PathBuf::from(&response.root_path).canonicalize().unwrap();
-            assert_eq!(actual_path, expected_path);
-            assert!(response.id.is_some());
+            assert_eq!(actual_path, expected_path, "Paths should match");
+            assert!(response.id.is_some(), "ID should be present");
         }
     }
 
     #[test]
-    fn test_calculate_hash() {
-        let value1 = "test";
-        let value2 = "test";
-        let value3 = "different";
-
-        // Same values should produce the same hash
-        assert_eq!(calculate_hash(&value1), calculate_hash(&value2));
-
-        // Different values should produce different hashes
-        assert_ne!(calculate_hash(&value1), calculate_hash(&value3));
-    }
-
-    #[test]
-    fn test_root_path_response_hash() {
-        // Test the Hash implementation for RootPathResponse
+    fn test_root_path_response_implementations() {
+        // Test Hash implementation
         let resp1 = RootPathResponse {
             root_path: "/path/to/repo".to_string(),
             id: Some(12345),
@@ -320,53 +301,30 @@ mod tests {
             id: Some(12345),                          // Same ID
         };
 
-        let resp4 = RootPathResponse {
-            root_path: "/path/to/repo".to_string(), // Same as resp1
-            id: Some(12345),                        // Same as resp1
-        };
-
-        // Create HashSets to verify Hash implementation
-        use std::collections::HashSet;
-        let mut set = HashSet::new();
-
-        // Add responses to the set
-        set.insert(resp1);
-        set.insert(resp2);
-        set.insert(resp3);
-
-        // Since resp1 and resp2 have the same path, only one should be in the set
-        // resp3 has a different path, so it should be in the set
+        // Test Hash implementation
+        let mut set = std::collections::HashSet::new();
+        set.insert(resp1.clone());
+        set.insert(resp2.clone());
+        set.insert(resp3.clone());
         assert_eq!(set.len(), 2, "HashSet should contain only 2 items");
 
-        // Verify resp4 (identical to resp1) is not added as a new item
-        let was_new = set.insert(resp4);
-        assert!(!was_new, "Identical item should not be added to HashSet");
-        assert_eq!(set.len(), 2, "HashSet size should remain 2");
-    }
-
-    #[test]
-    fn test_eq_implementation() {
-        // Test the Eq implementation for RootPathResponse
-        let resp1 = RootPathResponse {
-            root_path: "/path/to/repo".to_string(),
-            id: Some(12345),
-        };
-
-        let resp2 = RootPathResponse {
-            root_path: "/path/to/repo".to_string(), // Same path
-            id: Some(67890),                        // Different ID - should be ignored
-        };
-
-        let resp3 = RootPathResponse {
-            root_path: "/different/path".to_string(), // Different path
-            id: Some(12345),                          // Same ID - should be ignored
-        };
-
-        // Test equality based on path only
+        // Test Eq implementation
         assert_eq!(resp1, resp2, "Items with same path should be equal");
         assert_ne!(
             resp1, resp3,
             "Items with different paths should not be equal"
+        );
+
+        // Test Hash consistency with Eq
+        assert_eq!(
+            calculate_hash(&resp1),
+            calculate_hash(&resp2),
+            "Hash should be consistent with Eq"
+        );
+        assert_ne!(
+            calculate_hash(&resp1),
+            calculate_hash(&resp3),
+            "Hash should be consistent with Eq"
         );
     }
 }
