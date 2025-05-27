@@ -314,10 +314,10 @@
 				height="16px"
 				class={css({
 					_dark: {
-						color: 'primary.800'
+						color: 'neutral.900'
 					},
 					_light: {
-						color: 'primary.800.contrast'
+						color: 'neutral.900'
 					},
 					_hover: {
 						color: 'primary.950',
