@@ -31,12 +31,11 @@
 <div
 	class={css({
 		_dark: {
-			background: 'primary.100',
-			borderTop: '1px dashed token(colors.primary.300)'
+			background: 'neutral.200',
+			borderTop: '1px solid token(colors.neutral.100)'
 		},
 		_light: {
-			background: 'primary.800',
-			borderTop: '1px dashed token(colors.primary.400)'
+			background: 'neutral.400'
 		},
 		height: 'calc((token(spacing.sm)) * 2.5)',
 		borderLeft: '1px dashed token(colors.primary.300)',
@@ -50,18 +49,16 @@
 	<div
 		class={css({
 			_dark: {
-				borderTop: '1px dashed token(colors.primary.300)',
-				background: 'primary.200'
+				background: 'neutral.400'
 			},
 			_light: {
-				borderTop: '1px dashed token(colors.primary.700)',
-				background: 'primary.950'
+				background: 'neutral.600'
 			},
 			display: 'flex',
 			justifyContent: 'center',
 			alignItems: 'center',
 			height: 'calc((token(spacing.sm)) * 2.5)',
-			width: '260px',
+			width: '259px',
 			p: 'token(spacing.xxs)'
 		})}
 		data-testid="version-container"
@@ -70,10 +67,10 @@
 			class={css({
 				fontSize: 'sm',
 				_dark: {
-					color: 'primary.900'
+					color: 'neutral.900'
 				},
 				_light: {
-					color: 'primary.600'
+					color: 'neutral.900'
 				},
 				display: 'flex'
 			})}
@@ -95,10 +92,10 @@
 						},
 						padding: 0,
 						_dark: {
-							color: 'primary.900'
+							color: 'neutral.900'
 						},
 						_light: {
-							color: 'primary.600'
+							color: 'neutral.900'
 						}
 					})
 				}
@@ -133,10 +130,10 @@
 						class={css({
 							fontSize: 'sm',
 							_dark: {
-								color: 'primary.800'
+								color: 'neutral.900'
 							},
 							_light: {
-								color: 'primary.800.contrast'
+								color: 'neutral.900'
 							}
 						})}
 						data-testid="last-updated-text"
