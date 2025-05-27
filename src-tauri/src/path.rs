@@ -27,6 +27,43 @@ impl Hash for RootPathResponse {
     }
 }
 
+/// Validates a git repository by checking its config and HEAD.
+fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, Error> {
+    // Check if config is valid
+    if let Err(e) = repo.config() {
+        return Err(Error::new(
+            format!(
+                "Failed to read git repository config at {}: {}",
+                path.display(),
+                e
+            ),
+            "git_repository_error",
+            Some(e.to_string()),
+        ));
+    }
+
+    // Check if HEAD is valid
+    match repo.head() {
+        Ok(_) => Ok(true),
+        Err(e) => {
+            // If the repository is bare, it's still valid
+            if repo.is_bare() {
+                Ok(true)
+            } else {
+                Err(Error::new(
+                    format!(
+                        "Failed to read git repository HEAD at {}: {}",
+                        path.display(),
+                        e
+                    ),
+                    "git_repository_error",
+                    Some(e.to_string()),
+                ))
+            }
+        }
+    }
+}
+
 /// Checks if the given path is a git repository.
 ///
 /// # Arguments
@@ -38,42 +75,7 @@ impl Hash for RootPathResponse {
 /// * `Result<bool, Error>` - true if it's a git repository, or an error
 pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
     match Repository::open(path) {
-        Ok(repo) => {
-            // Try to read the config to verify it's not corrupted
-            match repo.config() {
-                Ok(_) => {
-                    // Try to read the HEAD to verify it's not corrupted
-                    match repo.head() {
-                        Ok(_) => Ok(true),
-                        Err(e) => {
-                            // If the repository is bare, it's still valid
-                            if repo.is_bare() {
-                                Ok(true)
-                            } else {
-                                Err(Error::new(
-                                    format!(
-                                        "Failed to read git repository HEAD at {}: {}",
-                                        path.display(),
-                                        e
-                                    ),
-                                    "git_repository_error",
-                                    Some(e.to_string()),
-                                ))
-                            }
-                        }
-                    }
-                }
-                Err(e) => Err(Error::new(
-                    format!(
-                        "Failed to read git repository config at {}: {}",
-                        path.display(),
-                        e
-                    ),
-                    "git_repository_error",
-                    Some(e.to_string()),
-                )),
-            }
-        }
+        Ok(repo) => validate_repository(&repo, path),
         Err(e) => {
             if e.code() == git2::ErrorCode::NotFound {
                 Ok(false)
