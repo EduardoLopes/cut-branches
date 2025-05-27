@@ -188,7 +188,6 @@
 		overflow: 'hidden',
 		position: 'relative',
 		height: 'calc(100vh - 30px)',
-		padding: 'md',
 		pl: 0
 	})}
 	class:deleted={branchesType === 'deleted'}
@@ -200,7 +199,6 @@
 			overflow: 'hidden',
 			position: 'relative',
 			height: '100%',
-			borderRadius: 'md',
 			_light: {
 				background: 'neutral.50'
 			},
