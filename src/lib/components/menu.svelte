@@ -106,14 +106,6 @@
 				display: 'flex',
 				flexDirection: 'column',
 				gap: 'sm',
-				p: 'sm',
-
-				_light: {
-					bg: 'neutral.50'
-				},
-				_dark: {
-					bg: 'neutral.100'
-				},
 				borderTopRadius: 'md'
 			})}
 		>
@@ -157,7 +149,12 @@
 							overflowY: 'auto',
 							backdropFilter: 'none',
 							padding: '0',
-							background: 'transparent'
+							_light: {
+								bg: 'neutral.50'
+							},
+							_dark: {
+								bg: 'neutral.100'
+							}
 						})
 					}}
 				/>
