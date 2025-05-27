@@ -102,7 +102,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
         std::env::set_current_dir(path)
-            .expect(&format!("Failed to set current directory to {:?}", path));
+            .unwrap_or_else(|_| panic!("Failed to set current directory to {:?}", path));
         let output = Command::new("git")
             .args(["branch", "--show-current"])
             .current_dir(path)
@@ -159,7 +159,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
         std::env::set_current_dir(path)
-            .expect(&format!("Failed to set current directory to {:?}", path));
+            .unwrap_or_else(|_| panic!("Failed to set current directory to {:?}", path));
         let output = Command::new("git")
             .args(["branch", "--show-current"])
             .current_dir(path)

@@ -102,7 +102,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
         std::env::set_current_dir(path)
-            .expect(&format!("Failed to set current directory to {:?}", path));
+            .unwrap_or_else(|_| panic!("Failed to set current directory to {:?}", path));
         let path_str = path.to_str().unwrap().to_string();
         let result = get_repo_info(path_str).await;
         assert!(result.is_ok(), "get_repo_info failed: {:?}", result.err());
@@ -186,7 +186,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
         std::env::set_current_dir(path)
-            .expect(&format!("Failed to set current directory to {:?}", path));
+            .unwrap_or_else(|_| panic!("Failed to set current directory to {:?}", path));
         // Create a corrupted git configuration to test parsing errors
         let test_dir = tempfile::tempdir().unwrap();
         let test_path = test_dir.path();

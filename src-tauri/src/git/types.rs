@@ -51,7 +51,7 @@ pub enum ConflictResolution {
     Skip,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct RestoreBranchInput {
     pub original_name: String,
