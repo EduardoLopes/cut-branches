@@ -26,6 +26,7 @@
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
 		selectedStore?: SetStore<string>;
+		branchesType?: 'current' | 'deleted';
 	}
 
 	const {
@@ -35,7 +36,8 @@
 		allowLocking = true,
 		allowSelection = true,
 		allowSetCurrent = true,
-		selectedStore
+		selectedStore,
+		branchesType = 'current'
 	}: Props = $props();
 
 	const queryClient = useQueryClient();
@@ -196,7 +198,7 @@
 
 					<Branch
 						data={branch}
-						selected={selected?.has(branch.name) ?? false}
+						selected={branchesType === 'deleted' ? true : selected?.has(branch.name)}
 						locked={locked?.has(branch.name) && currentBranch !== branch.name}
 					/>
 				</div>

@@ -79,12 +79,10 @@
 			},
 			'&.selected': {
 				borderColor: 'danger.800',
-				borderStyle: 'dashed',
-				colorPalette: 'danger'
+				borderStyle: 'dashed'
 			},
 			'&.current': {
-				borderColor: 'primary.400',
-				colorPalette: 'primary'
+				borderColor: 'primary.400'
 			},
 			pindobaTransition: 'fast'
 		})
@@ -98,17 +96,16 @@
 	data-testid={`branch-item-${data.name}`}
 >
 	<div
-		class={css({
-			display: 'flex',
-			flexDirection: 'column',
-			'.current &': {
-				color: 'primary.800'
-			},
-			'.selected &': {
-				borderColor: 'danger.800',
-				color: 'danger.800'
-			}
-		})}
+		class={[
+			css({
+				display: 'flex',
+				flexDirection: 'column'
+			}),
+			selected &&
+				css({
+					color: 'danger.800'
+				})
+		]}
 		id={`branch-${data.name}-title-container`}
 	>
 		<span
