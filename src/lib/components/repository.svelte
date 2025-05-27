@@ -340,6 +340,7 @@
 						{allowSelection}
 						{allowSetCurrent}
 						selectedStore={selected}
+						{branchesType}
 					/>
 				{/if}
 			{/key}

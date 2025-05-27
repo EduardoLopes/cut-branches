@@ -198,7 +198,9 @@
 
 					<Branch
 						data={branch}
-						selected={branchesType === 'deleted' ? true : selected?.has(branch.name)}
+						selected={branchesType === 'deleted'
+							? !selected?.has(branch.name)
+							: selected?.has(branch.name)}
 						locked={locked?.has(branch.name) && currentBranch !== branch.name}
 					/>
 				</div>
