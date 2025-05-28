@@ -1,5 +1,53 @@
 # cut-branches
 
+## 0.5.0
+
+### Minor Changes
+
+- [`f48d66e`](https://github.com/EduardoLopes/cut-branches/commit/f48d66e3047b062135d1c2f5771ec0fad6a798b6) - feat(branches): implement restore functionality for deleted branches (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+### Patch Changes
+
+- [`c910ca9`](https://github.com/EduardoLopes/cut-branches/commit/c910ca95a328e7a58d324515c349b5f229294100) - chore: update zod dependency to version 3.25.3 and adjust imports to use zod/v4 (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`4e0f100`](https://github.com/EduardoLopes/cut-branches/commit/4e0f100e345f2ddab0db792a7aa76eca02ce4a2b) - git commit -m "refactor(git): restructure git module by separating branch and commit functionalities into distinct files" (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`90f6410`](https://github.com/EduardoLopes/cut-branches/commit/90f6410313313a02606cfb539203800af757e30f) - feat: improve type safety (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`3a7afc5`](https://github.com/EduardoLopes/cut-branches/commit/3a7afc5124d9d2c16e2dbae28802ce3e4a773792) - feat(add-button): enhance error handling and notifications in repository addition process (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`61424ca`](https://github.com/EduardoLopes/cut-branches/commit/61424ca8e3c0089409e18bd6322ff6990743c74b) - feat(restore): can restore branches in a single call (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`de2ee3b`](https://github.com/EduardoLopes/cut-branches/commit/de2ee3bb0358132d1388eac017d75ace3e52b882) - docs: update README (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`c44910e`](https://github.com/EduardoLopes/cut-branches/commit/c44910e7b3e43296a0ac700b3e1630671edbe0c3) - feat(errors): add error messages descriptions (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`b884566`](https://github.com/EduardoLopes/cut-branches/commit/b8845668af4e0cec85897281f92cf895b8191d8d) - refact: better organize rust code and write tests for it. Update the front end code to the backend changes (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`87b6cf6`](https://github.com/EduardoLopes/cut-branches/commit/87b6cf6415d8445905b5b045e2f2aeef7ffcc201) - feat(coverage): integrate cargo-tarpaulin for Rust test coverage and update documentation (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`a10fb92`](https://github.com/EduardoLopes/cut-branches/commit/a10fb9295f100d06beb6e5c47ac6e32bf7497ae9) - chore: update deps (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`a270f76`](https://github.com/EduardoLopes/cut-branches/commit/a270f7638a5b13292541bd1a70394a40638ffffb) - chore: configure apple certificate (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`e220072`](https://github.com/EduardoLopes/cut-branches/commit/e220072f93d70c8955dd9c558f6e2ee4260e4224) - "fix(repository): change how store for repository is is handled" (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`c94159c`](https://github.com/EduardoLopes/cut-branches/commit/c94159cf34af67c50d15b01e8f5fb20f32dd79ab) - test: write more tests including integration tests (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`cab2094`](https://github.com/EduardoLopes/cut-branches/commit/cab2094467aee87fc97d17178e1d4c24142ce9c3) - feat(menu): sort menu items by label (again) (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`f60b8c2`](https://github.com/EduardoLopes/cut-branches/commit/f60b8c21a45f566af7d3be730ce312ebce6e6ca9) - style(footer): tweak visuals (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`9e4508e`](https://github.com/EduardoLopes/cut-branches/commit/9e4508efc27c2885eff654abe29582d7e0a22b44) - refactor: add lots of utilities and write tests (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`cf7c0bc`](https://github.com/EduardoLopes/cut-branches/commit/cf7c0bcd92ec582d417d16580da78fc8ab64bdbc) - feat(footer): add SvelteQueryDevtools in a better place and only shows in development mode (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`8897a2d`](https://github.com/EduardoLopes/cut-branches/commit/8897a2d65a3a3e66967f9dc042be247f263761c1) - fix(menu): improve item retrieval and sorting logic (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`f58491f`](https://github.com/EduardoLopes/cut-branches/commit/f58491fa8b59515ad94e647bc8eb37010a240a1f) - fix: correct function name casing for createSwitchBranchMutation and implement safe date formatting in services (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`7878d54`](https://github.com/EduardoLopes/cut-branches/commit/7878d54bf196dc7cc21c916ea2cacf29967f448f) - refactor(git): restructure git module by separating branch and commit functionalities into distinct files and uses git2 crate (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.4.2
 
 ### Patch Changes
