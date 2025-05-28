@@ -1,11 +1,11 @@
 name: 'Svelte check'
 
 on:
-  push:
-    branches:
-      - '**' # Run on pushes to all branches
-    tags-ignore:
-      - '**' # Ignore all tags
+  # push:
+  #   branches:
+  #     - '**' # Run on pushes to all branches
+  #   tags-ignore:
+  #     - '**' # Ignore all tags
   workflow_call:
 
 jobs:

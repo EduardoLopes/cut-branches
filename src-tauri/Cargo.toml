@@ -24,7 +24,7 @@ tokio = { version = "1.11.0", features = ["full"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
-git2 = "0.20.2"
+git2 = { version = "0.20.2", default-features = false, features = ["https"] }
 chrono = "0.4"
 
 [dev-dependencies]

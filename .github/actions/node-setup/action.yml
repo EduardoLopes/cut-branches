@@ -22,6 +22,20 @@ runs:
       run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
       shell: bash
 
+    - name: Clean cache directories
+      if: runner.os == 'Windows'
+      run: |
+        if (Test-Path ${{ steps.pnpm-cache-dir.outputs.STORE_PATH }}) { Remove-Item -Recurse -Force ${{ steps.pnpm-cache-dir.outputs.STORE_PATH }} }
+        if (Test-Path "**/node_modules") { Remove-Item -Recurse -Force "**/node_modules" }
+      shell: pwsh
+
+    - name: Configure pnpm for Windows
+      if: runner.os == 'Windows'
+      run: |
+        pnpm config set enable-pre-post-scripts true
+        pnpm config set node-linker hoisted
+      shell: pwsh
+
     - uses: actions/cache@v4
       name: Setup pnpm store cache
       with:
@@ -32,6 +46,7 @@ runs:
 
     - uses: actions/cache@v4
       name: Cache node_modules
+      if: runner.os != 'Windows'
       with:
         path: |
           **/node_modules
@@ -41,5 +56,12 @@ runs:
           ${{ runner.os }}-modules-
 
     - name: Install Dependencies
+      if: runner.os != 'Windows'
       run: pnpm install --frozen-lockfile
       shell: bash
+
+    - name: Install Dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        pnpm install --frozen-lockfile
+      shell: pwsh
