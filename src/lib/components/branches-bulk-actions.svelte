@@ -6,6 +6,7 @@
 	import TextInput from '@pindoba/svelte-text-input';
 	import type { Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
+	import type { SvelteSet } from 'svelte/reactivity';
 	import DeleteBranchModal from '$lib/components/delete-branch-modal.svelte';
 	import type { Branch, Repository } from '$lib/services/common';
 	import { getLockedBranchesStore } from '$lib/stores/locked-branches.svelte';
@@ -24,7 +25,7 @@
 		branches: Branch[];
 		onSearch: (value: string) => void;
 		onClearSearch: () => void;
-		actionsSnippet?: Snippet<[Repository, Set<string> | undefined, number]>;
+		actionsSnippet?: Snippet<[Repository, SvelteSet<string> | undefined | undefined]>;
 		selectedStore?: SetStore<string>;
 	}
 
@@ -79,7 +80,7 @@
 	}
 </script>
 
-{#snippet defaultActionsSnippet(repo: Repository, selectedBranches: Set<string> | undefined)}
+{#snippet defaultActionsSnippet(repo: Repository, selectedBranches?: Set<string> | undefined)}
 	<div data-testid="delete-branch-modal">
 		<DeleteBranchModal id={repo?.name} buttonProps={{ disabled: selectedBranches?.size === 0 }} />
 	</div>
@@ -216,7 +217,7 @@
 
 		{#if currentRepo}
 			{#if actionsSnippet}
-				{@render actionsSnippet(currentRepo, selected?.state, selectedSearchLength)}
+				{@render actionsSnippet(currentRepo, selected?.state)}
 			{:else}
 				{@render defaultActionsSnippet(currentRepo, selected?.state)}
 			{/if}

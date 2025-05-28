@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, type Snippet } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import RestoreDeletedBranchModal from './restore-deleted-branch-modal.svelte';
 	import { navigating } from '$app/state';
 	import BranchList from '$lib/components/branch-list.svelte';
@@ -173,7 +174,7 @@
 
 {#snippet restoreDeletedBranchModalSnippet(
 	repo: Repository,
-	selectedBranches: Set<string> | undefined
+	selectedBranches?: SvelteSet<string> | undefined
 )}
 	<div data-testid="delete-branch-modal">
 		<RestoreDeletedBranchModal
@@ -288,7 +289,11 @@
 						// Reset page on search
 					}}
 					onClearSearch={clearSearch}
-					actionsSnippet={branchesType === 'deleted' ? restoreDeletedBranchModalSnippet : undefined}
+					actionsSnippet={branchesType === 'deleted'
+						? (restoreDeletedBranchModalSnippet as Snippet<
+								[Repository, SvelteSet<string> | undefined]
+							>)
+						: undefined}
 					selectedStore={selected}
 				/>
 			{/if}
