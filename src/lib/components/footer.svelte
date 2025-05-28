@@ -31,8 +31,7 @@
 <div
 	class={css({
 		_dark: {
-			background: 'neutral.200',
-			borderTop: '1px solid token(colors.neutral.100)'
+			background: 'neutral.200'
 		},
 		_light: {
 			background: 'neutral.400'
