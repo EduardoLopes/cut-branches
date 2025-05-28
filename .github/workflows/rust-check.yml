@@ -1,11 +1,9 @@
 name: Rust check
 
 on:
-  # push:
-  #   branches:
-  #     - '**' # Run on pushes to all branches
-  #   tags-ignore:
-  #     - '**' # Ignore all tags
+  push:
+    branches:
+      - '**' # Run on pushes to all branches
   workflow_call:
 
 jobs:

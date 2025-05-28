@@ -2,14 +2,19 @@ name: 'publish'
 
 on:
   push:
-    branches:
-      - '**'
     tags:
       - '**'
   workflow_dispatch:
 
 jobs:
+  test-check:
+    uses: ./.github/workflows/test-check.yml
+
+  rust-check:
+    uses: ./.github/workflows/rust-check.yml
+
   publish-tauri:
+    needs: [test-check, rust-check]
     permissions:
       contents: write
     strategy:
