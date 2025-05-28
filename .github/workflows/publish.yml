@@ -35,6 +35,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      - name: install dependencies (macos only)
+        if: matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin'
+        run: |
+          brew install openssl pkg-config
+
       - name: node-setup
         uses: ./.github/actions/node-setup
 
@@ -43,6 +48,14 @@ jobs:
         with:
           platform: ${{ matrix.platform }}
           cache_key_discriminator: ${{ matrix.args || matrix.platform }}
+
+      - name: set OpenSSL environment variables
+        if: matrix.platform == 'macos-latest' && matrix.args == '--target x86_64-apple-darwin'
+
+        run: |
+          echo "OPENSSL_DIR=$(brew --prefix openssl)" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl)/include" >> $GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=$(brew --prefix openssl)/lib" >> $GITHUB_ENV
 
       - uses: tauri-apps/tauri-action@v0
         env:
