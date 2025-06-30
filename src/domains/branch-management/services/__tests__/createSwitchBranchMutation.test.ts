@@ -2,6 +2,13 @@ import * as svelteQuery from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createSwitchBranchMutation } from '../createSwitchBranchMutation';
+import {
+	testSetup,
+	tauriMocks,
+	testAssertions,
+	errorMocks,
+	type MockedInvoke
+} from '$utils/test-utils';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
@@ -9,20 +16,16 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 describe('createSwitchBranchMutation', () => {
+	let mockedInvoke: MockedInvoke;
 	const mockPath = '/path/to/repo';
 	const mockBranch = 'feature/new-branch';
 	const mockSuccessResponse = 'Switched to branch feature/new-branch';
 
-	// Define a mock mutation result with required properties
-	const mockMutate = vi.fn();
-	const mockMutateAsync = vi.fn();
-	const mockReset = vi.fn();
-
-	// Mock the mutation result
+	// Mock the mutation result for svelte-query spying
 	const mockMutationResult = {
-		mutate: mockMutate,
-		mutateAsync: mockMutateAsync,
-		reset: mockReset,
+		mutate: vi.fn(),
+		mutateAsync: vi.fn(),
+		reset: vi.fn(),
 		data: undefined,
 		error: null,
 		isPending: false,
@@ -34,10 +37,8 @@ describe('createSwitchBranchMutation', () => {
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
-		// Setup the default success response
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSuccessResponse);
-		// Mock createMutation to return our mock result
+		mockedInvoke = testSetup.setupInvokeMock(invoke);
+		tauriMocks.mockSwitchBranch(mockedInvoke, mockSuccessResponse);
 		// @ts-expect-error - Mock implementation for testing
 		vi.spyOn(svelteQuery, 'createMutation').mockImplementation(() => mockMutationResult);
 	});
@@ -70,7 +71,7 @@ describe('createSwitchBranchMutation', () => {
 		// Call the mutation function directly
 		await mutationFn({ path: mockPath, branch: mockBranch });
 
-		expect(invoke).toHaveBeenCalledWith('switch_branch', {
+		testAssertions.expectInvokeCalledWith(mockedInvoke, 'switch_branch', {
 			path: mockPath,
 			branch: mockBranch
 		});
@@ -101,16 +102,14 @@ describe('createSwitchBranchMutation', () => {
 		const mutationFn = config.mutationFn;
 
 		// Call the mutation function directly with empty path
-		await expect(mutationFn({ path: '', branch: mockBranch })).rejects.toEqual({
-			message: 'No path provided',
-			kind: 'missing_path',
-			description: 'A repository path is required to switch branches'
-		});
+		await expect(mutationFn({ path: '', branch: mockBranch })).rejects.toMatchObject(
+			errorMocks.missingPathMutationError()
+		);
 	});
 
 	it('should handle invoke errors when mutation function is called', async () => {
 		const mockError = new Error('Failed to switch branch');
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
+		tauriMocks.mockCommandFailure(mockedInvoke, 'switch_branch', mockError);
 
 		createSwitchBranchMutation();
 

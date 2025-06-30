@@ -4,6 +4,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createGetRepositoryByPathQuery } from '../createGetRepositoryByPathQuery';
 import * as repositoryStore from '$domains/repository-management/store/repository.svelte';
 import type { Repository } from '$services/common';
+import {
+	testSetup,
+	tauriMocks,
+	testAssertions,
+	errorMocks,
+	mockDataFactory,
+	type MockedInvoke
+} from '$utils/test-utils';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
@@ -20,29 +28,22 @@ vi.mock('$utils/validation-utils', () => ({
 }));
 
 describe('createGetRepositoryByPathQuery', () => {
+	let mockedInvoke: MockedInvoke;
 	const mockPath = '/path/to/repo';
-	const mockRepository: Repository = {
+	const mockRepository = mockDataFactory.repository({
 		path: '/path/to/repository',
-		branches: [
-			{
-				name: 'main',
-				current: true,
-				lastCommit: {
-					sha: 'abc123',
-					shortSha: 'abc123'.substring(0, 7),
-					date: '2023-01-01',
-					message: 'Initial commit',
-					author: 'John Doe',
-					email: 'john@example.com'
-				},
-				fullyMerged: true
-			}
-		],
 		name: 'test-repo',
 		currentBranch: 'main',
 		branchesCount: 1,
-		id: '1'
-	};
+		id: '1',
+		branches: [
+			mockDataFactory.branch({
+				name: 'main',
+				current: true,
+				fullyMerged: true
+			})
+		]
+	});
 
 	const mockRepositoryStore = {
 		set: vi.fn()
@@ -54,11 +55,8 @@ describe('createGetRepositoryByPathQuery', () => {
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
-		// Setup the default success response
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			JSON.stringify(mockRepository)
-		);
+		mockedInvoke = testSetup.setupInvokeMock(invoke);
+		tauriMocks.mockGetRepoInfo(mockedInvoke, mockRepository);
 		// Mock repository store
 		(repositoryStore.getRepositoryStore as ReturnType<typeof vi.fn>).mockReturnValue(
 			mockRepositoryStore
@@ -112,7 +110,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		// Call the query function directly
 		await queryFn();
 
-		expect(invoke).toHaveBeenCalledWith('get_repo_info', { path: mockPath });
+		testAssertions.expectInvokeCalledWith(mockedInvoke, 'get_repo_info', { path: mockPath });
 	});
 
 	it('should return the repository from the query function', async () => {
@@ -148,14 +146,10 @@ describe('createGetRepositoryByPathQuery', () => {
 		};
 
 		// Call the query function directly with the mock context and expect it to throw
-		await expect(queryFn(mockQueryContext)).rejects.toMatchObject({
-			message: 'No path provided',
-			kind: 'missing_path',
-			description: 'A repository path is required to fetch repository data'
-		});
+		await expect(queryFn(mockQueryContext)).rejects.toMatchObject(errorMocks.missingPathError());
 
 		// Verify that invoke was not called
-		expect(invoke).not.toHaveBeenCalled();
+		testAssertions.expectInvokeNotCalled(mockedInvoke);
 	});
 
 	it('should handle repository data with invalid dates', async () => {

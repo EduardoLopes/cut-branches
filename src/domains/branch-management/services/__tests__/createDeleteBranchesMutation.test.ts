@@ -3,6 +3,14 @@ import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDeleteBranchesMutation } from '../createDeleteBranchesMutation';
 import type { Branch } from '$services/common';
+import {
+	testSetup,
+	tauriMocks,
+	testAssertions,
+	errorMocks,
+	mockDataFactory,
+	type MockedInvoke
+} from '$utils/test-utils';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
@@ -10,82 +18,20 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 describe('createDeleteBranchesMutation', () => {
+	let mockedInvoke: MockedInvoke;
 	const mockPath = '/path/to/repo';
-	const mockBranches: Branch[] = [
-		{
-			name: 'branch-1',
-			current: false,
-			lastCommit: {
-				sha: 'abc123',
-				shortSha: 'abc123'.substring(0, 7),
-				date: '2023-01-01',
-				message: 'Commit 1',
-				author: 'Test User',
-				email: 'test@example.com'
-			},
-			fullyMerged: false
-		},
-		{
-			name: 'branch-2',
-			current: false,
-			lastCommit: {
-				sha: 'def456',
-				shortSha: 'def456'.substring(0, 7),
-				date: '2023-01-02',
-				message: 'Commit 2',
-				author: 'Test User',
-				email: 'test@example.com'
-			},
-			fullyMerged: false
-		}
+	const mockBranches = [
+		mockDataFactory.branch({ name: 'branch-1' }),
+		mockDataFactory.branch({ name: 'branch-2' })
 	];
-	const mockSuccessResponse = JSON.stringify([
-		{
-			branch: {
-				name: 'branch-1',
-				lastCommit: {
-					sha: 'abc123',
-					shortSha: 'abc123'.substring(0, 7),
-					date: '2023-01-01',
-					message: 'Initial commit',
-					author: 'Test User',
-					email: 'test@example.com'
-				},
-				current: false,
-				fullyMerged: true,
-				isRemote: false,
-				isLocked: false
-			},
-			raw_output: 'Deleted branch feature/branch1'
-		},
-		{
-			branch: {
-				name: 'branch-2',
-				lastCommit: {
-					sha: 'def456',
-					shortSha: 'def456'.substring(0, 7),
-					date: '2023-01-02',
-					message: 'Second commit',
-					author: 'Test User',
-					email: 'test@example.com'
-				},
-				current: false,
-				fullyMerged: true,
-				isRemote: false,
-				isLocked: false
-			},
-			raw_output: 'Deleted branch feature/branch2'
-		}
-	]);
 	const mockMutationResult = {
 		mutate: vi.fn(),
 		mutateAsync: vi.fn()
 	};
 
 	beforeEach(() => {
-		vi.clearAllMocks();
-		// Setup the default success response
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSuccessResponse);
+		mockedInvoke = testSetup.setupInvokeMock(invoke);
+		testSetup.setupBranchDeletionScenario(mockedInvoke, mockBranches);
 		// Mock createMutation to return our mock mutation result
 		// @ts-expect-error - Mock implementation for testing
 		vi.spyOn(svelteQuery, 'createMutation').mockImplementation(() => mockMutationResult);
@@ -119,7 +65,7 @@ describe('createDeleteBranchesMutation', () => {
 		// Call the mutation function directly
 		await mutationFn({ path: mockPath, branches: mockBranches });
 
-		expect(invoke).toHaveBeenCalledWith('delete_branches', {
+		testAssertions.expectInvokeCalledWith(mockedInvoke, 'delete_branches', {
 			path: mockPath,
 			branches: mockBranches.map((item) => item.name)
 		});
@@ -137,50 +83,16 @@ describe('createDeleteBranchesMutation', () => {
 		// Call the mutation function directly
 		const result = await mutationFn({ path: mockPath, branches: mockBranches });
 
-		// Verify the result is processed correctly
+		// Verify the result structure is correct using the factory data
 		expect(result).toEqual([
-			{
-				branch: {
-					name: 'branch-1',
-					lastCommit: {
-						sha: 'abc123',
-						shortSha: 'abc123'.substring(0, 7),
-						date: '2023-01-01',
-						message: 'Initial commit',
-						author: 'Test User',
-						email: 'test@example.com'
-					},
-					current: false,
-					fullyMerged: true,
-					isRemote: false,
-					isLocked: false
-				},
-				raw_output: 'Deleted branch feature/branch1'
-			},
-			{
-				branch: {
-					name: 'branch-2',
-					lastCommit: {
-						sha: 'def456',
-						shortSha: 'def456'.substring(0, 7),
-						date: '2023-01-02',
-						message: 'Second commit',
-						author: 'Test User',
-						email: 'test@example.com'
-					},
-					current: false,
-					fullyMerged: true,
-					isRemote: false,
-					isLocked: false
-				},
-				raw_output: 'Deleted branch feature/branch2'
-			}
+			mockDataFactory.deletedBranchInfo(mockBranches[0]),
+			mockDataFactory.deletedBranchInfo(mockBranches[1])
 		]);
 	});
 
 	it('should handle invoke errors when mutation function is called', async () => {
 		const mockError = new Error('Failed to delete branches');
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(mockError);
+		tauriMocks.mockCommandFailure(mockedInvoke, 'delete_branches', mockError);
 
 		createDeleteBranchesMutation();
 
@@ -205,14 +117,12 @@ describe('createDeleteBranchesMutation', () => {
 		const mutationFn = config.mutationFn;
 
 		// Call the mutation function with empty branches array
-		await expect(mutationFn({ path: mockPath, branches: [] })).rejects.toMatchObject({
-			message: 'No branches selected',
-			kind: 'missing_branches',
-			description: 'Please select at least one branch to delete'
-		});
+		await expect(mutationFn({ path: mockPath, branches: [] })).rejects.toMatchObject(
+			errorMocks.missingBranchesError()
+		);
 
 		// Verify that invoke was not called
-		expect(invoke).not.toHaveBeenCalled();
+		testAssertions.expectInvokeNotCalled(mockedInvoke);
 	});
 
 	// Test for Zod validation errors (lines 50-56)
@@ -231,18 +141,12 @@ describe('createDeleteBranchesMutation', () => {
 		await expect(mutationFn(invalidInput as { branches: Branch[] })).rejects.toBeTruthy();
 
 		// Verify that invoke was not called
-		expect(invoke).not.toHaveBeenCalled();
+		testAssertions.expectInvokeNotCalled(mockedInvoke);
 	});
 
 	// Test for Tauri errors (lines 60-61)
 	it('should handle Tauri errors properly', async () => {
-		// Setup a mock Tauri error with specific format
-		const tauriError = {
-			__TAURI_ERROR__: true,
-			message: 'Git operation failed',
-			stack: 'Error stack trace'
-		};
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(tauriError);
+		tauriMocks.mockTauriError(mockedInvoke, 'delete_branches', 'Git operation failed');
 
 		createDeleteBranchesMutation();
 

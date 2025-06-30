@@ -19,7 +19,6 @@
 	//TODO: the generics here are not working as expected
 	interface Props {
 		component: Component<any, any, any>;
-
 		props?: ComponentProps<any>;
 	}
 

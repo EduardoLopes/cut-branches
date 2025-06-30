@@ -2,7 +2,8 @@ import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 import BranchList from '../branch-list.svelte';
-import type { Branch } from '$services/common';
+import TestWrapper from '$components/test-wrapper.svelte';
+import { mockDataFactory } from '$utils/test-utils';
 
 // Define interface for onSuccess callback options
 interface MutationOptions {
@@ -53,18 +54,9 @@ vi.mock('../../store/selected-branches.svelte', () => ({
 	getSelectedBranchesStore: () => mockSelectedBranchesStore
 }));
 
-vi.mock('@tanstack/svelte-query', () => ({
-	useQueryClient: () => ({
-		invalidateQueries: vi.fn()
-	}),
-	createMutation: vi.fn(() => ({
-		mutate: vi.fn(),
-		isLoading: false,
-		isError: false,
-		isSuccess: false,
-		isPending: false,
-		error: null
-	}))
+// Mock Tauri invoke for any potential queries/mutations
+vi.mock('@tauri-apps/api/core', () => ({
+	invoke: vi.fn()
 }));
 
 vi.mock('$domains/notifications/store/notifications.svelte', () => ({
@@ -73,61 +65,13 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 	}
 }));
 
-// Generate mock branches
-function createMockBranches(): Branch[] {
+// Generate mock branches using factory
+function createMockBranches() {
 	return [
-		{
-			name: 'feature/test-branch',
-			current: false,
-			lastCommit: {
-				sha: 'abc123',
-				shortSha: 'abc123'.substring(0, 7),
-				date: '2023-01-01',
-				message: 'Commit 1',
-				author: 'Author 1',
-				email: 'author1@example.com'
-			},
-			fullyMerged: false
-		},
-		{
-			name: 'selected-branch',
-			current: false,
-			lastCommit: {
-				sha: 'def456',
-				shortSha: 'def456'.substring(0, 7),
-				date: '2023-01-02',
-				message: 'Commit 2',
-				author: 'Author 2',
-				email: 'author2@example.com'
-			},
-			fullyMerged: false
-		},
-		{
-			name: 'locked-branch',
-			current: false,
-			lastCommit: {
-				sha: 'ghi789',
-				shortSha: 'ghi789'.substring(0, 7),
-				date: '2023-01-03',
-				message: 'Commit 3',
-				author: 'Author 3',
-				email: 'author3@example.com'
-			},
-			fullyMerged: false
-		},
-		{
-			name: 'current-branch',
-			current: true,
-			lastCommit: {
-				sha: 'jkl012',
-				shortSha: 'jkl012'.substring(0, 7),
-				date: '2023-01-04',
-				message: 'Commit 4',
-				author: 'Author 4',
-				email: 'author4@example.com'
-			},
-			fullyMerged: false
-		}
+		mockDataFactory.branch({ name: 'feature/test-branch', current: false }),
+		mockDataFactory.branch({ name: 'selected-branch', current: false }),
+		mockDataFactory.branch({ name: 'locked-branch', current: false }),
+		mockDataFactory.branch({ name: 'current-branch', current: true })
 	];
 }
 
@@ -137,11 +81,14 @@ describe('BranchList Component', () => {
 	});
 
 	test('renders branches list with checkboxes and switch buttons', () => {
-		const { getAllByRole, getAllByTestId } = render(BranchList, {
+		const { getAllByRole, getAllByTestId } = render(TestWrapper, {
 			props: {
-				branches: createMockBranches(),
-				currentBranch: 'current-branch',
-				repositoryID: 'repo1'
+				component: BranchList,
+				props: {
+					branches: createMockBranches(),
+					currentBranch: 'current-branch',
+					repositoryID: 'repo1'
+				}
 			}
 		});
 
@@ -159,26 +106,22 @@ describe('BranchList Component', () => {
 	});
 
 	test('pagination controls are rendered correctly with many branches', async () => {
-		// Create more branches to test pagination
-		const manyBranches = Array.from({ length: 15 }, (_, i) => ({
-			name: `branch-${i + 1}`,
-			current: false,
-			lastCommit: {
-				sha: `hash-${i + 1}`,
-				shortSha: `hash-${i + 1}`.substring(0, 7),
-				date: `2023-01-${i + 1}`,
-				message: `Commit ${i + 1}`,
-				author: 'Test User',
-				email: '<test@example.com>'
-			},
-			fullyMerged: false
-		}));
+		// Create more branches to test pagination using factory
+		const manyBranches = Array.from({ length: 15 }, (_, i) =>
+			mockDataFactory.branch({
+				name: `branch-${i + 1}`,
+				current: false
+			})
+		);
 
-		const { getByText } = render(BranchList, {
+		const { getByText } = render(TestWrapper, {
 			props: {
-				branches: manyBranches,
-				currentBranch: 'current-branch',
-				repositoryID: 'repo1'
+				component: BranchList,
+				props: {
+					branches: manyBranches,
+					currentBranch: 'current-branch',
+					repositoryID: 'repo1'
+				}
 			}
 		});
 
@@ -197,11 +140,14 @@ describe('BranchList Component', () => {
 	});
 
 	test('toggle checkbox should update selected branches state', async () => {
-		const { getAllByRole } = render(BranchList, {
+		const { getAllByRole } = render(TestWrapper, {
 			props: {
-				branches: createMockBranches(),
-				currentBranch: 'current-branch',
-				repositoryID: 'repo1'
+				component: BranchList,
+				props: {
+					branches: createMockBranches(),
+					currentBranch: 'current-branch',
+					repositoryID: 'repo1'
+				}
 			}
 		});
 
