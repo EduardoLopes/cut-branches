@@ -159,4 +159,112 @@ describe('Store', () => {
 		expect(store.get()).toBeUndefined();
 		expect(store.list).toEqual([]);
 	});
+
+	it('should update object state using partial updates', () => {
+		const objectSchema = z.object({
+			name: z.string(),
+			age: z.number(),
+			nested: z.object({ value: z.string() }).optional()
+		});
+
+		type TestObject = z.infer<typeof objectSchema>;
+
+		const initialData: TestObject = {
+			name: 'John',
+			age: 30,
+			nested: { value: 'initial' }
+		};
+
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: initialData
+		});
+
+		const store = new Store<TestObject>(testKey, objectSchema);
+
+		// Update with partial state
+		store.update({ age: 31, nested: { value: 'updated' } });
+
+		const updatedState = store.get();
+		expect(updatedState?.name).toBe('John'); // Original value preserved
+		expect(updatedState?.age).toBe(31); // Updated value
+		expect(updatedState?.nested?.value).toBe('updated'); // Nested update
+	});
+
+	it('should warn when trying to update non-object state', () => {
+		const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+		const store = new Store<string>(testKey, stringSchema);
+
+		// Try to update a string (non-object) state
+		store.update({ someProperty: 'value' } as never);
+
+		expect(consoleWarnSpy).toHaveBeenCalledWith(
+			'Cannot update non-object state, use set() instead'
+		);
+
+		consoleWarnSpy.mockRestore();
+	});
+
+	it('should create derived values that react to state changes', () => {
+		const objectSchema = z.object({
+			name: z.string(),
+			age: z.number()
+		});
+
+		type TestObject = z.infer<typeof objectSchema>;
+
+		const initialData: TestObject = { name: 'John', age: 30 };
+
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: initialData
+		});
+
+		const store = new Store<TestObject>(testKey, objectSchema);
+
+		// Create a derived value
+		const derivedName = store.derive((state) => state?.name?.toUpperCase() || 'NO NAME');
+
+		expect(derivedName()).toBe('JOHN');
+
+		// Update the store
+		store.set({ name: 'Jane', age: 25 });
+
+		// Derived value should reflect the change
+		expect(derivedName()).toBe('JANE');
+	});
+
+	it('should handle derived values with undefined state', () => {
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: false,
+			error: new Error('No data')
+		});
+
+		const store = new Store<string>(testKey, stringSchema);
+
+		const derivedValue = store.derive((state) => (state ? state.length : 0));
+
+		expect(derivedValue()).toBe(0);
+	});
+
+	it('should handle null state in update method', () => {
+		const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+		vi.mocked(getValidatedLocalStorageModule.getValidatedLocalStorage).mockReturnValue({
+			success: true,
+			data: null
+		});
+
+		const store = new Store<string | null>(testKey, z.union([z.string(), z.null()]));
+
+		// Try to update null state
+		store.update({ someProperty: 'value' } as never);
+
+		expect(consoleWarnSpy).toHaveBeenCalledWith(
+			'Cannot update non-object state, use set() instead'
+		);
+
+		consoleWarnSpy.mockRestore();
+	});
 });

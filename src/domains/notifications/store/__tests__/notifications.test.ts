@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import {
 	createNotificationObject,
 	NotificationStore,
+	isNotification,
+	notifications,
 	type Notification
 } from '../notifications.svelte';
 
@@ -54,6 +56,78 @@ describe('createNotificationObject', () => {
 		expect(result.date).toBeDefined();
 		expect(result.message).toBe('Test message');
 		expect(result.title).toBeUndefined();
+	});
+});
+
+describe('isNotification', () => {
+	it('should return true for valid notification objects', () => {
+		const validNotification = { message: 'Test message' };
+		expect(isNotification(validNotification)).toBe(true);
+	});
+
+	it('should return true for objects with message property', () => {
+		const objectWithMessage = { message: 'Test', title: 'Title', id: '123' };
+		expect(isNotification(objectWithMessage)).toBe(true);
+	});
+
+	it('should return false for null', () => {
+		expect(isNotification(null)).toBe(false);
+	});
+
+	it('should return false for undefined', () => {
+		expect(isNotification(undefined)).toBe(false);
+	});
+
+	it('should return false for non-objects', () => {
+		expect(isNotification('string')).toBe(false);
+		expect(isNotification(123)).toBe(false);
+		expect(isNotification(true)).toBe(false);
+	});
+
+	it('should return false for objects without message property', () => {
+		const objectWithoutMessage = { title: 'Title', id: '123' };
+		expect(isNotification(objectWithoutMessage)).toBe(false);
+	});
+
+	it('should return false for arrays', () => {
+		expect(isNotification([])).toBe(false);
+		expect(isNotification([{ message: 'test' }])).toBe(false);
+	});
+});
+
+describe('notifications (exported instance)', () => {
+	beforeEach(() => {
+		notifications.clear();
+	});
+
+	it('should be an instance of NotificationStore', () => {
+		expect(notifications).toBeInstanceOf(NotificationStore);
+	});
+
+	it('should work as a global notification store', () => {
+		const notification = { message: 'Global notification', title: 'Global' };
+		notifications.push(notification);
+
+		expect(notifications.list.length).toBe(1);
+		expect(notifications.last.message).toBe('Global notification');
+		expect(notifications.last.title).toBe('Global');
+	});
+
+	it('should maintain state across multiple operations', () => {
+		notifications.push({ message: 'First global notification' });
+		notifications.push({ message: 'Second global notification' });
+
+		expect(notifications.list.length).toBe(2);
+		expect(notifications.last.message).toBe('Second global notification');
+	});
+
+	it('should allow deletion from global store', () => {
+		const notification = { message: 'To be deleted', id: 'delete-me' };
+		notifications.push(notification);
+		expect(notifications.list.length).toBe(1);
+
+		notifications.delete(['delete-me']);
+		expect(notifications.list.length).toBe(0);
 	});
 });
 

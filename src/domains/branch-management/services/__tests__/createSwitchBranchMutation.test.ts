@@ -125,6 +125,39 @@ describe('createSwitchBranchMutation', () => {
 		});
 	});
 
+	it('should handle validation errors from ZodError when mutation function is called', async () => {
+		createSwitchBranchMutation();
+
+		// Get the mutation function from the createMutation call
+		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+			.mock.calls[0][0];
+		const config = createMutationArg();
+		const mutationFn = config.mutationFn;
+
+		// Call the mutation function with invalid data (non-string values)
+		await expect(
+			mutationFn({ path: 123 as unknown as string, branch: null as unknown as string })
+		).rejects.toMatchObject({
+			message: 'Invalid input data',
+			kind: 'validation_error'
+		});
+	});
+
+	it('should handle undefined path correctly', async () => {
+		createSwitchBranchMutation();
+
+		// Get the mutation function from the createMutation call
+		const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+			.mock.calls[0][0];
+		const config = createMutationArg();
+		const mutationFn = config.mutationFn;
+
+		// Call the mutation function with undefined path
+		await expect(
+			mutationFn({ path: undefined as unknown as string, branch: mockBranch })
+		).rejects.toMatchObject(errorMocks.missingPathMutationError());
+	});
+
 	it('should pass custom options to createMutation', () => {
 		const onSuccessMock = vi.fn();
 		createSwitchBranchMutation({ onSuccess: onSuccessMock });
