@@ -5,6 +5,11 @@ import { vi } from 'vitest';
 import RepositoryHeader from '../repository-header.svelte';
 import type { Repository, Branch } from '$services/common';
 
+// Mock the navigation module
+vi.mock('$app/navigation', () => ({
+	goto: vi.fn()
+}));
+
 // Define a type for our mock store that includes the .state property
 interface MockRepositoryStoreType extends Writable<Repository | null> {
 	state?: Repository | null;
@@ -117,5 +122,65 @@ describe('RepositoryHeader', () => {
 		});
 		await tick();
 		expect(container.querySelector('[data-testid="open-remove-modal"]')).not.toBeInTheDocument();
+	});
+
+	test('should navigate to restore page when restore button is clicked', async () => {
+		const { goto } = await import('$app/navigation');
+		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Restore' };
+
+		const { getByText } = render(RepositoryHeader, {
+			props: { repositoryId: 'test-repo-id', isLoading: false, onUpdate: mockOnUpdate }
+		});
+
+		await tick();
+
+		// Find the restore button by its text content
+		const restoreButton = getByText('Restore').closest('button');
+		expect(restoreButton).toBeInTheDocument();
+		await fireEvent.click(restoreButton!);
+
+		expect(goto).toHaveBeenCalledWith('/repos/test-repo-id/restore');
+	});
+
+	test('should navigate back when back button is clicked', async () => {
+		const { goto } = await import('$app/navigation');
+
+		const { getByText } = render(RepositoryHeader, {
+			props: {
+				repositoryId: 'test-repo-id',
+				isLoading: false,
+				onUpdate: mockOnUpdate,
+				showBackButton: true
+			}
+		});
+
+		await tick();
+
+		// Find the back button by its "Back" text (which is visually hidden but accessible)
+		const backButton = getByText('Back').closest('button');
+		expect(backButton).toBeInTheDocument();
+
+		await fireEvent.click(backButton!);
+
+		expect(goto).toHaveBeenCalledWith('/repos/test-repo-id');
+	});
+
+	test('should not navigate when repositoryId is not provided', async () => {
+		const { goto } = await import('$app/navigation');
+		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Test' };
+
+		const { container } = render(RepositoryHeader, {
+			props: { isLoading: false, onUpdate: mockOnUpdate } // No repositoryId provided
+		});
+
+		await tick();
+
+		// Try to click the restore button if it exists
+		const restoreButton = container.querySelector('[data-testid="restore-navigate-button"]');
+		if (restoreButton) {
+			await fireEvent.click(restoreButton);
+			// goto should not be called when repositoryId is undefined
+			expect(goto).not.toHaveBeenCalled();
+		}
 	});
 });

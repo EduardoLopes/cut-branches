@@ -1,6 +1,7 @@
 import * as svelteQuery from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { z } from 'zod/v4';
 import {
 	createRestoreDeletedBranchMutation,
 	createRestoreDeletedBranchesMutation,
@@ -340,6 +341,41 @@ describe('createRestoreDeletedBranchMutation', () => {
 			// Restore original parse method
 			RestoreBranchInputSchema.parse = originalParse;
 		});
+
+		it('should handle ZodError validation errors with proper error formatting', async () => {
+			// Generate a real ZodError by parsing invalid data
+			let zodError: z.ZodError;
+			try {
+				RestoreBranchInputSchema.parse({ invalid: 'data' });
+			} catch (error) {
+				zodError = error as z.ZodError;
+			}
+
+			// Mock the parse method to throw the ZodError
+			const originalParse = RestoreBranchInputSchema.parse;
+			vi.spyOn(RestoreBranchInputSchema, 'parse').mockImplementation(() => {
+				throw zodError!;
+			});
+
+			createRestoreDeletedBranchMutation();
+
+			const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+				.mock.calls[0][0];
+			const config = createMutationArg();
+			const mutationFn = config.mutationFn;
+
+			await expect(mutationFn(validSingleBranchVariables)).rejects.toThrow();
+
+			// Verify createError was called with the specific validation error
+			expect(mockCreateError).toHaveBeenCalledWith({
+				message: 'Invalid input data for restoring branch',
+				kind: 'validation_error',
+				description: expect.any(String)
+			});
+
+			// Restore original parse method
+			RestoreBranchInputSchema.parse = originalParse;
+		});
 	});
 
 	describe('createRestoreDeletedBranchesMutation', () => {
@@ -434,6 +470,41 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 			await expect(mutationFn(validMultipleBranchesVariables)).rejects.toThrow();
 			expect(mockCreateError).toHaveBeenCalled();
+
+			// Restore original parse method
+			RestoreBranchesInputSchema.parse = originalParse;
+		});
+
+		it('should handle ZodError in batch mutation with proper error formatting', async () => {
+			// Generate a real ZodError by parsing invalid data
+			let zodError: z.ZodError;
+			try {
+				RestoreBranchesInputSchema.parse({ invalid: 'batch data' });
+			} catch (error) {
+				zodError = error as z.ZodError;
+			}
+
+			// Mock the parse method to throw the ZodError
+			const originalParse = RestoreBranchesInputSchema.parse;
+			vi.spyOn(RestoreBranchesInputSchema, 'parse').mockImplementation(() => {
+				throw zodError!;
+			});
+
+			createRestoreDeletedBranchesMutation();
+
+			const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
+				.mock.calls[0][0];
+			const config = createMutationArg();
+			const mutationFn = config.mutationFn;
+
+			await expect(mutationFn(validMultipleBranchesVariables)).rejects.toThrow();
+
+			// Verify createError was called with the specific batch validation error
+			expect(mockCreateError).toHaveBeenCalledWith({
+				message: 'Invalid input data for batch restoring branches',
+				kind: 'validation_error',
+				description: expect.any(String)
+			});
 
 			// Restore original parse method
 			RestoreBranchesInputSchema.parse = originalParse;
