@@ -2,10 +2,10 @@ import { render, fireEvent, waitFor, screen, within } from '@testing-library/sve
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, it, expect } from 'vitest';
 import RepositoryPageFixture from './fixtures/repository-page-fixture.svelte';
-import { notifications } from '$lib/stores/notifications.svelte';
-import { getRepositoryStore } from '$lib/stores/repository.svelte';
-import { getSearchBranchesStore } from '$lib/stores/search-branches.svelte';
-import { getSelectedBranchesStore } from '$lib/stores/selected-branches.svelte';
+import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
+import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
+import { notifications } from '$domains/notifications/store/notifications.svelte';
+import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 
 // Properly mock @tanstack/svelte-query
 vi.mock('@tanstack/svelte-query', () => {
@@ -54,7 +54,7 @@ vi.mock('@tanstack/svelte-query', () => {
 });
 
 // Mock the repository query
-vi.mock('$lib/services/createGetRepositoryByPathQuery', () => {
+vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => {
 	return {
 		createGetRepositoryByPathQuery: vi.fn(() => ({
 			data: {
@@ -195,7 +195,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 // Mock branch deletion and switch mutation services
-vi.mock('$lib/services/createDeleteBranchesMutation', () => {
+vi.mock('$domains/branch-management/services/createDeleteBranchesMutation', () => {
 	return {
 		createDeleteBranchesMutation: vi.fn(({ onSuccess }) => {
 			return {
@@ -251,7 +251,7 @@ vi.mock('$lib/services/createDeleteBranchesMutation', () => {
 	};
 });
 
-vi.mock('$lib/services/createSwitchBranchMutation', () => {
+vi.mock('$domains/branch-management/services/createSwitchBranchMutation', () => {
 	return {
 		createSwitchBranchMutation: vi.fn(({ onSuccess }) => {
 			return {
@@ -283,7 +283,7 @@ vi.mock('$app/page', () => ({
 }));
 
 // Mock the notifications store
-vi.mock('$lib/stores/notifications.svelte', () => ({
+vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn().mockImplementation((notification) => {
 			console.log('Mock push called with:', notification);

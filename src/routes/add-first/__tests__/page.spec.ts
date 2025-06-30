@@ -2,7 +2,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddFirstPage from '../+page.svelte';
-import TestWrapper from '../../../lib/components/test-wrapper.svelte';
+import TestWrapper from '$components/test-wrapper.svelte';
 
 // Mock all required dependencies
 vi.mock('$app/navigation', () => ({
@@ -14,7 +14,7 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 }));
 
 // Mock repository query
-vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
+vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => ({
 	createGetRepositoryByPathQuery: vi.fn().mockReturnValue({
 		isSuccess: false,
 		isLoading: false,
@@ -24,7 +24,7 @@ vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
 }));
 
 // Mock repositories store to prevent any actual store operations
-vi.mock('$lib/stores/repository.svelte', () => {
+vi.mock('$domains/repository-management/store/repository.svelte', () => {
 	const emptyRepositories = new Map();
 	return {
 		getRepositoryStore: vi.fn().mockImplementation((_id) => ({

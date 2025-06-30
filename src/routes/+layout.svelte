@@ -5,9 +5,9 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Footer from '$lib/components/footer.svelte';
-	import Providers from '$lib/components/providers.svelte';
-	import { RepositoryStore } from '$lib/stores/repository.svelte';
+	import Providers from '$components/providers.svelte';
+	import { RepositoryStore } from '$domains/repository-management/store/repository.svelte';
+	import Footer from '$ui/core/footer.svelte';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {

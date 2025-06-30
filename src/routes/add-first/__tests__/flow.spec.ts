@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddFirstPage from '../+page.svelte';
-import TestWrapper from '../../../lib/components/test-wrapper.svelte';
+import TestWrapper from '../../../components/test-wrapper.svelte';
 import { goto } from '$app/navigation';
-import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
-import { notifications } from '$lib/stores/notifications.svelte';
+import { notifications } from '$domains/notifications/store/notifications.svelte';
+import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
 
 // Mock the Tauri dialog
 vi.mock('@tauri-apps/plugin-dialog', () => ({
@@ -19,19 +19,19 @@ vi.mock('$app/navigation', () => ({
 }));
 
 // Mock notifications store
-vi.mock('$lib/stores/notifications.svelte', () => ({
+vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn()
 	}
 }));
 
 // Mock repository query
-vi.mock('$lib/services/createGetRepositoryByPathQuery', () => ({
+vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => ({
 	createGetRepositoryByPathQuery: vi.fn()
 }));
 
 // Mock store
-vi.mock('$lib/stores/repository.svelte', () => {
+vi.mock('$domains/repository-management/store/repository.svelte', () => {
 	const repositories = new Map();
 	return {
 		getRepositoryStore: vi.fn().mockImplementation((id) => {
@@ -179,7 +179,9 @@ describe('Add Repository Flow Integration', () => {
 		};
 
 		// Make sure RepositoryStore.repositories.has returns true to simulate an existing repo
-		const { RepositoryStore } = await import('$lib/stores/repository.svelte');
+		const { RepositoryStore } = await import(
+			'$domains/repository-management/store/repository.svelte'
+		);
 		const hasSpy = vi.fn().mockReturnValue(true);
 		RepositoryStore.repositories.has = hasSpy;
 

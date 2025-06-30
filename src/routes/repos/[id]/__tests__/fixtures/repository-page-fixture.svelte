@@ -1,9 +1,9 @@
 <script lang="ts">
 	// This is a test fixture that combines Menu and Repository components
 	// for integration testing
-	import Menu from '$lib/components/menu.svelte';
-	import Repository from '$lib/components/repository.svelte';
-	import { createGetRepositoryByPathQuery } from '$lib/services/createGetRepositoryByPathQuery';
+	import Menu from '$domains/navigation/components/menu.svelte';
+	import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
+	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import { css } from '@pindoba/panda/css';
 
 	// Define props using $props()

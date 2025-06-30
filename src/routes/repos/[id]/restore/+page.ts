@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { getRepositoryStore } from '$lib/stores/repository.svelte';
+import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 
 export const load = async ({ params }) => {
 	const { id } = params;

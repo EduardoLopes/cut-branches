@@ -51,6 +51,7 @@ export default defineConfig({
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
+		exclude: ['src/lib/**'],
 		environment: 'jsdom',
 		setupFiles: './vitest-setup.js',
 		globals: true,
@@ -60,7 +61,7 @@ export default defineConfig({
 			all: true,
 			include: ['src/**'],
 			exclude: [
-				'src/lib/components/providers.svelte',
+				'src/lib/**',
 				'src/**/*.d.ts',
 				'src/routes/+layout.svelte',
 				'src/routes/+layout.ts',

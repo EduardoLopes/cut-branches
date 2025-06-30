@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
-	import Menu from '$lib/components/menu.svelte';
+	import Menu from '$domains/navigation/components/menu.svelte';
 	import { css } from '@pindoba/panda/css';
 	interface Props {
 		children?: Snippet;
