@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::error::Error;
+use crate::error::AppError;
 
 /// Command to switch to another branch in a git repository.
 ///
@@ -11,10 +11,10 @@ use crate::error::Error;
 ///
 /// # Returns
 ///
-/// * `Result<String, Error>` - The new current branch name or an error
+/// * `Result<String, AppError>` - The new current branch name or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
+pub async fn switch_branch(path: String, branch: String) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
     crate::git::switch_branch(raw_path, &branch)
 }
@@ -28,16 +28,16 @@ pub async fn switch_branch(path: String, branch: String) -> Result<String, Error
 ///
 /// # Returns
 ///
-/// * `Result<String, Error>` - A JSON string with the deleted branches or an error
+/// * `Result<String, AppError>` - A JSON string with the deleted branches or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, Error> {
+pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
     let deleted_branch_infos: Vec<crate::git::DeletedBranchInfo> =
         crate::git::delete_branches(raw_path, &branches)?;
 
     serde_json::to_string(&deleted_branch_infos).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!(
@@ -58,17 +58,26 @@ pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Stri
 ///
 /// # Returns
 ///
-/// * `Result<String, String>` - A JSON string with the restoration result or an error
+/// * `Result<String, AppError>` - A JSON string with the restoration result or an error
 #[tauri::command]
 #[specta::specta]
 pub async fn restore_deleted_branch(
     app: tauri::AppHandle,
     path: String,
     branch_info: crate::git::RestoreBranchInput,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
     let result = crate::git::restore_deleted_branch(raw_path, &branch_info, Some(&app))?;
-    serde_json::to_string(&result).map_err(|e| e.to_string())
+    serde_json::to_string(&result).map_err(|e| {
+        AppError::new(
+            format!("Failed to serialize response: {}", e),
+            "serialization_failed",
+            Some(format!(
+                "Error converting the restoration result to JSON: {}",
+                e
+            )),
+        )
+    })
 }
 
 /// Command to restore multiple deleted branches in a git repository.
@@ -81,17 +90,26 @@ pub async fn restore_deleted_branch(
 ///
 /// # Returns
 ///
-/// * `Result<String, String>` - A JSON string with the restoration results or an error
+/// * `Result<String, AppError>` - A JSON string with the restoration results or an error
 #[tauri::command]
 #[specta::specta]
 pub async fn restore_deleted_branches(
     app: tauri::AppHandle,
     path: String,
     branch_infos: Vec<crate::git::RestoreBranchInput>,
-) -> Result<String, String> {
+) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
     let results = crate::git::restore_deleted_branches(raw_path, &branch_infos, Some(&app))?;
-    serde_json::to_string(&results).map_err(|e| e.to_string())
+    serde_json::to_string(&results).map_err(|e| {
+        AppError::new(
+            format!("Failed to serialize response: {}", e),
+            "serialization_failed",
+            Some(format!(
+                "Error converting the restoration results to JSON: {}",
+                e
+            )),
+        )
+    })
 }
 
 #[cfg(test)]

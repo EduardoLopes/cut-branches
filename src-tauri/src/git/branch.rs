@@ -8,14 +8,14 @@ use super::types::{
     Branch, Commit, ConflictDetails, ConflictResolution, DeletedBranchInfo, RestoreBranchInput,
     RestoreBranchResult,
 };
-use crate::error::Error;
+use crate::error::AppError;
 
-pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Error> {
+pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, AppError> {
     let repo = Repository::open(path).map_err(|e| {
         let err_str = e.to_string();
         let err_str_lower = err_str.to_lowercase();
         if !path.exists() {
-            Error::new(
+            AppError::new(
                 format!("Unable to access the path: {}", path.display()),
                 "unable_to_access_dir",
                 Some(err_str.clone()),
@@ -23,13 +23,13 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
         } else if err_str_lower.contains("permission denied")
             || err_str_lower.contains("not permitted")
         {
-            Error::new(
+            AppError::new(
                 format!("Failed to execute git command: {}", path.display()),
                 "command_execution_failed",
                 Some(err_str.clone()),
             )
         } else {
-            Error::new(
+            AppError::new(
                 format!(
                     "Failed to open git repository at {}: {}",
                     path.display(),
@@ -42,7 +42,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
     })?;
 
     let branches_iter = repo.branches(Some(BranchType::Local)).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to list branches: {}", e),
             "branch_list_failed",
             Some(e.to_string()),
@@ -54,7 +54,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
 
     for branch_result in branches_iter {
         let (branch, _branch_type) = branch_result.map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to get branch info: {}", e),
                 "branch_info_failed",
                 Some(e.to_string()),
@@ -64,14 +64,14 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
         let name = branch
             .name()
             .map_err(|e| {
-                Error::new(
+                AppError::new(
                     format!("Failed to get branch name: {}", e),
                     "branch_name_failed",
                     Some(e.to_string()),
                 )
             })?
             .ok_or_else(|| {
-                Error::new(
+                AppError::new(
                     "Branch name contains invalid UTF-8".to_string(),
                     "invalid_utf8",
                     None,
@@ -81,7 +81,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
 
         let reference = branch.get();
         let commit = reference.peel_to_commit().map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to get commit for branch {}: {}", name, e),
                 "commit_peel_failed",
                 Some(e.to_string()),
@@ -140,7 +140,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
     branches.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
 
     if branches.is_empty() {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "Couldn\\'t retrieve branches with last commit info in the path **{0}**",
                 path.display()
@@ -153,9 +153,9 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, Err
     Ok(branches)
 }
 
-fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, Error> {
+fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, AppError> {
     let head = repo.head().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get HEAD: {}", e),
             "head_not_found",
             Some(e.to_string()),
@@ -165,7 +165,7 @@ fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, Error>
     let branch_ref = repo
         .find_branch(branch_name, BranchType::Local)
         .map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to find branch '{}': {}", branch_name, e),
                 "branch_not_found",
                 Some(e.to_string()),
@@ -174,7 +174,7 @@ fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, Error>
 
     // Get the commit each reference points to
     let head_commit = head.peel_to_commit().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get HEAD commit: {}", e),
             "head_commit_failed",
             Some(e.to_string()),
@@ -182,7 +182,7 @@ fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, Error>
     })?;
 
     let branch_commit = branch_ref.get().peel_to_commit().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get branch commit: {}", e),
             "branch_commit_failed",
             Some(e.to_string()),
@@ -200,9 +200,9 @@ fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, Error>
         .unwrap_or(false))
 }
 
-pub fn get_current_branch(path: &Path) -> Result<String, Error> {
+pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
     let repo = Repository::open(path).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to open git repository at {}: {}", path.display(), e),
             "repository_open_failed",
             Some(e.to_string()),
@@ -210,7 +210,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
     })?;
 
     let head = repo.head().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get HEAD: {}", e),
             "head_not_found",
             Some(e.to_string()),
@@ -218,7 +218,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
     })?;
 
     if !head.is_branch() {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "HEAD is not pointing to a branch in path {}",
                 path.display()
@@ -229,7 +229,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
     }
 
     let branch_name = head.shorthand().ok_or_else(|| {
-        Error::new(
+        AppError::new(
             format!("Failed to get branch name in path {}", path.display()),
             "invalid_branch_name",
             Some("Branch name contains invalid UTF-8".to_string()),
@@ -239,7 +239,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, Error> {
     Ok(branch_name.to_string())
 }
 
-pub fn branch_exists(path: &Path, branch_name: &str) -> Result<bool, Error> {
+pub fn branch_exists(path: &Path, branch_name: &str) -> Result<bool, AppError> {
     let repo = match Repository::open(path) {
         Ok(repo) => repo,
         Err(_) => return Ok(false),
@@ -251,9 +251,9 @@ pub fn branch_exists(path: &Path, branch_name: &str) -> Result<bool, Error> {
     Ok(exists)
 }
 
-pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
+pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, AppError> {
     let repo = Repository::open(path).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to open git repository at {}: {}", path.display(), e),
             "repository_open_failed",
             Some(e.to_string()),
@@ -262,7 +262,7 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
 
     // Check if branch exists
     if !branch_exists(path, branch_name)? {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!("Branch **{0}** not found", branch_name),
             "branch_not_found",
             Some(format!(
@@ -277,7 +277,7 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
     let branch_ref = repo
         .find_branch(branch_name, BranchType::Local)
         .map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to find branch '{}': {}", branch_name, e),
                 "branch_not_found",
                 Some(e.to_string()),
@@ -287,7 +287,7 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
     let reference = branch_ref.get();
     // We don't actually use this commit, but we need to check it exists
     let _commit = reference.peel_to_commit().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get commit for branch {}: {}", branch_name, e),
             "commit_peel_failed",
             Some(e.to_string()),
@@ -297,7 +297,7 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
     // Set HEAD to the branch
     repo.set_head(&format!("refs/heads/{}", branch_name))
         .map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to set HEAD to branch '{}': {}", branch_name, e),
                 "set_head_failed",
                 Some(e.to_string()),
@@ -307,7 +307,7 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
     // Checkout the branch (update working directory)
     repo.checkout_head(Some(git2::build::CheckoutBuilder::new().force()))
         .map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to checkout branch '{}': {}", branch_name, e),
                 "checkout_failed",
                 Some(e.to_string()),
@@ -320,9 +320,9 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, Error> {
 pub fn delete_branches(
     path: &Path,
     branches_to_delete: &[String],
-) -> Result<Vec<DeletedBranchInfo>, Error> {
+) -> Result<Vec<DeletedBranchInfo>, AppError> {
     let repo = Repository::open(path).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to open git repository at {}: {}", path.display(), e),
             "repository_open_failed",
             Some(e.to_string()),
@@ -341,7 +341,7 @@ pub fn delete_branches(
     }
 
     if !not_found_branches.is_empty() {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "Branch(es) not found: **{0}**. {1} still exist(s).",
                 not_found_branches.join(", "),
@@ -374,7 +374,7 @@ pub fn delete_branches(
         let mut branch = repo
             .find_branch(branch_name, BranchType::Local)
             .map_err(|e| {
-                Error::new(
+                AppError::new(
                     format!("Failed to find branch '{}': {}", branch_name, e),
                     "branch_not_found",
                     Some(e.to_string()),
@@ -383,7 +383,7 @@ pub fn delete_branches(
 
         // Delete the branch (force=true to match original -D flag behavior)
         branch.delete().map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to delete branch '{}': {}", branch_name, e),
                 "delete_branch_failed",
                 Some(e.to_string()),
@@ -402,11 +402,11 @@ pub fn delete_branches(
     Ok(deleted_branches)
 }
 
-fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, Error> {
+fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppError> {
     let branch = repo
         .find_branch(branch_name, BranchType::Local)
         .map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to find branch '{}': {}", branch_name, e),
                 "branch_not_found",
                 Some(e.to_string()),
@@ -415,7 +415,7 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, Error
 
     let reference = branch.get();
     let commit = reference.peel_to_commit().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get commit for branch {}: {}", branch_name, e),
             "commit_peel_failed",
             Some(e.to_string()),
@@ -461,7 +461,7 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, Error
 
     // Check if it's the current branch
     let head = repo.head().map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to get HEAD: {}", e),
             "head_not_found",
             Some(e.to_string()),
@@ -493,9 +493,9 @@ pub fn restore_deleted_branch(
     path: &Path,
     branch_info: &RestoreBranchInput,
     app_handle: Option<&tauri::AppHandle>,
-) -> Result<RestoreBranchResult, Error> {
+) -> Result<RestoreBranchResult, AppError> {
     let repo = Repository::open(path).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to open git repository at {}: {}", path.display(), e),
             "repository_open_failed",
             Some(e.to_string()),
@@ -504,7 +504,7 @@ pub fn restore_deleted_branch(
 
     // Check if the commit exists in the repository
     if !is_commit_reachable(path, &branch_info.commit_sha)? {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "Commit **{}** not found in the repository",
                 branch_info.commit_sha
@@ -529,7 +529,7 @@ pub fn restore_deleted_branch(
                 let mut branch = repo
                     .find_branch(&branch_info.target_name, BranchType::Local)
                     .map_err(|e| {
-                        Error::new(
+                        AppError::new(
                             format!("Failed to find branch '{}': {}", branch_info.target_name, e),
                             "branch_not_found",
                             Some(e.to_string()),
@@ -537,7 +537,7 @@ pub fn restore_deleted_branch(
                     })?;
 
                 branch.delete().map_err(|e| {
-                    Error::new(
+                    AppError::new(
                         format!(
                             "Failed to delete branch '{}': {}",
                             branch_info.target_name, e
@@ -608,9 +608,9 @@ fn create_branch_at_commit(
     branch_name: &str,
     commit_sha: &str,
     app_handle: Option<&tauri::AppHandle>,
-) -> Result<RestoreBranchResult, Error> {
+) -> Result<RestoreBranchResult, AppError> {
     let repo = Repository::open(path).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to open git repository at {}: {}", path.display(), e),
             "repository_open_failed",
             Some(e.to_string()),
@@ -618,7 +618,7 @@ fn create_branch_at_commit(
     })?;
 
     let commit_id = Oid::from_str(commit_sha).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Invalid commit SHA '{}': {}", commit_sha, e),
             "invalid_commit_sha",
             Some(e.to_string()),
@@ -626,7 +626,7 @@ fn create_branch_at_commit(
     })?;
 
     let commit = repo.find_commit(commit_id).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to find commit '{}': {}", commit_sha, e),
             "commit_not_found",
             Some(e.to_string()),
@@ -634,7 +634,7 @@ fn create_branch_at_commit(
     })?;
 
     repo.branch(branch_name, &commit, false).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to create branch '{}': {}", branch_name, e),
             "create_branch_failed",
             Some(e.to_string()),
@@ -667,7 +667,7 @@ pub fn restore_deleted_branches(
     path: &Path,
     branch_infos: &[RestoreBranchInput],
     app_handle: Option<&tauri::AppHandle>,
-) -> Result<Vec<(String, RestoreBranchResult)>, Error> {
+) -> Result<Vec<(String, RestoreBranchResult)>, AppError> {
     let mut results = Vec::new();
 
     for branch_info in branch_infos {

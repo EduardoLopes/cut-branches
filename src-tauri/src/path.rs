@@ -5,7 +5,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
-use crate::error::Error;
+use crate::error::AppError;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct RootPathResponse {
@@ -28,10 +28,10 @@ impl Hash for RootPathResponse {
 }
 
 /// Validates a git repository by checking its config and HEAD.
-fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, Error> {
+fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, AppError> {
     // Check if config is valid
     if let Err(e) = repo.config() {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "Failed to read git repository config at {}: {}",
                 path.display(),
@@ -50,7 +50,7 @@ fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, Error> {
             if repo.is_bare() {
                 Ok(true)
             } else {
-                Err(Error::new(
+                Err(AppError::new(
                     format!(
                         "Failed to read git repository HEAD at {}: {}",
                         path.display(),
@@ -72,15 +72,15 @@ fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, Error> {
 ///
 /// # Returns
 ///
-/// * `Result<bool, Error>` - true if it's a git repository, or an error
-pub fn is_git_repository(path: &Path) -> Result<bool, Error> {
+/// * `Result<bool, AppError>` - true if it's a git repository, or an error
+pub fn is_git_repository(path: &Path) -> Result<bool, AppError> {
     match Repository::open(path) {
         Ok(repo) => validate_repository(&repo, path),
         Err(e) => {
             if e.code() == git2::ErrorCode::NotFound {
                 Ok(false)
             } else {
-                Err(Error::new(
+                Err(AppError::new(
                     format!("Failed to open git repository at {}: {}", path.display(), e),
                     "git_repository_error",
                     Some(e.to_string()),
@@ -113,14 +113,14 @@ fn calculate_hash<T: Hash + ?Sized>(t: &T) -> u64 {
 ///
 /// # Returns
 ///
-/// * `Result<String, Error>` - JSON string with the root path and ID, or an error
+/// * `Result<String, AppError>` - JSON string with the root path and ID, or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn get_root(path: String) -> Result<String, Error> {
+pub async fn get_root(path: String) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
 
     if !is_git_repository(raw_path)? {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "The folder **{}** is not a git repository",
                 raw_path
@@ -137,7 +137,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
     }
 
     let repo = Repository::open(raw_path).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to open git repository: {}", e),
             "git_repository_error",
             Some(e.to_string()),
@@ -145,7 +145,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
     })?;
 
     let workdir = repo.workdir().ok_or_else(|| {
-        Error::new(
+        AppError::new(
             "Repository has no working directory".to_string(),
             "no_workdir",
             Some("The git repository is bare".to_string()),
@@ -160,7 +160,7 @@ pub async fn get_root(path: String) -> Result<String, Error> {
     };
 
     serde_json::to_string(&response).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!(

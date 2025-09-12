@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::error::Error;
+use crate::error::AppError;
 
 /// Command to check if a commit SHA is reachable in a git repository.
 ///
@@ -11,17 +11,17 @@ use crate::error::Error;
 ///
 /// # Returns
 ///
-/// * `Result<String, Error>` - A JSON string with the reachability status or an error
+/// * `Result<String, AppError>` - A JSON string with the reachability status or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn is_commit_reachable(path: String, commit_sha: String) -> Result<String, Error> {
+pub async fn is_commit_reachable(path: String, commit_sha: String) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
     let is_reachable = crate::git::is_commit_reachable(raw_path, &commit_sha)?;
 
     let response = serde_json::json!({ "is_reachable": is_reachable });
 
     serde_json::to_string(&response).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!("Error converting to JSON: {}", e)),

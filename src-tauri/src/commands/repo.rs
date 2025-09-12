@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use crate::error::Error;
+use crate::error::AppError;
 use crate::git::GitDirResponse;
 use crate::path::RootPathResponse;
 
@@ -12,14 +12,14 @@ use crate::path::RootPathResponse;
 ///
 /// # Returns
 ///
-/// * `Result<String, Error>` - A JSON string with repository information or an error
+/// * `Result<String, AppError>` - A JSON string with repository information or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn get_repo_info(path: String) -> Result<String, Error> {
+pub async fn get_repo_info(path: String) -> Result<String, AppError> {
     let raw_path = Path::new(&path);
 
     if !crate::path::is_git_repository(raw_path)? {
-        return Err(Error::new(
+        return Err(AppError::new(
             format!(
                 "The folder **{}** is not a git repository",
                 raw_path
@@ -39,7 +39,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
 
     let root_path = serde_json::from_str::<RootPathResponse>(&unserialized_root_path)
         .map_err(|e| {
-            Error::new(
+            AppError::new(
                 format!("Failed to parse root path response: {}", e),
                 "parse_failed",
                 Some(format!("Error parsing root path JSON: {}", e)),
@@ -56,7 +56,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
     let repo_name = raw_root_path
         .file_name()
         .ok_or_else(|| {
-            Error::new(
+            AppError::new(
                 "Failed to get repository name".to_string(),
                 "repo_name_failed",
                 Some("Could not extract the repository name from the file path".to_string()),
@@ -64,7 +64,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
         })?
         .to_str()
         .ok_or_else(|| {
-            Error::new(
+            AppError::new(
                 "Failed to convert repository name to string".to_string(),
                 "repo_name_failed",
                 Some("Repository name contains invalid UTF-8 characters".to_string()),
@@ -83,7 +83,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
     };
 
     serde_json::to_string(&response).map_err(|e| {
-        Error::new(
+        AppError::new(
             format!("Failed to serialize response: {}", e),
             "serialization_failed",
             Some(format!("Error converting to JSON: {}", e)),

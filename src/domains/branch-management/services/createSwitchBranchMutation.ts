@@ -33,9 +33,9 @@ export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationO
 
 				if (result.status === 'error') {
 					throw createError({
-						message: 'Failed to switch branch',
-						kind: 'tauri_error',
-						description: result.error.message || result.error.toString()
+						message: result.error.message || 'Failed to switch branch',
+						kind: result.error.kind || 'tauri_error',
+						description: result.error.description || null
 					});
 				}
 

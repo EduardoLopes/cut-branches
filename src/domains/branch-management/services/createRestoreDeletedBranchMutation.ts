@@ -98,9 +98,9 @@ export function createRestoreDeletedBranchMutation(options?: RestoreBranchMutati
 
 				if (result.status === 'error') {
 					throw createError({
-						message: 'Failed to restore branch',
-						kind: 'tauri_error',
-						description: result.error
+						message: result.error.message || 'Failed to restore branch',
+						kind: result.error.kind || 'tauri_error',
+						description: result.error.description || null
 					});
 				}
 
@@ -149,9 +149,9 @@ export function createRestoreDeletedBranchesMutation(options?: RestoreBranchesMu
 
 				if (result.status === 'error') {
 					throw createError({
-						message: 'Failed to restore branches',
-						kind: 'tauri_error',
-						description: result.error
+						message: result.error.message || 'Failed to restore branches',
+						kind: result.error.kind || 'tauri_error',
+						description: result.error.description || null
 					});
 				}
 

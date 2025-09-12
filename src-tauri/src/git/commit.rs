@@ -1,9 +1,9 @@
 use git2::Repository;
 use std::path::Path;
 
-use crate::error::Error;
+use crate::error::AppError;
 
-pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, Error> {
+pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppError> {
     if commit_sha.is_empty() {
         return Ok(false);
     }

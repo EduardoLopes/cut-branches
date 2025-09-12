@@ -12,9 +12,9 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, Error>` - JSON string with the root path and ID, or an error
+	 * * `Result<String, AppError>` - JSON string with the root path and ID, or an error
 	 */
-	async getRoot(path: string): Promise<Result<string, Error>> {
+	async getRoot(path: string): Promise<Result<string, AppError>> {
 		try {
 			return { status: 'ok', data: await TAURI_INVOKE('get_root', { path }) };
 		} catch (e) {
@@ -31,9 +31,9 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, Error>` - A JSON string with repository information or an error
+	 * * `Result<String, AppError>` - A JSON string with repository information or an error
 	 */
-	async getRepoInfo(path: string): Promise<Result<string, Error>> {
+	async getRepoInfo(path: string): Promise<Result<string, AppError>> {
 		try {
 			return { status: 'ok', data: await TAURI_INVOKE('get_repo_info', { path }) };
 		} catch (e) {
@@ -51,9 +51,9 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, Error>` - The new current branch name or an error
+	 * * `Result<String, AppError>` - The new current branch name or an error
 	 */
-	async switchBranch(path: string, branch: string): Promise<Result<string, Error>> {
+	async switchBranch(path: string, branch: string): Promise<Result<string, AppError>> {
 		try {
 			return { status: 'ok', data: await TAURI_INVOKE('switch_branch', { path, branch }) };
 		} catch (e) {
@@ -71,9 +71,9 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, Error>` - A JSON string with the deleted branches or an error
+	 * * `Result<String, AppError>` - A JSON string with the deleted branches or an error
 	 */
-	async deleteBranches(path: string, branches: string[]): Promise<Result<string, Error>> {
+	async deleteBranches(path: string, branches: string[]): Promise<Result<string, AppError>> {
 		try {
 			return { status: 'ok', data: await TAURI_INVOKE('delete_branches', { path, branches }) };
 		} catch (e) {
@@ -91,9 +91,9 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, Error>` - A JSON string with the reachability status or an error
+	 * * `Result<String, AppError>` - A JSON string with the reachability status or an error
 	 */
-	async isCommitReachable(path: string, commitSha: string): Promise<Result<string, Error>> {
+	async isCommitReachable(path: string, commitSha: string): Promise<Result<string, AppError>> {
 		try {
 			return { status: 'ok', data: await TAURI_INVOKE('is_commit_reachable', { path, commitSha }) };
 		} catch (e) {
@@ -112,12 +112,12 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, String>` - A JSON string with the restoration result or an error
+	 * * `Result<String, AppError>` - A JSON string with the restoration result or an error
 	 */
 	async restoreDeletedBranch(
 		path: string,
 		branchInfo: RestoreBranchInput
-	): Promise<Result<string, string>> {
+	): Promise<Result<string, AppError>> {
 		try {
 			return {
 				status: 'ok',
@@ -139,12 +139,12 @@ export const commands = {
 	 *
 	 * # Returns
 	 *
-	 * * `Result<String, String>` - A JSON string with the restoration results or an error
+	 * * `Result<String, AppError>` - A JSON string with the restoration results or an error
 	 */
 	async restoreDeletedBranches(
 		path: string,
 		branchInfos: RestoreBranchInput[]
-	): Promise<Result<string, string>> {
+	): Promise<Result<string, AppError>> {
 		try {
 			return {
 				status: 'ok',
@@ -177,6 +177,7 @@ export const events = __makeEvents__<{
 
 /** user-defined types **/
 
+export type AppError = { message: string; kind: string; description: string | null };
 export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean };
 export type BranchDeletedEvent = { deleted_branches: DeletedBranchInfo[]; repository_path: string };
 export type BranchRestoredEvent = { restored_branch: Branch; repository_path: string };
@@ -195,7 +196,6 @@ export type Commit = {
 };
 export type ConflictResolution = 'Overwrite' | 'Rename' | 'Skip';
 export type DeletedBranchInfo = { branch: Branch; raw_output: string };
-export type Error = { message: string; kind: string; description: string | null };
 export type NotificationEvent = {
 	title: string;
 	message: string;
@@ -217,7 +217,7 @@ export type RestoreBranchInput = {
 
 /** tauri-specta globals **/
 
-import { invoke as TAURI_INVOKE } from '@tauri-apps/api/core';
+import { invoke as TAURI_INVOKE, Channel as TAURI_CHANNEL } from '@tauri-apps/api/core';
 import * as TAURI_API_EVENT from '@tauri-apps/api/event';
 import { type WebviewWindow as __WebviewWindow__ } from '@tauri-apps/api/webviewWindow';
 
