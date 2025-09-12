@@ -5,14 +5,14 @@ import { z } from 'zod/v4';
 import {
 	createRestoreDeletedBranchMutation,
 	createRestoreDeletedBranchesMutation,
-	ConflictResolution,
 	RestoreBranchInputSchema,
 	RestoreBranchesInputSchema,
 	RestoreBranchResponseSchema
 } from '../createRestoreDeletedBranchMutation';
 import type {
 	RestoreBranchVariables,
-	RestoreBranchesVariables
+	RestoreBranchesVariables,
+	ConflictResolution
 } from '../createRestoreDeletedBranchMutation';
 import { createError } from '$utils/error-utils';
 
@@ -35,7 +35,7 @@ describe('createRestoreDeletedBranchMutation', () => {
 			originalName: 'feature-branch',
 			targetName: 'feature-branch-restored',
 			commitSha: 'abc123def456',
-			conflictResolution: ConflictResolution.Overwrite
+			conflictResolution: 'Overwrite'
 		}
 	};
 
@@ -46,7 +46,7 @@ describe('createRestoreDeletedBranchMutation', () => {
 				originalName: 'feature-1',
 				targetName: 'feature-1-restored',
 				commitSha: 'abc123',
-				conflictResolution: ConflictResolution.Rename
+				conflictResolution: 'Rename'
 			},
 			{
 				originalName: 'feature-2',
@@ -74,11 +74,13 @@ describe('createRestoreDeletedBranchMutation', () => {
 		vi.restoreAllMocks();
 	});
 
-	describe('ConflictResolution enum', () => {
-		it('should have correct enum values', () => {
-			expect(ConflictResolution.Overwrite).toBe('Overwrite');
-			expect(ConflictResolution.Rename).toBe('Rename');
-			expect(ConflictResolution.Skip).toBe('Skip');
+	describe('ConflictResolution type', () => {
+		it('should have correct type values', () => {
+			// ConflictResolution is now a type, not an enum, so we test the schema validation
+			const ConflictResolutionSchema = z.enum(['Overwrite', 'Rename', 'Skip']);
+			expect(ConflictResolutionSchema.parse('Overwrite')).toBe('Overwrite');
+			expect(ConflictResolutionSchema.parse('Rename')).toBe('Rename');
+			expect(ConflictResolutionSchema.parse('Skip')).toBe('Skip');
 		});
 	});
 
@@ -93,12 +95,12 @@ describe('createRestoreDeletedBranchMutation', () => {
 				...validSingleBranchVariables,
 				branchInfo: {
 					...validSingleBranchVariables.branchInfo,
-					conflictResolution: undefined
+					conflictResolution: null
 				}
 			};
 
 			const result = RestoreBranchInputSchema.parse(inputWithoutConflictResolution);
-			expect(result.branchInfo.conflictResolution).toBeUndefined();
+			expect(result.branchInfo.conflictResolution).toBeNull();
 		});
 
 		it('should reject invalid input - missing path', () => {

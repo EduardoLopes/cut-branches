@@ -5,10 +5,11 @@
 
 extern crate execute;
 
-mod commands;
-mod error;
-mod git;
-mod path;
+pub mod commands;
+pub mod error;
+pub mod events;
+pub mod git;
+pub mod path;
 #[cfg(test)]
 pub mod test_utils;
 
@@ -16,15 +17,17 @@ use commands::{
     delete_branches, get_repo_info, is_commit_reachable, restore_deleted_branch,
     restore_deleted_branches, switch_branch,
 };
+use events::{
+    BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent, NotificationEvent,
+    RepositoryLoadedEvent,
+};
 use path::get_root;
 
 fn main() {
     let _ = fix_path_env::fix();
 
-    tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![
+    let builder = tauri_specta::Builder::<tauri::Wry>::new()
+        .commands(tauri_specta::collect_commands![
             get_root,
             get_repo_info,
             switch_branch,
@@ -33,6 +36,27 @@ fn main() {
             restore_deleted_branch,
             restore_deleted_branches
         ])
+        .events(tauri_specta::collect_events![
+            BranchDeletedEvent,
+            BranchRestoredEvent,
+            BranchSwitchedEvent,
+            RepositoryLoadedEvent,
+            NotificationEvent
+        ]);
+
+    #[cfg(debug_assertions)]
+    builder
+        .export(specta_typescript::Typescript::default(), "../src/lib/bindings.ts")
+        .expect("Failed to export typescript bindings");
+
+    tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .invoke_handler(builder.invoke_handler())
+        .setup(move |app| {
+            builder.mount_events(app);
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

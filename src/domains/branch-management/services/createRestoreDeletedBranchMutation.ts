@@ -1,14 +1,14 @@
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
-import { z } from 'zod/v4';
+import { z } from 'zod';
+import { commands, type ConflictResolution } from '$lib/bindings';
 import { BranchSchema } from '$services/common';
 import { createError, type AppError } from '$utils/error-utils';
 
-export enum ConflictResolution {
-	Overwrite = 'Overwrite',
-	Rename = 'Rename',
-	Skip = 'Skip'
-}
+// ConflictResolution schema that matches the generated type
+const ConflictResolutionSchema = z.enum(['Overwrite', 'Rename', 'Skip']);
+
+// Re-export the ConflictResolution type from bindings for convenience
+export type { ConflictResolution };
 
 // Input schema for branch restoration
 export const RestoreBranchInputSchema = z.object({
@@ -17,7 +17,7 @@ export const RestoreBranchInputSchema = z.object({
 		originalName: z.string(),
 		targetName: z.string(),
 		commitSha: z.string(),
-		conflictResolution: z.nativeEnum(ConflictResolution).optional()
+		conflictResolution: ConflictResolutionSchema.nullable()
 	})
 });
 
@@ -31,7 +31,7 @@ export const RestoreBranchesInputSchema = z.object({
 			originalName: z.string(),
 			targetName: z.string(),
 			commitSha: z.string(),
-			conflictResolution: z.nativeEnum(ConflictResolution).optional().nullable()
+			conflictResolution: ConflictResolutionSchema.nullable()
 		})
 	)
 });
@@ -90,14 +90,22 @@ export function createRestoreDeletedBranchMutation(options?: RestoreBranchMutati
 				// Validate input
 				const validatedInput = RestoreBranchInputSchema.parse(vars);
 
-				// Call Tauri command
-				const res = await invoke<string>('restore_deleted_branch', {
-					path: validatedInput.path,
-					branchInfo: validatedInput.branchInfo
-				});
+				// Call Tauri command using generated bindings
+				const result = await commands.restoreDeletedBranch(
+					validatedInput.path,
+					validatedInput.branchInfo
+				);
+
+				if (result.status === 'error') {
+					throw createError({
+						message: 'Failed to restore branch',
+						kind: 'tauri_error',
+						description: result.error
+					});
+				}
 
 				// Parse and validate response
-				const parsedResponse = JSON.parse(res);
+				const parsedResponse = JSON.parse(result.data);
 				const validatedResponse = await RestoreBranchResponseSchema.parseAsync(parsedResponse);
 
 				return validatedResponse;
@@ -133,14 +141,22 @@ export function createRestoreDeletedBranchesMutation(options?: RestoreBranchesMu
 				// Validate input
 				const validatedInput = RestoreBranchesInputSchema.parse(vars);
 
-				// Call Tauri command
-				const res = await invoke<string>('restore_deleted_branches', {
-					path: validatedInput.path,
-					branchInfos: validatedInput.branchInfos
-				});
+				// Call Tauri command using generated bindings
+				const result = await commands.restoreDeletedBranches(
+					validatedInput.path,
+					validatedInput.branchInfos
+				);
+
+				if (result.status === 'error') {
+					throw createError({
+						message: 'Failed to restore branches',
+						kind: 'tauri_error',
+						description: result.error
+					});
+				}
 
 				// Parse and validate response
-				const parsedResponse = JSON.parse(res);
+				const parsedResponse = JSON.parse(result.data);
 				const validatedResponse = await RestoreBranchesResponseSchema.parseAsync(parsedResponse);
 
 				return validatedResponse;

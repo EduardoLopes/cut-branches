@@ -1,6 +1,6 @@
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
-import { z } from 'zod/v4';
+import { z } from 'zod';
+import { commands } from '$lib/bindings';
 import { type SwitchBranchVariables, SwitchBranchInputSchema } from '$services/common';
 import { createError, type AppError } from '$utils/error-utils';
 
@@ -28,11 +28,18 @@ export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationO
 				// Validate input
 				const validatedInput = SwitchBranchInputSchema.parse(vars);
 
-				const res = await invoke<string>('switch_branch', {
-					path: validatedInput.path,
-					branch: validatedInput.branch
-				});
-				return res;
+				// Call Tauri command using generated bindings
+				const result = await commands.switchBranch(validatedInput.path, validatedInput.branch);
+
+				if (result.status === 'error') {
+					throw createError({
+						message: 'Failed to switch branch',
+						kind: 'tauri_error',
+						description: result.error.message || result.error.toString()
+					});
+				}
+
+				return result.data;
 			} catch (error) {
 				// Handle validation errors
 				if (error instanceof z.ZodError) {

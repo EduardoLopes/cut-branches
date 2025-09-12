@@ -14,6 +14,7 @@ use crate::path::RootPathResponse;
 ///
 /// * `Result<String, Error>` - A JSON string with repository information or an error
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn get_repo_info(path: String) -> Result<String, Error> {
     let raw_path = Path::new(&path);
 
@@ -70,7 +71,7 @@ pub async fn get_repo_info(path: String) -> Result<String, Error> {
             )
         })?
         .to_string();
-    let branches_count = branches.len();
+    let branches_count = branches.len() as u32;
 
     let response = GitDirResponse {
         path: root_path,

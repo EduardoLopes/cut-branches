@@ -7,7 +7,7 @@ use std::path::Path;
 
 use crate::error::Error;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct RootPathResponse {
     pub root_path: String,
     pub id: Option<u64>,
@@ -115,6 +115,7 @@ fn calculate_hash<T: Hash + ?Sized>(t: &T) -> u64 {
 ///
 /// * `Result<String, Error>` - JSON string with the root path and ID, or an error
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn get_root(path: String) -> Result<String, Error> {
     let raw_path = Path::new(&path);
 

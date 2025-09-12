@@ -13,6 +13,7 @@ use crate::error::Error;
 ///
 /// * `Result<String, Error>` - The new current branch name or an error
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn switch_branch(path: String, branch: String) -> Result<String, Error> {
     let raw_path = Path::new(&path);
     crate::git::switch_branch(raw_path, &branch)
@@ -29,6 +30,7 @@ pub async fn switch_branch(path: String, branch: String) -> Result<String, Error
 ///
 /// * `Result<String, Error>` - A JSON string with the deleted branches or an error
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<String, Error> {
     let raw_path = Path::new(&path);
     let deleted_branch_infos: Vec<crate::git::DeletedBranchInfo> =
@@ -58,6 +60,7 @@ pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Stri
 ///
 /// * `Result<String, String>` - A JSON string with the restoration result or an error
 #[tauri::command]
+#[specta::specta]
 pub async fn restore_deleted_branch(
     app: tauri::AppHandle,
     path: String,
@@ -80,6 +83,7 @@ pub async fn restore_deleted_branch(
 ///
 /// * `Result<String, String>` - A JSON string with the restoration results or an error
 #[tauri::command]
+#[specta::specta]
 pub async fn restore_deleted_branches(
     app: tauri::AppHandle,
     path: String,

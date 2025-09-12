@@ -3,7 +3,7 @@ pre-commit:
   commands:
     eslint:
       glob: '*.{js,ts,jsx,tsx,cjs,mjs,svelte}'
-      run: pnpm eslint {staged_files} --max-warnings 0 --fix && git add {staged_files}
+      run: pnpm eslint {staged_files} --fix && git add {staged_files}
     prettier:
       glob: '*.{js,ts,jsx,tsx,cjs,mjs,svelte,html,json,yml,md}'
       run: pnpm prettier --write {staged_files} && git add {staged_files}

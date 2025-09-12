@@ -1,24 +1,19 @@
 import * as svelteQuery from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createDeleteBranchesMutation } from '../createDeleteBranchesMutation';
+import { commands } from '$lib/bindings';
 import type { Branch } from '$services/common';
-import {
-	testSetup,
-	tauriMocks,
-	testAssertions,
-	errorMocks,
-	mockDataFactory,
-	type MockedInvoke
-} from '$utils/test-utils';
+import { errorMocks, mockDataFactory } from '$utils/test-utils';
 
-// Mock the dependencies
-vi.mock('@tauri-apps/api/core', () => ({
-	invoke: vi.fn()
+// Mock the generated bindings
+vi.mock('$lib/bindings', () => ({
+	commands: {
+		deleteBranches: vi.fn()
+	}
 }));
 
 describe('createDeleteBranchesMutation', () => {
-	let mockedInvoke: MockedInvoke;
+	const mockedDeleteBranches = vi.mocked(commands.deleteBranches);
 	const mockPath = '/path/to/repo';
 	const mockBranches = [
 		mockDataFactory.branch({ name: 'branch-1' }),
@@ -29,9 +24,24 @@ describe('createDeleteBranchesMutation', () => {
 		mutateAsync: vi.fn()
 	};
 
+	const mockDeletedBranches = [
+		{
+			branch: mockDataFactory.branch({ name: 'branch-1' }),
+			raw_output: 'Deleted branch branch-1 (was a1b2c3d).'
+		},
+		{
+			branch: mockDataFactory.branch({ name: 'branch-2' }),
+			raw_output: 'Deleted branch branch-2 (was e4f5g6h).'
+		}
+	];
+
 	beforeEach(() => {
-		mockedInvoke = testSetup.setupInvokeMock(invoke);
-		testSetup.setupBranchDeletionScenario(mockedInvoke, mockBranches);
+		// Set up mock for successful deletion
+		mockedDeleteBranches.mockResolvedValue({
+			status: 'ok',
+			data: JSON.stringify(mockDeletedBranches)
+		});
+
 		// Mock createMutation to return our mock mutation result
 		// @ts-expect-error - Mock implementation for testing
 		vi.spyOn(svelteQuery, 'createMutation').mockImplementation(() => mockMutationResult);
@@ -53,7 +63,7 @@ describe('createDeleteBranchesMutation', () => {
 		expect(typeof config.mutationFn).toBe('function');
 	});
 
-	it('should call invoke with correct parameters when mutation function is called', async () => {
+	it('should call deleteBranches command with correct parameters when mutation function is called', async () => {
 		createDeleteBranchesMutation();
 
 		// Get the mutation function from the createMutation call
@@ -65,10 +75,10 @@ describe('createDeleteBranchesMutation', () => {
 		// Call the mutation function directly
 		await mutationFn({ path: mockPath, branches: mockBranches });
 
-		testAssertions.expectInvokeCalledWith(mockedInvoke, 'delete_branches', {
-			path: mockPath,
-			branches: mockBranches.map((item) => item.name)
-		});
+		expect(mockedDeleteBranches).toHaveBeenCalledWith(
+			mockPath,
+			mockBranches.map((item) => item.name)
+		);
 	});
 
 	it('should return the processed response from invoke when mutation function is called', async () => {
@@ -83,16 +93,13 @@ describe('createDeleteBranchesMutation', () => {
 		// Call the mutation function directly
 		const result = await mutationFn({ path: mockPath, branches: mockBranches });
 
-		// Verify the result structure is correct using the factory data
-		expect(result).toEqual([
-			mockDataFactory.deletedBranchInfo(mockBranches[0]),
-			mockDataFactory.deletedBranchInfo(mockBranches[1])
-		]);
+		// Verify the result structure is correct
+		expect(result).toEqual(mockDeletedBranches);
 	});
 
-	it('should handle invoke errors when mutation function is called', async () => {
+	it('should handle command errors when mutation function is called', async () => {
 		const mockError = new Error('Failed to delete branches');
-		tauriMocks.mockCommandFailure(mockedInvoke, 'delete_branches', mockError);
+		mockedDeleteBranches.mockRejectedValue(mockError);
 
 		createDeleteBranchesMutation();
 
@@ -121,8 +128,8 @@ describe('createDeleteBranchesMutation', () => {
 			errorMocks.missingBranchesError()
 		);
 
-		// Verify that invoke was not called
-		testAssertions.expectInvokeNotCalled(mockedInvoke);
+		// Verify that deleteBranches command was not called
+		expect(mockedDeleteBranches).not.toHaveBeenCalled();
 	});
 
 	// Test for Zod validation errors (lines 50-56)
@@ -140,13 +147,21 @@ describe('createDeleteBranchesMutation', () => {
 		// Simply check that it rejects and verify invoke wasn't called
 		await expect(mutationFn(invalidInput as { branches: Branch[] })).rejects.toBeTruthy();
 
-		// Verify that invoke was not called
-		testAssertions.expectInvokeNotCalled(mockedInvoke);
+		// Verify that deleteBranches command was not called
+		expect(mockedDeleteBranches).not.toHaveBeenCalled();
 	});
 
 	// Test for Tauri errors (lines 60-61)
 	it('should handle Tauri errors properly', async () => {
-		tauriMocks.mockTauriError(mockedInvoke, 'delete_branches', 'Git operation failed');
+		// Mock the command to return an error result
+		mockedDeleteBranches.mockResolvedValue({
+			status: 'error',
+			error: {
+				message: 'Git operation failed',
+				kind: 'git_error',
+				description: null
+			}
+		});
 
 		createDeleteBranchesMutation();
 

@@ -1,6 +1,6 @@
 import { createMutation, type CreateMutationOptions } from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
-import { z } from 'zod/v4';
+import { z } from 'zod';
+import { commands, type DeletedBranchInfo } from '$lib/bindings';
 import {
 	type DeleteBranchesVariables,
 	BranchSchema,
@@ -21,8 +21,6 @@ const DeletedBranchInfoSchema = z.object({
 	raw_output: z.string()
 });
 
-type DeletedBranchInfo = z.infer<typeof DeletedBranchInfoSchema>;
-
 const DeleteBranchesResponseSchema = z.array(DeletedBranchInfoSchema);
 
 export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
@@ -41,15 +39,22 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 					});
 				}
 
-				const res = await invoke<string>('delete_branches', {
-					path: validatedInput.path,
-					branches: validatedInput.branches.map((item) => item.name)
-				});
+				const result = await commands.deleteBranches(
+					validatedInput.path,
+					validatedInput.branches.map((item) => item.name)
+				);
 
-				// Validate response
-				const parsedResponse = JSON.parse(res);
+				if (result.status === 'error') {
+					throw createError({
+						message: result.error.message || 'Failed to delete branches',
+						kind: 'tauri_error',
+						description: result.error.description || null
+					});
+				}
 
-				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(parsedResponse);
+				// Parse and validate response
+				const parsedData = JSON.parse(result.data);
+				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(parsedData);
 
 				return validatedResponse;
 			} catch (error) {

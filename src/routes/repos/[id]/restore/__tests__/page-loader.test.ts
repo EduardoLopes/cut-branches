@@ -13,7 +13,28 @@ const createMockLoadEvent = (params: { id: string }) => ({
 	depends: vi.fn(),
 	untrack: vi.fn(),
 	url: new URL('http://localhost'),
-	route: { id: '/repos/[id]/restore' as const }
+	route: { id: '/repos/[id]/restore' as const },
+	tracing: {
+		enabled: false,
+		root: {
+			name: 'mock-root-span',
+			id: 'mock-root-id',
+			traceId: 'mock-trace-id',
+			start: vi.fn(),
+			end: vi.fn(),
+			setAttribute: vi.fn(),
+			addEvent: vi.fn()
+		},
+		current: {
+			name: 'mock-current-span',
+			id: 'mock-current-id',
+			traceId: 'mock-trace-id',
+			start: vi.fn(),
+			end: vi.fn(),
+			setAttribute: vi.fn(),
+			addEvent: vi.fn()
+		}
+	}
 });
 
 // Mock dependencies

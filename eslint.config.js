@@ -28,7 +28,8 @@ export default ts.config(
 			'package-lock.json',
 			'yarn.lock',
 			'styled-system',
-			'html'
+			'html',
+			'src/lib/bindings.ts'
 		]
 	},
 	{

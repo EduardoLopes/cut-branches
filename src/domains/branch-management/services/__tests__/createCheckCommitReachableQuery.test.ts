@@ -181,24 +181,13 @@ describe('createCheckCommitReachableQuery', () => {
 		});
 
 		it('should handle ZodError with multiple validation errors', async () => {
-			const zodError = new z.ZodError([
-				{
-					code: z.ZodIssueCode.invalid_type,
-					expected: 'string',
-					received: 'number',
-					path: ['path'],
-					message: 'Expected string, received number'
-				},
-				{
-					code: z.ZodIssueCode.too_small,
-					minimum: 1,
-					type: 'string',
-					inclusive: true,
-					exact: false,
-					path: ['commitSha'],
-					message: 'String must contain at least 1 character(s)'
-				}
-			]);
+			// Generate a real ZodError by parsing invalid data
+			let zodError: z.ZodError;
+			try {
+				CommitReachableInputSchema.parse({ path: 123, commitSha: '' });
+			} catch (error) {
+				zodError = error as z.ZodError;
+			}
 
 			// Mock the parse method to throw the ZodError
 			const originalParse = CommitReachableInputSchema.parse;
@@ -217,7 +206,7 @@ describe('createCheckCommitReachableQuery', () => {
 			expect(mockCreateError).toHaveBeenCalledWith({
 				message: 'Invalid input data for checking commit reachability',
 				kind: 'validation_error',
-				description: 'Expected string, received number; String must contain at least 1 character(s)'
+				description: expect.stringContaining('expected string, received number')
 			});
 
 			// Restore original parse method

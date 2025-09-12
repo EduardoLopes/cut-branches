@@ -13,6 +13,7 @@ use crate::error::Error;
 ///
 /// * `Result<String, Error>` - A JSON string with the reachability status or an error
 #[tauri::command(async)]
+#[specta::specta]
 pub async fn is_commit_reachable(path: String, commit_sha: String) -> Result<String, Error> {
     let raw_path = Path::new(&path);
     let is_reachable = crate::git::is_commit_reachable(raw_path, &commit_sha)?;

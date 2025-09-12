@@ -1,6 +1,6 @@
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod/v4';
+import { commands } from '$lib/bindings';
 import { RepositorySchema, type Repository } from '$services/common';
 import { createError, type AppError } from '$utils/error-utils';
 import { isValidDate } from '$utils/validation-utils';
@@ -26,11 +26,18 @@ export function createGetRepositoryByPathQuery(
 					});
 				}
 
-				const res = await invoke<string>('get_repo_info', { path: currentPath });
+				const result = await commands.getRepoInfo(currentPath);
+
+				if (result.status === 'error') {
+					throw createError({
+						message: result.error.message || 'Failed to get repository information',
+						kind: 'tauri_error',
+						description: result.error.description || null
+					});
+				}
 
 				// Validate response
-				const parsedResponse = JSON.parse(res);
-				const parsedData = RepositorySchema.parse(parsedResponse);
+				const parsedData = RepositorySchema.parse(JSON.parse(result.data));
 
 				// Process branches to ensure valid dates
 				const processedBranches = parsedData.branches.map((branch) => {

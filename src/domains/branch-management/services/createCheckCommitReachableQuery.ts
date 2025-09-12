@@ -1,6 +1,6 @@
 import { createQuery, type CreateQueryOptions } from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
 import { z } from 'zod';
+import { commands } from '$lib/bindings';
 import { createError, type AppError } from '$utils/error-utils';
 
 // Input schema for commit reachability check
@@ -35,20 +35,27 @@ export function createCheckCommitReachableQuery(
 				const validatedInput = CommitReachableInputSchema.parse(variables);
 
 				// Call Tauri command
-				const res = await invoke<string>('is_commit_reachable', {
-					path: validatedInput.path,
-					commitSha: validatedInput.commitSha
-				});
+				const result = await commands.isCommitReachable(
+					validatedInput.path,
+					validatedInput.commitSha
+				);
+
+				if (result.status === 'error') {
+					throw createError({
+						message: result.error.message || 'Failed to check commit reachability',
+						kind: 'tauri_error',
+						description: result.error.description || null
+					});
+				}
 
 				// Parse and validate response
-				const parsedResponse = JSON.parse(res);
-				const validatedResponse = CommitReachableResponseSchema.parse(parsedResponse);
+				const validatedResponse = CommitReachableResponseSchema.parse(JSON.parse(result.data));
 
 				return validatedResponse.is_reachable;
 			} catch (error) {
 				// Handle specific validation errors
 				if (error instanceof z.ZodError) {
-					const errorMessage = error.errors.map((e) => e.message).join('; ');
+					const errorMessage = z.prettifyError(error);
 					throw createError({
 						message: 'Invalid input data for checking commit reachability',
 						kind: 'validation_error',

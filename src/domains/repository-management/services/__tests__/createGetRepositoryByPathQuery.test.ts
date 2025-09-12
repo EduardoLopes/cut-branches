@@ -3,19 +3,19 @@ import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createGetRepositoryByPathQuery } from '../createGetRepositoryByPathQuery';
 import * as repositoryStore from '$domains/repository-management/store/repository.svelte';
+import { commands } from '$lib/bindings';
 import type { Repository } from '$services/common';
-import {
-	testSetup,
-	tauriMocks,
-	testAssertions,
-	errorMocks,
-	mockDataFactory,
-	type MockedInvoke
-} from '$utils/test-utils';
+import { errorMocks, mockDataFactory } from '$utils/test-utils';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn()
+}));
+
+vi.mock('$lib/bindings', () => ({
+	commands: {
+		getRepoInfo: vi.fn()
+	}
 }));
 
 vi.mock('$domains/repository-management/store/repository.svelte', () => ({
@@ -28,7 +28,6 @@ vi.mock('$utils/validation-utils', () => ({
 }));
 
 describe('createGetRepositoryByPathQuery', () => {
-	let mockedInvoke: MockedInvoke;
 	const mockPath = '/path/to/repo';
 	const mockRepository = mockDataFactory.repository({
 		path: '/path/to/repository',
@@ -55,8 +54,13 @@ describe('createGetRepositoryByPathQuery', () => {
 	};
 
 	beforeEach(() => {
-		mockedInvoke = testSetup.setupInvokeMock(invoke);
-		tauriMocks.mockGetRepoInfo(mockedInvoke, mockRepository);
+		// Mock the getRepoInfo command to return a successful result
+		const mockCommand = vi.mocked(commands.getRepoInfo);
+		mockCommand.mockResolvedValue({
+			status: 'ok',
+			data: JSON.stringify(mockRepository)
+		});
+
 		// Mock repository store
 		(repositoryStore.getRepositoryStore as ReturnType<typeof vi.fn>).mockReturnValue(
 			mockRepositoryStore
@@ -110,7 +114,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		// Call the query function directly
 		await queryFn();
 
-		testAssertions.expectInvokeCalledWith(mockedInvoke, 'get_repo_info', { path: mockPath });
+		expect(vi.mocked(commands.getRepoInfo)).toHaveBeenCalledWith(mockPath);
 	});
 
 	it('should return the repository from the query function', async () => {
@@ -148,8 +152,8 @@ describe('createGetRepositoryByPathQuery', () => {
 		// Call the query function directly with the mock context and expect it to throw
 		await expect(queryFn(mockQueryContext)).rejects.toMatchObject(errorMocks.missingPathError());
 
-		// Verify that invoke was not called
-		testAssertions.expectInvokeNotCalled(mockedInvoke);
+		// Verify that getRepoInfo command was not called
+		expect(vi.mocked(commands.getRepoInfo)).not.toHaveBeenCalled();
 	});
 
 	it('should handle repository data with invalid dates', async () => {
@@ -199,10 +203,11 @@ describe('createGetRepositoryByPathQuery', () => {
 			// Missing name and currentBranch
 		};
 
-		// Update mock response with invalid data
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			JSON.stringify(malformedRepo)
-		);
+		// Update mock command response with invalid data
+		vi.mocked(commands.getRepoInfo).mockResolvedValue({
+			status: 'ok',
+			data: JSON.stringify(malformedRepo)
+		});
 
 		const pathFn = () => mockPath;
 		createGetRepositoryByPathQuery(pathFn);
@@ -218,13 +223,15 @@ describe('createGetRepositoryByPathQuery', () => {
 	});
 
 	it('should handle Tauri errors properly', async () => {
-		// Setup a mock Tauri error
-		const tauriError = {
-			__TAURI_ERROR__: true,
-			message: 'Failed to read repository information',
-			stack: 'Error stack trace'
-		};
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(tauriError);
+		// Mock command to return error result
+		vi.mocked(commands.getRepoInfo).mockResolvedValue({
+			status: 'error',
+			error: {
+				message: 'Failed to read repository information',
+				kind: 'io_error',
+				description: 'Repository path does not exist'
+			}
+		});
 
 		const pathFn = () => mockPath;
 		createGetRepositoryByPathQuery(pathFn);
@@ -297,18 +304,17 @@ describe('createGetRepositoryByPathQuery', () => {
 		expect(new Date(result.branches[0].lastCommit.date).getTime()).not.toBeNaN();
 	});
 
-	// Test for line 64 - error object with custom kind but not a AppError
-	it('should handle error objects with custom kind property', async () => {
-		// Create a custom error with a kind property but not a complete AppError
-		const customError = {
-			kind: 'custom_error',
-			message: 'Custom error message',
-			// Missing description field
-			additionalField: 'extra data'
-		};
-
-		// Mock the invoke function to throw this custom error
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(customError);
+	// Test for error handling from Tauri commands
+	it('should handle error results from commands properly', async () => {
+		// Mock the command to return an error result
+		(commands.getRepoInfo as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+			status: 'error',
+			error: {
+				message: 'Repository not found',
+				kind: 'not_found',
+				description: 'The specified repository path does not exist'
+			}
+		});
 
 		const pathFn = () => mockPath;
 		createGetRepositoryByPathQuery(pathFn);
@@ -319,14 +325,13 @@ describe('createGetRepositoryByPathQuery', () => {
 		const config = createQueryArg();
 		const queryFn = config.queryFn;
 
-		// Call the query function and expect the error to be passed through
+		// Call the query function and expect the tauri error to be wrapped
 		const error = await queryFn().catch((e: unknown) => e);
 
-		// Only check that the custom properties match
+		// Check that the error has the expected properties
 		expect(error).toMatchObject({
-			kind: 'custom_error',
-			message: 'Custom error message',
-			additionalField: 'extra data'
+			kind: 'tauri_error',
+			message: 'Repository not found'
 		});
 	});
 });

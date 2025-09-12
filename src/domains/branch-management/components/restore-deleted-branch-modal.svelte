@@ -11,10 +11,10 @@
 	import Markdown from 'svelte-exmarkdown';
 	import Branch from './branch.svelte';
 	import {
-		ConflictResolution,
 		createRestoreDeletedBranchMutation,
 		createRestoreDeletedBranchesMutation,
-		type RestoreBranchResult
+		type RestoreBranchResult,
+		type ConflictResolution
 	} from '$domains/branch-management/services/createRestoreDeletedBranchMutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 	import { getSelectedDeletedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
@@ -121,7 +121,7 @@
 				selectedDeletedBranches.forEach((branch) => {
 					if (existingBranchNames.includes(branch.name)) {
 						// Default to skip for safety
-						branchPreferences[branch.name] = ConflictResolution.Skip;
+						branchPreferences[branch.name] = 'Skip';
 					}
 				});
 			}
@@ -422,7 +422,7 @@
 				targetName: nextBranch.name,
 				commitSha: nextBranch.lastCommit.sha,
 				conflictResolution:
-					conflictResolutions[nextBranch.name] || branchPreferences[nextBranch.name]
+					conflictResolutions[nextBranch.name] || branchPreferences[nextBranch.name] || null
 			}
 		});
 	}
@@ -575,7 +575,7 @@
 				<Button
 					feedback="danger"
 					emphasis="secondary"
-					onclick={() => resolveConflict(ConflictResolution.Overwrite)}
+					onclick={() => resolveConflict('Overwrite')}
 					data-testid="overwrite-button"
 				>
 					Overwrite Existing
@@ -583,7 +583,7 @@
 
 				<Button
 					emphasis="secondary"
-					onclick={() => resolveConflict(ConflictResolution.Skip)}
+					onclick={() => resolveConflict('Skip')}
 					data-testid="skip-button"
 				>
 					Skip
@@ -775,10 +775,8 @@
 									<div class={css({ marginLeft: 'auto', display: 'flex', gap: 'xs' })}>
 										<Button
 											size="xs"
-											emphasis={branchPreferences[branch.name] === ConflictResolution.Skip
-												? 'primary'
-												: 'secondary'}
-											onclick={() => updateBranchPreference(branch.name, ConflictResolution.Skip)}
+											emphasis={branchPreferences[branch.name] === 'Skip' ? 'primary' : 'secondary'}
+											onclick={() => updateBranchPreference(branch.name, 'Skip')}
 											data-testid="pre-skip-button"
 										>
 											Skip
@@ -786,11 +784,10 @@
 										<Button
 											size="xs"
 											feedback="danger"
-											emphasis={branchPreferences[branch.name] === ConflictResolution.Overwrite
+											emphasis={branchPreferences[branch.name] === 'Overwrite'
 												? 'primary'
 												: 'secondary'}
-											onclick={() =>
-												updateBranchPreference(branch.name, ConflictResolution.Overwrite)}
+											onclick={() => updateBranchPreference(branch.name, 'Overwrite')}
 											data-testid="pre-overwrite-button"
 										>
 											Overwrite

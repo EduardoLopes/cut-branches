@@ -4,6 +4,7 @@
 	import { type Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Providers from '$components/providers.svelte';
 	import { RepositoryStore } from '$domains/repository-management/store/repository.svelte';
@@ -22,16 +23,18 @@
 		RepositoryStore.loadRepositories();
 	});
 
-	const idExists = $derived(RepositoryStore.repositories?.has(page.params.id));
+	const idExists = $derived(
+		page.params.id ? RepositoryStore.repositories?.has(page.params.id) : false
+	);
 
 	const first = $derived(RepositoryStore.repositories?.list[0]);
 
 	$effect(() => {
 		if (RepositoryStore.repositories?.list.length === 0) {
-			goto('/add-first');
+			goto(resolve('/add-first'));
 		} else {
 			if (first && !idExists) {
-				goto(`/repos/${first}`);
+				goto(resolve(`/repos/${first}`));
 			}
 		}
 	});
