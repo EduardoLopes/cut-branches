@@ -1,8 +1,4 @@
----
-description:
-globs:
-alwaysApply: false
----
+# Framework-Agnostic Frontend Architecture
 
 This document defines the architectural principles for building modern frontend
 applications. The architecture uses a modular, feature-driven approach to improve

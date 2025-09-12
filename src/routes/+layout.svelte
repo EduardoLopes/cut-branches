@@ -1,5 +1,5 @@
 <script lang="ts">
-	import '../app.css';
+	import '../styles/app.css';
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import { type Snippet } from 'svelte';
 	import { onMount } from 'svelte';

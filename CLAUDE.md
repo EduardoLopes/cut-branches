@@ -1,0 +1,171 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+Cut Branches is a Tauri-based desktop application for managing and cleaning up Git repository branches. The frontend is built with Svelte 5 and uses Panda CSS for styling, while the backend is written in Rust.
+
+## Development Commands
+
+### Frontend Development
+
+- `pnpm run dev` - Start Tauri development server
+- `pnpm run dev:svelte` - Start Svelte dev server only
+- `pnpm run build` - Build production application
+- `pnpm run build:debug` - Build debug version with backtraces
+
+### Code Quality & Linting
+
+- `pnpm run lint` - Run ESLint (fails on warnings)
+- `pnpm run lint:fix` - Auto-fix ESLint issues
+- `pnpm run format` - Check Prettier formatting
+- `pnpm run format:fix` - Auto-fix formatting
+- `pnpm run check` - Run Svelte type checking
+
+### Testing
+
+- `pnpm test` - Run all frontend tests with coverage (silent)
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:ui` - Run tests with UI interface
+- `pnpm test -- [FILE_PATH]` - Run tests for specific file
+
+### Rust Testing & Coverage
+
+- `pnpm run test:cargo` - Run Rust tests
+- `pnpm run test:cargo:coverage` - Run Rust tests with coverage
+- `pnpm run test:cargo:coverage:html` - Generate HTML coverage report
+- `pnpm run test:cargo:coverage:open` - Generate and open coverage report
+- `pnpm rust:fmt` - Check Rust formatting
+- `pnpm rust:clippy` - Run Rust linter
+- `pnpm rust:check` - Run all Rust quality checks
+
+### Package Management
+
+- `pnpm prepare` - Setup project (runs after install)
+- `pnpm update-all` - Update all dependencies (npm + cargo)
+
+## Architecture
+
+### Frontend Architecture (Svelte 5 + SvelteKit)
+
+The project follows a domain-driven architecture with clear separation of concerns:
+
+**File Structure:**
+
+- `src/domains/` - Feature modules (branch-management, repository-management, notifications, navigation)
+- `src/ui/core/` - Global reusable UI components
+- `src/utils/` - Global utility functions and stores
+- `src/routes/` - SvelteKit file-based routing
+- `src/components/` - Global non-UI components (providers, etc.)
+- `src/assets/` - Source assets for components (images, icons, fonts, videos, documents)
+- `src/styles/` - Global stylesheets and design tokens
+- `src/services/` - Global shared services and infrastructure
+- `src/store/` - Global state management
+- `static/` - Build-time static assets served from root URL (favicon, robots.txt)
+
+**Key Domains:**
+
+- **branch-management**: Core branch operations, bulk actions, search/filtering
+- **repository-management**: Repository selection and management
+- **notifications**: Toast notifications system
+- **navigation**: Application navigation and menus
+
+**State Management:**
+
+- Uses Svelte 5 runes with custom store utilities
+- Global state in `src/store/global-store.svelte.ts`
+- Domain-specific stores within each domain
+- TanStack Query for server state management
+
+### Backend Architecture (Rust + Tauri)
+
+**Structure:**
+
+- `src-tauri/src/commands/` - Tauri command handlers (repo.rs, branch.rs, commit.rs)
+- `src-tauri/src/git/` - Git operations using git2 crate
+- `src-tauri/src/error.rs` - Error handling
+- `src-tauri/src/path.rs` - Path utilities
+
+**Key Features:**
+
+- Git repository operations via git2 crate
+- Branch listing, deletion, and restoration
+- Commit reachability checking
+- Repository path validation
+
+## Testing Strategy
+
+### Frontend Testing (Vitest + Testing Library)
+
+- Co-located tests in `__tests__/` folders
+- Component testing with `@testing-library/svelte`
+- 100% branch coverage requirement
+- Integration tests for complex flows
+
+**Testing Commands:**
+
+- Always run `pnpm test` for coverage analysis
+- Write tests to cover every conditional branch
+- Use `getByRole` for accessibility compliance
+
+### Rust Testing
+
+- Unit tests co-located with source files
+- Use `cargo test` for running tests
+- LLVM-based coverage analysis available
+- Test utilities in `src-tauri/src/test_utils.rs`
+
+## Dependencies & Tools
+
+**Frontend Stack:**
+
+- Svelte 5 with SvelteKit
+- Panda CSS for styling
+- TanStack Query for data fetching
+- Vitest for testing
+- TypeScript with strict configuration
+
+**Backend Stack:**
+
+- Tauri 2.x for desktop app framework
+- git2 for Git operations
+- tokio for async runtime
+- serde for serialization
+
+**Development Tools:**
+
+- pnpm as package manager
+- ESLint + Prettier for code quality
+- Lefthook for Git hooks
+- Changesets for version management
+
+## Key Development Notes
+
+### Code Style
+
+- Frontend: kebab-case files, camelCase variables, PascalCase components
+- TypeScript: Use `import type` for type-only imports
+- Rust: Standard Rust conventions
+- 100% test coverage requirement for all new code
+
+### Git Workflow
+
+- Feature branches from `main`
+- Conventional commit messages
+- Pre-commit hooks for quality checks
+
+### Framework-Specific Guidelines
+
+- Svelte 5 runes for reactivity
+- Use `tick()` for DOM updates in tests
+- Prefer composition over inheritance
+- Domain-driven file organization over feature folders
+
+### Architecture Compliance
+
+- Project follows the Framework-Agnostic Frontend Architecture (see `docs/architecture.md`)
+- Uses SvelteKit file-based routing as recommended for SvelteKit projects
+- Implements hybrid static assets strategy: `src/assets/` for source assets, `static/` for build assets (see `docs/adr/002-static-assets-strategy.md`)
+- Domain separation enforced with no direct inter-domain imports
+- Global directories for shared resources and utilities
