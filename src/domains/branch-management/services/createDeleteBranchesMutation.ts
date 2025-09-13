@@ -47,7 +47,7 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 				if (result.status === 'error') {
 					throw createError({
 						message: result.error.message || 'Failed to delete branches',
-						kind: 'tauri_error',
+						kind: result.error.kind || 'tauri_error',
 						description: result.error.description || null
 					});
 				}
