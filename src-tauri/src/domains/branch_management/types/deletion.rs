@@ -1,41 +1,5 @@
 use serde::{Deserialize, Serialize};
-
-// Note: crate::error::Error will be needed by functions using these types,
-// but the types themselves don't directly depend on it here.
-
-#[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Commit {
-    pub sha: String,
-    pub short_sha: String,
-    pub date: String,
-    pub message: String,
-    pub author: String,
-    pub email: String,
-}
-
-#[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
-pub struct Branch {
-    pub name: String,
-    #[serde(rename = "fullyMerged")]
-    pub fully_merged: bool,
-    #[serde(rename = "lastCommit")]
-    pub last_commit: Commit,
-    pub current: bool,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct GitDirResponse {
-    pub path: String,
-    pub branches: Vec<Branch>,
-    #[serde(rename = "currentBranch")]
-    pub current_branch: String,
-    #[serde(rename = "branchesCount")]
-    pub branches_count: u32,
-    pub name: String,
-    pub id: String,
-}
+use super::branch::Branch;
 
 #[derive(Serialize, Deserialize, specta::Type, Debug, Clone)]
 pub struct DeletedBranchInfo {

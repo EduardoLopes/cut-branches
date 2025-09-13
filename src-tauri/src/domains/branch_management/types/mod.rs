@@ -1,7 +1,7 @@
 pub mod branch;
 pub mod commit;
-pub mod repo;
+pub mod deletion;
 
 pub use branch::*;
 pub use commit::*;
-pub use repo::*;
+pub use deletion::*;

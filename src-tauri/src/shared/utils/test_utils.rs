@@ -1,7 +1,10 @@
-use std::fs;
-use std::os::unix::process::ExitStatusExt;
 use std::process::Command;
+#[cfg(test)]
 use tempfile::tempdir;
+#[cfg(test)]
+use std::fs;
+#[cfg(all(test, unix))]
+use std::os::unix::process::ExitStatusExt;
 
 /// Trait for git operations to allow mocking in tests
 pub trait GitCommand {
@@ -106,11 +109,13 @@ impl GitCommand for RealGitCommand {
 /// - A single file named test.txt with "test content"
 /// - An initial commit with the message "Initial commit"
 /// - Git user configured as "Test User" with email "test@example.com"
+#[cfg(test)]
 pub fn setup_test_repo() -> tempfile::TempDir {
     setup_test_repo_with_git_command(&RealGitCommand)
 }
 
 /// Internal function that takes a GitCommand implementation for testing
+#[cfg(test)]
 fn setup_test_repo_with_git_command(git: &dyn GitCommand) -> tempfile::TempDir {
     // Create a temp directory
     let dir = tempdir().unwrap();
@@ -281,7 +286,19 @@ mod tests {
 
     impl GitCommand for InvalidUtf8GitCommand {
         fn init(&self, _path: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
-            Ok(std::process::ExitStatus::from_raw(0))
+            #[cfg(unix)]
+            {
+                Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
         }
 
         fn config(
@@ -290,7 +307,19 @@ mod tests {
             _key: &str,
             _value: &str,
         ) -> std::io::Result<std::process::ExitStatus> {
-            Ok(std::process::ExitStatus::from_raw(0))
+            #[cfg(unix)]
+            {
+                Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
         }
 
         fn add(
@@ -298,7 +327,19 @@ mod tests {
             _path: &std::path::Path,
             _file: &str,
         ) -> std::io::Result<std::process::ExitStatus> {
-            Ok(std::process::ExitStatus::from_raw(0))
+            #[cfg(unix)]
+            {
+                Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
         }
 
         fn commit(
@@ -306,7 +347,19 @@ mod tests {
             _path: &std::path::Path,
             _message: &str,
         ) -> std::io::Result<std::process::ExitStatus> {
-            Ok(std::process::ExitStatus::from_raw(0))
+            #[cfg(unix)]
+            {
+                Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
         }
 
         fn rev_parse(
@@ -624,7 +677,19 @@ mod tests {
 
         impl GitCommand for PartialFailingGitCommand {
             fn init(&self, _path: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
+                #[cfg(unix)]
+            {
                 Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
             }
 
             fn config(
@@ -639,7 +704,19 @@ mod tests {
                         "Config failed",
                     ))
                 } else {
-                    Ok(std::process::ExitStatus::from_raw(0))
+                    #[cfg(unix)]
+            {
+                Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
                 }
             }
 
@@ -648,7 +725,19 @@ mod tests {
                 _path: &std::path::Path,
                 _file: &str,
             ) -> std::io::Result<std::process::ExitStatus> {
+                #[cfg(unix)]
+            {
                 Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
             }
 
             fn commit(
@@ -656,7 +745,19 @@ mod tests {
                 _path: &std::path::Path,
                 _message: &str,
             ) -> std::io::Result<std::process::ExitStatus> {
+                #[cfg(unix)]
+            {
                 Ok(std::process::ExitStatus::from_raw(0))
+            }
+            #[cfg(not(unix))]
+            {
+                use std::process::{Command, Stdio};
+                Ok(Command::new("true")
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::null())
+                    .status()
+                    .unwrap())
+            }
             }
 
             fn rev_parse(
@@ -665,7 +766,17 @@ mod tests {
                 _args: &[&str],
             ) -> std::io::Result<std::process::Output> {
                 Ok(std::process::Output {
+                    #[cfg(unix)]
                     status: std::process::ExitStatus::from_raw(0),
+                    #[cfg(not(unix))]
+                    status: {
+                        use std::process::{Command, Stdio};
+                        Command::new("true")
+                            .stdout(Stdio::null())
+                            .stderr(Stdio::null())
+                            .status()
+                            .unwrap()
+                    },
                     stdout: b"true".to_vec(),
                     stderr: Vec::new(),
                 })
@@ -677,7 +788,17 @@ mod tests {
                 _args: &[&str],
             ) -> std::io::Result<std::process::Output> {
                 Ok(std::process::Output {
+                    #[cfg(unix)]
                     status: std::process::ExitStatus::from_raw(0),
+                    #[cfg(not(unix))]
+                    status: {
+                        use std::process::{Command, Stdio};
+                        Command::new("true")
+                            .stdout(Stdio::null())
+                            .stderr(Stdio::null())
+                            .status()
+                            .unwrap()
+                    },
                     stdout: b"main".to_vec(),
                     stderr: Vec::new(),
                 })

@@ -1,0 +1,1 @@
+// No git modules needed - repository management calls branch management directly

@@ -5,23 +5,21 @@
 
 extern crate execute;
 
-pub mod commands;
-pub mod error;
-pub mod events;
-pub mod git;
-pub mod path;
-#[cfg(test)]
-pub mod test_utils;
+pub mod domains;
+pub mod shared;
 
-use commands::{
-    delete_branches, get_repo_info, is_commit_reachable, restore_deleted_branch,
+use domains::branch_management::commands::{
+    delete_branches, is_commit_reachable, restore_deleted_branch,
     restore_deleted_branches, switch_branch,
 };
-use events::{
-    BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent, NotificationEvent,
-    RepositoryLoadedEvent,
+use domains::repository_management::commands::get_repo_info;
+use domains::path_operations::commands::get_root;
+use domains::branch_management::events::{
+    BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
 };
-use path::get_root;
+use domains::repository_management::events::{
+    NotificationEvent, RepositoryLoadedEvent,
+};
 
 fn main() {
     let _ = fix_path_env::fix();
@@ -77,16 +75,17 @@ mod tests {
         // Verify that the command modules and functions exist
         // This doesn't directly test the Tauri builder, but ensures
         // that all the handlers we reference in main() are valid
-        use crate::commands;
-        use crate::path;
+        use crate::domains::branch_management::commands;
+        use crate::domains::path_operations::commands as path_commands;
+        use crate::domains::repository_management::commands as repo_commands;
 
         // Test that we can access the command functions
-        let _ = commands::get_repo_info;
+        let _ = repo_commands::get_repo_info;
         let _ = commands::switch_branch;
         let _ = commands::delete_branches;
         let _ = commands::is_commit_reachable;
         let _ = commands::restore_deleted_branch;
         let _ = commands::restore_deleted_branches;
-        let _ = path::get_root;
+        let _ = path_commands::get_root;
     }
 }

@@ -1,7 +1,7 @@
 use git2::Repository;
 use std::path::Path;
 
-use crate::error::AppError;
+use crate::shared::error::AppError;
 
 pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppError> {
     if commit_sha.is_empty() {
@@ -21,7 +21,7 @@ pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppErr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::{setup_test_repo, DirectoryGuard};
+    use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
     use std::process::Command;
 
     #[test]

@@ -4,11 +4,11 @@ use std::path::Path;
 use tauri::Emitter;
 
 use super::commit::is_commit_reachable;
-use super::types::{
+use super::super::types::{
     Branch, Commit, ConflictDetails, ConflictResolution, DeletedBranchInfo, RestoreBranchInput,
     RestoreBranchResult,
 };
-use crate::error::AppError;
+use crate::shared::error::AppError;
 
 pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, AppError> {
     let repo = Repository::open(path).map_err(|e| {
@@ -681,7 +681,7 @@ pub fn restore_deleted_branches(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test_utils::{setup_test_repo, DirectoryGuard};
+    use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
     use std::process::Command;
 
     #[test]
