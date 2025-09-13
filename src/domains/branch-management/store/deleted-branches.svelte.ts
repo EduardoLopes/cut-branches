@@ -1,3 +1,4 @@
+import { SvelteDate } from 'svelte/reactivity';
 import { z } from 'zod/v4';
 import { BranchSchema, type Branch } from '$services/common';
 import { Store } from '$utils/store.svelte';
@@ -26,13 +27,14 @@ export class DeletedBranchesStore extends Store<DeletedBranchesState> {
 		// Add the branch to the deleted branches list
 		currentBranches.push({
 			...branch,
-			deletedAt: new Date().toISOString(),
+			deletedAt: new SvelteDate().toISOString(),
 			isReachable: true // Assume initially reachable since it was just deleted
 		});
 
 		// Sort by deletion date (newest first)
 		currentBranches.sort(
-			(a, b) => new Date(b.deletedAt ?? '').getTime() - new Date(a.deletedAt ?? '').getTime()
+			(a, b) =>
+				new SvelteDate(b.deletedAt ?? '').getTime() - new SvelteDate(a.deletedAt ?? '').getTime()
 		);
 
 		this.set({ branches: currentBranches });

@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import { type ButtonProps } from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
+	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import BranchComponent from '$domains/branch-management/components/branch.svelte';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/services/createDeleteBranchesMutation';
@@ -50,9 +51,8 @@
 			selected?.clear();
 
 			// Force a complete refresh of the repository data
-			client.invalidateQueries({
-				queryKey: ['branches', 'get-all', repository?.state?.path],
-				refetchType: 'all'
+			return client.invalidateQueries({
+				queryKey: ['branches', 'get-all', repository?.state?.path]
 			});
 		},
 		meta: { showErrorNotification: true }
@@ -160,8 +160,10 @@
 			data-testid="cancel-button"
 			disabled={deleteMutation.isPending}>Cancel</Button
 		>
-		<Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
-			>Delete</Button
+		<Loading isLoading={deleteMutation.isPending}
+			><Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
+				>Delete</Button
+			></Loading
 		>
 	</div>
 </Modal>

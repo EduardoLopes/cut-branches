@@ -161,7 +161,7 @@
 	}
 
 	const restoreMutation = createRestoreDeletedBranchMutation({
-		onSuccess(data, variables) {
+		async onSuccess(data, variables) {
 			const branchName = variables.branchInfo.originalName;
 
 			// Update results immediately when the mutation starts
@@ -206,9 +206,14 @@
 						});
 
 						// Update repository data to reflect the new branch
-						client.invalidateQueries({
+						const invalidated = await client.invalidateQueries({
 							queryKey: ['branches', 'get-all', repository?.state?.path]
 						});
+
+						selectedDeletedBranchesStore?.clear();
+						open = false;
+
+						return invalidated;
 					} catch (e) {
 						console.error('Error during notification or query invalidation:', e);
 					}
@@ -264,7 +269,7 @@
 
 	// New mutation for batch processing
 	const restoreBatchMutation = createRestoreDeletedBranchesMutation({
-		onSuccess(data) {
+		async onSuccess(data) {
 			// Process all the results
 			for (const result of data) {
 				const branchName = result.branchName;
@@ -314,9 +319,14 @@
 					});
 
 					// Update repository data to reflect the new branches
-					client.invalidateQueries({
+					const invalidated = await client.invalidateQueries({
 						queryKey: ['branches', 'get-all', repository?.state?.path]
 					});
+
+					selectedDeletedBranchesStore?.clear();
+					open = false;
+
+					return invalidated;
 				} catch (e) {
 					console.error('Error during batch notification or query invalidation:', e);
 				}

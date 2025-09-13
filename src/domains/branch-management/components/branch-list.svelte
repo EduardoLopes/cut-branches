@@ -56,9 +56,8 @@
 
 			selected?.delete([currentBranch]);
 
-			queryClient.invalidateQueries({
-				queryKey: ['branches', 'get-all', repository?.state?.path],
-				refetchType: 'all'
+			return queryClient.invalidateQueries({
+				queryKey: ['branches', 'get-all', repository?.state?.path]
 			});
 		},
 		meta: { showErrorNotification: true }
