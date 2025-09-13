@@ -15,3 +15,6 @@ node_modules
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+# Ignore files for Tauri
+src-tauri/src/lib/bindings.ts
