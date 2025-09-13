@@ -47,8 +47,8 @@ export const RestoreBranchResponseSchema = z.object({
 	skipped: z.boolean(),
 	conflictDetails: z
 		.object({
-			originalName: z.string().optional(),
-			conflictingName: z.string().optional()
+			originalName: z.string(),
+			conflictingName: z.string()
 		})
 		.optional()
 		.nullable(),
@@ -59,12 +59,7 @@ export const RestoreBranchResponseSchema = z.object({
 export type RestoreBranchResult = z.infer<typeof RestoreBranchResponseSchema>;
 
 // Response schema for batch restoration
-export const RestoreBranchesResponseSchema = z.array(
-	z.tuple([
-		z.string(), // branch name
-		RestoreBranchResponseSchema // result
-	])
-);
+export const RestoreBranchesResponseSchema = z.array(RestoreBranchResponseSchema);
 
 export type RestoreBranchesResult = z.infer<typeof RestoreBranchesResponseSchema>;
 
@@ -105,8 +100,7 @@ export function createRestoreDeletedBranchMutation(options?: RestoreBranchMutati
 				}
 
 				// Parse and validate response
-				const parsedResponse = JSON.parse(result.data);
-				const validatedResponse = await RestoreBranchResponseSchema.parseAsync(parsedResponse);
+				const validatedResponse = await RestoreBranchResponseSchema.parseAsync(result.data);
 
 				return validatedResponse;
 			} catch (error) {
@@ -156,8 +150,7 @@ export function createRestoreDeletedBranchesMutation(options?: RestoreBranchesMu
 				}
 
 				// Parse and validate response
-				const parsedResponse = JSON.parse(result.data);
-				const validatedResponse = await RestoreBranchesResponseSchema.parseAsync(parsedResponse);
+				const validatedResponse = await RestoreBranchesResponseSchema.parseAsync(result.data);
 
 				return validatedResponse;
 			} catch (error) {
@@ -169,8 +162,8 @@ export function createRestoreDeletedBranchesMutation(options?: RestoreBranchesMu
 						.join('; ');
 
 					throw createError({
-						message: 'Invalid input data for batch restoring branches',
-						kind: 'validation_error',
+						message: error.message || 'Invalid input data for batch restoring branches',
+						kind: error.type || 'validation_error',
 						description: errorMessage
 					});
 				}

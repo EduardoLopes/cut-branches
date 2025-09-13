@@ -18,7 +18,7 @@ type DeleteBranchesMutationOptions = CreateMutationOptions<
 // Response schema for delete branches
 const DeletedBranchInfoSchema = z.object({
 	branch: BranchSchema,
-	raw_output: z.string()
+	rawOutput: z.string()
 });
 
 const DeleteBranchesResponseSchema = z.array(DeletedBranchInfoSchema);
@@ -53,8 +53,7 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 				}
 
 				// Parse and validate response
-				const parsedData = JSON.parse(result.data);
-				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(parsedData);
+				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(result.data);
 
 				return validatedResponse;
 			} catch (error) {

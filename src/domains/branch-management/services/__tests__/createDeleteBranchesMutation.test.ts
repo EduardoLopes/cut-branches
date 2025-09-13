@@ -27,11 +27,11 @@ describe('createDeleteBranchesMutation', () => {
 	const mockDeletedBranches = [
 		{
 			branch: mockDataFactory.branch({ name: 'branch-1' }),
-			raw_output: 'Deleted branch branch-1 (was a1b2c3d).'
+			rawOutput: 'Deleted branch branch-1 (was a1b2c3d).'
 		},
 		{
 			branch: mockDataFactory.branch({ name: 'branch-2' }),
-			raw_output: 'Deleted branch branch-2 (was e4f5g6h).'
+			rawOutput: 'Deleted branch branch-2 (was e4f5g6h).'
 		}
 	];
 
@@ -39,7 +39,7 @@ describe('createDeleteBranchesMutation', () => {
 		// Set up mock for successful deletion
 		mockedDeleteBranches.mockResolvedValue({
 			status: 'ok',
-			data: JSON.stringify(mockDeletedBranches)
+			data: mockDeletedBranches
 		});
 
 		// Mock createMutation to return our mock mutation result

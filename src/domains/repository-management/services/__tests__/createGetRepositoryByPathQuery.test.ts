@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createGetRepositoryByPathQuery } from '../createGetRepositoryByPathQuery';
 import * as repositoryStore from '$domains/repository-management/store/repository.svelte';
-import { commands } from '$lib/bindings';
+import { commands, type GitDirResponse } from '$lib/bindings';
 import type { Repository } from '$services/common';
 import { errorMocks, mockDataFactory } from '$utils/test-utils';
 
@@ -58,7 +58,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		const mockCommand = vi.mocked(commands.getRepoInfo);
 		mockCommand.mockResolvedValue({
 			status: 'ok',
-			data: JSON.stringify(mockRepository)
+			data: mockRepository
 		});
 
 		// Mock repository store
@@ -172,9 +172,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		};
 
 		// Update mock response with invalid date
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			JSON.stringify(repoWithInvalidDate)
-		);
+		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(repoWithInvalidDate);
 
 		const pathFn = () => mockPath;
 		createGetRepositoryByPathQuery(pathFn);
@@ -194,19 +192,23 @@ describe('createGetRepositoryByPathQuery', () => {
 	});
 
 	it('should handle Zod validation errors', async () => {
-		// Mock malformed repository data
+		// Mock malformed repository data - intentionally incomplete to test error handling
 		const malformedRepo = {
 			path: mockPath,
-			// Missing required fields
-			branches: [{ name: 'test' }], // Missing required lastCommit
+			branches: [
+				{
+					name: 'test'
+					// Missing other required Branch fields like lastCommit
+				}
+			],
 			id: '1'
-			// Missing name and currentBranch
-		};
+			// Missing required GitDirResponse fields: name, currentBranch, branchesCount
+		} as unknown as GitDirResponse;
 
-		// Update mock command response with invalid data
+		// Mock the command to return this invalid data - use type assertion for test
 		vi.mocked(commands.getRepoInfo).mockResolvedValue({
 			status: 'ok',
-			data: JSON.stringify(malformedRepo)
+			data: malformedRepo
 		});
 
 		const pathFn = () => mockPath;
@@ -283,9 +285,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		};
 
 		// Update mock response with empty date
-		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-			JSON.stringify(repoWithEmptyDate)
-		);
+		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(repoWithEmptyDate);
 
 		const pathFn = () => mockPath;
 		createGetRepositoryByPathQuery(pathFn);

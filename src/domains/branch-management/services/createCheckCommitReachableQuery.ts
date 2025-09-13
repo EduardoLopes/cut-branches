@@ -13,7 +13,7 @@ export type CommitReachableVariables = z.infer<typeof CommitReachableInputSchema
 
 // Response schema for commit reachability check
 const CommitReachableResponseSchema = z.object({
-	is_reachable: z.boolean()
+	isReachable: z.boolean()
 });
 
 type CommitReachableQueryOptions = CreateQueryOptions<
@@ -49,9 +49,9 @@ export function createCheckCommitReachableQuery(
 				}
 
 				// Parse and validate response
-				const validatedResponse = CommitReachableResponseSchema.parse(JSON.parse(result.data));
+				const validatedResponse = CommitReachableResponseSchema.parse(result.data);
 
-				return validatedResponse.is_reachable;
+				return validatedResponse.isReachable;
 			} catch (error) {
 				// Handle specific validation errors
 				if (error instanceof z.ZodError) {

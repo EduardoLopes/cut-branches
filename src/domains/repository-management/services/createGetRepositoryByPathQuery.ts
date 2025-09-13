@@ -37,7 +37,7 @@ export function createGetRepositoryByPathQuery(
 				}
 
 				// Validate response
-				const parsedData = RepositorySchema.parse(JSON.parse(result.data));
+				const parsedData = RepositorySchema.parse(result.data);
 
 				// Process branches to ensure valid dates
 				const processedBranches = parsedData.branches.map((branch) => {

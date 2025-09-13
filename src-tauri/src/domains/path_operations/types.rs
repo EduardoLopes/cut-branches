@@ -1,9 +1,10 @@
 use std::hash::{Hash, Hasher};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct RootPathResponse {
     pub root_path: String,
-    pub id: Option<u64>,
+    pub id: Option<String>,
 }
 
 impl PartialEq for RootPathResponse {

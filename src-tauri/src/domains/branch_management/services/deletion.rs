@@ -1,9 +1,10 @@
+use super::super::git::branch::Branch;
+use crate::shared::error::AppError;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use crate::shared::error::AppError;
-use super::super::git::branch::Branch;
 
 #[derive(Serialize, Deserialize, specta::Type, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct DeletedBranchInfo {
     pub branch: Branch,
     pub raw_output: String,
@@ -39,6 +40,7 @@ pub struct RestoreBranchResult {
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct ConflictDetails {
     pub original_name: String,
     pub conflicting_name: String,
@@ -54,6 +56,9 @@ pub struct ConflictDetails {
 /// # Returns
 ///
 /// * `Result<Vec<DeletedBranchInfo>, AppError>` - Information about deleted branches or an error
-pub fn delete_branches(path: &Path, branches: &[String]) -> Result<Vec<DeletedBranchInfo>, AppError> {
+pub fn delete_branches(
+    path: &Path,
+    branches: &[String],
+) -> Result<Vec<DeletedBranchInfo>, AppError> {
     super::super::git::branch::delete_branches(path, branches)
 }

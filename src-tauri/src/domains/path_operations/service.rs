@@ -4,7 +4,27 @@ use std::hash::{Hash, Hasher};
 use std::path::Path;
 
 use crate::shared::error::AppError;
-use super::types::RootPathResponse;
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RootPathResponse {
+    pub root_path: String,
+    pub id: Option<String>,
+}
+
+impl PartialEq for RootPathResponse {
+    fn eq(&self, other: &Self) -> bool {
+        self.root_path == other.root_path
+    }
+}
+
+impl Eq for RootPathResponse {}
+
+impl Hash for RootPathResponse {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.root_path.hash(state);
+    }
+}
 
 /// Calculates a hash for a hashable type.
 ///
@@ -32,8 +52,8 @@ use crate::shared::git::is_git_repository;
 ///
 /// # Returns
 ///
-/// * `Result<String, AppError>` - JSON string with the root path and ID, or an error
-pub async fn get_root_path(path: String) -> Result<String, AppError> {
+/// * `Result<RootPathResponse, AppError>` - The root path and ID, or an error
+pub async fn get_root_path(path: String) -> Result<RootPathResponse, AppError> {
     let raw_path = Path::new(&path);
 
     if !is_git_repository(raw_path)? {
@@ -71,19 +91,8 @@ pub async fn get_root_path(path: String) -> Result<String, AppError> {
 
     let rootpath = workdir.to_string_lossy().to_string();
 
-    let response = RootPathResponse {
+    Ok(RootPathResponse {
         root_path: rootpath.clone(),
-        id: Some(calculate_hash(&rootpath)),
-    };
-
-    serde_json::to_string(&response).map_err(|e| {
-        AppError::new(
-            format!("Failed to serialize response: {}", e),
-            "serialization_failed",
-            Some(format!(
-                "Error converting the root path response to JSON: {}",
-                e
-            )),
-        )
+        id: Some(calculate_hash(&rootpath).to_string()),
     })
 }

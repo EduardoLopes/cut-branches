@@ -266,7 +266,8 @@
 	const restoreBatchMutation = createRestoreDeletedBranchesMutation({
 		onSuccess(data) {
 			// Process all the results
-			for (const [branchName, result] of data) {
+			for (const result of data) {
+				const branchName = result.branchName;
 				// Update results immediately when the mutation starts
 				restorationResults = {
 					...restorationResults,
@@ -288,16 +289,16 @@
 			updateProgress();
 
 			// Show success notification for batch operations
-			const restoredBranches = data.filter(([_, result]) => result.success && !result.skipped);
+			const restoredBranches = data.filter((result) => result.success && !result.skipped);
 
 			if (restoredBranches.length > 0) {
 				try {
 					const m = restoredBranches
-						.map(([branchName, result]) => {
+						.map((result) => {
 							// Use the branch information from the result
 							const branch = result.branch;
 							return formatString('- **{name}** (at {sha})', {
-								name: ensureString(branchName).trim(),
+								name: ensureString(result.branchName).trim(),
 								sha: branch ? ensureString(branch.lastCommit.shortSha).trim() : ''
 							});
 						})

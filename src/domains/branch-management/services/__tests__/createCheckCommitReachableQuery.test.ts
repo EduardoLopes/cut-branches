@@ -88,7 +88,7 @@ describe('createCheckCommitReachableQuery', () => {
 		});
 
 		it('should return true when commit is reachable', async () => {
-			const mockResponse = JSON.stringify({ is_reachable: true });
+			const mockResponse = { isReachable: true };
 			mockInvoke.mockResolvedValue(mockResponse);
 
 			createCheckCommitReachableQuery(validVariables);
@@ -108,7 +108,7 @@ describe('createCheckCommitReachableQuery', () => {
 		});
 
 		it('should return false when commit is not reachable', async () => {
-			const mockResponse = JSON.stringify({ is_reachable: false });
+			const mockResponse = { isReachable: false };
 			mockInvoke.mockResolvedValue(mockResponse);
 
 			createCheckCommitReachableQuery(validVariables);
@@ -152,7 +152,7 @@ describe('createCheckCommitReachableQuery', () => {
 		});
 
 		it('should handle response validation errors', async () => {
-			const mockResponse = JSON.stringify({ invalid_field: true });
+			const mockResponse = { invalid_field: true };
 			mockInvoke.mockResolvedValue(mockResponse);
 
 			createCheckCommitReachableQuery(validVariables);

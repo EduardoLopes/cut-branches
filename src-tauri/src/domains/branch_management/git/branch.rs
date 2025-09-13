@@ -23,6 +23,7 @@ pub struct Commit {
 }
 
 #[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Branch {
     pub name: String,
     #[serde(rename = "fullyMerged")]

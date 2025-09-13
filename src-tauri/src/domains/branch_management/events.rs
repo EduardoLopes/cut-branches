@@ -6,6 +6,7 @@ use super::git::branch::Branch;
 use super::services::deletion::DeletedBranchInfo;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct BranchDeletedEvent {
     pub deleted_branches: Vec<DeletedBranchInfo>,
     pub repository_path: String,
@@ -16,6 +17,7 @@ impl Event for BranchDeletedEvent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct BranchRestoredEvent {
     pub restored_branch: Branch,
     pub repository_path: String,
@@ -26,6 +28,7 @@ impl Event for BranchRestoredEvent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct BranchSwitchedEvent {
     pub from_branch: String,
     pub to_branch: String,

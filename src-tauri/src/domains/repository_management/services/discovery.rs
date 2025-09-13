@@ -1,7 +1,20 @@
 use std::path::Path;
 
 use crate::shared::error::AppError;
-use super::super::types::GitDirResponse;
+use crate::domains::branch_management::git::branch::Branch;
+
+#[derive(serde::Serialize, serde::Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GitDirResponse {
+    pub path: String,
+    pub branches: Vec<Branch>,
+    #[serde(rename = "currentBranch")]
+    pub current_branch: String,
+    #[serde(rename = "branchesCount")]
+    pub branches_count: u32,
+    pub name: String,
+    pub id: String,
+}
 
 /// Get information about a git repository.
 ///
@@ -12,8 +25,8 @@ use super::super::types::GitDirResponse;
 ///
 /// # Returns
 ///
-/// * `Result<String, AppError>` - A JSON string with repository information or an error
-pub async fn get_repo_info(raw_path: &Path, path: &str) -> Result<String, AppError> {
+/// * `Result<GitDirResponse, AppError>` - Repository information or an error
+pub async fn get_repo_info(raw_path: &Path, path: &str) -> Result<GitDirResponse, AppError> {
     // Check if it's a git repository
     if !super::validation::is_git_repository(raw_path)? {
         return Err(AppError::new(
@@ -33,18 +46,8 @@ pub async fn get_repo_info(raw_path: &Path, path: &str) -> Result<String, AppErr
     }
 
     // Get root path using path operations domain
-    let unserialized_root_path: String = crate::domains::path_operations::service::get_root_path(path.to_string()).await?;
-    
-    // Parse root path response
-    let root_path = serde_json::from_str::<crate::domains::path_operations::types::RootPathResponse>(&unserialized_root_path)
-        .map_err(|e| {
-            AppError::new(
-                format!("Failed to parse root path response: {}", e),
-                "parse_failed",
-                Some(format!("Error parsing root path JSON: {}", e)),
-            )
-        })?
-        .root_path;
+    let root_path_response = crate::domains::path_operations::service::get_root_path(path.to_string()).await?;
+    let root_path = root_path_response.root_path;
 
     let raw_root_path = Path::new(&root_path);
 
@@ -74,20 +77,12 @@ pub async fn get_repo_info(raw_path: &Path, path: &str) -> Result<String, AppErr
         .to_string();
     let branches_count = branches.len() as u32;
 
-    let response = GitDirResponse {
+    Ok(GitDirResponse {
         path: root_path,
         branches,
         current_branch: current.to_string(),
         branches_count,
         name: repo_name.clone(),
         id: repo_name,
-    };
-
-    serde_json::to_string(&response).map_err(|e| {
-        AppError::new(
-            format!("Failed to serialize response: {}", e),
-            "serialization_failed",
-            Some(format!("Error converting to JSON: {}", e)),
-        )
     })
 }

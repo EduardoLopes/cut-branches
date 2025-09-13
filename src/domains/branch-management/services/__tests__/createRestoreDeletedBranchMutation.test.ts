@@ -1,5 +1,4 @@
 import * as svelteQuery from '@tanstack/svelte-query';
-import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { z } from 'zod/v4';
 import {
@@ -14,11 +13,15 @@ import type {
 	RestoreBranchesVariables,
 	ConflictResolution
 } from '../createRestoreDeletedBranchMutation';
+import { commands, type RestoreBranchResult } from '$lib/bindings';
 import { createError } from '$utils/error-utils';
 
 // Mock dependencies following TypeScript guidelines
-vi.mock('@tauri-apps/api/core', () => ({
-	invoke: vi.fn()
+vi.mock('$lib/bindings', () => ({
+	commands: {
+		restoreDeletedBranch: vi.fn(),
+		restoreDeletedBranches: vi.fn()
+	}
 }));
 
 vi.mock('$utils/error-utils', () => ({
@@ -26,7 +29,7 @@ vi.mock('$utils/error-utils', () => ({
 }));
 
 describe('createRestoreDeletedBranchMutation', () => {
-	const mockInvoke = vi.mocked(invoke);
+	const mockCommands = vi.mocked(commands);
 	const mockCreateError = vi.mocked(createError);
 
 	const validSingleBranchVariables: RestoreBranchVariables = {
@@ -246,7 +249,10 @@ describe('createRestoreDeletedBranchMutation', () => {
 				branch: null
 			};
 
-			mockInvoke.mockResolvedValue(JSON.stringify(mockResponse));
+			mockCommands.restoreDeletedBranch.mockResolvedValue({
+				status: 'ok',
+				data: mockResponse
+			});
 
 			createRestoreDeletedBranchMutation();
 
@@ -257,29 +263,22 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 			const result = await mutationFn(validSingleBranchVariables);
 
-			expect(mockInvoke).toHaveBeenCalledWith('restore_deleted_branch', {
-				path: validSingleBranchVariables.path,
-				branchInfo: validSingleBranchVariables.branchInfo
-			});
+			expect(mockCommands.restoreDeletedBranch).toHaveBeenCalledWith(
+				validSingleBranchVariables.path,
+				validSingleBranchVariables.branchInfo
+			);
 			expect(result).toEqual(mockResponse);
 		});
 
-		it('should handle service errors when invoke fails', async () => {
-			mockInvoke.mockResolvedValue(undefined);
-
-			createRestoreDeletedBranchMutation();
-
-			const createMutationArg = (svelteQuery.createMutation as unknown as ReturnType<typeof vi.fn>)
-				.mock.calls[0][0];
-			const config = createMutationArg();
-			const mutationFn = config.mutationFn;
-
-			await expect(mutationFn(validSingleBranchVariables)).rejects.toThrow();
-			expect(mockCreateError).toHaveBeenCalled();
-		});
-
-		it('should handle JSON parsing errors', async () => {
-			mockInvoke.mockResolvedValue('invalid json');
+		it('should handle service errors when command fails', async () => {
+			mockCommands.restoreDeletedBranch.mockResolvedValue({
+				status: 'error',
+				error: {
+					message: 'Failed to restore branch',
+					kind: 'git_error',
+					description: 'Repository not found'
+				}
+			});
 
 			createRestoreDeletedBranchMutation();
 
@@ -293,10 +292,19 @@ describe('createRestoreDeletedBranchMutation', () => {
 		});
 
 		it('should handle response validation errors', async () => {
+			// Create an object that looks like a valid response but has wrong types/missing fields
 			const invalidResponse = {
-				invalid_field: true
-			};
-			mockInvoke.mockResolvedValue(JSON.stringify(invalidResponse));
+				success: 'not-a-boolean', // wrong type
+				branchName: 123, // wrong type
+				message: null // wrong type
+				// missing other required fields
+			} as unknown as RestoreBranchResult;
+
+			// Mock the command to return this invalid data
+			mockCommands.restoreDeletedBranch.mockResolvedValue({
+				status: 'ok',
+				data: invalidResponse
+			});
 
 			createRestoreDeletedBranchMutation();
 
@@ -308,9 +316,9 @@ describe('createRestoreDeletedBranchMutation', () => {
 			await expect(mutationFn(validSingleBranchVariables)).rejects.toThrow();
 		});
 
-		it('should handle service errors from invoke', async () => {
+		it('should handle service errors from commands', async () => {
 			const serviceError = new Error('Service unavailable');
-			mockInvoke.mockRejectedValue(serviceError);
+			mockCommands.restoreDeletedBranch.mockRejectedValue(serviceError);
 
 			createRestoreDeletedBranchMutation();
 
@@ -395,36 +403,33 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 		it('should successfully restore multiple branches', async () => {
 			const mockResponse = [
-				[
-					'feature-1',
-					{
-						success: true,
-						branchName: 'feature-1',
-						message: 'Branch restored successfully',
-						requiresUserAction: false,
-						skipped: false,
-						conflictDetails: null,
-						branch: null
-					}
-				],
-				[
-					'feature-2',
-					{
-						success: false,
-						branchName: 'feature-2',
-						message: 'Conflict detected',
-						requiresUserAction: true,
-						skipped: false,
-						conflictDetails: {
-							originalName: 'feature-2',
-							conflictingName: 'existing-feature-2'
-						},
-						branch: null
-					}
-				]
+				{
+					success: true,
+					branchName: 'feature-1',
+					message: 'Branch restored successfully',
+					requiresUserAction: false,
+					skipped: false,
+					conflictDetails: null,
+					branch: null
+				},
+				{
+					success: false,
+					branchName: 'feature-2',
+					message: 'Conflict detected',
+					requiresUserAction: true,
+					skipped: false,
+					conflictDetails: {
+						originalName: 'feature-2',
+						conflictingName: 'existing-feature-2'
+					},
+					branch: null
+				}
 			];
 
-			mockInvoke.mockResolvedValue(JSON.stringify(mockResponse));
+			mockCommands.restoreDeletedBranches.mockResolvedValue({
+				status: 'ok',
+				data: mockResponse
+			});
 
 			createRestoreDeletedBranchesMutation();
 
@@ -435,15 +440,22 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 			const result = await mutationFn(validMultipleBranchesVariables);
 
-			expect(mockInvoke).toHaveBeenCalledWith('restore_deleted_branches', {
-				path: validMultipleBranchesVariables.path,
-				branchInfos: validMultipleBranchesVariables.branchInfos
-			});
+			expect(mockCommands.restoreDeletedBranches).toHaveBeenCalledWith(
+				validMultipleBranchesVariables.path,
+				validMultipleBranchesVariables.branchInfos
+			);
 			expect(result).toEqual(mockResponse);
 		});
 
 		it('should handle service errors in batch operations', async () => {
-			mockInvoke.mockResolvedValue(undefined);
+			mockCommands.restoreDeletedBranches.mockResolvedValue({
+				status: 'error',
+				error: {
+					message: 'Failed to restore branches',
+					kind: 'git_error',
+					description: 'Multiple repositories not found'
+				}
+			});
 
 			createRestoreDeletedBranchesMutation();
 
@@ -503,7 +515,7 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 			// Verify createError was called with the specific batch validation error
 			expect(mockCreateError).toHaveBeenCalledWith({
-				message: 'Invalid input data for batch restoring branches',
+				message: expect.stringContaining('Invalid input'),
 				kind: 'validation_error',
 				description: expect.any(String)
 			});

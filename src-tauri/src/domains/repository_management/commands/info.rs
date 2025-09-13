@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::shared::error::AppError;
-// GitDirResponse is used by the service, not directly here
+use super::super::services::discovery::GitDirResponse;
 
 /// Command to get information about a git repository.
 ///
@@ -11,10 +11,10 @@ use crate::shared::error::AppError;
 ///
 /// # Returns
 ///
-/// * `Result<String, AppError>` - A JSON string with repository information or an error
+/// * `Result<GitDirResponse, AppError>` - Repository information or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn get_repo_info(path: String) -> Result<String, AppError> {
+pub async fn get_repo_info(path: String) -> Result<GitDirResponse, AppError> {
     let raw_path = Path::new(&path);
     super::super::services::discovery::get_repo_info(raw_path, &path).await
 }
