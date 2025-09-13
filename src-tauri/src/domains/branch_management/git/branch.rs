@@ -4,11 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::Emitter;
 
-use super::commit::is_commit_reachable;
 use super::super::services::deletion::{
-    ConflictDetails, ConflictResolution, DeletedBranchInfo, RestoreBranchInput,
-    RestoreBranchResult,
+    ConflictDetails, ConflictResolution, DeletedBranchInfo, DeletedBranch, RestoreBranchResult,
 };
+use super::commit::is_commit_reachable;
 use crate::shared::error::AppError;
 
 #[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
@@ -26,9 +25,7 @@ pub struct Commit {
 #[serde(rename_all = "camelCase")]
 pub struct Branch {
     pub name: String,
-    #[serde(rename = "fullyMerged")]
     pub fully_merged: bool,
-    #[serde(rename = "lastCommit")]
     pub last_commit: Commit,
     pub current: bool,
 }
@@ -514,7 +511,7 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
 
 pub fn restore_deleted_branch(
     path: &Path,
-    branch_info: &RestoreBranchInput,
+    branch_info: &DeletedBranch,
     app_handle: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, AppError> {
     let repo = Repository::open(path).map_err(|e| {
@@ -688,7 +685,7 @@ fn create_branch_at_commit(
 
 pub fn restore_deleted_branches(
     path: &Path,
-    branch_infos: &[RestoreBranchInput],
+    branch_infos: &[DeletedBranch],
     app_handle: Option<&tauri::AppHandle>,
 ) -> Result<Vec<(String, RestoreBranchResult)>, AppError> {
     let mut results = Vec::new();
@@ -919,7 +916,7 @@ mod tests {
             .unwrap();
         assert!(!branch_exists(path, branch_to_delete_name).unwrap());
 
-        let restore_input = RestoreBranchInput {
+        let restore_input = DeletedBranch {
             original_name: branch_to_delete_name.to_string(),
             target_name: branch_to_delete_name.to_string(),
             commit_sha: commit_sha.clone(),
@@ -939,7 +936,7 @@ mod tests {
         assert!(branch_exists(path, branch_to_delete_name).unwrap());
 
         // Test conflict
-        let conflict_input = RestoreBranchInput {
+        let conflict_input = DeletedBranch {
             original_name: "some-other-original-name".to_string(),
             target_name: branch_to_delete_name.to_string(), // This now exists
             commit_sha: commit_sha.clone(),
@@ -957,7 +954,7 @@ mod tests {
         );
 
         // Test skip conflict resolution
-        let skip_input = RestoreBranchInput {
+        let skip_input = DeletedBranch {
             original_name: "another-original".to_string(),
             target_name: branch_to_delete_name.to_string(), // Still exists
             commit_sha: commit_sha.clone(),
@@ -1038,7 +1035,7 @@ mod tests {
         let conflict_branch_name = "existing-conflict-branch";
 
         // Attempt to restore 'test_branch_name' but name it 'conflict_branch_name' (which exists) using Overwrite
-        let restore_info = RestoreBranchInput {
+        let restore_info = DeletedBranch {
             original_name: test_branch_name.to_string(),
             target_name: conflict_branch_name.to_string(),
             commit_sha: commit_sha.clone(),
@@ -1148,9 +1145,9 @@ mod tests {
         }
 
         // Create restore inputs
-        let restore_inputs: Vec<RestoreBranchInput> = branch_names
+        let restore_inputs: Vec<DeletedBranch> = branch_names
             .iter()
-            .map(|name| RestoreBranchInput {
+            .map(|name| DeletedBranch {
                 original_name: name.to_string(),
                 target_name: name.to_string(),
                 commit_sha: commit_sha.clone(),
@@ -1177,13 +1174,13 @@ mod tests {
 
         // Test restore with conflicts
         let conflict_inputs = vec![
-            RestoreBranchInput {
+            DeletedBranch {
                 original_name: "conflict-original-1".to_string(),
                 target_name: branch_names[0].to_string(), // This now exists
                 commit_sha: commit_sha.clone(),
                 conflict_resolution: None,
             },
-            RestoreBranchInput {
+            DeletedBranch {
                 original_name: "conflict-original-2".to_string(),
                 target_name: branch_names[1].to_string(), // This now exists
                 commit_sha: commit_sha.clone(),
@@ -1212,13 +1209,13 @@ mod tests {
 
         // Test restore with overwrite
         let overwrite_inputs = vec![
-            RestoreBranchInput {
+            DeletedBranch {
                 original_name: "overwrite-original-1".to_string(),
                 target_name: branch_names[0].to_string(), // This exists
                 commit_sha: commit_sha.clone(),
                 conflict_resolution: Some(ConflictResolution::Overwrite),
             },
-            RestoreBranchInput {
+            DeletedBranch {
                 original_name: "overwrite-original-2".to_string(),
                 target_name: branch_names[1].to_string(), // This exists
                 commit_sha: commit_sha.clone(),
@@ -1253,7 +1250,7 @@ mod tests {
         let temp_dir = tempfile::tempdir().unwrap();
         let non_git_path = temp_dir.path();
 
-        let restore_inputs = vec![RestoreBranchInput {
+        let restore_inputs = vec![DeletedBranch {
             original_name: "test-branch".to_string(),
             target_name: "test-branch".to_string(),
             commit_sha: "invalid-sha".to_string(),
@@ -1278,7 +1275,7 @@ mod tests {
         let non_git_path = temp_dir.path();
 
         // Test with non-git directory
-        let restore_input = RestoreBranchInput {
+        let restore_input = DeletedBranch {
             original_name: "test-branch".to_string(),
             target_name: "test-branch".to_string(),
             commit_sha: "invalid-sha".to_string(),
@@ -1312,7 +1309,7 @@ mod tests {
         }
 
         // Test with non-existent commit
-        let restore_input = RestoreBranchInput {
+        let restore_input = DeletedBranch {
             original_name: "test-branch".to_string(),
             target_name: "test-branch".to_string(),
             commit_sha: "0000000000000000000000000000000000000000".to_string(),
@@ -1383,7 +1380,7 @@ mod tests {
             .trim()
             .to_string();
 
-        let invalid_branch_input = RestoreBranchInput {
+        let invalid_branch_input = DeletedBranch {
             original_name: "test branch with spaces".to_string(), // Invalid branch name with spaces
             target_name: "test branch with spaces".to_string(),
             commit_sha: commit_sha.clone(),

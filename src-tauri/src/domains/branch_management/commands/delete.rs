@@ -1,24 +1,39 @@
 use std::path::Path;
 
-use crate::shared::error::AppError;
 use super::super::services::deletion::DeletedBranchInfo;
+use crate::shared::error::AppError;
+use serde::{Deserialize, Serialize};
 
-/// Command to delete branches from a git repository.
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteBranchesInput {
+    pub path: String,
+    pub branches: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct DeleteBranchesOutput {
+    pub deleted_branches: Vec<DeletedBranchInfo>,
+}
+
+/// Deletes branches from a git repository.
 ///
 /// # Arguments
 ///
-/// * `path` - Path to the git repository
-/// * `branches` - List of branch names to delete
+/// * `input` - Input parameters containing path and branch names to delete
 ///
 /// # Returns
 ///
-/// * `Result<Vec<DeletedBranchInfo>, AppError>` - The deleted branches or an error
+/// * `Result<DeleteBranchesOutput, AppError>` - The deleted branches or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn delete_branches(path: String, branches: Vec<String>) -> Result<Vec<DeletedBranchInfo>, AppError> {
-    let raw_path = Path::new(&path);
+pub async fn delete_branches(input: DeleteBranchesInput) -> Result<DeleteBranchesOutput, AppError> {
+    let raw_path = Path::new(&input.path);
     let deleted_branch_infos: Vec<DeletedBranchInfo> =
-        super::super::services::deletion::delete_branches(raw_path, &branches)?;
+        super::super::services::deletion::delete_branches(raw_path, &input.branches)?;
 
-    Ok(deleted_branch_infos)
+    Ok(DeleteBranchesOutput {
+        deleted_branches: deleted_branch_infos,
+    })
 }

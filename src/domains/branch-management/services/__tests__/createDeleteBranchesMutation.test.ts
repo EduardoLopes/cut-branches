@@ -39,7 +39,7 @@ describe('createDeleteBranchesMutation', () => {
 		// Set up mock for successful deletion
 		mockedDeleteBranches.mockResolvedValue({
 			status: 'ok',
-			data: mockDeletedBranches
+			data: { deletedBranches: mockDeletedBranches }
 		});
 
 		// Mock createMutation to return our mock mutation result
@@ -75,10 +75,10 @@ describe('createDeleteBranchesMutation', () => {
 		// Call the mutation function directly
 		await mutationFn({ path: mockPath, branches: mockBranches });
 
-		expect(mockedDeleteBranches).toHaveBeenCalledWith(
-			mockPath,
-			mockBranches.map((item) => item.name)
-		);
+		expect(mockedDeleteBranches).toHaveBeenCalledWith({
+			path: mockPath,
+			branches: mockBranches.map((item) => item.name)
+		});
 	});
 
 	it('should return the processed response from invoke when mutation function is called', async () => {

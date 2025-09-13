@@ -39,10 +39,10 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 					});
 				}
 
-				const result = await commands.deleteBranches(
-					validatedInput.path,
-					validatedInput.branches.map((item) => item.name)
-				);
+				const result = await commands.deleteBranches({
+					path: validatedInput.path,
+					branches: validatedInput.branches.map((item) => item.name)
+				});
 
 				if (result.status === 'error') {
 					throw createError({
@@ -53,7 +53,9 @@ export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOpt
 				}
 
 				// Parse and validate response
-				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(result.data);
+				const validatedResponse = await DeleteBranchesResponseSchema.parseAsync(
+					result.data.deletedBranches
+				);
 
 				return validatedResponse;
 			} catch (error) {

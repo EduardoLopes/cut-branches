@@ -26,7 +26,7 @@ export function createGetRepositoryByPathQuery(
 					});
 				}
 
-				const result = await commands.getRepoInfo(currentPath);
+				const result = await commands.getRepository({ path: currentPath });
 
 				if (result.status === 'error') {
 					throw createError({

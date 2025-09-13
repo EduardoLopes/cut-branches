@@ -10,136 +10,131 @@ export const commands = {
  * 
  * # Arguments
  * 
- * * `path` - Path to check for a git repository
+ * * `input` - Input parameters containing the path to check
  * 
  * # Returns
  * 
- * * `Result<RootPathResponse, AppError>` - The root path and ID, or an error
+ * * `Result<GetRepositoryRootOutput, AppError>` - The root path and ID, or an error
  */
-async getRoot(path: string) : Promise<Result<RootPathResponse, AppError>> {
+async getRepositoryRoot(input: GetRepositoryRootInput) : Promise<Result<GetRepositoryRootOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_root", { path }) };
+    return { status: "ok", data: await TAURI_INVOKE("get_repository_root", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Command to get information about a git repository.
+ * Gets information about a git repository.
  * 
  * # Arguments
  * 
- * * `path` - Path to the git repository
+ * * `input` - Input parameters containing the repository path
  * 
  * # Returns
  * 
- * * `Result<GitDirResponse, AppError>` - Repository information or an error
+ * * `Result<GetRepositoryOutput, AppError>` - Repository information or an error
  */
-async getRepoInfo(path: string) : Promise<Result<GitDirResponse, AppError>> {
+async getRepository(input: GetRepositoryInput) : Promise<Result<GetRepositoryOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("get_repo_info", { path }) };
+    return { status: "ok", data: await TAURI_INVOKE("get_repository", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Command to switch to another branch in a git repository.
+ * Switches to another branch in a git repository.
  * 
  * # Arguments
  * 
- * * `path` - Path to the git repository
- * * `branch` - The branch name to switch to
+ * * `input` - Input parameters containing path and branch name
  * 
  * # Returns
  * 
- * * `Result<String, AppError>` - The new current branch name or an error
+ * * `Result<SwitchBranchOutput, AppError>` - The new current branch name or an error
  */
-async switchBranch(path: string, branch: string) : Promise<Result<string, AppError>> {
+async switchBranch(input: SwitchBranchInput) : Promise<Result<SwitchBranchOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("switch_branch", { path, branch }) };
+    return { status: "ok", data: await TAURI_INVOKE("switch_branch", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Command to delete branches from a git repository.
+ * Deletes branches from a git repository.
  * 
  * # Arguments
  * 
- * * `path` - Path to the git repository
- * * `branches` - List of branch names to delete
+ * * `input` - Input parameters containing path and branch names to delete
  * 
  * # Returns
  * 
- * * `Result<Vec<DeletedBranchInfo>, AppError>` - The deleted branches or an error
+ * * `Result<DeleteBranchesOutput, AppError>` - The deleted branches or an error
  */
-async deleteBranches(path: string, branches: string[]) : Promise<Result<DeletedBranchInfo[], AppError>> {
+async deleteBranches(input: DeleteBranchesInput) : Promise<Result<DeleteBranchesOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("delete_branches", { path, branches }) };
+    return { status: "ok", data: await TAURI_INVOKE("delete_branches", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Command to check if a commit SHA is reachable in a git repository.
+ * Checks if a commit SHA is reachable in a git repository.
  * 
  * # Arguments
  * 
- * * `path` - Path to the git repository
- * * `commit_sha` - The commit SHA to check
+ * * `input` - Input parameters containing path and commit SHA
  * 
  * # Returns
  * 
- * * `Result<CommitReachabilityResponse, AppError>` - The reachability status or an error
+ * * `Result<IsCommitReachableOutput, AppError>` - The reachability status or an error
  */
-async isCommitReachable(path: string, commitSha: string) : Promise<Result<CommitReachabilityResponse, AppError>> {
+async isCommitReachable(input: IsCommitReachableInput) : Promise<Result<IsCommitReachableOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("is_commit_reachable", { path, commitSha }) };
+    return { status: "ok", data: await TAURI_INVOKE("is_commit_reachable", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Command to restore a deleted branch in a git repository.
+ * Restores a deleted branch in a git repository.
  * 
  * # Arguments
  * 
  * * `app` - The AppHandle
- * * `path` - Path to the git repository
- * * `branch_info` - Information about the branch to restore
+ * * `input` - Input parameters containing path and branch info
  * 
  * # Returns
  * 
- * * `Result<RestoreBranchResult, AppError>` - The restoration result or an error
+ * * `Result<RestoreBranchOutput, AppError>` - The restoration result or an error
  */
-async restoreDeletedBranch(path: string, branchInfo: RestoreBranchInput) : Promise<Result<RestoreBranchResult, AppError>> {
+async restoreBranch(input: RestoreBranchInput) : Promise<Result<RestoreBranchOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("restore_deleted_branch", { path, branchInfo }) };
+    return { status: "ok", data: await TAURI_INVOKE("restore_branch", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Command to restore multiple deleted branches in a git repository.
+ * Restores multiple deleted branches in a git repository.
  * 
  * # Arguments
  * 
  * * `app` - The AppHandle
- * * `path` - Path to the git repository
- * * `branch_infos` - Information about the branches to restore
+ * * `input` - Input parameters containing path and branch infos
  * 
  * # Returns
  * 
- * * `Result<Vec<RestoreBranchResult>, AppError>` - The restoration results or an error
+ * * `Result<RestoreBranchesOutput, AppError>` - The restoration results or an error
  */
-async restoreDeletedBranches(path: string, branchInfos: RestoreBranchInput[]) : Promise<Result<RestoreBranchResult[], AppError>> {
+async restoreBranches(input: RestoreBranchesInput) : Promise<Result<RestoreBranchesOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("restore_deleted_branches", { path, branchInfos }) };
+    return { status: "ok", data: await TAURI_INVOKE("restore_branches", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -176,17 +171,28 @@ export type BranchDeletedEvent = { deletedBranches: DeletedBranchInfo[]; reposit
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
 export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
-export type CommitReachabilityResponse = { isReachable: boolean }
 export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"
+export type DeleteBranchesInput = { path: string; branches: string[] }
+export type DeleteBranchesOutput = { deletedBranches: DeletedBranchInfo[] }
+export type DeletedBranch = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
 export type DeletedBranchInfo = { branch: Branch; rawOutput: string }
-export type GitDirResponse = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
+export type GetRepositoryInput = { path: string }
+export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
+export type GetRepositoryRootInput = { path: string }
+export type GetRepositoryRootOutput = { rootPath: string; id: string | null }
+export type IsCommitReachableInput = { path: string; commitSha: string }
+export type IsCommitReachableOutput = { isReachable: boolean }
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
 export type RepositoryLoadedEvent = { repositoryPath: string; repositoryName: string; branchesCount: number }
-export type RestoreBranchInput = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
+export type RestoreBranchInput = { path: string; branchInfo: DeletedBranch }
+export type RestoreBranchOutput = { result: RestoreBranchResult }
 export type RestoreBranchResult = { success: boolean; branchName: string; message: string; requiresUserAction: boolean; conflictDetails: ConflictDetails | null; skipped: boolean; branch: Branch | null }
-export type RootPathResponse = { rootPath: string; id: string | null }
+export type RestoreBranchesInput = { path: string; branchInfos: DeletedBranch[] }
+export type RestoreBranchesOutput = { results: RestoreBranchResult[] }
+export type SwitchBranchInput = { path: string; branch: string }
+export type SwitchBranchOutput = { currentBranch: string }
 
 /** tauri-specta globals **/
 

@@ -1,5 +1,5 @@
-use std::path::Path;
 use git2::Repository;
+use std::path::Path;
 
 use crate::shared::error::AppError;
 

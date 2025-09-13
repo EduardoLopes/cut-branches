@@ -69,13 +69,10 @@ export const tauriMocks = {
 	/**
 	 * Mock successful branch switching
 	 */
-	mockSwitchBranch: (
-		mockedInvoke: MockedInvoke,
-		successMessage = 'Switched to branch test-branch'
-	) => {
+	mockSwitchBranch: (mockedInvoke: MockedInvoke, currentBranch = 'test-branch') => {
 		mockedInvoke.mockImplementation((command: string) => {
 			if (command === 'switch_branch') {
-				return Promise.resolve(successMessage);
+				return Promise.resolve({ currentBranch });
 			}
 			return Promise.reject(new Error(`Unexpected command: ${command}`));
 		});

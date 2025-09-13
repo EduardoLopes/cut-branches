@@ -149,7 +149,6 @@
 - [`f7e8a91`](https://github.com/EduardoLopes/cut-branches/commit/f7e8a917f8e638b49a9af6d8720de1f393a163dd) - feat(notifications): implement infinite scroll for notifications popover (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
 
 - [`1d336ba`](https://github.com/EduardoLopes/cut-branches/commit/1d336ba497087cccbf01e5ae08a233ad30fe9059) - feat(branch): show last commit details (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
-
   - show the right information for not fully merged branches (it was inverted)
   - change how colors is handled in the branch component
 

@@ -35,10 +35,7 @@ export function createCheckCommitReachableQuery(
 				const validatedInput = CommitReachableInputSchema.parse(variables);
 
 				// Call Tauri command
-				const result = await commands.isCommitReachable(
-					validatedInput.path,
-					validatedInput.commitSha
-				);
+				const result = await commands.isCommitReachable(validatedInput);
 
 				if (result.status === 'error') {
 					throw createError({
@@ -48,7 +45,7 @@ export function createCheckCommitReachableQuery(
 					});
 				}
 
-				// Parse and validate response
+				// Parse and validate response - the new structured output has isReachable directly
 				const validatedResponse = CommitReachableResponseSchema.parse(result.data);
 
 				return validatedResponse.isReachable;

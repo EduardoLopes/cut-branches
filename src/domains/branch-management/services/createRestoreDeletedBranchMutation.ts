@@ -86,10 +86,7 @@ export function createRestoreDeletedBranchMutation(options?: RestoreBranchMutati
 				const validatedInput = RestoreBranchInputSchema.parse(vars);
 
 				// Call Tauri command using generated bindings
-				const result = await commands.restoreDeletedBranch(
-					validatedInput.path,
-					validatedInput.branchInfo
-				);
+				const result = await commands.restoreBranch(validatedInput);
 
 				if (result.status === 'error') {
 					throw createError({
@@ -99,8 +96,8 @@ export function createRestoreDeletedBranchMutation(options?: RestoreBranchMutati
 					});
 				}
 
-				// Parse and validate response
-				const validatedResponse = await RestoreBranchResponseSchema.parseAsync(result.data);
+				// Parse and validate response - the new structured output has a result field
+				const validatedResponse = await RestoreBranchResponseSchema.parseAsync(result.data.result);
 
 				return validatedResponse;
 			} catch (error) {
@@ -136,10 +133,7 @@ export function createRestoreDeletedBranchesMutation(options?: RestoreBranchesMu
 				const validatedInput = RestoreBranchesInputSchema.parse(vars);
 
 				// Call Tauri command using generated bindings
-				const result = await commands.restoreDeletedBranches(
-					validatedInput.path,
-					validatedInput.branchInfos
-				);
+				const result = await commands.restoreBranches(validatedInput);
 
 				if (result.status === 'error') {
 					throw createError({
@@ -149,8 +143,10 @@ export function createRestoreDeletedBranchesMutation(options?: RestoreBranchesMu
 					});
 				}
 
-				// Parse and validate response
-				const validatedResponse = await RestoreBranchesResponseSchema.parseAsync(result.data);
+				// Parse and validate response - the new structured output has a results field
+				const validatedResponse = await RestoreBranchesResponseSchema.parseAsync(
+					result.data.results
+				);
 
 				return validatedResponse;
 			} catch (error) {

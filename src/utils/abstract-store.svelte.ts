@@ -37,6 +37,13 @@ export abstract class AbstractStore<T, C> {
 		if (typeof window !== 'undefined') {
 			try {
 				const data = this.getStorableData();
+
+				// If data is undefined (cleared state), remove from localStorage directly
+				if (data === undefined) {
+					localStorage.removeItem(this.localStorageKey);
+					return;
+				}
+
 				const dataSchema = this.getDataSchema() || this.schema;
 				const result = setValidatedLocalStorage(this.localStorageKey, data, dataSchema);
 				if (!result.success) {

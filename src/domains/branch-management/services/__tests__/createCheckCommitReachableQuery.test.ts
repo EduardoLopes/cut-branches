@@ -101,8 +101,7 @@ describe('createCheckCommitReachableQuery', () => {
 			const result = await queryFn();
 
 			expect(mockInvoke).toHaveBeenCalledWith('is_commit_reachable', {
-				path: validVariables.path,
-				commitSha: validVariables.commitSha
+				input: validVariables
 			});
 			expect(result).toBe(true);
 		});

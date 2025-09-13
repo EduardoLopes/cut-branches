@@ -70,14 +70,15 @@ describe('Store', () => {
 	it('should clear the value', () => {
 		const store = new Store<string>(testKey, stringSchema);
 
+		// Mock localStorage.removeItem
+		const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem');
+
 		store.clear();
 
 		expect(store.get()).toBeUndefined();
-		expect(setValidatedLocalStorageModule.setValidatedLocalStorage).toHaveBeenCalledWith(
-			`store_${testKey}`,
-			undefined,
-			expect.any(Object)
-		);
+		expect(removeItemSpy).toHaveBeenCalledWith(`store_${testKey}`);
+
+		removeItemSpy.mockRestore();
 	});
 
 	it('should update from localStorage', () => {

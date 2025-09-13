@@ -19,7 +19,7 @@ describe('createSwitchBranchMutation', () => {
 	let mockedInvoke: MockedInvoke;
 	const mockPath = '/path/to/repo';
 	const mockBranch = 'feature/new-branch';
-	const mockSuccessResponse = 'Switched to branch feature/new-branch';
+	const mockCurrentBranch = 'feature/new-branch';
 
 	// Mock the mutation result for svelte-query spying
 	const mockMutationResult = {
@@ -38,7 +38,7 @@ describe('createSwitchBranchMutation', () => {
 
 	beforeEach(() => {
 		mockedInvoke = testSetup.setupInvokeMock(invoke);
-		tauriMocks.mockSwitchBranch(mockedInvoke, mockSuccessResponse);
+		tauriMocks.mockSwitchBranch(mockedInvoke, mockCurrentBranch);
 		// @ts-expect-error - Mock implementation for testing
 		vi.spyOn(svelteQuery, 'createMutation').mockImplementation(() => mockMutationResult);
 	});
@@ -72,8 +72,10 @@ describe('createSwitchBranchMutation', () => {
 		await mutationFn({ path: mockPath, branch: mockBranch });
 
 		testAssertions.expectInvokeCalledWith(mockedInvoke, 'switch_branch', {
-			path: mockPath,
-			branch: mockBranch
+			input: {
+				path: mockPath,
+				branch: mockBranch
+			}
 		});
 	});
 
@@ -89,7 +91,7 @@ describe('createSwitchBranchMutation', () => {
 		// Call the mutation function directly
 		const result = await mutationFn({ path: mockPath, branch: mockBranch });
 
-		expect(result).toBe(mockSuccessResponse);
+		expect(result).toBe(mockCurrentBranch);
 	});
 
 	it('should reject if no path is provided when mutation function is called', async () => {

@@ -20,7 +20,7 @@ pub enum ConflictResolution {
 
 #[derive(Serialize, Deserialize, specta::Type, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct RestoreBranchInput {
+pub struct DeletedBranch {
     pub original_name: String,
     pub target_name: String,
     pub commit_sha: String,

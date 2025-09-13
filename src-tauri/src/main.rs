@@ -9,30 +9,27 @@ pub mod domains;
 pub mod shared;
 
 use domains::branch_management::commands::{
-    delete_branches, is_commit_reachable, restore_deleted_branch,
-    restore_deleted_branches, switch_branch,
+    delete_branches, is_commit_reachable, restore_branch, restore_branches, switch_branch,
 };
-use domains::repository_management::commands::get_repo_info;
-use domains::path_operations::commands::get_root;
 use domains::branch_management::events::{
     BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
 };
-use domains::repository_management::events::{
-    NotificationEvent, RepositoryLoadedEvent,
-};
+use domains::path_operations::commands::get_repository_root;
+use domains::repository_management::commands::get_repository;
+use domains::repository_management::events::{NotificationEvent, RepositoryLoadedEvent};
 
 fn main() {
     let _ = fix_path_env::fix();
 
     let builder = tauri_specta::Builder::<tauri::Wry>::new()
         .commands(tauri_specta::collect_commands![
-            get_root,
-            get_repo_info,
+            get_repository_root,
+            get_repository,
             switch_branch,
             delete_branches,
             is_commit_reachable,
-            restore_deleted_branch,
-            restore_deleted_branches
+            restore_branch,
+            restore_branches
         ])
         .events(tauri_specta::collect_events![
             BranchDeletedEvent,
@@ -44,7 +41,10 @@ fn main() {
 
     #[cfg(debug_assertions)]
     builder
-        .export(specta_typescript::Typescript::default(), "../src/lib/bindings.ts")
+        .export(
+            specta_typescript::Typescript::default(),
+            "../src/lib/bindings.ts",
+        )
         .expect("Failed to export typescript bindings");
 
     tauri::Builder::default()
@@ -80,12 +80,12 @@ mod tests {
         use crate::domains::repository_management::commands as repo_commands;
 
         // Test that we can access the command functions
-        let _ = repo_commands::get_repo_info;
+        let _ = repo_commands::get_repository;
         let _ = commands::switch_branch;
         let _ = commands::delete_branches;
         let _ = commands::is_commit_reachable;
-        let _ = commands::restore_deleted_branch;
-        let _ = commands::restore_deleted_branches;
-        let _ = path_commands::get_root;
+        let _ = commands::restore_branch;
+        let _ = commands::restore_branches;
+        let _ = path_commands::get_repository_root;
     }
 }

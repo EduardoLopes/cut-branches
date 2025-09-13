@@ -29,7 +29,10 @@ export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationO
 				const validatedInput = SwitchBranchInputSchema.parse(vars);
 
 				// Call Tauri command using generated bindings
-				const result = await commands.switchBranch(validatedInput.path, validatedInput.branch);
+				const result = await commands.switchBranch({
+					path: validatedInput.path,
+					branch: validatedInput.branch
+				});
 
 				if (result.status === 'error') {
 					throw createError({
@@ -39,7 +42,7 @@ export function createSwitchBranchMutation(options?: CreateSwitchbranchMutationO
 					});
 				}
 
-				return result.data;
+				return result.data.currentBranch;
 			} catch (error) {
 				// Handle validation errors
 				if (error instanceof z.ZodError) {

@@ -30,7 +30,6 @@ when needed.
 - `README.md`: Explains the domain's purpose, key responsibilities, business rules, and
   interactions.
 - `assets/`: Feature-specific static assets organized by type:
-
   - `assets/images/` (optional): Domain-specific images, illustrations, and graphics.
   - `assets/icons/` (optional): Feature-specific icons and SVG assets.
   - `assets/fonts/` (optional): Domain-specific typography assets.

@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::domains::branch_management::git::branch::Branch;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]

@@ -1,5 +1,5 @@
-use std::path::Path;
 use crate::shared::error::AppError;
+use std::path::Path;
 
 /// Switch to another branch in a git repository.
 ///

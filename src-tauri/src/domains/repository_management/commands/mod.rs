@@ -1,3 +1,3 @@
-pub mod info;
+pub mod read;
 
-pub use info::*;
+pub use read::*;

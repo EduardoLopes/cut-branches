@@ -1,16 +1,14 @@
 use std::path::Path;
 
-use crate::shared::error::AppError;
 use crate::domains::branch_management::git::branch::Branch;
+use crate::shared::error::AppError;
 
 #[derive(serde::Serialize, serde::Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GitDirResponse {
     pub path: String,
     pub branches: Vec<Branch>,
-    #[serde(rename = "currentBranch")]
     pub current_branch: String,
-    #[serde(rename = "branchesCount")]
     pub branches_count: u32,
     pub name: String,
     pub id: String,
@@ -26,7 +24,7 @@ pub struct GitDirResponse {
 /// # Returns
 ///
 /// * `Result<GitDirResponse, AppError>` - Repository information or an error
-pub async fn get_repo_info(raw_path: &Path, path: &str) -> Result<GitDirResponse, AppError> {
+pub async fn get_repository(raw_path: &Path, path: &str) -> Result<GitDirResponse, AppError> {
     // Check if it's a git repository
     if !super::validation::is_git_repository(raw_path)? {
         return Err(AppError::new(
@@ -46,15 +44,20 @@ pub async fn get_repo_info(raw_path: &Path, path: &str) -> Result<GitDirResponse
     }
 
     // Get root path using path operations domain
-    let root_path_response = crate::domains::path_operations::service::get_root_path(path.to_string()).await?;
+    let root_path_response =
+        crate::domains::path_operations::service::get_root_path(path.to_string()).await?;
     let root_path = root_path_response.root_path;
 
     let raw_root_path = Path::new(&root_path);
 
     // Get branches from branch management domain (vertical slice architecture)
-    let mut branches = crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(raw_root_path)?;
+    let mut branches =
+        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
+            raw_root_path,
+        )?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
-    let current = crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
+    let current =
+        crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
 
     // Extract repository name
     let repo_name = raw_root_path

@@ -19,8 +19,8 @@ import { createError } from '$utils/error-utils';
 // Mock dependencies following TypeScript guidelines
 vi.mock('$lib/bindings', () => ({
 	commands: {
-		restoreDeletedBranch: vi.fn(),
-		restoreDeletedBranches: vi.fn()
+		restoreBranch: vi.fn(),
+		restoreBranches: vi.fn()
 	}
 }));
 
@@ -249,9 +249,9 @@ describe('createRestoreDeletedBranchMutation', () => {
 				branch: null
 			};
 
-			mockCommands.restoreDeletedBranch.mockResolvedValue({
+			mockCommands.restoreBranch.mockResolvedValue({
 				status: 'ok',
-				data: mockResponse
+				data: { result: mockResponse }
 			});
 
 			createRestoreDeletedBranchMutation();
@@ -263,15 +263,12 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 			const result = await mutationFn(validSingleBranchVariables);
 
-			expect(mockCommands.restoreDeletedBranch).toHaveBeenCalledWith(
-				validSingleBranchVariables.path,
-				validSingleBranchVariables.branchInfo
-			);
+			expect(mockCommands.restoreBranch).toHaveBeenCalledWith(validSingleBranchVariables);
 			expect(result).toEqual(mockResponse);
 		});
 
 		it('should handle service errors when command fails', async () => {
-			mockCommands.restoreDeletedBranch.mockResolvedValue({
+			mockCommands.restoreBranch.mockResolvedValue({
 				status: 'error',
 				error: {
 					message: 'Failed to restore branch',
@@ -301,9 +298,9 @@ describe('createRestoreDeletedBranchMutation', () => {
 			} as unknown as RestoreBranchResult;
 
 			// Mock the command to return this invalid data
-			mockCommands.restoreDeletedBranch.mockResolvedValue({
+			mockCommands.restoreBranch.mockResolvedValue({
 				status: 'ok',
-				data: invalidResponse
+				data: { result: invalidResponse }
 			});
 
 			createRestoreDeletedBranchMutation();
@@ -318,7 +315,7 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 		it('should handle service errors from commands', async () => {
 			const serviceError = new Error('Service unavailable');
-			mockCommands.restoreDeletedBranch.mockRejectedValue(serviceError);
+			mockCommands.restoreBranch.mockRejectedValue(serviceError);
 
 			createRestoreDeletedBranchMutation();
 
@@ -426,9 +423,9 @@ describe('createRestoreDeletedBranchMutation', () => {
 				}
 			];
 
-			mockCommands.restoreDeletedBranches.mockResolvedValue({
+			mockCommands.restoreBranches.mockResolvedValue({
 				status: 'ok',
-				data: mockResponse
+				data: { results: mockResponse }
 			});
 
 			createRestoreDeletedBranchesMutation();
@@ -440,15 +437,12 @@ describe('createRestoreDeletedBranchMutation', () => {
 
 			const result = await mutationFn(validMultipleBranchesVariables);
 
-			expect(mockCommands.restoreDeletedBranches).toHaveBeenCalledWith(
-				validMultipleBranchesVariables.path,
-				validMultipleBranchesVariables.branchInfos
-			);
+			expect(mockCommands.restoreBranches).toHaveBeenCalledWith(validMultipleBranchesVariables);
 			expect(result).toEqual(mockResponse);
 		});
 
 		it('should handle service errors in batch operations', async () => {
-			mockCommands.restoreDeletedBranches.mockResolvedValue({
+			mockCommands.restoreBranches.mockResolvedValue({
 				status: 'error',
 				error: {
 					message: 'Failed to restore branches',

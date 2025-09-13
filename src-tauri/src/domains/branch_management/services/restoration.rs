@@ -1,6 +1,6 @@
-use std::path::Path;
+use super::deletion::{DeletedBranch, RestoreBranchResult};
 use crate::shared::error::AppError;
-use super::deletion::{RestoreBranchInput, RestoreBranchResult};
+use std::path::Path;
 
 /// Restore a deleted branch in a git repository.
 ///
@@ -15,7 +15,7 @@ use super::deletion::{RestoreBranchInput, RestoreBranchResult};
 /// * `Result<RestoreBranchResult, AppError>` - The restoration result or an error
 pub fn restore_deleted_branch(
     path: &Path,
-    branch_info: &RestoreBranchInput,
+    branch_info: &DeletedBranch,
     app: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, AppError> {
     super::super::git::branch::restore_deleted_branch(path, branch_info, app)
@@ -34,7 +34,7 @@ pub fn restore_deleted_branch(
 /// * `Result<Vec<RestoreBranchResult>, AppError>` - The restoration results or an error
 pub fn restore_deleted_branches(
     path: &Path,
-    branch_infos: &[RestoreBranchInput],
+    branch_infos: &[DeletedBranch],
     app: Option<&tauri::AppHandle>,
 ) -> Result<Vec<RestoreBranchResult>, AppError> {
     let results = super::super::git::branch::restore_deleted_branches(path, branch_infos, app)?;
