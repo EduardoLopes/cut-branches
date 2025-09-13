@@ -5,7 +5,8 @@ pub mod shared;
 pub use shared::error::AppError;
 
 // Re-export commonly used types for backward compatibility
-pub use domains::branch_management::types::{Branch, Commit, DeletedBranchInfo, RestoreBranchInput, RestoreBranchResult};
+pub use domains::branch_management::git::branch::{Branch, Commit};
+pub use domains::branch_management::services::deletion::{DeletedBranchInfo, RestoreBranchInput, RestoreBranchResult};
 pub use domains::repository_management::types::GitDirResponse;
 pub use domains::path_operations::types::RootPathResponse;
 

@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri_specta::Event;
 
-use super::types::{Branch, DeletedBranchInfo};
+use super::git::branch::Branch;
+use super::services::deletion::DeletedBranchInfo;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 pub struct BranchDeletedEvent {

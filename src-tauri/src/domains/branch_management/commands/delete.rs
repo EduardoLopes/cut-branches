@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::shared::error::AppError;
-use super::super::types::deletion::DeletedBranchInfo;
+use super::super::services::deletion::DeletedBranchInfo;
 
 /// Command to delete branches from a git repository.
 ///

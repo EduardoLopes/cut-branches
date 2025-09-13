@@ -1,14 +1,36 @@
 use chrono::{DateTime, FixedOffset, TimeZone};
 use git2::{BranchType, Oid, Repository};
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::Emitter;
 
 use super::commit::is_commit_reachable;
-use super::super::types::{
-    Branch, Commit, ConflictDetails, ConflictResolution, DeletedBranchInfo, RestoreBranchInput,
+use super::super::services::deletion::{
+    ConflictDetails, ConflictResolution, DeletedBranchInfo, RestoreBranchInput,
     RestoreBranchResult,
 };
 use crate::shared::error::AppError;
+
+#[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct Commit {
+    pub sha: String,
+    pub short_sha: String,
+    pub date: String,
+    pub message: String,
+    pub author: String,
+    pub email: String,
+}
+
+#[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
+pub struct Branch {
+    pub name: String,
+    #[serde(rename = "fullyMerged")]
+    pub fully_merged: bool,
+    #[serde(rename = "lastCommit")]
+    pub last_commit: Commit,
+    pub current: bool,
+}
 
 pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, AppError> {
     let repo = Repository::open(path).map_err(|e| {

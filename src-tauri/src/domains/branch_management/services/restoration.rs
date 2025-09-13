@@ -1,6 +1,6 @@
 use std::path::Path;
 use crate::shared::error::AppError;
-use super::super::types::deletion::{RestoreBranchInput, RestoreBranchResult};
+use super::deletion::{RestoreBranchInput, RestoreBranchResult};
 
 /// Restore a deleted branch in a git repository.
 ///

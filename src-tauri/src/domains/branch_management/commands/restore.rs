@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use crate::shared::error::AppError;
-use super::super::types::deletion::RestoreBranchInput;
+use super::super::services::deletion::RestoreBranchInput;
 
 /// Command to restore a deleted branch in a git repository.
 ///
