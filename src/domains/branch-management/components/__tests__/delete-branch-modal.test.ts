@@ -187,12 +187,7 @@ describe('DeleteBranchModal Component', () => {
 			// First argument should be the branches/path object
 			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
-				branches: [
-					{
-						name: 'feature-1',
-						current: false
-					}
-				]
+				branches: ['feature-1']
 			});
 
 			// Second argument should have onSuccess function
@@ -225,16 +220,7 @@ describe('DeleteBranchModal Component', () => {
 			// First argument should be the branches/path object
 			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
-				branches: [
-					{
-						name: 'feature-1',
-						current: false
-					},
-					{
-						name: 'feature-2',
-						current: false
-					}
-				]
+				branches: ['feature-1', 'feature-2']
 			});
 
 			// Second argument should have onSuccess function
@@ -272,12 +258,7 @@ describe('DeleteBranchModal Component', () => {
 			// First argument should be the branches/path object
 			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
-				branches: [
-					{
-						name: 'main',
-						current: true
-					}
-				]
+				branches: ['main']
 			});
 
 			// Second argument should have onSuccess function
@@ -311,16 +292,18 @@ describe('DeleteBranchModal Component', () => {
 			expect(mutationConfig).toHaveProperty('onSuccess');
 
 			// Mock the delete response data
-			const mockDeleteResponse = [
-				{
-					branch: {
-						name: 'feature-1',
-						lastCommit: {
-							shortSha: 'abc123'
+			const mockDeleteResponse = {
+				deletedBranches: [
+					{
+						branch: {
+							name: 'feature-1',
+							lastCommit: {
+								shortSha: 'abc123'
+							}
 						}
 					}
-				}
-			];
+				]
+			};
 
 			// Execute the mutation's onSuccess callback directly
 			mutationConfig.onSuccess(mockDeleteResponse);
@@ -361,24 +344,26 @@ describe('DeleteBranchModal Component', () => {
 			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0][0];
 
 			// Mock the delete response data for multiple branches
-			const mockDeleteResponse = [
-				{
-					branch: {
-						name: 'feature-1',
-						lastCommit: {
-							shortSha: 'abc123'
+			const mockDeleteResponse = {
+				deletedBranches: [
+					{
+						branch: {
+							name: 'feature-1',
+							lastCommit: {
+								shortSha: 'abc123'
+							}
+						}
+					},
+					{
+						branch: {
+							name: 'feature-2',
+							lastCommit: {
+								shortSha: 'def456'
+							}
 						}
 					}
-				},
-				{
-					branch: {
-						name: 'feature-2',
-						lastCommit: {
-							shortSha: 'def456'
-						}
-					}
-				}
-			];
+				]
+			};
 
 			// Execute the mutation's onSuccess callback
 			mutationConfig.onSuccess(mockDeleteResponse);
@@ -435,30 +420,34 @@ describe('DeleteBranchModal Component', () => {
 			const handleDeleteOnSuccess = callArgs[1].onSuccess;
 
 			// Mock the delete response data
-			const mockDeleteResponse = [
-				{
-					branch: {
-						name: 'feature-1',
-						current: false,
-						lastCommit: {
-							sha: 'abc123',
-							shortSha: 'abc123',
-							date: '2023-01-01',
-							message: 'Test commit',
-							author: 'Test User',
-							email: 'test@example.com'
-						},
-						fullyMerged: false
+			const mockDeleteResponse = {
+				deletedBranches: [
+					{
+						branch: {
+							name: 'feature-1',
+							current: false,
+							lastCommit: {
+								sha: 'abc123',
+								shortSha: 'abc123',
+								date: '2023-01-01',
+								message: 'Test commit',
+								author: 'Test User',
+								email: 'test@example.com'
+							},
+							fullyMerged: false
+						}
 					}
-				}
-			];
+				]
+			};
 
 			// Execute the handleDelete onSuccess callback
 			handleDeleteOnSuccess(mockDeleteResponse);
 
 			// Verify deleted branch was added to store
 			expect(getDeletedBranchesStore).toHaveBeenCalledWith('1'); // repository id
-			expect(mockStore.addDeletedBranch).toHaveBeenCalledWith(mockDeleteResponse[0].branch);
+			expect(mockStore.addDeletedBranch).toHaveBeenCalledWith(
+				mockDeleteResponse.deletedBranches[0].branch
+			);
 		});
 	});
 });

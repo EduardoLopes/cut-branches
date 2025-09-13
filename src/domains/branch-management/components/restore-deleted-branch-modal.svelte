@@ -12,14 +12,13 @@
 	import Branch from './branch.svelte';
 	import {
 		createRestoreDeletedBranchMutation,
-		createRestoreDeletedBranchesMutation,
-		type RestoreBranchResult,
-		type ConflictResolution
+		createRestoreDeletedBranchesMutation
 	} from '$domains/branch-management/services/createRestoreDeletedBranchMutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 	import { getSelectedDeletedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
+	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
@@ -39,7 +38,9 @@
 
 	let open = $state(false);
 	let isProcessing = $state(false);
-	let restorationResults = $state<Record<string, RestoreBranchResult>>({});
+	// Extended type to include processing state
+	type ExtendedRestoreBranchResult = RestoreBranchResult & { processing: boolean };
+	let restorationResults = $state<Record<string, ExtendedRestoreBranchResult>>({});
 	let conflictResolutions = $state<Record<string, ConflictResolution>>({});
 	let currentConflictBranch = $state<string | null>(null);
 
@@ -167,11 +168,11 @@
 			// Update results immediately when the mutation starts
 			restorationResults = {
 				...restorationResults,
-				[branchName]: { ...(data as RestoreBranchResult), processing: false }
+				[branchName]: { ...data.result, processing: false }
 			};
 
 			// If we have a conflict that needs resolution (even after an attempt)
-			if (data.requiresUserAction && data.conflictDetails) {
+			if (data.result.requiresUserAction && data.result.conflictDetails) {
 				currentConflictBranch = branchName; // Keep or set it as current
 
 				// Ensure it's in pending if not already (should be there from batch or previous step)
@@ -189,9 +190,9 @@
 			currentConflictBranch = null; // Explicitly clear before potentially setting the next one
 			pendingConflictBranches = pendingConflictBranches.filter((b) => b !== branchName);
 
-			if (data.success) {
+			if (data.result.success) {
 				// If successfully restored, remove from deleted branches store
-				if (data.success && !data.skipped) {
+				if (data.result.success && !data.result.skipped) {
 					deletedBranchesStore?.removeDeletedBranch(branchName);
 					try {
 						notifications.push({
@@ -201,7 +202,9 @@
 							}),
 							message: formatString('- **{name}** (at {sha})', {
 								name: ensureString(branchName).trim(),
-								sha: data.branch ? ensureString(data.branch.lastCommit.shortSha).trim() : ''
+								sha: data.result.branch
+									? ensureString(data.result.branch.lastCommit.shortSha).trim()
+									: ''
 							})
 						});
 
@@ -271,12 +274,12 @@
 	const restoreBatchMutation = createRestoreDeletedBranchesMutation({
 		async onSuccess(data) {
 			// Process all the results
-			for (const result of data) {
+			for (const result of data.results) {
 				const branchName = result.branchName;
 				// Update results immediately when the mutation starts
 				restorationResults = {
 					...restorationResults,
-					[branchName]: { ...(result as RestoreBranchResult), processing: false }
+					[branchName]: { ...result, processing: false }
 				};
 
 				// If successfully restored, remove from deleted branches store
@@ -294,12 +297,14 @@
 			updateProgress();
 
 			// Show success notification for batch operations
-			const restoredBranches = data.filter((result) => result.success && !result.skipped);
+			const restoredBranches = data.results.filter(
+				(result: RestoreBranchResult) => result.success && !result.skipped
+			);
 
 			if (restoredBranches.length > 0) {
 				try {
 					const m = restoredBranches
-						.map((result) => {
+						.map((result: RestoreBranchResult) => {
 							// Use the branch information from the result
 							const branch = result.branch;
 							return formatString('- **{name}** (at {sha})', {
@@ -514,7 +519,7 @@
 	}
 
 	// Get the status icon for a branch
-	function getStatusIcon(result: RestoreBranchResult | undefined) {
+	function getStatusIcon(result: ExtendedRestoreBranchResult | undefined) {
 		if (!result) return { icon: 'ion:ellipse-outline', color: 'gray.500' };
 
 		if (result.success) {

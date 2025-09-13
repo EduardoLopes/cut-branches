@@ -1,6 +1,7 @@
 import { SvelteSet } from 'svelte/reactivity';
 import { z } from 'zod/v4';
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import { RepositorySchema, type Repository } from '$services/common';
 import { getValidatedLocalStorage } from '$utils/get-validated-local-storage';
 import { setValidatedLocalStorage } from '$utils/set-validated-local-storage';
@@ -102,7 +103,7 @@ export class RepositoryStore extends Store<Repository | undefined> {
 			// Only navigate if the name is new or different from the old one.
 			// This prevents re-navigation when just refreshing data for the same repository.
 			if (value.name !== oldName) {
-				goto(`/repos/${value.name}`);
+				goto(resolve(`/repos/${value.name}`));
 			}
 			RepositoryStore.repositories.add([value.name]);
 		} else if (oldName) {

@@ -49,14 +49,20 @@ vi.mock('@tanstack/svelte-query', () => {
 		QueryClientProvider: queryClientProviderMock,
 		useQueryClient: vi.fn(() => ({
 			invalidateQueries: vi.fn()
+		})),
+		createQuery: vi.fn(() => ({
+			data: null,
+			isLoading: false,
+			isError: false,
+			error: null
 		}))
 	};
 });
 
 // Mock the repository query
-vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => {
+vi.mock('$domains/repository-management/services/create-get-repository-query', () => {
 	return {
-		createGetRepositoryByPathQuery: vi.fn(() => ({
+		createGetRepositoryQuery: vi.fn(() => ({
 			data: {
 				id: 'test-repo-id',
 				name: 'test-repo',
@@ -257,7 +263,7 @@ vi.mock('$domains/branch-management/services/createSwitchBranchMutation', () => 
 			return {
 				mutate: vi.fn(({ branch }) => {
 					// Simulate success callback
-					onSuccess(branch);
+					onSuccess({ currentBranch: branch });
 					return Promise.resolve();
 				}),
 				isPending: false,

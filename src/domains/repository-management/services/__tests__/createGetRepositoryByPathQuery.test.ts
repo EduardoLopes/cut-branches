@@ -1,11 +1,11 @@
 import * as svelteQuery from '@tanstack/svelte-query';
 import { invoke } from '@tauri-apps/api/core';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createGetRepositoryByPathQuery } from '../createGetRepositoryByPathQuery';
+import { createGetRepositoryQuery } from '../create-get-repository-query';
 import * as repositoryStore from '$domains/repository-management/store/repository.svelte';
 import { commands, type GetRepositoryOutput } from '$lib/bindings';
 import type { Repository } from '$services/common';
-import { errorMocks, mockDataFactory } from '$utils/test-utils';
+import { mockDataFactory } from '$utils/test-utils';
 
 // Mock the dependencies
 vi.mock('@tauri-apps/api/core', () => ({
@@ -27,7 +27,7 @@ vi.mock('$utils/validation-utils', () => ({
 	isValidDate: vi.fn((date) => date !== 'invalid-date' && date !== '')
 }));
 
-describe('createGetRepositoryByPathQuery', () => {
+describe('createGetRepositoryQuery', () => {
 	const mockPath = '/path/to/repo';
 	const mockRepository = mockDataFactory.repository({
 		path: '/path/to/repository',
@@ -77,7 +77,7 @@ describe('createGetRepositoryByPathQuery', () => {
 
 	it('should create a query with the correct configuration', () => {
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		expect(svelteQuery.createQuery).toHaveBeenCalled();
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -91,7 +91,7 @@ describe('createGetRepositoryByPathQuery', () => {
 
 	it('should handle undefined path correctly', () => {
 		const pathFn = () => undefined;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
 			.calls[0][0];
@@ -103,7 +103,7 @@ describe('createGetRepositoryByPathQuery', () => {
 
 	it('should call invoke with correct parameters when query function is called', async () => {
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function from the createQuery call
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -119,7 +119,7 @@ describe('createGetRepositoryByPathQuery', () => {
 
 	it('should return the repository from the query function', async () => {
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function from the createQuery call
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -133,26 +133,20 @@ describe('createGetRepositoryByPathQuery', () => {
 		expect(result).toEqual(mockRepository);
 	});
 
-	it('should throw an error when no path is provided to the query function', async () => {
+	it('should be disabled when no path is provided', async () => {
 		// Create query with undefined path directly
 		const undefinedPathFn = () => undefined;
-		createGetRepositoryByPathQuery(undefinedPathFn);
+		createGetRepositoryQuery(undefinedPathFn);
 
-		// Get the query function from the second createQuery call
+		// Get the query configuration from the createQuery call
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
 			.calls[0][0];
 		const config = createQueryArg();
-		const queryFn = config.queryFn;
 
-		// Create a mock context that simulates the queryKey with empty path
-		const mockQueryContext = {
-			queryKey: ['branches', 'get-all', '']
-		};
+		// The query should be disabled when path is undefined/empty
+		expect(config.enabled).toBe(false);
 
-		// Call the query function directly with the mock context and expect it to throw
-		await expect(queryFn(mockQueryContext)).rejects.toMatchObject(errorMocks.missingPathError());
-
-		// Verify that getRepository command was not called
+		// Verify that getRepository command was not called since the query is disabled
 		expect(vi.mocked(commands.getRepository)).not.toHaveBeenCalled();
 	});
 
@@ -175,7 +169,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(repoWithInvalidDate);
 
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -191,8 +185,8 @@ describe('createGetRepositoryByPathQuery', () => {
 		expect(new Date(result.branches[0].lastCommit.date).getTime()).not.toBeNaN();
 	});
 
-	it('should handle Zod validation errors', async () => {
-		// Mock malformed repository data - intentionally incomplete to test error handling
+	it('should pass through malformed data from backend', async () => {
+		// Mock malformed repository data - the service doesn't validate and trusts the backend
 		const malformedRepo = {
 			path: mockPath,
 			branches: [
@@ -208,14 +202,15 @@ describe('createGetRepositoryByPathQuery', () => {
 			// This is still malformed due to missing Branch fields, but has the required top-level fields
 		} as unknown as GetRepositoryOutput;
 
-		// Mock the command to return this invalid data - use type assertion for test
+		// Clear the default mock from beforeEach and mock the command to return this invalid data
+		vi.mocked(commands.getRepository).mockReset();
 		vi.mocked(commands.getRepository).mockResolvedValue({
 			status: 'ok',
 			data: malformedRepo
 		});
 
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -223,12 +218,15 @@ describe('createGetRepositoryByPathQuery', () => {
 		const config = createQueryArg();
 		const queryFn = config.queryFn;
 
-		// Simply check that it rejects with an error
-		await expect(queryFn()).rejects.toBeTruthy();
+		// The service passes through the data as-is (trusts the backend)
+		const result = await queryFn();
+		expect(result.path).toBe(mockPath);
+		expect(result.branches[0].name).toBe('test');
 	});
 
 	it('should handle Tauri errors properly', async () => {
-		// Mock command to return error result
+		// Clear the default mock from beforeEach and mock command to return error result
+		vi.mocked(commands.getRepository).mockReset();
 		vi.mocked(commands.getRepository).mockResolvedValue({
 			status: 'error',
 			error: {
@@ -239,7 +237,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		});
 
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -255,7 +253,7 @@ describe('createGetRepositoryByPathQuery', () => {
 
 	it('should pass custom options to createQuery', () => {
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn, { enabled: false });
+		createGetRepositoryQuery(pathFn, { enabled: false });
 
 		// Get the query config from the createQuery call
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -291,7 +289,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		(invoke as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(repoWithEmptyDate);
 
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -320,7 +318,7 @@ describe('createGetRepositoryByPathQuery', () => {
 		});
 
 		const pathFn = () => mockPath;
-		createGetRepositoryByPathQuery(pathFn);
+		createGetRepositoryQuery(pathFn);
 
 		// Get the query function
 		const createQueryArg = (svelteQuery.createQuery as unknown as ReturnType<typeof vi.fn>).mock
@@ -331,9 +329,9 @@ describe('createGetRepositoryByPathQuery', () => {
 		// Call the query function and expect the tauri error to be wrapped
 		const error = await queryFn().catch((e: unknown) => e);
 
-		// Check that the error has the expected properties
+		// Check that the error has the expected properties (passed through from the mocked error)
 		expect(error).toMatchObject({
-			kind: 'tauri_error',
+			kind: 'not_found',
 			message: 'Repository not found'
 		});
 	});

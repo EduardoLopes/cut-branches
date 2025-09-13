@@ -6,7 +6,7 @@ import AddFirstPage from '../+page.svelte';
 import TestWrapper from '../../../components/test-wrapper.svelte';
 import { goto } from '$app/navigation';
 import { notifications } from '$domains/notifications/store/notifications.svelte';
-import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
+import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 
 // Mock the Tauri dialog
 vi.mock('@tauri-apps/plugin-dialog', () => ({
@@ -26,8 +26,8 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 }));
 
 // Mock repository query
-vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => ({
-	createGetRepositoryByPathQuery: vi.fn()
+vi.mock('$domains/repository-management/services/create-get-repository-query', () => ({
+	createGetRepositoryQuery: vi.fn()
 }));
 
 // Mock store
@@ -61,7 +61,7 @@ describe('Add Repository Flow Integration', () => {
 	it('renders the AddFirst page with AddButton', async () => {
 		// Mock necessary query functions to prevent errors
 		// Using 'any' type assertion because the actual return type is complex and only needed for testing
-		vi.mocked(createGetRepositoryByPathQuery).mockImplementation(
+		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockImplementation(
 			() =>
 				({
 					isSuccess: false,
@@ -91,7 +91,7 @@ describe('Add Repository Flow Integration', () => {
 		(open as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('/mock/repo/path');
 
 		// Mock query function to return a function
-		vi.mocked(createGetRepositoryByPathQuery).mockImplementation(
+		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockImplementation(
 			() =>
 				({
 					isSuccess: false,
@@ -123,7 +123,7 @@ describe('Add Repository Flow Integration', () => {
 
 	it('shows notification when directory selection fails', async () => {
 		// Mock necessary query functions to prevent errors
-		vi.mocked(createGetRepositoryByPathQuery).mockImplementation(
+		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockImplementation(
 			() =>
 				({
 					isSuccess: false,
@@ -186,7 +186,7 @@ describe('Add Repository Flow Integration', () => {
 		RepositoryStore.repositories.has = hasSpy;
 
 		// Mock repository query to indicate an existing repository
-		vi.mocked(createGetRepositoryByPathQuery).mockImplementation(
+		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockImplementation(
 			() =>
 				({
 					isSuccess: true,

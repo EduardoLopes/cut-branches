@@ -14,8 +14,8 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 }));
 
 // Mock repository query
-vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => ({
-	createGetRepositoryByPathQuery: vi.fn().mockReturnValue({
+vi.mock('$domains/repository-management/services/create-get-repository-query', () => ({
+	createGetRepositoryQuery: vi.fn().mockReturnValue({
 		isSuccess: false,
 		isLoading: false,
 		isError: false,

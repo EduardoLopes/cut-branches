@@ -5,7 +5,7 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { untrack } from 'svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
+	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import { RepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -25,7 +25,7 @@
 	}: Props = $props();
 
 	let path = $state<string | undefined>(undefined);
-	const repoQuery = createGetRepositoryByPathQuery(() => path, {
+	const repoQuery = createGetRepositoryQuery(() => path, {
 		meta: {
 			showErrorNotification: true
 		}
@@ -60,7 +60,7 @@
 				notifications.push({
 					feedback: 'danger',
 					title: repoQuery.error.message,
-					message: repoQuery.error.description
+					message: repoQuery.error.description ?? undefined
 				});
 			});
 		}

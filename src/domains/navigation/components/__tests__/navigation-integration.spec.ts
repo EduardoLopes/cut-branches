@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import TestWrapper from '$components/test-wrapper.svelte';
 import { notifications } from '$domains/notifications/store/notifications.svelte';
 import AddButton from '$domains/repository-management/components/add-button.svelte';
-import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
+import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 
 // Mock navigation
 vi.mock('$app/navigation', () => ({
@@ -24,8 +24,8 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 }));
 
 // Mock the repository query
-vi.mock('$domains/repository-management/services/createGetRepositoryByPathQuery', () => ({
-	createGetRepositoryByPathQuery: vi.fn()
+vi.mock('$domains/repository-management/services/create-get-repository-query', () => ({
+	createGetRepositoryQuery: vi.fn()
 }));
 
 // Mock the repository store
@@ -56,7 +56,7 @@ describe('Navigation Integration', () => {
 		);
 
 		// Set up query mock to return a non-success state
-		(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockReturnValue({
 			isSuccess: false,
 			isLoading: false,
 			isError: false,
@@ -92,7 +92,7 @@ describe('Navigation Integration', () => {
 		(open as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('/path/to/repo');
 
 		// Set up query mock to return success with a repo
-		(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockReturnValue({
 			isSuccess: true,
 			isLoading: false,
 			isError: false,

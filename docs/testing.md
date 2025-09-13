@@ -127,7 +127,7 @@ it('should fetch repository data successfully', async () => {
 	});
 
 	// Create query
-	const query = createGetRepositoryByPathQuery(() => '/test/repo');
+	const query = createGetRepositoryQuery(() => '/test/repo');
 
 	// Wait for query to execute
 	await new Promise((resolve) => setTimeout(resolve, 100));

@@ -2,7 +2,7 @@
 	// This is a test fixture that combines Menu and Repository components
 	// for integration testing
 	import Menu from '$domains/navigation/components/menu.svelte';
-	import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
+	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import { css } from '@pindoba/panda/css';
 
@@ -12,7 +12,7 @@
 	// Use $effect to trigger refetch when id changes, simulating component logic
 	$effect(() => {
 		if (id) {
-			const query = createGetRepositoryByPathQuery(() => id, {
+			const query = createGetRepositoryQuery(() => id, {
 				enabled: !!id
 			});
 			if (query && typeof query.refetch === 'function') {

@@ -5,10 +5,11 @@ import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { Mock } from 'vitest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createGetRepositoryByPathQuery } from '../../services/createGetRepositoryByPathQuery';
+import { createGetRepositoryQuery } from '../../services/create-get-repository-query';
 import { RepositoryStore } from '../../store/repository.svelte';
 import AddButton from '../add-button.svelte';
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import TestWrapper from '$components/test-wrapper.svelte';
 import { notifications } from '$domains/notifications/store/notifications.svelte';
 import type { Repository } from '$services/common';
@@ -31,9 +32,9 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 	}
 }));
 
-vi.mock('../../services/createGetRepositoryByPathQuery', () => {
+vi.mock('../../services/create-get-repository-query', () => {
 	return {
-		createGetRepositoryByPathQuery: vi.fn()
+		createGetRepositoryQuery: vi.fn()
 	};
 });
 
@@ -67,7 +68,7 @@ const mockQueryResult = (overrides = {}) => ({
 describe('AddButton', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Set up default mock for createGetRepositoryByPathQuery
+		// Set up default mock for createGetRepositoryQuery
 		const defaultMock = mockQueryResult({
 			isSuccess: false,
 			isLoading: false,
@@ -75,9 +76,7 @@ describe('AddButton', () => {
 			data: null,
 			error: null
 		});
-		(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(
-			defaultMock
-		);
+		(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(defaultMock);
 	});
 
 	describe('Rendering', () => {
@@ -141,9 +140,7 @@ describe('AddButton', () => {
 				data: null,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-				mock
-			);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -180,7 +177,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
 		});
 
 		test('shows warning notification if repository already exists', async () => {
@@ -238,13 +235,11 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-				mock
-			);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
 
 			// Since goto is called inside the effect after repository check, we need to manually mock it
 			// This simulates the navigation that would happen in the component
-			setTimeout(() => goto(`/repos/${mockRepo.name}`), 100);
+			setTimeout(() => goto(resolve(`/repos/${mockRepo.name}`)), 100);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
@@ -273,7 +268,7 @@ describe('AddButton', () => {
 				data: null,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
 
 			// Reset goto mock to ensure we can test it hasn't been called
 			(goto as Mock).mockReset();
@@ -326,9 +321,7 @@ describe('AddButton', () => {
 				data: newRepo,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-				mock
-			);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
 
 			// Directly trigger the notification that would happen in the component
 			setTimeout(() => {
@@ -404,9 +397,7 @@ describe('AddButton', () => {
 				data: null,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-				mock
-			);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
 
 			// Mock dialog to return a path
 			(open as Mock).mockResolvedValueOnce('/path/to/loading/repo');
@@ -450,7 +441,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -490,9 +481,7 @@ describe('AddButton', () => {
 				data: null,
 				error: null
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(
-				mock
-			);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -558,7 +547,7 @@ describe('AddButton', () => {
 					description: errorDescription
 				}
 			});
-			(createGetRepositoryByPathQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }

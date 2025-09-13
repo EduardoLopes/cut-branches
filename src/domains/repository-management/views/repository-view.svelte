@@ -15,7 +15,7 @@
 	} from '$domains/branch-management/store/selected-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import RepositoryHeader from '$domains/repository-management/components/repository-header.svelte';
-	import { createGetRepositoryByPathQuery } from '$domains/repository-management/services/createGetRepositoryByPathQuery';
+	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import type { Branch, Repository } from '$services/common';
 	import { globalStore } from '$store/global-store.svelte';
@@ -53,7 +53,7 @@
 	);
 	const deletedBranchesStore = $derived(getDeletedBranchesStore(id));
 
-	const getBranchesQuery = createGetRepositoryByPathQuery(() => repository?.state?.path, {
+	const getBranchesQuery = createGetRepositoryQuery(() => repository?.state?.path, {
 		staleTime: oneMinute
 	});
 
@@ -302,7 +302,7 @@
 			{#if getBranchesQuery.isError}
 				<ErrorMessage
 					message={getBranchesQuery.error.message}
-					description={getBranchesQuery.error.description}
+					description={getBranchesQuery.error.description ?? undefined}
 				/>
 			{/if}
 			<!-- ERRO MESSAGE END -->

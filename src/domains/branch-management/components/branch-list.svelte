@@ -47,7 +47,7 @@
 	const selected = $derived(selectedStore ?? getSelectedBranchesStore(repositoryID));
 
 	const switchBranchMutation = createSwitchBranchMutation({
-		onSuccess: (currentBranch) => {
+		onSuccess: ({ currentBranch }) => {
 			notifications.push({
 				title: 'Branch switched',
 				message: `Successfully switched to branch **${currentBranch}**`,

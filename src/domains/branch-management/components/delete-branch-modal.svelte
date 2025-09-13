@@ -30,7 +30,7 @@
 
 	const deleteMutation = createDeleteBranchesMutation({
 		onSuccess(data) {
-			const m = data
+			const m = data.deletedBranches
 				.map((item) => {
 					return formatString('- **{name}** (was {sha})', {
 						name: ensureString(item.branch.name).trim(),
@@ -42,7 +42,7 @@
 			notifications.push({
 				feedback: 'success',
 				title: formatString('{type} deleted from {repo} repository', {
-					type: data.length > 1 ? 'Branches' : 'Branch',
+					type: data.deletedBranches.length > 1 ? 'Branches' : 'Branch',
 					repo: ensureString(repository?.state?.name)
 				}),
 				message: m
@@ -79,17 +79,14 @@
 			deleteMutation.mutate(
 				{
 					path: repository.state.path,
-					branches: branches.map((item) => ({
-						name: item.name,
-						current: item.current
-					}))
+					branches: branches.map((item) => item.name)
 				},
 				{
 					onSuccess: (data) => {
 						// Log deleted branches to the deleted branches store
 						const deletedBranchesStore = getDeletedBranchesStore(repository.state?.id);
 						if (deletedBranchesStore && repository.state?.path) {
-							data.forEach((deletedBranch) => {
+							data.deletedBranches.forEach((deletedBranch) => {
 								deletedBranchesStore.addDeletedBranch(deletedBranch.branch);
 							});
 						}
