@@ -2,10 +2,9 @@
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
-	import Markdown from 'svelte-exmarkdown';
+	import CommitCard from './commit-card.svelte';
 	import type { Branch } from '$services/common';
-	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
-	import { cleanEmailString, containsAnyWord, formatString } from '$utils/string-utils';
+	import { containsAnyWord, formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
@@ -148,88 +147,7 @@
 				id={`branch-${data.name}-commit-icon`}
 			/> Last commit
 		</div>
-		<span
-			class={css({
-				fontSize: 'sm',
-				color: 'neutral.950',
-				pindobaTransition: 'fast',
-				mb: 'xs'
-			})}
-			data-testid="last-commit-message"
-			id={`branch-${data.name}-commit-message`}
-		>
-			<Markdown md={data.lastCommit.message} />
-		</span>
-
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'row',
-				gap: 'sm'
-			})}
-			id={`branch-${data.name}-commit-details`}
-		>
-			<span
-				class={css({
-					fontSize: 'sm',
-					display: 'flex',
-					flexDirection: 'row',
-					alignItems: 'center',
-					gap: 'xxs',
-					pindobaTransition: 'fast',
-					color: 'neutral.900'
-				})}
-				title={cleanEmailString(data.lastCommit.email)}
-				data-testid="author-name"
-				id={`branch-${data.name}-author`}
-			>
-				<Icon
-					icon="lucide:circle-user-round"
-					width="16px"
-					height="16px"
-					id={`branch-${data.name}-author-icon`}
-				/>
-				{data.lastCommit.author}
-			</span>
-			<span
-				class={css({
-					fontSize: 'sm',
-					display: 'flex',
-					flexDirection: 'row',
-					alignItems: 'center',
-					gap: 'xxs',
-					pindobaTransition: 'fast',
-					color: 'neutral.900'
-				})}
-				title={safeFormatDate(data.lastCommit.date)}
-				id={`branch-${data.name}-date`}
-			>
-				<Icon
-					icon="lucide:clock"
-					width="16px"
-					height="16px"
-					id={`branch-${data.name}-date-icon`}
-				/>{safeFormatRelativeDate(data.lastCommit.date, { unit: 'day' })}
-			</span>
-			{#if data.deletedAt}
-				<span
-					class={css({
-						fontSize: 'sm',
-						display: 'flex',
-						flexDirection: 'row',
-						alignItems: 'center',
-						gap: 'xxs',
-						color: 'danger.800',
-						marginLeft: 'auto'
-					})}
-					title={safeFormatDate(data.deletedAt)}
-					id={`branch-${data.name}-deleted-at`}
-				>
-					<Icon icon="lucide:trash" width="16px" height="16px" />
-					Deleted At {safeFormatRelativeDate(data.deletedAt)}
-				</span>
-			{/if}
-		</div>
+		<CommitCard commit={data.lastCommit} deletedAt={data.deletedAt} />
 	</div>
 
 	{#if alerts.length > 0 && !(alerts.length === 1 && alerts[0] === 'fullyMerged' && data.current)}
