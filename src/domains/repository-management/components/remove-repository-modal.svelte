@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
@@ -32,13 +33,12 @@
 
 		const repoName = ensureString(repository?.state?.name || currentRepo?.name);
 
-		// Clear stores first
+		// Clear related stores first
 		selected?.clear();
 		search?.clear();
-		repository?.clear();
 
-		// Then remove from repository store
-		RepositoryStore.repositories?.delete([repoName]);
+		// Clear the repository store (this removes from localStorage and from the repositories list)
+		repository?.clear();
 
 		// Show notification about repository removal
 		notifications.push({
@@ -47,9 +47,14 @@
 			feedback: 'success'
 		});
 
-		const first = RepositoryStore.repositories?.list[0];
+		const remainingRepos = RepositoryStore.repositories?.list;
+		const first = remainingRepos?.[0];
 
-		goto(first ? `/repos/${first}` : `/add-first`);
+		if (first) {
+			goto(resolve(`/repos/${first}`));
+		} else {
+			goto(resolve(`/add-first`));
+		}
 	}
 
 	function handleCancel() {

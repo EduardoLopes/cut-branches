@@ -46,22 +46,24 @@
 	const locked = $derived(getLockedBranchesStore(repositoryID));
 	const selected = $derived(selectedStore ?? getSelectedBranchesStore(repositoryID));
 
-	const switchBranchMutation = createSwitchBranchMutation({
-		onSuccess: ({ currentBranch }) => {
-			notifications.push({
-				title: 'Branch switched',
-				message: `Successfully switched to branch **${currentBranch}**`,
-				feedback: 'success'
-			});
+	const switchBranchMutation = $derived(
+		createSwitchBranchMutation({
+			onSuccess: ({ currentBranch }) => {
+				notifications.push({
+					title: 'Branch switched',
+					message: `Successfully switched to branch **${currentBranch}**`,
+					feedback: 'success'
+				});
 
-			selected?.delete([currentBranch]);
+				selected?.delete([currentBranch]);
 
-			return queryClient.invalidateQueries({
-				queryKey: ['branches', 'get-all', repository?.state?.path]
-			});
-		},
-		meta: { showErrorNotification: true }
-	});
+				return queryClient.invalidateQueries({
+					queryKey: ['branches', 'get', repository?.state?.path]
+				});
+			},
+			meta: { showErrorNotification: true }
+		})
+	);
 
 	function handleToggleSelect(branch: string) {
 		if (selected?.has(branch)) {

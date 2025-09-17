@@ -28,35 +28,37 @@
 	const repository = $derived(getRepositoryStore(id));
 	const selectedCount = $derived(selected?.list.length);
 
-	const deleteMutation = createDeleteBranchesMutation({
-		onSuccess(data) {
-			const m = data.deletedBranches
-				.map((item) => {
-					return formatString('- **{name}** (was {sha})', {
-						name: ensureString(item.branch.name).trim(),
-						sha: ensureString(item.branch.lastCommit.shortSha).trim()
-					});
-				})
-				.join('\n\n');
+	const deleteMutation = $derived(
+		createDeleteBranchesMutation({
+			onSuccess(data) {
+				const m = data.deletedBranches
+					.map((item) => {
+						return formatString('- **{name}** (was {sha})', {
+							name: ensureString(item.branch.name).trim(),
+							sha: ensureString(item.branch.lastCommit.shortSha).trim()
+						});
+					})
+					.join('\n\n');
 
-			notifications.push({
-				feedback: 'success',
-				title: formatString('{type} deleted from {repo} repository', {
-					type: data.deletedBranches.length > 1 ? 'Branches' : 'Branch',
-					repo: ensureString(repository?.state?.name)
-				}),
-				message: m
-			});
+				notifications.push({
+					feedback: 'success',
+					title: formatString('{type} deleted from {repo} repository', {
+						type: data.deletedBranches.length > 1 ? 'Branches' : 'Branch',
+						repo: ensureString(repository?.state?.name)
+					}),
+					message: m
+				});
 
-			selected?.clear();
+				selected?.clear();
 
-			// Force a complete refresh of the repository data
-			return client.invalidateQueries({
-				queryKey: ['branches', 'get-all', repository?.state?.path]
-			});
-		},
-		meta: { showErrorNotification: true }
-	});
+				// Force a complete refresh of the repository data
+				return client.invalidateQueries({
+					queryKey: ['branches', 'get', repository?.state?.path]
+				});
+			},
+			meta: { showErrorNotification: true }
+		})
+	);
 
 	// current branch first
 	function sort(a: Branch, b: Branch) {

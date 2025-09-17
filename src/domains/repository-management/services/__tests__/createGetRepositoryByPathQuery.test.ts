@@ -84,7 +84,7 @@ describe('createGetRepositoryQuery', () => {
 			.calls[0][0];
 		const config = createQueryArg();
 
-		expect(config.queryKey).toEqual(['branches', 'get-all', mockPath]);
+		expect(config.queryKey).toEqual(['branches', 'get', mockPath]);
 		expect(typeof config.queryFn).toBe('function');
 		expect(config.enabled).toBe(true);
 	});
@@ -97,7 +97,7 @@ describe('createGetRepositoryQuery', () => {
 			.calls[0][0];
 		const config = createQueryArg();
 
-		expect(config.queryKey).toEqual(['branches', 'get-all', '']);
+		expect(config.queryKey).toEqual(['branches', 'get', '']);
 		expect(config.enabled).toBe(false);
 	});
 

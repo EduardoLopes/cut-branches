@@ -25,11 +25,13 @@
 	}: Props = $props();
 
 	let path = $state<string | undefined>(undefined);
-	const repoQuery = createGetRepositoryQuery(() => path, {
-		meta: {
-			showErrorNotification: true
-		}
-	});
+	const repoQuery = $derived(
+		createGetRepositoryQuery(() => path, {
+			meta: {
+				showErrorNotification: true
+			}
+		})
+	);
 
 	$effect(() => {
 		if (repoQuery.isSuccess && repoQuery.data) {
