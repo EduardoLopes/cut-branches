@@ -1,10 +1,15 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Alert from '@pindoba/svelte-alert';
-	import Group from '@pindoba/svelte-group';
+	import {
+		getBranchColorPalette,
+		getBranchAlerts,
+		getBranchElementId,
+		shouldShowBranchAlerts
+	} from '../utils/branch-utils';
+	import BranchAlerts from './branch-alerts.svelte';
 	import CommitCard from './commit-card.svelte';
 	import type { Branch } from '$services/common';
-	import { containsAnyWord, formatString } from '$utils/string-utils';
+	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
@@ -16,44 +21,13 @@
 
 	let { data, selected, locked, disabled }: Props = $props();
 
-	const protectedWords = [
-		'develop',
-		'dev',
-		'stg',
-		'main',
-		'staging',
-		'master',
-		'hml',
-		'master',
-		'default',
-		'trunk'
-	];
-
-	const colorPalette = $derived.by(() => {
-		if (selected) {
-			return css({ colorPalette: 'danger' });
-		}
-
-		if (data.current) {
-			return css({ colorPalette: 'primary' });
-		}
-
-		return css({ colorPalette: 'neutral' });
-	});
-
-	const alerts = $derived(
-		Object.entries({
-			fullyMerged: data.fullyMerged,
-			protectedWords: containsAnyWord(data.name, protectedWords) && selected,
-			offensiveWords: data.name.includes('master')
-		})
-			.filter((item) => item[1] === true)
-			.map((item) => item[0])
-	);
+	const colorPalette = $derived(getBranchColorPalette(data, selected ?? false));
+	const alerts = $derived(getBranchAlerts(data, selected ?? false));
+	const showAlerts = $derived(shouldShowBranchAlerts(alerts, data));
 </script>
 
 <div
-	id={`branch-${data.name}-container`}
+	id={getBranchElementId(data.name, 'container')}
 	class={[
 		colorPalette,
 		css({
@@ -105,7 +79,7 @@
 					color: 'danger.800'
 				})
 		]}
-		id={`branch-${data.name}-title-container`}
+		id={getBranchElementId(data.name, 'title-container')}
 	>
 		<span
 			class={css({
@@ -113,7 +87,7 @@
 				pindobaTransition: 'fast'
 			})}
 			data-testid="branch-name"
-			id={`branch-${data.name}-name`}>{data.name}</span
+			id={getBranchElementId(data.name, 'name')}>{data.name}</span
 		>
 	</div>
 
@@ -123,7 +97,7 @@
 			flexDirection: 'column',
 			borderRadius: 'md'
 		})}
-		id={`branch-${data.name}-commit-container`}
+		id={getBranchElementId(data.name, 'commit-container')}
 	>
 		<div
 			class={css({
@@ -137,60 +111,20 @@
 				color: 'neutral.600',
 				fontWeight: 'bold'
 			})}
-			id={`branch-${data.name}-commit-label`}
+			id={getBranchElementId(data.name, 'commit-label')}
 		>
 			<Icon
 				class={css({ color: 'neutral.800' })}
 				icon="lucide:git-commit-horizontal"
 				width="16px"
 				height="16px"
-				id={`branch-${data.name}-commit-icon`}
+				id={getBranchElementId(data.name, 'commit-icon')}
 			/> Last commit
 		</div>
 		<CommitCard commit={data.lastCommit} deletedAt={data.deletedAt} />
 	</div>
 
-	{#if alerts.length > 0 && !(alerts.length === 1 && alerts[0] === 'fullyMerged' && data.current)}
-		<Group direction="vertical" noBorder id={`branch-${data.name}-alerts-group`}>
-			{#each alerts as alert (alert)}
-				{#if alert === 'fullyMerged' && !data.current}
-					<Alert id={`branch-${data.name}-alert-${alert}`}>
-						<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-							<Icon icon="lucide:info" />
-							<span>This branch is not fully merged into the current branch!</span>
-						</div>
-					</Alert>
-				{:else if alert === 'protectedWords'}
-					<Alert
-						id={`branch-${data.name}-alert-${alert}`}
-						data-testid="protected-words-alert"
-						feedback="danger"
-					>
-						<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-							<Icon icon="lucide:alert-triangle" />
-							<span
-								>{formatString('This branch contains protected words ({name})', {
-									name: data.name
-								})}</span
-							>
-						</div>
-					</Alert>
-				{:else if alert === 'offensiveWords'}
-					<Alert
-						id={`branch-${data.name}-alert-${alert}`}
-						data-testid="offensive-words-alert"
-						feedback="warning"
-					>
-						<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-							<Icon icon="lucide:info" />
-							<span
-								>This branch contains potentially offensive words (e.g. 'master'). Consider renaming
-								it to align with inclusive terminology.</span
-							>
-						</div>
-					</Alert>
-				{/if}
-			{/each}
-		</Group>
+	{#if showAlerts}
+		<BranchAlerts {alerts} branch={data} />
 	{/if}
 </div>
