@@ -9,54 +9,89 @@ import {
 	type CommandName,
 	type CommandParams,
 	type CommandResult,
-	executeCommand
-} from './tauri-command-types';
+	buildCommandExecutor
+} from './tauri-commands';
 import { type AppError } from '$lib/bindings';
 
+// Helper to resolve input (static value or function)
+type InputResolver<TCommand extends CommandName> =
+	| CommandParams<TCommand>
+	| (() => CommandParams<TCommand>);
+
+// Helper to resolve input value at runtime
+function resolveInput<TCommand extends CommandName>(
+	input: InputResolver<TCommand> | undefined
+): CommandParams<TCommand> | undefined {
+	return typeof input === 'function' ? input() : input;
+}
+
+// Type guard to ensure a value is a valid QueryKey
+function isQueryKey<TQueryKey extends QueryKey>(value: unknown): value is TQueryKey {
+	return Array.isArray(value) && value.every((v) => v !== undefined && v !== null);
+}
+
+// Helper to create default query key
+function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey = QueryKey>(
+	commandName: TCommand,
+	input: CommandParams<TCommand> | undefined
+): TQueryKey {
+	const queryKey = [commandName, input].filter((v) => v !== undefined && v !== null);
+	if (isQueryKey<TQueryKey>(queryKey)) {
+		return queryKey;
+	}
+	// This should never happen in practice, but TypeScript needs a fallback
+	throw new Error('Invalid query key generated');
+}
+
 // Base query options - using explicit types for better inference
-export interface TauriQueryOptions<
+export type TauriQueryOptions<
 	TCommand extends CommandName,
 	TQueryKey extends QueryKey = QueryKey,
 	TError = AppError
-> extends Omit<CreateQueryOptions<CommandResult<TCommand>, TError>, 'queryKey' | 'queryFn'> {
-	queryKey: TQueryKey;
-	input?: CommandParams<TCommand> extends []
-		? void
-		: CommandParams<TCommand> | (() => CommandParams<TCommand>);
-}
+> = Omit<CreateQueryOptions<CommandResult<TCommand>, TError>, 'queryKey' | 'queryFn'> & {
+	queryKey?: TQueryKey;
+	input?: InputResolver<TCommand>;
+};
 
 // Prefetch options that extend TanStack Query's FetchQueryOptions
-export interface TauriFetchQueryOptions<
+export type TauriFetchQueryOptions<
 	TCommand extends CommandName,
 	TQueryKey extends QueryKey = QueryKey,
 	TError = AppError
-> extends FetchQueryOptions<CommandResult<TCommand>, TError, CommandResult<TCommand>, TQueryKey> {
-	queryKey: TQueryKey;
-	input?: CommandParams<TCommand> extends []
-		? void
-		: CommandParams<TCommand> | (() => CommandParams<TCommand>);
-}
+> = Omit<
+	FetchQueryOptions<CommandResult<TCommand>, TError, CommandResult<TCommand>, TQueryKey>,
+	'queryKey' | 'queryFn'
+> & {
+	queryKey?: TQueryKey;
+	input?: InputResolver<TCommand>;
+};
 
-// Legacy wrapper options for backward compatibility
-export type TauriQueryWrapperOptions<
-	TCommand extends CommandName,
-	TQueryKey extends QueryKey = QueryKey
-> = Omit<TauriQueryOptions<TCommand, TQueryKey>, 'queryKey'>;
+// Helper to build queryFn for Tauri commands
+function buildQueryFn<TCommand extends CommandName>(
+	commandName: TCommand,
+	input: InputResolver<TCommand> | undefined
+): () => Promise<CommandResult<TCommand>> {
+	const executor = buildCommandExecutor(commandName);
+	return () => executor(resolveInput(input));
+}
 
 export function createTauriQuery<
 	TCommand extends CommandName,
 	TQueryKey extends QueryKey = QueryKey
 >(commandName: TCommand, config: TauriQueryOptions<TCommand, TQueryKey>) {
-	const { queryKey, input, ...options } = config;
+	const { input, queryKey, ...options } = config;
 
-	return createQuery(() => ({
-		queryKey,
-		queryFn: () => {
-			const resolvedInput = typeof input === 'function' ? input() : input;
-			return executeCommand(commandName, resolvedInput as CommandParams<TCommand> | undefined);
-		},
-		...options
-	}));
+	return createQuery(() => {
+		const resolvedInput = resolveInput(input);
+		const finalQueryKey =
+			queryKey ?? createQueryKey<TCommand, TQueryKey>(commandName, resolvedInput);
+
+		return {
+			queryKey: finalQueryKey,
+			queryFn: buildQueryFn(commandName, input),
+			...options
+		};
+	});
 }
 
 /**
@@ -73,18 +108,18 @@ export async function prefetchTauriQuery<
 ) {
 	const { queryKey, input, ...fetchOptions } = config;
 
+	const resolvedInput = resolveInput(input);
+	const finalQueryKey = queryKey ?? createQueryKey<TCommand, TQueryKey>(commandName, resolvedInput);
+
 	// Check if data already exists in cache
-	const existingData = queryClient.getQueryData(queryKey);
+	const existingData = queryClient.getQueryData(finalQueryKey);
 	if (existingData !== undefined) {
 		return;
 	}
 
 	return await queryClient.prefetchQuery({
-		queryKey,
-		queryFn: () => {
-			const resolvedInput = typeof input === 'function' ? input() : input;
-			return executeCommand(commandName, resolvedInput as CommandParams<TCommand> | undefined);
-		},
+		queryKey: finalQueryKey,
+		queryFn: buildQueryFn(commandName, input),
 		...fetchOptions
 	});
 }

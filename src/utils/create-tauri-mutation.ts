@@ -9,12 +9,24 @@ import {
 	type CommandParams,
 	type CommandResult,
 	executeCommand
-} from './tauri-command-types';
+} from './tauri-commands';
 import { type AppError } from '$lib/bindings';
 
 // Configuration for automatic query invalidation
 export interface QueryInvalidationConfig {
 	queryKeys?: QueryKey[];
+}
+
+// Helper to clean query keys by filtering out nullish values
+function cleanQueryKey(queryKey: QueryKey | undefined): QueryKey | undefined {
+	return queryKey?.filter(Boolean);
+}
+
+// Type guard to check if variables are provided
+function hasVariables<TCommand extends CommandName>(
+	variables: CommandParams<TCommand> | unknown | undefined
+): variables is CommandParams<TCommand> {
+	return variables !== undefined;
 }
 
 // Base mutation options - using explicit types for better inference
@@ -39,19 +51,25 @@ export function createTauriMutation<TCommand extends CommandName>(
 	const { queryInvalidation, onSuccess, ...rest } = options ?? {};
 
 	return createMutation(() => ({
-		mutationFn: (variables?: CommandParams<TCommand> extends [] ? void : CommandParams<TCommand>) =>
-			executeCommand(commandName, variables as CommandParams<TCommand> | undefined),
-		onSuccess: (data, variables, context) => {
+		mutationFn: (
+			variables?: CommandParams<TCommand> extends [] ? void : CommandParams<TCommand>
+		) => {
+			if (hasVariables<TCommand>(variables)) {
+				return executeCommand(commandName, variables);
+			}
+			return executeCommand(commandName);
+		},
+		onSuccess: async (data, variables, onMutateResult, context) => {
 			const invalidations: Promise<unknown>[] =
 				queryInvalidation?.queryKeys?.map((queryKey) =>
-					queryClient.invalidateQueries({ queryKey: queryKey?.filter(Boolean) })
+					queryClient.invalidateQueries({ queryKey: cleanQueryKey(queryKey) })
 				) ?? [];
 
 			if (onSuccess) {
-				invalidations.push(Promise.resolve(onSuccess(data, variables, context)));
+				invalidations.push(Promise.resolve(onSuccess(data, variables, onMutateResult, context)));
 			}
 
-			return invalidations.length > 0 ? Promise.all(invalidations) : undefined;
+			await Promise.all(invalidations);
 		},
 		...rest
 	}));
