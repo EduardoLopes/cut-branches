@@ -14,6 +14,7 @@ interface QueryMeta extends Record<string, unknown> {
 		title?: string;
 		message?: string;
 	};
+	awaitInvalidates?: string[][];
 }
 
 type MutationMeta = QueryMeta;

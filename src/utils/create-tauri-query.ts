@@ -3,8 +3,10 @@ import {
 	type QueryKey,
 	type QueryClient,
 	type CreateQueryOptions,
-	type FetchQueryOptions
+	type FetchQueryOptions,
+	useQueryClient
 } from '@tanstack/svelte-query';
+import { getResource } from './query-key-utils';
 import {
 	type CommandName,
 	type CommandParams,
@@ -30,12 +32,14 @@ function isQueryKey<TQueryKey extends QueryKey>(value: unknown): value is TQuery
 	return Array.isArray(value) && value.every((v) => v !== undefined && v !== null);
 }
 
-// Helper to create default query key
+// Helper to create default query key using resource-based naming
 function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey = QueryKey>(
 	commandName: TCommand,
 	input: CommandParams<TCommand> | undefined
 ): TQueryKey {
-	const queryKey = [commandName, input].filter((v) => v !== undefined && v !== null);
+	// Use resource-based key (e.g., 'selected-branches' instead of 'listSelectedBranches')
+	const resource = getResource(commandName);
+	const queryKey = [resource, input].filter((v) => v !== undefined && v !== null);
 	if (isQueryKey<TQueryKey>(queryKey)) {
 		return queryKey;
 	}
@@ -51,6 +55,9 @@ export type TauriQueryOptions<
 > = Omit<CreateQueryOptions<CommandResult<TCommand>, TError>, 'queryKey' | 'queryFn'> & {
 	queryKey?: TQueryKey;
 	input?: InputResolver<TCommand>;
+	meta?: {
+		[key: string]: unknown;
+	};
 };
 
 // Prefetch options that extend TanStack Query's FetchQueryOptions
@@ -79,7 +86,15 @@ export function createTauriQuery<
 	TCommand extends CommandName,
 	TQueryKey extends QueryKey = QueryKey
 >(commandName: TCommand, config: TauriQueryOptions<TCommand, TQueryKey>) {
-	const { input, queryKey, ...options } = config;
+	const { input, queryKey, meta, ...options } = config;
+
+	const queryClient = useQueryClient();
+
+	function invalidate() {
+		return queryClient.invalidateQueries({
+			queryKey: queryKey ?? createQueryKey<TCommand, TQueryKey>(commandName, resolveInput(input))
+		});
+	}
 
 	return createQuery(() => {
 		const resolvedInput = resolveInput(input);
@@ -89,7 +104,11 @@ export function createTauriQuery<
 		return {
 			queryKey: finalQueryKey,
 			queryFn: buildQueryFn(commandName, input),
-			...options
+			...options,
+			meta: {
+				...meta,
+				invalidate
+			}
 		};
 	});
 }
