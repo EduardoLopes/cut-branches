@@ -47,7 +47,9 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	createBranchRestoration: ['getRepository'],
 	batchCreateBranchRestorations: ['getRepository'],
 	batchDeleteBranches: ['getRepository'],
-	deleteAllSelectedBranches: ['listBranches']
+	deleteAllSelectedBranches: ['listBranches'],
+	createRepository: ['listRepositories'],
+	deleteRepository: ['listRepositories']
 };
 
 /**
@@ -68,8 +70,8 @@ export function getResource(commandName: CommandName): string | string[] {
 
 	// Check special cases first
 	if (RESOURCE_MAPPINGS[commandName]) {
-		const mapping = RESOURCE_MAPPINGS[commandName].map((resource) => extractResource(resource)); // Combine all resources: mapping resources + extracted resource
-		console.log({ mapping, extracted });
+		// Combine all resources: mapping resources + extracted resource
+		const mapping = RESOURCE_MAPPINGS[commandName].map((resource) => extractResource(resource));
 		return [extracted, ...mapping];
 	}
 

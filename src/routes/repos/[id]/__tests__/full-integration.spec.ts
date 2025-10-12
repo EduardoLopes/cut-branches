@@ -68,60 +68,11 @@ vi.mock('@tanstack/svelte-query', () => {
 });
 
 // Mock the repository query
-vi.mock('$domains/repository-management/services/create-get-repository-query', () => {
-	return {
-		createGetRepositoryQuery: vi.fn(() => ({
-			data: {
-				id: 'test-repo-id',
-				name: 'test-repo',
-				path: '/path/to/test-repo',
-				branches: [
-					{
-						name: 'main',
-						current: true,
-						lastCommit: {
-							sha: 'abc123',
-							shortSha: 'abc123'.substring(0, 7),
-							date: new Date().toISOString(),
-							message: 'Initial commit',
-							author: 'Test User',
-							email: 'test@example.com'
-						},
-						fullyMerged: true
-					},
-					{
-						name: 'feature-branch',
-						current: false,
-						lastCommit: {
-							sha: 'def456',
-							shortSha: 'def456'.substring(0, 7),
-							date: new Date().toISOString(),
-							message: 'Add feature',
-							author: 'Test User',
-							email: 'test@example.com'
-						},
-						fullyMerged: false
-					},
-					{
-						name: 'bugfix-branch',
-						current: false,
-						lastCommit: {
-							sha: 'ghi789',
-							shortSha: 'ghi789'.substring(0, 7),
-							date: new Date().toISOString(),
-							message: 'Fix bug',
-							author: 'Test User',
-							email: 'test@example.com'
-						},
-						fullyMerged: false
-					}
-				],
-				currentBranch: 'main',
-				branchesCount: 3
-			},
-			isLoading: false,
-			isError: false,
-			refetch: vi.fn().mockResolvedValue({
+vi.mock(
+	'$domains/repository-management/logic/application/queries/create-get-repository-query',
+	() => {
+		return {
+			createGetRepositoryQuery: vi.fn(() => ({
 				data: {
 					id: 'test-repo-id',
 					name: 'test-repo',
@@ -152,17 +103,69 @@ vi.mock('$domains/repository-management/services/create-get-repository-query', (
 								email: 'test@example.com'
 							},
 							fullyMerged: false
+						},
+						{
+							name: 'bugfix-branch',
+							current: false,
+							lastCommit: {
+								sha: 'ghi789',
+								shortSha: 'ghi789'.substring(0, 7),
+								date: new Date().toISOString(),
+								message: 'Fix bug',
+								author: 'Test User',
+								email: 'test@example.com'
+							},
+							fullyMerged: false
 						}
 					],
 					currentBranch: 'main',
-					branchesCount: 2
-				}
-			}),
-			error: null,
-			dataUpdatedAt: Date.now()
-		}))
-	};
-});
+					branchesCount: 3
+				},
+				isLoading: false,
+				isError: false,
+				refetch: vi.fn().mockResolvedValue({
+					data: {
+						id: 'test-repo-id',
+						name: 'test-repo',
+						path: '/path/to/test-repo',
+						branches: [
+							{
+								name: 'main',
+								current: true,
+								lastCommit: {
+									sha: 'abc123',
+									shortSha: 'abc123'.substring(0, 7),
+									date: new Date().toISOString(),
+									message: 'Initial commit',
+									author: 'Test User',
+									email: 'test@example.com'
+								},
+								fullyMerged: true
+							},
+							{
+								name: 'feature-branch',
+								current: false,
+								lastCommit: {
+									sha: 'def456',
+									shortSha: 'def456'.substring(0, 7),
+									date: new Date().toISOString(),
+									message: 'Add feature',
+									author: 'Test User',
+									email: 'test@example.com'
+								},
+								fullyMerged: false
+							}
+						],
+						currentBranch: 'main',
+						branchesCount: 2
+					}
+				}),
+				error: null,
+				dataUpdatedAt: Date.now()
+			}))
+		};
+	}
+);
 
 // Mock the Tauri API
 vi.mock('@tauri-apps/api/core', () => ({

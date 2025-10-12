@@ -39,7 +39,7 @@ function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey
 ): TQueryKey {
 	// Use resource-based key (e.g., 'selected-branches' instead of 'listSelectedBranches')
 	const resource = getResource(commandName);
-	const queryKey = [resource, input].filter((v) => v !== undefined && v !== null);
+	const queryKey = [resource, commandName, input].filter((v) => v !== undefined && v !== null);
 	if (isQueryKey<TQueryKey>(queryKey)) {
 		return queryKey;
 	}

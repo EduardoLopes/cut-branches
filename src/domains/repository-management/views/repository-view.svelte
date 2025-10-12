@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
 	import { onDestroy } from 'svelte';
+	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
 	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { navigating } from '$app/state';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
@@ -12,7 +13,6 @@
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import RepositoryHeader from '$domains/repository-management/components/repository-header.svelte';
-	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 	import type { Branch, Repository } from '$services/common';
 	import { globalStore } from '$store/global-store.svelte';
 	import EmptyState from '$ui/core/empty-state.svelte';
@@ -37,8 +37,6 @@
 		allowSetCurrent = true
 	}: Props = $props();
 
-	const oneMinute = 60000;
-
 	const listRepositoriesQuery = createListRepositoriesQuery();
 
 	const path = $derived.by(() => {
@@ -57,11 +55,7 @@
 	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
 
 	// Use different queries based on branchesType
-	const getBranchesQuery = $derived(
-		createGetRepositoryQuery(() => path, {
-			staleTime: oneMinute
-		})
-	);
+	const getBranchesQuery = $derived(createGetRepositoryQuery(() => path));
 
 	const getDeletedBranchesQuery = $derived(
 		branchesType === 'deleted' ? createListBranchesQuery(id ?? '', true) : undefined

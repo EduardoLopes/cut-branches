@@ -3,15 +3,15 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
+	import { createDeleteRepositoryMutation } from '../logic/application/mutations/create-delete-repository-mutation';
+	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
 	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
-	import { createGetRepositoryQuery } from '../services/create-get-repository-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createClearLockedBranchesMutation } from '$domains/branch-management/services/createLockedBranchesMutations';
 	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createDeleteRepositoryMutation } from '$domains/repository-management/services/create-delete-repository-mutation';
 	import type { Repository } from '$services/common';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';

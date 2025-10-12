@@ -6,10 +6,9 @@
 		QueryClientProvider
 	} from '@tanstack/svelte-query';
 	import { type Snippet } from 'svelte';
-	import { onMount } from 'svelte';
+	import DomainsHandlers from './domains-handlers.svelte';
 	import { browser } from '$app/environment';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { setupAddRepositoryHandler } from '$domains/repository-management/logic/add-repository-handler.svelte';
 	import { createError } from '$utils/error-utils';
 	import { shouldInvalidate } from '$utils/query-key-utils';
 
@@ -130,14 +129,10 @@
 			}
 		}
 	});
-
-	// Setup event bus handlers
-	onMount(() => {
-		const cleanup = setupAddRepositoryHandler(queryClient);
-		return cleanup;
-	});
 </script>
 
 <QueryClientProvider client={queryClient}>
-	{@render children?.()}
+	<DomainsHandlers>
+		{@render children?.()}
+	</DomainsHandlers>
 </QueryClientProvider>

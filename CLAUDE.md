@@ -199,7 +199,7 @@ All operation functions follow the pattern: **[Action][Resource][Identifier]**
 | addOrderItem       | add_order_item.rs       | Item     |
 | toggleUserStatus   | toggle_user_status.rs   | User     |
 | getProduct         | get_product.rs          | Product  |
-| listProducts       | list_products.rs        | Product  |
+| getProductList     | get_product_list.rs     | Product  |
 
 Every command should have an input and output struct with the name of the command and the suffixes Input and Output.
 

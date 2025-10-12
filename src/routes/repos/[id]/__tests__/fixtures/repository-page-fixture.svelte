@@ -1,7 +1,7 @@
 <script lang="ts">
+	// import { createGetRepositoryQuery } from '$domains/repository-management/logic/application/queries/create-get-repository-query';
 	// This is a test fixture that combines MenuView and Repository components
 	// for integration testing
-	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -10,16 +10,16 @@
 	const { id }: { id: string } = $props();
 
 	// Use $effect to trigger refetch when id changes, simulating component logic
-	$effect(() => {
-		if (id) {
-			const query = createGetRepositoryQuery(() => id, {
-				enabled: !!id
-			});
-			if (query && typeof query.refetch === 'function') {
-				query.refetch();
-			}
-		}
-	});
+	// $effect(() => {
+	// 	if (id) {
+	// 		const query = createGetRepositoryQuery(() => id, {
+	// 			enabled: !!id
+	// 		});
+	// 		if (query && typeof query.refetch === 'function') {
+	// 			query.refetch();
+	// 		}
+	// 	}
+	// });
 </script>
 
 <div class={css({ display: 'flex', width: '100%' })}>

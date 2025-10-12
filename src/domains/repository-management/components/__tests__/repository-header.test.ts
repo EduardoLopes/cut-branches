@@ -66,11 +66,11 @@ const mockGetRepositoryQuery = vi.hoisted(() => ({
 	}))
 }));
 
-vi.mock('../../services/create-list-repositories-query', () => ({
+vi.mock('../../logic/application/queries/create-list-repositories-query', () => ({
 	createListRepositoriesQuery: mockListRepositoriesQuery.fn
 }));
 
-vi.mock('../../services/create-get-repository-query', () => ({
+vi.mock('../../logic/application/queries/create-get-repository-query', () => ({
 	createGetRepositoryQuery: mockGetRepositoryQuery.fn
 }));
 

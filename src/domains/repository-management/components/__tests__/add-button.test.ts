@@ -4,7 +4,7 @@ import { render, fireEvent, waitFor } from '@testing-library/svelte';
 // Import all Svelte-related modules in one place
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createGetRepositoryQuery } from '../../services/create-get-repository-query';
+import { createGetRepositoryQuery } from '../../logic/application/queries/create-get-repository-query';
 import AddButton from '../add-button.svelte';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
@@ -69,7 +69,7 @@ vi.mock('$lib/bindings', () => ({
 	}
 }));
 
-vi.mock('../../services/create-get-repository-query', () => {
+vi.mock('../../logic/application/queries/create-get-repository-query', () => {
 	return {
 		createGetRepositoryQuery: vi.fn()
 	};
@@ -133,7 +133,7 @@ describe('AddButton', () => {
 			data: undefined,
 			error: null
 		});
-		vi.mocked(createGetRepositoryQuery).mockReturnValue(defaultMock);
+		vi.mocked(createGetRepositoryQuery).mockImplementation(() => defaultMock);
 	});
 
 	describe('Rendering', () => {
@@ -197,7 +197,7 @@ describe('AddButton', () => {
 				data: undefined,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -234,7 +234,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValue(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementation(() => mock);
 		});
 
 		test('shows warning notification if repository already exists', async () => {
@@ -285,7 +285,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
 
 			// Since goto is called inside the effect after repository check, we need to manually mock it
 			// This simulates the navigation that would happen in the component
@@ -318,7 +318,7 @@ describe('AddButton', () => {
 				data: undefined,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValue(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementation(() => mock);
 
 			// Reset goto mock to ensure we can test it hasn't been called
 			vi.mocked(goto).mockReset();
@@ -368,7 +368,7 @@ describe('AddButton', () => {
 				data: newRepo,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
 
 			// Directly trigger the notification that would happen in the component
 			setTimeout(() => {
@@ -444,7 +444,7 @@ describe('AddButton', () => {
 				data: null,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
 
 			// Mock dialog to return a path
 			vi.mocked(open).mockResolvedValueOnce('/path/to/loading/repo');
@@ -485,7 +485,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValue(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementation(() => mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -525,7 +525,7 @@ describe('AddButton', () => {
 				data: undefined,
 				error: null
 			});
-			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }

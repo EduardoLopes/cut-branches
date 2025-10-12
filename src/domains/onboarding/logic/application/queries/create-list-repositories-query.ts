@@ -2,7 +2,6 @@ import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-qu
 
 export function createListRepositoriesQuery(options?: TauriQueryOptions<'listRepositories'>) {
 	return createTauriQuery('listRepositories', {
-		queryKey: ['listRepositories'],
 		...options
 	});
 }

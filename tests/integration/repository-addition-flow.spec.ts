@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import TestWrapper from '$components/test-wrapper.svelte';
 import { notifications } from '$domains/notifications/store/notifications.svelte';
 import AddButton from '$domains/repository-management/components/add-button.svelte';
-import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
+import { createGetRepositoryQuery } from '$domains/repository-management/logic/application/queries/create-get-repository-query';
 
 // Mock navigation
 vi.mock('$app/navigation', () => ({

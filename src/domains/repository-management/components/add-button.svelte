@@ -5,7 +5,7 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createCreateRepositoryMutation } from '$domains/repository-management/services/create-create-repository-mutation';
+	import { createCreateRepositoryMutation } from '$domains/repository-management/logic/application/mutations/create-create-repository-mutation';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
