@@ -222,8 +222,37 @@ Every command should have an input and output struct with the name of the comman
 
 ### Architecture Compliance
 
-- Project follows the Framework-Agnostic Frontend Architecture (see `docs/architecture.md`)
-- Uses SvelteKit file-based routing as recommended for SvelteKit projects
-- Implements hybrid static assets strategy: `src/assets/` for source assets, `static/` for build assets (see `docs/adr/002-static-assets-strategy.md`)
-- Domain separation enforced with no direct inter-domain imports
-- Global directories for shared resources and utilities
+The project follows the **Framework-Agnostic Frontend Architecture** principles as described in [this article](https://eduardolopes.dev.br/en/blog/framework-agnostic-frontend-architecture/). Key principles:
+
+**Core Architectural Principles:**
+
+1. **Vertical Slice Architecture** - Features organized as self-contained vertical slices
+2. **Domain-Driven Design** - Business logic organized around domain concepts
+3. **High Cohesion** - Related code kept together
+4. **Low Coupling** - Minimal dependencies between modules
+5. **Framework Independence** - Architecture adaptable across different frameworks
+
+**Directory Organization:**
+
+- `src/domains/` - Self-contained feature modules with components, logic, views, tests, and assets
+- `src/ui/core/` - Atomic, abstract, globally reusable UI components
+- `src/ui/patterns/` - Composed UI solutions (not currently used)
+- `src/ui/lab/` - Experimental components (not currently used)
+- `src/services/` - Infrastructure services and shared functionality
+- `src/routes/` - SvelteKit file-based routing (thin orchestration layers)
+- `src/assets/` - Source assets for components (images, icons, fonts, videos, documents)
+- `src/styles/` - Global stylesheets and design tokens
+- `src/utils/` - Shared utility functions
+- `src/store/` - Global state management
+- `static/` - Build-time static assets served from root URL (favicon, robots.txt)
+
+**Architectural Rules:**
+
+- **Domain Isolation**: No direct imports between domains - use global event bus or shared services
+- **Route Files**: Should be thin orchestration layers that compose domain components
+- **Co-located Tests**: Tests placed in `__tests__/` directories near the code they test
+- **Documentation**: Significant folders should include README.md files
+- **Shared Code Promotion**: Code needed by multiple domains should be promoted to global directories
+- **Static Assets Strategy**: Hybrid approach with `src/assets/` for source assets and `static/` for build assets (see [@docs/adr/002-static-assets-strategy.md](docs/adr/002-static-assets-strategy.md))
+
+For detailed architectural guidelines, see [@docs/architecture.md](docs/architecture.md)
