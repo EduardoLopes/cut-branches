@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
 	import { onDestroy } from 'svelte';
-	import { createListRepositoriesQuery } from '../services/create-list-repositories-query';
+	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { navigating } from '$app/state';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
 	import BulkActions from '$domains/branch-management/components/branches-bulk-actions.svelte';

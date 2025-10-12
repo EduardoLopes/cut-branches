@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
+	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { createGetRepositoryQuery } from '../services/create-get-repository-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -11,7 +12,6 @@
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createDeleteRepositoryMutation } from '$domains/repository-management/services/create-delete-repository-mutation';
-	import { createListRepositoriesQuery } from '$domains/repository-management/services/create-list-repositories-query';
 	import type { Repository } from '$services/common';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';

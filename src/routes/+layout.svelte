@@ -3,7 +3,7 @@
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import { type Snippet } from 'svelte';
 	import Providers from '$components/providers.svelte';
-	import RedirectToGetStarted from '$components/redirect-to-get-started.svelte';
+	import RedirectToGetStarted from '$domains/onboarding/components/redirect-to-get-started.svelte';
 	import Footer from '$ui/core/footer.svelte';
 	import { css } from '@pindoba/panda/css';
 

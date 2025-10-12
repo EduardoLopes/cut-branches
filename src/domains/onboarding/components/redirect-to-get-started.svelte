@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { createListRepositoriesQuery } from '$domains/repository-management/services/create-list-repositories-query';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createListRepositoriesQuery();

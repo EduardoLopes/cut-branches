@@ -1,0 +1,113 @@
+<script lang="ts">
+	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
+	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
+	import { page } from '$app/state';
+	import { eventBus, Events } from '$services/event-bus';
+	import IconButton from '$ui/core/icon-button.svelte';
+	import { css } from '@pindoba/panda/css';
+
+	// Query for repositories list from database
+	const repositoriesQuery = $derived(createListRepositoriesQuery());
+
+	// Map repository data to navigation items
+	const items = $derived.by<NavigationItem[]>(() => {
+		if (!repositoriesQuery.data) {
+			return [];
+		}
+
+		const repositories = repositoriesQuery.data;
+		const mappedItems = repositories.map((repo) => ({
+			id: repo.id,
+			label: repo.name,
+			href: `/repos/${repo.id}`,
+			badge: repo.branches_count > 0 ? `${repo.branches_count}` : undefined
+		}));
+
+		// Sort by name
+		return [...mappedItems].sort((a, b) => a.label.localeCompare(b.label));
+	});
+
+	function handleAddRepository() {
+		eventBus.publish(Events.REPOSITORY_ADD_REQUESTED);
+	}
+</script>
+
+<div
+	class={css({
+		minWidth: '260px',
+		px: 'md'
+	})}
+>
+	<div
+		class={css({
+			display: 'flex',
+			flexDirection: 'column',
+			gap: 'sm',
+			borderTopRadius: 'md'
+		})}
+	>
+		<div
+			class={css({
+				display: 'flex',
+				justifyContent: 'space-between',
+				alignItems: 'center'
+			})}
+		>
+			<h2
+				class={css({
+					fontSize: 'xs',
+					textTransform: 'uppercase',
+					opacity: 0.6,
+					color: 'neutral.950',
+					margin: '0'
+				})}
+			>
+				Repositories
+			</h2>
+
+			<IconButton
+				onclick={handleAddRepository}
+				size="sm"
+				shape="square"
+				icon="material-symbols:add-rounded"
+				label="Add a git repository"
+				visuallyHiddenLabel={true}
+				passThrough={{
+					root: css.raw({})
+				}}
+			/>
+		</div>
+		{#if items.length > 0}
+			<Navigation
+				{items}
+				activeItem={page.params.id}
+				direction="vertical"
+				passThrough={{
+					root: css.raw({
+						maxHeight: 'calc(100vh - 146px)',
+						overflowY: 'auto',
+						backdropFilter: 'none',
+						padding: '0',
+						_light: {
+							bg: 'neutral.50'
+						},
+						_dark: {
+							bg: 'neutral.100'
+						}
+					})
+				}}
+			/>
+		{:else}
+			<p
+				class={css({
+					textAlign: 'center',
+					padding: 'md',
+					color: 'neutral.800.contrast',
+					opacity: 0.7
+				})}
+			>
+				No repositories
+			</p>
+		{/if}
+	</div>
+</div>

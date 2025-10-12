@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
-import Menu from '../menu.svelte';
+import MenuView from '../menu-view.svelte';
 import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
 
 // Database Repository type uses snake_case fields
@@ -48,10 +48,10 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
-describe('Menu Component', () => {
+describe('MenuView Component', () => {
 	it('renders all repositories in the list', async () => {
 		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(Menu)
+			props: testWrapperWithProps(MenuView)
 		});
 
 		await waitFor(() => expect(getByText('repo1')).toBeInTheDocument());
@@ -61,7 +61,7 @@ describe('Menu Component', () => {
 
 	it('displays badge counts for repositories with branches', async () => {
 		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(Menu)
+			props: testWrapperWithProps(MenuView)
 		});
 
 		await waitFor(() => expect(getByText('5')).toBeInTheDocument()); // repo1 has 5 branches
@@ -73,7 +73,7 @@ describe('Menu Component', () => {
 
 	it('renders the app title correctly', () => {
 		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(Menu)
+			props: testWrapperWithProps(MenuView)
 		});
 
 		expect(getByText('Cut Branches')).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe('Menu Component', () => {
 
 	it('displays the repositories heading', () => {
 		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(Menu)
+			props: testWrapperWithProps(MenuView)
 		});
 
 		expect(getByText('Repositories')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('Menu Component', () => {
 
 	it('renders the add button for adding new repositories', () => {
 		const { getByRole } = render(TestWrapper, {
-			props: testWrapperWithProps(Menu)
+			props: testWrapperWithProps(MenuView)
 		});
 
 		// Check for the add button using accessible role and name

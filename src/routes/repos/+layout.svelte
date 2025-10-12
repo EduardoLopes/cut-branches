@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
-	import Menu from '$domains/navigation/components/menu.svelte';
+	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
 	import { css } from '@pindoba/panda/css';
 	interface Props {
 		children?: Snippet;
@@ -23,7 +23,7 @@
 			gridTemplateColumns: 'max-content auto'
 		})}
 	>
-		<Menu />
+		<MenuView />
 		{@render children?.()}
 	</div>
 </div>

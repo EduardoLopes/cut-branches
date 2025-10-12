@@ -1,9 +1,9 @@
 <script lang="ts">
-	// This is a test fixture that combines Menu and Repository components
+	// This is a test fixture that combines MenuView and Repository components
 	// for integration testing
-	import Menu from '$domains/navigation/components/menu.svelte';
 	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
+	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
 	import { css } from '@pindoba/panda/css';
 
 	// Define props using $props()
@@ -24,7 +24,7 @@
 
 <div class={css({ display: 'flex', width: '100%' })}>
 	<div class={css({ width: '250px' })} data-testid="menu-container">
-		<Menu />
+		<MenuView />
 	</div>
 	<div class={css({ flex: 1 })} data-testid="repository-container">
 		<Repository {id} />

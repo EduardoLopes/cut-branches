@@ -3,8 +3,8 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
+	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { createGetRepositoryQuery } from '../services/create-get-repository-query';
-	import { createListRepositoriesQuery } from '../services/create-list-repositories-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import RemoveRepositoryModal from '$domains/repository-management/components/remove-repository-modal.svelte';
