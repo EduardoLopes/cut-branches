@@ -3,7 +3,7 @@
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import { type Snippet } from 'svelte';
 	import Providers from '$components/providers.svelte';
-	import RedirectTopAddFirst from '$components/redirect-top-add-first.svelte';
+	import RedirectToGetStarted from '$components/redirect-to-get-started.svelte';
 	import Footer from '$ui/core/footer.svelte';
 	import { css } from '@pindoba/panda/css';
 
@@ -17,7 +17,7 @@
 <ThemeModeSelectScript />
 
 <Providers>
-	<RedirectTopAddFirst />
+	<RedirectToGetStarted />
 	<div
 		class={css({
 			height: '100vh',

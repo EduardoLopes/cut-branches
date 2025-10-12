@@ -65,7 +65,7 @@
 				if (otherRepo) {
 					await goto(resolve(`/repos/${otherRepo.name}`));
 				} else {
-					await goto(resolve(`/add-first`));
+					await goto(resolve(`/get-started`));
 				}
 
 				// Show notification about repository removal

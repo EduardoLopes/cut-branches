@@ -15,7 +15,7 @@ export default defineConfig({
 	dependencies: ['@pindoba/panda', '@pindoba/styles'],
 	importMap: '@pindoba/panda',
 	watch: true,
-	clean: true,
+	clean: false,
 
 	// Useful for theme customization
 	theme: {
@@ -40,6 +40,53 @@ export default defineConfig({
 						}
 					},
 					...getSemanticTokens('primary', 'grass')
+				}
+			},
+			keyframes: {
+				// Onboarding animations
+				float: {
+					'0%, 100%': { transform: 'translateY(0px)' },
+					'50%': { transform: 'translateY(-20px)' }
+				},
+				pulse: {
+					'0%, 100%': { opacity: '1', transform: 'scale(1)' },
+					'50%': { opacity: '0.8', transform: 'scale(1.05)' }
+				},
+				fadeIn: {
+					from: { opacity: '0', transform: 'translateY(20px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
+				},
+				fadeInUp: {
+					from: { opacity: '0', transform: 'translateY(15px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
+				},
+				gradientShift: {
+					'0%': { backgroundPosition: '0% 50%' },
+					'50%': { backgroundPosition: '100% 50%' },
+					'100%': { backgroundPosition: '0% 50%' }
+				},
+				slideUp: {
+					from: { opacity: '0', transform: 'translateY(40px)' },
+					to: { opacity: '1', transform: 'translateY(0)' }
+				},
+				float1: {
+					'0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
+					'25%': { transform: 'translate(50px, -50px) rotate(90deg)' },
+					'50%': { transform: 'translate(100px, 0) rotate(180deg)' },
+					'75%': { transform: 'translate(50px, 50px) rotate(270deg)' }
+				},
+				float2: {
+					'0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+					'33%': { transform: 'translate(-80px, -40px) scale(1.1)' },
+					'66%': { transform: 'translate(-40px, 60px) scale(0.9)' }
+				},
+				float3: {
+					'0%, 100%': { transform: 'translate(0, 0)' },
+					'50%': { transform: 'translate(-60px, -80px)' }
+				},
+				rotateAngle: {
+					'0%': { '--angle': '0deg' },
+					'100%': { '--angle': '360deg' }
 				}
 			}
 		}

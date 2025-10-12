@@ -10,14 +10,14 @@
 	$effect(() => {
 		const first = repositoriesQuery.data?.[0];
 		const hasRepositories = (repositoriesQuery.data?.length ?? 0) > 0;
-		const isOnAddFirstPage = page.url.pathname === resolve('/add-first');
+		const isOnGetStartedPage = page.url.pathname === resolve('/get-started');
 
-		// Redirect to /add-first if no repositories exist
-		if (!hasRepositories && !isOnAddFirstPage) {
-			goto(resolve('/add-first'));
+		// Redirect to /get-started if no repositories exist
+		if (!hasRepositories && !isOnGetStartedPage) {
+			goto(resolve('/get-started'));
 		}
-		// Redirect to first repository if on /add-first but repositories exist
-		else if (hasRepositories && isOnAddFirstPage && first) {
+		// Redirect to first repository if on /get-started but repositories exist
+		else if (hasRepositories && isOnGetStartedPage && first) {
 			goto(resolve(`/repos/${first.id}`));
 		}
 	});

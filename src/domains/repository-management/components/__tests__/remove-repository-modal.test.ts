@@ -200,7 +200,7 @@ describe('RemoveRepositoryModal', () => {
 			await waitFor(() => expect(goto).toHaveBeenCalled());
 		});
 
-		test('should navigate to add-first when no repositories remain', async () => {
+		test('should navigate to get-started when no repositories remain', async () => {
 			// Set up only the test repository
 			mockRepositories = [mockRepository];
 
@@ -214,7 +214,7 @@ describe('RemoveRepositoryModal', () => {
 			const removeButton = getByTestId('confirm-remove');
 			await fireEvent.click(removeButton);
 
-			await waitFor(() => expect(goto).toHaveBeenCalledWith('/add-first'));
+			await waitFor(() => expect(goto).toHaveBeenCalledWith('/get-started'));
 		});
 	});
 });
