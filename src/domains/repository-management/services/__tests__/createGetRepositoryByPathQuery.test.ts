@@ -27,6 +27,22 @@ vi.mock('$utils/validation-utils', () => ({
 	isValidDate: vi.fn((date) => date !== 'invalid-date' && date !== '')
 }));
 
+// Mock useQueryClient to avoid lifecycle errors
+const mockQueryClient = {
+	invalidateQueries: vi.fn(),
+	getQueryData: vi.fn(),
+	setQueryData: vi.fn()
+};
+
+vi.mock('@tanstack/svelte-query', async () => {
+	const actual = await vi.importActual('@tanstack/svelte-query');
+	return {
+		...actual,
+		useQueryClient: vi.fn(() => mockQueryClient),
+		createQuery: vi.fn()
+	};
+});
+
 describe('createGetRepositoryQuery', () => {
 	const mockPath = '/path/to/repo';
 	const mockRepository = mockDataFactory.repository({
@@ -84,7 +100,7 @@ describe('createGetRepositoryQuery', () => {
 			.calls[0][0];
 		const config = createQueryArg();
 
-		expect(config.queryKey).toEqual(['branches', 'get', mockPath]);
+		expect(config.queryKey).toEqual(['repository', { path: mockPath }]);
 		expect(typeof config.queryFn).toBe('function');
 		expect(config.enabled).toBe(true);
 	});
@@ -97,7 +113,7 @@ describe('createGetRepositoryQuery', () => {
 			.calls[0][0];
 		const config = createQueryArg();
 
-		expect(config.queryKey).toEqual(['branches', 'get', '']);
+		expect(config.queryKey).toEqual(['repository', { path: '' }]);
 		expect(config.enabled).toBe(false);
 	});
 

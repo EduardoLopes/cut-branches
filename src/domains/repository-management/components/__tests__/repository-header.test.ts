@@ -3,6 +3,7 @@ import { tick } from 'svelte';
 import type { Writable } from 'svelte/store';
 import { vi } from 'vitest';
 import RepositoryHeader from '../repository-header.svelte';
+import TestWrapper from '$components/test-wrapper.svelte';
 import type { Repository, Branch } from '$services/common';
 
 // Mock the navigation module
@@ -36,6 +37,43 @@ vi.mock('../../store/repository.svelte', () => {
 	};
 });
 
+// Create mock query functions that can be updated in tests
+const mockListRepositoriesQuery = vi.hoisted(() => ({
+	fn: vi.fn(() => ({
+		data: [
+			{
+				id: 'some-id',
+				name: 'Test-Repo',
+				path: '/path/to/repo',
+				current_branch: 'main',
+				branches_count: 0,
+				created_at: new Date().toISOString(),
+				updated_at: new Date().toISOString()
+			}
+		],
+		isLoading: false,
+		isError: false,
+		error: null
+	}))
+}));
+
+const mockGetRepositoryQuery = vi.hoisted(() => ({
+	fn: vi.fn(() => ({
+		data: undefined, // Default to undefined
+		isLoading: false,
+		isError: false,
+		error: null
+	}))
+}));
+
+vi.mock('../../services/create-list-repositories-query', () => ({
+	createListRepositoriesQuery: mockListRepositoriesQuery.fn
+}));
+
+vi.mock('../../services/create-get-repository-query', () => ({
+	createGetRepositoryQuery: mockGetRepositoryQuery.fn
+}));
+
 describe('RepositoryHeader', () => {
 	const mockOnUpdate = vi.fn();
 	const mockBranches: Branch[] = [];
@@ -56,18 +94,62 @@ describe('RepositoryHeader', () => {
 	});
 
 	test('should render the component', () => {
-		const { container } = render(RepositoryHeader, {
-			props: { isLoading: false, onUpdate: mockOnUpdate }
+		const { container } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: { isLoading: false, isFetching: false, onUpdate: mockOnUpdate }
+			}
 		});
 		expect(container).toBeInTheDocument();
 	});
 
 	test('should display repository name when available', async () => {
 		const repoName = 'Display-Repo-Name';
-		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: repoName };
 
-		const { getByTestId } = render(RepositoryHeader, {
-			props: { repositoryId: 'some-id', isLoading: false, onUpdate: mockOnUpdate }
+		// Mock list to include a repository with the test ID
+		mockListRepositoriesQuery.fn.mockReturnValueOnce({
+			data: [
+				{
+					id: 'some-id',
+					name: 'Display-Repo-Name',
+					path: '/path/to/repo',
+					current_branch: 'main',
+					branches_count: 0,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString()
+				}
+			],
+			isLoading: false,
+			isError: false,
+			error: null
+		});
+
+		// Update the mock to return the specific repo name
+		mockGetRepositoryQuery.fn.mockReturnValueOnce({
+			data: {
+				id: 'mock-repo-id',
+				name: repoName,
+				path: '/path/to/repo',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			},
+			isLoading: false,
+			isError: false,
+			error: null
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} as any);
+
+		const { getByTestId } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 
 		await tick();
@@ -79,8 +161,42 @@ describe('RepositoryHeader', () => {
 	test('should display nothing for repository name when not available', async () => {
 		mockRepositoryStore.mockStore.state = null;
 
-		const { getByTestId } = render(RepositoryHeader, {
-			props: { repositoryId: 'some-id', isLoading: false, onUpdate: mockOnUpdate }
+		// Mock list with empty path to prevent getRepository query from running
+		mockListRepositoriesQuery.fn.mockReturnValueOnce({
+			data: [
+				{
+					id: 'some-id',
+					name: 'Test-Repo',
+					path: '' as unknown as string, // Empty path means getRepository won't be called
+					current_branch: 'main',
+					branches_count: 0,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString()
+				}
+			],
+			isLoading: false,
+			isError: false,
+			error: null
+		});
+
+		// Mock getRepository to return undefined
+		mockGetRepositoryQuery.fn.mockReturnValueOnce({
+			data: undefined,
+			isLoading: false,
+			isError: false,
+			error: null
+		});
+
+		const { getByTestId } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 		await tick();
 		const repoNameElement = getByTestId('repository-name');
@@ -89,15 +205,31 @@ describe('RepositoryHeader', () => {
 	});
 
 	test('should show loading indicator when isLoading is true', () => {
-		const { container } = render(RepositoryHeader, {
-			props: { repositoryId: 'some-id', isLoading: true, onUpdate: mockOnUpdate }
+		const { container } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					isLoading: true,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 		expect(container.querySelector('[data-testid="update-button"]')).toBeInTheDocument();
 	});
 
 	test('update button should call onUpdate when clicked', async () => {
-		const { getByTestId } = render(RepositoryHeader, {
-			props: { repositoryId: 'some-id', isLoading: false, onUpdate: mockOnUpdate }
+		const { getByTestId } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 		const updateButton = getByTestId('update-button');
 		await fireEvent.click(updateButton);
@@ -105,10 +237,50 @@ describe('RepositoryHeader', () => {
 	});
 
 	test('RemoveRepositoryModal should be rendered when repository state exists', async () => {
-		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Modal' };
+		// Mock list to include a repository with valid path
+		mockListRepositoriesQuery.fn.mockReturnValueOnce({
+			data: [
+				{
+					id: 'some-id',
+					name: 'Repo-For-Modal',
+					path: '/path/to/repo',
+					current_branch: 'main',
+					branches_count: 0,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString()
+				}
+			],
+			isLoading: false,
+			isError: false,
+			error: null
+		});
 
-		const { container } = render(RepositoryHeader, {
-			props: { repositoryId: 'some-id', isLoading: false, onUpdate: mockOnUpdate }
+		// Update the mock to return repository data
+		mockGetRepositoryQuery.fn.mockReturnValueOnce({
+			data: {
+				id: 'mock-repo-id',
+				name: 'Repo-For-Modal',
+				path: '/path/to/repo',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			},
+			isLoading: false,
+			isError: false,
+			error: null
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} as any);
+
+		const { container } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 		await tick();
 		expect(container.querySelector('[data-testid="open-remove-modal"]')).toBeInTheDocument();
@@ -117,8 +289,43 @@ describe('RepositoryHeader', () => {
 	test('RemoveRepositoryModal should NOT be rendered when repository state does not exist', async () => {
 		mockRepositoryStore.mockStore.state = null;
 
-		const { container } = render(RepositoryHeader, {
-			props: { repositoryId: 'some-id', isLoading: false, onUpdate: mockOnUpdate }
+		// Mock list with repository but no path
+		mockListRepositoriesQuery.fn.mockReturnValueOnce({
+			data: [
+				{
+					id: 'some-id',
+					name: 'Test-Repo',
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					path: '' as any,
+					current_branch: 'main',
+					branches_count: 0,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString()
+				}
+			],
+			isLoading: false,
+			isError: false,
+			error: null
+		});
+
+		// Mock getRepository to return undefined (no data)
+		mockGetRepositoryQuery.fn.mockReturnValueOnce({
+			data: undefined,
+			isLoading: false,
+			isError: false,
+			error: null
+		});
+
+		const { container } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 		await tick();
 		expect(container.querySelector('[data-testid="open-remove-modal"]')).not.toBeInTheDocument();
@@ -128,8 +335,16 @@ describe('RepositoryHeader', () => {
 		const { goto } = await import('$app/navigation');
 		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Restore' };
 
-		const { getByText } = render(RepositoryHeader, {
-			props: { repositoryId: 'test-repo-id', isLoading: false, onUpdate: mockOnUpdate }
+		const { getByText } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'test-repo-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate
+				}
+			}
 		});
 
 		await tick();
@@ -145,12 +360,16 @@ describe('RepositoryHeader', () => {
 	test('should navigate back when back button is clicked', async () => {
 		const { goto } = await import('$app/navigation');
 
-		const { getByText } = render(RepositoryHeader, {
+		const { getByText } = render(TestWrapper, {
 			props: {
-				repositoryId: 'test-repo-id',
-				isLoading: false,
-				onUpdate: mockOnUpdate,
-				showBackButton: true
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'test-repo-id',
+					isLoading: false,
+					isFetching: false,
+					onUpdate: mockOnUpdate,
+					showBackButton: true
+				}
 			}
 		});
 
@@ -169,8 +388,11 @@ describe('RepositoryHeader', () => {
 		const { goto } = await import('$app/navigation');
 		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Test' };
 
-		const { container } = render(RepositoryHeader, {
-			props: { isLoading: false, onUpdate: mockOnUpdate } // No repositoryId provided
+		const { container } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: { isLoading: false, isFetching: false, onUpdate: mockOnUpdate }
+			} // No repositoryId provided
 		});
 
 		await tick();

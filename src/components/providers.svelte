@@ -33,7 +33,7 @@
 			// Automatic query invalidation based on mutationKey
 			// This follows the pattern from: https://tkdodo.eu/blog/automatic-query-invalidation-after-mutations
 			// Uses resource-based keys: mutationKey ['branches'] invalidates all queries starting with ['branches']
-			const mutationKey = mutation.options.mutationKey;
+			const mutationKey = mutation.options?.mutationKey;
 			const resources = (mutation.meta?.resources as string[] | undefined) ?? [];
 			const awaitInvalidates = mutation.meta?.awaitInvalidates as string[][] | undefined;
 
@@ -123,7 +123,8 @@
 			queries: {
 				enabled: browser,
 				retry: 0,
-				refetchOnWindowFocus: false
+				refetchOnWindowFocus: false,
+				staleTime: 1000 * 60 * 1 // 1 minute
 			}
 		}
 	});

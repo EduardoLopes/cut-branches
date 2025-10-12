@@ -103,7 +103,7 @@
 		"@pindoba/svelte-text-input": "alpha",
 		"@pindoba/svelte-theme-mode-select": "alpha",
 		"@radix-ui/colors": "^3.0.0",
-		"@tanstack/svelte-query": "https://pkg.pr.new/@tanstack/svelte-query@8c9ce998d84573adafedcbac4488159cd75e2473",
+		"@tanstack/svelte-query": "^6.0.0",
 		"@tauri-apps/api": "^2.8.0",
 		"@tauri-apps/plugin-dialog": "~2.4.0",
 		"@tauri-apps/plugin-shell": "~2.3.1",

@@ -9,16 +9,18 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
-	import Branch from './branch.svelte';
+	import BranchComponent from './branch.svelte';
+	import { createListBranchesQuery } from '$domains/branch-management/services/createListBranchesQuery';
 	import {
 		createRestoreDeletedBranchMutation,
 		createRestoreDeletedBranchesMutation
 	} from '$domains/branch-management/services/createRestoreDeletedBranchMutation';
-	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
-	import { getSelectedDeletedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
+	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
+	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
+	import type { Branch } from '$services/common';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
@@ -31,10 +33,16 @@
 
 	let { repoId, buttonProps }: Props = $props();
 	const repository = $derived(getRepositoryStore(repoId));
-	const deletedBranchesStore = $derived(getDeletedBranchesStore(repository?.state?.id));
-	const selectedDeletedBranchesStore = $derived(
-		getSelectedDeletedBranchesStore(repository?.state?.id)
-	);
+
+	// Get deleted branches from database
+	const getDeletedBranchesQuery = $derived(createListBranchesQuery(repoId ?? '', true));
+
+	// Get selected branches from database
+	const selectedQueryInput = $derived({ repoId: repoId ?? '' });
+	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+
+	// Mutation for clearing selected branches
+	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
 
 	let open = $state(false);
 	let isProcessing = $state(false);
@@ -96,11 +104,33 @@
 		}
 	});
 
-	// Get all deleted branches that match our criteria
-	const allDeletedBranches = $derived(deletedBranchesStore?.state?.branches ?? []);
+	// Convert database branch format to frontend Branch format
+	function convertDbBranchToFrontend(dbBranch: Record<string, unknown>): Branch {
+		return {
+			name: dbBranch.name as string,
+			current: dbBranch.current as boolean,
+			fullyMerged: dbBranch.fully_merged as boolean,
+			lastCommit: {
+				sha: dbBranch.last_commit_sha as string,
+				shortSha: dbBranch.last_commit_short_sha as string,
+				date: dbBranch.last_commit_date as string,
+				message: dbBranch.last_commit_message as string,
+				author: dbBranch.last_commit_author as string,
+				email: dbBranch.last_commit_email as string
+			},
+			deletedAt: dbBranch.deleted_at as string | undefined,
+			isReachable: dbBranch.is_reachable as boolean | undefined
+		};
+	}
 
+	// Get all deleted branches from database
+	const allDeletedBranches = $derived(
+		(getDeletedBranchesQuery?.data?.branches ?? []).map(convertDbBranchToFrontend)
+	);
+
+	// Get selected deleted branches (filter deleted branches by selected branch names)
 	const selectedDeletedBranches = $derived(
-		allDeletedBranches.filter((branch) => selectedDeletedBranchesStore?.state?.has(branch.name))
+		allDeletedBranches.filter((branch) => selectedQuery.data?.branches.includes(branch.name))
 	);
 
 	// Check which branches already exist in the repository
@@ -191,9 +221,8 @@
 			pendingConflictBranches = pendingConflictBranches.filter((b) => b !== branchName);
 
 			if (data.result.success) {
-				// If successfully restored, remove from deleted branches store
+				// If successfully restored
 				if (data.result.success && !data.result.skipped) {
-					deletedBranchesStore?.removeDeletedBranch(branchName);
 					try {
 						notifications.push({
 							feedback: 'success',
@@ -208,15 +237,11 @@
 							})
 						});
 
-						// Update repository data to reflect the new branch
-						const invalidated = await client.invalidateQueries({
-							queryKey: ['branches', 'get-all', repository?.state?.path]
-						});
-
-						selectedDeletedBranchesStore?.clear();
+						// Clear selected branches - automatic invalidation handles query updates
+						if (repoId) {
+							clearSelectedMutation.mutate({ repoId });
+						}
 						open = false;
-
-						return invalidated;
 					} catch (e) {
 						console.error('Error during notification or query invalidation:', e);
 					}
@@ -282,11 +307,6 @@
 					[branchName]: { ...result, processing: false }
 				};
 
-				// If successfully restored, remove from deleted branches store
-				if (result.success && !result.skipped) {
-					deletedBranchesStore?.removeDeletedBranch(branchName);
-				}
-
 				// Collect branches that need conflict resolution
 				if (result.requiresUserAction && result.conflictDetails) {
 					pendingConflictBranches = [...pendingConflictBranches, branchName];
@@ -323,15 +343,11 @@
 						message: m
 					});
 
-					// Update repository data to reflect the new branches
-					const invalidated = await client.invalidateQueries({
-						queryKey: ['branches', 'get-all', repository?.state?.path]
-					});
-
-					selectedDeletedBranchesStore?.clear();
+					// Clear selected branches - automatic invalidation handles query updates
+					if (repoId) {
+						clearSelectedMutation.mutate({ repoId });
+					}
 					open = false;
-
-					return invalidated;
 				} catch (e) {
 					console.error('Error during batch notification or query invalidation:', e);
 				}
@@ -343,7 +359,9 @@
 			} else {
 				// Otherwise, we're done
 				isProcessing = false;
-				selectedDeletedBranchesStore?.clear();
+				if (repoId) {
+					clearSelectedMutation.mutate({ repoId });
+				}
 				open = false;
 			}
 		},
@@ -368,8 +386,8 @@
 				// All done
 				isProcessing = false;
 				// Only clear if we successfully processed everything
-				if (Object.keys(restorationResults).length === selectedDeletedBranches.length) {
-					selectedDeletedBranchesStore?.clear();
+				if (Object.keys(restorationResults).length === selectedDeletedBranches.length && repoId) {
+					clearSelectedMutation.mutate({ repoId });
 				}
 			}
 			return;
@@ -409,7 +427,9 @@
 			// All branches processed
 			isProcessing = false;
 			// Clear selected branches only after all processing is complete
-			selectedDeletedBranchesStore?.clear();
+			if (repoId) {
+				clearSelectedMutation.mutate({ repoId });
+			}
 			open = false;
 			return;
 		}
@@ -433,6 +453,7 @@
 		// Restore the next branch
 		restoreMutation.mutate({
 			path: repository.state.path,
+			repoId: repository.state.id,
 			branchInfo: {
 				originalName: nextBranch.name,
 				targetName: nextBranch.name,
@@ -472,6 +493,7 @@
 
 			restoreBatchMutation.mutate({
 				path: repository.state.path,
+				repoId: repository.state.id,
 				branchInfos
 			});
 		}
@@ -496,6 +518,7 @@
 		// Continue with the same branch but now with resolution
 		restoreMutation.mutate({
 			path: repository.state.path,
+			repoId: repository.state.id,
 			branchInfo: {
 				originalName: branch.name,
 				targetName: branch.name,
@@ -771,7 +794,7 @@
 						}}
 					>
 						<Group direction="vertical">
-							<Branch data={branch} />
+							<BranchComponent data={branch} />
 							{#if !isProcessing && existingBranches.includes(branch.name)}
 								<div
 									class={css({

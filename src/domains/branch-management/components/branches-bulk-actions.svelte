@@ -8,11 +8,14 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { SvelteSet } from 'svelte/reactivity';
 	import DeleteBranchModal from '$domains/branch-management/components/delete-branch-modal.svelte';
-	import { getLockedBranchesStore } from '$domains/branch-management/store/locked-branches.svelte';
+	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
+	import {
+		createAddSelectedBranchesMutation,
+		createClearSelectedBranchesMutation
+	} from '$domains/branch-management/services/createSelectedBranchesMutations';
+	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
-	import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
 	import type { Branch, Repository } from '$services/common';
-	import type { SetStore } from '$utils/set-store.svelte';
 	import { isEmptyString, formatString } from '$utils/string-utils';
 	import { createToggle } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
@@ -25,8 +28,7 @@
 		branches: Branch[];
 		onSearch: (value: string) => void;
 		onClearSearch: () => void;
-		actionsSnippet?: Snippet<[Repository, SvelteSet<string> | undefined | undefined]>;
-		selectedStore?: SetStore<string>;
+		actionsSnippet?: Snippet<[Repository, Set<string> | undefined | undefined]>;
 	}
 
 	const {
@@ -37,45 +39,63 @@
 		onSearch,
 		onClearSearch,
 		actionsSnippet,
-		selectedStore,
 		...rest
 	}: Props = $props();
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
-	const selected = $derived(selectedStore ?? getSelectedBranchesStore(currentRepo?.name));
-	const locked = $derived(getLockedBranchesStore(currentRepo?.name));
+
+	const selectedQueryInput = $derived({ repoId: currentRepo?.id ?? '' });
+	const lockedQueryInput = $derived({ repoId: currentRepo?.id ?? '' });
+
+	// Use queries for database-backed data
+	const lockedQuery = $derived(createLockedBranchesQuery(lockedQueryInput));
+	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+
 	const searchToggle = createToggle(false);
 
-	function handleSelectAll() {
+	// Mutations
+	const addSelectedMutation = $derived(createAddSelectedBranchesMutation());
+
+	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
+
+	// Computed state
+	const lockedBranches = $derived(
+		lockedQuery.data?.branches ? new Set(lockedQuery.data.branches) : new Set<string>()
+	);
+
+	async function handleSelectAll() {
 		const indeterminate = selectedSearchLength !== selectibleCount && selectedSearchLength > 0;
+
+		if (!currentRepo?.id) return;
 
 		// If we have no selected branches or some (but not all) are selected, we need to select all
 		if (indeterminate || selectedSearchLength === 0) {
-			// For better performance, create a tempSet to batch operations
-			const tempSet = new Set<string>();
+			// Collect branches to select
+			const branchesToAdd: string[] = [];
 
-			// First, add all existing selections to maintain them
-			if (selected?.state) {
-				// Use for...of instead of forEach for better performance
-				for (const branch of selected.state) {
-					tempSet.add(branch);
-				}
-			}
-
-			// Then add all branches that should be selected
 			for (let i = 0, len = branches.length; i < len; i++) {
 				const branch = branches[i];
-				if (branch.name !== currentRepo?.currentBranch && !locked?.has(branch.name)) {
-					tempSet.add(branch.name);
+				if (branch.name !== currentRepo?.currentBranch && !lockedBranches.has(branch.name)) {
+					branchesToAdd.push(branch.name);
 				}
 			}
 
-			// Clear current selections and add the complete set at once
-			selected?.clear();
-			selected?.add([...tempSet]);
+			// Use mutateAsync to properly chain operations
+			try {
+				await clearSelectedMutation.mutateAsync({
+					repoId: currentRepo.id
+				});
+				await addSelectedMutation.mutateAsync({
+					repoId: currentRepo.id,
+					branchNames: branchesToAdd
+				});
+			} catch (error) {
+				// Error handling is done by the mutation's onError callback
+				console.error('Failed to select all branches:', error);
+			}
 		} else {
 			// If all are selected, we need to deselect all
-			selected?.clear();
+			clearSelectedMutation.mutate({ repoId: currentRepo.id });
 		}
 	}
 </script>
@@ -141,8 +161,10 @@
 
 					{#if search?.state?.length ?? 0 > 0}
 						<div class={css({ fontSize: 'md' })} data-testid="search-query-info">
-							<span class={css({ color: 'neutral.950.contrast' })}>{selected?.state?.size}</span>
-							{selected?.state?.size === 1 ? 'is' : 'are'} selected /
+							<span class={css({ color: 'neutral.950.contrast' })}
+								>{selectedQuery.data?.branches.length ?? 0}</span
+							>
+							{selectedQuery.data?.branches.length === 1 ? 'is' : 'are'} selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
 							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
 							<strong class={css({ color: 'primary.800' })}>
@@ -156,7 +178,7 @@
 					{#if isEmptyString(search?.state)}
 						<div data-testid="selectible-count-info">
 							{formatString('{selected} / {total} {label}', {
-								selected: selected?.state?.size ?? 0,
+								selected: selectedQuery.data?.branches.length ?? 0,
 								total: selectibleCount,
 								label: selectibleCount === 1 ? 'branch' : 'branches'
 							})}
@@ -217,9 +239,12 @@
 
 		{#if currentRepo}
 			{#if actionsSnippet}
-				{@render actionsSnippet(currentRepo, selected?.state)}
+				{@render actionsSnippet(currentRepo, new SvelteSet(selectedQuery.data?.branches ?? []))}
 			{:else}
-				{@render defaultActionsSnippet(currentRepo, selected?.state)}
+				{@render defaultActionsSnippet(
+					currentRepo,
+					new SvelteSet(selectedQuery.data?.branches ?? [])
+				)}
 			{/if}
 		{/if}
 	</div>

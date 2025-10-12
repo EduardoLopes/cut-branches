@@ -1,9 +1,7 @@
 import { createTauriMutation, type TauriMutationOptions } from '$utils/create-tauri-mutation';
 
-type DeleteBranchesMutationOptions = TauriMutationOptions<'deleteBranches'>;
+type BatchDeleteBranchesMutationOptions = TauriMutationOptions<'batchDeleteBranches'>;
 
-export function createDeleteBranchesMutation(options?: DeleteBranchesMutationOptions) {
-	return createTauriMutation('deleteBranches', {
-		...options
-	});
+export function createDeleteBranchesMutation(options?: BatchDeleteBranchesMutationOptions) {
+	return createTauriMutation('batchDeleteBranches', options);
 }

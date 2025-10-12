@@ -1,52 +1,31 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import AddButton from '$domains/repository-management/components/add-button.svelte';
-	import {
-		getRepositoryStore,
-		RepositoryStore
-	} from '$domains/repository-management/store/repository.svelte';
+	import { createListRepositoriesQuery } from '$domains/repository-management/services/create-list-repositories-query';
 	import { css } from '@pindoba/panda/css';
 
-	// Create a reactive variable to track the repositories list
-	const repoList = $derived(RepositoryStore.repositories.list);
+	// Query for repositories list from database
+	const repositoriesQuery = $derived(createListRepositoriesQuery());
 
-	// Add an onMount to ensure repositories are loaded
-	onMount(() => {
-		// This will ensure repository stores are loaded and initialized
-		RepositoryStore.loadRepositories();
+	// Map repository data to navigation items
+	const items = $derived.by<NavigationItem[]>(() => {
+		if (!repositoriesQuery.data) {
+			return [];
+		}
+
+		const repositories = repositoriesQuery.data;
+		const mappedItems = repositories.map((repo) => ({
+			id: repo.id,
+			label: repo.name,
+			href: `/repos/${repo.id}`,
+			badge: repo.branches_count > 0 ? `${repo.branches_count}` : undefined
+		}));
+
+		// Sort by name
+		return [...mappedItems].sort((a, b) => a.label.localeCompare(b.label));
 	});
-
-	// This function gets the repository menu items by mapping through the repository list
-	const getItems = $derived.by<NavigationItem[]>(() => {
-		const mappedAndFilteredItems = repoList
-			.map((repoName) => {
-				const repository = getRepositoryStore(repoName);
-				if (repository?.state) {
-					return {
-						id: repository.state.id,
-						label: repository.state.name,
-						href: `/repos/${repository.state.name}`,
-						badge:
-							repository.state.branchesCount > 0 ? `${repository.state.branchesCount}` : undefined
-					} satisfies NavigationItem;
-				}
-				return undefined;
-			})
-			.filter((item) => {
-				return !!item;
-			});
-
-		// Use spread syntax to create a new array before sorting
-		return [...mappedAndFilteredItems].sort((a, b) => {
-			return a.label.localeCompare(b.label);
-		});
-	});
-
-	// Create a reactive list of menu items that will update when repository states change
-	const items = $derived(getItems);
 </script>
 
 <section

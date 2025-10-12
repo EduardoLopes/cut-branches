@@ -33,6 +33,24 @@ impl AppError {
     }
 }
 
+// Implement From for diesel::result::Error
+impl From<diesel::result::Error> for AppError {
+    fn from(err: diesel::result::Error) -> Self {
+        AppError::new(
+            format!("Database error: {}", err),
+            "database_error",
+            Some(err.to_string()),
+        )
+    }
+}
+
+// Implement From for String (database connection errors)
+impl From<String> for AppError {
+    fn from(err: String) -> Self {
+        AppError::new(err.clone(), "error", Some(err))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

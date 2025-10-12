@@ -1,5 +1,7 @@
 use std::path::Path;
+use tauri::State;
 
+use crate::db::{models::NewRepository, operations, DatabaseState};
 use crate::domains::branch_management::git::branch::Branch;
 use crate::shared::error::AppError;
 
@@ -14,17 +16,25 @@ pub struct GitDirResponse {
     pub id: String,
 }
 
-/// Get information about a git repository.
+/// Get information about a git repository from the database.
+/// This is a DB-first operation that only syncs if the repository data is stale.
 ///
 /// # Arguments
 ///
 /// * `raw_path` - Path to the git repository
 /// * `path` - Original path string
+/// * `db` - Database state for persisting repository data
 ///
 /// # Returns
 ///
 /// * `Result<GitDirResponse, AppError>` - Repository information or an error
-pub async fn get_repository(raw_path: &Path, path: &str) -> Result<GitDirResponse, AppError> {
+pub async fn get_repository(
+    raw_path: &Path,
+    path: &str,
+    db: &State<'_, DatabaseState>,
+) -> Result<GitDirResponse, AppError> {
+    println!("get_repository called for path: {}", path);
+
     // Check if it's a git repository
     if !super::validation::is_git_repository(raw_path)? {
         return Err(AppError::new(
@@ -47,17 +57,7 @@ pub async fn get_repository(raw_path: &Path, path: &str) -> Result<GitDirRespons
     let root_path_response =
         crate::domains::path_operations::service::get_root_path(path.to_string()).await?;
     let root_path = root_path_response.root_path;
-
     let raw_root_path = Path::new(&root_path);
-
-    // Get branches from branch management domain (vertical slice architecture)
-    let mut branches =
-        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
-            raw_root_path,
-        )?;
-    branches.sort_by(|a, b| b.current.cmp(&a.current));
-    let current =
-        crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
 
     // Extract repository name
     let repo_name = raw_root_path
@@ -78,14 +78,142 @@ pub async fn get_repository(raw_path: &Path, path: &str) -> Result<GitDirRespons
             )
         })?
         .to_string();
-    let branches_count = branches.len() as u32;
 
-    Ok(GitDirResponse {
-        path: root_path,
-        branches,
-        current_branch: current.to_string(),
-        branches_count,
-        name: repo_name.clone(),
-        id: repo_name,
-    })
+    // DB-FIRST: Check if repository exists in database
+    let mut conn = db.get_connection().map_err(|e| {
+        AppError::new(
+            "Failed to get database connection".to_string(),
+            "db_connection_failed",
+            Some(e),
+        )
+    })?;
+
+    let db_repo = operations::get_repository(&mut conn, &repo_name);
+
+    match db_repo {
+        Ok(repo) => {
+            println!("Repository found in DB: {}", repo.name);
+            // Repository exists in DB - sync if needed
+            sync_repository_if_needed(raw_root_path, &repo_name, &root_path, db).await?;
+
+            // Get fresh data from DB after sync
+            let updated_repo = operations::get_repository(&mut conn, &repo_name).map_err(|e| {
+                AppError::new(
+                    "Failed to get updated repository from database".to_string(),
+                    "db_query_failed",
+                    Some(e.to_string()),
+                )
+            })?;
+
+            // Get branches from branch management domain
+            let mut branches =
+                crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
+                    raw_root_path,
+                )?;
+            branches.sort_by(|a, b| b.current.cmp(&a.current));
+
+            Ok(GitDirResponse {
+                path: root_path,
+                branches,
+                current_branch: updated_repo.current_branch,
+                branches_count: updated_repo.branches_count as u32,
+                name: updated_repo.name,
+                id: updated_repo.id,
+            })
+        }
+        Err(_) => {
+            println!("Repository NOT found in DB: {}", repo_name);
+            // Repository doesn't exist in DB - return error
+            // User must explicitly add the repository first
+            Err(AppError::new(
+                format!("Repository '{}' not found", repo_name),
+                "repository_not_found",
+                Some(format!(
+                    "Please add the repository at '{}' first before accessing it",
+                    root_path
+                )),
+            ))
+        }
+    }
+}
+
+/// Syncs repository data if it has changed.
+/// Only performs expensive git operations if the data is stale.
+async fn sync_repository_if_needed(
+    raw_root_path: &Path,
+    repo_name: &str,
+    root_path: &str,
+    db: &State<'_, DatabaseState>,
+) -> Result<(), AppError> {
+    // Get current git state
+    let current_branch =
+        crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
+
+    // Quick check: has the current branch changed?
+    let mut conn = db.get_connection().map_err(|e| {
+        AppError::new(
+            "Failed to get database connection".to_string(),
+            "db_connection_failed",
+            Some(e),
+        )
+    })?;
+
+    let db_repo = operations::get_repository(&mut conn, repo_name).map_err(|e| {
+        AppError::new(
+            "Failed to get repository from database".to_string(),
+            "db_query_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // If current branch changed, we need to sync
+    let needs_sync = db_repo.current_branch != current_branch;
+
+    if needs_sync {
+        println!("Repository data is stale, syncing...");
+
+        // Get full branch list (expensive operation)
+        let branches =
+            crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
+                raw_root_path,
+            )?;
+        let branches_count = branches.len() as i32;
+
+        // Update repository metadata
+        let updated_repo = NewRepository {
+            id: repo_name.to_string(),
+            name: repo_name.to_string(),
+            path: root_path.to_string(),
+            current_branch: current_branch.to_string(),
+            branches_count,
+        };
+
+        operations::update_repository(&mut conn, repo_name, updated_repo).map_err(|e| {
+            AppError::new(
+                "Failed to update repository in database".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
+
+        // Sync branches to database
+        crate::domains::branch_management::services::sync::sync_branches_to_db(
+            raw_root_path,
+            repo_name,
+            db,
+        )
+        .map_err(|e| {
+            AppError::new(
+                "Failed to sync branches to database".to_string(),
+                "branch_sync_failed",
+                Some(e.to_string()),
+            )
+        })?;
+
+        println!("Sync completed");
+    } else {
+        println!("Repository data is fresh, skipping sync");
+    }
+
+    Ok(())
 }

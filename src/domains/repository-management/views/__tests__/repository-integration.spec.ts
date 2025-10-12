@@ -135,6 +135,7 @@ vi.mock('$domains/branch-management/components/branches-bulk-actions.svelte', ()
 			// Use a valid type that matches the mutation's expected parameters
 			mockMutation.mutate({
 				path: '/mock/path',
+				repoId: 'mock-repo-id',
 				branches: ['branch-1', 'branch-2']
 			});
 		});
@@ -269,12 +270,14 @@ describe('Repository Integration', () => {
 		const mockMutation = createDeleteBranchesMutation();
 		mockMutation.mutate({
 			path: '/mock/path',
+			repoId: 'mock-repo-id',
 			branches: ['branch-1', 'branch-2']
 		});
 
 		// Verify delete mutation was called with correct parameters
 		expect(mockMutation.mutate).toHaveBeenCalledWith({
 			path: '/mock/path',
+			repoId: 'mock-repo-id',
 			branches: ['branch-1', 'branch-2']
 		});
 	});

@@ -4,16 +4,18 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
-	import { useQueryClient } from '@tanstack/svelte-query';
 	import Branch from '$domains/branch-management/components/branch.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
+	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
+	import {
+		createAddSelectedBranchesMutation,
+		createRemoveSelectedBranchesMutation
+	} from '$domains/branch-management/services/createSelectedBranchesMutations';
+	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { createSwitchBranchMutation } from '$domains/branch-management/services/createSwitchBranchMutation';
-	import { getLockedBranchesStore } from '$domains/branch-management/store/locked-branches.svelte';
-	import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import type { Branch as BranchType } from '$services/common';
-	import type { SetStore } from '$utils/set-store.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
@@ -25,8 +27,6 @@
 		allowLocking?: boolean;
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
-		selectedStore?: SetStore<string>;
-		branchesType?: 'current' | 'deleted';
 	}
 
 	const {
@@ -35,16 +35,22 @@
 		repositoryID,
 		allowLocking = true,
 		allowSelection = true,
-		allowSetCurrent = true,
-		selectedStore,
-		branchesType = 'current'
+		allowSetCurrent = true
 	}: Props = $props();
 
-	const queryClient = useQueryClient();
-
 	const repository = $derived(getRepositoryStore(repositoryID));
-	const locked = $derived(getLockedBranchesStore(repositoryID));
-	const selected = $derived(selectedStore ?? getSelectedBranchesStore(repositoryID));
+
+	const selectedQueryInput = $derived({ repoId: repositoryID ?? '' });
+	const lockedQueryInput = $derived({ repoId: repositoryID ?? '' });
+
+	// Use queries for database-backed data
+	const lockedQuery = $derived(createLockedBranchesQuery(lockedQueryInput));
+	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+
+	// Mutations for selected branches
+	const addSelectedMutation = $derived(createAddSelectedBranchesMutation());
+
+	const removeSelectedMutation = $derived(createRemoveSelectedBranchesMutation());
 
 	const switchBranchMutation = $derived(
 		createSwitchBranchMutation({
@@ -55,21 +61,21 @@
 					feedback: 'success'
 				});
 
-				selected?.delete([currentBranch]);
-
-				return queryClient.invalidateQueries({
-					queryKey: ['branches', 'get', repository?.state?.path]
-				});
+				// Remove from selected branches in database - invalidation happens automatically
+				if (repositoryID) {
+					removeSelectedMutation.mutate({ repoId: repositoryID, branchNames: [currentBranch] });
+				}
 			},
 			meta: { showErrorNotification: true }
 		})
 	);
-
 	function handleToggleSelect(branch: string) {
-		if (selected?.has(branch)) {
-			selected?.delete([branch]);
+		if (!repositoryID) return;
+
+		if (selectedQuery.data?.branches.includes(branch)) {
+			removeSelectedMutation.mutate({ repoId: repositoryID, branchNames: [branch] });
 		} else {
-			selected?.add([branch]);
+			addSelectedMutation.mutate({ repoId: repositoryID, branchNames: [branch] });
 		}
 	}
 
@@ -119,7 +125,7 @@
 						gap: 'sm',
 						borderRadius: 'sm'
 					})}
-					class:selected={selected?.has(branch.name)}
+					class:selected={selectedQuery.data?.branches.includes(branch.name)}
 				>
 					{#if currentBranch !== branch.name}
 						<div
@@ -133,8 +139,8 @@
 								<Checkbox
 									id={`checkbox-${branch.name}`}
 									onclick={() => handleToggleSelect(branch.name)}
-									checked={selected?.has(branch.name)}
-									disabled={locked?.has(branch.name)}
+									checked={selectedQuery.data?.branches.includes(branch.name)}
+									disabled={lockedQuery.data?.branches.includes(branch.name)}
 								>
 									<div class={visuallyHidden()}>
 										{branch.name}
@@ -199,10 +205,9 @@
 
 					<Branch
 						data={branch}
-						selected={branchesType === 'deleted'
-							? !selected?.has(branch.name)
-							: selected?.has(branch.name)}
-						locked={locked?.has(branch.name) && currentBranch !== branch.name}
+						selected={selectedQuery.data?.branches.includes(branch.name)}
+						locked={lockedQuery.data?.branches.includes(branch.name) &&
+							currentBranch !== branch.name}
 					/>
 				</div>
 			{/each}

@@ -5,17 +5,26 @@
 
 extern crate execute;
 
+pub mod db;
 pub mod domains;
 pub mod shared;
 
+use tauri::Manager;
+
 use domains::branch_management::commands::{
-    delete_branches, is_commit_reachable, restore_branch, restore_branches, switch_branch,
+    batch_create_branch_restorations, batch_create_locked_branches, batch_create_selected_branches,
+    batch_delete_branches, batch_delete_locked_branches, batch_delete_selected_branches,
+    create_branch_restoration, delete_all_locked_branches, delete_all_selected_branches,
+    get_commit_reachability, list_branches, list_locked_branches, list_selected_branches,
+    update_current_branch,
 };
 use domains::branch_management::events::{
     BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
 };
 use domains::path_operations::commands::get_repository_root;
-use domains::repository_management::commands::get_repository;
+use domains::repository_management::commands::{
+    create_repository, delete_repository, get_repository, list_repositories,
+};
 use domains::repository_management::events::{NotificationEvent, RepositoryLoadedEvent};
 
 fn main() {
@@ -23,13 +32,30 @@ fn main() {
 
     let builder = tauri_specta::Builder::<tauri::Wry>::new()
         .commands(tauri_specta::collect_commands![
+            // Path operations
             get_repository_root,
+            // Repository management
+            create_repository,
             get_repository,
-            switch_branch,
-            delete_branches,
-            is_commit_reachable,
-            restore_branch,
-            restore_branches
+            list_repositories,
+            delete_repository,
+            // Branch management
+            list_branches,
+            update_current_branch,
+            batch_delete_branches,
+            get_commit_reachability,
+            create_branch_restoration,
+            batch_create_branch_restorations,
+            // Selected branches
+            list_selected_branches,
+            batch_create_selected_branches,
+            batch_delete_selected_branches,
+            delete_all_selected_branches,
+            // Locked branches
+            list_locked_branches,
+            batch_create_locked_branches,
+            batch_delete_locked_branches,
+            delete_all_locked_branches,
         ])
         .events(tauri_specta::collect_events![
             BranchDeletedEvent,
@@ -50,8 +76,15 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .manage(db::DatabaseState::new())
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
+            // Initialize database
+            let db_state = app.state::<db::DatabaseState>();
+            db_state
+                .initialize(app.handle())
+                .expect("Failed to initialize database");
+
             builder.mount_events(app);
             Ok(())
         })
@@ -81,11 +114,11 @@ mod tests {
 
         // Test that we can access the command functions
         let _ = repo_commands::get_repository;
-        let _ = commands::switch_branch;
-        let _ = commands::delete_branches;
-        let _ = commands::is_commit_reachable;
-        let _ = commands::restore_branch;
-        let _ = commands::restore_branches;
+        let _ = commands::update_current_branch;
+        let _ = commands::batch_delete_branches;
+        let _ = commands::get_commit_reachability;
+        let _ = commands::create_branch_restoration;
+        let _ = commands::batch_create_branch_restorations;
         let _ = path_commands::get_repository_root;
     }
 }

@@ -44,6 +44,16 @@ vi.mock('$domains/repository-management/store/repository.svelte', () => {
 	};
 });
 
+// Mock Tauri commands
+vi.mock('$lib/bindings', () => ({
+	commands: {
+		createRepository: vi.fn(),
+		getRepositoryRoot: vi.fn(),
+		getRepository: vi.fn(),
+		listRepositories: vi.fn().mockResolvedValue({ status: 'ok', data: [] })
+	}
+}));
+
 describe('Navigation Integration', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -91,13 +101,27 @@ describe('Navigation Integration', () => {
 		// Mock successful dialog
 		(open as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('/path/to/repo');
 
+		// Mock the createRepository command to return success
+		const { commands } = await import('$lib/bindings');
+		(commands.createRepository as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+			status: 'ok',
+			data: {
+				id: 'test-repo-id',
+				name: 'Test Repo',
+				path: '/path/to/repo',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			}
+		});
+
 		// Set up query mock to return success with a repo
 		(createGetRepositoryQuery as ReturnType<typeof vi.fn>).mockReturnValue({
 			isSuccess: true,
 			isLoading: false,
 			isError: false,
 			data: {
-				id: 'Test Repo',
+				id: 'test-repo-id',
 				name: 'Test Repo',
 				path: '/path/to/repo',
 				branches: [],

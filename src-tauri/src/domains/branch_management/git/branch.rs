@@ -5,7 +5,7 @@ use std::path::Path;
 use tauri::Emitter;
 
 use super::super::services::deletion::{
-    ConflictDetails, ConflictResolution, DeletedBranchInfo, DeletedBranch, RestoreBranchResult,
+    ConflictDetails, ConflictResolution, DeletedBranch, DeletedBranchInfo, RestoreBranchResult,
 };
 use super::commit::is_commit_reachable;
 use crate::shared::error::AppError;

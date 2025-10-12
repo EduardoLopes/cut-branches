@@ -15,11 +15,13 @@
 		height: 'full'
 	})}
 >
-	<Repository
-		{id}
-		branchesType="deleted"
-		allowLocking={false}
-		allowSelection={true}
-		allowSetCurrent={false}
-	/>
+	{#if id}
+		<Repository
+			{id}
+			branchesType="deleted"
+			allowLocking={false}
+			allowSelection={true}
+			allowSetCurrent={false}
+		/>
+	{/if}
 </div>

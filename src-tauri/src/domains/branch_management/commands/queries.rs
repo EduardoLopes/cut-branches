@@ -1,22 +1,37 @@
 use std::path::Path;
 
+use crate::db::DatabaseState;
 use crate::shared::error::AppError;
 use serde::{Deserialize, Serialize};
+use tauri::State;
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct IsCommitReachableInput {
+pub struct GetCommitReachabilityInput {
     pub path: String,
     pub commit_sha: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct IsCommitReachableOutput {
+pub struct GetCommitReachabilityOutput {
     pub is_reachable: bool,
 }
 
-/// Checks if a commit SHA is reachable in a git repository.
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ListBranchesInput {
+    pub repo_id: String,
+    pub include_deleted: bool,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ListBranchesOutput {
+    pub branches: Vec<crate::db::models::BranchRecord>,
+}
+
+/// Gets the reachability status of a commit SHA in a git repository.
 ///
 /// # Arguments
 ///
@@ -24,14 +39,54 @@ pub struct IsCommitReachableOutput {
 ///
 /// # Returns
 ///
-/// * `Result<IsCommitReachableOutput, AppError>` - The reachability status or an error
+/// * `Result<GetCommitReachabilityOutput, AppError>` - The reachability status or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn is_commit_reachable(
-    input: IsCommitReachableInput,
-) -> Result<IsCommitReachableOutput, AppError> {
+pub async fn get_commit_reachability(
+    input: GetCommitReachabilityInput,
+) -> Result<GetCommitReachabilityOutput, AppError> {
     let raw_path = Path::new(&input.path);
     let is_reachable = super::super::git::commit::is_commit_reachable(raw_path, &input.commit_sha)?;
 
-    Ok(IsCommitReachableOutput { is_reachable })
+    Ok(GetCommitReachabilityOutput { is_reachable })
+}
+
+/// Lists branches from the database for a repository.
+///
+/// # Arguments
+///
+/// * `db` - Database state
+/// * `input` - Input parameters containing repo_id and include_deleted flag
+///
+/// # Returns
+///
+/// * `Result<ListBranchesOutput, AppError>` - The list of branches or an error
+#[tauri::command]
+#[specta::specta]
+pub fn list_branches(
+    db: State<DatabaseState>,
+    input: ListBranchesInput,
+) -> Result<ListBranchesOutput, AppError> {
+    let mut conn = db.get_connection().map_err(|e| {
+        AppError::new(
+            "Failed to get database connection".to_string(),
+            "db_connection_failed",
+            Some(e),
+        )
+    })?;
+
+    let branches = if input.include_deleted {
+        crate::db::operations::get_deleted_branches_for_repository(&mut conn, &input.repo_id)
+    } else {
+        crate::db::operations::get_branches_for_repository(&mut conn, &input.repo_id)
+    }
+    .map_err(|e| {
+        AppError::new(
+            "Failed to get branches from database".to_string(),
+            "db_query_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    Ok(ListBranchesOutput { branches })
 }

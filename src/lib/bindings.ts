@@ -25,11 +25,33 @@ async getRepositoryRoot(input: GetRepositoryRootInput) : Promise<Result<GetRepos
 }
 },
 /**
+ * Creates a new repository entry in the database.
+ * This should only be called when a user explicitly adds a repository.
+ * 
+ * # Arguments
+ * 
+ * * `input` - Input parameters containing the repository path
+ * * `db` - Database state for persisting repository data
+ * 
+ * # Returns
+ * 
+ * * `Result<CreateRepositoryOutput, AppError>` - Repository information or an error
+ */
+async createRepository(input: CreateRepositoryInput) : Promise<Result<CreateRepositoryOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_repository", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Gets information about a git repository.
  * 
  * # Arguments
  * 
  * * `input` - Input parameters containing the repository path
+ * * `db` - Database state for persisting repository data
  * 
  * # Returns
  * 
@@ -44,7 +66,66 @@ async getRepository(input: GetRepositoryInput) : Promise<Result<GetRepositoryOut
 }
 },
 /**
- * Switches to another branch in a git repository.
+ * List all repositories from the database.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state for retrieving repositories
+ * 
+ * # Returns
+ * 
+ * * `Result<Vec<crate::db::models::Repository>, AppError>` - List of repositories or an error
+ */
+async listRepositories() : Promise<Result<Repository[], AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_repositories") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes a repository from the database.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state for repository deletion
+ * * `input` - Input parameters containing the repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<DeleteRepositoryOutput, AppError>` - Success status or an error
+ */
+async deleteRepository(input: DeleteRepositoryInput) : Promise<Result<DeleteRepositoryOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_repository", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Lists branches from the database for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repo_id and include_deleted flag
+ * 
+ * # Returns
+ * 
+ * * `Result<ListBranchesOutput, AppError>` - The list of branches or an error
+ */
+async listBranches(input: ListBranchesInput) : Promise<Result<ListBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Updates the current branch in a git repository (switches to another branch).
  * 
  * # Arguments
  * 
@@ -52,37 +133,38 @@ async getRepository(input: GetRepositoryInput) : Promise<Result<GetRepositoryOut
  * 
  * # Returns
  * 
- * * `Result<SwitchBranchOutput, AppError>` - The new current branch name or an error
+ * * `Result<UpdateCurrentBranchOutput, AppError>` - The new current branch name or an error
  */
-async switchBranch(input: SwitchBranchInput) : Promise<Result<SwitchBranchOutput, AppError>> {
+async updateCurrentBranch(input: UpdateCurrentBranchInput) : Promise<Result<UpdateCurrentBranchOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("switch_branch", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("update_current_branch", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Deletes branches from a git repository.
+ * Deletes multiple branches from a git repository.
  * 
  * # Arguments
  * 
+ * * `db` - Database state for soft-deleting branches
  * * `input` - Input parameters containing path and branch names to delete
  * 
  * # Returns
  * 
- * * `Result<DeleteBranchesOutput, AppError>` - The deleted branches or an error
+ * * `Result<BatchDeleteBranchesOutput, AppError>` - The deleted branches or an error
  */
-async deleteBranches(input: DeleteBranchesInput) : Promise<Result<DeleteBranchesOutput, AppError>> {
+async batchDeleteBranches(input: BatchDeleteBranchesInput) : Promise<Result<BatchDeleteBranchesOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("delete_branches", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("batch_delete_branches", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Checks if a commit SHA is reachable in a git repository.
+ * Gets the reachability status of a commit SHA in a git repository.
  * 
  * # Arguments
  * 
@@ -90,51 +172,213 @@ async deleteBranches(input: DeleteBranchesInput) : Promise<Result<DeleteBranches
  * 
  * # Returns
  * 
- * * `Result<IsCommitReachableOutput, AppError>` - The reachability status or an error
+ * * `Result<GetCommitReachabilityOutput, AppError>` - The reachability status or an error
  */
-async isCommitReachable(input: IsCommitReachableInput) : Promise<Result<IsCommitReachableOutput, AppError>> {
+async getCommitReachability(input: GetCommitReachabilityInput) : Promise<Result<GetCommitReachabilityOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("is_commit_reachable", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("get_commit_reachability", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Restores a deleted branch in a git repository.
+ * Creates a restoration of a deleted branch in a git repository.
  * 
  * # Arguments
  * 
  * * `app` - The AppHandle
+ * * `db` - Database state for updating branch status
  * * `input` - Input parameters containing path and branch info
  * 
  * # Returns
  * 
- * * `Result<RestoreBranchOutput, AppError>` - The restoration result or an error
+ * * `Result<CreateBranchRestorationOutput, AppError>` - The restoration result or an error
  */
-async restoreBranch(input: RestoreBranchInput) : Promise<Result<RestoreBranchOutput, AppError>> {
+async createBranchRestoration(input: CreateBranchRestorationInput) : Promise<Result<CreateBranchRestorationOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("restore_branch", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("create_branch_restoration", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Restores multiple deleted branches in a git repository.
+ * Creates restorations of multiple deleted branches in a git repository.
  * 
  * # Arguments
  * 
  * * `app` - The AppHandle
+ * * `db` - Database state for updating branch status
  * * `input` - Input parameters containing path and branch infos
  * 
  * # Returns
  * 
- * * `Result<RestoreBranchesOutput, AppError>` - The restoration results or an error
+ * * `Result<BatchCreateBranchRestorationsOutput, AppError>` - The restoration results or an error
  */
-async restoreBranches(input: RestoreBranchesInput) : Promise<Result<RestoreBranchesOutput, AppError>> {
+async batchCreateBranchRestorations(input: BatchCreateBranchRestorationsInput) : Promise<Result<BatchCreateBranchRestorationsOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("restore_branches", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("batch_create_branch_restorations", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Lists all selected branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<ListSelectedBranchesOutput, AppError>` - The selected branches or an error
+ */
+async listSelectedBranches(input: ListSelectedBranchesInput) : Promise<Result<ListSelectedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_selected_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Creates multiple selected branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BatchCreateSelectedBranchesOutput, AppError>` - Success or an error
+ */
+async batchCreateSelectedBranches(input: BatchCreateSelectedBranchesInput) : Promise<Result<BatchCreateSelectedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("batch_create_selected_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes multiple selected branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BatchDeleteSelectedBranchesOutput, AppError>` - Success or an error
+ */
+async batchDeleteSelectedBranches(input: BatchDeleteSelectedBranchesInput) : Promise<Result<BatchDeleteSelectedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("batch_delete_selected_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes all selected branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<DeleteAllSelectedBranchesOutput, AppError>` - Success or an error
+ */
+async deleteAllSelectedBranches(input: DeleteAllSelectedBranchesInput) : Promise<Result<DeleteAllSelectedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_all_selected_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Lists all locked branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<ListLockedBranchesOutput, AppError>` - The locked branches or an error
+ */
+async listLockedBranches(input: ListLockedBranchesInput) : Promise<Result<ListLockedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_locked_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Creates multiple locked branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BatchCreateLockedBranchesOutput, AppError>` - Success or an error
+ */
+async batchCreateLockedBranches(input: BatchCreateLockedBranchesInput) : Promise<Result<BatchCreateLockedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("batch_create_locked_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes multiple locked branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BatchDeleteLockedBranchesOutput, AppError>` - Success or an error
+ */
+async batchDeleteLockedBranches(input: BatchDeleteLockedBranchesInput) : Promise<Result<BatchDeleteLockedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("batch_delete_locked_branches", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes all locked branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<DeleteAllLockedBranchesOutput, AppError>` - Success or an error
+ */
+async deleteAllLockedBranches(input: DeleteAllLockedBranchesInput) : Promise<Result<DeleteAllLockedBranchesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_all_locked_branches", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -166,33 +410,57 @@ repositoryLoaded: "repository-loaded"
 /** user-defined types **/
 
 export type AppError = { message: string; kind: string; description: string | null }
+export type BatchCreateBranchRestorationsInput = { path: string; repoId: string; branchInfos: DeletedBranch[] }
+export type BatchCreateBranchRestorationsOutput = { results: RestoreBranchResult[] }
+export type BatchCreateLockedBranchesInput = { repoId: string; branchNames: string[] }
+export type BatchCreateLockedBranchesOutput = Record<string, never>
+export type BatchCreateSelectedBranchesInput = { repoId: string; branchNames: string[] }
+export type BatchCreateSelectedBranchesOutput = Record<string, never>
+export type BatchDeleteBranchesInput = { path: string; repoId: string; branches: string[] }
+export type BatchDeleteBranchesOutput = { deletedBranches: DeletedBranchInfo[] }
+export type BatchDeleteLockedBranchesInput = { repoId: string; branchNames: string[] }
+export type BatchDeleteLockedBranchesOutput = Record<string, never>
+export type BatchDeleteSelectedBranchesInput = { repoId: string; branchNames: string[] }
+export type BatchDeleteSelectedBranchesOutput = Record<string, never>
 export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean }
 export type BranchDeletedEvent = { deletedBranches: DeletedBranchInfo[]; repositoryPath: string }
+export type BranchRecord = { id: number | null; repository_id: string; name: string; current: boolean; fully_merged: boolean; last_commit_sha: string; last_commit_short_sha: string; last_commit_date: string; last_commit_message: string; last_commit_author: string; last_commit_email: string; deleted_at: string | null; is_reachable: boolean | null; created_at: string; updated_at: string }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
 export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
 export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"
-export type DeleteBranchesInput = { path: string; branches: string[] }
-export type DeleteBranchesOutput = { deletedBranches: DeletedBranchInfo[] }
+export type CreateBranchRestorationInput = { path: string; repoId: string; branchInfo: DeletedBranch }
+export type CreateBranchRestorationOutput = { result: RestoreBranchResult }
+export type CreateRepositoryInput = { path: string }
+export type CreateRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
+export type DeleteAllLockedBranchesInput = { repoId: string }
+export type DeleteAllLockedBranchesOutput = Record<string, never>
+export type DeleteAllSelectedBranchesInput = { repoId: string }
+export type DeleteAllSelectedBranchesOutput = Record<string, never>
+export type DeleteRepositoryInput = { id: string }
+export type DeleteRepositoryOutput = { success: boolean }
 export type DeletedBranch = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
 export type DeletedBranchInfo = { branch: Branch; rawOutput: string }
+export type GetCommitReachabilityInput = { path: string; commitSha: string }
+export type GetCommitReachabilityOutput = { isReachable: boolean }
 export type GetRepositoryInput = { path: string }
 export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
 export type GetRepositoryRootInput = { path: string }
 export type GetRepositoryRootOutput = { rootPath: string; id: string | null }
-export type IsCommitReachableInput = { path: string; commitSha: string }
-export type IsCommitReachableOutput = { isReachable: boolean }
+export type ListBranchesInput = { repoId: string; includeDeleted: boolean }
+export type ListBranchesOutput = { branches: BranchRecord[] }
+export type ListLockedBranchesInput = { repoId: string }
+export type ListLockedBranchesOutput = { branches: string[] }
+export type ListSelectedBranchesInput = { repoId: string }
+export type ListSelectedBranchesOutput = { branches: string[] }
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
+export type Repository = { id: string; name: string; path: string; current_branch: string; branches_count: number; created_at: string; updated_at: string }
 export type RepositoryLoadedEvent = { repositoryPath: string; repositoryName: string; branchesCount: number }
-export type RestoreBranchInput = { path: string; branchInfo: DeletedBranch }
-export type RestoreBranchOutput = { result: RestoreBranchResult }
 export type RestoreBranchResult = { success: boolean; branchName: string; message: string; requiresUserAction: boolean; conflictDetails: ConflictDetails | null; skipped: boolean; branch: Branch | null }
-export type RestoreBranchesInput = { path: string; branchInfos: DeletedBranch[] }
-export type RestoreBranchesOutput = { results: RestoreBranchResult[] }
-export type SwitchBranchInput = { path: string; branch: string }
-export type SwitchBranchOutput = { currentBranch: string }
+export type UpdateCurrentBranchInput = { path: string; branch: string }
+export type UpdateCurrentBranchOutput = { currentBranch: string }
 
 /** tauri-specta globals **/
 

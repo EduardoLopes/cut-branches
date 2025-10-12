@@ -3,9 +3,11 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
+	import { createGetRepositoryQuery } from '../services/create-get-repository-query';
+	import { createListRepositoriesQuery } from '../services/create-list-repositories-query';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import RemoveRepositoryModal from '$domains/repository-management/components/remove-repository-modal.svelte';
-	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -13,6 +15,7 @@
 		title?: string;
 		repositoryId?: string;
 		isLoading: boolean;
+		isFetching: boolean;
 		onUpdate: () => void;
 		showBackButton?: boolean;
 		showRestoreButton?: boolean;
@@ -23,6 +26,7 @@
 	const {
 		repositoryId,
 		isLoading,
+		isFetching,
 		onUpdate,
 		title,
 		showBackButton = true,
@@ -31,17 +35,23 @@
 		showRemoveButton = true
 	}: Props = $props();
 
-	const repository = $derived(getRepositoryStore(repositoryId));
+	const listRepositoriesQuery = $derived(createListRepositoriesQuery());
+
+	const repositoryPath = $derived(
+		listRepositoriesQuery.data?.find((repository) => repository.id === repositoryId)?.path
+	);
+
+	const getRepositoryQuery = $derived(createGetRepositoryQuery(() => repositoryPath));
 
 	function navigateToRestore() {
 		if (repositoryId) {
-			goto(`/repos/${repositoryId}/restore`);
+			goto(resolve(`/repos/${repositoryId}/restore`));
 		}
 	}
 
 	function navigateBack() {
 		if (repositoryId) {
-			goto(`/repos/${repositoryId}`);
+			goto(resolve(`/repos/${repositoryId}`));
 		}
 	}
 </script>
@@ -66,7 +76,7 @@
 			gap: 'sm'
 		})}
 	>
-		{#key repository?.state?.name}
+		{#key getRepositoryQuery.data?.name}
 			<!-- back button -->
 			{#if showBackButton}
 				<Button
@@ -88,13 +98,13 @@
 			>
 				{#if title}
 					{title}
-				{:else if repository?.state?.name}
+				{:else if getRepositoryQuery.data?.name}
 					<span
 						class={css({
 							textTransform: 'uppercase'
 						})}
 					>
-						{repository.state.name}
+						{getRepositoryQuery.data?.name}
 					</span>
 				{/if}
 			</h2>
@@ -104,7 +114,7 @@
 	{#if showRestoreButton || showUpdateButton || showRemoveButton}
 		<Loading {isLoading}>
 			<Group direction="horizontal">
-				{#if repository?.state && showRestoreButton}
+				{#if showRestoreButton && repositoryId}
 					<Button
 						emphasis="ghost"
 						size="sm"
@@ -119,20 +129,23 @@
 					</Button>
 				{/if}
 				{#if showUpdateButton}
-					<Button
-						emphasis="ghost"
-						size="sm"
-						onclick={onUpdate}
-						shape="square"
-						data-testid="update-button"
-					>
-						<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
-						<span class={visuallyHidden()}>Update</span>
-					</Button>
+					<Loading isLoading={isFetching}>
+						<Button
+							emphasis="ghost"
+							size="sm"
+							onclick={onUpdate}
+							disabled={isFetching}
+							shape="square"
+							data-testid="update-button"
+						>
+							<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
+							<span class={visuallyHidden()}>Update</span>
+						</Button>
+					</Loading>
 				{/if}
 
-				{#if repository?.state && showRemoveButton}
-					<RemoveRepositoryModal currentRepo={repository?.state} />
+				{#if getRepositoryQuery.data && showRemoveButton}
+					<RemoveRepositoryModal currentRepo={getRepositoryQuery.data} />
 				{/if}
 			</Group>
 		</Loading>

@@ -2,12 +2,10 @@
 	import Icon from '@iconify/svelte';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
+	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { untrack } from 'svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createGetRepositoryQuery } from '$domains/repository-management/services/create-get-repository-query';
-	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
-	import { RepositoryStore } from '$domains/repository-management/store/repository.svelte';
+	import { createCreateRepositoryMutation } from '$domains/repository-management/services/create-create-repository-mutation';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
@@ -24,47 +22,24 @@
 		...props
 	}: Props = $props();
 
-	let path = $state<string | undefined>(undefined);
-	const repoQuery = $derived(
-		createGetRepositoryQuery(() => path, {
-			meta: {
-				showErrorNotification: true
+	const queryClient = useQueryClient();
+
+	// Mutation to create repository
+	const createRepositoryMutation = createCreateRepositoryMutation({
+		onSuccess: (data) => {
+			// Invalidate repositories query to refetch the list
+			queryClient.invalidateQueries({ queryKey: ['listRepositories'] });
+
+			if (data) {
+				notifications.push({
+					feedback: 'success',
+					title: 'Repository added',
+					message: `The repository ${data.name} was added successfully`
+				});
 			}
-		})
-	);
-
-	$effect(() => {
-		if (repoQuery.isSuccess && repoQuery.data) {
-			untrack(() => {
-				const repository = getRepositoryStore(repoQuery.data.name);
-
-				if (!RepositoryStore.repositories.has(repoQuery.data.name)) {
-					repository?.set(repoQuery.data);
-					// success
-					notifications.push({
-						feedback: 'success',
-						title: 'Repository added',
-						message: `The repository ${repoQuery.data.name} was added successfully`
-					});
-
-					return;
-				}
-				notifications.push({
-					feedback: 'warning',
-					title: 'Repository already exists',
-					message: `The repository ${repoQuery.data.name} already exists`
-				});
-			});
-		}
-
-		if (repoQuery.isError) {
-			untrack(() => {
-				notifications.push({
-					feedback: 'danger',
-					title: repoQuery.error.message,
-					message: repoQuery.error.description ?? undefined
-				});
-			});
+		},
+		meta: {
+			showErrorNotification: true
 		}
 	});
 
@@ -72,7 +47,7 @@
 		open({ directory: true, multiple: false })
 			.then((dir) => {
 				if (dir !== null) {
-					path = dir;
+					createRepositoryMutation.mutate({ path: dir });
 				}
 			})
 			.catch((error) => {
@@ -85,7 +60,7 @@
 	}
 </script>
 
-<Loading isLoading={repoQuery.isLoading}>
+<Loading isLoading={createRepositoryMutation.isPending}>
 	<Button onclick={handleAddClick} {size} {emphasis} {...props}>
 		<div
 			class={css({

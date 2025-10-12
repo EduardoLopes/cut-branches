@@ -46,7 +46,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	updateCurrentBranch: ['getRepository'],
 	createBranchRestoration: ['getRepository'],
 	batchCreateBranchRestorations: ['getRepository'],
-	batchDeleteBranches: ['getRepository']
+	batchDeleteBranches: ['getRepository'],
+	deleteAllSelectedBranches: ['listBranches']
 };
 
 /**

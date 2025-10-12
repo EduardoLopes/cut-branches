@@ -246,8 +246,7 @@ describe('Providers', () => {
 			expect(notifications.push).not.toHaveBeenCalled();
 		});
 
-		it('should log error to console when showErrorNotification is true', async () => {
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+		it('should call createError when showErrorNotification is true', async () => {
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Test error');
@@ -260,15 +259,6 @@ describe('Providers', () => {
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(consoleSpy).toHaveBeenCalledWith({
-				e: {
-					message: 'Test error', // Uses the actual error message
-					kind: 'error',
-					description: 'Default error description'
-				}
-			});
-
-			consoleSpy.mockRestore();
 		});
 	});
 

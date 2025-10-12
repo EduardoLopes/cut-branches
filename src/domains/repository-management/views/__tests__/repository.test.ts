@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getRepositoryStore, RepositoryStore } from '../../store/repository.svelte';
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 import type { Repository } from '$services/common';
 
 vi.mock('$app/navigation', () => ({
@@ -24,29 +25,12 @@ const mockSetStore = {
 	has: vi.fn().mockReturnValue(false)
 };
 
-// Mock the static repositories property
+// Mock setup for each test
 beforeEach(() => {
-	// Save original implementation
-	const originalRepositories = RepositoryStore.repositories;
-
 	// Reset mock functions for each test
 	mockSetStore.delete.mockReset();
 	mockSetStore.add.mockReset();
 	mockSetStore.has.mockReset().mockReturnValue(false);
-
-	// Replace with the mock
-	Object.defineProperty(RepositoryStore, 'repositories', {
-		configurable: true,
-		get: vi.fn().mockReturnValue(mockSetStore)
-	});
-
-	return () => {
-		// Restore original implementation
-		Object.defineProperty(RepositoryStore, 'repositories', {
-			configurable: true,
-			get: () => originalRepositories
-		});
-	};
 });
 
 describe('getRepositoryStore', () => {
@@ -70,71 +54,14 @@ describe('RepositoryStore', () => {
 		vi.clearAllMocks();
 	});
 
-	it('should add repository name to repositories set on set', () => {
-		const repository = 'test-repo';
-		const store = new RepositoryStore(repository);
-		const repoData = {
-			name: 'repo-name',
-			path: '/path/to/repo',
-			branches: [],
-			currentBranch: 'main',
-			branchesCount: 0,
-			id: 'unique-id'
-		};
-		store.set(repoData);
-		expect(goto).toHaveBeenCalledWith(`/repos/${repoData.name}`);
-		expect(mockSetStore.add).toHaveBeenCalledWith([repoData.name]);
-	});
+	// Note: The following tests were removed because they tested old store behavior
+	// where repositories were managed in a Set. Repositories are now managed in the
+	// database via TanStack Query, so these tests are no longer relevant:
+	// - "should add repository name to repositories set on set"
+	// - "should remove repository name from repositories set on clear"
+	// - "should handle setting undefined and not navigate"
 
-	it('should remove repository name from repositories set on clear', () => {
-		const repository = 'test-repo';
-		const store = new RepositoryStore(repository);
-		const repoData = {
-			name: 'repo-name',
-			path: '/path/to/repo',
-			branches: [],
-			currentBranch: 'main',
-			branchesCount: 0,
-			id: 'unique-id'
-		};
-
-		// Set a value to store.state
-		store.set(repoData);
-
-		// Clear should call delete
-		store.clear();
-		expect(mockSetStore.delete).toHaveBeenCalledWith([repoData.name]);
-	});
-
-	it('should handle setting undefined and not navigate', () => {
-		const repository = 'test-repo';
-		const store = new RepositoryStore(repository);
-
-		// First set a value to store.state with an actual repository
-		const repoData = {
-			name: 'repo-name',
-			path: '/path/to/repo',
-			branches: [],
-			currentBranch: 'main',
-			branchesCount: 0,
-			id: 'unique-id'
-		};
-		store.set(repoData);
-
-		// Reset mocks
-		vi.clearAllMocks();
-
-		// Now set to undefined (null would work similarly)
-		store.set(undefined);
-
-		// Should not call goto when setting undefined
-		expect(goto).not.toHaveBeenCalled();
-
-		// Should delete the previous repository name
-		expect(mockSetStore.delete).toHaveBeenCalledWith(['repo-name']);
-	});
-
-	it('should delete repository from repositories when setting a repo without a name', () => {
+	it('should navigate to repository when setting a repo with an id', () => {
 		// Create a new repository store
 		const repository = 'test-repo';
 
@@ -144,29 +71,21 @@ describe('RepositoryStore', () => {
 				super(repo);
 			}
 
-			deleteWasCalled = false;
-			deletedNames: string[] = [];
-
 			set(value?: Repository) {
-				if (value?.name) {
-					goto(`/repos/${value.name}`);
-					RepositoryStore.repositories.add([value.name]);
-				} else {
-					if (this.state?.name) {
-						// Instead of calling the actual delete, record that it would be called
-						this.deleteWasCalled = true;
-						this.deletedNames.push(this.state.name);
-					}
-				}
-
+				const oldId = this.state?.id;
 				// Set the state directly
 				this.state = value;
+
+				// Navigate to repository page if it's a new repository
+				if (value?.id && value.id !== oldId) {
+					goto(resolve(`/repos/${value.id}`));
+				}
 			}
 		}
 
 		const store = new TestRepositoryStore(repository);
 
-		// First set a value with a name
+		// First set a value with an id
 		const repoData = {
 			name: 'repo-name',
 			path: '/path/to/repo',
@@ -178,26 +97,25 @@ describe('RepositoryStore', () => {
 
 		store.set(repoData);
 
+		// Should call goto with the ID
+		expect(goto).toHaveBeenCalledWith('/repos/unique-id');
+
 		// Reset mocks
 		vi.clearAllMocks();
 
-		// Now set a repository without a name
-		const repoWithoutName = {
+		// Now set a repository with a different ID
+		const repoWithDifferentId = {
+			name: 'other-repo',
 			path: '/path/to/other-repo',
 			branches: [],
 			currentBranch: 'main',
 			branchesCount: 0,
 			id: 'unique-id-2'
-			// Intentionally missing name property
-		} as unknown as Repository;
+		};
 
-		store.set(repoWithoutName);
+		store.set(repoWithDifferentId);
 
-		// Should not call goto because there's no name
-		expect(goto).not.toHaveBeenCalled();
-
-		// Verify our test-specific implementation was called with the expected parameters
-		expect(store.deleteWasCalled).toBe(true);
-		expect(store.deletedNames).toContain(repoData.name);
+		// Should call goto with the new ID
+		expect(goto).toHaveBeenCalledWith('/repos/unique-id-2');
 	});
 });

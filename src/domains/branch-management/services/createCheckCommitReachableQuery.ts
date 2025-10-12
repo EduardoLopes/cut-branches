@@ -1,13 +1,16 @@
-import type { IsCommitReachableInput } from '$lib/bindings';
+import type { GetCommitReachabilityInput } from '$lib/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
-type CommitReachableQueryOptions = TauriQueryOptions<'isCommitReachable', [string, string, string]>;
+type CommitReachableQueryOptions = TauriQueryOptions<
+	'getCommitReachability',
+	[string, string, string]
+>;
 
 export function createCheckCommitReachableQuery(
-	input: IsCommitReachableInput,
+	input: GetCommitReachabilityInput,
 	options?: CommitReachableQueryOptions
 ) {
-	return createTauriQuery('isCommitReachable', {
+	return createTauriQuery('getCommitReachability', {
 		queryKey: ['commit', 'is_reachable', input.commitSha],
 		input: () => input,
 		...options

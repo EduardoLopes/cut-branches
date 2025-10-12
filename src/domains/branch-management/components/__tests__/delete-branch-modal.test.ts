@@ -35,6 +35,30 @@ vi.mock('../../services/createDeleteBranchesMutation', () => ({
 	})
 }));
 
+// Mock the selected branches query
+const mockSelectedBranchesQuery = vi.hoisted(() => ({
+	fn: vi.fn(() => ({
+		data: {
+			branches: ['feature-1']
+		},
+		isLoading: false,
+		isError: false,
+		error: null
+	}))
+}));
+
+vi.mock('../../services/createSelectedBranchesQuery', () => ({
+	createSelectedBranchesQuery: mockSelectedBranchesQuery.fn
+}));
+
+// Mock clear selected branches mutation
+vi.mock('../../services/createSelectedBranchesMutations', () => ({
+	createClearSelectedBranchesMutation: vi.fn(() => ({
+		mutate: vi.fn(),
+		isPending: false
+	}))
+}));
+
 // Test data
 const mockBranches: Branch[] = [
 	{
@@ -108,8 +132,15 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('renders delete button in disabled state when no branches selected', () => {
-			const selectedBranches = getSelectedBranchesStore('test-repo');
-			selectedBranches?.clear();
+			// Mock the query to return empty branches
+			mockSelectedBranchesQuery.fn.mockReturnValueOnce({
+				data: {
+					branches: []
+				},
+				isLoading: false,
+				isError: false,
+				error: null
+			});
 
 			const { getByTestId } = render(TestWrapper, {
 				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
@@ -187,6 +218,7 @@ describe('DeleteBranchModal Component', () => {
 			// First argument should be the branches/path object
 			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
+				repoId: 'test-repo',
 				branches: ['feature-1']
 			});
 
@@ -195,9 +227,15 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('handles multiple branch deletion', async () => {
-			const selectedBranches = getSelectedBranchesStore('test-repo');
-			selectedBranches?.clear();
-			selectedBranches?.add(['feature-1', 'feature-2']);
+			// Mock the query to return multiple selected branches
+			mockSelectedBranchesQuery.fn.mockReturnValueOnce({
+				data: {
+					branches: ['feature-1', 'feature-2']
+				},
+				isLoading: false,
+				isError: false,
+				error: null
+			});
 
 			const deleteMutate = createDeleteBranchesMutation();
 
@@ -220,6 +258,7 @@ describe('DeleteBranchModal Component', () => {
 			// First argument should be the branches/path object
 			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
+				repoId: 'test-repo',
 				branches: ['feature-1', 'feature-2']
 			});
 
@@ -228,9 +267,15 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('prevents deletion of current branch', async () => {
-			const selectedBranches = getSelectedBranchesStore('test-repo');
-			selectedBranches?.clear();
-			selectedBranches?.add(['main']);
+			// Mock the query to return main branch as selected
+			mockSelectedBranchesQuery.fn.mockReturnValueOnce({
+				data: {
+					branches: ['main']
+				},
+				isLoading: false,
+				isError: false,
+				error: null
+			});
 
 			// Get the standard mock to avoid typing issues
 			const deleteMutate = createDeleteBranchesMutation();
@@ -258,6 +303,7 @@ describe('DeleteBranchModal Component', () => {
 			// First argument should be the branches/path object
 			expect(callArgs[0]).toEqual({
 				path: '/path/to/repo',
+				repoId: 'test-repo',
 				branches: ['main']
 			});
 

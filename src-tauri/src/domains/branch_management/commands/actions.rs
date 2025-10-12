@@ -1,64 +1,70 @@
 use std::path::Path;
+use tauri::State;
 
 use super::super::services::deletion::{DeletedBranch, RestoreBranchResult};
+use crate::db::DatabaseState;
 use crate::shared::error::AppError;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct SwitchBranchInput {
+pub struct UpdateCurrentBranchInput {
     pub path: String,
     pub branch: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct SwitchBranchOutput {
+pub struct UpdateCurrentBranchOutput {
     pub current_branch: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct RestoreBranchInput {
+pub struct CreateBranchRestorationInput {
     pub path: String,
+    pub repo_id: String,
     pub branch_info: DeletedBranch,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct RestoreBranchOutput {
+pub struct CreateBranchRestorationOutput {
     pub result: RestoreBranchResult,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct RestoreBranchesInput {
+pub struct BatchCreateBranchRestorationsInput {
     pub path: String,
+    pub repo_id: String,
     pub branch_infos: Vec<DeletedBranch>,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct RestoreBranchesOutput {
+pub struct BatchCreateBranchRestorationsOutput {
     pub results: Vec<RestoreBranchResult>,
 }
 
-/// Restores a deleted branch in a git repository.
+/// Creates a restoration of a deleted branch in a git repository.
 ///
 /// # Arguments
 ///
 /// * `app` - The AppHandle
+/// * `db` - Database state for updating branch status
 /// * `input` - Input parameters containing path and branch info
 ///
 /// # Returns
 ///
-/// * `Result<RestoreBranchOutput, AppError>` - The restoration result or an error
+/// * `Result<CreateBranchRestorationOutput, AppError>` - The restoration result or an error
 #[tauri::command]
 #[specta::specta]
-pub async fn restore_branch(
+pub async fn create_branch_restoration(
     app: tauri::AppHandle,
-    input: RestoreBranchInput,
-) -> Result<RestoreBranchOutput, AppError> {
+    db: State<'_, DatabaseState>,
+    input: CreateBranchRestorationInput,
+) -> Result<CreateBranchRestorationOutput, AppError> {
     let raw_path = Path::new(&input.path);
     let result = super::super::services::restoration::restore_deleted_branch(
         raw_path,
@@ -66,25 +72,51 @@ pub async fn restore_branch(
         Some(&app),
     )?;
 
-    Ok(RestoreBranchOutput { result })
+    // If restoration was successful, mark branch as active in database
+    if result.success {
+        let mut conn = db.get_connection().map_err(|e| {
+            AppError::new(
+                "Failed to get database connection".to_string(),
+                "db_connection_failed",
+                Some(e),
+            )
+        })?;
+
+        crate::db::operations::mark_branches_as_active(
+            &mut conn,
+            &input.repo_id,
+            std::slice::from_ref(&result.branch_name),
+        )
+        .map_err(|e| {
+            AppError::new(
+                "Failed to mark branch as active in database".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
+    }
+
+    Ok(CreateBranchRestorationOutput { result })
 }
 
-/// Restores multiple deleted branches in a git repository.
+/// Creates restorations of multiple deleted branches in a git repository.
 ///
 /// # Arguments
 ///
 /// * `app` - The AppHandle
+/// * `db` - Database state for updating branch status
 /// * `input` - Input parameters containing path and branch infos
 ///
 /// # Returns
 ///
-/// * `Result<RestoreBranchesOutput, AppError>` - The restoration results or an error
+/// * `Result<BatchCreateBranchRestorationsOutput, AppError>` - The restoration results or an error
 #[tauri::command]
 #[specta::specta]
-pub async fn restore_branches(
+pub async fn batch_create_branch_restorations(
     app: tauri::AppHandle,
-    input: RestoreBranchesInput,
-) -> Result<RestoreBranchesOutput, AppError> {
+    db: State<'_, DatabaseState>,
+    input: BatchCreateBranchRestorationsInput,
+) -> Result<BatchCreateBranchRestorationsOutput, AppError> {
     let raw_path = Path::new(&input.path);
     let results = super::super::services::restoration::restore_deleted_branches(
         raw_path,
@@ -92,10 +124,40 @@ pub async fn restore_branches(
         Some(&app),
     )?;
 
-    Ok(RestoreBranchesOutput { results })
+    // Mark successfully restored branches as active in database
+    let successful_branch_names: Vec<String> = results
+        .iter()
+        .filter(|result| result.success)
+        .map(|result| result.branch_name.clone())
+        .collect();
+
+    if !successful_branch_names.is_empty() {
+        let mut conn = db.get_connection().map_err(|e| {
+            AppError::new(
+                "Failed to get database connection".to_string(),
+                "db_connection_failed",
+                Some(e),
+            )
+        })?;
+
+        crate::db::operations::mark_branches_as_active(
+            &mut conn,
+            &input.repo_id,
+            &successful_branch_names,
+        )
+        .map_err(|e| {
+            AppError::new(
+                "Failed to mark branches as active in database".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
+    }
+
+    Ok(BatchCreateBranchRestorationsOutput { results })
 }
 
-/// Switches to another branch in a git repository.
+/// Updates the current branch in a git repository (switches to another branch).
 ///
 /// # Arguments
 ///
@@ -103,12 +165,14 @@ pub async fn restore_branches(
 ///
 /// # Returns
 ///
-/// * `Result<SwitchBranchOutput, AppError>` - The new current branch name or an error
+/// * `Result<UpdateCurrentBranchOutput, AppError>` - The new current branch name or an error
 #[tauri::command(async)]
 #[specta::specta]
-pub async fn switch_branch(input: SwitchBranchInput) -> Result<SwitchBranchOutput, AppError> {
+pub async fn update_current_branch(
+    input: UpdateCurrentBranchInput,
+) -> Result<UpdateCurrentBranchOutput, AppError> {
     let raw_path = Path::new(&input.path);
     let current_branch = super::super::services::switching::switch_branch(raw_path, &input.branch)?;
 
-    Ok(SwitchBranchOutput { current_branch })
+    Ok(UpdateCurrentBranchOutput { current_branch })
 }

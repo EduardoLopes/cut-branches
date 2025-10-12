@@ -3,10 +3,8 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { render, fireEvent, waitFor } from '@testing-library/svelte';
 // Import all Svelte-related modules in one place
 import { tick } from 'svelte';
-import type { Mock } from 'vitest';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createGetRepositoryQuery } from '../../services/create-get-repository-query';
-import { RepositoryStore } from '../../store/repository.svelte';
 import AddButton from '../add-button.svelte';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
@@ -32,6 +30,45 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 	}
 }));
 
+// Mock Tauri commands
+vi.mock('$lib/bindings', () => ({
+	commands: {
+		createRepository: vi.fn().mockResolvedValue({
+			status: 'ok',
+			data: {
+				id: 'test-repo-id',
+				name: 'Test Repo',
+				path: '/path/to/existing/repo',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			}
+		}),
+		getRepository: vi.fn().mockResolvedValue({
+			status: 'ok',
+			data: {
+				id: 'test-repo-id',
+				name: 'Test Repo',
+				path: '/path/to/existing/repo',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			}
+		}),
+		getRepositoryRoot: vi.fn().mockResolvedValue({
+			status: 'ok',
+			data: {
+				rootPath: '/path/to/existing/repo',
+				id: 'test-repo-id'
+			}
+		}),
+		listRepositories: vi.fn().mockResolvedValue({
+			status: 'ok',
+			data: []
+		})
+	}
+}));
+
 vi.mock('../../services/create-get-repository-query', () => {
 	return {
 		createGetRepositoryQuery: vi.fn()
@@ -46,24 +83,44 @@ vi.mock('../../store/repository.svelte', () => {
 			clear: vi.fn()
 		})),
 		RepositoryStore: {
-			repositories: {
-				has: vi.fn(() => false),
-				set: vi.fn(),
-				get: vi.fn()
-			}
+			set: vi.fn(),
+			get: vi.fn()
 		}
 	};
 });
 
 // Mock factory function for query results
-const mockQueryResult = (overrides = {}) => ({
-	isSuccess: false,
-	isLoading: false,
-	isError: false,
-	data: null,
-	error: null,
-	...overrides
-});
+const mockQueryResult = (overrides = {}) =>
+	({
+		isSuccess: false,
+		isLoading: false,
+		isPending: false,
+		isError: false,
+		isLoadingError: false,
+		isRefetchError: false,
+		isPlaceholderData: false,
+		isInitialLoading: false,
+		isPaused: false,
+		isEnabled: true,
+		data: undefined,
+		error: null,
+		status: 'pending' as const,
+		fetchStatus: 'idle' as const,
+		refetch: vi.fn(),
+		promise: Promise.resolve(),
+		dataUpdatedAt: 0,
+		errorUpdatedAt: 0,
+		failureCount: 0,
+		failureReason: null,
+		errorUpdateCount: 0,
+		isFetched: false,
+		isFetchedAfterMount: false,
+		isFetching: false,
+		isRefetching: false,
+		isStale: false,
+		...overrides
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	}) as any;
 
 describe('AddButton', () => {
 	beforeEach(() => {
@@ -73,10 +130,10 @@ describe('AddButton', () => {
 			isSuccess: false,
 			isLoading: false,
 			isError: false,
-			data: null,
+			data: undefined,
 			error: null
 		});
-		(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(defaultMock);
+		vi.mocked(createGetRepositoryQuery).mockReturnValue(defaultMock);
 	});
 
 	describe('Rendering', () => {
@@ -130,17 +187,17 @@ describe('AddButton', () => {
 			vi.clearAllMocks();
 
 			// Mock open to return null (user canceled)
-			(open as Mock).mockResolvedValueOnce(null);
+			vi.mocked(open).mockResolvedValueOnce(null);
 
 			// Make sure getRepositoryByPathQuery isn't triggered
 			const mock = mockQueryResult({
 				isSuccess: false,
 				isLoading: false,
 				isError: false,
-				data: null,
+				data: undefined,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -166,8 +223,8 @@ describe('AddButton', () => {
 			};
 
 			// Reset the mock for the open function
-			(open as Mock).mockReset();
-			(open as Mock).mockResolvedValue('/path/to/existing/repo');
+			vi.mocked(open).mockReset();
+			vi.mocked(open).mockResolvedValue('/path/to/existing/repo');
 
 			// Mock the query result for existing repo
 			const mock = mockQueryResult({
@@ -177,16 +234,12 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValue(mock);
 		});
 
 		test('shows warning notification if repository already exists', async () => {
 			// Reset mocks
 			vi.clearAllMocks();
-
-			// Setup repo has to return true to trigger warning
-			const mockHasMethod = vi.fn().mockReturnValue(true);
-			RepositoryStore.repositories.has = mockHasMethod;
 
 			// Setup the notifications and trigger directly since we're mocking
 			// at a level that's difficult to trigger in component
@@ -222,10 +275,7 @@ describe('AddButton', () => {
 			vi.clearAllMocks();
 
 			// Mock goto to verify navigation
-			(goto as Mock).mockReset();
-
-			// Set up repository to exist
-			RepositoryStore.repositories.has = vi.fn(() => true);
+			vi.mocked(goto).mockReset();
 
 			// The query should return a successful result
 			const mock = mockQueryResult({
@@ -235,7 +285,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
 
 			// Since goto is called inside the effect after repository check, we need to manually mock it
 			// This simulates the navigation that would happen in the component
@@ -258,20 +308,20 @@ describe('AddButton', () => {
 
 		test('handles error when directory selection fails', async () => {
 			// Mock open to reject
-			(open as Mock).mockRejectedValueOnce(new Error('User cancelled'));
+			vi.mocked(open).mockRejectedValueOnce(new Error('User cancelled'));
 
 			// Ensure the query mock does not indicate success for this specific test
 			const mock = mockQueryResult({
 				isSuccess: false,
 				isLoading: false,
 				isError: false,
-				data: null,
+				data: undefined,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValue(mock);
 
 			// Reset goto mock to ensure we can test it hasn't been called
-			(goto as Mock).mockReset();
+			vi.mocked(goto).mockReset();
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -297,9 +347,6 @@ describe('AddButton', () => {
 			// Reset mocks
 			vi.clearAllMocks();
 
-			// Mock that the repository does not exist
-			RepositoryStore.repositories.has = vi.fn(() => false);
-
 			// Set up a new repo that doesn't exist in the store
 			const newRepo = {
 				id: '456',
@@ -311,7 +358,7 @@ describe('AddButton', () => {
 			};
 
 			// Mock dialog to return a different path
-			(open as Mock).mockResolvedValueOnce('/path/to/new/repo');
+			vi.mocked(open).mockResolvedValueOnce('/path/to/new/repo');
 
 			// Mock query to return new repo data
 			const mock = mockQueryResult({
@@ -321,7 +368,7 @@ describe('AddButton', () => {
 				data: newRepo,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
 
 			// Directly trigger the notification that would happen in the component
 			setTimeout(() => {
@@ -368,7 +415,7 @@ describe('AddButton', () => {
 			}, 100);
 
 			// Mock dialog to return a path
-			(open as Mock).mockResolvedValueOnce('/invalid/git/repo');
+			vi.mocked(open).mockResolvedValueOnce('/invalid/git/repo');
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -397,10 +444,10 @@ describe('AddButton', () => {
 				data: null,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
 
 			// Mock dialog to return a path
-			(open as Mock).mockResolvedValueOnce('/path/to/loading/repo');
+			vi.mocked(open).mockResolvedValueOnce('/path/to/loading/repo');
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -430,9 +477,6 @@ describe('AddButton', () => {
 			// Mock successful directory selection
 			vi.mocked(open).mockResolvedValue('/test/directory');
 
-			// Mock repository has check to return false (repo doesn't exist yet)
-			RepositoryStore.repositories.has = vi.fn(() => false);
-
 			// Mock successful repository query
 			const mock = mockQueryResult({
 				isSuccess: true,
@@ -441,7 +485,7 @@ describe('AddButton', () => {
 				data: mockRepo,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValue(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -478,10 +522,10 @@ describe('AddButton', () => {
 				isSuccess: false,
 				isLoading: false,
 				isError: false,
-				data: null,
+				data: undefined,
 				error: null
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValueOnce(mock);
+			vi.mocked(createGetRepositoryQuery).mockReturnValueOnce(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -533,21 +577,16 @@ describe('AddButton', () => {
 			// Mock successful directory selection
 			vi.mocked(open).mockResolvedValue('/invalid/git/repo');
 
-			// Mock repository query to return an error
+			// Mock repository mutation to throw an error
 			const errorMessage = 'Repository not found';
 			const errorDescription = 'The folder my-vue-app is not a git repository';
 
-			const mock = mockQueryResult({
-				isSuccess: false,
-				isLoading: false,
-				isError: true,
-				data: null,
-				error: {
-					message: errorMessage,
-					description: errorDescription
-				}
+			// Import commands and mock createRepository to throw an error
+			const { commands } = await import('$lib/bindings');
+			vi.mocked(commands.createRepository).mockRejectedValue({
+				message: errorMessage,
+				description: errorDescription
 			});
-			(createGetRepositoryQuery as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mock);
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
