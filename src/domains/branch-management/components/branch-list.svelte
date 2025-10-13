@@ -20,7 +20,6 @@
 		shouldShowBranchAlerts
 	} from '$domains/branch-management/utils/branch-utils';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import type { Branch } from '$lib/bindings';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
@@ -32,6 +31,7 @@
 		branches: Branch[];
 		currentBranch?: string;
 		repositoryID?: string;
+		repositoryPath?: string;
 		allowLocking?: boolean;
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
@@ -42,13 +42,12 @@
 		branches = [],
 		currentBranch = '',
 		repositoryID,
+		repositoryPath,
 		allowLocking = true,
 		allowSelection = true,
 		allowSetCurrent = true,
 		variant = 'default'
 	}: Props = $props();
-
-	const repository = $derived(getRepositoryStore(repositoryID));
 
 	const selectedQueryInput = $derived({ repoId: repositoryID ?? '' });
 	const lockedQueryInput = $derived({ repoId: repositoryID ?? '' });
@@ -90,9 +89,9 @@
 	}
 
 	function handleSwitchBranch(branch: string) {
-		if (repository?.state?.path) {
+		if (repositoryPath) {
 			switchBranchMutation.mutate({
-				path: repository?.state?.path,
+				path: repositoryPath,
 				branch
 			});
 		}

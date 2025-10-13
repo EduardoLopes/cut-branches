@@ -391,6 +391,7 @@
 						{branches}
 						currentBranch={repoInfo.currentBranch}
 						repositoryID={id}
+						repositoryPath={path}
 						{allowLocking}
 						{allowSelection}
 						{allowSetCurrent}
