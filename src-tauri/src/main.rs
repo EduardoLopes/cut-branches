@@ -23,7 +23,7 @@ use domains::branch_management::events::{
 };
 use domains::path_operations::commands::get_repository_root;
 use domains::repository_management::commands::{
-    create_repository, delete_repository, get_repository, list_repositories,
+    create_repository, delete_repository, get_repository, get_repository_list,
 };
 use domains::repository_management::events::{NotificationEvent, RepositoryLoadedEvent};
 
@@ -37,7 +37,7 @@ fn main() {
             // Repository management
             create_repository,
             get_repository,
-            list_repositories,
+            get_repository_list,
             delete_repository,
             // Branch management
             list_branches,

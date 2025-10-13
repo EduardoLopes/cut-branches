@@ -37,7 +37,7 @@ const mockRepositories = [
 // Mock Tauri commands
 vi.mock('$lib/bindings', () => ({
 	commands: {
-		listRepositories: vi.fn(() => Promise.resolve({ status: 'ok', data: mockRepositories }))
+		getRepositoryList: vi.fn(() => Promise.resolve({ status: 'ok', data: mockRepositories }))
 	}
 }));
 

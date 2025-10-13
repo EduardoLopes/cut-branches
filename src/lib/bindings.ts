@@ -66,7 +66,7 @@ async getRepository(input: GetRepositoryInput) : Promise<Result<GetRepositoryOut
 }
 },
 /**
- * List all repositories from the database.
+ * Get all repositories from the database.
  * 
  * # Arguments
  * 
@@ -76,9 +76,9 @@ async getRepository(input: GetRepositoryInput) : Promise<Result<GetRepositoryOut
  * 
  * * `Result<Vec<crate::db::models::Repository>, AppError>` - List of repositories or an error
  */
-async listRepositories() : Promise<Result<Repository[], AppError>> {
+async getRepositoryList() : Promise<Result<Repository[], AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("list_repositories") };
+    return { status: "ok", data: await TAURI_INVOKE("get_repository_list") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

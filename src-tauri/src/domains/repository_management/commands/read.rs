@@ -53,7 +53,7 @@ pub async fn get_repository(
     })
 }
 
-/// List all repositories from the database.
+/// Get all repositories from the database.
 ///
 /// # Arguments
 ///
@@ -64,7 +64,7 @@ pub async fn get_repository(
 /// * `Result<Vec<crate::db::models::Repository>, AppError>` - List of repositories or an error
 #[tauri::command]
 #[specta::specta]
-pub fn list_repositories(
+pub fn get_repository_list(
     db: State<'_, DatabaseState>,
 ) -> Result<Vec<crate::db::models::Repository>, AppError> {
     let mut conn = db.get_connection().map_err(|e| {
@@ -75,15 +75,15 @@ pub fn list_repositories(
         )
     })?;
 
-    let repos = crate::db::operations::list_repositories(&mut conn).map_err(|e| {
+    let repos = crate::db::operations::get_repository_list(&mut conn).map_err(|e| {
         AppError::new(
-            "Failed to list repositories".to_string(),
+            "Failed to get repository list".to_string(),
             "db_list_failed",
             Some(e.to_string()),
         )
     })?;
 
-    println!("list_repositories: Found {} repositories", repos.len());
+    println!("get_repository_list: Found {} repositories", repos.len());
     for repo in &repos {
         println!("  - {} (id: {})", repo.name, repo.id);
     }

@@ -12,16 +12,17 @@ function toKebabCase(str: string): string {
 }
 
 /**
- * Extract resource name from command name by removing CRUD prefixes
+ * Extract resource name from command name by removing CRUD prefixes and suffixes
  * Following the naming convention from CLAUDE.md:
- * - get, list, create, update, delete, batch
+ * - get, list, create, update, delete, batch (prefixes)
+ * - List (suffix for collection queries like getRepositoryList)
  *
  * IMPORTANT: Compound prefixes (batchDelete, batchCreate, deleteAll) must be checked FIRST
  * before simple prefixes (batch, delete, etc.) to avoid partial matches
  */
 export function extractResource(commandName: CommandName): string {
 	// Remove CRUD prefixes - COMPOUND PREFIXES FIRST, THEN SIMPLE ONES
-	const withoutPrefix = commandName
+	let withoutPrefix = commandName
 		// Compound prefixes (most specific)
 		.replace(/^batchDelete/, '')
 		.replace(/^batchCreate/, '')
@@ -33,6 +34,9 @@ export function extractResource(commandName: CommandName): string {
 		.replace(/^update/, '')
 		.replace(/^list/, '')
 		.replace(/^get/, '');
+
+	// Remove 'List' suffix for collection queries (e.g., getRepositoryList → Repository → repository)
+	withoutPrefix = withoutPrefix.replace(/List$/, '');
 
 	return toKebabCase(withoutPrefix);
 }
@@ -47,9 +51,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	createBranchRestoration: ['getRepository'],
 	batchCreateBranchRestorations: ['getRepository'],
 	batchDeleteBranches: ['getRepository'],
-	deleteAllSelectedBranches: ['listBranches'],
-	createRepository: ['listRepositories'],
-	deleteRepository: ['listRepositories']
+	deleteAllSelectedBranches: ['listBranches']
 };
 
 /**
@@ -62,8 +64,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
  * @example
  * getResource('listSelectedBranches') // 'selected-branches'
  * getResource('batchDeleteBranches') // 'branches'
- * getResource('updateCurrentBranch') // 'repository'
- * getResource('someMultiResourceCommand') // ['resource-a', 'resource-b']
+ * getResource('getRepositoryList') // 'repository'
+ * getResource('updateCurrentBranch') // ['repository']
  */
 export function getResource(commandName: CommandName): string | string[] {
 	const extracted = extractResource(commandName);

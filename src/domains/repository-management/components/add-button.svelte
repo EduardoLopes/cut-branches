@@ -28,7 +28,7 @@
 	const createRepositoryMutation = createCreateRepositoryMutation({
 		onSuccess: (data) => {
 			// Invalidate repositories query to refetch the list
-			queryClient.invalidateQueries({ queryKey: ['listRepositories'] });
+			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
 
 			if (data) {
 				notifications.push({

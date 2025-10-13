@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
-	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
+	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
 	import { css } from '@pindoba/panda/css';
 
 	// Query for repositories list from database
-	const repositoriesQuery = $derived(createListRepositoriesQuery());
+	const repositoriesQuery = $derived(createGetRepositoryListQuery());
 
 	// Map repository data to navigation items
 	const items = $derived.by<NavigationItem[]>(() => {

@@ -51,7 +51,7 @@ This domain communicates with other domains exclusively through the global event
 ### Global Services
 
 - `$services/event-bus` - For inter-domain communication
-- `$services/repositories/create-list-repositories-query` - For fetching repository list
+- `$services/repositories/create-get-repository-list-query` - For fetching repository list
 
 ### UI Components
 
@@ -60,4 +60,4 @@ This domain communicates with other domains exclusively through the global event
 
 ## State Management
 
-This domain uses TanStack Query for server state management via the global `createListRepositoriesQuery` service. No local domain-specific state management is needed.
+This domain uses TanStack Query for server state management via the global `createGetRepositoryListQuery` service. No local domain-specific state management is needed.

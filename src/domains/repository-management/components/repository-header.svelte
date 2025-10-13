@@ -4,9 +4,9 @@
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
 	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
-	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
 	import RemoveRepositoryModal from '$domains/repository-management/components/remove-repository-modal.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
@@ -35,10 +35,10 @@
 		showRemoveButton = true
 	}: Props = $props();
 
-	const listRepositoriesQuery = $derived(createListRepositoriesQuery());
+	const getRepositoryListQuery = $derived(createGetRepositoryListQuery());
 
 	const repositoryPath = $derived(
-		listRepositoriesQuery.data?.find((repository) => repository.id === repositoryId)?.path
+		getRepositoryListQuery.data?.find((repository) => repository.id === repositoryId)?.path
 	);
 
 	const getRepositoryQuery = $derived(createGetRepositoryQuery(() => repositoryPath));

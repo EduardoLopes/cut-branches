@@ -5,13 +5,13 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../logic/application/mutations/create-delete-repository-mutation';
 	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
-	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createClearLockedBranchesMutation } from '$domains/branch-management/services/createLockedBranchesMutations';
 	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
+	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
 	import type { Repository } from '$services/common';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
@@ -31,7 +31,7 @@
 	const getRepositoryQuery = $derived(createGetRepositoryQuery(() => currentRepo?.path));
 
 	// Query for repositories list
-	const repositoriesQuery = $derived(createListRepositoriesQuery());
+	const repositoriesQuery = $derived(createGetRepositoryListQuery());
 	const repositories = $derived(repositoriesQuery.data ?? []);
 
 	// Mutations for clearing database data
@@ -55,7 +55,7 @@
 				}
 
 				// Invalidate repositories list so it refreshes
-				queryClient.invalidateQueries({ queryKey: ['listRepositories'] });
+				queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
 
 				// Find another repository to navigate to using current list
 				const currentRepos = repositories;

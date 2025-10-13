@@ -2,7 +2,6 @@
 	import Loading from '@pindoba/svelte-loading';
 	import { onDestroy } from 'svelte';
 	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
-	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
 	import { navigating } from '$app/state';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
 	import BulkActions from '$domains/branch-management/components/branches-bulk-actions.svelte';
@@ -12,6 +11,7 @@
 	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
+	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
 	import RepositoryHeader from '$domains/repository-management/components/repository-header.svelte';
 	import type { Branch, Repository } from '$services/common';
 	import { globalStore } from '$store/global-store.svelte';
@@ -37,10 +37,10 @@
 		allowSetCurrent = true
 	}: Props = $props();
 
-	const listRepositoriesQuery = createListRepositoriesQuery();
+	const getRepositoryListQuery = createGetRepositoryListQuery();
 
 	const path = $derived.by(() => {
-		const repository = listRepositoriesQuery.data?.find((repository) => repository.id === id);
+		const repository = getRepositoryListQuery.data?.find((repository) => repository.id === id);
 		return repository?.path;
 	});
 
@@ -183,7 +183,7 @@
 				id: repoInfo.id,
 				name: repoInfo.name,
 				currentBranch: repoInfo.currentBranch,
-				path: listRepositoriesQuery.data?.find((r) => r.id === id)?.path ?? '',
+				path: getRepositoryListQuery.data?.find((r) => r.id === id)?.path ?? '',
 				branchesCount: 0,
 				branches: [] // Not used in deleted view
 			} as Repository;
@@ -201,7 +201,7 @@
 			};
 		}
 		if (branchesType === 'deleted') {
-			const repo = listRepositoriesQuery.data?.find((r) => r.id === id);
+			const repo = getRepositoryListQuery.data?.find((r) => r.id === id);
 			return repo
 				? {
 						id: repo.id,

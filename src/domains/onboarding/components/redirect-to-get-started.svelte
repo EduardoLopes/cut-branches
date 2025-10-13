@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { createListRepositoriesQuery } from '../logic/application/queries/create-list-repositories-query';
+	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 
 	// Query for repositories list from database
-	const repositoriesQuery = createListRepositoriesQuery();
+	const repositoriesQuery = createGetRepositoryListQuery();
 
 	$effect(() => {
 		const first = repositoriesQuery.data?.[0];

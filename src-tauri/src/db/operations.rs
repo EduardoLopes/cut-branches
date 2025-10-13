@@ -33,7 +33,7 @@ pub fn get_repository_by_name(
         .first(conn)
 }
 
-pub fn list_repositories(conn: &mut SqliteConnection) -> Result<Vec<Repository>, DieselError> {
+pub fn get_repository_list(conn: &mut SqliteConnection) -> Result<Vec<Repository>, DieselError> {
     repositories::table.load(conn)
 }
 

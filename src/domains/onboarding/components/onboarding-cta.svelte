@@ -2,20 +2,14 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
-	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createCreateRepositoryMutation } from '$domains/repository-management/logic/application/mutations/create-create-repository-mutation';
 	import { css } from '@pindoba/panda/css';
 
-	const queryClient = useQueryClient();
-
 	// Mutation to create repository
 	const createRepositoryMutation = createCreateRepositoryMutation({
 		onSuccess: (data) => {
-			// Invalidate repositories query to refetch the list
-			queryClient.invalidateQueries({ queryKey: ['listRepositories'] });
-
 			if (data) {
 				notifications.push({
 					feedback: 'success',

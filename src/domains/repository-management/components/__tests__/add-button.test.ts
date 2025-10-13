@@ -62,7 +62,7 @@ vi.mock('$lib/bindings', () => ({
 				id: 'test-repo-id'
 			}
 		}),
-		listRepositories: vi.fn().mockResolvedValue({
+		getRepositoryList: vi.fn().mockResolvedValue({
 			status: 'ok',
 			data: []
 		})

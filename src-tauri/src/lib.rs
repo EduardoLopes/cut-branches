@@ -23,7 +23,7 @@ pub use domains::branch_management::commands::{
 };
 pub use domains::path_operations::commands::get_repository_root;
 pub use domains::repository_management::commands::{
-    create_repository, delete_repository, get_repository, list_repositories,
+    create_repository, delete_repository, get_repository, get_repository_list,
 };
 
 // Re-export events
