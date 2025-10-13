@@ -1,33 +1,42 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import {
-		getBranchColorPalette,
-		getBranchAlerts,
-		getBranchElementId,
-		shouldShowBranchAlerts
-	} from '../utils/branch-utils';
-	import BranchAlerts from './branch-alerts.svelte';
+	import type { Snippet } from 'svelte';
 	import CommitCard from './commit-card.svelte';
-	import type { Branch } from '$services/common';
-	import { formatString } from '$utils/string-utils';
+	import type { Branch } from '$lib/bindings';
+	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
-		data: Branch;
+		branch: Branch;
 		selected?: boolean;
 		locked?: boolean;
 		disabled?: boolean;
+		colorPalette?: string;
+		id?: string;
+		title?: string;
+		children?: Snippet;
+		variant?: 'default' | 'inverted';
 	}
 
-	let { data, selected, locked, disabled }: Props = $props();
+	let {
+		branch,
+		selected = false,
+		locked = false,
+		disabled = false,
+		colorPalette,
+		id,
+		title,
+		children,
+		variant = 'default'
+	}: Props = $props();
 
-	const colorPalette = $derived(getBranchColorPalette(data, selected ?? false));
-	const alerts = $derived(getBranchAlerts(data, selected ?? false));
-	const showAlerts = $derived(shouldShowBranchAlerts(alerts, data));
+	// In inverted mode, visual state is opposite of selection state
+	const isVisuallySelected = $derived(variant === 'inverted' ? !selected : selected);
 </script>
 
 <div
-	id={getBranchElementId(data.name, 'container')}
+	{id}
+	{title}
 	class={[
 		colorPalette,
 		css({
@@ -35,7 +44,7 @@
 			flexDirection: 'column',
 			borderRadius: 'md',
 			borderWidth: '1px',
-			borderColor: 'colorPalette.400',
+			borderColor: 'neutral.400',
 			colorPalette: 'neutral',
 			p: 'md',
 			gap: 'md',
@@ -62,11 +71,10 @@
 	]}
 	class:disabled
 	class:locked
-	class:current={data.current}
-	class:selected
-	title={data.current ? 'Current branch' : formatString('{name}', { name: data.name })}
-	data-selected={selected}
-	data-testid={`branch-item-${data.name}`}
+	class:current={branch.current}
+	class:selected={isVisuallySelected}
+	data-testid="branch-card"
+	data-variant={variant}
 >
 	<div
 		class={[
@@ -74,12 +82,11 @@
 				display: 'flex',
 				flexDirection: 'column'
 			}),
-			selected &&
+			isVisuallySelected &&
 				css({
 					color: 'danger.800'
 				})
 		]}
-		id={getBranchElementId(data.name, 'title-container')}
 	>
 		<span
 			class={css({
@@ -87,8 +94,9 @@
 				pindobaTransition: 'fast'
 			})}
 			data-testid="branch-name"
-			id={getBranchElementId(data.name, 'name')}>{data.name}</span
 		>
+			{branch.name}
+		</span>
 	</div>
 
 	<div
@@ -97,7 +105,6 @@
 			flexDirection: 'column',
 			borderRadius: 'md'
 		})}
-		id={getBranchElementId(data.name, 'commit-container')}
 	>
 		<div
 			class={css({
@@ -111,20 +118,41 @@
 				color: 'neutral.600',
 				fontWeight: 'bold'
 			})}
-			id={getBranchElementId(data.name, 'commit-label')}
 		>
 			<Icon
 				class={css({ color: 'neutral.800' })}
 				icon="lucide:git-commit-horizontal"
 				width="16px"
 				height="16px"
-				id={getBranchElementId(data.name, 'commit-icon')}
 			/> Last commit
 		</div>
-		<CommitCard commit={data.lastCommit} deletedAt={data.deletedAt} />
+		<CommitCard commit={branch.lastCommit} />
 	</div>
 
-	{#if showAlerts}
-		<BranchAlerts {alerts} branch={data} />
+	{#if branch.deletedAt}
+		<div
+			class={css({
+				display: 'flex',
+				flexDirection: 'row',
+				alignItems: 'center',
+				justifyContent: 'flex-end',
+				gap: 'xxs',
+				fontSize: 'sm',
+				color: 'danger.800',
+				pt: 'xs',
+				borderTopWidth: '1px',
+				borderTopColor: 'neutral.300'
+			})}
+			data-testid="deleted-at-info"
+		>
+			<Icon icon="lucide:trash" width="16px" height="16px" />
+			<span title={safeFormatDate(branch.deletedAt)}>
+				Deleted {safeFormatRelativeDate(branch.deletedAt)}
+			</span>
+		</div>
+	{/if}
+
+	{#if children}
+		{@render children()}
 	{/if}
 </div>

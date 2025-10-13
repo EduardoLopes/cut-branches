@@ -15,7 +15,8 @@
 	} from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
-	import type { Branch, Repository } from '$services/common';
+	import type { Branch } from '$lib/bindings';
+	import type { Repository } from '$services/common';
 	import { isEmptyString, formatString } from '$utils/string-utils';
 	import { createToggle } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';

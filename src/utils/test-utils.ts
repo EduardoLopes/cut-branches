@@ -1,5 +1,6 @@
 import { vi, type MockedFunction } from 'vitest';
-import type { Branch, Repository } from '$services/common';
+import type { Branch } from '$lib/bindings';
+import type { Repository } from '$services/common';
 
 // Type for the mocked invoke function
 export type MockedInvoke = MockedFunction<typeof import('@tauri-apps/api/core').invoke>;
@@ -28,6 +29,8 @@ export const mockDataFactory = {
 			email: 'test@example.com'
 		},
 		fullyMerged: false,
+		deletedAt: null,
+		isReachable: null,
 		...overrides
 	}),
 

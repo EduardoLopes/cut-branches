@@ -16,7 +16,7 @@ import {
 import { type AppError } from '$lib/bindings';
 
 // Helper to resolve input (static value or function)
-type InputResolver<TCommand extends CommandName> =
+export type InputResolver<TCommand extends CommandName> =
 	| CommandParams<TCommand>
 	| (() => CommandParams<TCommand>);
 

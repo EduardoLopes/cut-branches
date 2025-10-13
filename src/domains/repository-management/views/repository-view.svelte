@@ -13,7 +13,8 @@
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
 	import RepositoryHeader from '$domains/repository-management/components/repository-header.svelte';
-	import type { Branch, Repository } from '$services/common';
+	import type { Branch } from '$lib/bindings';
+	import type { Repository } from '$services/common';
 	import { globalStore } from '$store/global-store.svelte';
 	import EmptyState from '$ui/core/empty-state.svelte';
 	import ErrorMessage from '$ui/core/error-message.svelte';
@@ -105,8 +106,8 @@
 				author: dbBranch.last_commit_author as string,
 				email: dbBranch.last_commit_email as string
 			},
-			deletedAt: dbBranch.deleted_at as string | undefined,
-			isReachable: dbBranch.is_reachable as boolean | undefined
+			deletedAt: dbBranch.deleted_at as string | null,
+			isReachable: dbBranch.is_reachable as boolean | null
 		};
 	}
 
@@ -206,7 +207,7 @@
 				? {
 						id: repo.id,
 						name: repo.name,
-						currentBranch: repo.current_branch
+						currentBranch: repo.currentBranch
 					}
 				: undefined;
 		}
@@ -393,6 +394,7 @@
 						{allowLocking}
 						{allowSelection}
 						{allowSetCurrent}
+						variant={branchesType === 'deleted' ? 'inverted' : 'default'}
 					/>
 				{/if}
 			{/key}

@@ -1,11 +1,28 @@
 import { SvelteDate } from 'svelte/reactivity';
 import { z } from 'zod/v4';
-import { BranchSchema, type Branch } from '$services/common';
+import type { Branch } from '$lib/bindings';
 import { Store } from '$utils/store.svelte';
 
 export interface DeletedBranchesState {
 	branches: Branch[];
 }
+
+// Branch schema for validation - matches the Branch type from bindings
+const BranchSchema = z.object({
+	name: z.string(),
+	fullyMerged: z.boolean(),
+	lastCommit: z.object({
+		sha: z.string(),
+		shortSha: z.string(),
+		date: z.string(),
+		message: z.string(),
+		author: z.string(),
+		email: z.string()
+	}),
+	current: z.boolean(),
+	deletedAt: z.string().nullable(),
+	isReachable: z.boolean().nullable()
+});
 
 const deletedBranchesStateSchema = z.object({
 	branches: z.array(BranchSchema)

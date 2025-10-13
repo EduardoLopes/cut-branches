@@ -9,7 +9,7 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
-	import BranchComponent from './branch.svelte';
+	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
 	import { createListBranchesQuery } from '$domains/branch-management/services/createListBranchesQuery';
 	import {
 		createRestoreDeletedBranchMutation,
@@ -18,9 +18,8 @@
 	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
-	import type { Branch } from '$services/common';
+	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
@@ -32,7 +31,10 @@
 	}
 
 	let { repoId, buttonProps }: Props = $props();
-	const repository = $derived(getRepositoryStore(repoId));
+
+	const getRepositoryQuery = $derived(createGetRepositoryListQuery());
+
+	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === repoId));
 
 	// Get deleted branches from database
 	const getDeletedBranchesQuery = $derived(createListBranchesQuery(repoId ?? '', true));
@@ -104,29 +106,8 @@
 		}
 	});
 
-	// Convert database branch format to frontend Branch format
-	function convertDbBranchToFrontend(dbBranch: Record<string, unknown>): Branch {
-		return {
-			name: dbBranch.name as string,
-			current: dbBranch.current as boolean,
-			fullyMerged: dbBranch.fully_merged as boolean,
-			lastCommit: {
-				sha: dbBranch.last_commit_sha as string,
-				shortSha: dbBranch.last_commit_short_sha as string,
-				date: dbBranch.last_commit_date as string,
-				message: dbBranch.last_commit_message as string,
-				author: dbBranch.last_commit_author as string,
-				email: dbBranch.last_commit_email as string
-			},
-			deletedAt: dbBranch.deleted_at as string | undefined,
-			isReachable: dbBranch.is_reachable as boolean | undefined
-		};
-	}
-
 	// Get all deleted branches from database
-	const allDeletedBranches = $derived(
-		(getDeletedBranchesQuery?.data?.branches ?? []).map(convertDbBranchToFrontend)
-	);
+	const allDeletedBranches = $derived(getDeletedBranchesQuery?.data?.branches ?? []);
 
 	// Get selected deleted branches (filter deleted branches by selected branch names)
 	const selectedDeletedBranches = $derived(
@@ -135,12 +116,12 @@
 
 	// Check which branches already exist in the repository
 	async function checkExistingBranches() {
-		if (!repository?.state?.path) return;
+		if (!repository?.path) return;
 
 		try {
 			// Get existing branches from the repository
 			const response = await client.fetchQuery({
-				queryKey: ['branches', 'get-all', repository.state.path]
+				queryKey: ['branches', 'get-all', repository.path]
 			});
 
 			if (response && Array.isArray(response)) {
@@ -227,7 +208,7 @@
 						notifications.push({
 							feedback: 'success',
 							title: formatString('Branch restored to {repo} repository', {
-								repo: ensureString(repository?.state?.name)
+								repo: ensureString(repository?.name)
 							}),
 							message: formatString('- **{name}** (at {sha})', {
 								name: ensureString(branchName).trim(),
@@ -338,7 +319,7 @@
 						feedback: 'success',
 						title: formatString('{type} restored to {repo} repository', {
 							type: restoredBranches.length > 1 ? 'Branches' : 'Branch',
-							repo: ensureString(repository?.state?.name)
+							repo: ensureString(repository?.name)
 						}),
 						message: m
 					});
@@ -378,7 +359,7 @@
 
 	// Process the next branch that has a conflict
 	function processNextConflictBranch() {
-		if (!repository?.state?.path || pendingConflictBranches.length === 0) {
+		if (!repository?.path || pendingConflictBranches.length === 0) {
 			// If no more conflicts, process remaining normal branches
 			if (selectedDeletedBranches.some((branch) => !restorationResults[branch.name])) {
 				processNextBranch();
@@ -418,7 +399,7 @@
 
 	// Process branches one by one
 	function processNextBranch() {
-		if (!repository?.state?.path) return;
+		if (!repository?.path) return;
 
 		// Find the next branch to process (one that hasn't been processed yet)
 		const nextBranch = selectedDeletedBranches.find((branch) => !restorationResults[branch.name]);
@@ -452,12 +433,12 @@
 
 		// Restore the next branch
 		restoreMutation.mutate({
-			path: repository.state.path,
-			repoId: repository.state.id,
+			path: repository.path,
+			repoId: repository.id,
 			branchInfo: {
 				originalName: nextBranch.name,
 				targetName: nextBranch.name,
-				commitSha: nextBranch.lastCommit.sha,
+				commitSha: nextBranch.lastCommit.shortSha,
 				conflictResolution:
 					conflictResolutions[nextBranch.name] || branchPreferences[nextBranch.name] || null
 			}
@@ -466,7 +447,7 @@
 
 	// Start the restoration process
 	function handleRestore() {
-		if (!repository?.state?.path) return;
+		if (!repository?.path) return;
 
 		isProcessing = true;
 		restorationResults = {};
@@ -487,13 +468,13 @@
 			const branchInfos = selectedDeletedBranches.map((branch) => ({
 				originalName: branch.name,
 				targetName: branch.name,
-				commitSha: branch.lastCommit.sha,
+				commitSha: branch.lastCommit.shortSha,
 				conflictResolution: branchPreferences[branch.name] || null // Use preemptive resolution if set
 			}));
 
 			restoreBatchMutation.mutate({
-				path: repository.state.path,
-				repoId: repository.state.id,
+				path: repository.path,
+				repoId: repository.id,
 				branchInfos
 			});
 		}
@@ -501,7 +482,7 @@
 
 	// Handle conflict resolution
 	function resolveConflict(resolution: ConflictResolution) {
-		if (!currentConflictBranch || !repository?.state?.path) return;
+		if (!currentConflictBranch || !repository?.path) return;
 
 		const branch = selectedDeletedBranches.find((b) => b.name === currentConflictBranch);
 		if (!branch) return;
@@ -517,12 +498,12 @@
 
 		// Continue with the same branch but now with resolution
 		restoreMutation.mutate({
-			path: repository.state.path,
-			repoId: repository.state.id,
+			path: repository.path,
+			repoId: repository.id,
 			branchInfo: {
 				originalName: branch.name,
 				targetName: branch.name,
-				commitSha: branch.lastCommit.sha,
+				commitSha: branch.lastCommit.shortSha,
 				conflictResolution: resolution
 			}
 		});
@@ -652,7 +633,7 @@
 				</strong>
 				from repository
 				<strong class={css({ color: 'primary.800' })}>
-					{repository?.state?.name}
+					{repository?.name}
 				</strong>?
 			{/if}
 		</p>
@@ -734,7 +715,7 @@
 			const aSkipped = restorationResults[a.name]?.skipped ?? false;
 			const bSkipped = restorationResults[b.name]?.skipped ?? false;
 			return aSkipped === bSkipped ? 0 : aSkipped ? 1 : -1;
-		}) as branch (`${branch.name}-${branch.lastCommit.sha}`)}
+		}) as branch (`${branch.name}-${branch.lastCommit.shortSha}`)}
 			<div class={css({ position: 'relative' })}>
 				{#if restorationResults[branch.name]}
 					<div
@@ -794,7 +775,7 @@
 						}}
 					>
 						<Group direction="vertical">
-							<BranchComponent data={branch} />
+							<BranchCard {branch} />
 							{#if !isProcessing && existingBranches.includes(branch.name)}
 								<div
 									class={css({

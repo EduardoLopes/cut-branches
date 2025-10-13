@@ -4,7 +4,8 @@ import type { Writable } from 'svelte/store';
 import { vi } from 'vitest';
 import RepositoryHeader from '../repository-header.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import type { Repository, Branch } from '$services/common';
+import type { Branch } from '$lib/bindings';
+import type { Repository } from '$services/common';
 
 // Mock the navigation module
 vi.mock('$app/navigation', () => ({

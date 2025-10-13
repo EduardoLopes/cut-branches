@@ -3,34 +3,34 @@ import { describe, it, expect, vi } from 'vitest';
 import MenuView from '../menu-view.svelte';
 import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
 
-// Database Repository type uses snake_case fields
+// Repository type uses camelCase fields (from bindings)
 const mockRepositories = [
 	{
 		id: '1',
 		name: 'repo1',
 		path: '/path/repo1',
-		current_branch: 'main',
-		branches_count: 5,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString()
+		currentBranch: 'main',
+		branchesCount: 5,
+		createdAt: new Date().toISOString(),
+		updatedAt: new Date().toISOString()
 	},
 	{
 		id: '2',
 		name: 'repo2',
 		path: '/path/repo2',
-		current_branch: 'main',
-		branches_count: 3,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString()
+		currentBranch: 'main',
+		branchesCount: 3,
+		createdAt: new Date().toISOString(),
+		updatedAt: new Date().toISOString()
 	},
 	{
 		id: '3',
 		name: 'repo3',
 		path: '/path/repo3',
-		current_branch: 'main',
-		branches_count: 0,
-		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString()
+		currentBranch: 'main',
+		branchesCount: 0,
+		createdAt: new Date().toISOString(),
+		updatedAt: new Date().toISOString()
 	}
 ];
 

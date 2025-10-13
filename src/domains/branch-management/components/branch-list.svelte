@@ -4,7 +4,7 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
-	import Branch from '$domains/branch-management/components/branch.svelte';
+	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
 	import {
@@ -13,20 +13,29 @@
 	} from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { createSwitchBranchMutation } from '$domains/branch-management/services/createSwitchBranchMutation';
+	import {
+		getBranchColorPalette,
+		getBranchAlerts,
+		getBranchElementId,
+		shouldShowBranchAlerts
+	} from '$domains/branch-management/utils/branch-utils';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
-	import type { Branch as BranchType } from '$services/common';
+	import type { Branch } from '$lib/bindings';
+	import BranchCard from '$ui/core/branch-card.svelte';
+	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 	import { token } from '@pindoba/panda/tokens';
 
 	interface Props {
-		branches: BranchType[];
+		branches: Branch[];
 		currentBranch?: string;
 		repositoryID?: string;
 		allowLocking?: boolean;
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
+		variant?: 'default' | 'inverted';
 	}
 
 	const {
@@ -35,7 +44,8 @@
 		repositoryID,
 		allowLocking = true,
 		allowSelection = true,
-		allowSetCurrent = true
+		allowSetCurrent = true,
+		variant = 'default'
 	}: Props = $props();
 
 	const repository = $derived(getRepositoryStore(repositoryID));
@@ -203,12 +213,29 @@
 						</div>
 					{/if}
 
-					<Branch
-						data={branch}
+					<BranchCard
+						{branch}
 						selected={selectedQuery.data?.branches.includes(branch.name)}
 						locked={lockedQuery.data?.branches.includes(branch.name) &&
 							currentBranch !== branch.name}
-					/>
+						colorPalette={getBranchColorPalette(
+							branch,
+							selectedQuery.data?.branches.includes(branch.name) ?? false
+						)}
+						id={getBranchElementId(branch.name, 'container')}
+						title={branch.current
+							? 'Current branch'
+							: formatString('{name}', { name: branch.name })}
+						{variant}
+					>
+						{@const alerts = getBranchAlerts(
+							branch,
+							selectedQuery.data?.branches.includes(branch.name) ?? false
+						)}
+						{#if shouldShowBranchAlerts(alerts, branch)}
+							<BranchAlerts {alerts} {branch} />
+						{/if}
+					</BranchCard>
 				</div>
 			{/each}
 		{/if}

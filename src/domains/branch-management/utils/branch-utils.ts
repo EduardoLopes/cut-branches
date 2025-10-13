@@ -1,5 +1,5 @@
 import { PROTECTED_BRANCH_NAMES, POTENTIALLY_OFFENSIVE_BRANCH_NAMES } from './branch-constants';
-import type { Branch } from '$services/common';
+import type { Branch } from '$lib/bindings';
 import { containsAnyWord } from '$utils/string-utils';
 import { css } from '@pindoba/panda/css';
 

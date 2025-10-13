@@ -4,14 +4,15 @@
 	import { type ButtonProps } from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import BranchComponent from '$domains/branch-management/components/branch.svelte';
+	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
+	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/services/createDeleteBranchesMutation';
 	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
-	import type { Branch } from '$services/common';
+	import type { Branch } from '$lib/bindings';
+	import BranchCard from '$ui/core/branch-card.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
@@ -26,9 +27,13 @@
 
 	const selectedQueryInput = $derived({ repoId: id ?? '' });
 
-	const repository = $derived(getRepositoryStore(id));
-	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const getRepositoryQuery = $derived(createGetRepositoryListQuery());
 
+	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === id));
+	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const getBranchesQuery = $derived(
+		createGetBranchesQuery({ repoId: id ?? '', includeDeleted: false })
+	);
 	// No need for manual invalidation - automatic invalidation handles it
 	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
 
@@ -54,7 +59,7 @@
 					feedback: 'success',
 					title: formatString('{type} deleted from {repo} repository', {
 						type: data.deletedBranches.length > 1 ? 'Branches' : 'Branch',
-						repo: ensureString(repository?.state?.name)
+						repo: ensureString(repository?.name)
 					}),
 					message: m
 				});
@@ -81,24 +86,24 @@
 	}
 
 	let branches = $derived(
-		[...(repository?.state?.branches ?? [])]
+		[...(getBranchesQuery.data?.branches ?? [])]
 			.sort(sort)
 			.filter((item) => selectedQuery.data?.branches.includes(item.name))
 	);
 
 	function handleDelete() {
-		if (repository?.state?.path && id) {
+		if (repository?.path && id) {
 			deleteMutation.mutate(
 				{
-					path: repository.state.path,
+					path: repository.path,
 					repoId: id,
 					branches: branches.map((item) => item.name)
 				},
 				{
 					onSuccess: (data) => {
 						// Log deleted branches to the deleted branches store
-						const deletedBranchesStore = getDeletedBranchesStore(repository.state?.id);
-						if (deletedBranchesStore && repository.state?.path) {
+						const deletedBranchesStore = getDeletedBranchesStore(repository.id);
+						if (deletedBranchesStore && repository.path) {
 							data.deletedBranches.forEach((deletedBranch) => {
 								deletedBranchesStore.addDeletedBranch(deletedBranch.branch);
 							});
@@ -129,7 +134,7 @@
 			class={css({
 				color: 'danger.800',
 				fontSize: 'lg'
-			})}>{repository?.state?.name}</strong
+			})}>{repository?.name}</strong
 		>?
 	</p>
 
@@ -143,17 +148,7 @@
 		})}
 	>
 		{#each branches as branch (`${branch.name}-${branch.lastCommit.sha}`)}
-			<div
-				class={css({
-					position: 'relative',
-					display: 'grid',
-					gridTemplateColumns: 'auto',
-					gap: 'md',
-					borderRadius: 'sm'
-				})}
-			>
-				<BranchComponent data={branch} />
-			</div>
+			<BranchCard {branch} selected={true} />
 		{/each}
 	</div>
 

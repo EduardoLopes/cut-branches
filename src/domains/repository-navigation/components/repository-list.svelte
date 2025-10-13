@@ -20,7 +20,7 @@
 			id: repo.id,
 			label: repo.name,
 			href: `/repos/${repo.id}`,
-			badge: repo.branches_count > 0 ? `${repo.branches_count}` : undefined
+			badge: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined
 		}));
 
 		// Sort by name

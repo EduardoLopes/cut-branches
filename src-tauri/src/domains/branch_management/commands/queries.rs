@@ -28,7 +28,7 @@ pub struct ListBranchesInput {
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ListBranchesOutput {
-    pub branches: Vec<crate::db::models::BranchRecord>,
+    pub branches: Vec<crate::domains::branch_management::git::branch::Branch>,
 }
 
 /// Gets the reachability status of a commit SHA in a git repository.
@@ -75,7 +75,7 @@ pub fn list_branches(
         )
     })?;
 
-    let branches = if input.include_deleted {
+    let branch_records = if input.include_deleted {
         crate::db::operations::get_deleted_branches_for_repository(&mut conn, &input.repo_id)
     } else {
         crate::db::operations::get_branches_for_repository(&mut conn, &input.repo_id)
@@ -87,6 +87,12 @@ pub fn list_branches(
             Some(e.to_string()),
         )
     })?;
+
+    // Convert BranchRecord to Branch
+    let branches: Vec<crate::domains::branch_management::git::branch::Branch> = branch_records
+        .into_iter()
+        .map(crate::domains::branch_management::git::branch::Branch::from)
+        .collect();
 
     Ok(ListBranchesOutput { branches })
 }

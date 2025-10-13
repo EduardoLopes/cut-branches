@@ -4,7 +4,7 @@ import {
 	getDeletedBranchesStore,
 	type DeletedBranchesState
 } from '../deleted-branches.svelte';
-import type { Branch } from '$services/common';
+import type { Branch } from '$lib/bindings';
 
 // Mock localStorage
 const localStorageMock = {
@@ -32,7 +32,9 @@ describe('DeletedBranchesStore', () => {
 			message: 'Test commit',
 			author: 'Test Author',
 			email: 'test@example.com'
-		}
+		},
+		deletedAt: null,
+		isReachable: null
 	};
 
 	beforeEach(() => {
@@ -60,8 +62,9 @@ describe('DeletedBranchesStore', () => {
 
 			const state = store.get();
 			expect(state?.branches).toHaveLength(1);
+			const { deletedAt: _, ...expectedBranch } = mockBranch;
 			expect(state?.branches[0]).toMatchObject({
-				...mockBranch,
+				...expectedBranch,
 				isReachable: true
 			});
 			expect(state?.branches[0].deletedAt).toBeDefined();

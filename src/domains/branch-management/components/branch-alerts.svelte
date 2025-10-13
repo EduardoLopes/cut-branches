@@ -3,7 +3,7 @@
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { getBranchElementId } from '../utils/branch-utils';
-	import type { Branch } from '$services/common';
+	import type { Branch } from '$lib/bindings';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 

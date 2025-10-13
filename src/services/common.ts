@@ -1,34 +1,9 @@
 import { z } from 'zod/v4';
 
-// Commit schema
-export const CommitSchema = z.object({
-	sha: z.string(),
-	shortSha: z.string(),
-	date: z.string(),
-	message: z.string(),
-	author: z.string(),
-	email: z.string()
-});
-
-export type Commit = z.infer<typeof CommitSchema>;
-
-// Branch schema
-export const BranchSchema = z
-	.object({
-		name: z.string(),
-		current: z.boolean(),
-		lastCommit: CommitSchema,
-		fullyMerged: z.boolean(),
-		deletedAt: z.string().optional(),
-		isReachable: z.boolean().optional()
-	})
-	.passthrough();
-
-export type Branch = z.infer<typeof BranchSchema>;
-
-// Repository schema
+// Repository schema for combined repository + branches data
+// Note: This is different from the Repository type in bindings which is just the DB model
 export const RepositorySchema = z.object({
-	branches: z.array(BranchSchema),
+	branches: z.array(z.any()), // Branch[] - using any to avoid circular dependency with bindings
 	path: z.string(),
 	name: z.string(),
 	currentBranch: z.string(),

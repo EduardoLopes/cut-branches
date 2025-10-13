@@ -1,17 +1,16 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Markdown from 'svelte-exmarkdown';
-	import type { Commit } from '$services/common';
+	import type { Commit } from '$lib/bindings';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { cleanEmailString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		commit: Commit;
-		deletedAt?: string;
 	}
 
-	let { commit, deletedAt }: Props = $props();
+	let { commit }: Props = $props();
 </script>
 
 <div
@@ -66,27 +65,11 @@
 				color: 'neutral.900'
 			})}
 			title={safeFormatDate(commit.date)}
+			data-testid="commit-date"
 		>
 			<Icon icon="lucide:clock" width="16px" height="16px" />{safeFormatRelativeDate(commit.date, {
 				unit: 'day'
 			})}
 		</span>
-		{#if deletedAt}
-			<span
-				class={css({
-					fontSize: 'sm',
-					display: 'flex',
-					flexDirection: 'row',
-					alignItems: 'center',
-					gap: 'xxs',
-					color: 'danger.800',
-					marginLeft: 'auto'
-				})}
-				title={safeFormatDate(deletedAt)}
-			>
-				<Icon icon="lucide:trash" width="16px" height="16px" />
-				Deleted At {safeFormatRelativeDate(deletedAt)}
-			</span>
-		{/if}
 	</div>
 </div>

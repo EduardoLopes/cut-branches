@@ -8,6 +8,7 @@ use specta::Type;
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize, Type)]
 #[diesel(table_name = repositories)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct Repository {
     pub id: String,
     pub name: String,
@@ -20,6 +21,7 @@ pub struct Repository {
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
 #[diesel(table_name = repositories)]
+#[serde(rename_all = "camelCase")]
 pub struct NewRepository {
     pub id: String,
     pub name: String,
@@ -35,6 +37,7 @@ pub struct NewRepository {
 #[diesel(belongs_to(Repository, foreign_key = repository_id))]
 #[diesel(table_name = branches)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct BranchRecord {
     pub id: Option<i32>,
     pub repository_id: String,
@@ -55,6 +58,7 @@ pub struct BranchRecord {
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
 #[diesel(table_name = branches)]
+#[serde(rename_all = "camelCase")]
 pub struct NewBranchRecord {
     pub repository_id: String,
     pub name: String,
@@ -77,6 +81,7 @@ pub struct NewBranchRecord {
 #[diesel(belongs_to(Repository, foreign_key = repository_id))]
 #[diesel(table_name = selected_branches)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct SelectedBranch {
     pub id: Option<i32>,
     pub repository_id: String,
@@ -86,6 +91,7 @@ pub struct SelectedBranch {
 
 #[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
 #[diesel(table_name = selected_branches)]
+#[serde(rename_all = "camelCase")]
 pub struct NewSelectedBranch {
     pub repository_id: String,
     pub branch_name: String,
@@ -98,6 +104,7 @@ pub struct NewSelectedBranch {
 #[diesel(belongs_to(Repository, foreign_key = repository_id))]
 #[diesel(table_name = locked_branches)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct LockedBranch {
     pub id: Option<i32>,
     pub repository_id: String,
@@ -107,6 +114,7 @@ pub struct LockedBranch {
 
 #[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
 #[diesel(table_name = locked_branches)]
+#[serde(rename_all = "camelCase")]
 pub struct NewLockedBranch {
     pub repository_id: String,
     pub branch_name: String,
@@ -119,6 +127,7 @@ pub struct NewLockedBranch {
 #[diesel(belongs_to(Repository, foreign_key = repository_id))]
 #[diesel(table_name = settings)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct Setting {
     pub id: Option<i32>,
     pub repository_id: Option<String>,
@@ -130,6 +139,7 @@ pub struct Setting {
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
 #[diesel(table_name = settings)]
+#[serde(rename_all = "camelCase")]
 pub struct NewSetting {
     pub repository_id: Option<String>,
     pub key: String,
@@ -140,6 +150,7 @@ pub struct NewSetting {
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize, Type)]
 #[diesel(table_name = notifications)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct Notification {
     pub id: String,
     pub title: Option<String>,
@@ -151,6 +162,7 @@ pub struct Notification {
 
 #[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
 #[diesel(table_name = notifications)]
+#[serde(rename_all = "camelCase")]
 pub struct NewNotification {
     pub id: String,
     pub title: Option<String>,
@@ -164,6 +176,7 @@ pub struct NewNotification {
 #[diesel(table_name = metadata)]
 #[diesel(primary_key(key))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
 pub struct Metadata {
     pub key: String,
     pub value: String,
@@ -172,6 +185,7 @@ pub struct Metadata {
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
 #[diesel(table_name = metadata)]
+#[serde(rename_all = "camelCase")]
 pub struct NewMetadata {
     pub key: String,
     pub value: String,

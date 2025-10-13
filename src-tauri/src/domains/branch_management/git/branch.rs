@@ -28,6 +28,28 @@ pub struct Branch {
     pub fully_merged: bool,
     pub last_commit: Commit,
     pub current: bool,
+    pub deleted_at: Option<String>,
+    pub is_reachable: Option<bool>,
+}
+
+impl From<crate::db::models::BranchRecord> for Branch {
+    fn from(record: crate::db::models::BranchRecord) -> Self {
+        Branch {
+            name: record.name,
+            fully_merged: record.fully_merged,
+            last_commit: Commit {
+                sha: record.last_commit_sha,
+                short_sha: record.last_commit_short_sha,
+                date: record.last_commit_date,
+                message: record.last_commit_message,
+                author: record.last_commit_author,
+                email: record.last_commit_email,
+            },
+            current: record.current,
+            deleted_at: record.deleted_at,
+            is_reachable: record.is_reachable,
+        }
+    }
 }
 
 pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, AppError> {
@@ -154,6 +176,8 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, App
                 author: author_name,
                 email: author_email,
             },
+            deleted_at: None,
+            is_reachable: None,
         });
     }
 
@@ -506,6 +530,8 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
             author: author_name,
             email: author_email,
         },
+        deleted_at: None,
+        is_reachable: None,
     })
 }
 

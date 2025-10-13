@@ -6,7 +6,7 @@ import { getSelectedBranchesStore } from '../../store/selected-branches.svelte';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
 import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
-import type { Branch } from '$services/common';
+import type { Branch } from '$lib/bindings';
 
 // Mock dependencies
 vi.mock('$app/state', () => {
@@ -72,7 +72,9 @@ const mockBranches: Branch[] = [
 			author: 'Test User',
 			email: 'test@example.com'
 		},
-		fullyMerged: false
+		fullyMerged: false,
+		deletedAt: null,
+		isReachable: null
 	},
 	{
 		name: 'feature-2',
@@ -85,7 +87,9 @@ const mockBranches: Branch[] = [
 			author: 'Test User',
 			email: 'test@example.com'
 		},
-		fullyMerged: false
+		fullyMerged: false,
+		deletedAt: null,
+		isReachable: null
 	},
 	{
 		name: 'main',
@@ -98,9 +102,39 @@ const mockBranches: Branch[] = [
 			author: 'Test User',
 			email: 'test@example.com'
 		},
-		fullyMerged: true
+		fullyMerged: true,
+		deletedAt: null,
+		isReachable: null
 	}
 ];
+
+// Mock get repository list query
+vi.mock('../../logic/application/queries/create-get-repository-list-query', () => ({
+	createGetRepositoryListQuery: vi.fn(() => ({
+		data: [
+			{
+				id: 'test-repo',
+				name: 'test-repo',
+				currentBranch: 'main',
+				path: '/path/to/repo',
+				branchesCount: 3
+			}
+		],
+		isLoading: false,
+		isError: false,
+		error: null
+	}))
+}));
+
+// Mock get branches query
+vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
+	createGetBranchesQuery: vi.fn(() => ({
+		data: { branches: mockBranches },
+		isLoading: false,
+		isError: false,
+		error: null
+	}))
+}));
 
 describe('DeleteBranchModal Component', () => {
 	beforeEach(() => {
@@ -490,7 +524,7 @@ describe('DeleteBranchModal Component', () => {
 			handleDeleteOnSuccess(mockDeleteResponse);
 
 			// Verify deleted branch was added to store
-			expect(getDeletedBranchesStore).toHaveBeenCalledWith('1'); // repository id
+			expect(getDeletedBranchesStore).toHaveBeenCalledWith('test-repo'); // repository id
 			expect(mockStore.addDeletedBranch).toHaveBeenCalledWith(
 				mockDeleteResponse.deletedBranches[0].branch
 			);
