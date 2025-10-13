@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset, TimeZone};
-use git2::{BranchType, Oid, Repository};
+use git2::{BranchType, Repository};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::Emitter;
@@ -663,15 +663,16 @@ fn create_branch_at_commit(
         )
     })?;
 
-    let commit_id = Oid::from_str(commit_sha).map_err(|e| {
+    // Use revparse_single to handle both full and short SHA hashes
+    let obj = repo.revparse_single(commit_sha).map_err(|e| {
         AppError::new(
-            format!("Invalid commit SHA '{}': {}", commit_sha, e),
-            "invalid_commit_sha",
+            format!("Failed to find commit '{}': {}", commit_sha, e),
+            "commit_not_found",
             Some(e.to_string()),
         )
     })?;
 
-    let commit = repo.find_commit(commit_id).map_err(|e| {
+    let commit = obj.peel_to_commit().map_err(|e| {
         AppError::new(
             format!("Failed to find commit '{}': {}", commit_sha, e),
             "commit_not_found",
