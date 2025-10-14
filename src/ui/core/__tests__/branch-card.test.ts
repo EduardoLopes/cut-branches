@@ -17,7 +17,9 @@ describe('BranchCard Component', () => {
 			email: 'john.doe@example.com'
 		},
 		deletedAt: null,
-		isReachable: null
+		isReachable: null,
+		isSelected: false,
+		isLocked: false
 	};
 
 	test('renders branch name', () => {

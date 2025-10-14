@@ -153,7 +153,10 @@ pub fn mark_branches_deleted(
             .filter(branches::repository_id.eq(repo_id))
             .filter(branches::name.eq_any(branch_names)),
     )
-    .set(branches::deleted_at.eq(Some(now)))
+    .set((
+        branches::deleted_at.eq(Some(now)),
+        branches::is_selected.eq(false),
+    ))
     .execute(conn)
 }
 
@@ -178,29 +181,45 @@ pub fn add_selected_branches(
     branch_names: Vec<String>,
     branch_context: &str,
 ) -> Result<usize, DieselError> {
-    let new_selected: Vec<NewSelectedBranch> = branch_names
-        .into_iter()
-        .map(|name| NewSelectedBranch {
-            repository_id: repo_id.to_string(),
-            branch_name: name,
-            branch_context: branch_context.to_string(),
-        })
-        .collect();
-
-    diesel::insert_or_ignore_into(selected_branches::table)
-        .values(&new_selected)
+    // Map branch_context to deleted_at filter
+    if branch_context == "current" {
+        diesel::update(
+            branches::table
+                .filter(branches::repository_id.eq(repo_id))
+                .filter(branches::name.eq_any(branch_names))
+                .filter(branches::deleted_at.is_null()),
+        )
+        .set(branches::is_selected.eq(true))
         .execute(conn)
+    } else {
+        diesel::update(
+            branches::table
+                .filter(branches::repository_id.eq(repo_id))
+                .filter(branches::name.eq_any(branch_names))
+                .filter(branches::deleted_at.is_not_null()),
+        )
+        .set(branches::is_selected.eq(true))
+        .execute(conn)
+    }
 }
 
 pub fn get_selected_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
     branch_context: &str,
-) -> Result<Vec<SelectedBranch>, DieselError> {
-    selected_branches::table
-        .filter(selected_branches::repository_id.eq(repo_id))
-        .filter(selected_branches::branch_context.eq(branch_context))
-        .load(conn)
+) -> Result<Vec<String>, DieselError> {
+    let mut query = branches::table
+        .filter(branches::repository_id.eq(repo_id))
+        .filter(branches::is_selected.eq(true))
+        .into_boxed();
+
+    query = if branch_context == "current" {
+        query.filter(branches::deleted_at.is_null())
+    } else {
+        query.filter(branches::deleted_at.is_not_null())
+    };
+
+    query.select(branches::name).load::<String>(conn)
 }
 
 pub fn remove_selected_branches(
@@ -209,13 +228,25 @@ pub fn remove_selected_branches(
     branch_names: Vec<String>,
     branch_context: &str,
 ) -> Result<usize, DieselError> {
-    diesel::delete(
-        selected_branches::table
-            .filter(selected_branches::repository_id.eq(repo_id))
-            .filter(selected_branches::branch_name.eq_any(branch_names))
-            .filter(selected_branches::branch_context.eq(branch_context)),
-    )
-    .execute(conn)
+    if branch_context == "current" {
+        diesel::update(
+            branches::table
+                .filter(branches::repository_id.eq(repo_id))
+                .filter(branches::name.eq_any(branch_names))
+                .filter(branches::deleted_at.is_null()),
+        )
+        .set(branches::is_selected.eq(false))
+        .execute(conn)
+    } else {
+        diesel::update(
+            branches::table
+                .filter(branches::repository_id.eq(repo_id))
+                .filter(branches::name.eq_any(branch_names))
+                .filter(branches::deleted_at.is_not_null()),
+        )
+        .set(branches::is_selected.eq(false))
+        .execute(conn)
+    }
 }
 
 pub fn clear_selected_branches(
@@ -223,12 +254,25 @@ pub fn clear_selected_branches(
     repo_id: &str,
     branch_context: &str,
 ) -> Result<usize, DieselError> {
-    diesel::delete(
-        selected_branches::table
-            .filter(selected_branches::repository_id.eq(repo_id))
-            .filter(selected_branches::branch_context.eq(branch_context)),
-    )
-    .execute(conn)
+    if branch_context == "current" {
+        diesel::update(
+            branches::table
+                .filter(branches::repository_id.eq(repo_id))
+                .filter(branches::is_selected.eq(true))
+                .filter(branches::deleted_at.is_null()),
+        )
+        .set(branches::is_selected.eq(false))
+        .execute(conn)
+    } else {
+        diesel::update(
+            branches::table
+                .filter(branches::repository_id.eq(repo_id))
+                .filter(branches::is_selected.eq(true))
+                .filter(branches::deleted_at.is_not_null()),
+        )
+        .set(branches::is_selected.eq(false))
+        .execute(conn)
+    }
 }
 
 // Locked branches operations
@@ -237,26 +281,24 @@ pub fn add_locked_branches(
     repo_id: &str,
     branch_names: Vec<String>,
 ) -> Result<usize, DieselError> {
-    let new_locked: Vec<NewLockedBranch> = branch_names
-        .into_iter()
-        .map(|name| NewLockedBranch {
-            repository_id: repo_id.to_string(),
-            branch_name: name,
-        })
-        .collect();
-
-    diesel::insert_or_ignore_into(locked_branches::table)
-        .values(&new_locked)
-        .execute(conn)
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::name.eq_any(branch_names)),
+    )
+    .set(branches::is_locked.eq(true))
+    .execute(conn)
 }
 
 pub fn get_locked_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
-) -> Result<Vec<LockedBranch>, DieselError> {
-    locked_branches::table
-        .filter(locked_branches::repository_id.eq(repo_id))
-        .load(conn)
+) -> Result<Vec<String>, DieselError> {
+    branches::table
+        .filter(branches::repository_id.eq(repo_id))
+        .filter(branches::is_locked.eq(true))
+        .select(branches::name)
+        .load::<String>(conn)
 }
 
 pub fn remove_locked_branches(
@@ -264,11 +306,12 @@ pub fn remove_locked_branches(
     repo_id: &str,
     branch_names: Vec<String>,
 ) -> Result<usize, DieselError> {
-    diesel::delete(
-        locked_branches::table
-            .filter(locked_branches::repository_id.eq(repo_id))
-            .filter(locked_branches::branch_name.eq_any(branch_names)),
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::name.eq_any(branch_names)),
     )
+    .set(branches::is_locked.eq(false))
     .execute(conn)
 }
 
@@ -276,8 +319,13 @@ pub fn clear_locked_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
 ) -> Result<usize, DieselError> {
-    diesel::delete(locked_branches::table.filter(locked_branches::repository_id.eq(repo_id)))
-        .execute(conn)
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::is_locked.eq(true)),
+    )
+    .set(branches::is_locked.eq(false))
+    .execute(conn)
 }
 
 // Settings operations

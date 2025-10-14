@@ -107,7 +107,9 @@
 				email: dbBranch.last_commit_email as string
 			},
 			deletedAt: dbBranch.deleted_at as string | null,
-			isReachable: dbBranch.is_reachable as boolean | null
+			isReachable: dbBranch.is_reachable as boolean | null,
+			isSelected: dbBranch.is_selected as boolean,
+			isLocked: dbBranch.is_locked as boolean
 		};
 	}
 

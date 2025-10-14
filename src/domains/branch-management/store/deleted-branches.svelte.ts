@@ -21,7 +21,9 @@ const BranchSchema = z.object({
 	}),
 	current: z.boolean(),
 	deletedAt: z.string().nullable(),
-	isReachable: z.boolean().nullable()
+	isReachable: z.boolean().nullable(),
+	isSelected: z.boolean(),
+	isLocked: z.boolean()
 });
 
 const deletedBranchesStateSchema = z.object({

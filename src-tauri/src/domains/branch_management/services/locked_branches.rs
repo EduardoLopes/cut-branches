@@ -16,15 +16,13 @@ pub fn get_locked_branches(
         )
     })?;
 
-    operations::get_locked_branches(&mut conn, repo_id)
-        .map(|branches| branches.into_iter().map(|b| b.branch_name).collect())
-        .map_err(|e| {
-            AppError::new(
-                "Failed to get locked branches".to_string(),
-                "db_get_failed",
-                Some(e.to_string()),
-            )
-        })
+    operations::get_locked_branches(&mut conn, repo_id).map_err(|e| {
+        AppError::new(
+            "Failed to get locked branches".to_string(),
+            "db_get_failed",
+            Some(e.to_string()),
+        )
+    })
 }
 
 /// Add branches to the locked list

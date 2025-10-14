@@ -34,7 +34,9 @@ describe('DeletedBranchesStore', () => {
 			email: 'test@example.com'
 		},
 		deletedAt: null,
-		isReachable: null
+		isReachable: null,
+		isSelected: false,
+		isLocked: false
 	};
 
 	beforeEach(() => {

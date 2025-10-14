@@ -30,6 +30,8 @@ pub struct Branch {
     pub current: bool,
     pub deleted_at: Option<String>,
     pub is_reachable: Option<bool>,
+    pub is_selected: bool,
+    pub is_locked: bool,
 }
 
 impl From<crate::db::models::BranchRecord> for Branch {
@@ -48,6 +50,8 @@ impl From<crate::db::models::BranchRecord> for Branch {
             current: record.current,
             deleted_at: record.deleted_at,
             is_reachable: record.is_reachable,
+            is_selected: record.is_selected,
+            is_locked: record.is_locked,
         }
     }
 }
@@ -178,6 +182,8 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, App
             },
             deleted_at: None,
             is_reachable: None,
+            is_selected: false,
+            is_locked: false,
         });
     }
 
@@ -532,6 +538,8 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
         },
         deleted_at: None,
         is_reachable: None,
+        is_selected: false,
+        is_locked: false,
     })
 }
 

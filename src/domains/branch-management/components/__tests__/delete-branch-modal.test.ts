@@ -74,7 +74,9 @@ const mockBranches: Branch[] = [
 		},
 		fullyMerged: false,
 		deletedAt: null,
-		isReachable: null
+		isReachable: null,
+		isSelected: false,
+		isLocked: false
 	},
 	{
 		name: 'feature-2',
@@ -89,7 +91,9 @@ const mockBranches: Branch[] = [
 		},
 		fullyMerged: false,
 		deletedAt: null,
-		isReachable: null
+		isReachable: null,
+		isSelected: false,
+		isLocked: false
 	},
 	{
 		name: 'main',
@@ -104,7 +108,9 @@ const mockBranches: Branch[] = [
 		},
 		fullyMerged: true,
 		deletedAt: null,
-		isReachable: null
+		isReachable: null,
+		isSelected: false,
+		isLocked: false
 	}
 ];
 

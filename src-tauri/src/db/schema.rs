@@ -17,15 +17,8 @@ diesel::table! {
         is_reachable -> Nullable<Bool>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-    }
-}
-
-diesel::table! {
-    locked_branches (id) {
-        id -> Nullable<Integer>,
-        repository_id -> Text,
-        branch_name -> Text,
-        created_at -> Timestamp,
+        is_selected -> Bool,
+        is_locked -> Bool,
     }
 }
 
@@ -63,16 +56,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    selected_branches (id) {
-        id -> Nullable<Integer>,
-        repository_id -> Text,
-        branch_name -> Text,
-        branch_context -> Text,
-        created_at -> Timestamp,
-    }
-}
-
-diesel::table! {
     settings (id) {
         id -> Nullable<Integer>,
         repository_id -> Nullable<Text>,
@@ -84,16 +67,12 @@ diesel::table! {
 }
 
 diesel::joinable!(branches -> repositories (repository_id));
-diesel::joinable!(locked_branches -> repositories (repository_id));
-diesel::joinable!(selected_branches -> repositories (repository_id));
 diesel::joinable!(settings -> repositories (repository_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     branches,
-    locked_branches,
     metadata,
     notifications,
     repositories,
-    selected_branches,
     settings,
 );

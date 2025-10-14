@@ -17,15 +17,13 @@ pub fn get_selected_branches(
         )
     })?;
 
-    operations::get_selected_branches(&mut conn, repo_id, branch_context)
-        .map(|branches| branches.into_iter().map(|b| b.branch_name).collect())
-        .map_err(|e| {
-            AppError::new(
-                "Failed to get selected branches".to_string(),
-                "db_get_failed",
-                Some(e.to_string()),
-            )
-        })
+    operations::get_selected_branches(&mut conn, repo_id, branch_context).map_err(|e| {
+        AppError::new(
+            "Failed to get selected branches".to_string(),
+            "db_get_failed",
+            Some(e.to_string()),
+        )
+    })
 }
 
 /// Add branches to the selected list

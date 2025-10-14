@@ -31,6 +31,8 @@ export const mockDataFactory = {
 		fullyMerged: false,
 		deletedAt: null,
 		isReachable: null,
+		isSelected: false,
+		isLocked: false,
 		...overrides
 	}),
 

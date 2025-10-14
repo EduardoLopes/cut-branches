@@ -58,6 +58,8 @@ pub struct BranchRecord {
     pub is_reachable: Option<bool>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub is_selected: bool,
+    pub is_locked: bool,
 }
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
@@ -76,54 +78,8 @@ pub struct NewBranchRecord {
     pub last_commit_email: String,
     pub deleted_at: Option<String>,
     pub is_reachable: Option<bool>,
-}
-
-// Selected branches models
-#[derive(
-    Debug, Clone, Queryable, Selectable, Identifiable, Associations, Serialize, Deserialize, Type,
-)]
-#[diesel(belongs_to(Repository, foreign_key = repository_id))]
-#[diesel(table_name = selected_branches)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[serde(rename_all = "camelCase")]
-pub struct SelectedBranch {
-    pub id: Option<i32>,
-    pub repository_id: String,
-    pub branch_name: String,
-    pub branch_context: String,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
-#[diesel(table_name = selected_branches)]
-#[serde(rename_all = "camelCase")]
-pub struct NewSelectedBranch {
-    pub repository_id: String,
-    pub branch_name: String,
-    pub branch_context: String,
-}
-
-// Locked branches models
-#[derive(
-    Debug, Clone, Queryable, Selectable, Identifiable, Associations, Serialize, Deserialize, Type,
-)]
-#[diesel(belongs_to(Repository, foreign_key = repository_id))]
-#[diesel(table_name = locked_branches)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[serde(rename_all = "camelCase")]
-pub struct LockedBranch {
-    pub id: Option<i32>,
-    pub repository_id: String,
-    pub branch_name: String,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
-#[diesel(table_name = locked_branches)]
-#[serde(rename_all = "camelCase")]
-pub struct NewLockedBranch {
-    pub repository_id: String,
-    pub branch_name: String,
+    pub is_selected: bool,
+    pub is_locked: bool,
 }
 
 // Settings models

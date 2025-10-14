@@ -127,5 +127,7 @@ fn branch_to_new_branch(repo_id: &str, branch: &Branch) -> NewBranchRecord {
         last_commit_email: branch.last_commit.email.clone(),
         deleted_at: None,
         is_reachable: None,
+        is_selected: false,
+        is_locked: false,
     }
 }
