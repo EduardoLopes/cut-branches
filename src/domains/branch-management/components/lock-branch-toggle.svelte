@@ -45,8 +45,7 @@
 			addLockedMutation.mutate({ repoId: lockedQueryInput.repoId, branchNames: [branch] });
 			removeSelectedMutation.mutate({
 				repoId: lockedQueryInput.repoId,
-				branchNames: [branch],
-				branchContext: 'current'
+				branchNames: [branch]
 			});
 		}
 	}

@@ -15,6 +15,8 @@ pub use locked::{
 };
 pub use queries::{get_commit_reachability, list_branches};
 pub use selected::{
-    batch_create_selected_branches, batch_delete_selected_branches, delete_all_selected_branches,
-    list_selected_branches,
+    batch_create_branch_selection, batch_create_deleted_branch_selection,
+    batch_delete_branch_selection, batch_delete_deleted_branch_selection,
+    delete_all_branch_selection, delete_all_deleted_branch_selection, list_branch_selection,
+    list_deleted_branch_selection,
 };

@@ -9,9 +9,14 @@
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
 	import {
 		createAddSelectedBranchesMutation,
-		createRemoveSelectedBranchesMutation
+		createRemoveSelectedBranchesMutation,
+		createAddDeletedSelectedBranchesMutation,
+		createRemoveDeletedSelectedBranchesMutation
 	} from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
+	import {
+		createSelectedBranchesQuery,
+		createDeletedSelectedBranchesQuery
+	} from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { createSwitchBranchMutation } from '$domains/branch-management/services/createSwitchBranchMutation';
 	import {
 		getBranchColorPalette,
@@ -51,20 +56,28 @@
 		branchContext = 'current'
 	}: Props = $props();
 
-	const selectedQueryInput = $derived({
-		repoId: repositoryID ?? '',
-		branchContext: branchContext
-	});
-	const lockedQueryInput = $derived({ repoId: repositoryID ?? '' });
+	const queryInput = $derived({ repoId: repositoryID ?? '' });
 
 	// Use queries for database-backed data
-	const lockedQuery = $derived(createLockedBranchesQuery(lockedQueryInput));
-	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const lockedQuery = $derived(createLockedBranchesQuery(queryInput));
+	const selectedQuery = $derived(
+		branchContext === 'current'
+			? createSelectedBranchesQuery(queryInput)
+			: createDeletedSelectedBranchesQuery(queryInput)
+	);
 
 	// Mutations for selected branches
-	const addSelectedMutation = $derived(createAddSelectedBranchesMutation());
+	const addSelectedMutation = $derived(
+		branchContext === 'current'
+			? createAddSelectedBranchesMutation()
+			: createAddDeletedSelectedBranchesMutation()
+	);
 
-	const removeSelectedMutation = $derived(createRemoveSelectedBranchesMutation());
+	const removeSelectedMutation = $derived(
+		branchContext === 'current'
+			? createRemoveSelectedBranchesMutation()
+			: createRemoveDeletedSelectedBranchesMutation()
+	);
 
 	const switchBranchMutation = $derived(
 		createSwitchBranchMutation({
@@ -79,8 +92,7 @@
 				if (repositoryID) {
 					removeSelectedMutation.mutate({
 						repoId: repositoryID,
-						branchNames: [currentBranch],
-						branchContext: branchContext
+						branchNames: [currentBranch]
 					});
 				}
 			},
@@ -93,14 +105,12 @@
 		if (selectedQuery.data?.branches.includes(branch)) {
 			removeSelectedMutation.mutate({
 				repoId: repositoryID,
-				branchNames: [branch],
-				branchContext: branchContext
+				branchNames: [branch]
 			});
 		} else {
 			addSelectedMutation.mutate({
 				repoId: repositoryID,
-				branchNames: [branch],
-				branchContext: branchContext
+				branchNames: [branch]
 			});
 		}
 	}

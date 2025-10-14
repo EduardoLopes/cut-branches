@@ -225,7 +225,7 @@ async batchCreateBranchRestorations(input: BatchCreateBranchRestorationsInput) :
 }
 },
 /**
- * Lists all selected branches for a repository.
+ * Lists all selected branches for a repository (active branches only).
  * 
  * # Arguments
  * 
@@ -234,18 +234,18 @@ async batchCreateBranchRestorations(input: BatchCreateBranchRestorationsInput) :
  * 
  * # Returns
  * 
- * * `Result<ListSelectedBranchesOutput, AppError>` - The selected branches or an error
+ * * `Result<ListBranchSelectionOutput, AppError>` - The selected branches or an error
  */
-async listSelectedBranches(input: ListSelectedBranchesInput) : Promise<Result<ListSelectedBranchesOutput, AppError>> {
+async listBranchSelection(input: ListBranchSelectionInput) : Promise<Result<ListBranchSelectionOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("list_selected_branches", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("list_branch_selection", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Creates multiple selected branches for a repository.
+ * Creates multiple selected branches for a repository (active branches).
  * 
  * # Arguments
  * 
@@ -254,18 +254,18 @@ async listSelectedBranches(input: ListSelectedBranchesInput) : Promise<Result<Li
  * 
  * # Returns
  * 
- * * `Result<BatchCreateSelectedBranchesOutput, AppError>` - Success or an error
+ * * `Result<BatchCreateBranchSelectionOutput, AppError>` - Success or an error
  */
-async batchCreateSelectedBranches(input: BatchCreateSelectedBranchesInput) : Promise<Result<BatchCreateSelectedBranchesOutput, AppError>> {
+async batchCreateBranchSelection(input: BatchCreateBranchSelectionInput) : Promise<Result<BatchCreateBranchSelectionOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("batch_create_selected_branches", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("batch_create_branch_selection", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Deletes multiple selected branches for a repository.
+ * Deletes multiple selected branches for a repository (active branches).
  * 
  * # Arguments
  * 
@@ -274,18 +274,18 @@ async batchCreateSelectedBranches(input: BatchCreateSelectedBranchesInput) : Pro
  * 
  * # Returns
  * 
- * * `Result<BatchDeleteSelectedBranchesOutput, AppError>` - Success or an error
+ * * `Result<BatchDeleteBranchSelectionOutput, AppError>` - Success or an error
  */
-async batchDeleteSelectedBranches(input: BatchDeleteSelectedBranchesInput) : Promise<Result<BatchDeleteSelectedBranchesOutput, AppError>> {
+async batchDeleteBranchSelection(input: BatchDeleteBranchSelectionInput) : Promise<Result<BatchDeleteBranchSelectionOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("batch_delete_selected_branches", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("batch_delete_branch_selection", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
 },
 /**
- * Deletes all selected branches for a repository.
+ * Deletes all selected branches for a repository (active branches).
  * 
  * # Arguments
  * 
@@ -294,11 +294,91 @@ async batchDeleteSelectedBranches(input: BatchDeleteSelectedBranchesInput) : Pro
  * 
  * # Returns
  * 
- * * `Result<DeleteAllSelectedBranchesOutput, AppError>` - Success or an error
+ * * `Result<DeleteAllBranchSelectionOutput, AppError>` - Success or an error
  */
-async deleteAllSelectedBranches(input: DeleteAllSelectedBranchesInput) : Promise<Result<DeleteAllSelectedBranchesOutput, AppError>> {
+async deleteAllBranchSelection(input: DeleteAllBranchSelectionInput) : Promise<Result<DeleteAllBranchSelectionOutput, AppError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("delete_all_selected_branches", { input }) };
+    return { status: "ok", data: await TAURI_INVOKE("delete_all_branch_selection", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Lists all selected deleted branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<ListDeletedBranchSelectionOutput, AppError>` - The selected deleted branches or an error
+ */
+async listDeletedBranchSelection(input: ListDeletedBranchSelectionInput) : Promise<Result<ListDeletedBranchSelectionOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_deleted_branch_selection", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Creates multiple selected deleted branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BatchCreateDeletedBranchSelectionOutput, AppError>` - Success or an error
+ */
+async batchCreateDeletedBranchSelection(input: BatchCreateDeletedBranchSelectionInput) : Promise<Result<BatchCreateDeletedBranchSelectionOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("batch_create_deleted_branch_selection", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes multiple selected deleted branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BatchDeleteDeletedBranchSelectionOutput, AppError>` - Success or an error
+ */
+async batchDeleteDeletedBranchSelection(input: BatchDeleteDeletedBranchSelectionInput) : Promise<Result<BatchDeleteDeletedBranchSelectionOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("batch_delete_deleted_branch_selection", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes all selected deleted branches for a repository.
+ * 
+ * # Arguments
+ * 
+ * * `db` - Database state
+ * * `input` - Input parameters containing repository ID
+ * 
+ * # Returns
+ * 
+ * * `Result<DeleteAllDeletedBranchSelectionOutput, AppError>` - Success or an error
+ */
+async deleteAllDeletedBranchSelection(input: DeleteAllDeletedBranchSelectionInput) : Promise<Result<DeleteAllDeletedBranchSelectionOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_all_deleted_branch_selection", { input }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -412,16 +492,20 @@ repositoryLoaded: "repository-loaded"
 export type AppError = { message: string; kind: string; description: string | null }
 export type BatchCreateBranchRestorationsInput = { path: string; repoId: string; branchInfos: DeletedBranch[] }
 export type BatchCreateBranchRestorationsOutput = { results: RestoreBranchResult[] }
+export type BatchCreateBranchSelectionInput = { repoId: string; branchNames: string[] }
+export type BatchCreateBranchSelectionOutput = Record<string, never>
+export type BatchCreateDeletedBranchSelectionInput = { repoId: string; branchNames: string[] }
+export type BatchCreateDeletedBranchSelectionOutput = Record<string, never>
 export type BatchCreateLockedBranchesInput = { repoId: string; branchNames: string[] }
 export type BatchCreateLockedBranchesOutput = Record<string, never>
-export type BatchCreateSelectedBranchesInput = { repoId: string; branchNames: string[]; branchContext: string }
-export type BatchCreateSelectedBranchesOutput = Record<string, never>
+export type BatchDeleteBranchSelectionInput = { repoId: string; branchNames: string[] }
+export type BatchDeleteBranchSelectionOutput = Record<string, never>
 export type BatchDeleteBranchesInput = { path: string; repoId: string; branches: string[] }
 export type BatchDeleteBranchesOutput = { deletedBranches: DeletedBranchInfo[] }
+export type BatchDeleteDeletedBranchSelectionInput = { repoId: string; branchNames: string[] }
+export type BatchDeleteDeletedBranchSelectionOutput = Record<string, never>
 export type BatchDeleteLockedBranchesInput = { repoId: string; branchNames: string[] }
 export type BatchDeleteLockedBranchesOutput = Record<string, never>
-export type BatchDeleteSelectedBranchesInput = { repoId: string; branchNames: string[]; branchContext: string }
-export type BatchDeleteSelectedBranchesOutput = Record<string, never>
 export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean; deletedAt: string | null; isReachable: boolean | null; isSelected: boolean; isLocked: boolean }
 export type BranchDeletedEvent = { deletedBranches: DeletedBranchInfo[]; repositoryPath: string }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
@@ -433,10 +517,12 @@ export type CreateBranchRestorationInput = { path: string; repoId: string; branc
 export type CreateBranchRestorationOutput = { result: RestoreBranchResult }
 export type CreateRepositoryInput = { path: string }
 export type CreateRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
+export type DeleteAllBranchSelectionInput = { repoId: string }
+export type DeleteAllBranchSelectionOutput = Record<string, never>
+export type DeleteAllDeletedBranchSelectionInput = { repoId: string }
+export type DeleteAllDeletedBranchSelectionOutput = Record<string, never>
 export type DeleteAllLockedBranchesInput = { repoId: string }
 export type DeleteAllLockedBranchesOutput = Record<string, never>
-export type DeleteAllSelectedBranchesInput = { repoId: string; branchContext: string }
-export type DeleteAllSelectedBranchesOutput = Record<string, never>
 export type DeleteRepositoryInput = { id: string }
 export type DeleteRepositoryOutput = { success: boolean }
 export type DeletedBranch = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
@@ -447,12 +533,14 @@ export type GetRepositoryInput = { path: string }
 export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
 export type GetRepositoryRootInput = { path: string }
 export type GetRepositoryRootOutput = { rootPath: string; id: string | null }
+export type ListBranchSelectionInput = { repoId: string }
+export type ListBranchSelectionOutput = { branches: string[] }
 export type ListBranchesInput = { repoId: string; includeDeleted: boolean }
 export type ListBranchesOutput = { branches: Branch[] }
+export type ListDeletedBranchSelectionInput = { repoId: string }
+export type ListDeletedBranchSelectionOutput = { branches: string[] }
 export type ListLockedBranchesInput = { repoId: string }
 export type ListLockedBranchesOutput = { branches: string[] }
-export type ListSelectedBranchesInput = { repoId: string; branchContext: string }
-export type ListSelectedBranchesOutput = { branches: string[] }
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
 export type Repository = { id: string; name: string; path: string; currentBranch: string; branchesCount: number; createdAt: string; updatedAt: string; lastSyncHash: string | null; lastSyncTimestamp: number | null }

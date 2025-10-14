@@ -96,7 +96,7 @@
 		// Clear database entries for this repository
 		// Note: clearSelectedMutation and clearLockedMutation will be auto-deleted via CASCADE
 		// but we call them explicitly to be defensive
-		clearSelectedMutation.mutate({ repoId, branchContext: 'current' });
+		clearSelectedMutation.mutate({ repoId });
 		clearLockedMutation.mutate({ repoId });
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}

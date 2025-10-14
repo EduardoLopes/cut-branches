@@ -15,8 +15,8 @@
 		createRestoreDeletedBranchMutation,
 		createRestoreDeletedBranchesMutation
 	} from '$domains/branch-management/services/createRestoreDeletedBranchMutation';
-	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
+	import { createClearDeletedSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
+	import { createDeletedSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
 	import BranchCard from '$ui/core/branch-card.svelte';
@@ -40,11 +40,11 @@
 	const getDeletedBranchesQuery = $derived(createListBranchesQuery(repoId ?? '', true));
 
 	// Get selected branches from database
-	const selectedQueryInput = $derived({ repoId: repoId ?? '', branchContext: 'deleted' });
-	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const queryInput = $derived({ repoId: repoId ?? '' });
+	const selectedQuery = $derived(createDeletedSelectedBranchesQuery(queryInput));
 
 	// Mutation for clearing selected branches
-	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
+	const clearSelectedMutation = $derived(createClearDeletedSelectedBranchesMutation());
 
 	let open = $state(false);
 	let isProcessing = $state(false);
@@ -220,7 +220,7 @@
 
 						// Clear selected branches - automatic invalidation handles query updates
 						if (repoId) {
-							clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
+							clearSelectedMutation.mutate({ repoId });
 						}
 						open = false;
 					} catch (e) {
@@ -326,7 +326,7 @@
 
 					// Clear selected branches - automatic invalidation handles query updates
 					if (repoId) {
-						clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
+						clearSelectedMutation.mutate({ repoId });
 					}
 					open = false;
 				} catch (e) {
@@ -341,7 +341,7 @@
 				// Otherwise, we're done
 				isProcessing = false;
 				if (repoId) {
-					clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
+					clearSelectedMutation.mutate({ repoId });
 				}
 				open = false;
 			}
@@ -368,7 +368,7 @@
 				isProcessing = false;
 				// Only clear if we successfully processed everything
 				if (Object.keys(restorationResults).length === selectedDeletedBranches.length && repoId) {
-					clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
+					clearSelectedMutation.mutate({ repoId });
 				}
 			}
 			return;
@@ -409,7 +409,7 @@
 			isProcessing = false;
 			// Clear selected branches only after all processing is complete
 			if (repoId) {
-				clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
+				clearSelectedMutation.mutate({ repoId });
 			}
 			open = false;
 			return;

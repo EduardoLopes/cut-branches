@@ -12,10 +12,12 @@ pub mod shared;
 use tauri::Manager;
 
 use domains::branch_management::commands::{
-    batch_create_branch_restorations, batch_create_locked_branches, batch_create_selected_branches,
-    batch_delete_branches, batch_delete_locked_branches, batch_delete_selected_branches,
-    create_branch_restoration, delete_all_locked_branches, delete_all_selected_branches,
-    get_commit_reachability, list_branches, list_locked_branches, list_selected_branches,
+    batch_create_branch_restorations, batch_create_branch_selection,
+    batch_create_deleted_branch_selection, batch_create_locked_branches, batch_delete_branches,
+    batch_delete_branch_selection, batch_delete_deleted_branch_selection,
+    batch_delete_locked_branches, create_branch_restoration, delete_all_branch_selection,
+    delete_all_deleted_branch_selection, delete_all_locked_branches, get_commit_reachability,
+    list_branch_selection, list_branches, list_deleted_branch_selection, list_locked_branches,
     update_current_branch,
 };
 use domains::branch_management::events::{
@@ -46,11 +48,16 @@ fn main() {
             get_commit_reachability,
             create_branch_restoration,
             batch_create_branch_restorations,
-            // Selected branches
-            list_selected_branches,
-            batch_create_selected_branches,
-            batch_delete_selected_branches,
-            delete_all_selected_branches,
+            // Selected branches (active)
+            list_branch_selection,
+            batch_create_branch_selection,
+            batch_delete_branch_selection,
+            delete_all_branch_selection,
+            // Selected branches (deleted/restoration)
+            list_deleted_branch_selection,
+            batch_create_deleted_branch_selection,
+            batch_delete_deleted_branch_selection,
+            delete_all_deleted_branch_selection,
             // Locked branches
             list_locked_branches,
             batch_create_locked_branches,

@@ -174,105 +174,118 @@ pub fn mark_branches_as_active(
     .execute(conn)
 }
 
-// Selected branches operations
-pub fn add_selected_branches(
+// Selected branches operations - Default (for active branches)
+pub fn add_branch_selection_batch(
     conn: &mut SqliteConnection,
     repo_id: &str,
     branch_names: Vec<String>,
-    branch_context: &str,
 ) -> Result<usize, DieselError> {
-    // Map branch_context to deleted_at filter
-    if branch_context == "current" {
-        diesel::update(
-            branches::table
-                .filter(branches::repository_id.eq(repo_id))
-                .filter(branches::name.eq_any(branch_names))
-                .filter(branches::deleted_at.is_null()),
-        )
-        .set(branches::is_selected.eq(true))
-        .execute(conn)
-    } else {
-        diesel::update(
-            branches::table
-                .filter(branches::repository_id.eq(repo_id))
-                .filter(branches::name.eq_any(branch_names))
-                .filter(branches::deleted_at.is_not_null()),
-        )
-        .set(branches::is_selected.eq(true))
-        .execute(conn)
-    }
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::name.eq_any(branch_names))
+            .filter(branches::deleted_at.is_null()),
+    )
+    .set(branches::is_selected.eq(true))
+    .execute(conn)
 }
 
-pub fn get_selected_branches(
+pub fn get_branch_selection_list(
     conn: &mut SqliteConnection,
     repo_id: &str,
-    branch_context: &str,
 ) -> Result<Vec<String>, DieselError> {
-    let mut query = branches::table
+    branches::table
         .filter(branches::repository_id.eq(repo_id))
         .filter(branches::is_selected.eq(true))
-        .into_boxed();
-
-    query = if branch_context == "current" {
-        query.filter(branches::deleted_at.is_null())
-    } else {
-        query.filter(branches::deleted_at.is_not_null())
-    };
-
-    query.select(branches::name).load::<String>(conn)
+        .filter(branches::deleted_at.is_null())
+        .select(branches::name)
+        .load::<String>(conn)
 }
 
-pub fn remove_selected_branches(
+pub fn remove_branch_selection_batch(
     conn: &mut SqliteConnection,
     repo_id: &str,
     branch_names: Vec<String>,
-    branch_context: &str,
 ) -> Result<usize, DieselError> {
-    if branch_context == "current" {
-        diesel::update(
-            branches::table
-                .filter(branches::repository_id.eq(repo_id))
-                .filter(branches::name.eq_any(branch_names))
-                .filter(branches::deleted_at.is_null()),
-        )
-        .set(branches::is_selected.eq(false))
-        .execute(conn)
-    } else {
-        diesel::update(
-            branches::table
-                .filter(branches::repository_id.eq(repo_id))
-                .filter(branches::name.eq_any(branch_names))
-                .filter(branches::deleted_at.is_not_null()),
-        )
-        .set(branches::is_selected.eq(false))
-        .execute(conn)
-    }
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::name.eq_any(branch_names))
+            .filter(branches::deleted_at.is_null()),
+    )
+    .set(branches::is_selected.eq(false))
+    .execute(conn)
 }
 
-pub fn clear_selected_branches(
+pub fn clear_branch_selection(
     conn: &mut SqliteConnection,
     repo_id: &str,
-    branch_context: &str,
 ) -> Result<usize, DieselError> {
-    if branch_context == "current" {
-        diesel::update(
-            branches::table
-                .filter(branches::repository_id.eq(repo_id))
-                .filter(branches::is_selected.eq(true))
-                .filter(branches::deleted_at.is_null()),
-        )
-        .set(branches::is_selected.eq(false))
-        .execute(conn)
-    } else {
-        diesel::update(
-            branches::table
-                .filter(branches::repository_id.eq(repo_id))
-                .filter(branches::is_selected.eq(true))
-                .filter(branches::deleted_at.is_not_null()),
-        )
-        .set(branches::is_selected.eq(false))
-        .execute(conn)
-    }
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::is_selected.eq(true))
+            .filter(branches::deleted_at.is_null()),
+    )
+    .set(branches::is_selected.eq(false))
+    .execute(conn)
+}
+
+// Selected branches operations - Deleted (for restoration)
+pub fn add_deleted_branch_selection_batch(
+    conn: &mut SqliteConnection,
+    repo_id: &str,
+    branch_names: Vec<String>,
+) -> Result<usize, DieselError> {
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::name.eq_any(branch_names))
+            .filter(branches::deleted_at.is_not_null()),
+    )
+    .set(branches::is_selected.eq(true))
+    .execute(conn)
+}
+
+pub fn get_deleted_branch_selection_list(
+    conn: &mut SqliteConnection,
+    repo_id: &str,
+) -> Result<Vec<String>, DieselError> {
+    branches::table
+        .filter(branches::repository_id.eq(repo_id))
+        .filter(branches::is_selected.eq(true))
+        .filter(branches::deleted_at.is_not_null())
+        .select(branches::name)
+        .load::<String>(conn)
+}
+
+pub fn remove_deleted_branch_selection_batch(
+    conn: &mut SqliteConnection,
+    repo_id: &str,
+    branch_names: Vec<String>,
+) -> Result<usize, DieselError> {
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::name.eq_any(branch_names))
+            .filter(branches::deleted_at.is_not_null()),
+    )
+    .set(branches::is_selected.eq(false))
+    .execute(conn)
+}
+
+pub fn clear_deleted_branch_selection(
+    conn: &mut SqliteConnection,
+    repo_id: &str,
+) -> Result<usize, DieselError> {
+    diesel::update(
+        branches::table
+            .filter(branches::repository_id.eq(repo_id))
+            .filter(branches::is_selected.eq(true))
+            .filter(branches::deleted_at.is_not_null()),
+    )
+    .set(branches::is_selected.eq(false))
+    .execute(conn)
 }
 
 // Locked branches operations

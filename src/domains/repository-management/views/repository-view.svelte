@@ -8,7 +8,10 @@
 	import RestoreDeletedBranchModal from '$domains/branch-management/components/restore-deleted-branch-modal.svelte';
 	import { createListBranchesQuery } from '$domains/branch-management/services/createListBranchesQuery';
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
-	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
+	import {
+		createSelectedBranchesQuery,
+		createDeletedSelectedBranchesQuery
+	} from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
@@ -48,12 +51,15 @@
 	const search = $derived(getSearchBranchesStore(id));
 
 	// Create stable query input objects
-	const selectedQueryInput = $derived({ repoId: id ?? '', branchContext: branchesType });
-	const lockedQueryInput = $derived({ repoId: id ?? '' });
+	const queryInput = $derived({ repoId: id ?? '' });
 
 	// Use queries for database-backed data
-	const lockedQuery = $derived(createLockedBranchesQuery(lockedQueryInput));
-	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const lockedQuery = $derived(createLockedBranchesQuery(queryInput));
+	const selectedQuery = $derived(
+		branchesType === 'current'
+			? createSelectedBranchesQuery(queryInput)
+			: createDeletedSelectedBranchesQuery(queryInput)
+	);
 
 	// Use different queries based on branchesType
 	const getBranchesQuery = $derived(createGetRepositoryQuery(() => path));

@@ -11,9 +11,14 @@
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
 	import {
 		createAddSelectedBranchesMutation,
-		createClearSelectedBranchesMutation
+		createClearSelectedBranchesMutation,
+		createAddDeletedSelectedBranchesMutation,
+		createClearDeletedSelectedBranchesMutation
 	} from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
+	import {
+		createSelectedBranchesQuery,
+		createDeletedSelectedBranchesQuery
+	} from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import type { Branch } from '$lib/bindings';
 	import type { Repository } from '$services/common';
@@ -49,15 +54,15 @@
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 
-	const selectedQueryInput = $derived({
-		repoId: currentRepo?.id ?? '',
-		branchContext: branchContext
-	});
-	const lockedQueryInput = $derived({ repoId: currentRepo?.id ?? '' });
+	const queryInput = $derived({ repoId: currentRepo?.id ?? '' });
 
 	// Use queries for database-backed data
-	const lockedQuery = $derived(createLockedBranchesQuery(lockedQueryInput));
-	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const lockedQuery = $derived(createLockedBranchesQuery(queryInput));
+	const selectedQuery = $derived(
+		branchContext === 'current'
+			? createSelectedBranchesQuery(queryInput)
+			: createDeletedSelectedBranchesQuery(queryInput)
+	);
 
 	const searchToggle = createToggle(false);
 
@@ -71,9 +76,17 @@
 	});
 
 	// Mutations
-	const addSelectedMutation = $derived(createAddSelectedBranchesMutation());
+	const addSelectedMutation = $derived(
+		branchContext === 'current'
+			? createAddSelectedBranchesMutation()
+			: createAddDeletedSelectedBranchesMutation()
+	);
 
-	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
+	const clearSelectedMutation = $derived(
+		branchContext === 'current'
+			? createClearSelectedBranchesMutation()
+			: createClearDeletedSelectedBranchesMutation()
+	);
 
 	// Computed state
 	const lockedBranches = $derived(
@@ -100,13 +113,11 @@
 			// Use mutateAsync to properly chain operations
 			try {
 				await clearSelectedMutation.mutateAsync({
-					repoId: currentRepo.id,
-					branchContext: branchContext
+					repoId: currentRepo.id
 				});
 				await addSelectedMutation.mutateAsync({
 					repoId: currentRepo.id,
-					branchNames: branchesToAdd,
-					branchContext: branchContext
+					branchNames: branchesToAdd
 				});
 			} catch (error) {
 				// Error handling is done by the mutation's onError callback
@@ -114,7 +125,7 @@
 			}
 		} else {
 			// If all are selected, we need to deselect all
-			clearSelectedMutation.mutate({ repoId: currentRepo.id, branchContext: branchContext });
+			clearSelectedMutation.mutate({ repoId: currentRepo.id });
 		}
 	}
 </script>

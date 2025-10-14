@@ -66,7 +66,7 @@
 
 				// Clear selected branches in database - invalidation happens automatically
 				if (id) {
-					clearSelectedMutation.mutate({ repoId: id, branchContext: 'current' });
+					clearSelectedMutation.mutate({ repoId: id });
 				}
 			},
 			meta: { showErrorNotification: true }
