@@ -69,9 +69,9 @@ pub async fn create_repository(
 
     let raw_root_path = Path::new(&root_path);
 
-    // Get branches from branch management domain
+    // Get branches from branch management domain (use fast version for performance)
     let mut branches =
-        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
+        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
             raw_root_path,
         )?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));

@@ -4,7 +4,9 @@ use std::collections::HashSet;
 use std::path::Path;
 use tauri::State;
 
-use super::super::git::branch::{get_all_branches_with_last_commit, Branch};
+use super::super::git::branch::{
+    get_all_branches_with_last_commit, get_all_branches_with_last_commit_fast, Branch,
+};
 
 /// Synchronizes branches from Git repository to database.
 /// This function will:
@@ -28,6 +30,17 @@ pub fn sync_branches_to_db(
     repo_id: &str,
     db: &State<DatabaseState>,
 ) -> Result<usize, AppError> {
+    sync_branches_to_db_internal(git_branches, path, repo_id, db, true)
+}
+
+/// Internal sync function with option to skip expensive merge check
+fn sync_branches_to_db_internal(
+    git_branches: Option<&[Branch]>,
+    path: Option<&Path>,
+    repo_id: &str,
+    db: &State<DatabaseState>,
+    skip_merge_check: bool,
+) -> Result<usize, AppError> {
     // Get branches from Git - either use provided or fetch
     let fetched_branches;
     let git_branches = match git_branches {
@@ -40,7 +53,12 @@ pub fn sync_branches_to_db(
                     None,
                 )
             })?;
-            fetched_branches = get_all_branches_with_last_commit(path)?;
+            // Use fast version by default to skip expensive merge checks
+            fetched_branches = if skip_merge_check {
+                get_all_branches_with_last_commit_fast(path)?
+            } else {
+                get_all_branches_with_last_commit(path)?
+            };
             &fetched_branches
         }
     };

@@ -183,6 +183,26 @@ async getCommitReachability(input: GetCommitReachabilityInput) : Promise<Result<
 }
 },
 /**
+ * Gets the merge status of a branch in a git repository.
+ * Checks if the specified branch is fully merged into HEAD.
+ * 
+ * # Arguments
+ * 
+ * * `input` - Input parameters containing path and branch name
+ * 
+ * # Returns
+ * 
+ * * `Result<GetBranchMergeStatusOutput, AppError>` - The merge status or an error
+ */
+async getBranchMergeStatus(input: GetBranchMergeStatusInput) : Promise<Result<GetBranchMergeStatusOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_branch_merge_status", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Creates a restoration of a deleted branch in a git repository.
  * 
  * # Arguments
@@ -527,6 +547,8 @@ export type DeleteRepositoryInput = { id: string }
 export type DeleteRepositoryOutput = { success: boolean }
 export type DeletedBranch = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
 export type DeletedBranchInfo = { branch: Branch; rawOutput: string }
+export type GetBranchMergeStatusInput = { path: string; branchName: string }
+export type GetBranchMergeStatusOutput = { isMerged: boolean }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
 export type GetRepositoryInput = { path: string }

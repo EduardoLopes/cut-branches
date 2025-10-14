@@ -16,9 +16,9 @@ use domains::branch_management::commands::{
     batch_create_deleted_branch_selection, batch_create_locked_branches,
     batch_delete_branch_selection, batch_delete_branches, batch_delete_deleted_branch_selection,
     batch_delete_locked_branches, create_branch_restoration, delete_all_branch_selection,
-    delete_all_deleted_branch_selection, delete_all_locked_branches, get_commit_reachability,
-    list_branch_selection, list_branches, list_deleted_branch_selection, list_locked_branches,
-    update_current_branch,
+    delete_all_deleted_branch_selection, delete_all_locked_branches, get_branch_merge_status,
+    get_commit_reachability, list_branch_selection, list_branches, list_deleted_branch_selection,
+    list_locked_branches, update_current_branch,
 };
 use domains::branch_management::events::{
     BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
@@ -46,6 +46,7 @@ fn main() {
             update_current_branch,
             batch_delete_branches,
             get_commit_reachability,
+            get_branch_merge_status,
             create_branch_restoration,
             batch_create_branch_restorations,
             // Selected branches (active)
@@ -124,6 +125,7 @@ mod tests {
         let _ = commands::update_current_branch;
         let _ = commands::batch_delete_branches;
         let _ = commands::get_commit_reachability;
+        let _ = commands::get_branch_merge_status;
         let _ = commands::create_branch_restoration;
         let _ = commands::batch_create_branch_restorations;
         let _ = path_commands::get_repository_root;

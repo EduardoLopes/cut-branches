@@ -105,9 +105,9 @@ pub async fn get_repository(
                 )
             })?;
 
-            // Get branches from branch management domain
+            // Get branches from branch management domain (use fast version for performance)
             let mut branches =
-                crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
+                crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
                     raw_root_path,
                 )?;
             branches.sort_by(|a, b| b.current.cmp(&a.current));
@@ -178,9 +178,9 @@ async fn sync_repository_if_needed(
             current_timestamp
         );
 
-        // Get full branch list (expensive operation, but only when needed)
+        // Get full branch list (use fast version for better performance)
         let branches =
-            crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
+            crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
                 raw_root_path,
             )?;
         let branches_count = branches.len() as i32;

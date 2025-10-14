@@ -25,11 +25,20 @@ export function getBranchColorPalette(branch: Branch, selected: boolean): string
  * Generates alert conditions for a branch
  * @param branch - The branch data
  * @param selected - Whether the branch is selected
+ * @param mergeStatus - Optional override for merge status (when fetched via query)
  * @returns Array of alert types that should be shown
  */
-export function getBranchAlerts(branch: Branch, selected: boolean): string[] {
+export function getBranchAlerts(
+	branch: Branch,
+	selected: boolean,
+	mergeStatus?: boolean
+): string[] {
+	// Use provided mergeStatus if available, otherwise fall back to branch.fullyMerged
+	// Alert should show when branch is NOT merged (warning about unmerged changes)
+	const isNotMerged = mergeStatus !== undefined ? !mergeStatus : !branch.fullyMerged;
+
 	const alerts = Object.entries({
-		fullyMerged: branch.fullyMerged,
+		fullyMerged: isNotMerged,
 		protectedWords: containsAnyWord(branch.name, [...PROTECTED_BRANCH_NAMES]) && selected,
 		offensiveWords: containsAnyWord(branch.name, [...POTENTIALLY_OFFENSIVE_BRANCH_NAMES])
 	})

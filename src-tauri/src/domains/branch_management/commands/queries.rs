@@ -31,6 +31,19 @@ pub struct ListBranchesOutput {
     pub branches: Vec<crate::domains::branch_management::git::branch::Branch>,
 }
 
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBranchMergeStatusInput {
+    pub path: String,
+    pub branch_name: String,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBranchMergeStatusOutput {
+    pub is_merged: bool,
+}
+
 /// Gets the reachability status of a commit SHA in a git repository.
 ///
 /// # Arguments
@@ -95,4 +108,26 @@ pub fn list_branches(
         .collect();
 
     Ok(ListBranchesOutput { branches })
+}
+
+/// Gets the merge status of a branch in a git repository.
+/// Checks if the specified branch is fully merged into HEAD.
+///
+/// # Arguments
+///
+/// * `input` - Input parameters containing path and branch name
+///
+/// # Returns
+///
+/// * `Result<GetBranchMergeStatusOutput, AppError>` - The merge status or an error
+#[tauri::command(async)]
+#[specta::specta]
+pub async fn get_branch_merge_status(
+    input: GetBranchMergeStatusInput,
+) -> Result<GetBranchMergeStatusOutput, AppError> {
+    let raw_path = Path::new(&input.path);
+    let is_merged =
+        super::super::git::branch::check_branch_merge_status(raw_path, &input.branch_name)?;
+
+    Ok(GetBranchMergeStatusOutput { is_merged })
 }

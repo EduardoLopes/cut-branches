@@ -6,6 +6,7 @@
 	import Pagination from '@pindoba/svelte-pagination';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
+	import { createBranchMergeStatusQuery } from '$domains/branch-management/services/createBranchMergeStatusQuery';
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
 	import {
 		createAddSelectedBranchesMutation,
@@ -254,9 +255,19 @@
 							: formatString('{name}', { name: branch.name })}
 						{variant}
 					>
+						{@const mergeStatusQuery = createBranchMergeStatusQuery(
+							{
+								path: repositoryPath ?? '',
+								branchName: branch.name
+							},
+							{
+								enabled: !!repositoryPath && !branch.current
+							}
+						)}
 						{@const alerts = getBranchAlerts(
 							branch,
-							selectedQuery.data?.branches.includes(branch.name) ?? false
+							selectedQuery.data?.branches.includes(branch.name) ?? false,
+							mergeStatusQuery.data?.isMerged
 						)}
 						{#if shouldShowBranchAlerts(alerts, branch)}
 							<BranchAlerts {alerts} {branch} />

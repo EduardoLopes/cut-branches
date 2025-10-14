@@ -57,6 +57,19 @@ impl From<crate::db::models::BranchRecord> for Branch {
 }
 
 pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, AppError> {
+    get_all_branches_with_last_commit_internal(path, false)
+}
+
+/// Get all branches with last commit info, with option to skip expensive merge check.
+/// Use `skip_merge_check: true` for better performance when merge status isn't needed.
+pub fn get_all_branches_with_last_commit_fast(path: &Path) -> Result<Vec<Branch>, AppError> {
+    get_all_branches_with_last_commit_internal(path, true)
+}
+
+fn get_all_branches_with_last_commit_internal(
+    path: &Path,
+    skip_merge_check: bool,
+) -> Result<Vec<Branch>, AppError> {
     let repo = Repository::open(path).map_err(|e| {
         let err_str = e.to_string();
         let err_str_lower = err_str.to_lowercase();
@@ -165,8 +178,12 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, App
         let author_email = author.email().unwrap_or("").to_string();
         let summary = commit.summary().unwrap_or("").to_string();
 
-        // Check if branch is fully merged into HEAD
-        let is_merged = is_branch_merged(&repo, &name)?;
+        // Check if branch is fully merged into HEAD (skip if requested for performance)
+        let is_merged = if skip_merge_check {
+            false
+        } else {
+            is_branch_merged(&repo, &name)?
+        };
 
         branches.push(Branch {
             name: name.clone(),
@@ -203,7 +220,7 @@ pub fn get_all_branches_with_last_commit(path: &Path) -> Result<Vec<Branch>, App
     Ok(branches)
 }
 
-fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, AppError> {
+pub fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, AppError> {
     let head = repo.head().map_err(|e| {
         AppError::new(
             format!("Failed to get HEAD: {}", e),
@@ -248,6 +265,29 @@ fn is_branch_merged(repo: &Repository, branch_name: &str) -> Result<bool, AppErr
     Ok(repo
         .graph_descendant_of(head_commit.id(), branch_commit.id())
         .unwrap_or(false))
+}
+
+/// Check if a branch is fully merged into HEAD.
+/// This is a path-based wrapper around is_branch_merged for easier use from command layer.
+///
+/// # Arguments
+///
+/// * `path` - Path to the git repository
+/// * `branch_name` - Name of the branch to check
+///
+/// # Returns
+///
+/// * `Result<bool, AppError>` - true if the branch is fully merged, false otherwise
+pub fn check_branch_merge_status(path: &Path, branch_name: &str) -> Result<bool, AppError> {
+    let repo = Repository::open(path).map_err(|e| {
+        AppError::new(
+            format!("Failed to open git repository at {}: {}", path.display(), e),
+            "repository_open_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    is_branch_merged(&repo, branch_name)
 }
 
 pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
@@ -1431,6 +1471,115 @@ mod tests {
                 e.message
             );
             assert_eq!(e.kind, "create_branch_failed");
+        }
+    }
+
+    #[test]
+    fn test_check_branch_merge_status() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Get current branch name
+        let output = Command::new("git")
+            .args(["branch", "--show-current"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let current_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        // Test 1: Current branch should be "merged" (into itself)
+        let result = check_branch_merge_status(path, &current_branch);
+        assert!(
+            result.is_ok(),
+            "check_branch_merge_status failed: {:?}",
+            result.err()
+        );
+        assert!(
+            result.unwrap(),
+            "Current branch should be considered merged"
+        );
+
+        // Test 2: Create a new branch from current and check it's merged
+        let merged_branch = "test-merged-branch";
+        Command::new("git")
+            .args(["branch", merged_branch])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let result = check_branch_merge_status(path, merged_branch);
+        assert!(
+            result.is_ok(),
+            "Failed to check merged branch: {:?}",
+            result.err()
+        );
+        assert!(
+            result.unwrap(),
+            "Branch created from HEAD should be considered merged"
+        );
+
+        // Test 3: Create a branch with new commits (unmerged)
+        let unmerged_branch = "test-unmerged-branch";
+        Command::new("git")
+            .args(["checkout", "-b", unmerged_branch])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        std::fs::write(path.join("new-file.txt"), "new content").unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "New commit on unmerged branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        // Switch back to original branch
+        Command::new("git")
+            .args(["checkout", &current_branch])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let result = check_branch_merge_status(path, unmerged_branch);
+        assert!(
+            result.is_ok(),
+            "Failed to check unmerged branch: {:?}",
+            result.err()
+        );
+        assert!(
+            !result.unwrap(),
+            "Branch with new commits should not be considered merged"
+        );
+
+        // Test 4: Non-existent branch should return error
+        let result = check_branch_merge_status(path, "non-existent-branch");
+        assert!(result.is_err(), "Expected error for non-existent branch");
+        if let Err(e) = result {
+            assert!(
+                e.message.contains("Failed to find branch"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "branch_not_found");
+        }
+
+        // Test 5: Invalid path should return error
+        let invalid_path = Path::new("/non/existent/path");
+        let result = check_branch_merge_status(invalid_path, &current_branch);
+        assert!(result.is_err(), "Expected error for invalid path");
+        if let Err(e) = result {
+            assert!(
+                e.message.contains("Failed to open git repository"),
+                "Unexpected error message: {}",
+                e.message
+            );
+            assert_eq!(e.kind, "repository_open_failed");
         }
     }
 }
