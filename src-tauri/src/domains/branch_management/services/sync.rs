@@ -67,17 +67,25 @@ pub fn sync_branches_to_db(
     // Create a set of Git branch names for quick lookup
     let git_branch_names: HashSet<String> = git_branches.iter().map(|b| b.name.clone()).collect();
 
-    // Upsert branches that exist in Git
-    for git_branch in git_branches {
-        let new_branch = branch_to_new_branch(repo_id, git_branch);
-        crate::db::operations::upsert_branch(&mut conn, new_branch).map_err(|e| {
-            AppError::new(
-                format!("Failed to upsert branch '{}' to database", git_branch.name),
-                "db_upsert_failed",
-                Some(e.to_string()),
-            )
-        })?;
-    }
+    // Convert all branches to NewBranchRecord format
+    let new_branches: Vec<_> = git_branches
+        .iter()
+        .map(|git_branch| branch_to_new_branch(repo_id, git_branch))
+        .collect();
+
+    // Use batch upsert for better performance with many branches
+    use diesel::Connection;
+    conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        crate::db::operations::upsert_branches_batch(conn, &new_branches)?;
+        Ok(())
+    })
+    .map_err(|e| {
+        AppError::new(
+            "Failed to sync branches to database".to_string(),
+            "db_batch_upsert_failed",
+            Some(e.to_string()),
+        )
+    })?;
 
     // Mark branches as deleted that exist in DB but not in Git (excluding already deleted ones)
     let branches_to_mark_deleted: Vec<String> = db_branches

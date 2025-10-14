@@ -81,7 +81,9 @@ export const eventBus = new EventBus();
 // Export event names as constants to avoid typos
 export const Events = {
 	REPOSITORY_ADD_REQUESTED: 'repository:add:requested',
+	REPOSITORY_ADDING: 'repository:adding',
 	REPOSITORY_ADDED: 'repository:added',
+	REPOSITORY_ADD_FAILED: 'repository:add:failed',
 	REPOSITORY_REMOVED: 'repository:removed',
 	REPOSITORY_UPDATED: 'repository:updated',
 	BRANCH_DELETED: 'branch:deleted',

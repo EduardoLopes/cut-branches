@@ -201,11 +201,10 @@ pub fn list_deleted_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListDeletedBranchSelectionInput,
 ) -> Result<ListDeletedBranchSelectionOutput, AppError> {
-    let branches =
-        super::super::services::selected_branches::get_deleted_branch_selection_list(
-            &db,
-            &input.repo_id,
-        )?;
+    let branches = super::super::services::selected_branches::get_deleted_branch_selection_list(
+        &db,
+        &input.repo_id,
+    )?;
     Ok(ListDeletedBranchSelectionOutput { branches })
 }
 
@@ -273,9 +272,6 @@ pub fn delete_all_deleted_branch_selection(
     db: State<'_, DatabaseState>,
     input: DeleteAllDeletedBranchSelectionInput,
 ) -> Result<DeleteAllDeletedBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::clear_deleted_branch_selection(
-        &db,
-        &input.repo_id,
-    )?;
+    super::super::services::selected_branches::clear_deleted_branch_selection(&db, &input.repo_id)?;
     Ok(DeleteAllDeletedBranchSelectionOutput {})
 }

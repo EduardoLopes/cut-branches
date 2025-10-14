@@ -140,6 +140,35 @@ pub fn upsert_branch(
         .first(conn)
 }
 
+/// Batch upsert branches for better performance when syncing many branches
+pub fn upsert_branches_batch(
+    conn: &mut SqliteConnection,
+    branches: &[NewBranchRecord],
+) -> Result<usize, DieselError> {
+    if branches.is_empty() {
+        return Ok(0);
+    }
+
+    // Process in chunks to avoid SQLite variable limit (999 variables)
+    // Each branch has ~15 fields, so we can safely do ~60 branches per chunk
+    const CHUNK_SIZE: usize = 50;
+    let mut total_inserted = 0;
+
+    for chunk in branches.chunks(CHUNK_SIZE) {
+        for branch in chunk {
+            diesel::insert_into(branches::table)
+                .values(branch)
+                .on_conflict((branches::repository_id, branches::name))
+                .do_update()
+                .set(branch)
+                .execute(conn)?;
+            total_inserted += 1;
+        }
+    }
+
+    Ok(total_inserted)
+}
+
 pub fn mark_branches_deleted(
     conn: &mut SqliteConnection,
     repo_id: &str,

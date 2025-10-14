@@ -14,6 +14,10 @@ import { eventBus, Events } from '$services/event-bus';
 
 export function setupAddRepositoryHandler() {
 	const createRepositoryMutation = createCreateRepositoryMutation({
+		onMutate: () => {
+			// Publish event that repository is being added
+			eventBus.publish(Events.REPOSITORY_ADDING);
+		},
 		onSuccess: (data) => {
 			if (data) {
 				notifications.push({
@@ -28,6 +32,11 @@ export function setupAddRepositoryHandler() {
 				goto(resolve(`/repos/${data.id}`));
 			}
 		},
+		onError: () => {
+			// Publish event that repository add failed
+			// Note: Error notification is already shown via meta.showErrorNotification
+			eventBus.publish(Events.REPOSITORY_ADD_FAILED);
+		},
 		meta: {
 			showErrorNotification: true
 		}
@@ -39,8 +48,13 @@ export function setupAddRepositoryHandler() {
 			const dir = await open({ directory: true, multiple: false });
 			if (dir !== null) {
 				createRepositoryMutation.mutate({ path: dir });
+			} else {
+				// User cancelled the dialog
+				eventBus.publish(Events.REPOSITORY_ADD_FAILED);
 			}
 		} catch (error) {
+			// Dialog API error
+			eventBus.publish(Events.REPOSITORY_ADD_FAILED);
 			notifications.push({
 				title: 'Error',
 				message: error instanceof Error ? error.message : String(error),
@@ -49,8 +63,11 @@ export function setupAddRepositoryHandler() {
 		}
 	});
 
-	// Return cleanup function
-	return () => {
-		subscription.unsubscribe();
+	// Return cleanup function and mutation state
+	return {
+		cleanup: () => {
+			subscription.unsubscribe();
+		},
+		mutation: createRepositoryMutation
 	};
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
 	import { page } from '$app/state';
@@ -8,6 +9,30 @@
 
 	// Query for repositories list from database
 	const repositoriesQuery = $derived(createGetRepositoryListQuery());
+
+	// Track if repository is being added
+	let isAddingRepository = $state(false);
+
+	// Subscribe to repository adding events
+	$effect(() => {
+		const addingSubscription = eventBus.subscribe(Events.REPOSITORY_ADDING, () => {
+			isAddingRepository = true;
+		});
+
+		const addedSubscription = eventBus.subscribe(Events.REPOSITORY_ADDED, () => {
+			isAddingRepository = false;
+		});
+
+		const failedSubscription = eventBus.subscribe(Events.REPOSITORY_ADD_FAILED, () => {
+			isAddingRepository = false;
+		});
+
+		return () => {
+			addingSubscription.unsubscribe();
+			addedSubscription.unsubscribe();
+			failedSubscription.unsubscribe();
+		};
+	});
 
 	// Map repository data to navigation items
 	const items = $derived.by<NavigationItem[]>(() => {
@@ -72,42 +97,52 @@
 				icon="material-symbols:add-rounded"
 				label="Add a git repository"
 				visuallyHiddenLabel={true}
+				disabled={isAddingRepository}
 				passThrough={{
 					root: css.raw({})
 				}}
 			/>
 		</div>
-		{#if items.length > 0}
-			<Navigation
-				{items}
-				activeItem={page.params.id}
-				direction="vertical"
-				passThrough={{
-					root: css.raw({
-						maxHeight: 'calc(100vh - 146px)',
-						overflowY: 'auto',
-						backdropFilter: 'none',
-						padding: '0',
-						_light: {
-							bg: 'neutral.50'
-						},
-						_dark: {
-							bg: 'neutral.100'
-						}
-					})
-				}}
-			/>
-		{:else}
-			<p
-				class={css({
-					textAlign: 'center',
-					padding: 'md',
-					color: 'neutral.800.contrast',
-					opacity: 0.7
-				})}
-			>
-				No repositories
-			</p>
-		{/if}
+		<Loading
+			isLoading={repositoriesQuery.isLoading || isAddingRepository}
+			passThrough={{
+				root: css.raw({
+					width: 'full'
+				})
+			}}
+		>
+			{#if items.length > 0}
+				<Navigation
+					{items}
+					activeItem={page.params.id}
+					direction="vertical"
+					passThrough={{
+						root: css.raw({
+							maxHeight: 'calc(100vh - 146px)',
+							overflowY: 'auto',
+							backdropFilter: 'none',
+							padding: '0',
+							_light: {
+								bg: 'neutral.50'
+							},
+							_dark: {
+								bg: 'neutral.100'
+							}
+						})
+					}}
+				/>
+			{:else}
+				<p
+					class={css({
+						textAlign: 'center',
+						padding: 'md',
+						color: 'neutral.800.contrast',
+						opacity: 0.7
+					})}
+				>
+					No repositories
+				</p>
+			{/if}
+		</Loading>
 	</div>
 </div>

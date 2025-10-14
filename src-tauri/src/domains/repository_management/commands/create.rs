@@ -99,7 +99,7 @@ pub async fn create_repository(
         .to_string();
     let branches_count = branches.len() as u32;
 
-    // Create repository in database
+    // Create repository in database - wrap everything in a transaction for atomicity and performance
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
             "Failed to get database connection".to_string(),
@@ -122,29 +122,36 @@ pub async fn create_repository(
         last_sync_timestamp: Some(initial_timestamp),
     };
 
-    // Check if repository already exists
-    let existing = crate::db::operations::get_repository(&mut conn, &repo_name);
-    if existing.is_ok() {
-        return Err(AppError::new(
-            format!("Repository '{}' already exists", repo_name),
-            "repository_already_exists",
-            Some(format!(
-                "A repository with the name '{}' is already in the database",
-                repo_name
-            )),
-        ));
-    }
+    // Use a transaction to ensure atomicity and improve performance
+    use diesel::Connection;
+    conn.transaction::<_, AppError, _>(|conn| {
+        // Check if repository already exists
+        let existing = crate::db::operations::get_repository(conn, &repo_name);
+        if existing.is_ok() {
+            return Err(AppError::new(
+                format!("Repository '{}' already exists", repo_name),
+                "repository_already_exists",
+                Some(format!(
+                    "A repository with the name '{}' is already in the database",
+                    repo_name
+                )),
+            ));
+        }
 
-    // Create the repository
-    crate::db::operations::create_repository(&mut conn, new_repo).map_err(|e| {
-        AppError::new(
-            "Failed to create repository in database".to_string(),
-            "db_create_failed",
-            Some(e.to_string()),
-        )
+        // Create the repository
+        crate::db::operations::create_repository(conn, new_repo).map_err(|e| {
+            AppError::new(
+                "Failed to create repository in database".to_string(),
+                "db_create_failed",
+                Some(e.to_string()),
+            )
+        })?;
+
+        Ok(())
     })?;
 
     // Sync branches from Git to database, passing already-fetched branches
+    // This is done in its own transaction in sync_branches_to_db
     crate::domains::branch_management::services::sync::sync_branches_to_db(
         Some(&branches),
         None,

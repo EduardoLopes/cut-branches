@@ -9,7 +9,8 @@
 	const { children }: Props = $props();
 
 	onMount(() => {
-		setupAddRepositoryHandler();
+		const handler = setupAddRepositoryHandler();
+		return handler.cleanup;
 	});
 </script>
 
