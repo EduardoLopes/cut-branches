@@ -12,7 +12,7 @@ export function createSelectedBranchesQuery(
 ) {
 	return createTauriQuery('listSelectedBranches', {
 		input: () => input,
-		enabled: !!input.repoId,
+		enabled: !!input.repoId && !!input.branchContext,
 		...options
 	});
 }

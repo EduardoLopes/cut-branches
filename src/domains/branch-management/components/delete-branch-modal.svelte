@@ -25,7 +25,7 @@
 
 	let { id, buttonProps }: Props = $props();
 
-	const selectedQueryInput = $derived({ repoId: id ?? '' });
+	const selectedQueryInput = $derived({ repoId: id ?? '', branchContext: 'current' });
 
 	const getRepositoryQuery = $derived(createGetRepositoryListQuery());
 
@@ -66,7 +66,7 @@
 
 				// Clear selected branches in database - invalidation happens automatically
 				if (id) {
-					clearSelectedMutation.mutate({ repoId: id });
+					clearSelectedMutation.mutate({ repoId: id, branchContext: 'current' });
 				}
 			},
 			meta: { showErrorNotification: true }

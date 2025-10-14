@@ -176,12 +176,14 @@ pub fn add_selected_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
     branch_names: Vec<String>,
+    branch_context: &str,
 ) -> Result<usize, DieselError> {
     let new_selected: Vec<NewSelectedBranch> = branch_names
         .into_iter()
         .map(|name| NewSelectedBranch {
             repository_id: repo_id.to_string(),
             branch_name: name,
+            branch_context: branch_context.to_string(),
         })
         .collect();
 
@@ -193,9 +195,11 @@ pub fn add_selected_branches(
 pub fn get_selected_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
+    branch_context: &str,
 ) -> Result<Vec<SelectedBranch>, DieselError> {
     selected_branches::table
         .filter(selected_branches::repository_id.eq(repo_id))
+        .filter(selected_branches::branch_context.eq(branch_context))
         .load(conn)
 }
 
@@ -203,11 +207,13 @@ pub fn remove_selected_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
     branch_names: Vec<String>,
+    branch_context: &str,
 ) -> Result<usize, DieselError> {
     diesel::delete(
         selected_branches::table
             .filter(selected_branches::repository_id.eq(repo_id))
-            .filter(selected_branches::branch_name.eq_any(branch_names)),
+            .filter(selected_branches::branch_name.eq_any(branch_names))
+            .filter(selected_branches::branch_context.eq(branch_context)),
     )
     .execute(conn)
 }
@@ -215,9 +221,14 @@ pub fn remove_selected_branches(
 pub fn clear_selected_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
+    branch_context: &str,
 ) -> Result<usize, DieselError> {
-    diesel::delete(selected_branches::table.filter(selected_branches::repository_id.eq(repo_id)))
-        .execute(conn)
+    diesel::delete(
+        selected_branches::table
+            .filter(selected_branches::repository_id.eq(repo_id))
+            .filter(selected_branches::branch_context.eq(branch_context)),
+    )
+    .execute(conn)
 }
 
 // Locked branches operations

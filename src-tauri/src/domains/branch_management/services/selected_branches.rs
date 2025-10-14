@@ -7,6 +7,7 @@ use crate::shared::error::AppError;
 pub fn get_selected_branches(
     db: &State<'_, DatabaseState>,
     repo_id: &str,
+    branch_context: &str,
 ) -> Result<Vec<String>, AppError> {
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
@@ -16,7 +17,7 @@ pub fn get_selected_branches(
         )
     })?;
 
-    operations::get_selected_branches(&mut conn, repo_id)
+    operations::get_selected_branches(&mut conn, repo_id, branch_context)
         .map(|branches| branches.into_iter().map(|b| b.branch_name).collect())
         .map_err(|e| {
             AppError::new(
@@ -32,6 +33,7 @@ pub fn add_selected_branches(
     db: &State<'_, DatabaseState>,
     repo_id: &str,
     branch_names: Vec<String>,
+    branch_context: &str,
 ) -> Result<(), AppError> {
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
@@ -41,13 +43,15 @@ pub fn add_selected_branches(
         )
     })?;
 
-    operations::add_selected_branches(&mut conn, repo_id, branch_names).map_err(|e| {
-        AppError::new(
-            "Failed to add selected branches".to_string(),
-            "db_add_failed",
-            Some(e.to_string()),
-        )
-    })?;
+    operations::add_selected_branches(&mut conn, repo_id, branch_names, branch_context).map_err(
+        |e| {
+            AppError::new(
+                "Failed to add selected branches".to_string(),
+                "db_add_failed",
+                Some(e.to_string()),
+            )
+        },
+    )?;
 
     Ok(())
 }
@@ -57,6 +61,7 @@ pub fn remove_selected_branches(
     db: &State<'_, DatabaseState>,
     repo_id: &str,
     branch_names: Vec<String>,
+    branch_context: &str,
 ) -> Result<(), AppError> {
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
@@ -66,13 +71,14 @@ pub fn remove_selected_branches(
         )
     })?;
 
-    operations::remove_selected_branches(&mut conn, repo_id, branch_names).map_err(|e| {
-        AppError::new(
-            "Failed to remove selected branches".to_string(),
-            "db_remove_failed",
-            Some(e.to_string()),
-        )
-    })?;
+    operations::remove_selected_branches(&mut conn, repo_id, branch_names, branch_context)
+        .map_err(|e| {
+            AppError::new(
+                "Failed to remove selected branches".to_string(),
+                "db_remove_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     Ok(())
 }
@@ -81,6 +87,7 @@ pub fn remove_selected_branches(
 pub fn clear_selected_branches(
     db: &State<'_, DatabaseState>,
     repo_id: &str,
+    branch_context: &str,
 ) -> Result<(), AppError> {
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
@@ -90,7 +97,7 @@ pub fn clear_selected_branches(
         )
     })?;
 
-    operations::clear_selected_branches(&mut conn, repo_id).map_err(|e| {
+    operations::clear_selected_branches(&mut conn, repo_id, branch_context).map_err(|e| {
         AppError::new(
             "Failed to clear selected branches".to_string(),
             "db_clear_failed",

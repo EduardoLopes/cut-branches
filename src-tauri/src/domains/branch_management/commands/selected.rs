@@ -8,6 +8,7 @@ use crate::shared::error::AppError;
 #[serde(rename_all = "camelCase")]
 pub struct ListSelectedBranchesInput {
     pub repo_id: String,
+    pub branch_context: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -21,6 +22,7 @@ pub struct ListSelectedBranchesOutput {
 pub struct BatchCreateSelectedBranchesInput {
     pub repo_id: String,
     pub branch_names: Vec<String>,
+    pub branch_context: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -32,6 +34,7 @@ pub struct BatchCreateSelectedBranchesOutput {}
 pub struct BatchDeleteSelectedBranchesInput {
     pub repo_id: String,
     pub branch_names: Vec<String>,
+    pub branch_context: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -42,6 +45,7 @@ pub struct BatchDeleteSelectedBranchesOutput {}
 #[serde(rename_all = "camelCase")]
 pub struct DeleteAllSelectedBranchesInput {
     pub repo_id: String,
+    pub branch_context: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -64,8 +68,11 @@ pub fn list_selected_branches(
     db: State<'_, DatabaseState>,
     input: ListSelectedBranchesInput,
 ) -> Result<ListSelectedBranchesOutput, AppError> {
-    let branches =
-        super::super::services::selected_branches::get_selected_branches(&db, &input.repo_id)?;
+    let branches = super::super::services::selected_branches::get_selected_branches(
+        &db,
+        &input.repo_id,
+        &input.branch_context,
+    )?;
     Ok(ListSelectedBranchesOutput { branches })
 }
 
@@ -89,6 +96,7 @@ pub fn batch_create_selected_branches(
         &db,
         &input.repo_id,
         input.branch_names,
+        &input.branch_context,
     )?;
     Ok(BatchCreateSelectedBranchesOutput {})
 }
@@ -113,6 +121,7 @@ pub fn batch_delete_selected_branches(
         &db,
         &input.repo_id,
         input.branch_names,
+        &input.branch_context,
     )?;
     Ok(BatchDeleteSelectedBranchesOutput {})
 }
@@ -133,6 +142,10 @@ pub fn delete_all_selected_branches(
     db: State<'_, DatabaseState>,
     input: DeleteAllSelectedBranchesInput,
 ) -> Result<DeleteAllSelectedBranchesOutput, AppError> {
-    super::super::services::selected_branches::clear_selected_branches(&db, &input.repo_id)?;
+    super::super::services::selected_branches::clear_selected_branches(
+        &db,
+        &input.repo_id,
+        &input.branch_context,
+    )?;
     Ok(DeleteAllSelectedBranchesOutput {})
 }

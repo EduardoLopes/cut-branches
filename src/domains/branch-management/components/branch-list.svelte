@@ -36,6 +36,7 @@
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
 		variant?: 'default' | 'inverted';
+		branchContext?: 'current' | 'deleted';
 	}
 
 	const {
@@ -46,10 +47,14 @@
 		allowLocking = true,
 		allowSelection = true,
 		allowSetCurrent = true,
-		variant = 'default'
+		variant = 'default',
+		branchContext = 'current'
 	}: Props = $props();
 
-	const selectedQueryInput = $derived({ repoId: repositoryID ?? '' });
+	const selectedQueryInput = $derived({
+		repoId: repositoryID ?? '',
+		branchContext: branchContext
+	});
 	const lockedQueryInput = $derived({ repoId: repositoryID ?? '' });
 
 	// Use queries for database-backed data
@@ -72,7 +77,11 @@
 
 				// Remove from selected branches in database - invalidation happens automatically
 				if (repositoryID) {
-					removeSelectedMutation.mutate({ repoId: repositoryID, branchNames: [currentBranch] });
+					removeSelectedMutation.mutate({
+						repoId: repositoryID,
+						branchNames: [currentBranch],
+						branchContext: branchContext
+					});
 				}
 			},
 			meta: { showErrorNotification: true }
@@ -82,9 +91,17 @@
 		if (!repositoryID) return;
 
 		if (selectedQuery.data?.branches.includes(branch)) {
-			removeSelectedMutation.mutate({ repoId: repositoryID, branchNames: [branch] });
+			removeSelectedMutation.mutate({
+				repoId: repositoryID,
+				branchNames: [branch],
+				branchContext: branchContext
+			});
 		} else {
-			addSelectedMutation.mutate({ repoId: repositoryID, branchNames: [branch] });
+			addSelectedMutation.mutate({
+				repoId: repositoryID,
+				branchNames: [branch],
+				branchContext: branchContext
+			});
 		}
 	}
 

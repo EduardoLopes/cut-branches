@@ -138,18 +138,17 @@ pub async fn get_repository(
 }
 
 /// Syncs repository data if it has changed.
-/// Only performs expensive git operations if the data is stale.
+/// Uses a fast hash-based detection to avoid expensive git operations when possible.
 async fn sync_repository_if_needed(
     raw_root_path: &Path,
     repo_name: &str,
     root_path: &str,
     db: &State<'_, DatabaseState>,
 ) -> Result<(), AppError> {
-    // Get current git state
-    let current_branch =
-        crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
+    // Compute current repository state timestamp (ultra-fast: ~0.5-2ms)
+    let current_timestamp = super::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
-    // Quick check: has the current branch changed?
+    // Get database connection
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
             "Failed to get database connection".to_string(),
@@ -166,26 +165,39 @@ async fn sync_repository_if_needed(
         )
     })?;
 
-    // If current branch changed, we need to sync
-    let needs_sync = db_repo.current_branch != current_branch;
+    // Check if timestamp changed - this detects ALL changes (branches, commits, etc.)
+    let needs_sync = match db_repo.last_sync_timestamp {
+        Some(stored_timestamp) => stored_timestamp != current_timestamp,
+        None => true, // First sync
+    };
 
     if needs_sync {
-        println!("Repository data is stale, syncing...");
+        println!(
+            "Repository state changed (timestamp: {} -> {}), syncing...",
+            db_repo.last_sync_timestamp.unwrap_or(0),
+            current_timestamp
+        );
 
-        // Get full branch list (expensive operation)
+        // Get full branch list (expensive operation, but only when needed)
         let branches =
             crate::domains::branch_management::git::branch::get_all_branches_with_last_commit(
                 raw_root_path,
             )?;
         let branches_count = branches.len() as i32;
 
-        // Update repository metadata
+        // Get current branch name
+        let current_branch =
+            crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
+
+        // Update repository metadata with new timestamp
         let updated_repo = NewRepository {
             id: repo_name.to_string(),
             name: repo_name.to_string(),
             path: root_path.to_string(),
             current_branch: current_branch.to_string(),
             branches_count,
+            last_sync_hash: None, // Deprecated, keeping for backward compatibility
+            last_sync_timestamp: Some(current_timestamp),
         };
 
         operations::update_repository(&mut conn, repo_name, updated_repo).map_err(|e| {
@@ -196,9 +208,10 @@ async fn sync_repository_if_needed(
             )
         })?;
 
-        // Sync branches to database
+        // Sync branches to database, passing the already-fetched branches
         crate::domains::branch_management::services::sync::sync_branches_to_db(
-            raw_root_path,
+            Some(&branches),
+            None,
             repo_name,
             db,
         )
@@ -212,7 +225,10 @@ async fn sync_repository_if_needed(
 
         println!("Sync completed");
     } else {
-        println!("Repository data is fresh, skipping sync");
+        println!(
+            "Repository state unchanged (timestamp: {}), skipping sync",
+            current_timestamp
+        );
     }
 
     Ok(())

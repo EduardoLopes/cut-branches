@@ -40,7 +40,7 @@
 	const getDeletedBranchesQuery = $derived(createListBranchesQuery(repoId ?? '', true));
 
 	// Get selected branches from database
-	const selectedQueryInput = $derived({ repoId: repoId ?? '' });
+	const selectedQueryInput = $derived({ repoId: repoId ?? '', branchContext: 'deleted' });
 	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
 
 	// Mutation for clearing selected branches
@@ -220,7 +220,7 @@
 
 						// Clear selected branches - automatic invalidation handles query updates
 						if (repoId) {
-							clearSelectedMutation.mutate({ repoId });
+							clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
 						}
 						open = false;
 					} catch (e) {
@@ -326,7 +326,7 @@
 
 					// Clear selected branches - automatic invalidation handles query updates
 					if (repoId) {
-						clearSelectedMutation.mutate({ repoId });
+						clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
 					}
 					open = false;
 				} catch (e) {
@@ -341,7 +341,7 @@
 				// Otherwise, we're done
 				isProcessing = false;
 				if (repoId) {
-					clearSelectedMutation.mutate({ repoId });
+					clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
 				}
 				open = false;
 			}
@@ -368,7 +368,7 @@
 				isProcessing = false;
 				// Only clear if we successfully processed everything
 				if (Object.keys(restorationResults).length === selectedDeletedBranches.length && repoId) {
-					clearSelectedMutation.mutate({ repoId });
+					clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
 				}
 			}
 			return;
@@ -409,7 +409,7 @@
 			isProcessing = false;
 			// Clear selected branches only after all processing is complete
 			if (repoId) {
-				clearSelectedMutation.mutate({ repoId });
+				clearSelectedMutation.mutate({ repoId, branchContext: 'deleted' });
 			}
 			open = false;
 			return;

@@ -30,6 +30,8 @@
 		onSearch: (value: string) => void;
 		onClearSearch: () => void;
 		actionsSnippet?: Snippet<[Repository, Set<string> | undefined | undefined]>;
+		variant?: 'default' | 'restore';
+		branchContext?: 'current' | 'deleted';
 	}
 
 	const {
@@ -40,12 +42,17 @@
 		onSearch,
 		onClearSearch,
 		actionsSnippet,
+		variant = 'default',
+		branchContext = 'current',
 		...rest
 	}: Props = $props();
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 
-	const selectedQueryInput = $derived({ repoId: currentRepo?.id ?? '' });
+	const selectedQueryInput = $derived({
+		repoId: currentRepo?.id ?? '',
+		branchContext: branchContext
+	});
 	const lockedQueryInput = $derived({ repoId: currentRepo?.id ?? '' });
 
 	// Use queries for database-backed data
@@ -53,6 +60,15 @@
 	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
 
 	const searchToggle = createToggle(false);
+
+	// Computed label based on variant
+	const branchLabel = $derived.by(() => {
+		const prefix = variant === 'restore' ? 'deleted ' : '';
+		return {
+			singular: `${prefix}branch`,
+			plural: `${prefix}branches`
+		};
+	});
 
 	// Mutations
 	const addSelectedMutation = $derived(createAddSelectedBranchesMutation());
@@ -84,11 +100,13 @@
 			// Use mutateAsync to properly chain operations
 			try {
 				await clearSelectedMutation.mutateAsync({
-					repoId: currentRepo.id
+					repoId: currentRepo.id,
+					branchContext: branchContext
 				});
 				await addSelectedMutation.mutateAsync({
 					repoId: currentRepo.id,
-					branchNames: branchesToAdd
+					branchNames: branchesToAdd,
+					branchContext: branchContext
 				});
 			} catch (error) {
 				// Error handling is done by the mutation's onError callback
@@ -96,7 +114,7 @@
 			}
 		} else {
 			// If all are selected, we need to deselect all
-			clearSelectedMutation.mutate({ repoId: currentRepo.id });
+			clearSelectedMutation.mutate({ repoId: currentRepo.id, branchContext: branchContext });
 		}
 	}
 </script>
@@ -165,9 +183,13 @@
 							<span class={css({ color: 'neutral.950.contrast' })}
 								>{selectedQuery.data?.branches.length ?? 0}</span
 							>
+							{selectedQuery.data?.branches.length === 1
+								? branchLabel.singular
+								: branchLabel.plural}
 							{selectedQuery.data?.branches.length === 1 ? 'is' : 'are'} selected /
 							<span class={css({ color: 'neutral.950.contrast' })}>{selectibleCount}</span>
-							{selectibleCount === 1 ? 'branch was' : 'branches were'} found for
+							{selectibleCount === 1 ? branchLabel.singular : branchLabel.plural}
+							{selectibleCount === 1 ? 'was' : 'were'} found for
 							<strong class={css({ color: 'primary.800' })}>
 								{formatString('{query}', {
 									query: search?.state ? search.state.trim() : ''
@@ -181,7 +203,7 @@
 							{formatString('{selected} / {total} {label}', {
 								selected: selectedQuery.data?.branches.length ?? 0,
 								total: selectibleCount,
-								label: selectibleCount === 1 ? 'branch' : 'branches'
+								label: selectibleCount === 1 ? branchLabel.singular : branchLabel.plural
 							})}
 						</div>
 					{/if}

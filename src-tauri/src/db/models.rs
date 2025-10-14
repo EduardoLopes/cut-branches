@@ -17,6 +17,8 @@ pub struct Repository {
     pub branches_count: i32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
+    pub last_sync_hash: Option<String>,
+    pub last_sync_timestamp: Option<i32>,
 }
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
@@ -28,6 +30,8 @@ pub struct NewRepository {
     pub path: String,
     pub current_branch: String,
     pub branches_count: i32,
+    pub last_sync_hash: Option<String>,
+    pub last_sync_timestamp: Option<i32>,
 }
 
 // Branch models
@@ -86,6 +90,7 @@ pub struct SelectedBranch {
     pub id: Option<i32>,
     pub repository_id: String,
     pub branch_name: String,
+    pub branch_context: String,
     pub created_at: NaiveDateTime,
 }
 
@@ -95,6 +100,7 @@ pub struct SelectedBranch {
 pub struct NewSelectedBranch {
     pub repository_id: String,
     pub branch_name: String,
+    pub branch_context: String,
 }
 
 // Locked branches models

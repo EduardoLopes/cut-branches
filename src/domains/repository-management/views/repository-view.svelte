@@ -48,7 +48,7 @@
 	const search = $derived(getSearchBranchesStore(id));
 
 	// Create stable query input objects
-	const selectedQueryInput = $derived({ repoId: id ?? '' });
+	const selectedQueryInput = $derived({ repoId: id ?? '', branchContext: branchesType });
 	const lockedQueryInput = $derived({ repoId: id ?? '' });
 
 	// Use queries for database-backed data
@@ -349,6 +349,8 @@
 					}}
 					onClearSearch={clearSearch}
 					actionsSnippet={branchesType === 'deleted' ? restoreDeletedBranchModalSnippet : undefined}
+					variant={branchesType === 'deleted' ? 'restore' : 'default'}
+					branchContext={branchesType === 'deleted' ? 'deleted' : 'current'}
 				/>
 			{/if}
 
@@ -396,6 +398,7 @@
 						{allowSelection}
 						{allowSetCurrent}
 						variant={branchesType === 'deleted' ? 'inverted' : 'default'}
+						branchContext={branchesType === 'deleted' ? 'deleted' : 'current'}
 					/>
 				{/if}
 			{/key}

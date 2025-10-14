@@ -108,12 +108,18 @@ pub async fn create_repository(
         )
     })?;
 
+    // Compute initial state timestamp
+    let initial_timestamp =
+        super::super::services::state_hash::compute_repo_state_timestamp(raw_root_path)?;
+
     let new_repo = NewRepository {
         id: repo_name.clone(),
         name: repo_name.clone(),
         path: root_path.clone(),
         current_branch: current.to_string(),
         branches_count: branches_count as i32,
+        last_sync_hash: None, // Deprecated
+        last_sync_timestamp: Some(initial_timestamp),
     };
 
     // Check if repository already exists
@@ -138,9 +144,10 @@ pub async fn create_repository(
         )
     })?;
 
-    // Sync branches from Git to database
+    // Sync branches from Git to database, passing already-fetched branches
     crate::domains::branch_management::services::sync::sync_branches_to_db(
-        raw_root_path,
+        Some(&branches),
+        None,
         &repo_name,
         &db,
     )

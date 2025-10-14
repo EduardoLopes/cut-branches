@@ -57,6 +57,8 @@ diesel::table! {
         branches_count -> Integer,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        last_sync_hash -> Nullable<Text>,
+        last_sync_timestamp -> Nullable<Integer>,
     }
 }
 
@@ -65,6 +67,7 @@ diesel::table! {
         id -> Nullable<Integer>,
         repository_id -> Text,
         branch_name -> Text,
+        branch_context -> Text,
         created_at -> Timestamp,
     }
 }

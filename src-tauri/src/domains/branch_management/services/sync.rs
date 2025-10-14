@@ -14,7 +14,8 @@ use super::super::git::branch::{get_all_branches_with_last_commit, Branch};
 ///
 /// # Arguments
 ///
-/// * `path` - Path to the git repository
+/// * `git_branches` - Pre-fetched branches from Git (pass None to fetch internally)
+/// * `path` - Path to the git repository (only used if git_branches is None)
 /// * `repo_id` - Repository ID in database
 /// * `db` - Database state
 ///
@@ -22,12 +23,27 @@ use super::super::git::branch::{get_all_branches_with_last_commit, Branch};
 ///
 /// * `Result<usize, AppError>` - Number of branches synced or an error
 pub fn sync_branches_to_db(
-    path: &Path,
+    git_branches: Option<&[Branch]>,
+    path: Option<&Path>,
     repo_id: &str,
     db: &State<DatabaseState>,
 ) -> Result<usize, AppError> {
-    // Get branches from Git
-    let git_branches = get_all_branches_with_last_commit(path)?;
+    // Get branches from Git - either use provided or fetch
+    let fetched_branches;
+    let git_branches = match git_branches {
+        Some(branches) => branches,
+        None => {
+            let path = path.ok_or_else(|| {
+                AppError::new(
+                    "Path is required when git_branches is not provided".to_string(),
+                    "missing_path",
+                    None,
+                )
+            })?;
+            fetched_branches = get_all_branches_with_last_commit(path)?;
+            &fetched_branches
+        }
+    };
 
     // Get database connection
     let mut conn = db.get_connection().map_err(|e| {
@@ -52,7 +68,7 @@ pub fn sync_branches_to_db(
     let git_branch_names: HashSet<String> = git_branches.iter().map(|b| b.name.clone()).collect();
 
     // Upsert branches that exist in Git
-    for git_branch in &git_branches {
+    for git_branch in git_branches {
         let new_branch = branch_to_new_branch(repo_id, git_branch);
         crate::db::operations::upsert_branch(&mut conn, new_branch).map_err(|e| {
             AppError::new(
@@ -84,6 +100,16 @@ pub fn sync_branches_to_db(
     }
 
     Ok(git_branches.len())
+}
+
+// Keep backwards compatible wrapper for old code
+#[allow(dead_code)]
+pub fn sync_branches_to_db_legacy(
+    path: &Path,
+    repo_id: &str,
+    db: &State<DatabaseState>,
+) -> Result<usize, AppError> {
+    sync_branches_to_db(None, Some(path), repo_id, db)
 }
 
 /// Converts a Git branch to a NewBranchRecord for database insertion

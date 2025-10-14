@@ -467,7 +467,8 @@ describe('BranchesBulkActions Component', () => {
 				props: testWrapperWithProps(BranchesBulkActions, props)
 			});
 			const searchQueryInfo = getByTestId('search-query-info');
-			expect(searchQueryInfo.textContent).toContain('branch was found');
+			expect(searchQueryInfo.textContent).toContain('branch');
+			expect(searchQueryInfo.textContent).toContain('was found');
 		});
 
 		test('correctly shows plural form when multiple branches are selected in search results', () => {
@@ -489,7 +490,8 @@ describe('BranchesBulkActions Component', () => {
 
 			const searchQueryInfo = getByTestId('search-query-info');
 			expect(searchQueryInfo.textContent).toContain('are selected');
-			expect(searchQueryInfo.textContent).toContain('branches were found');
+			expect(searchQueryInfo.textContent).toContain('branches');
+			expect(searchQueryInfo.textContent).toContain('were found');
 		});
 
 		test('renders correctly when selectibleCount is 1 and there is a search query', () => {
