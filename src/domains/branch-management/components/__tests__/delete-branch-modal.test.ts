@@ -2,10 +2,8 @@ import { render, fireEvent } from '@testing-library/svelte';
 import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { createDeleteBranchesMutation } from '../../services/createDeleteBranchesMutation';
-import { getSelectedBranchesStore } from '../../store/selected-branches.svelte';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 import type { Branch } from '$lib/bindings';
 
 // Mock dependencies
@@ -35,26 +33,16 @@ vi.mock('../../services/createDeleteBranchesMutation', () => ({
 	})
 }));
 
-// Mock the selected branches query
-const mockSelectedBranchesQuery = vi.hoisted(() => ({
-	fn: vi.fn(() => ({
-		data: {
-			branches: ['feature-1']
-		},
-		isLoading: false,
-		isError: false,
-		error: null
-	}))
-}));
-
-vi.mock('../../services/createSelectedBranchesQuery', () => ({
-	createSelectedBranchesQuery: mockSelectedBranchesQuery.fn
-}));
-
 // Mock clear selected branches mutation
 vi.mock('../../services/createSelectedBranchesMutations', () => ({
-	createClearSelectedBranchesMutation: vi.fn(() => ({
+	createUpdateBranchSelectionBatchMutation: vi.fn(() => ({
 		mutate: vi.fn(),
+		mutateAsync: vi.fn(),
+		isPending: false
+	})),
+	createSetBranchSelectionAllMutation: vi.fn(() => ({
+		mutate: vi.fn(),
+		mutateAsync: vi.fn(),
 		isPending: false
 	}))
 }));
@@ -132,32 +120,43 @@ vi.mock('../../logic/application/queries/create-get-repository-list-query', () =
 	}))
 }));
 
-// Mock get branches query
+// Variable to track selected branches for mocking
+let mockSelectedBranches: string[] = ['feature-1'];
+
+// Mock get branches query with dynamic filtering based on filters
 vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
-	createGetBranchesQuery: vi.fn(() => ({
-		data: { branches: mockBranches },
-		isLoading: false,
-		isError: false,
-		error: null
-	}))
+	createGetBranchesQuery: vi.fn((filtersFactory) => {
+		const filters = typeof filtersFactory === 'function' ? filtersFactory() : filtersFactory;
+
+		// If filtering for selected branches
+		if (filters?.filters?.selectionStatus === 'selected') {
+			return {
+				get data() {
+					const selectedBranchesData = mockBranches.filter((b) =>
+						mockSelectedBranches.includes(b.name)
+					);
+					return { branches: selectedBranchesData };
+				},
+				isLoading: false,
+				isError: false,
+				error: null
+			};
+		}
+
+		// Default: return all branches
+		return {
+			data: { branches: mockBranches },
+			isLoading: false,
+			isError: false,
+			error: null
+		};
+	})
 }));
 
 describe('DeleteBranchModal Component', () => {
 	beforeEach(() => {
-		// Set up test data
-		const repository = getRepositoryStore('test-repo');
-		repository?.set({
-			name: 'test-repo',
-			currentBranch: 'main',
-			path: '/path/to/repo',
-			branchesCount: 3,
-			id: '1',
-			branches: mockBranches
-		});
-
-		const selectedBranches = getSelectedBranchesStore('test-repo');
-		selectedBranches?.clear();
-		selectedBranches?.add(['feature-1']);
+		// Reset selected branches to default
+		mockSelectedBranches = ['feature-1'];
 
 		// Reset mocks
 		vi.clearAllMocks();
@@ -172,15 +171,8 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('renders delete button in disabled state when no branches selected', () => {
-			// Mock the query to return empty branches
-			mockSelectedBranchesQuery.fn.mockReturnValueOnce({
-				data: {
-					branches: []
-				},
-				isLoading: false,
-				isError: false,
-				error: null
-			});
+			// Set no selected branches
+			mockSelectedBranches = [];
 
 			const { getByTestId } = render(TestWrapper, {
 				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
@@ -267,15 +259,8 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('handles multiple branch deletion', async () => {
-			// Mock the query to return multiple selected branches
-			mockSelectedBranchesQuery.fn.mockReturnValueOnce({
-				data: {
-					branches: ['feature-1', 'feature-2']
-				},
-				isLoading: false,
-				isError: false,
-				error: null
-			});
+			// Set multiple selected branches
+			mockSelectedBranches = ['feature-1', 'feature-2'];
 
 			const deleteMutate = createDeleteBranchesMutation();
 
@@ -307,15 +292,8 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('prevents deletion of current branch', async () => {
-			// Mock the query to return main branch as selected
-			mockSelectedBranchesQuery.fn.mockReturnValueOnce({
-				data: {
-					branches: ['main']
-				},
-				isLoading: false,
-				isError: false,
-				error: null
-			});
+			// Set main branch as selected
+			mockSelectedBranches = ['main'];
 
 			// Get the standard mock to avoid typing issues
 			const deleteMutate = createDeleteBranchesMutation();
@@ -404,9 +382,8 @@ describe('DeleteBranchModal Component', () => {
 
 		test('handles multiple branch deletion in notifications', async () => {
 			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-			const selectedBranches = getSelectedBranchesStore('test-repo');
-			selectedBranches?.clear();
-			selectedBranches?.add(['feature-1', 'feature-2']);
+			// Set multiple selected branches
+			mockSelectedBranches = ['feature-1', 'feature-2'];
 
 			const mockMutate = vi.fn();
 
@@ -465,9 +442,8 @@ describe('DeleteBranchModal Component', () => {
 
 	describe('Branch Sorting', () => {
 		test('sorts current branch first', async () => {
-			const selectedBranches = getSelectedBranchesStore('test-repo');
-			selectedBranches?.clear();
-			selectedBranches?.add(['feature-1', 'main']); // Include current branch
+			// Include current branch in selection
+			mockSelectedBranches = ['feature-1', 'main'];
 
 			const { getByTestId, getAllByText } = render(TestWrapper, {
 				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }

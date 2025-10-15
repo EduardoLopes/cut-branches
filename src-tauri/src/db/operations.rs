@@ -228,7 +228,19 @@ pub fn upsert_branches_batch(
             .values(branch)
             .on_conflict((branches::repository_id, branches::name))
             .do_update()
-            .set(branch)
+            .set((
+                branches::current.eq(&branch.current),
+                branches::fully_merged.eq(&branch.fully_merged),
+                branches::last_commit_sha.eq(&branch.last_commit_sha),
+                branches::last_commit_short_sha.eq(&branch.last_commit_short_sha),
+                branches::last_commit_date.eq(&branch.last_commit_date),
+                branches::last_commit_message.eq(&branch.last_commit_message),
+                branches::last_commit_author.eq(&branch.last_commit_author),
+                branches::last_commit_email.eq(&branch.last_commit_email),
+                branches::is_reachable.eq(&branch.is_reachable),
+                // Note: is_selected, is_locked, and deleted_at are intentionally excluded
+                // to preserve user-managed state during sync operations
+            ))
             .execute(conn)?;
         total_inserted += 1;
     }
@@ -266,23 +278,26 @@ pub fn mark_branches_as_active(
             .filter(branches::repository_id.eq(repo_id))
             .filter(branches::name.eq_any(branch_names)),
     )
-    .set(branches::deleted_at.eq(None::<String>))
+    .set((
+        branches::deleted_at.eq(None::<String>),
+        branches::is_selected.eq(false),
+    ))
     .execute(conn)
 }
 
-// Selected branches operations - Default (for active branches)
-pub fn add_branch_selection_batch(
+// Selected branches operations
+pub fn update_branch_selection_batch(
     conn: &mut SqliteConnection,
     repo_id: &str,
     branch_names: Vec<String>,
+    is_selected: bool,
 ) -> Result<usize, DieselError> {
     diesel::update(
         branches::table
             .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::name.eq_any(branch_names))
-            .filter(branches::deleted_at.is_null()),
+            .filter(branches::name.eq_any(branch_names)),
     )
-    .set(branches::is_selected.eq(true))
+    .set(branches::is_selected.eq(is_selected))
     .execute(conn)
 }
 
@@ -298,51 +313,6 @@ pub fn get_branch_selection_list(
         .load::<String>(conn)
 }
 
-pub fn remove_branch_selection_batch(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-    branch_names: Vec<String>,
-) -> Result<usize, DieselError> {
-    diesel::update(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::name.eq_any(branch_names))
-            .filter(branches::deleted_at.is_null()),
-    )
-    .set(branches::is_selected.eq(false))
-    .execute(conn)
-}
-
-pub fn clear_branch_selection(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-) -> Result<usize, DieselError> {
-    diesel::update(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::is_selected.eq(true))
-            .filter(branches::deleted_at.is_null()),
-    )
-    .set(branches::is_selected.eq(false))
-    .execute(conn)
-}
-
-// Selected branches operations - Deleted (for restoration)
-pub fn add_deleted_branch_selection_batch(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-    branch_names: Vec<String>,
-) -> Result<usize, DieselError> {
-    diesel::update(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::name.eq_any(branch_names))
-            .filter(branches::deleted_at.is_not_null()),
-    )
-    .set(branches::is_selected.eq(true))
-    .execute(conn)
-}
-
 pub fn get_deleted_branch_selection_list(
     conn: &mut SqliteConnection,
     repo_id: &str,
@@ -355,33 +325,133 @@ pub fn get_deleted_branch_selection_list(
         .load::<String>(conn)
 }
 
-pub fn remove_deleted_branch_selection_batch(
+pub fn set_branch_selection_all(
     conn: &mut SqliteConnection,
     repo_id: &str,
-    branch_names: Vec<String>,
+    is_selected: bool,
+    deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter,
+    exclude_locked: bool,
+    exclude_current: bool,
 ) -> Result<usize, DieselError> {
-    diesel::update(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::name.eq_any(branch_names))
-            .filter(branches::deleted_at.is_not_null()),
-    )
-    .set(branches::is_selected.eq(false))
-    .execute(conn)
-}
+    use crate::domains::branch_management::filters::DeletionStatusFilter;
 
-pub fn clear_deleted_branch_selection(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-) -> Result<usize, DieselError> {
-    diesel::update(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::is_selected.eq(true))
-            .filter(branches::deleted_at.is_not_null()),
-    )
-    .set(branches::is_selected.eq(false))
-    .execute(conn)
+    // Build base query filters
+    let base_filters = (
+        branches::repository_id.eq(repo_id),
+        branches::is_selected.eq(!is_selected),
+    );
+
+    match (deletion_status, exclude_locked, exclude_current) {
+        // Active branches
+        (DeletionStatusFilter::Active, false, false) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_null()),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::Active, true, false) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_null())
+                .filter(branches::is_locked.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::Active, false, true) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_null())
+                .filter(branches::current.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::Active, true, true) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_null())
+                .filter(branches::is_locked.eq(false))
+                .filter(branches::current.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+
+        // Deleted branches
+        (DeletionStatusFilter::Deleted, false, false) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_not_null()),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::Deleted, true, false) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_not_null())
+                .filter(branches::is_locked.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::Deleted, false, true) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_not_null())
+                .filter(branches::current.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::Deleted, true, true) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::deleted_at.is_not_null())
+                .filter(branches::is_locked.eq(false))
+                .filter(branches::current.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+
+        // All branches
+        (DeletionStatusFilter::All, false, false) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::All, true, false) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::is_locked.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::All, false, true) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::current.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+        (DeletionStatusFilter::All, true, true) => diesel::update(
+            branches::table
+                .filter(base_filters.0)
+                .filter(base_filters.1)
+                .filter(branches::is_locked.eq(false))
+                .filter(branches::current.eq(false)),
+        )
+        .set(branches::is_selected.eq(is_selected))
+        .execute(conn),
+    }
 }
 
 // Locked branches operations

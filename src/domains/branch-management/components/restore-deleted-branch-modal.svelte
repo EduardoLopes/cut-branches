@@ -5,25 +5,20 @@
 	import Dialog from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
-	import { useQueryClient } from '@tanstack/svelte-query';
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
+	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
-	import { createListBranchesQuery } from '$domains/branch-management/services/createListBranchesQuery';
 	import {
 		createRestoreDeletedBranchMutation,
 		createRestoreDeletedBranchesMutation
 	} from '$domains/branch-management/services/createRestoreDeletedBranchMutation';
-	import { createClearDeletedSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import { createDeletedSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
-
-	const client = useQueryClient();
 
 	interface Props {
 		repoId?: string;
@@ -32,19 +27,19 @@
 
 	let { repoId, buttonProps }: Props = $props();
 
-	const getRepositoryQuery = $derived(createGetRepositoryListQuery());
+	const getRepositoryQuery = createGetRepositoryListQuery();
+	const getBranchesQuery = createGetBranchesQuery(() => ({
+		repoId: repoId ?? '',
+		filters: { deletionStatus: 'active' }
+	}));
 
 	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === repoId));
 
-	// Get deleted branches from database
-	const getDeletedBranchesQuery = $derived(createListBranchesQuery(repoId ?? '', true));
-
 	// Get selected branches from database
-	const queryInput = $derived({ repoId: repoId ?? '' });
-	const selectedQuery = $derived(createDeletedSelectedBranchesQuery(() => queryInput));
-
-	// Mutation for clearing selected branches
-	const clearSelectedMutation = $derived(createClearDeletedSelectedBranchesMutation());
+	const selectedQuery = createGetBranchesQuery(() => ({
+		repoId: repoId ?? '',
+		filters: { selectionStatus: 'selected', deletionStatus: 'deleted' }
+	}));
 
 	let open = $state(false);
 	let isProcessing = $state(false);
@@ -106,31 +101,21 @@
 		}
 	});
 
-	// Get all deleted branches from database
-	const allDeletedBranches = $derived(getDeletedBranchesQuery?.data?.branches ?? []);
-
-	// Get selected deleted branches (filter deleted branches by selected branch names)
-	const selectedDeletedBranches = $derived(
-		allDeletedBranches.filter((branch) => selectedQuery.data?.branches.includes(branch.name))
-	);
-
 	// Check which branches already exist in the repository
 	async function checkExistingBranches() {
 		if (!repository?.path) return;
 
 		try {
 			// Get existing branches from the repository
-			const response = await client.fetchQuery({
-				queryKey: ['branches', 'get-all', repository.path]
-			});
+			const response = getBranchesQuery.data?.branches;
 
 			if (response && Array.isArray(response)) {
 				// Extract branch names and find overlaps with our selected branches
-				const existingBranchNames = response.map((branch) => branch.name);
+				const existingBranchNames = response?.map((branch) => branch.name) ?? [];
 				existingBranches = existingBranchNames;
 
 				// Initialize preferences for branches that might conflict
-				selectedDeletedBranches.forEach((branch) => {
+				selectedQuery.data?.branches?.forEach((branch) => {
 					if (existingBranchNames.includes(branch.name)) {
 						// Default to skip for safety
 						branchPreferences[branch.name] = 'Skip';
@@ -218,10 +203,6 @@
 							})
 						});
 
-						// Clear selected branches - automatic invalidation handles query updates
-						if (repoId) {
-							clearSelectedMutation.mutate({ repoId });
-						}
 						open = false;
 					} catch (e) {
 						console.error('Error during notification or query invalidation:', e);
@@ -324,10 +305,6 @@
 						message: m
 					});
 
-					// Clear selected branches - automatic invalidation handles query updates
-					if (repoId) {
-						clearSelectedMutation.mutate({ repoId });
-					}
 					open = false;
 				} catch (e) {
 					console.error('Error during batch notification or query invalidation:', e);
@@ -340,9 +317,6 @@
 			} else {
 				// Otherwise, we're done
 				isProcessing = false;
-				if (repoId) {
-					clearSelectedMutation.mutate({ repoId });
-				}
 				open = false;
 			}
 		},
@@ -361,15 +335,11 @@
 	function processNextConflictBranch() {
 		if (!repository?.path || pendingConflictBranches.length === 0) {
 			// If no more conflicts, process remaining normal branches
-			if (selectedDeletedBranches.some((branch) => !restorationResults[branch.name])) {
+			if (selectedQuery.data?.branches?.some((branch) => !restorationResults[branch.name])) {
 				processNextBranch();
 			} else {
 				// All done
 				isProcessing = false;
-				// Only clear if we successfully processed everything
-				if (Object.keys(restorationResults).length === selectedDeletedBranches.length && repoId) {
-					clearSelectedMutation.mutate({ repoId });
-				}
 			}
 			return;
 		}
@@ -402,15 +372,13 @@
 		if (!repository?.path) return;
 
 		// Find the next branch to process (one that hasn't been processed yet)
-		const nextBranch = selectedDeletedBranches.find((branch) => !restorationResults[branch.name]);
+		const nextBranch = selectedQuery.data?.branches.find(
+			(branch) => !restorationResults[branch.name]
+		);
 
 		if (!nextBranch) {
 			// All branches processed
 			isProcessing = false;
-			// Clear selected branches only after all processing is complete
-			if (repoId) {
-				clearSelectedMutation.mutate({ repoId });
-			}
 			open = false;
 			return;
 		}
@@ -458,14 +426,14 @@
 		startTime = Date.now();
 		estimatedTimeRemaining = 'Calculating...';
 		processedCount = 0;
-		initialSelectedCount = selectedDeletedBranches.length;
+		initialSelectedCount = selectedQuery.data?.branches.length ?? 0;
 
-		if (selectedDeletedBranches.length <= 1) {
+		if (selectedQuery.data?.branches.length && selectedQuery.data?.branches.length <= 1) {
 			// For a single branch, use the regular approach
 			processNextBranch();
 		} else {
 			// For multiple branches, use the batch approach for better performance
-			const branchInfos = selectedDeletedBranches.map((branch) => ({
+			const branchInfos = selectedQuery.data?.branches.map((branch) => ({
 				originalName: branch.name,
 				targetName: branch.name,
 				commitSha: branch.lastCommit.shortSha,
@@ -475,7 +443,7 @@
 			restoreBatchMutation.mutate({
 				path: repository.path,
 				repoId: repository.id,
-				branchInfos
+				branchInfos: branchInfos ?? []
 			});
 		}
 	}
@@ -484,7 +452,7 @@
 	function resolveConflict(resolution: ConflictResolution) {
 		if (!currentConflictBranch || !repository?.path) return;
 
-		const branch = selectedDeletedBranches.find((b) => b.name === currentConflictBranch);
+		const branch = selectedQuery.data?.branches.find((b) => b.name === currentConflictBranch);
 		if (!branch) return;
 
 		// Update conflict resolution and continue
@@ -628,8 +596,8 @@
 			{:else}
 				Are you sure you want to restore
 				<strong class={css({ color: 'primary.800' })}>
-					{selectedDeletedBranches.length}
-					{selectedDeletedBranches.length === 1 ? 'branch' : 'branches'}
+					{selectedQuery.data?.branches.length}
+					{selectedQuery.data?.branches.length === 1 ? 'branch' : 'branches'}
 				</strong>
 				from repository
 				<strong class={css({ color: 'primary.800' })}>
@@ -702,7 +670,7 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each [...selectedDeletedBranches].sort((a, b) => {
+		{#each [...(selectedQuery.data?.branches ?? [])].sort((a, b) => {
 			// Sort pending conflicts first
 			const aIsPending = pendingConflictBranches.includes(a.name);
 			const bIsPending = pendingConflictBranches.includes(b.name);
@@ -881,7 +849,7 @@
 <Button
 	emphasis="primary"
 	size="sm"
-	disabled={selectedDeletedBranches.length === 0}
+	disabled={selectedQuery.data?.branches.length === 0}
 	class={css({
 		gap: 'xs',
 		display: 'flex',
@@ -894,7 +862,7 @@
 	data-testid="open-restore-dialog-button"
 >
 	<Icon icon="lucide:undo" width="16px" height="16px" />
-	Restore ({selectedDeletedBranches.length})
+	Restore ({selectedQuery.data?.branches.length})
 </Button>
 
 <style>

@@ -6,12 +6,7 @@
  */
 
 import { createGetBranchesQuery } from './queries/create-get-branches-query';
-import {
-	createAddSelectedBranchesMutation,
-	createClearSelectedBranchesMutation,
-	createAddDeletedSelectedBranchesMutation,
-	createClearDeletedSelectedBranchesMutation
-} from '$domains/branch-management/services/createSelectedBranchesMutations';
+import { createSetBranchSelectionAllMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { calculateSelectionState } from '$domains/branch-management/utils/calculate-selection-state';
 import { filterSelectableBranches } from '$domains/branch-management/utils/filter-selectable-branches';
@@ -39,18 +34,8 @@ export function useBranchSelection({ repository, deletionStatus }: UseBranchSele
 		filters: { selectionStatus: 'selected' as const, deletionStatus: deletionStatus() }
 	}));
 
-	// Mutations for selected branches - choose based on deletion status
-	const addSelectedMutation = $derived(
-		deletionStatus() === 'deleted'
-			? createAddDeletedSelectedBranchesMutation()
-			: createAddSelectedBranchesMutation()
-	);
-
-	const clearSelectedMutation = $derived(
-		deletionStatus() === 'deleted'
-			? createClearDeletedSelectedBranchesMutation()
-			: createClearSelectedBranchesMutation()
-	);
+	// Unified mutations for selected branches
+	const setSelectionAllMutation = createSetBranchSelectionAllMutation();
 
 	// Filter branches based on locked/current and search state
 	const branches = $derived.by(() => {
@@ -102,20 +87,21 @@ export function useBranchSelection({ repository, deletionStatus }: UseBranchSele
 		const repo = repository();
 		if (!repo?.id) return;
 
-		// If indeterminate or all are selected, deselect all
+		// If indeterminate or all are selected, deselect all (including locked and current)
 		if (isIndeterminate || isAllSelected) {
-			await clearSelectedMutation.mutateAsync({ repoId: repo.id });
-		} else {
-			// If none are selected, select all
-			const branchesToAdd = branches.map((branch) => branch.name);
-
-			// Use mutateAsync to properly chain operations
-			await clearSelectedMutation.mutateAsync({
-				repoId: repo.id
-			});
-			await addSelectedMutation.mutateAsync({
+			await setSelectionAllMutation.mutateAsync({
 				repoId: repo.id,
-				branchNames: branchesToAdd
+				isSelected: false,
+				deletionStatus: deletionStatus(),
+				excludeLocked: false,
+				excludeCurrent: false
+			});
+		} else {
+			// Select all selectable branches (defaults: excludeLocked=true, excludeCurrent=true)
+			await setSelectionAllMutation.mutateAsync({
+				repoId: repo.id,
+				isSelected: true,
+				deletionStatus: deletionStatus()
 			});
 		}
 	}

@@ -4,20 +4,13 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
+	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
+	import { getSearchBranchesStore } from '../store/search-branches.svelte';
+	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
 	import { createBranchMergeStatusQuery } from '$domains/branch-management/services/createBranchMergeStatusQuery';
-	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
-	import {
-		createAddSelectedBranchesMutation,
-		createRemoveSelectedBranchesMutation,
-		createAddDeletedSelectedBranchesMutation,
-		createRemoveDeletedSelectedBranchesMutation
-	} from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import {
-		createSelectedBranchesQuery,
-		createDeletedSelectedBranchesQuery
-	} from '$domains/branch-management/services/createSelectedBranchesQuery';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { createSwitchBranchMutation } from '$domains/branch-management/services/createSwitchBranchMutation';
 	import {
 		getBranchColorPalette,
@@ -34,51 +27,37 @@
 	import { token } from '@pindoba/panda/tokens';
 
 	interface Props {
-		branches: Branch[];
-		currentBranch?: string;
 		repositoryID?: string;
 		repositoryPath?: string;
 		allowLocking?: boolean;
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
 		variant?: 'default' | 'inverted';
-		branchContext?: 'current' | 'deleted';
 	}
 
 	const {
-		branches = [],
-		currentBranch = '',
 		repositoryID,
 		repositoryPath,
 		allowLocking = true,
 		allowSelection = true,
 		allowSetCurrent = true,
-		variant = 'default',
-		branchContext = 'current'
+		variant = 'default'
 	}: Props = $props();
 
-	const queryInput = $derived({ repoId: repositoryID ?? '' });
+	const search = $derived(getSearchBranchesStore(repositoryID));
 
-	// Use queries for database-backed data
-	const lockedQuery = $derived(createLockedBranchesQuery(queryInput));
-	const selectedQuery = $derived(
-		branchContext === 'current'
-			? createSelectedBranchesQuery(() => queryInput)
-			: createDeletedSelectedBranchesQuery(() => queryInput)
-	);
+	const branchesQuery = createGetBranchesQuery(() => ({
+		repoId: repositoryID ?? '',
+		filters: {
+			deletionStatus: page.url.pathname.includes('restore')
+				? ('deleted' as const)
+				: ('active' as const),
+			includeCurrent: true
+		}
+	}));
 
-	// Mutations for selected branches
-	const addSelectedMutation = $derived(
-		branchContext === 'current'
-			? createAddSelectedBranchesMutation()
-			: createAddDeletedSelectedBranchesMutation()
-	);
-
-	const removeSelectedMutation = $derived(
-		branchContext === 'current'
-			? createRemoveSelectedBranchesMutation()
-			: createRemoveDeletedSelectedBranchesMutation()
-	);
+	// Unified mutation for selected branches
+	const updateSelectionMutation = createUpdateBranchSelectionBatchMutation();
 
 	const switchBranchMutation = $derived(
 		createSwitchBranchMutation({
@@ -91,29 +70,24 @@
 
 				// Remove from selected branches in database - invalidation happens automatically
 				if (repositoryID) {
-					removeSelectedMutation.mutate({
+					updateSelectionMutation.mutate({
 						repoId: repositoryID,
-						branchNames: [currentBranch]
+						branchNames: [currentBranch],
+						isSelected: false
 					});
 				}
 			},
 			meta: { showErrorNotification: true }
 		})
 	);
-	function handleToggleSelect(branch: string) {
+	function handleToggleSelect(branch: Branch) {
 		if (!repositoryID) return;
 
-		if (selectedQuery.data?.branches.includes(branch)) {
-			removeSelectedMutation.mutate({
-				repoId: repositoryID,
-				branchNames: [branch]
-			});
-		} else {
-			addSelectedMutation.mutate({
-				repoId: repositoryID,
-				branchNames: [branch]
-			});
-		}
+		updateSelectionMutation.mutate({
+			repoId: repositoryID,
+			branchNames: [branch.name],
+			isSelected: !branch.isSelected
+		});
 	}
 
 	function handleSwitchBranch(branch: string) {
@@ -130,7 +104,16 @@
 
 	let start = $derived(Math.max(0, itemsPerPage * (currentPage - 1)));
 	let end = $derived(start + itemsPerPage);
-	let paginatedBranches = $derived(branches?.slice(start, end));
+	let sortedBranches = $derived(
+		branchesQuery.data?.branches
+			.toSorted((a, b) => {
+				if (a.current && !b.current) return -1;
+				if (!a.current && b.current) return 1;
+				return 0;
+			})
+			.filter((branch) => branch.name.toLowerCase().includes(search?.state?.toLowerCase() ?? ''))
+	);
+	let paginatedBranches = $derived(sortedBranches?.slice(start, end));
 </script>
 
 <div
@@ -162,9 +145,9 @@
 						gap: 'sm',
 						borderRadius: 'sm'
 					})}
-					class:selected={selectedQuery.data?.branches.includes(branch.name)}
+					class:selected={branch.isSelected}
 				>
-					{#if currentBranch !== branch.name}
+					{#if !branch.current}
 						<div
 							class={css({
 								display: 'flex',
@@ -175,9 +158,9 @@
 							{#if allowSelection}
 								<Checkbox
 									id={`checkbox-${branch.name}`}
-									onclick={() => handleToggleSelect(branch.name)}
-									checked={selectedQuery.data?.branches.includes(branch.name)}
-									disabled={lockedQuery.data?.branches.includes(branch.name)}
+									onclick={() => handleToggleSelect(branch)}
+									checked={branch.isSelected}
+									disabled={branch.isLocked}
 								>
 									<div class={visuallyHidden()}>
 										{branch.name}
@@ -217,7 +200,7 @@
 						</div>
 					{/if}
 
-					{#if currentBranch === branch.name}
+					{#if branch.current}
 						<div
 							class={css({
 								display: 'flex',
@@ -242,13 +225,9 @@
 
 					<BranchCard
 						{branch}
-						selected={selectedQuery.data?.branches.includes(branch.name)}
-						locked={lockedQuery.data?.branches.includes(branch.name) &&
-							currentBranch !== branch.name}
-						colorPalette={getBranchColorPalette(
-							branch,
-							selectedQuery.data?.branches.includes(branch.name) ?? false
-						)}
+						selected={branch.isSelected}
+						locked={branch.isLocked && !branch.current}
+						colorPalette={getBranchColorPalette(branch, branch.isSelected ?? false)}
 						id={getBranchElementId(branch.name, 'container')}
 						title={branch.current
 							? 'Current branch'
@@ -266,7 +245,7 @@
 						)}
 						{@const alerts = getBranchAlerts(
 							branch,
-							selectedQuery.data?.branches.includes(branch.name) ?? false,
+							branch.isSelected ?? false,
 							mergeStatusQuery.data?.isMerged
 						)}
 						{#if shouldShowBranchAlerts(alerts, branch)}
@@ -278,7 +257,7 @@
 		{/if}
 	</div>
 
-	{#if branches.length > 0}
+	{#if branchesQuery.data?.branches.length && branchesQuery.data?.branches.length > 0}
 		<div
 			class={css({
 				p: 'md',
@@ -294,7 +273,11 @@
 				}
 			})}
 		>
-			<Pagination itemsTotal={branches?.length ?? 0} bind:itemsPerPage bind:currentPage />
+			<Pagination
+				itemsTotal={branchesQuery.data?.branches.length}
+				bind:itemsPerPage
+				bind:currentPage
+			/>
 		</div>
 	{/if}
 </div>

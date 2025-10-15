@@ -8,7 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createClearLockedBranchesMutation } from '$domains/branch-management/services/createLockedBranchesMutations';
-	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
+	import { createSetBranchSelectionAllMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
@@ -28,56 +28,54 @@
 
 	const queryClient = useQueryClient();
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
-	const getRepositoryQuery = $derived(createGetRepositoryQuery(() => currentRepo?.path));
+	const getRepositoryQuery = createGetRepositoryQuery(() => currentRepo?.path);
 
 	// Query for repositories list
-	const repositoriesQuery = $derived(createGetRepositoryListQuery());
+	const repositoriesQuery = createGetRepositoryListQuery();
 	const repositories = $derived(repositoriesQuery.data ?? []);
 
 	// Mutations for clearing database data
-	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
-	const clearLockedMutation = $derived(createClearLockedBranchesMutation());
-	const deleteRepositoryMutation = $derived(
-		createDeleteRepositoryMutation({
-			onSuccess: async () => {
-				const repoName = ensureString(getRepositoryQuery.data?.name || currentRepo?.name);
-				const deletedPath = currentRepo?.path;
-				const deletedId = currentRepo?.id;
+	const setSelectionAllMutation = createSetBranchSelectionAllMutation();
+	const clearLockedMutation = createClearLockedBranchesMutation();
+	const deleteRepositoryMutation = createDeleteRepositoryMutation({
+		onSuccess: async () => {
+			const repoName = ensureString(getRepositoryQuery.data?.name || currentRepo?.name);
+			const deletedPath = currentRepo?.path;
+			const deletedId = currentRepo?.id;
 
-				// Clear UI stores
-				search?.clear();
+			// Clear UI stores
+			search?.clear();
 
-				// Cancel and remove queries for the deleted repository
-				// This prevents get_repository from being called on the deleted repo
-				if (deletedPath) {
-					queryClient.cancelQueries({ queryKey: ['getRepository', deletedPath] });
-					queryClient.removeQueries({ queryKey: ['getRepository', deletedPath] });
-				}
+			// Cancel and remove queries for the deleted repository
+			// This prevents get_repository from being called on the deleted repo
+			if (deletedPath) {
+				queryClient.cancelQueries({ queryKey: ['getRepository', deletedPath] });
+				queryClient.removeQueries({ queryKey: ['getRepository', deletedPath] });
+			}
 
-				// Invalidate repositories list so it refreshes
-				queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
+			// Invalidate repositories list so it refreshes
+			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
 
-				// Find another repository to navigate to using current list
-				const currentRepos = repositories;
-				const otherRepo = currentRepos.find((repo) => repo.id !== deletedId);
+			// Find another repository to navigate to using current list
+			const currentRepos = repositories;
+			const otherRepo = currentRepos.find((repo) => repo.id !== deletedId);
 
-				// Navigate away immediately
-				if (otherRepo) {
-					await goto(resolve(`/repos/${otherRepo.name}`));
-				} else {
-					await goto(resolve(`/get-started`));
-				}
+			// Navigate away immediately
+			if (otherRepo) {
+				await goto(resolve(`/repos/${otherRepo.name}`));
+			} else {
+				await goto(resolve(`/get-started`));
+			}
 
-				// Show notification about repository removal
-				notifications.push({
-					title: 'Repository removed',
-					message: formatString('The repository {name} has been removed', { name: repoName }),
-					feedback: 'success'
-				});
-			},
-			meta: { showErrorNotification: true }
-		})
-	);
+			// Show notification about repository removal
+			notifications.push({
+				title: 'Repository removed',
+				message: formatString('The repository {name} has been removed', { name: repoName }),
+				feedback: 'success'
+			});
+		},
+		meta: { showErrorNotification: true }
+	});
 
 	function handleRemove() {
 		open = false;
@@ -94,9 +92,9 @@
 		}
 
 		// Clear database entries for this repository
-		// Note: clearSelectedMutation and clearLockedMutation will be auto-deleted via CASCADE
+		// Note: setSelectionAllMutation and clearLockedMutation will be auto-deleted via CASCADE
 		// but we call them explicitly to be defensive
-		clearSelectedMutation.mutate({ repoId });
+		setSelectionAllMutation.mutate({ repoId, isSelected: false, deletionStatus: 'all' });
 		clearLockedMutation.mutate({ repoId });
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}

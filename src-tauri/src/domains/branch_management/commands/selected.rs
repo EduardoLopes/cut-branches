@@ -4,7 +4,94 @@ use tauri::State;
 use crate::db::DatabaseState;
 use crate::shared::error::AppError;
 
-// Default (active branches) operations
+// Helper function for default true values
+fn default_true() -> bool {
+    true
+}
+
+// Unified selection commands
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateBranchSelectionBatchInput {
+    pub repo_id: String,
+    pub branch_names: Vec<String>,
+    pub is_selected: bool,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateBranchSelectionBatchOutput {}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SetBranchSelectionAllInput {
+    pub repo_id: String,
+    pub is_selected: bool,
+    pub deletion_status: super::super::filters::DeletionStatusFilter,
+    #[serde(default = "default_true")]
+    pub exclude_locked: bool,
+    #[serde(default = "default_true")]
+    pub exclude_current: bool,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct SetBranchSelectionAllOutput {}
+
+/// Updates selection status for specific branches.
+///
+/// # Arguments
+///
+/// * `db` - Database state
+/// * `input` - Input parameters containing repository ID, branch names, and selection status
+///
+/// # Returns
+///
+/// * `Result<UpdateBranchSelectionBatchOutput, AppError>` - Success or an error
+#[tauri::command]
+#[specta::specta]
+pub fn update_branch_selection_batch(
+    db: State<'_, DatabaseState>,
+    input: UpdateBranchSelectionBatchInput,
+) -> Result<UpdateBranchSelectionBatchOutput, AppError> {
+    super::super::services::selected_branches::update_branch_selection_batch(
+        &db,
+        &input.repo_id,
+        input.branch_names,
+        input.is_selected,
+    )?;
+    Ok(UpdateBranchSelectionBatchOutput {})
+}
+
+/// Sets all branches to selected/unselected based on deletion status filter.
+///
+/// # Arguments
+///
+/// * `db` - Database state
+/// * `input` - Input parameters containing repository ID, selection status, deletion status filter, and exclusion flags
+///
+/// # Returns
+///
+/// * `Result<SetBranchSelectionAllOutput, AppError>` - Success or an error
+#[tauri::command]
+#[specta::specta]
+pub fn set_branch_selection_all(
+    db: State<'_, DatabaseState>,
+    input: SetBranchSelectionAllInput,
+) -> Result<SetBranchSelectionAllOutput, AppError> {
+    super::super::services::selected_branches::set_branch_selection_all(
+        &db,
+        &input.repo_id,
+        input.is_selected,
+        input.deletion_status,
+        input.exclude_locked,
+        input.exclude_current,
+    )?;
+    Ok(SetBranchSelectionAllOutput {})
+}
+
+// Query commands for getting selected branches
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -17,38 +104,6 @@ pub struct ListBranchSelectionInput {
 pub struct ListBranchSelectionOutput {
     pub branches: Vec<String>,
 }
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchCreateBranchSelectionInput {
-    pub repo_id: String,
-    pub branch_names: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchCreateBranchSelectionOutput {}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchDeleteBranchSelectionInput {
-    pub repo_id: String,
-    pub branch_names: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchDeleteBranchSelectionOutput {}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteAllBranchSelectionInput {
-    pub repo_id: String,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteAllBranchSelectionOutput {}
 
 /// Lists all selected branches for a repository (active branches only).
 ///
@@ -71,76 +126,6 @@ pub fn list_branch_selection(
     Ok(ListBranchSelectionOutput { branches })
 }
 
-/// Creates multiple selected branches for a repository (active branches).
-///
-/// # Arguments
-///
-/// * `db` - Database state
-/// * `input` - Input parameters containing repository ID and branch names
-///
-/// # Returns
-///
-/// * `Result<BatchCreateBranchSelectionOutput, AppError>` - Success or an error
-#[tauri::command]
-#[specta::specta]
-pub fn batch_create_branch_selection(
-    db: State<'_, DatabaseState>,
-    input: BatchCreateBranchSelectionInput,
-) -> Result<BatchCreateBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::add_branch_selection_batch(
-        &db,
-        &input.repo_id,
-        input.branch_names,
-    )?;
-    Ok(BatchCreateBranchSelectionOutput {})
-}
-
-/// Deletes multiple selected branches for a repository (active branches).
-///
-/// # Arguments
-///
-/// * `db` - Database state
-/// * `input` - Input parameters containing repository ID and branch names
-///
-/// # Returns
-///
-/// * `Result<BatchDeleteBranchSelectionOutput, AppError>` - Success or an error
-#[tauri::command]
-#[specta::specta]
-pub fn batch_delete_branch_selection(
-    db: State<'_, DatabaseState>,
-    input: BatchDeleteBranchSelectionInput,
-) -> Result<BatchDeleteBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::remove_branch_selection_batch(
-        &db,
-        &input.repo_id,
-        input.branch_names,
-    )?;
-    Ok(BatchDeleteBranchSelectionOutput {})
-}
-
-/// Deletes all selected branches for a repository (active branches).
-///
-/// # Arguments
-///
-/// * `db` - Database state
-/// * `input` - Input parameters containing repository ID
-///
-/// # Returns
-///
-/// * `Result<DeleteAllBranchSelectionOutput, AppError>` - Success or an error
-#[tauri::command]
-#[specta::specta]
-pub fn delete_all_branch_selection(
-    db: State<'_, DatabaseState>,
-    input: DeleteAllBranchSelectionInput,
-) -> Result<DeleteAllBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::clear_branch_selection(&db, &input.repo_id)?;
-    Ok(DeleteAllBranchSelectionOutput {})
-}
-
-// Deleted branches (restoration) operations
-
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct ListDeletedBranchSelectionInput {
@@ -152,38 +137,6 @@ pub struct ListDeletedBranchSelectionInput {
 pub struct ListDeletedBranchSelectionOutput {
     pub branches: Vec<String>,
 }
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchCreateDeletedBranchSelectionInput {
-    pub repo_id: String,
-    pub branch_names: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchCreateDeletedBranchSelectionOutput {}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchDeleteDeletedBranchSelectionInput {
-    pub repo_id: String,
-    pub branch_names: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct BatchDeleteDeletedBranchSelectionOutput {}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteAllDeletedBranchSelectionInput {
-    pub repo_id: String,
-}
-
-#[derive(Serialize, Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct DeleteAllDeletedBranchSelectionOutput {}
 
 /// Lists all selected deleted branches for a repository.
 ///
@@ -206,72 +159,4 @@ pub fn list_deleted_branch_selection(
         &input.repo_id,
     )?;
     Ok(ListDeletedBranchSelectionOutput { branches })
-}
-
-/// Creates multiple selected deleted branches for a repository.
-///
-/// # Arguments
-///
-/// * `db` - Database state
-/// * `input` - Input parameters containing repository ID and branch names
-///
-/// # Returns
-///
-/// * `Result<BatchCreateDeletedBranchSelectionOutput, AppError>` - Success or an error
-#[tauri::command]
-#[specta::specta]
-pub fn batch_create_deleted_branch_selection(
-    db: State<'_, DatabaseState>,
-    input: BatchCreateDeletedBranchSelectionInput,
-) -> Result<BatchCreateDeletedBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::add_deleted_branch_selection_batch(
-        &db,
-        &input.repo_id,
-        input.branch_names,
-    )?;
-    Ok(BatchCreateDeletedBranchSelectionOutput {})
-}
-
-/// Deletes multiple selected deleted branches for a repository.
-///
-/// # Arguments
-///
-/// * `db` - Database state
-/// * `input` - Input parameters containing repository ID and branch names
-///
-/// # Returns
-///
-/// * `Result<BatchDeleteDeletedBranchSelectionOutput, AppError>` - Success or an error
-#[tauri::command]
-#[specta::specta]
-pub fn batch_delete_deleted_branch_selection(
-    db: State<'_, DatabaseState>,
-    input: BatchDeleteDeletedBranchSelectionInput,
-) -> Result<BatchDeleteDeletedBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::remove_deleted_branch_selection_batch(
-        &db,
-        &input.repo_id,
-        input.branch_names,
-    )?;
-    Ok(BatchDeleteDeletedBranchSelectionOutput {})
-}
-
-/// Deletes all selected deleted branches for a repository.
-///
-/// # Arguments
-///
-/// * `db` - Database state
-/// * `input` - Input parameters containing repository ID
-///
-/// # Returns
-///
-/// * `Result<DeleteAllDeletedBranchSelectionOutput, AppError>` - Success or an error
-#[tauri::command]
-#[specta::specta]
-pub fn delete_all_deleted_branch_selection(
-    db: State<'_, DatabaseState>,
-    input: DeleteAllDeletedBranchSelectionInput,
-) -> Result<DeleteAllDeletedBranchSelectionOutput, AppError> {
-    super::super::services::selected_branches::clear_deleted_branch_selection(&db, &input.repo_id)?;
-    Ok(DeleteAllDeletedBranchSelectionOutput {})
 }

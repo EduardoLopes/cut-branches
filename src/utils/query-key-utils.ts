@@ -47,16 +47,12 @@ export function extractResource(commandName: CommandName): string {
  * Values can be a single string or an array of strings for multi-resource invalidation
  */
 const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
-	updateCurrentBranch: ['getRepository'],
-	createBranchRestoration: ['getRepository'],
-	batchCreateBranchRestorations: ['getRepository'],
-	batchDeleteBranches: ['getRepository'],
-	deleteAllBranchSelection: ['listBranches'],
-	deleteAllDeletedBranchSelection: ['listBranches'],
-	batchCreateBranchSelection: ['listBranches'],
-	batchDeleteBranchSelection: ['listBranches'],
-	batchCreateDeletedBranchSelection: ['listBranches'],
-	batchDeleteDeletedBranchSelection: ['listBranches']
+	updateCurrentBranch: ['getRepository', 'getBranchList'],
+	createBranchRestoration: ['getRepository', 'getBranchList'],
+	batchCreateBranchRestorations: ['getRepository', 'getBranchList'],
+	batchDeleteBranches: ['getRepository', 'getBranchList'],
+	updateBranchSelectionBatch: ['getBranchList'],
+	setBranchSelectionAll: ['getBranchList']
 };
 
 /**

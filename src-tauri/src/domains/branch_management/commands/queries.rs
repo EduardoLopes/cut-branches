@@ -20,7 +20,7 @@ pub struct GetCommitReachabilityOutput {
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct ListBranchesInput {
+pub struct GetBranchListInput {
     pub repo_id: String,
     #[serde(default)]
     pub filters: crate::domains::branch_management::filters::BranchFilters,
@@ -28,7 +28,7 @@ pub struct ListBranchesInput {
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct ListBranchesOutput {
+pub struct GetBranchListOutput {
     pub branches: Vec<crate::domains::branch_management::git::branch::Branch>,
 }
 
@@ -65,7 +65,7 @@ pub async fn get_commit_reachability(
     Ok(GetCommitReachabilityOutput { is_reachable })
 }
 
-/// Lists branches from the database for a repository with optional filtering.
+/// Gets branches from the database for a repository with optional filtering.
 ///
 /// # Arguments
 ///
@@ -74,13 +74,13 @@ pub async fn get_commit_reachability(
 ///
 /// # Returns
 ///
-/// * `Result<ListBranchesOutput, AppError>` - The list of branches or an error
+/// * `Result<GetBranchListOutput, AppError>` - The list of branches or an error
 #[tauri::command]
 #[specta::specta]
-pub fn list_branches(
+pub fn get_branch_list(
     db: State<DatabaseState>,
-    input: ListBranchesInput,
-) -> Result<ListBranchesOutput, AppError> {
+    input: GetBranchListInput,
+) -> Result<GetBranchListOutput, AppError> {
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
             "Failed to get database connection".to_string(),
@@ -108,7 +108,7 @@ pub fn list_branches(
         .map(crate::domains::branch_management::git::branch::Branch::from)
         .collect();
 
-    Ok(ListBranchesOutput { branches })
+    Ok(GetBranchListOutput { branches })
 }
 
 /// Gets the merge status of a branch in a git repository.

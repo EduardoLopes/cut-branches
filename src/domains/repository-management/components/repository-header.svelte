@@ -35,13 +35,13 @@
 		showRemoveButton = true
 	}: Props = $props();
 
-	const getRepositoryListQuery = $derived(createGetRepositoryListQuery());
+	const getRepositoryListQuery = createGetRepositoryListQuery();
 
 	const repositoryPath = $derived(
 		getRepositoryListQuery.data?.find((repository) => repository.id === repositoryId)?.path
 	);
 
-	const getRepositoryQuery = $derived(createGetRepositoryQuery(() => repositoryPath));
+	const getRepositoryQuery = createGetRepositoryQuery(() => repositoryPath);
 
 	function navigateToRestore() {
 		if (repositoryId) {

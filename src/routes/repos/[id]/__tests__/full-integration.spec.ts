@@ -4,7 +4,6 @@ import { vi, beforeEach, describe, it, expect } from 'vitest';
 import RepositoryPageFixture from './fixtures/repository-page-fixture.svelte';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
-import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
 
 // Properly mock @tanstack/svelte-query
 vi.mock('@tanstack/svelte-query', () => {
@@ -67,105 +66,93 @@ vi.mock('@tanstack/svelte-query', () => {
 	};
 });
 
-// Mock the repository query
-vi.mock(
-	'$domains/repository-management/logic/application/queries/create-get-repository-query',
-	() => {
-		return {
-			createGetRepositoryQuery: vi.fn(() => ({
-				data: {
-					id: 'test-repo-id',
-					name: 'test-repo',
-					path: '/path/to/test-repo',
-					branches: [
-						{
-							name: 'main',
-							current: true,
-							lastCommit: {
-								sha: 'abc123',
-								shortSha: 'abc123'.substring(0, 7),
-								date: new Date().toISOString(),
-								message: 'Initial commit',
-								author: 'Test User',
-								email: 'test@example.com'
-							},
-							fullyMerged: true
-						},
-						{
-							name: 'feature-branch',
-							current: false,
-							lastCommit: {
-								sha: 'def456',
-								shortSha: 'def456'.substring(0, 7),
-								date: new Date().toISOString(),
-								message: 'Add feature',
-								author: 'Test User',
-								email: 'test@example.com'
-							},
-							fullyMerged: false
-						},
-						{
-							name: 'bugfix-branch',
-							current: false,
-							lastCommit: {
-								sha: 'ghi789',
-								shortSha: 'ghi789'.substring(0, 7),
-								date: new Date().toISOString(),
-								message: 'Fix bug',
-								author: 'Test User',
-								email: 'test@example.com'
-							},
-							fullyMerged: false
-						}
-					],
-					currentBranch: 'main',
-					branchesCount: 3
-				},
-				isLoading: false,
-				isError: false,
-				refetch: vi.fn().mockResolvedValue({
-					data: {
-						id: 'test-repo-id',
-						name: 'test-repo',
-						path: '/path/to/test-repo',
-						branches: [
-							{
-								name: 'main',
-								current: true,
-								lastCommit: {
-									sha: 'abc123',
-									shortSha: 'abc123'.substring(0, 7),
-									date: new Date().toISOString(),
-									message: 'Initial commit',
-									author: 'Test User',
-									email: 'test@example.com'
-								},
-								fullyMerged: true
-							},
-							{
-								name: 'feature-branch',
-								current: false,
-								lastCommit: {
-									sha: 'def456',
-									shortSha: 'def456'.substring(0, 7),
-									date: new Date().toISOString(),
-									message: 'Add feature',
-									author: 'Test User',
-									email: 'test@example.com'
-								},
-								fullyMerged: false
-							}
-						],
-						currentBranch: 'main',
-						branchesCount: 2
-					}
-				}),
-				error: null,
-				dataUpdatedAt: Date.now()
-			}))
-		};
+// Mock branch list data
+const mockBranches = [
+	{
+		name: 'main',
+		current: true,
+		isLocked: false,
+		isSelected: false,
+		lastCommit: {
+			sha: 'abc123',
+			shortSha: 'abc123'.substring(0, 7),
+			date: new Date().toISOString(),
+			message: 'Initial commit',
+			author: 'Test User',
+			email: 'test@example.com'
+		},
+		fullyMerged: true
+	},
+	{
+		name: 'feature-branch',
+		current: false,
+		isLocked: false,
+		isSelected: false,
+		lastCommit: {
+			sha: 'def456',
+			shortSha: 'def456'.substring(0, 7),
+			date: new Date().toISOString(),
+			message: 'Add feature',
+			author: 'Test User',
+			email: 'test@example.com'
+		},
+		fullyMerged: false
+	},
+	{
+		name: 'bugfix-branch',
+		current: false,
+		isLocked: false,
+		isSelected: false,
+		lastCommit: {
+			sha: 'ghi789',
+			shortSha: 'ghi789'.substring(0, 7),
+			date: new Date().toISOString(),
+			message: 'Fix bug',
+			author: 'Test User',
+			email: 'test@example.com'
+		},
+		fullyMerged: false
 	}
-);
+];
+
+// Mock the repository list query
+vi.mock('$domains/onboarding/logic/application/queries/create-get-repository-list-query', () => ({
+	createGetRepositoryListQuery: () => ({
+		data: [
+			{
+				id: 'test-repo-id',
+				name: 'test-repo',
+				path: '/path/to/test-repo',
+				currentBranch: 'main',
+				branchesCount: 3
+			}
+		],
+		isLoading: false,
+		isError: false
+	})
+}));
+
+// Mock the branch list query
+vi.mock('$domains/repository-management/logic/application/queries/get-branch-list-query', () => ({
+	getBranchListQuery: () => ({
+		data: { branches: mockBranches },
+		isLoading: false,
+		isError: false,
+		error: null,
+		dataUpdatedAt: Date.now(),
+		refetch: vi.fn().mockResolvedValue({ data: { branches: mockBranches } })
+	})
+}));
+
+// Mock the get branches query used by branch-list component
+vi.mock('$domains/branch-management/logic/application/queries/create-get-branches-query', () => ({
+	createGetBranchesQuery: () => ({
+		data: { branches: mockBranches },
+		isLoading: false,
+		isError: false,
+		error: null
+	})
+}));
 
 // Mock the Tauri API
 vi.mock('@tauri-apps/api/core', () => ({
@@ -211,62 +198,51 @@ vi.mock('@tauri-apps/api/core', () => ({
 	})
 }));
 
-// Mock branch deletion and switch mutation services
-vi.mock('$domains/branch-management/services/createDeleteBranchesMutation', () => {
-	return {
-		createDeleteBranchesMutation: vi.fn(({ onSuccess }) => {
-			return {
-				mutate: vi.fn((_args) => {
-					// Call the onSuccess handler with the expected format
-					setTimeout(() => {
-						// Update the repository store directly to match refetch mock data
-						const repo = getRepositoryStore('test-repo-id');
-						if (repo) {
-							repo.set({
-								id: 'test-repo-id',
-								name: 'test-repo',
-								path: '/path/to/test-repo',
-								branches: [
-									{
-										name: 'main',
-										current: true,
-										lastCommit: {
-											sha: 'abc123',
-											shortSha: 'abc123'.substring(0, 7),
-											date: new Date().toISOString(),
-											message: 'Initial commit',
-											author: 'Test User',
-											email: 'test@example.com'
-										},
-										fullyMerged: true
-									},
-									{
-										name: 'bugfix-branch',
-										current: false,
-										lastCommit: {
-											sha: 'ghi789',
-											shortSha: 'ghi789'.substring(0, 7),
-											date: new Date().toISOString(),
-											message: 'Fix bug',
-											author: 'Test User',
-											email: 'test@example.com'
-										},
-										fullyMerged: false
-									}
-								],
-								currentBranch: 'main',
-								branchesCount: 2
-							});
-						}
-						onSuccess(['feature-branch (was def456)']);
-					}, 0);
-					return Promise.resolve();
-				}),
-				isPending: false
-			};
-		})
-	};
-});
+// Mock branch deletion mutation
+vi.mock('$domains/branch-management/services/createDeleteBranchesMutation', () => ({
+	createDeleteBranchesMutation: vi.fn(({ onSuccess }) => ({
+		mutate: vi.fn((_args) => {
+			setTimeout(() => {
+				if (onSuccess) {
+					onSuccess(['feature-branch (was def456)']);
+				}
+			}, 0);
+			return Promise.resolve();
+		}),
+		isPending: false
+	}))
+}));
+
+// Mock branch selection mutations
+vi.mock('$domains/branch-management/services/createSelectedBranchesMutations', () => ({
+	createUpdateBranchSelectionBatchMutation: () => ({
+		mutate: vi.fn(({ branchNames, isSelected }) => {
+			const store = getSelectedBranchesStore('test-repo-id');
+			if (isSelected) {
+				store?.add(branchNames);
+			} else {
+				for (const name of branchNames) {
+					store?.delete([name]);
+				}
+			}
+		}),
+		isPending: false
+	}),
+	createSetBranchSelectionAllMutation: () => ({
+		mutate: vi.fn(),
+		isPending: false
+	})
+}));
+
+// Mock branch merge status query
+vi.mock('$domains/branch-management/services/createBranchMergeStatusQuery', () => ({
+	createBranchMergeStatusQuery: () => ({
+		data: undefined,
+		isLoading: false,
+		isError: false,
+		error: null
+	})
+}));
 
 vi.mock('$domains/branch-management/services/createSwitchBranchMutation', () => {
 	return {
@@ -306,6 +282,16 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 			console.log('Mock push called with:', notification);
 		})
 	}
+}));
+
+// Mock $app/state
+vi.mock('$app/state', () => ({
+	page: {
+		url: {
+			pathname: '/repos/test-repo-id'
+		}
+	},
+	navigating: null
 }));
 
 describe('Repository Page Integration Test', () => {
@@ -456,7 +442,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('switches the current branch', async () => {
 		// Render the fixture
-		render(RepositoryPageFixture, {
+		const { getAllByTestId } = render(RepositoryPageFixture, {
 			props: {
 				id: 'test-repo-id'
 			}
@@ -465,23 +451,17 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Find all switch buttons and click one
-		const branchNameElements = screen.getAllByTestId('branch-name');
-		const featureBranchNameElement = branchNameElements.find(
-			(el) => el.textContent?.trim() === 'feature-branch'
-		);
-		if (!featureBranchNameElement)
-			throw new Error('Branch name element for feature-branch not found');
+		// Wait for branches to render
+		await waitFor(() => {
+			const switchButtons = getAllByTestId('switch-button');
+			expect(switchButtons.length).toBeGreaterThan(0);
+		});
 
-		const featureBranchListItem = featureBranchNameElement.closest('[role="listitem"]');
-		if (!featureBranchListItem) throw new Error('List item for feature-branch not found');
+		// Find all switch buttons and click the first one (should be for feature-branch)
+		const switchButtons = getAllByTestId('switch-button');
+		expect(switchButtons.length).toBeGreaterThan(0);
 
-		const featureBranchSwitchButton = within(featureBranchListItem as HTMLElement).getByTestId(
-			'switch-button'
-		);
-		if (!featureBranchSwitchButton) throw new Error('Switch button for feature-branch not found'); // Should not happen if structure is as expected
-
-		await fireEvent.click(featureBranchSwitchButton);
+		await fireEvent.click(switchButtons[0]);
 
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
@@ -489,6 +469,6 @@ describe('Repository Page Integration Test', () => {
 		// The switch functionality works via mutations
 		// The notification would be shown via the mutation's onSuccess callback
 		// For now, we just verify the switch flow completes without errors
-		expect(featureBranchSwitchButton).toBeInTheDocument();
+		expect(switchButtons[0]).toBeInTheDocument();
 	});
 });

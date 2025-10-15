@@ -1,8 +1,6 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
-import { getLockedBranchesStore } from '../../store/locked-branches.svelte';
 import { getSearchBranchesStore } from '../../store/search-branches.svelte';
-import { getSelectedBranchesStore } from '../../store/selected-branches.svelte';
 import BranchesBulkActions from '../branches-bulk-actions.svelte';
 import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
 import type { Repository } from '$services/common';
@@ -85,58 +83,15 @@ vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
 
 // Mock the mutations to actually update the stores
 vi.mock('../../services/createSelectedBranchesMutations', () => ({
-	createAddSelectedBranchesMutation: () => ({
+	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
-		mutateAsync: vi.fn(async ({ branchNames }) => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.add(branchNames);
-			return { status: 'ok' };
-		}),
+		mutateAsync: vi.fn(),
 		isPending: false
 	}),
-	createClearSelectedBranchesMutation: () => ({
-		mutate: vi.fn(() => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-		}),
-		mutateAsync: vi.fn(async () => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-			return { status: 'ok' };
-		}),
+	createSetBranchSelectionAllMutation: () => ({
+		mutate: vi.fn(),
+		mutateAsync: vi.fn(),
 		isPending: false
-	})
-}));
-
-// Mock the selected branches query to return data from the store dynamically
-vi.mock('../../services/createSelectedBranchesQuery', () => ({
-	createSelectedBranchesQuery: () => ({
-		get data() {
-			const store = getSelectedBranchesStore('test-repo');
-			return { branches: Array.from(store?.state || []) };
-		},
-		isLoading: false,
-		isError: false
-	}),
-	createDeletedSelectedBranchesQuery: () => ({
-		get data() {
-			const store = getSelectedBranchesStore('test-repo');
-			return { branches: Array.from(store?.state || []) };
-		},
-		isLoading: false,
-		isError: false
-	})
-}));
-
-// Mock the locked branches query to return data from the store dynamically
-vi.mock('../../services/createLockedBranchesQuery', () => ({
-	createLockedBranchesQuery: () => ({
-		get data() {
-			const store = getLockedBranchesStore('test-repo');
-			return { branches: Array.from(store?.state || []) };
-		},
-		isLoading: false,
-		isError: false
 	})
 }));
 

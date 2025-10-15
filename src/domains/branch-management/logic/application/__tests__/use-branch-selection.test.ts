@@ -80,25 +80,54 @@ vi.mock('../../../services/createSelectedBranchesQuery', () => ({
 
 // Mock the mutations to actually update the stores
 vi.mock('../../../services/createSelectedBranchesMutations', () => ({
-	createAddSelectedBranchesMutation: () => ({
+	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
-		mutateAsync: vi.fn(async ({ branchNames }) => {
+		mutateAsync: vi.fn(async ({ branchNames, isSelected }) => {
 			const store = getSelectedBranchesStore('test-repo');
-			store?.add(branchNames);
+			if (isSelected) {
+				store?.add(branchNames);
+			} else {
+				for (const name of branchNames) {
+					store?.delete([name]);
+				}
+			}
 			return { status: 'ok' };
 		}),
 		isPending: false
 	}),
-	createClearSelectedBranchesMutation: () => ({
-		mutate: vi.fn(() => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-		}),
-		mutateAsync: vi.fn(async () => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-			return { status: 'ok' };
-		}),
+	createSetBranchSelectionAllMutation: () => ({
+		mutate: vi.fn(),
+		mutateAsync: vi.fn(
+			async ({ isSelected, deletionStatus, excludeCurrent = true, excludeLocked = true }) => {
+				const store = getSelectedBranchesStore('test-repo');
+
+				if (!isSelected) {
+					// Deselect all
+					store?.clear();
+				} else {
+					// Select all branches matching the criteria
+					if (!currentRepository) return { status: 'ok' };
+
+					const branchesToSelect = currentRepository.branches
+						.filter((b) => {
+							// Filter by deletion status
+							if (deletionStatus === 'deleted' && !b.deletedAt) return false;
+							if (deletionStatus === 'active' && b.deletedAt) return false;
+
+							// Filter by current and locked status
+							if (excludeCurrent && b.current) return false;
+							if (excludeLocked && b.isLocked) return false;
+
+							return true;
+						})
+						.map((b) => b.name);
+
+					store?.add(branchesToSelect);
+				}
+
+				return { status: 'ok' };
+			}
+		),
 		isPending: false
 	}),
 	createAddDeletedSelectedBranchesMutation: () => ({

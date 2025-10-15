@@ -6,12 +6,9 @@
 	import { type Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { SvelteSet } from 'svelte/reactivity';
+	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
 	import BranchSelection from '$domains/branch-management/components/branch-selection.svelte';
 	import DeleteBranchModal from '$domains/branch-management/components/delete-branch-modal.svelte';
-	import {
-		createSelectedBranchesQuery,
-		createDeletedSelectedBranchesQuery
-	} from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import type { Repository } from '$services/common';
 	import { createToggle } from '$utils/svelte-runes-utils';
@@ -37,13 +34,15 @@
 
 	const search = $derived(getSearchBranchesStore(currentRepo?.name));
 
-	const queryInput = $derived({ repoId: currentRepo?.id ?? '' });
-
 	// Use queries for database-backed data
 	const selectedQuery = $derived(
-		branchContext === 'current'
-			? createSelectedBranchesQuery(() => queryInput)
-			: createDeletedSelectedBranchesQuery(() => queryInput)
+		createGetBranchesQuery(() => ({
+			repoId: currentRepo?.id ?? '',
+			filters: {
+				selectionStatus: 'selected' as const,
+				deletionStatus: branchContext === 'current' ? ('active' as const) : ('deleted' as const)
+			}
+		}))
 	);
 
 	const searchToggle = createToggle(false);
@@ -139,11 +138,14 @@
 
 		{#if currentRepo}
 			{#if actionsSnippet}
-				{@render actionsSnippet(currentRepo, new SvelteSet(selectedQuery.data?.branches ?? []))}
+				{@render actionsSnippet(
+					currentRepo,
+					new SvelteSet(selectedQuery.data?.branches.map((branch) => branch.name) ?? [])
+				)}
 			{:else}
 				{@render defaultActionsSnippet(
 					currentRepo,
-					new SvelteSet(selectedQuery.data?.branches ?? [])
+					new SvelteSet(selectedQuery.data?.branches.map((branch) => branch.name) ?? [])
 				)}
 			{/if}
 		{/if}

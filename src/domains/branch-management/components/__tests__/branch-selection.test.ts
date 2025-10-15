@@ -77,46 +77,14 @@ vi.mock('../../services/createSelectedBranchesQuery', () => ({
 
 // Mock the mutations to actually update the stores
 vi.mock('../../services/createSelectedBranchesMutations', () => ({
-	createAddSelectedBranchesMutation: () => ({
+	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
-		mutateAsync: vi.fn(async ({ branchNames }) => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.add(branchNames);
-			return { status: 'ok' };
-		}),
+		mutateAsync: vi.fn(),
 		isPending: false
 	}),
-	createClearSelectedBranchesMutation: () => ({
-		mutate: vi.fn(() => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-		}),
-		mutateAsync: vi.fn(async () => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-			return { status: 'ok' };
-		}),
-		isPending: false
-	}),
-	createAddDeletedSelectedBranchesMutation: () => ({
+	createSetBranchSelectionAllMutation: () => ({
 		mutate: vi.fn(),
-		mutateAsync: vi.fn(async ({ branchNames }) => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.add(branchNames);
-			return { status: 'ok' };
-		}),
-		isPending: false
-	}),
-	createClearDeletedSelectedBranchesMutation: () => ({
-		mutate: vi.fn(() => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-		}),
-		mutateAsync: vi.fn(async () => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-			return { status: 'ok' };
-		}),
+		mutateAsync: vi.fn(),
 		isPending: false
 	})
 }));

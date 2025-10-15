@@ -53,7 +53,7 @@ export function createTauriMutation<TCommand extends CommandName>(
 	// Use resource-based mutation key (e.g., 'selected-branches' instead of 'batchDeleteSelectedBranches')
 	const resource = getResource(commandName);
 	const resourceKey = Array.isArray(resource) ? resource[0] : resource;
-	const finalMutationKey = mutationKey ?? [resourceKey];
+	const finalMutationKey = mutationKey ?? [resourceKey, commandName];
 
 	// For multi-resource commands, store all resources in meta for invalidation
 	const allResources = Array.isArray(resource) ? resource : [resource];

@@ -7,8 +7,6 @@
 	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/services/createDeleteBranchesMutation';
-	import { createClearSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { Branch } from '$lib/bindings';
@@ -25,56 +23,42 @@
 
 	let { id, buttonProps }: Props = $props();
 
-	const selectedQueryInput = $derived({ repoId: id ?? '', branchContext: 'current' });
-
-	const getRepositoryQuery = $derived(createGetRepositoryListQuery());
+	const getRepositoryQuery = createGetRepositoryListQuery();
 
 	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === id));
-	const selectedQuery = $derived(createSelectedBranchesQuery(() => selectedQueryInput));
-	const getBranchesQuery = $derived(
-		createGetBranchesQuery(() => ({
-			repoId: id ?? '',
-			filters: { deletionStatus: 'active' }
-		}))
-	);
-	// No need for manual invalidation - automatic invalidation handles it
-	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());
+	const getBranchesQuery = createGetBranchesQuery(() => ({
+		repoId: id ?? '',
+		filters: { deletionStatus: 'active', selectionStatus: 'selected' }
+	}));
 
-	const selectedCount = $derived(selectedQuery.data?.branches.length);
+	const selectedCount = $derived(getBranchesQuery.data?.branches.length);
 
-	const deleteMutation = $derived(
-		createDeleteBranchesMutation({
-			// Await repository query invalidation to ensure UI is updated before closing modal
-			queryInvalidation: {
-				awaitInvalidates: [['repository']]
-			},
-			onSuccess(data) {
-				const m = data.deletedBranches
-					.map((item) => {
-						return formatString('- **{name}** (was {sha})', {
-							name: ensureString(item.branch.name).trim(),
-							sha: ensureString(item.branch.lastCommit.shortSha).trim()
-						});
-					})
-					.join('\n\n');
+	const deleteMutation = createDeleteBranchesMutation({
+		// Await repository query invalidation to ensure UI is updated before closing modal
+		queryInvalidation: {
+			awaitInvalidates: [['repository', 'branche']]
+		},
+		onSuccess(data) {
+			const m = data.deletedBranches
+				.map((item) => {
+					return formatString('- **{name}** (was {sha})', {
+						name: ensureString(item.branch.name).trim(),
+						sha: ensureString(item.branch.lastCommit.shortSha).trim()
+					});
+				})
+				.join('\n\n');
 
-				notifications.push({
-					feedback: 'success',
-					title: formatString('{type} deleted from {repo} repository', {
-						type: data.deletedBranches.length > 1 ? 'Branches' : 'Branch',
-						repo: ensureString(repository?.name)
-					}),
-					message: m
-				});
-
-				// Clear selected branches in database - invalidation happens automatically
-				if (id) {
-					clearSelectedMutation.mutate({ repoId: id });
-				}
-			},
-			meta: { showErrorNotification: true }
-		})
-	);
+			notifications.push({
+				feedback: 'success',
+				title: formatString('{type} deleted from {repo} repository', {
+					type: data.deletedBranches.length > 1 ? 'Branches' : 'Branch',
+					repo: ensureString(repository?.name)
+				}),
+				message: m
+			});
+		},
+		meta: { showErrorNotification: true }
+	});
 
 	// current branch first
 	function sort(a: Branch, b: Branch) {
@@ -88,11 +72,7 @@
 		return 0;
 	}
 
-	let branches = $derived(
-		[...(getBranchesQuery.data?.branches ?? [])]
-			.sort(sort)
-			.filter((item) => selectedQuery.data?.branches.includes(item.name))
-	);
+	let branches = $derived([...(getBranchesQuery.data?.branches ?? [])].sort(sort));
 
 	function handleDelete() {
 		if (repository?.path && id) {

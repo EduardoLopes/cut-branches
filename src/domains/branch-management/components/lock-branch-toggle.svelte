@@ -6,7 +6,7 @@
 		createRemoveLockedBranchesMutation
 	} from '$domains/branch-management/services/createLockedBranchesMutations';
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
-	import { createRemoveSelectedBranchesMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
@@ -22,15 +22,15 @@
 	const lockedQueryInput = $derived({ repoId: repositoryID ?? '' });
 
 	// Query for locked branches
-	const lockedQuery = $derived(createLockedBranchesQuery(lockedQueryInput));
+	const lockedQuery = createLockedBranchesQuery(() => lockedQueryInput);
 
 	// Mutations for locked branches - no need for manual invalidation
-	const addLockedMutation = $derived(createAddLockedBranchesMutation());
+	const addLockedMutation = createAddLockedBranchesMutation();
 
-	const removeLockedMutation = $derived(createRemoveLockedBranchesMutation());
+	const removeLockedMutation = createRemoveLockedBranchesMutation();
 
 	// Mutations for selected branches (to remove when locking) - no need for manual invalidation
-	const removeSelectedMutation = $derived(createRemoveSelectedBranchesMutation());
+	const updateSelectionMutation = createUpdateBranchSelectionBatchMutation();
 
 	// Computed state
 	const isLocked = $derived(lockedQuery.data && lockedQuery.data.branches.includes(branch));
@@ -43,9 +43,10 @@
 			removeLockedMutation.mutate({ repoId: lockedQueryInput.repoId, branchNames: [branch] });
 		} else {
 			addLockedMutation.mutate({ repoId: lockedQueryInput.repoId, branchNames: [branch] });
-			removeSelectedMutation.mutate({
+			updateSelectionMutation.mutate({
 				repoId: lockedQueryInput.repoId,
-				branchNames: [branch]
+				branchNames: [branch],
+				isSelected: false
 			});
 		}
 	}

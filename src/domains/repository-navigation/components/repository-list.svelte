@@ -8,7 +8,7 @@
 	import { css } from '@pindoba/panda/css';
 
 	// Query for repositories list from database
-	const repositoriesQuery = $derived(createGetRepositoryListQuery());
+	const repositoriesQuery = createGetRepositoryListQuery();
 
 	// Track if repository is being added
 	let isAddingRepository = $state(false);

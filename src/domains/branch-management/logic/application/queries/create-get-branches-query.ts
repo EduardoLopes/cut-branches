@@ -1,11 +1,11 @@
-import type { BranchFilters, ListBranchesInput } from '$lib/bindings';
+import type { BranchFilters, GetBranchListInput } from '$lib/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 export function createGetBranchesQuery(
-	input: () => ListBranchesInput,
-	options?: TauriQueryOptions<'listBranches'>
+	input: () => GetBranchListInput,
+	options?: TauriQueryOptions<'getBranchList'>
 ) {
-	return createTauriQuery('listBranches', {
+	return createTauriQuery('getBranchList', {
 		input,
 		enabled: () => !!input().repoId,
 		...options

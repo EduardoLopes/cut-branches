@@ -13,10 +13,8 @@ pub use locked::{
     batch_create_locked_branches, batch_delete_locked_branches, delete_all_locked_branches,
     list_locked_branches,
 };
-pub use queries::{get_branch_merge_status, get_commit_reachability, list_branches};
+pub use queries::{get_branch_list, get_branch_merge_status, get_commit_reachability};
 pub use selected::{
-    batch_create_branch_selection, batch_create_deleted_branch_selection,
-    batch_delete_branch_selection, batch_delete_deleted_branch_selection,
-    delete_all_branch_selection, delete_all_deleted_branch_selection, list_branch_selection,
-    list_deleted_branch_selection,
+    list_branch_selection, list_deleted_branch_selection, set_branch_selection_all,
+    update_branch_selection_batch,
 };
