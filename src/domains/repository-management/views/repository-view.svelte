@@ -8,11 +8,7 @@
 	import RestoreDeletedBranchModal from '$domains/branch-management/components/restore-deleted-branch-modal.svelte';
 	import { createListBranchesQuery } from '$domains/branch-management/services/createListBranchesQuery';
 	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
-	import {
-		createSelectedBranchesQuery,
-		createDeletedSelectedBranchesQuery
-	} from '$domains/branch-management/services/createSelectedBranchesQuery';
-	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
+import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
 	import RepositoryHeader from '$domains/repository-management/components/repository-header.svelte';
@@ -55,11 +51,6 @@
 
 	// Use queries for database-backed data
 	const lockedQuery = $derived(createLockedBranchesQuery(queryInput));
-	const selectedQuery = $derived(
-		branchesType === 'current'
-			? createSelectedBranchesQuery(queryInput)
-			: createDeletedSelectedBranchesQuery(queryInput)
-	);
 
 	// Use different queries based on branchesType
 	const getBranchesQuery = $derived(createGetRepositoryQuery(() => path));
@@ -176,10 +167,6 @@
 	});
 
 	const hasNoBranchesToDelete = $derived(selectibleCount === 0 && isEmptyString(search?.state));
-
-	const selectedSearchLength = $derived(
-		branches?.filter((item: Branch) => selectedQuery.data?.branches.includes(item.name)).length ?? 0
-	);
 
 	// Get the current repository data from either query
 	const currentRepoData = $derived.by(() => {
@@ -349,15 +336,11 @@
 			{#if allowSelection}
 				<BulkActions
 					currentRepo={currentRepoData}
-					{selectibleCount}
-					{selectedSearchLength}
-					{branches}
 					onSearch={() => {
 						// Reset page on search
 					}}
 					onClearSearch={clearSearch}
 					actionsSnippet={branchesType === 'deleted' ? restoreDeletedBranchModalSnippet : undefined}
-					variant={branchesType === 'deleted' ? 'restore' : 'default'}
 					branchContext={branchesType === 'deleted' ? 'deleted' : 'current'}
 				/>
 			{/if}

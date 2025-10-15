@@ -30,9 +30,9 @@
 	const getRepositoryQuery = $derived(createGetRepositoryListQuery());
 
 	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === id));
-	const selectedQuery = $derived(createSelectedBranchesQuery(selectedQueryInput));
+	const selectedQuery = $derived(createSelectedBranchesQuery(() => selectedQueryInput));
 	const getBranchesQuery = $derived(
-		createGetBranchesQuery({ repoId: id ?? '', includeDeleted: false })
+		createGetBranchesQuery(() => ({ repoId: id ?? '', includeDeleted: false }))
 	);
 	// No need for manual invalidation - automatic invalidation handles it
 	const clearSelectedMutation = $derived(createClearSelectedBranchesMutation());

@@ -63,8 +63,8 @@
 	const lockedQuery = $derived(createLockedBranchesQuery(queryInput));
 	const selectedQuery = $derived(
 		branchContext === 'current'
-			? createSelectedBranchesQuery(queryInput)
-			: createDeletedSelectedBranchesQuery(queryInput)
+			? createSelectedBranchesQuery(() => queryInput)
+			: createDeletedSelectedBranchesQuery(() => queryInput)
 	);
 
 	// Mutations for selected branches

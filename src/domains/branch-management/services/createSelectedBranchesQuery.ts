@@ -11,12 +11,12 @@ import { createTauriQuery } from '$utils/create-tauri-query';
 // Active branches query
 
 export function createSelectedBranchesQuery(
-	input: ListBranchSelectionInput,
+	input: () => ListBranchSelectionInput,
 	options?: Omit<CreateQueryOptions<ListBranchSelectionOutput, AppError>, 'queryKey' | 'queryFn'>
 ) {
 	return createTauriQuery('listBranchSelection', {
 		input,
-		enabled: !!input.repoId,
+		enabled: () => !!input().repoId,
 		...options
 	});
 }
@@ -24,7 +24,7 @@ export function createSelectedBranchesQuery(
 // Deleted branches (restoration) query
 
 export function createDeletedSelectedBranchesQuery(
-	input: ListDeletedBranchSelectionInput,
+	input: () => ListDeletedBranchSelectionInput,
 	options?: Omit<
 		CreateQueryOptions<ListDeletedBranchSelectionOutput, AppError>,
 		'queryKey' | 'queryFn'
@@ -32,7 +32,7 @@ export function createDeletedSelectedBranchesQuery(
 ) {
 	return createTauriQuery('listDeletedBranchSelection', {
 		input,
-		enabled: !!input.repoId,
+		enabled: () => !!input().repoId,
 		...options
 	});
 }

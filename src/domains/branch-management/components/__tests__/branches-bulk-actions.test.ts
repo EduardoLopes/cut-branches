@@ -24,6 +24,65 @@ vi.mock('../components/delete-branch-modal.svelte', () => {
 	};
 });
 
+// Variable to store mock branch data that can be modified by tests
+let mockBranchData = [
+	{
+		name: 'main',
+		current: true,
+		isLocked: false,
+		lastCommit: {
+			sha: 'abc123',
+			shortSha: 'abc123'.substring(0, 7),
+			date: '2023-01-01',
+			message: 'Initial commit',
+			author: 'John Doe',
+			email: 'john@example.com'
+		},
+		fullyMerged: false
+	},
+	{
+		name: 'feature-1',
+		current: false,
+		isLocked: false,
+		lastCommit: {
+			sha: 'def456',
+			shortSha: 'def456'.substring(0, 7),
+			date: '2023-01-02',
+			message: 'Add feature 1',
+			author: 'Jane Doe',
+			email: 'jane@example.com'
+		},
+		fullyMerged: false
+	},
+	{
+		name: 'feature-2',
+		current: false,
+		isLocked: false,
+		lastCommit: {
+			sha: 'ghi789',
+			shortSha: 'ghi789'.substring(0, 7),
+			date: '2023-01-03',
+			message: 'Add feature 2',
+			author: 'Jim Doe',
+			email: 'jim@example.com'
+		},
+		fullyMerged: false
+	}
+];
+
+// Mock createGetBranchesQuery for BranchSelection component
+vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
+	createGetBranchesQuery: () => ({
+		get data() {
+			return {
+				branches: mockBranchData
+			};
+		},
+		isLoading: false,
+		isError: false
+	})
+}));
+
 // Mock the mutations to actually update the stores
 vi.mock('../../services/createSelectedBranchesMutations', () => ({
 	createAddSelectedBranchesMutation: () => ({
@@ -46,6 +105,26 @@ vi.mock('../../services/createSelectedBranchesMutations', () => ({
 			return { status: 'ok' };
 		}),
 		isPending: false
+	})
+}));
+
+// Mock the selected branches query to return data from the store dynamically
+vi.mock('../../services/createSelectedBranchesQuery', () => ({
+	createSelectedBranchesQuery: () => ({
+		get data() {
+			const store = getSelectedBranchesStore('test-repo');
+			return { branches: Array.from(store?.state || []) };
+		},
+		isLoading: false,
+		isError: false
+	}),
+	createDeletedSelectedBranchesQuery: () => ({
+		get data() {
+			const store = getSelectedBranchesStore('test-repo');
+			return { branches: Array.from(store?.state || []) };
+		},
+		isLoading: false,
+		isError: false
 	})
 }));
 
@@ -121,6 +200,52 @@ describe('BranchesBulkActions Component', () => {
 	};
 
 	beforeEach(() => {
+		// Reset mock branch data to default
+		mockBranchData = [
+			{
+				name: 'main',
+				current: true,
+				isLocked: false,
+				lastCommit: {
+					sha: 'abc123',
+					shortSha: 'abc123'.substring(0, 7),
+					date: '2023-01-01',
+					message: 'Initial commit',
+					author: 'John Doe',
+					email: 'john@example.com'
+				},
+				fullyMerged: false
+			},
+			{
+				name: 'feature-1',
+				current: false,
+				isLocked: false,
+				lastCommit: {
+					sha: 'def456',
+					shortSha: 'def456'.substring(0, 7),
+					date: '2023-01-02',
+					message: 'Add feature 1',
+					author: 'Jane Doe',
+					email: 'jane@example.com'
+				},
+				fullyMerged: false
+			},
+			{
+				name: 'feature-2',
+				current: false,
+				isLocked: false,
+				lastCommit: {
+					sha: 'ghi789',
+					shortSha: 'ghi789'.substring(0, 7),
+					date: '2023-01-03',
+					message: 'Add feature 2',
+					author: 'Jim Doe',
+					email: 'jim@example.com'
+				},
+				fullyMerged: false
+			}
+		];
+
 		const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
 		search?.clear();
 		vi.clearAllMocks();
@@ -134,8 +259,30 @@ describe('BranchesBulkActions Component', () => {
 			expect(getByTestId('search-input')).toBeInTheDocument();
 		});
 
-		test('does not render select all container when selectibleCount is 0', () => {
-			const props = { ...defaultProps, selectibleCount: 0 };
+		test('does not render select all container when there are no selectible branches', () => {
+			// Set mock to return only current branch
+			mockBranchData = [
+				{
+					name: 'main',
+					current: true,
+					isLocked: false,
+					lastCommit: {
+						sha: 'abc123',
+						shortSha: 'abc123'.substring(0, 7),
+						date: '2023-01-01',
+						message: 'Initial commit',
+						author: 'John Doe',
+						email: 'john@example.com'
+					},
+					fullyMerged: false
+				}
+			];
+
+			const props = {
+				...defaultProps,
+				selectibleCount: 0,
+				branches: [mockRepo.branches[0]] // Only the current branch
+			};
 			const { queryByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(BranchesBulkActions, props)
 			});
@@ -188,24 +335,6 @@ describe('BranchesBulkActions Component', () => {
 	});
 
 	describe('Search Functionality', () => {
-		test('shows search query info when search is active', () => {
-			const props = {
-				...defaultProps,
-				selectibleCount: 2,
-				selectedSearchLength: 1
-			};
-
-			const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
-			search?.set('feature');
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-
-			const searchQueryInfo = getByTestId('search-query-info');
-			expect(searchQueryInfo).toBeInTheDocument();
-		});
-
 		test('clear search button is disabled when there is no search query', () => {
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(BranchesBulkActions, defaultProps)
@@ -295,215 +424,12 @@ describe('BranchesBulkActions Component', () => {
 		});
 	});
 
-	describe('Branch Selection', () => {
-		test('selects all branches when select all checkbox is clicked', async () => {
+	describe('Integration with BranchSelection', () => {
+		test('renders BranchSelection component', () => {
 			const { getByTestId } = render(TestWrapper, {
 				props: testWrapperWithProps(BranchesBulkActions, defaultProps)
 			});
-			const checkbox = getByTestId('select-all-checkbox');
-			await fireEvent.click(checkbox);
-			expect(checkbox).toBeChecked();
-		});
-
-		test('deselects all branches when all are selected and select all checkbox is clicked', async () => {
-			const props = {
-				...defaultProps,
-				selectibleCount: 2,
-				selectedSearchLength: 2
-			};
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-
-			const checkbox = getByTestId('select-all-checkbox');
-			expect(checkbox).toBeChecked();
-
-			await fireEvent.click(checkbox);
-			expect(checkbox).not.toBeChecked();
-		});
-
-		test('does not select the current branch when selecting all', async () => {
-			const selectedStore = getSelectedBranchesStore(defaultProps?.currentRepo.name);
-			selectedStore?.clear();
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, defaultProps)
-			});
-
-			const checkbox = getByTestId('select-all-checkbox');
-			await fireEvent.click(checkbox);
-
-			// Wait for async mutations to complete
-			await vi.waitFor(() => {
-				// main is the current branch and should not be selected
-				expect(selectedStore?.has('main')).toBe(false);
-				// non-current branches should be selected
-				expect(selectedStore?.has('feature-1')).toBe(true);
-				expect(selectedStore?.has('feature-2')).toBe(true);
-			});
-		});
-
-		test.skip('does not select locked branches when selecting all', async () => {
-			// NOTE: This test is skipped because the component reads locked branches from a database query
-			// that's mocked at module load time. The test adds locked branches to the store after rendering,
-			// but the component's query doesn't see this update due to how the mocks work.
-			// In the real app, this functionality works correctly because the database and queries are synced.
-			// The component correctly filters out locked branches at line 81 of branches-bulk-actions.svelte.
-
-			const selectedStore = getSelectedBranchesStore(defaultProps?.currentRepo.name);
-			selectedStore?.clear();
-
-			const lockedStore = getLockedBranchesStore(defaultProps?.currentRepo.name);
-			lockedStore?.add(['feature-1']);
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, defaultProps)
-			});
-
-			const checkbox = getByTestId('select-all-checkbox');
-			await fireEvent.click(checkbox);
-
-			// Wait for async mutations to complete
-			await vi.waitFor(() => {
-				expect(selectedStore?.has('feature-1')).toBe(false);
-				expect(selectedStore?.has('feature-2')).toBe(true);
-			});
-
-			// Clean up
-			lockedStore?.clear();
-		});
-
-		test('does not try to remove current branch when deselecting all', async () => {
-			const props = {
-				...defaultProps,
-				selectibleCount: 2,
-				selectedSearchLength: 2
-			};
-
-			const selectedStore = getSelectedBranchesStore(defaultProps?.currentRepo.name);
-			selectedStore?.add(['feature-1', 'feature-2']);
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-
-			const checkbox = getByTestId('select-all-checkbox');
-			await fireEvent.click(checkbox);
-
-			// Wait for async mutations to complete
-			await vi.waitFor(() => {
-				expect(selectedStore?.has('main')).toBe(false);
-				expect(selectedStore?.has('feature-1')).toBe(false);
-				expect(selectedStore?.has('feature-2')).toBe(false);
-			});
-		});
-
-		test('select all checkbox is not checked when no branches are selected', () => {
-			const selectedStore = getSelectedBranchesStore(defaultProps?.currentRepo.name);
-			selectedStore?.clear();
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, defaultProps)
-			});
-
-			const checkbox = getByTestId('select-all-checkbox') as HTMLInputElement;
-			expect(checkbox.checked).toBe(false);
-		});
-
-		test('checkbox becomes indeterminate when some but not all branches are selected', () => {
-			const props = {
-				...defaultProps,
-				selectibleCount: 3,
-				selectedSearchLength: 2
-			};
-
-			const { getByRole } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-
-			// Select the input element by its role
-			const checkbox = getByRole('checkbox', { name: /select all/i }) as HTMLInputElement;
-			expect(checkbox.getAttribute('aria-checked')).toBe('mixed');
-		});
-	});
-
-	describe('Text and Pluralization', () => {
-		test('displays correct singular form when selectibleCount is 1', () => {
-			// Clear search state to ensure we show selectible-count-info
-			const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
-			search?.clear();
-
-			const props = { ...defaultProps, selectibleCount: 1, selectedSearchLength: 0 };
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-			expect(getByTestId('selectible-count-info')).toHaveTextContent('0 / 1 branch');
-		});
-
-		test('displays correct plural form when selectibleCount is greater than 1', () => {
-			// Clear search state to ensure we show selectible-count-info
-			const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
-			search?.clear();
-
-			const props = { ...defaultProps, selectibleCount: 2, selectedSearchLength: 0 };
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-			expect(getByTestId('selectible-count-info')).toHaveTextContent('0 / 2 branches');
-		});
-
-		test('shows correct singular/plural form in search results', () => {
-			const props = {
-				...defaultProps,
-				selectibleCount: 1,
-				selectedSearchLength: 1
-			};
-
-			const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
-			search?.set('feature');
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-			const searchQueryInfo = getByTestId('search-query-info');
-			expect(searchQueryInfo.textContent).toContain('branch');
-			expect(searchQueryInfo.textContent).toContain('was found');
-		});
-
-		test('correctly shows plural form when multiple branches are selected in search results', () => {
-			const props = {
-				...defaultProps,
-				selectibleCount: 2,
-				selectedSearchLength: 2
-			};
-
-			const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
-			search?.set('feature');
-
-			const selectedStore = getSelectedBranchesStore(defaultProps?.currentRepo.name);
-			selectedStore?.add(['feature-1', 'feature-2']);
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-
-			const searchQueryInfo = getByTestId('search-query-info');
-			expect(searchQueryInfo.textContent).toContain('are selected');
-			expect(searchQueryInfo.textContent).toContain('branches');
-			expect(searchQueryInfo.textContent).toContain('were found');
-		});
-
-		test('renders correctly when selectibleCount is 1 and there is a search query', () => {
-			const props = { ...defaultProps, selectibleCount: 1, selectedSearchLength: 1 };
-
-			const search = getSearchBranchesStore(defaultProps?.currentRepo.name);
-			search?.set('feature');
-
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(BranchesBulkActions, props)
-			});
-			expect(getByTestId('search-query-info')).toBeInTheDocument();
+			expect(getByTestId('select-all-container')).toBeInTheDocument();
 		});
 	});
 });

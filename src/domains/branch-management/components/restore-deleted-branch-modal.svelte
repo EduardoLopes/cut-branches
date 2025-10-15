@@ -41,7 +41,7 @@
 
 	// Get selected branches from database
 	const queryInput = $derived({ repoId: repoId ?? '' });
-	const selectedQuery = $derived(createDeletedSelectedBranchesQuery(queryInput));
+	const selectedQuery = $derived(createDeletedSelectedBranchesQuery(() => queryInput));
 
 	// Mutation for clearing selected branches
 	const clearSelectedMutation = $derived(createClearDeletedSelectedBranchesMutation());
