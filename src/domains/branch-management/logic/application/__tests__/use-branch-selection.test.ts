@@ -14,56 +14,8 @@ vi.mock('../queries/create-get-branches-query', () => ({
 		get data() {
 			if (!currentRepository) return { branches: [] };
 
-			const allBranches = [
-				{
-					name: 'main',
-					current: true,
-					isLocked: false,
-					isSelected: false,
-					deletedAt: null,
-					lastCommit: {
-						sha: 'abc123',
-						shortSha: 'abc123'.substring(0, 7),
-						date: '2023-01-01',
-						message: 'Initial commit',
-						author: 'John Doe',
-						email: 'john@example.com'
-					},
-					fullyMerged: false
-				},
-				{
-					name: 'feature-1',
-					current: false,
-					isLocked: false,
-					isSelected: false,
-					deletedAt: null,
-					lastCommit: {
-						sha: 'def456',
-						shortSha: 'def456'.substring(0, 7),
-						date: '2023-01-02',
-						message: 'Add feature 1',
-						author: 'Jane Doe',
-						email: 'jane@example.com'
-					},
-					fullyMerged: false
-				},
-				{
-					name: 'feature-2',
-					current: false,
-					isLocked: false,
-					isSelected: false,
-					deletedAt: null,
-					lastCommit: {
-						sha: 'ghi789',
-						shortSha: 'ghi789'.substring(0, 7),
-						date: '2023-01-03',
-						message: 'Add feature 2',
-						author: 'Jim Doe',
-						email: 'jim@example.com'
-					},
-					fullyMerged: false
-				}
-			];
+			// Use branches from current repository to support dynamic updates
+			const allBranches = currentRepository.branches;
 
 			const filters = input().filters || {};
 			let filteredBranches = [...allBranches];
@@ -246,7 +198,8 @@ describe('useBranchSelection', () => {
 		test('calculates selectibleCount correctly excluding current branch', () => {
 			currentRepository = mockRepo;
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			// 2 branches (feature-1, feature-2) that are not current and not locked
@@ -256,7 +209,8 @@ describe('useBranchSelection', () => {
 		test('calculates selectibleCount as 0 when repository is undefined', () => {
 			currentRepository = undefined;
 			const selection = useBranchSelection({
-				repository: () => undefined
+				repository: () => undefined,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.selectibleCount).toBe(0);
@@ -267,7 +221,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.add(['feature-1', 'feature-2']);
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.selectedCount).toBe(2);
@@ -278,7 +233,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.add(['feature-1']);
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.isIndeterminate).toBe(true);
@@ -290,7 +246,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.add(['feature-1', 'feature-2']);
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.isIndeterminate).toBe(false);
@@ -299,7 +256,8 @@ describe('useBranchSelection', () => {
 
 		test('both isIndeterminate and isAllSelected are false when no branches are selected', () => {
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.isIndeterminate).toBe(false);
@@ -310,7 +268,8 @@ describe('useBranchSelection', () => {
 	describe('Branch Labels', () => {
 		test('returns correct labels', () => {
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.branchLabel.singular).toBe('branch');
@@ -324,7 +283,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.clear();
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -341,7 +301,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.add(['feature-1']);
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -357,7 +318,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.add(['feature-1', 'feature-2']);
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -373,7 +335,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.clear();
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -388,13 +351,42 @@ describe('useBranchSelection', () => {
 			const initialSize = selectedStore?.state?.size ?? 0;
 
 			const selection = useBranchSelection({
-				repository: () => undefined
+				repository: () => undefined,
+				deletionStatus: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
 
 			// Should not change the store
 			expect(selectedStore?.state?.size).toBe(initialSize);
+		});
+
+		test('uses deleted branch mutations when deletionStatus is deleted', async () => {
+			const selectedStore = getSelectedBranchesStore('test-repo');
+			selectedStore?.clear();
+
+			// Create a mock repo with deleted branches
+			const mockRepoWithDeletedBranches: Repository = {
+				...mockRepo,
+				branches: mockRepo.branches.map((b) => ({
+					...b,
+					deletedAt: b.name !== 'main' ? '2023-01-15' : null
+				}))
+			};
+			currentRepository = mockRepoWithDeletedBranches;
+
+			const selection = useBranchSelection({
+				repository: () => mockRepoWithDeletedBranches,
+				deletionStatus: () => 'deleted' as const
+			});
+
+			await selection.handleSelectAll();
+
+			// Should select deleted branches using the deleted mutations
+			await vi.waitFor(() => {
+				expect(selectedStore?.has('feature-1')).toBe(true);
+				expect(selectedStore?.has('feature-2')).toBe(true);
+			});
 		});
 	});
 
@@ -404,7 +396,8 @@ describe('useBranchSelection', () => {
 			search?.set('feature');
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.hasSearchQuery).toBe(true);
@@ -415,7 +408,8 @@ describe('useBranchSelection', () => {
 			search?.clear();
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.hasSearchQuery).toBe(false);
@@ -428,7 +422,8 @@ describe('useBranchSelection', () => {
 			selectedStore?.add(['feature-1']);
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.searchInfoText).toBeDefined();
@@ -438,7 +433,8 @@ describe('useBranchSelection', () => {
 
 		test('integrates count with text formatting', () => {
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.countInfoText).toBe('0 / 2 branches');
@@ -449,7 +445,8 @@ describe('useBranchSelection', () => {
 			search?.clear();
 
 			const selection = useBranchSelection({
-				repository: () => mockRepo
+				repository: () => mockRepo,
+				deletionStatus: () => 'active' as const
 			});
 
 			expect(selection.searchInfoText).toBeUndefined();

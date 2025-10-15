@@ -8,7 +8,9 @@
 import { createGetBranchesQuery } from './queries/create-get-branches-query';
 import {
 	createAddSelectedBranchesMutation,
-	createClearSelectedBranchesMutation
+	createClearSelectedBranchesMutation,
+	createAddDeletedSelectedBranchesMutation,
+	createClearDeletedSelectedBranchesMutation
 } from '$domains/branch-management/services/createSelectedBranchesMutations';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { calculateSelectionState } from '$domains/branch-management/utils/calculate-selection-state';
@@ -17,25 +19,38 @@ import {
 	formatSearchInfoText,
 	formatCountInfoText
 } from '$domains/branch-management/utils/format-branch-selection-text';
+import type { DeletionStatusFilter } from '$lib/bindings';
 import type { Repository } from '$services/common';
 
 interface UseBranchSelectionProps {
 	repository: () => Repository | undefined;
+	deletionStatus: () => DeletionStatusFilter;
 }
 
-export function useBranchSelection({ repository }: UseBranchSelectionProps) {
+export function useBranchSelection({ repository, deletionStatus }: UseBranchSelectionProps) {
 	const search = $derived(getSearchBranchesStore(repository()?.name));
 
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',
-		filters: { deletionStatus: 'active' as const }
+		filters: { deletionStatus: deletionStatus() }
 	}));
 	const selectedBranchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',
-		filters: { selectionStatus: 'selected' as const }
+		filters: { selectionStatus: 'selected' as const, deletionStatus: deletionStatus() }
 	}));
-	const addSelectedMutation = createAddSelectedBranchesMutation();
-	const clearSelectedMutation = createClearSelectedBranchesMutation();
+
+	// Mutations for selected branches - choose based on deletion status
+	const addSelectedMutation = $derived(
+		deletionStatus() === 'deleted'
+			? createAddDeletedSelectedBranchesMutation()
+			: createAddSelectedBranchesMutation()
+	);
+
+	const clearSelectedMutation = $derived(
+		deletionStatus() === 'deleted'
+			? createClearDeletedSelectedBranchesMutation()
+			: createClearSelectedBranchesMutation()
+	);
 
 	// Filter branches based on locked/current and search state
 	const branches = $derived.by(() => {
