@@ -72,15 +72,21 @@ fn sync_branches_to_db_internal(
         )
     })?;
 
-    // Get existing branches from database for this repository
-    let db_branches = crate::db::operations::get_branches_for_repository(&mut conn, repo_id)
-        .map_err(|e| {
-            AppError::new(
-                "Failed to get branches from database".to_string(),
-                "db_query_failed",
-                Some(e.to_string()),
-            )
-        })?;
+    // Get existing branches from database for this repository (both active and deleted)
+    let filters = crate::domains::branch_management::filters::BranchFilters {
+        deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter::All,
+        ..Default::default()
+    };
+    let db_branches = crate::db::operations::get_branches_for_repository(
+        &mut conn, repo_id, &filters,
+    )
+    .map_err(|e| {
+        AppError::new(
+            "Failed to get branches from database".to_string(),
+            "db_query_failed",
+            Some(e.to_string()),
+        )
+    })?;
 
     // Create a set of Git branch names for quick lookup
     let git_branch_names: HashSet<String> = git_branches.iter().map(|b| b.name.clone()).collect();

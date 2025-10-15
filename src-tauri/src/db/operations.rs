@@ -71,23 +71,92 @@ pub fn create_branch(
 pub fn get_branches_for_repository(
     conn: &mut SqliteConnection,
     repo_id: &str,
+    filters: &crate::domains::branch_management::filters::BranchFilters,
 ) -> Result<Vec<BranchRecord>, DieselError> {
-    branches::table
+    use crate::domains::branch_management::filters::*;
+
+    let mut query = branches::table
         .filter(branches::repository_id.eq(repo_id))
-        .filter(branches::deleted_at.is_null())
-        .order(branches::name.asc())
-        .load(conn)
+        .into_boxed();
+
+    // Apply deletion status filter
+    match filters.deletion_status {
+        DeletionStatusFilter::Active => {
+            query = query.filter(branches::deleted_at.is_null());
+        }
+        DeletionStatusFilter::Deleted => {
+            query = query.filter(branches::deleted_at.is_not_null());
+        }
+        DeletionStatusFilter::All => {
+            // No filter needed for deletion status
+        }
+    }
+
+    // Apply merge status filter
+    match filters.merge_status {
+        MergeStatusFilter::Merged => {
+            query = query.filter(branches::fully_merged.eq(true));
+        }
+        MergeStatusFilter::Unmerged => {
+            query = query.filter(branches::fully_merged.eq(false));
+        }
+        MergeStatusFilter::All => {
+            // No filter needed for merge status
+        }
+    }
+
+    // Apply selection status filter
+    match filters.selection_status {
+        SelectionStatusFilter::Selected => {
+            query = query.filter(branches::is_selected.eq(true));
+        }
+        SelectionStatusFilter::Unselected => {
+            query = query.filter(branches::is_selected.eq(false));
+        }
+        SelectionStatusFilter::All => {
+            // No filter needed for selection status
+        }
+    }
+
+    // Apply lock status filter
+    match filters.lock_status {
+        LockStatusFilter::Locked => {
+            query = query.filter(branches::is_locked.eq(true));
+        }
+        LockStatusFilter::Unlocked => {
+            query = query.filter(branches::is_locked.eq(false));
+        }
+        LockStatusFilter::All => {
+            // No filter needed for lock status
+        }
+    }
+
+    // Apply current branch filter
+    if !filters.include_current {
+        query = query.filter(branches::current.eq(false));
+    }
+
+    // Order by name for active branches, by deleted_at for deleted branches
+    match filters.deletion_status {
+        DeletionStatusFilter::Deleted => query.order(branches::deleted_at.desc()).load(conn),
+        _ => query.order(branches::name.asc()).load(conn),
+    }
 }
 
+/// Deprecated: Use get_branches_for_repository with DeletionStatusFilter::Deleted instead
+#[deprecated(
+    since = "0.1.0",
+    note = "Use get_branches_for_repository with filters.deletion_status = DeletionStatusFilter::Deleted"
+)]
 pub fn get_deleted_branches_for_repository(
     conn: &mut SqliteConnection,
     repo_id: &str,
 ) -> Result<Vec<BranchRecord>, DieselError> {
-    branches::table
-        .filter(branches::repository_id.eq(repo_id))
-        .filter(branches::deleted_at.is_not_null())
-        .order(branches::deleted_at.desc())
-        .load(conn)
+    let filters = crate::domains::branch_management::filters::BranchFilters {
+        deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter::Deleted,
+        ..Default::default()
+    };
+    get_branches_for_repository(conn, repo_id, &filters)
 }
 
 pub fn update_branch(

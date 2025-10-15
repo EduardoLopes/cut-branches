@@ -10,7 +10,6 @@ import {
 	createAddSelectedBranchesMutation,
 	createClearSelectedBranchesMutation
 } from '$domains/branch-management/services/createSelectedBranchesMutations';
-import { createSelectedBranchesQuery } from '$domains/branch-management/services/createSelectedBranchesQuery';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { calculateSelectionState } from '$domains/branch-management/utils/calculate-selection-state';
 import { filterSelectableBranches } from '$domains/branch-management/utils/filter-selectable-branches';
@@ -27,12 +26,16 @@ interface UseBranchSelectionProps {
 export function useBranchSelection({ repository }: UseBranchSelectionProps) {
 	const search = $derived(getSearchBranchesStore(repository()?.name));
 
-	const branchesQueryInput = $derived({
+	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',
-		includeDeleted: false
-	});
-
-	const branchesQuery = createGetBranchesQuery(() => branchesQueryInput);
+		filters: { deletionStatus: 'active' as const }
+	}));
+	const selectedBranchesQuery = createGetBranchesQuery(() => ({
+		repoId: repository()?.id ?? '',
+		filters: { selectionStatus: 'selected' as const }
+	}));
+	const addSelectedMutation = createAddSelectedBranchesMutation();
+	const clearSelectedMutation = createClearSelectedBranchesMutation();
 
 	// Filter branches based on locked/current and search state
 	const branches = $derived.by(() => {
@@ -47,12 +50,8 @@ export function useBranchSelection({ repository }: UseBranchSelectionProps) {
 		});
 	});
 
-	const selectedQuery = createSelectedBranchesQuery(() => ({ repoId: repository()?.id ?? '' }));
-	const addSelectedMutation = createAddSelectedBranchesMutation();
-	const clearSelectedMutation = createClearSelectedBranchesMutation();
-
 	const selectibleCount = $derived(branches.length);
-	const selectedCount = $derived(selectedQuery.data?.branches.length ?? 0);
+	const selectedCount = $derived(selectedBranchesQuery.data?.branches.length ?? 0);
 
 	const selectionState = $derived(
 		calculateSelectionState({
@@ -110,8 +109,8 @@ export function useBranchSelection({ repository }: UseBranchSelectionProps) {
 		get search() {
 			return search;
 		},
-		get selectedQuery() {
-			return selectedQuery;
+		get selectedBranchesQuery() {
+			return selectedBranchesQuery;
 		},
 		get branchLabel() {
 			return {

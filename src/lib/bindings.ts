@@ -105,12 +105,12 @@ async deleteRepository(input: DeleteRepositoryInput) : Promise<Result<DeleteRepo
 }
 },
 /**
- * Lists branches from the database for a repository.
+ * Lists branches from the database for a repository with optional filtering.
  * 
  * # Arguments
  * 
  * * `db` - Database state
- * * `input` - Input parameters containing repo_id and include_deleted flag
+ * * `input` - Input parameters containing repo_id and optional filters
  * 
  * # Returns
  * 
@@ -528,6 +528,30 @@ export type BatchDeleteLockedBranchesInput = { repoId: string; branchNames: stri
 export type BatchDeleteLockedBranchesOutput = Record<string, never>
 export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean; deletedAt: string | null; isReachable: boolean | null; isSelected: boolean; isLocked: boolean }
 export type BranchDeletedEvent = { deletedBranches: DeletedBranchInfo[]; repositoryPath: string }
+/**
+ * Comprehensive filter configuration for querying branches
+ */
+export type BranchFilters = { 
+/**
+ * Filter by deletion status (default: Active - only non-deleted branches)
+ */
+deletionStatus?: DeletionStatusFilter; 
+/**
+ * Filter by merge status (default: All)
+ */
+mergeStatus?: MergeStatusFilter; 
+/**
+ * Filter by selection status (default: All)
+ */
+selectionStatus?: SelectionStatusFilter; 
+/**
+ * Filter by lock status (default: All)
+ */
+lockStatus?: LockStatusFilter; 
+/**
+ * Whether to include the current branch in results (default: true)
+ */
+includeCurrent?: boolean }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
 export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
@@ -547,6 +571,22 @@ export type DeleteRepositoryInput = { id: string }
 export type DeleteRepositoryOutput = { success: boolean }
 export type DeletedBranch = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
 export type DeletedBranchInfo = { branch: Branch; rawOutput: string }
+/**
+ * Filter for branch deletion status
+ */
+export type DeletionStatusFilter = 
+/**
+ * Only active (non-deleted) branches
+ */
+"active" | 
+/**
+ * Only deleted branches
+ */
+"deleted" | 
+/**
+ * Both active and deleted branches
+ */
+"all"
 export type GetBranchMergeStatusInput = { path: string; branchName: string }
 export type GetBranchMergeStatusOutput = { isMerged: boolean }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
@@ -557,17 +597,65 @@ export type GetRepositoryRootInput = { path: string }
 export type GetRepositoryRootOutput = { rootPath: string; id: string | null }
 export type ListBranchSelectionInput = { repoId: string }
 export type ListBranchSelectionOutput = { branches: string[] }
-export type ListBranchesInput = { repoId: string; includeDeleted: boolean }
+export type ListBranchesInput = { repoId: string; filters?: BranchFilters }
 export type ListBranchesOutput = { branches: Branch[] }
 export type ListDeletedBranchSelectionInput = { repoId: string }
 export type ListDeletedBranchSelectionOutput = { branches: string[] }
 export type ListLockedBranchesInput = { repoId: string }
 export type ListLockedBranchesOutput = { branches: string[] }
+/**
+ * Filter for branch lock status
+ */
+export type LockStatusFilter = 
+/**
+ * Only locked branches
+ */
+"locked" | 
+/**
+ * Only unlocked branches
+ */
+"unlocked" | 
+/**
+ * Both locked and unlocked branches
+ */
+"all"
+/**
+ * Filter for branch merge status
+ */
+export type MergeStatusFilter = 
+/**
+ * Only fully merged branches
+ */
+"merged" | 
+/**
+ * Only unmerged branches
+ */
+"unmerged" | 
+/**
+ * Both merged and unmerged branches
+ */
+"all"
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
 export type Repository = { id: string; name: string; path: string; currentBranch: string; branchesCount: number; createdAt: string; updatedAt: string; lastSyncHash: string | null; lastSyncTimestamp: number | null }
 export type RepositoryLoadedEvent = { repositoryPath: string; repositoryName: string; branchesCount: number }
 export type RestoreBranchResult = { success: boolean; branchName: string; message: string; requiresUserAction: boolean; conflictDetails: ConflictDetails | null; skipped: boolean; branch: Branch | null }
+/**
+ * Filter for branch selection status
+ */
+export type SelectionStatusFilter = 
+/**
+ * Only selected branches
+ */
+"selected" | 
+/**
+ * Only unselected branches
+ */
+"unselected" | 
+/**
+ * Both selected and unselected branches
+ */
+"all"
 export type UpdateCurrentBranchInput = { path: string; branch: string }
 export type UpdateCurrentBranchOutput = { currentBranch: string }
 

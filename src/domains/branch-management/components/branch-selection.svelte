@@ -38,9 +38,9 @@
 		>
 			<Checkbox
 				id="select-all"
-				indeterminate={isIndeterminate}
+				bind:indeterminate={isIndeterminate}
 				onclick={selection.handleSelectAll}
-				checked={isAllSelected}
+				bind:checked={isAllSelected}
 				data-testid="select-all-checkbox"
 			>
 				<div class={visuallyHidden()}>Select all</div>

@@ -22,7 +22,8 @@ pub struct GetCommitReachabilityOutput {
 #[serde(rename_all = "camelCase")]
 pub struct ListBranchesInput {
     pub repo_id: String,
-    pub include_deleted: bool,
+    #[serde(default)]
+    pub filters: crate::domains::branch_management::filters::BranchFilters,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -64,12 +65,12 @@ pub async fn get_commit_reachability(
     Ok(GetCommitReachabilityOutput { is_reachable })
 }
 
-/// Lists branches from the database for a repository.
+/// Lists branches from the database for a repository with optional filtering.
 ///
 /// # Arguments
 ///
 /// * `db` - Database state
-/// * `input` - Input parameters containing repo_id and include_deleted flag
+/// * `input` - Input parameters containing repo_id and optional filters
 ///
 /// # Returns
 ///
@@ -88,11 +89,11 @@ pub fn list_branches(
         )
     })?;
 
-    let branch_records = if input.include_deleted {
-        crate::db::operations::get_deleted_branches_for_repository(&mut conn, &input.repo_id)
-    } else {
-        crate::db::operations::get_branches_for_repository(&mut conn, &input.repo_id)
-    }
+    let branch_records = crate::db::operations::get_branches_for_repository(
+        &mut conn,
+        &input.repo_id,
+        &input.filters,
+    )
     .map_err(|e| {
         AppError::new(
             "Failed to get branches from database".to_string(),

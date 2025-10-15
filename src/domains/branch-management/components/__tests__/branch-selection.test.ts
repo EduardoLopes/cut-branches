@@ -5,17 +5,50 @@ import { getSearchBranchesStore } from '../../store/search-branches.svelte';
 import { getSelectedBranchesStore } from '../../store/selected-branches.svelte';
 import BranchSelection from '../branch-selection.svelte';
 import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
-import type { Branch } from '$lib/bindings';
+import type { Branch, BranchFilters } from '$lib/bindings';
 import type { Repository } from '$services/common';
 
 let mockBranchData: Branch[] = [];
 
-// Mock createGetBranchesQuery
+// Mock createGetBranchesQuery with filter support
 vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
-	createGetBranchesQuery: () => ({
+	createGetBranchesQuery: (input: () => { repoId: string; filters?: BranchFilters }) => ({
 		get data() {
+			const filters = input().filters || {};
+			let filteredBranches = [...mockBranchData];
+
+			// Apply deletionStatus filter
+			if (filters.deletionStatus === 'active') {
+				filteredBranches = filteredBranches.filter((b) => !b.deletedAt);
+			} else if (filters.deletionStatus === 'deleted') {
+				filteredBranches = filteredBranches.filter((b) => b.deletedAt);
+			}
+
+			// Apply selectionStatus filter
+			if (filters.selectionStatus === 'selected') {
+				const store = getSelectedBranchesStore('test-repo');
+				const selectedNames = Array.from(store?.state || []);
+				filteredBranches = filteredBranches.filter((b) => selectedNames.includes(b.name));
+			} else if (filters.selectionStatus === 'unselected') {
+				const store = getSelectedBranchesStore('test-repo');
+				const selectedNames = Array.from(store?.state || []);
+				filteredBranches = filteredBranches.filter((b) => !selectedNames.includes(b.name));
+			}
+
+			// Apply lockStatus filter
+			if (filters.lockStatus === 'locked') {
+				filteredBranches = filteredBranches.filter((b) => b.isLocked);
+			} else if (filters.lockStatus === 'unlocked') {
+				filteredBranches = filteredBranches.filter((b) => !b.isLocked);
+			}
+
+			// Apply includeCurrent filter
+			if (filters.includeCurrent === false) {
+				filteredBranches = filteredBranches.filter((b) => !b.current);
+			}
+
 			return {
-				branches: mockBranchData
+				branches: filteredBranches
 			};
 		},
 		isLoading: false,
