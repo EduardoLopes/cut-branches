@@ -44,7 +44,11 @@
 		variant = 'default'
 	}: Props = $props();
 
-	const search = $derived(getSearchBranchesStore(repositoryID));
+	const search = $derived(
+		getSearchBranchesStore(
+			`${repositoryID}-${page.url.pathname.includes('restore') ? 'deleted' : 'active'}`
+		)
+	);
 
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repositoryID ?? '',

@@ -228,7 +228,7 @@ describe('useBranchSelection', () => {
 			currentRepository = mockRepo;
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			// 2 branches (feature-1, feature-2) that are not current and not locked
@@ -239,7 +239,7 @@ describe('useBranchSelection', () => {
 			currentRepository = undefined;
 			const selection = useBranchSelection({
 				repository: () => undefined,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.selectibleCount).toBe(0);
@@ -251,7 +251,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.selectedCount).toBe(2);
@@ -263,7 +263,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.isIndeterminate).toBe(true);
@@ -276,7 +276,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.isIndeterminate).toBe(false);
@@ -286,7 +286,7 @@ describe('useBranchSelection', () => {
 		test('both isIndeterminate and isAllSelected are false when no branches are selected', () => {
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.isIndeterminate).toBe(false);
@@ -298,7 +298,7 @@ describe('useBranchSelection', () => {
 		test('returns correct labels', () => {
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.branchLabel.singular).toBe('branch');
@@ -313,7 +313,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -331,7 +331,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -348,7 +348,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -365,7 +365,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -381,7 +381,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => undefined,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			await selection.handleSelectAll();
@@ -406,7 +406,7 @@ describe('useBranchSelection', () => {
 
 			const selection = useBranchSelection({
 				repository: () => mockRepoWithDeletedBranches,
-				deletionStatus: () => 'deleted' as const
+				branchContext: () => 'deleted' as const
 			});
 
 			await selection.handleSelectAll();
@@ -421,38 +421,38 @@ describe('useBranchSelection', () => {
 
 	describe('Integration - Search and Display', () => {
 		test('hasSearchQuery returns true when search is active', () => {
-			const search = getSearchBranchesStore('test-repo');
+			const search = getSearchBranchesStore('test-repo-active');
 			search?.set('feature');
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.hasSearchQuery).toBe(true);
 		});
 
 		test('hasSearchQuery returns false when search is empty', () => {
-			const search = getSearchBranchesStore('test-repo');
+			const search = getSearchBranchesStore('test-repo-active');
 			search?.clear();
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.hasSearchQuery).toBe(false);
 		});
 
 		test('integrates search query with text formatting', () => {
-			const search = getSearchBranchesStore('test-repo');
+			const search = getSearchBranchesStore('test-repo-active');
 			search?.set('feature');
 			const selectedStore = getSelectedBranchesStore('test-repo');
 			selectedStore?.add(['feature-1']);
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.searchInfoText).toBeDefined();
@@ -463,19 +463,19 @@ describe('useBranchSelection', () => {
 		test('integrates count with text formatting', () => {
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.countInfoText).toBe('0 / 2 branches');
 		});
 
 		test('searchInfoText returns undefined when no search query', () => {
-			const search = getSearchBranchesStore('test-repo');
+			const search = getSearchBranchesStore('test-repo-active');
 			search?.clear();
 
 			const selection = useBranchSelection({
 				repository: () => mockRepo,
-				deletionStatus: () => 'active' as const
+				branchContext: () => 'active' as const
 			});
 
 			expect(selection.searchInfoText).toBeUndefined();

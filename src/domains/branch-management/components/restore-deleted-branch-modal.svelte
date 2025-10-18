@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
-	import Button, { type ButtonProps } from '@pindoba/svelte-button';
+	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
@@ -22,10 +22,9 @@
 
 	interface Props {
 		repoId?: string;
-		buttonProps?: Omit<ButtonProps, 'onclick'>;
 	}
 
-	let { repoId, buttonProps }: Props = $props();
+	let { repoId }: Props = $props();
 
 	const getRepositoryQuery = createGetRepositoryListQuery();
 	const getBranchesQuery = createGetBranchesQuery(() => ({
@@ -579,9 +578,6 @@
 			</div>
 		</div>
 	{:else}
-		<div class="header">
-			<h2>Restore Deleted Branch</h2>
-		</div>
 		<p data-testid="restore-branch-dialog-text">
 			{#if isProcessing && !isRestorationComplete}
 				Restoring selected branches...
@@ -858,15 +854,8 @@
 	onclick={() => {
 		open = true;
 	}}
-	{...buttonProps}
 	data-testid="open-restore-dialog-button"
 >
 	<Icon icon="lucide:undo" width="16px" height="16px" />
 	Restore ({selectedQuery.data?.branches.length})
 </Button>
-
-<style>
-	.header {
-		margin-bottom: 1rem;
-	}
-</style>

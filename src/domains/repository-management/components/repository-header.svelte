@@ -1,38 +1,27 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
-	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
+	import type { Snippet } from 'svelte';
 	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
-	import RemoveRepositoryModal from '$domains/repository-management/components/remove-repository-modal.svelte';
 	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	interface Props {
-		title?: string;
 		repositoryId?: string;
-		isLoading: boolean;
-		isFetching: boolean;
-		onUpdate: () => void;
-		showBackButton?: boolean;
-		showRestoreButton?: boolean;
-		showUpdateButton?: boolean;
-		showRemoveButton?: boolean;
+		defaultTitle?: string;
+		isLoading?: boolean;
+		leftActions?: Snippet;
+		title?: Snippet;
+		rightActions?: Snippet;
 	}
 
 	const {
 		repositoryId,
-		isLoading,
-		isFetching,
-		onUpdate,
+		defaultTitle,
+		isLoading = false,
+		leftActions,
 		title,
-		showBackButton = true,
-		showRestoreButton = true,
-		showUpdateButton = true,
-		showRemoveButton = true
+		rightActions
 	}: Props = $props();
 
 	const getRepositoryListQuery = createGetRepositoryListQuery();
@@ -43,17 +32,7 @@
 
 	const getRepositoryQuery = createGetRepositoryQuery(() => repositoryPath);
 
-	function navigateToRestore() {
-		if (repositoryId) {
-			goto(resolve(`/repos/${repositoryId}/restore`));
-		}
-	}
-
-	function navigateBack() {
-		if (repositoryId) {
-			goto(resolve(`/repos/${repositoryId}`));
-		}
-	}
+	const repositoryName = $derived(getRepositoryQuery.data?.name);
 </script>
 
 <div
@@ -76,77 +55,43 @@
 			gap: 'sm'
 		})}
 	>
-		{#key getRepositoryQuery.data?.name}
-			<!-- back button -->
-			{#if showBackButton}
-				<Button
-					emphasis="ghost"
-					size="sm"
-					onclick={navigateBack}
-					shape="square"
-					data-testid="restore-navigate-button"
-				>
-					<Icon icon="lucide:arrow-left" width="24px" height="24px" />
-					<span class={visuallyHidden()}>Back</span>
-				</Button>
+		{#key repositoryName}
+			<!-- left actions (e.g., back button) -->
+			{#if leftActions}
+				{@render leftActions()}
 			{/if}
-			<h2
-				class={css({
-					textStyle: '4xl'
-				})}
-				data-testid="repository-name"
-			>
-				{#if title}
-					{title}
-				{:else if getRepositoryQuery.data?.name}
-					<span
-						class={css({
-							textTransform: 'uppercase'
-						})}
-					>
-						{getRepositoryQuery.data?.name}
-					</span>
-				{/if}
-			</h2>
+
+			<!-- title -->
+			{#if title}
+				{@render title()}
+			{:else}
+				<h2
+					class={css({
+						textStyle: '4xl'
+					})}
+					data-testid="repository-name"
+				>
+					{#if defaultTitle}
+						{defaultTitle}
+					{:else if repositoryName}
+						<span
+							class={css({
+								textTransform: 'uppercase'
+							})}
+						>
+							{repositoryName}
+						</span>
+					{/if}
+				</h2>
+			{/if}
 		{/key}
 	</div>
 
-	{#if showRestoreButton || showUpdateButton || showRemoveButton}
+	<!-- right actions (e.g., restore, update, remove buttons) -->
+	{#if rightActions}
 		<Loading {isLoading}>
 			<Group direction="horizontal">
-				{#if showRestoreButton && repositoryId}
-					<Button
-						emphasis="ghost"
-						size="sm"
-						onclick={navigateToRestore}
-						data-testid="restore-navigate-button"
-						class={css({
-							gap: 'sm'
-						})}
-					>
-						<Icon icon="lucide:undo" width="24px" height="24px" />
-						<span>Restore</span>
-					</Button>
-				{/if}
-				{#if showUpdateButton}
-					<Loading isLoading={isFetching}>
-						<Button
-							emphasis="ghost"
-							size="sm"
-							onclick={onUpdate}
-							disabled={isFetching}
-							shape="square"
-							data-testid="update-button"
-						>
-							<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
-							<span class={visuallyHidden()}>Update</span>
-						</Button>
-					</Loading>
-				{/if}
-
-				{#if getRepositoryQuery.data && showRemoveButton}
-					<RemoveRepositoryModal currentRepo={getRepositoryQuery.data} />
-				{/if}
+				{@render rightActions()}
 			</Group>
 		</Loading>
 	{/if}

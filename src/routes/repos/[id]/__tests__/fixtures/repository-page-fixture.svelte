@@ -2,6 +2,7 @@
 	// import { createGetRepositoryQuery } from '$domains/repository-management/logic/application/queries/create-get-repository-query';
 	// This is a test fixture that combines MenuView and Repository components
 	// for integration testing
+	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
 	import { css } from '@pindoba/panda/css';
@@ -27,6 +28,8 @@
 		<MenuView />
 	</div>
 	<div class={css({ flex: 1 })} data-testid="repository-container">
-		<Repository {id} />
+		<Repository {id}>
+			<ActiveBranchesView {id} />
+		</Repository>
 	</div>
 </div>

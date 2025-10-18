@@ -1,10 +1,9 @@
-import { render, fireEvent } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import type { Writable } from 'svelte/store';
 import { vi } from 'vitest';
 import RepositoryHeader from '../repository-header.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import type { Branch } from '$lib/bindings';
 import type { Repository } from '$services/common';
 
 // Mock the navigation module
@@ -76,18 +75,6 @@ vi.mock('../../logic/application/queries/create-get-repository-query', () => ({
 }));
 
 describe('RepositoryHeader', () => {
-	const mockOnUpdate = vi.fn();
-	const mockBranches: Branch[] = [];
-
-	const baseMockRepo: Repository = {
-		id: 'mock-repo-id',
-		name: 'Test-Repo',
-		path: '/path/to/repo',
-		branches: mockBranches,
-		currentBranch: 'main',
-		branchesCount: 0
-	};
-
 	beforeEach(() => {
 		vi.resetAllMocks();
 		mockRepositoryStore.mockStore.state = null;
@@ -98,7 +85,7 @@ describe('RepositoryHeader', () => {
 		const { container } = render(TestWrapper, {
 			props: {
 				component: RepositoryHeader,
-				props: { isLoading: false, isFetching: false, onUpdate: mockOnUpdate }
+				props: {}
 			}
 		});
 		expect(container).toBeInTheDocument();
@@ -145,10 +132,7 @@ describe('RepositoryHeader', () => {
 			props: {
 				component: RepositoryHeader,
 				props: {
-					repositoryId: 'some-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate
+					repositoryId: 'some-id'
 				}
 			}
 		});
@@ -157,6 +141,25 @@ describe('RepositoryHeader', () => {
 
 		expect(getByTestId('repository-name')).toBeInTheDocument();
 		expect(getByTestId('repository-name').textContent).toBe(repoName);
+	});
+
+	test('should display defaultTitle when provided', async () => {
+		const defaultTitle = 'Custom Title';
+
+		const { getByTestId } = render(TestWrapper, {
+			props: {
+				component: RepositoryHeader,
+				props: {
+					repositoryId: 'some-id',
+					defaultTitle
+				}
+			}
+		});
+
+		await tick();
+
+		expect(getByTestId('repository-name')).toBeInTheDocument();
+		expect(getByTestId('repository-name').textContent).toBe(defaultTitle);
 	});
 
 	test('should display nothing for repository name when not available', async () => {
@@ -192,10 +195,7 @@ describe('RepositoryHeader', () => {
 			props: {
 				component: RepositoryHeader,
 				props: {
-					repositoryId: 'some-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate
+					repositoryId: 'some-id'
 				}
 			}
 		});
@@ -205,205 +205,18 @@ describe('RepositoryHeader', () => {
 		expect(repoNameElement.textContent).toBe('');
 	});
 
-	test('should show loading indicator when isLoading is true', () => {
+	test('should render without errors when no snippets provided', async () => {
 		const { container } = render(TestWrapper, {
 			props: {
 				component: RepositoryHeader,
 				props: {
-					repositoryId: 'some-id',
-					isLoading: true,
-					isFetching: false,
-					onUpdate: mockOnUpdate
-				}
-			}
-		});
-		expect(container.querySelector('[data-testid="update-button"]')).toBeInTheDocument();
-	});
-
-	test('update button should call onUpdate when clicked', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeader,
-				props: {
-					repositoryId: 'some-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate
-				}
-			}
-		});
-		const updateButton = getByTestId('update-button');
-		await fireEvent.click(updateButton);
-		expect(mockOnUpdate).toHaveBeenCalledTimes(1);
-	});
-
-	test('RemoveRepositoryModal should be rendered when repository state exists', async () => {
-		// Mock list to include a repository with valid path
-		mockListRepositoriesQuery.fn.mockReturnValueOnce({
-			data: [
-				{
-					id: 'some-id',
-					name: 'Repo-For-Modal',
-					path: '/path/to/repo',
-					current_branch: 'main',
-					branches_count: 0,
-					created_at: new Date().toISOString(),
-					updated_at: new Date().toISOString()
-				}
-			],
-			isLoading: false,
-			isError: false,
-			error: null
-		});
-
-		// Update the mock to return repository data
-		mockGetRepositoryQuery.fn.mockReturnValueOnce({
-			data: {
-				id: 'mock-repo-id',
-				name: 'Repo-For-Modal',
-				path: '/path/to/repo',
-				branches: [],
-				currentBranch: 'main',
-				branchesCount: 0
-			},
-			isLoading: false,
-			isError: false,
-			error: null
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		} as any);
-
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeader,
-				props: {
-					repositoryId: 'some-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate
-				}
-			}
-		});
-		await tick();
-		expect(container.querySelector('[data-testid="open-remove-modal"]')).toBeInTheDocument();
-	});
-
-	test('RemoveRepositoryModal should NOT be rendered when repository state does not exist', async () => {
-		mockRepositoryStore.mockStore.state = null;
-
-		// Mock list with repository but no path
-		mockListRepositoriesQuery.fn.mockReturnValueOnce({
-			data: [
-				{
-					id: 'some-id',
-					name: 'Test-Repo',
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					path: '' as any,
-					current_branch: 'main',
-					branches_count: 0,
-					created_at: new Date().toISOString(),
-					updated_at: new Date().toISOString()
-				}
-			],
-			isLoading: false,
-			isError: false,
-			error: null
-		});
-
-		// Mock getRepository to return undefined (no data)
-		mockGetRepositoryQuery.fn.mockReturnValueOnce({
-			data: undefined,
-			isLoading: false,
-			isError: false,
-			error: null
-		});
-
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeader,
-				props: {
-					repositoryId: 'some-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate
-				}
-			}
-		});
-		await tick();
-		expect(container.querySelector('[data-testid="open-remove-modal"]')).not.toBeInTheDocument();
-	});
-
-	test('should navigate to restore page when restore button is clicked', async () => {
-		const { goto } = await import('$app/navigation');
-		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Restore' };
-
-		const { getByText } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeader,
-				props: {
-					repositoryId: 'test-repo-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate
+					repositoryId: 'some-id'
 				}
 			}
 		});
 
 		await tick();
 
-		// Find the restore button by its text content
-		const restoreButton = getByText('Restore').closest('button');
-		expect(restoreButton).toBeInTheDocument();
-		await fireEvent.click(restoreButton!);
-
-		expect(goto).toHaveBeenCalledWith('/repos/test-repo-id/restore');
-	});
-
-	test('should navigate back when back button is clicked', async () => {
-		const { goto } = await import('$app/navigation');
-
-		const { getByText } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeader,
-				props: {
-					repositoryId: 'test-repo-id',
-					isLoading: false,
-					isFetching: false,
-					onUpdate: mockOnUpdate,
-					showBackButton: true
-				}
-			}
-		});
-
-		await tick();
-
-		// Find the back button by its "Back" text (which is visually hidden but accessible)
-		const backButton = getByText('Back').closest('button');
-		expect(backButton).toBeInTheDocument();
-
-		await fireEvent.click(backButton!);
-
-		expect(goto).toHaveBeenCalledWith('/repos/test-repo-id');
-	});
-
-	test('should not navigate when repositoryId is not provided', async () => {
-		const { goto } = await import('$app/navigation');
-		mockRepositoryStore.mockStore.state = { ...baseMockRepo, name: 'Repo-For-Test' };
-
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeader,
-				props: { isLoading: false, isFetching: false, onUpdate: mockOnUpdate }
-			} // No repositoryId provided
-		});
-
-		await tick();
-
-		// Try to click the restore button if it exists
-		const restoreButton = container.querySelector('[data-testid="restore-navigate-button"]');
-		if (restoreButton) {
-			await fireEvent.click(restoreButton);
-			// goto should not be called when repositoryId is undefined
-			expect(goto).not.toHaveBeenCalled();
-		}
+		expect(container).toBeInTheDocument();
 	});
 });

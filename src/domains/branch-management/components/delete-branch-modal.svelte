@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
-	import { type ButtonProps } from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
 	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
@@ -16,12 +15,11 @@
 
 	interface Props {
 		id?: string;
-		buttonProps?: Omit<ButtonProps, 'onclick'>;
 	}
 
 	let open = $state(false);
 
-	let { id, buttonProps }: Props = $props();
+	let { id }: Props = $props();
 
 	const getRepositoryQuery = createGetRepositoryListQuery();
 
@@ -160,12 +158,16 @@
 	feedback="danger"
 	size="sm"
 	disabled={selectedCount === 0}
+	class={css({
+		gap: 'xs',
+		display: 'flex',
+		whiteSpace: 'nowrap'
+	})}
 	onclick={() => {
 		open = true;
 	}}
-	{...buttonProps}
 	data-testid="open-dialog-button"
 >
 	<Icon icon="ion:trash-outline" width="16px" height="16px" />
-	Delete
+	Delete ({selectedCount})
 </Button>

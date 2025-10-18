@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Checkbox from '@pindoba/svelte-checkbox';
-	import { page } from '$app/state';
 	import { useBranchSelection } from '$domains/branch-management/logic/application/use-branch-selection.svelte';
 	import type { Repository } from '$services/common';
 	import { css } from '@pindoba/panda/css';
@@ -8,14 +7,14 @@
 
 	interface Props {
 		repository: Repository | undefined;
+		branchContext: 'active' | 'deleted';
 	}
 
-	const { repository }: Props = $props();
+	const { repository, branchContext }: Props = $props();
 
 	const selection = useBranchSelection({
 		repository: () => repository,
-		deletionStatus: () =>
-			page.url.pathname.includes('restore') ? ('deleted' as const) : ('active' as const)
+		branchContext: () => branchContext
 	});
 
 	// Local state to control checkbox - synced with selection state

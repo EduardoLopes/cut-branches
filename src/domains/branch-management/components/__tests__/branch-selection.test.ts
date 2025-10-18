@@ -154,14 +154,17 @@ const mockRepo: Repository = {
 
 describe('BranchSelection Component', () => {
 	const defaultProps = {
-		repository: mockRepo
+		repository: mockRepo,
+		branchContext: 'active' as const
 	};
 
 	beforeEach(() => {
 		// Set default mock branch data
 		mockBranchData = mockBranches;
 
-		const search = getSearchBranchesStore(defaultProps?.repository.name);
+		const search = getSearchBranchesStore(
+			`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+		);
 		search?.clear();
 		const selectedStore = getSelectedBranchesStore('test-repo');
 		selectedStore?.clear();
@@ -198,7 +201,9 @@ describe('BranchSelection Component', () => {
 
 	describe('Search Query Display', () => {
 		test('shows search query info when search is active', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.set('feature');
 
 			const { getByTestId } = render(TestWrapper, {
@@ -211,7 +216,9 @@ describe('BranchSelection Component', () => {
 		});
 
 		test('does not show search query info when search is empty', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.clear();
 
 			const { queryByTestId } = render(TestWrapper, {
@@ -222,7 +229,9 @@ describe('BranchSelection Component', () => {
 		});
 
 		test('shows selectible count info when search is empty', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.clear();
 
 			const { getByTestId } = render(TestWrapper, {
@@ -233,7 +242,9 @@ describe('BranchSelection Component', () => {
 		});
 
 		test('does not show selectible count info when search is active', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.set('feature');
 
 			const { queryByTestId } = render(TestWrapper, {
@@ -246,7 +257,9 @@ describe('BranchSelection Component', () => {
 
 	describe('Text and Pluralization', () => {
 		test('displays correct singular form when selectibleCount is 1', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.clear();
 
 			// Set mock to return only main (current) and feature-1 (1 selectible)
@@ -260,7 +273,9 @@ describe('BranchSelection Component', () => {
 		});
 
 		test('displays correct plural form when selectibleCount is greater than 1', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.clear();
 
 			const { getByTestId } = render(TestWrapper, {
@@ -271,7 +286,9 @@ describe('BranchSelection Component', () => {
 		});
 
 		test('shows correct singular form in search results', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.set('feature-1'); // Search that returns only 1 result
 
 			const selectedStore = getSelectedBranchesStore('test-repo');
@@ -290,7 +307,9 @@ describe('BranchSelection Component', () => {
 		});
 
 		test('shows correct plural form in search results', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.set('feature');
 
 			const selectedStore = getSelectedBranchesStore('test-repo');
@@ -308,7 +327,9 @@ describe('BranchSelection Component', () => {
 
 	describe('Branch Labels', () => {
 		test('displays "branch" label', () => {
-			const search = getSearchBranchesStore(defaultProps?.repository.name);
+			const search = getSearchBranchesStore(
+				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
+			);
 			search?.clear();
 
 			const { getByTestId } = render(TestWrapper, {

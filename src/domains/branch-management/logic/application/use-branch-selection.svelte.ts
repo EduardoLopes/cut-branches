@@ -14,24 +14,23 @@ import {
 	formatSearchInfoText,
 	formatCountInfoText
 } from '$domains/branch-management/utils/format-branch-selection-text';
-import type { DeletionStatusFilter } from '$lib/bindings';
 import type { Repository } from '$services/common';
 
 interface UseBranchSelectionProps {
 	repository: () => Repository | undefined;
-	deletionStatus: () => DeletionStatusFilter;
+	branchContext: () => 'active' | 'deleted';
 }
 
-export function useBranchSelection({ repository, deletionStatus }: UseBranchSelectionProps) {
-	const search = $derived(getSearchBranchesStore(repository()?.name));
+export function useBranchSelection({ repository, branchContext }: UseBranchSelectionProps) {
+	const search = $derived(getSearchBranchesStore(`${repository()?.name}-${branchContext()}`));
 
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',
-		filters: { deletionStatus: deletionStatus() }
+		filters: { deletionStatus: branchContext() }
 	}));
 	const selectedBranchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',
-		filters: { selectionStatus: 'selected' as const, deletionStatus: deletionStatus() }
+		filters: { selectionStatus: 'selected' as const, deletionStatus: branchContext() }
 	}));
 
 	// Unified mutations for selected branches
@@ -92,7 +91,7 @@ export function useBranchSelection({ repository, deletionStatus }: UseBranchSele
 			await setSelectionAllMutation.mutateAsync({
 				repoId: repo.id,
 				isSelected: false,
-				deletionStatus: deletionStatus(),
+				deletionStatus: branchContext(),
 				excludeLocked: false,
 				excludeCurrent: false
 			});
@@ -101,7 +100,7 @@ export function useBranchSelection({ repository, deletionStatus }: UseBranchSele
 			await setSelectionAllMutation.mutateAsync({
 				repoId: repo.id,
 				isSelected: true,
-				deletionStatus: deletionStatus()
+				deletionStatus: branchContext()
 			});
 		}
 	}

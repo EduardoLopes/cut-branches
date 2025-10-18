@@ -431,7 +431,7 @@ describe('Repository Page Integration Test', () => {
 
 		// Only branches with "feature" should be visible
 		// The full branches list should be filtered
-		const searchStore = getSearchBranchesStore('test-repo');
+		const searchStore = getSearchBranchesStore('test-repo-active');
 		expect(searchStore?.state).toBe('feature');
 
 		// Verify that only one branch is rendered
