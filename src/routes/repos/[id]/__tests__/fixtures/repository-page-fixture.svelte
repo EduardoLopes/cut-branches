@@ -9,18 +9,6 @@
 
 	// Define props using $props()
 	const { id }: { id: string } = $props();
-
-	// Use $effect to trigger refetch when id changes, simulating component logic
-	// $effect(() => {
-	// 	if (id) {
-	// 		const query = createGetRepositoryQuery(() => id, {
-	// 			enabled: !!id
-	// 		});
-	// 		if (query && typeof query.refetch === 'function') {
-	// 			query.refetch();
-	// 		}
-	// 	}
-	// });
 </script>
 
 <div class={css({ display: 'flex', width: '100%' })}>
@@ -28,7 +16,7 @@
 		<MenuView />
 	</div>
 	<div class={css({ flex: 1 })} data-testid="repository-container">
-		<Repository {id}>
+		<Repository>
 			<ActiveBranchesView {id} />
 		</Repository>
 	</div>

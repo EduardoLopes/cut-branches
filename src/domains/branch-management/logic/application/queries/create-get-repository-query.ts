@@ -1,12 +1,12 @@
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 export function createGetRepositoryQuery(
-	path: () => string | undefined,
+	id: () => string | undefined,
 	options?: TauriQueryOptions<'getRepository'>
 ) {
 	return createTauriQuery('getRepository', {
-		input: () => ({ path: path() ?? '' }),
-		enabled: !!path(),
+		input: () => ({ id: id() ?? '' }),
+		enabled: !!id(),
 		...options
 	});
 }

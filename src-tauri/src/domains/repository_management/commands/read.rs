@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -9,7 +7,7 @@ use crate::shared::error::AppError;
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GetRepositoryInput {
-    pub path: String,
+    pub id: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -27,7 +25,7 @@ pub struct GetRepositoryOutput {
 ///
 /// # Arguments
 ///
-/// * `input` - Input parameters containing the repository path
+/// * `input` - Input parameters containing the repository ID
 /// * `db` - Database state for persisting repository data
 ///
 /// # Returns
@@ -39,9 +37,7 @@ pub async fn get_repository(
     db: State<'_, DatabaseState>,
     input: GetRepositoryInput,
 ) -> Result<GetRepositoryOutput, AppError> {
-    let raw_path = Path::new(&input.path);
-    let response =
-        super::super::services::discovery::get_repository(raw_path, &input.path, &db).await?;
+    let response = super::super::services::discovery::get_repository(&input.id, &db).await?;
 
     Ok(GetRepositoryOutput {
         path: response.path,

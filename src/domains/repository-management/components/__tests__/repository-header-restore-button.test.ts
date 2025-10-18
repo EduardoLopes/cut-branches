@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
-import RepositoryHeaderRestoreButton from '../repository-header-restore-button.svelte';
+import RestoreRepositoryButton from '../restore-repository-button.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
 
 // Mock the navigation module
@@ -9,7 +9,7 @@ vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
 }));
 
-describe('RepositoryHeaderRestoreButton', () => {
+describe('RestoreRepositoryButton', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
@@ -17,7 +17,7 @@ describe('RepositoryHeaderRestoreButton', () => {
 	test('should render the button', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: RepositoryHeaderRestoreButton,
+				component: RestoreRepositoryButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -33,7 +33,7 @@ describe('RepositoryHeaderRestoreButton', () => {
 
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: RepositoryHeaderRestoreButton,
+				component: RestoreRepositoryButton,
 				props: {
 					repositoryId
 				}
@@ -51,7 +51,7 @@ describe('RepositoryHeaderRestoreButton', () => {
 	test('should display "Restore" text', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: RepositoryHeaderRestoreButton,
+				component: RestoreRepositoryButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}

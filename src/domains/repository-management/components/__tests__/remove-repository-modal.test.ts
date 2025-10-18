@@ -33,7 +33,7 @@ vi.mock('$lib/bindings', () => ({
 			.fn()
 			.mockImplementation(() => Promise.resolve({ status: 'ok', data: mockRepositories })),
 		getRepository: vi.fn().mockImplementation((input) => {
-			const repo = mockRepositories.find((r) => r.path === input.path);
+			const repo = mockRepositories.find((r) => r.id === input.id || r.path === input.path);
 			if (repo) {
 				return Promise.resolve({ status: 'ok', data: repo });
 			}
@@ -78,7 +78,7 @@ describe('RemoveRepositoryModal', () => {
 	describe('Modal Rendering', () => {
 		test('renders with correct initial state', () => {
 			const { getByText } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			expect(getByText('Remove repository')).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe('RemoveRepositoryModal', () => {
 
 		test('renders repository name in modal content', async () => {
 			const { getByTestId, getByText } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -99,7 +99,7 @@ describe('RemoveRepositoryModal', () => {
 	describe('Modal Interaction', () => {
 		test('should open and close the modal', async () => {
 			const { getByTestId, queryByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -116,7 +116,7 @@ describe('RemoveRepositoryModal', () => {
 
 		test('closes modal after repository removal', async () => {
 			const { getByTestId, queryByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -133,7 +133,7 @@ describe('RemoveRepositoryModal', () => {
 	describe('Repository Removal', () => {
 		test('should remove the repository from database', async () => {
 			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -149,7 +149,7 @@ describe('RemoveRepositoryModal', () => {
 
 		test('clears the search store for removed repository', async () => {
 			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -164,7 +164,7 @@ describe('RemoveRepositoryModal', () => {
 
 		test('shows notification after repository removal', async () => {
 			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -187,7 +187,7 @@ describe('RemoveRepositoryModal', () => {
 			mockRepositories = [mockRepository];
 
 			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');
@@ -205,7 +205,7 @@ describe('RemoveRepositoryModal', () => {
 			mockRepositories = [mockRepository];
 
 			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { currentRepo: mockRepository })
+				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
 			});
 
 			const openButton = getByTestId('open-remove-modal');

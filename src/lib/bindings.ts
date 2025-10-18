@@ -50,7 +50,7 @@ async createRepository(input: CreateRepositoryInput) : Promise<Result<CreateRepo
  * 
  * # Arguments
  * 
- * * `input` - Input parameters containing the repository path
+ * * `input` - Input parameters containing the repository ID
  * * `db` - Database state for persisting repository data
  * 
  * # Returns
@@ -501,7 +501,7 @@ export type GetBranchMergeStatusInput = { path: string; branchName: string }
 export type GetBranchMergeStatusOutput = { isMerged: boolean }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
-export type GetRepositoryInput = { path: string }
+export type GetRepositoryInput = { id: string }
 export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
 export type GetRepositoryRootInput = { path: string }
 export type GetRepositoryRootOutput = { rootPath: string; id: string | null }

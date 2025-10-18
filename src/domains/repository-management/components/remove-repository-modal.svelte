@@ -12,23 +12,22 @@
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
-	import type { Repository } from '$services/common';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	interface Props {
-		currentRepo: Repository;
+		repositoryId: string;
 	}
 
 	let open = $state(false);
 
-	let { currentRepo }: Props = $props();
+	let { repositoryId }: Props = $props();
 
 	const queryClient = useQueryClient();
-	const search = $derived(getSearchBranchesStore(currentRepo?.name));
-	const getRepositoryQuery = createGetRepositoryQuery(() => currentRepo?.path);
+	const search = $derived(getSearchBranchesStore(repositoryId));
+	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
 
 	// Query for repositories list
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -39,30 +38,28 @@
 	const clearLockedMutation = createClearLockedBranchesMutation();
 	const deleteRepositoryMutation = createDeleteRepositoryMutation({
 		onSuccess: async () => {
-			const repoName = ensureString(getRepositoryQuery.data?.name || currentRepo?.name);
-			const deletedPath = currentRepo?.path;
-			const deletedId = currentRepo?.id;
+			const repoName = ensureString(getRepositoryQuery.data?.name);
+			const deletedId = repositoryId;
 
 			// Clear UI stores
 			search?.clear();
 
 			// Cancel and remove queries for the deleted repository
 			// This prevents get_repository from being called on the deleted repo
-			if (deletedPath) {
-				queryClient.cancelQueries({ queryKey: ['getRepository', deletedPath] });
-				queryClient.removeQueries({ queryKey: ['getRepository', deletedPath] });
+			if (deletedId) {
+				queryClient.cancelQueries({ queryKey: ['getRepository', { id: deletedId }] });
+				queryClient.removeQueries({ queryKey: ['getRepository', { id: deletedId }] });
 			}
 
 			// Invalidate repositories list so it refreshes
 			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
 
 			// Find another repository to navigate to using current list
-			const currentRepos = repositories;
-			const otherRepo = currentRepos.find((repo) => repo.id !== deletedId);
+			const otherRepository = repositories.find((repository) => repository.id !== deletedId);
 
 			// Navigate away immediately
-			if (otherRepo) {
-				await goto(resolve(`/repos/${otherRepo.name}`));
+			if (otherRepository) {
+				await goto(resolve(`/repos/${otherRepository.name}`));
 			} else {
 				await goto(resolve(`/get-started`));
 			}
@@ -80,7 +77,7 @@
 	function handleRemove() {
 		open = false;
 
-		const repoId = currentRepo?.id;
+		const repoId = repositoryId;
 
 		if (!repoId) {
 			notifications.push({
@@ -116,7 +113,7 @@
 			class={css({
 				color: 'danger.800',
 				fontSize: 'lg'
-			})}>{currentRepo?.name}</strong
+			})}>{getRepositoryQuery.data?.name ?? repositoryId}</strong
 		>?
 	</p>
 
@@ -136,7 +133,7 @@
 
 <Button
 	emphasis="ghost"
-	size="sm"
+	size="md"
 	feedback="danger"
 	onclick={debounce(() => {
 		open = true;
@@ -144,6 +141,6 @@
 	shape="square"
 	data-testid="open-remove-modal"
 >
-	<Icon icon="solar:close-circle-linear" width="24px" height="24px" />
+	<Icon icon="lucide:circle-x" width="20px" height="20px" />
 	<span class={visuallyHidden()}>Remove</span>
 </Button>

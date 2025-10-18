@@ -21,65 +21,19 @@ pub struct GitDirResponse {
 ///
 /// # Arguments
 ///
-/// * `raw_path` - Path to the git repository
-/// * `path` - Original path string
+/// * `repo_id` - Repository ID
 /// * `db` - Database state for persisting repository data
 ///
 /// # Returns
 ///
 /// * `Result<GitDirResponse, AppError>` - Repository information or an error
 pub async fn get_repository(
-    raw_path: &Path,
-    path: &str,
+    repo_id: &str,
     db: &State<'_, DatabaseState>,
 ) -> Result<GitDirResponse, AppError> {
-    println!("get_repository called for path: {}", path);
+    println!("get_repository called for id: {}", repo_id);
 
-    // Check if it's a git repository
-    if !super::validation::is_git_repository(raw_path)? {
-        return Err(AppError::new(
-            format!(
-                "The folder **{}** is not a git repository",
-                raw_path
-                    .file_name()
-                    .unwrap_or(raw_path.as_os_str())
-                    .to_string_lossy()
-            ),
-            "is_not_git_repository",
-            Some(format!(
-                "The path **{}** does not contain a .git directory",
-                raw_path.display()
-            )),
-        ));
-    }
-
-    // Get root path using path operations domain
-    let root_path_response =
-        crate::domains::path_operations::service::get_root_path(path.to_string()).await?;
-    let root_path = root_path_response.root_path;
-    let raw_root_path = Path::new(&root_path);
-
-    // Extract repository name
-    let repo_name = raw_root_path
-        .file_name()
-        .ok_or_else(|| {
-            AppError::new(
-                "Failed to get repository name".to_string(),
-                "repo_name_failed",
-                Some("Could not extract the repository name from the file path".to_string()),
-            )
-        })?
-        .to_str()
-        .ok_or_else(|| {
-            AppError::new(
-                "Failed to convert repository name to string".to_string(),
-                "repo_name_failed",
-                Some("Repository name contains invalid UTF-8 characters".to_string()),
-            )
-        })?
-        .to_string();
-
-    // DB-FIRST: Check if repository exists in database
+    // DB-FIRST: Get repository from database
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
             "Failed to get database connection".to_string(),
@@ -88,53 +42,68 @@ pub async fn get_repository(
         )
     })?;
 
-    let db_repo = operations::get_repository(&mut conn, &repo_name);
+    let db_repo = operations::get_repository(&mut conn, repo_id).map_err(|_| {
+        AppError::new(
+            format!("Repository '{}' not found", repo_id),
+            "repository_not_found",
+            Some(format!(
+                "Please add the repository with ID '{}' first before accessing it",
+                repo_id
+            )),
+        )
+    })?;
 
-    match db_repo {
-        Ok(repo) => {
-            println!("Repository found in DB: {}", repo.name);
-            // Repository exists in DB - sync if needed
-            sync_repository_if_needed(raw_root_path, &repo_name, &root_path, db).await?;
+    println!("Repository found in DB: {}", db_repo.name);
 
-            // Get fresh data from DB after sync
-            let updated_repo = operations::get_repository(&mut conn, &repo_name).map_err(|e| {
-                AppError::new(
-                    "Failed to get updated repository from database".to_string(),
-                    "db_query_failed",
-                    Some(e.to_string()),
-                )
-            })?;
+    // Get path from database
+    let root_path = db_repo.path.clone();
+    let raw_root_path = Path::new(&root_path);
 
-            // Get branches from branch management domain (use fast version for performance)
-            let mut branches =
-                crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
-                    raw_root_path,
-                )?;
-            branches.sort_by(|a, b| b.current.cmp(&a.current));
-
-            Ok(GitDirResponse {
-                path: root_path,
-                branches,
-                current_branch: updated_repo.current_branch,
-                branches_count: updated_repo.branches_count as u32,
-                name: updated_repo.name,
-                id: updated_repo.id,
-            })
-        }
-        Err(_) => {
-            println!("Repository NOT found in DB: {}", repo_name);
-            // Repository doesn't exist in DB - return error
-            // User must explicitly add the repository first
-            Err(AppError::new(
-                format!("Repository '{}' not found", repo_name),
-                "repository_not_found",
-                Some(format!(
-                    "Please add the repository at '{}' first before accessing it",
-                    root_path
-                )),
-            ))
-        }
+    // Check if it's a git repository
+    if !super::validation::is_git_repository(raw_root_path)? {
+        return Err(AppError::new(
+            format!(
+                "The folder **{}** is not a git repository",
+                raw_root_path
+                    .file_name()
+                    .unwrap_or(raw_root_path.as_os_str())
+                    .to_string_lossy()
+            ),
+            "is_not_git_repository",
+            Some(format!(
+                "The path **{}** does not contain a .git directory",
+                raw_root_path.display()
+            )),
+        ));
     }
+
+    // Repository exists in DB - sync if needed
+    sync_repository_if_needed(raw_root_path, repo_id, &root_path, db).await?;
+
+    // Get fresh data from DB after sync
+    let updated_repo = operations::get_repository(&mut conn, repo_id).map_err(|e| {
+        AppError::new(
+            "Failed to get updated repository from database".to_string(),
+            "db_query_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // Get branches from branch management domain (use fast version for performance)
+    let mut branches =
+        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
+            raw_root_path,
+        )?;
+    branches.sort_by(|a, b| b.current.cmp(&a.current));
+
+    Ok(GitDirResponse {
+        path: root_path,
+        branches,
+        current_branch: updated_repo.current_branch,
+        branches_count: updated_repo.branches_count as u32,
+        name: updated_repo.name,
+        id: updated_repo.id,
+    })
 }
 
 /// Syncs repository data if it has changed.

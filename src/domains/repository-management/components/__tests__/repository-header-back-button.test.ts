@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
-import RepositoryHeaderBackButton from '../repository-header-back-button.svelte';
+import BackButton from '../back-button.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
 
 // Mock the navigation module
@@ -9,7 +9,7 @@ vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
 }));
 
-describe('RepositoryHeaderBackButton', () => {
+describe('BackButton', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
@@ -17,7 +17,7 @@ describe('RepositoryHeaderBackButton', () => {
 	test('should render the button', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: RepositoryHeaderBackButton,
+				component: BackButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -33,7 +33,7 @@ describe('RepositoryHeaderBackButton', () => {
 
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: RepositoryHeaderBackButton,
+				component: BackButton,
 				props: {
 					repositoryId
 				}
@@ -51,7 +51,7 @@ describe('RepositoryHeaderBackButton', () => {
 	test('should have correct accessibility attributes', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: RepositoryHeaderBackButton,
+				component: BackButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}

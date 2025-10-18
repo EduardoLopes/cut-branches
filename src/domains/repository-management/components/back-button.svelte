@@ -16,7 +16,7 @@
 	}
 </script>
 
-<Button emphasis="ghost" size="sm" onclick={navigateBack} shape="square" data-testid="back-button">
+<Button emphasis="ghost" size="md" onclick={navigateBack} shape="square" data-testid="back-button">
 	<Icon icon="lucide:arrow-left" width="24px" height="24px" />
 	<span class={visuallyHidden()}>Back</span>
 </Button>

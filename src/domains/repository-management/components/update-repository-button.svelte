@@ -6,7 +6,6 @@
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
 	import { hasRepoId, hasPath } from '$utils/query-type-guards';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	interface Props {
 		repositoryId: string;
@@ -63,13 +62,15 @@
 <Loading isLoading={isRefreshing}>
 	<Button
 		emphasis="ghost"
-		size="sm"
+		size="md"
 		onclick={handleUpdate}
 		disabled={isRefreshing}
+		title="Update repository"
+		aria-label="Update repository"
+		aria-describedby="Update repository"
 		shape="square"
 		data-testid="update-button"
 	>
-		<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
-		<span class={visuallyHidden()}>Update</span>
+		<Icon icon="lucide:refresh-cw" width="20px" height="20px" />
 	</Button>
 </Loading>
