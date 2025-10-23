@@ -1,84 +1,61 @@
 import { z } from 'zod/v4';
+import { Notification, type NotificationData } from '../core/models/notification';
 import { MapStore } from '$utils/map-store.svelte';
 
-/**
- * Represents a notification object.
- */
-export interface Notification {
-	/**
-	 * The message content of the notification.
-	 */
-	message?: string;
-
-	/**
-	 * The unique identifier for the notification.
-	 */
-	id?: string;
-
-	/**
-	 * The title of the notification.
-	 */
-	title?: string;
-
-	/**
-	 * The type of feedback associated with the notification.
-	 * Can be one of 'success', 'danger', 'warning', or 'default'.
-	 */
-	feedback?: 'success' | 'danger' | 'warning' | 'default';
-
-	/**
-	 * The timestamp when the notification was created.
-	 */
-	date?: number;
-}
-
-// Define schema for notification objects
-const notificationSchema = z.object({
-	message: z.string().optional(),
-	id: z.string().optional(),
-	title: z.string().optional(),
-	feedback: z.enum(['success', 'danger', 'warning', 'default']).optional(),
-	date: z.number().optional()
-});
+// Define schema for notification data objects that transforms to Notification instances
+const notificationSchema = z
+	.object({
+		message: z.string().optional(),
+		id: z.string().optional(),
+		title: z.string().optional(),
+		feedback: z.enum(['success', 'danger', 'warning', 'default']).optional(),
+		date: z.number().nullable().optional()
+	})
+	.transform((data) => Notification.create(data));
 
 /**
- * Creates a new notification object by merging the provided notification
- * with additional default properties.
- *
- * @param {Notification} notification - The notification object to be merged.
- * @returns {Notification} - The newly created notification object with a unique ID, default feedback, and current date.
+ * Store for managing notifications using the Notification Value Object
  */
-export function createNotificationObject(notification: Notification): Notification {
-	return {
-		id: notification.id || crypto.randomUUID(),
-		feedback: 'default',
-		date: Date.now(),
-		...notification
-	};
-}
-
 export class NotificationStore extends MapStore<string, Notification> {
 	constructor(repository: string) {
 		super(repository, z.string(), notificationSchema, []);
 	}
 
-	get last() {
+	/**
+	 * Gets the last notification in the list
+	 */
+	get last(): Notification | undefined {
 		return this.list[this.list.length - 1];
 	}
 
 	/**
 	 * Adds a notification without requiring a key.
+	 * Creates a Notification Value Object from the provided data.
 	 *
-	 * @param {Notification} value - The notification object to be added.
+	 * @param data - The notification data to be added.
 	 */
-	push(value: Notification) {
-		const notification = createNotificationObject(value);
-		super.set(notification.id!, notification);
+	push(data: NotificationData) {
+		const notification = Notification.create(data);
+		super.set(notification.id, notification);
+	}
+
+	/**
+	 * Overrides the set method to ensure we're working with Notification instances
+	 */
+	override set(key: string, value: Notification | NotificationData) {
+		const notification = Notification.isNotification(value) ? value : Notification.create(value);
+		super.set(key, notification);
 	}
 }
 
-export function isNotification(value: unknown): value is Notification {
-	return typeof value === 'object' && value !== null && 'message' in value;
-}
-
+/**
+ * Global notification store instance
+ */
 export const notifications = new NotificationStore('notifications');
+
+// Re-export types and classes for convenience
+export {
+	Notification,
+	NotificationValidationError,
+	type NotificationData
+} from '../core/models/notification';

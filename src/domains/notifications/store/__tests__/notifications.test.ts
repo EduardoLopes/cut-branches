@@ -1,10 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-	createNotificationObject,
 	NotificationStore,
-	isNotification,
 	notifications,
-	type Notification
+	Notification,
+	type NotificationData
 } from '../notifications.svelte';
 
 vi.mock('crypto', () => ({
@@ -19,10 +18,10 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-describe('createNotificationObject', () => {
+describe('Notification.create', () => {
 	it('should create a notification object with default properties', () => {
-		const notification: Notification = { message: 'Test message', title: 'Test title' };
-		const result = createNotificationObject(notification);
+		const data: NotificationData = { message: 'Test message', title: 'Test title' };
+		const result = Notification.create(data);
 		expect(result.id).toMatch(
 			/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
 		);
@@ -33,14 +32,14 @@ describe('createNotificationObject', () => {
 	});
 
 	it('should preserve existing properties when creating notification object', () => {
-		const notification: Notification = {
+		const data: NotificationData = {
 			message: 'Test message',
 			title: 'Test title',
 			feedback: 'success',
 			id: 'custom-id',
 			date: 1234567890
 		};
-		const result = createNotificationObject(notification);
+		const result = Notification.create(data);
 		expect(result.id).toBe('custom-id');
 		expect(result.feedback).toBe('success');
 		expect(result.date).toBe(1234567890);
@@ -49,49 +48,44 @@ describe('createNotificationObject', () => {
 	});
 
 	it('should handle notification without optional properties', () => {
-		const notification: Notification = { message: 'Test message' };
-		const result = createNotificationObject(notification);
+		const data: NotificationData = { message: 'Test message' };
+		const result = Notification.create(data);
 		expect(result.id).toBeDefined();
 		expect(result.feedback).toBe('default');
 		expect(result.date).toBeDefined();
 		expect(result.message).toBe('Test message');
-		expect(result.title).toBeUndefined();
+		expect(result.title).toBe('');
 	});
 });
 
-describe('isNotification', () => {
-	it('should return true for valid notification objects', () => {
-		const validNotification = { message: 'Test message' };
-		expect(isNotification(validNotification)).toBe(true);
+describe('Notification.isNotification', () => {
+	it('should return true for Notification instances', () => {
+		const notification = Notification.create({ message: 'Test message' });
+		expect(Notification.isNotification(notification)).toBe(true);
 	});
 
-	it('should return true for objects with message property', () => {
-		const objectWithMessage = { message: 'Test', title: 'Title', id: '123' };
-		expect(isNotification(objectWithMessage)).toBe(true);
+	it('should return false for plain objects', () => {
+		const plainObject = { message: 'Test', title: 'Title', id: '123' };
+		expect(Notification.isNotification(plainObject)).toBe(false);
 	});
 
 	it('should return false for null', () => {
-		expect(isNotification(null)).toBe(false);
+		expect(Notification.isNotification(null)).toBe(false);
 	});
 
 	it('should return false for undefined', () => {
-		expect(isNotification(undefined)).toBe(false);
+		expect(Notification.isNotification(undefined)).toBe(false);
 	});
 
 	it('should return false for non-objects', () => {
-		expect(isNotification('string')).toBe(false);
-		expect(isNotification(123)).toBe(false);
-		expect(isNotification(true)).toBe(false);
-	});
-
-	it('should return false for objects without message property', () => {
-		const objectWithoutMessage = { title: 'Title', id: '123' };
-		expect(isNotification(objectWithoutMessage)).toBe(false);
+		expect(Notification.isNotification('string')).toBe(false);
+		expect(Notification.isNotification(123)).toBe(false);
+		expect(Notification.isNotification(true)).toBe(false);
 	});
 
 	it('should return false for arrays', () => {
-		expect(isNotification([])).toBe(false);
-		expect(isNotification([{ message: 'test' }])).toBe(false);
+		expect(Notification.isNotification([])).toBe(false);
+		expect(Notification.isNotification([{ message: 'test' }])).toBe(false);
 	});
 });
 
@@ -109,8 +103,8 @@ describe('notifications (exported instance)', () => {
 		notifications.push(notification);
 
 		expect(notifications.list.length).toBe(1);
-		expect(notifications.last.message).toBe('Global notification');
-		expect(notifications.last.title).toBe('Global');
+		expect(notifications.last?.message).toBe('Global notification');
+		expect(notifications.last?.title).toBe('Global');
 	});
 
 	it('should maintain state across multiple operations', () => {
@@ -118,7 +112,7 @@ describe('notifications (exported instance)', () => {
 		notifications.push({ message: 'Second global notification' });
 
 		expect(notifications.list.length).toBe(2);
-		expect(notifications.last.message).toBe('Second global notification');
+		expect(notifications.last?.message).toBe('Second global notification');
 	});
 
 	it('should allow deletion from global store', () => {
@@ -140,10 +134,10 @@ describe('NotificationStore', () => {
 	});
 
 	it('should add a notification with a unique ID', () => {
-		const notification: Notification = { message: 'Test message', title: 'Test title' };
-		const result = createNotificationObject(notification);
-		store.push(notification);
+		const data: NotificationData = { message: 'Test message', title: 'Test title' };
+		store.push(data);
 
+		const result = store.last!;
 		expect(result.id).toMatch(
 			/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
 		);
@@ -160,8 +154,8 @@ describe('NotificationStore', () => {
 		store.push(notification1);
 		store.push(notification2);
 
-		expect(store.last.message).toBe('Second message');
-		expect(store.last.title).toBe('Second title');
+		expect(store.last?.message).toBe('Second message');
+		expect(store.last?.title).toBe('Second title');
 	});
 
 	it('should delete notifications by ID', () => {
@@ -248,8 +242,8 @@ describe('NotificationStore', () => {
 		store.push(notification);
 		const storedNotification = store.last;
 
-		expect(storedNotification.title).toBe('**Bold Title**');
-		expect(storedNotification.message).toBe('- List item 1\n- List item 2\n\n*Italic text*');
+		expect(storedNotification?.title).toBe('**Bold Title**');
+		expect(storedNotification?.message).toBe('- List item 1\n- List item 2\n\n*Italic text*');
 	});
 
 	it('should handle notifications with HTML content safely', () => {
@@ -261,8 +255,8 @@ describe('NotificationStore', () => {
 		store.push(notification);
 		const storedNotification = store.last;
 
-		expect(storedNotification.title).toBe('<script>alert("xss")</script>Title');
-		expect(storedNotification.message).toBe('<div onclick="alert()">Message</div>');
+		expect(storedNotification?.title).toBe('<script>alert("xss")</script>Title');
+		expect(storedNotification?.message).toBe('<div onclick="alert()">Message</div>');
 	});
 
 	it('should handle very long notification content', () => {
@@ -275,7 +269,7 @@ describe('NotificationStore', () => {
 		store.push(notification);
 		const storedNotification = store.last;
 
-		expect(storedNotification.title).toBe(longString);
-		expect(storedNotification.message).toBe(longString);
+		expect(storedNotification?.title).toBe(longString);
+		expect(storedNotification?.message).toBe(longString);
 	});
 });

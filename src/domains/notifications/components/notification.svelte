@@ -12,11 +12,13 @@
 	import { isValidDate } from '$utils/validation-utils';
 	import { css } from '@pindoba/panda/css';
 
-	type Props = Notification & {
+	type Props = {
+		notification: Notification;
 		emphasis?: AlertProps['emphasis'];
 	};
 
-	const { feedback, id, title, message, emphasis, date }: Props = $props();
+	const { notification, emphasis }: Props = $props();
+	const { feedback, id, title, message, date } = notification;
 </script>
 
 <Alert

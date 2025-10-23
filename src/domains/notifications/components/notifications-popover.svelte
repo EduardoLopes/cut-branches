@@ -11,88 +11,43 @@
 	import { intlFormatDistance } from 'date-fns';
 	import { untrack, onMount, onDestroy } from 'svelte';
 	import Notification from '$domains/notifications/components/notification.svelte';
-	import {
-		notifications,
-		type Notification as NotificationType
-	} from '$domains/notifications/store/notifications.svelte';
-	import { formatToUserTimezone, toUserTimezone } from '$utils/date-utils';
-	import { isValidDate } from '$utils/validation-utils';
+	import { useNotificationGrouping } from '$domains/notifications/core/composables/use-notification-grouping.svelte';
+	import { useNotificationPagination } from '$domains/notifications/core/composables/use-notification-pagination.svelte';
+	import { notifications } from '$domains/notifications/store/notifications.svelte';
+	import { toUserTimezone } from '$utils/date-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
-
-	/**
-	 * Represents a group of notifications for a specific date
-	 */
-	interface NotificationGroup {
-		date: Date;
-		notifications: NotificationType[];
-	}
 
 	// State management
 	let open = $state(false);
 	let timeoutID = $state<number | undefined>(undefined);
 	let showMore = $state(false);
-	let observer: IntersectionObserver | null = $state(null);
-	let sentinel: HTMLElement | null = $state(null);
-	let page = $state(1);
-	let isLoading = $state(false);
-	let hasError = $state(false);
-	let errorMessage = $state('');
 
 	// Configuration constants
 	const AUTO_CLOSE_DELAY = 2000; // ms
-	const PAGE_SIZE = 10;
 
 	// Get user's timezone for consistent date handling
-	const userTimeZone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+	const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-	/**
-	 * Groups notifications by date in the user's timezone
-	 * @returns An array of notification groups sorted by date (newest first)
-	 */
-	function getGroupedNotifications(): NotificationGroup[] {
-		if (!showMore) return [];
+	// Initialize pagination composable (reactive through getters)
+	const pagination = useNotificationPagination({
+		getNotifications: () => notifications.list,
+		pageSize: 10
+	});
 
-		try {
-			// Get paginated notifications in reverse order (newest first)
-			const reversedNotifications = [...notifications.list].reverse().slice(0, page * PAGE_SIZE);
-
-			// Group by date in user's timezone
-			const groups: Record<string, NotificationType[]> = {};
-
-			reversedNotifications.forEach((notification) => {
-				if (!notification.date || !isValidDate(notification.date)) return;
-
-				// Use our toUserTimezone utility to handle timezone conversion
-				const userTimezoneDate = toUserTimezone(notification.date, userTimeZone);
-				// Format the date for grouping
-				const dateKey = formatToUserTimezone(userTimezoneDate, 'yyyy-MM-dd', userTimeZone);
-
-				if (!groups[dateKey]) {
-					groups[dateKey] = [];
-				}
-
-				groups[dateKey].push(notification);
-			});
-
-			// Convert to array of objects with date and notifications
-			return Object.entries(groups)
-				.map(([dateKey, groupNotifications]) => ({
-					// Use our toUserTimezone utility to create the date object
-					date: toUserTimezone(dateKey, userTimeZone),
-					notifications: groupNotifications
-				}))
-				.sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date, newest first
-		} catch (error) {
-			console.error('Error grouping notifications:', error);
-			hasError = true;
-			errorMessage = 'Failed to load notifications';
-			return [];
-		}
-	}
+	// Derived state for paginated notifications (only when showing more)
+	const paginatedNotifications = $derived(showMore ? pagination.paginatedNotifications : []);
 
 	// Derived state for grouped notifications
-	let groupedNotifications = $derived(getGroupedNotifications());
+	const groupedNotifications = $derived(
+		showMore
+			? useNotificationGrouping({
+					getNotifications: () => paginatedNotifications,
+					userTimeZone,
+					enabled: true
+				}).grouped
+			: []
+	);
 
 	/**
 	 * Opens the notification popover and starts the auto-close timer
@@ -108,7 +63,7 @@
 	$effect(() => {
 		if (open) {
 			untrack(startAutoCloseTimer);
-			page = 1;
+			pagination.reset();
 		}
 
 		if (!open) {
@@ -155,73 +110,13 @@
 		}
 	});
 
-	/**
-	 * Loads more notifications when the user scrolls to the bottom
-	 */
-	function loadMoreNotifications() {
-		try {
-			isLoading = true;
-			// Avoid loading more if all items are loaded
-			if (page * PAGE_SIZE < notifications.list.length) {
-				page++;
-			}
-		} catch (error) {
-			console.error('Error loading more notifications:', error);
-			hasError = true;
-			errorMessage = 'Failed to load more notifications';
-		} finally {
-			isLoading = false;
-		}
-	}
-
-	/**
-	 * Sets up the Intersection Observer for infinite scrolling
-	 */
-	function setupObserver() {
-		if (observer) return;
-
-		try {
-			observer = new IntersectionObserver(
-				(entries) => {
-					entries.forEach((entry) => {
-						if (entry.isIntersecting && !isLoading) {
-							loadMoreNotifications();
-						}
-					});
-				},
-				{
-					rootMargin: '100px',
-					threshold: 0.1
-				}
-			);
-
-			if (sentinel) {
-				observer.observe(sentinel);
-			}
-		} catch (error) {
-			console.error('Error setting up intersection observer:', error);
-			// Fallback to manual loading if observer fails
-			observer = null;
-		}
-	}
-
 	// Lifecycle methods
 	onMount(() => {
 		handleClose();
-		setupObserver();
 	});
 
 	onDestroy(() => {
 		clearAutoCloseTimer();
-		if (observer && sentinel) {
-			observer.unobserve(sentinel);
-			observer.disconnect();
-		}
-	});
-
-	// Force reactivity for grouped notifications
-	$effect(() => {
-		getGroupedNotifications();
 	});
 
 	// Accessibility label for notification count
@@ -342,7 +237,7 @@
 		aria-live="polite"
 		aria-atomic="false"
 	>
-		{#if hasError}
+		{#if pagination.hasError}
 			<div
 				class={css({
 					p: 'md',
@@ -351,15 +246,13 @@
 				})}
 				role="alert"
 			>
-				{errorMessage}
+				{pagination.errorMessage}
 				<Button
 					size="sm"
 					emphasis="ghost"
 					feedback="danger"
 					onclick={() => {
-						hasError = false;
-						errorMessage = '';
-						page = 1;
+						pagination.retry();
 					}}
 				>
 					Retry
@@ -382,7 +275,7 @@
 					pb: 'md'
 				})}
 			>
-				<Notification {...notifications.last} />
+				<Notification notification={notifications.last} />
 			</div>
 		{:else if showMore}
 			<div
@@ -442,20 +335,20 @@
 							gap: 'md'
 						})}
 					>
-						{#each group.notifications as notification (notification.id)}
+						{#each group.notifications as notif (notif.id)}
 							<div
 								class={css({
 									zIndex: '0'
 								})}
 							>
-								<Notification {...notification} />
+								<Notification notification={notif} />
 							</div>
 						{/each}
 					</div>
 				{/each}
 			</div>
 
-			{#if isLoading}
+			{#if pagination.isLoading}
 				<div
 					class={css({
 						p: 'md',
@@ -472,7 +365,7 @@
 
 	<!-- Sentinel element for infinite scrolling -->
 	<div
-		bind:this={sentinel}
+		use:pagination.bindSentinel
 		class={css({
 			width: '100%'
 		})}
