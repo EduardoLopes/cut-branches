@@ -142,6 +142,95 @@ The project follows a domain-driven architecture with clear separation of concer
 
 ## Key Development Notes
 
+### CRITICAL: Code Design Rules (MUST FOLLOW)
+
+**BEFORE making any code changes, you MUST verify compliance with these rules:**
+
+#### Pre-Edit Decision Checklist
+
+When creating or editing files, ask yourself:
+
+- [ ] Is this code domain-specific or globally reusable?
+- [ ] If domain-specific, which existing domain does it belong to?
+- [ ] If creating a new file, does a similar one already exist that I should edit instead?
+- [ ] Does this follow our file naming conventions (kebab-case)?
+- [ ] Am I importing code between domains? ❌ **NOT ALLOWED**
+- [ ] Does this follow our operation naming patterns (create/update/delete/get/list)?
+- [ ] Should this logic be in `core/composables/` (application logic) or `core/models/` (domain logic)?
+- [ ] Can this domain concept be represented as a Value Object? (e.g., Email, BranchName, RepositoryPath)
+
+#### Critical Code Design Rules
+
+1. **Domain Isolation - NO EXCEPTIONS**
+   - ❌ **NEVER** import code directly between domains
+   - ✅ If code is needed by multiple domains, **promote it** to a global directory (`src/utils/`, `src/services/`, `src/core/`)
+   - ✅ Domains communicate only through a global event bus or shared services
+
+2. **Route Files Must Be Thin**
+   - Routes in `src/routes/` should only orchestrate and compose domain components
+   - Keep business logic in domain directories, not in route files
+
+3. **Co-locate Tests**
+   - Place tests in `__tests__/` directories next to the code they test
+   - 100% branch coverage requirement for all new code
+
+4. **File Naming Conventions**
+   - Use **kebab-case** for all files and directories (e.g., `my-component.svelte`, `user-profile/`)
+   - Follow operation naming patterns (see "Operations Naming Convention" section below)
+
+5. **Prefer Editing Over Creating**
+   - ✅ **ALWAYS** prefer editing existing files over creating new ones
+   - Only create new files when absolutely necessary
+
+6. **Shared Code Promotion Strategy**
+   - Domain-specific code → `src/domains/[domain-name]/`
+   - Globally reusable UI components → `src/ui/core/`
+   - Globally reusable utilities (stateless) → `src/utils/`
+   - Globally reusable logic (stateful, framework-dependent) → `src/lib/`
+   - Pure domain models & Value Objects (shared) → `src/core/`
+   - Domain-specific models & Value Objects → `src/domains/[domain-name]/core/models/`
+   - Infrastructure services → `src/services/`
+
+7. **Use Value Objects for Domain Concepts**
+   - ✅ **DO** use Value Objects for domain concepts like `Email`, `Money`, `BranchName`, `RepositoryPath`, `CommitHash`
+   - ✅ Value Objects should be **immutable** (no setters, properties are readonly)
+   - ✅ Value Objects use **value equality** (two objects with same values are considered equal)
+   - ✅ Encapsulate **validation logic** in the constructor (throw errors for invalid values)
+   - ✅ Provide type safety and make domain rules explicit in code
+   - **Placement**:
+     - Shared Value Objects → `src/core/`
+     - Domain-specific Value Objects → `src/domains/[domain-name]/core/models/`
+   - **Example**:
+
+     ```typescript
+     class Email {
+     	private readonly value: string;
+
+     	constructor(email: string) {
+     		if (!this.isValid(email)) {
+     			throw new Error('Invalid email format');
+     		}
+     		this.value = email;
+     	}
+
+     	getValue(): string {
+     		return this.value;
+     	}
+     	equals(other: Email): boolean {
+     		return this.value === other.value;
+     	}
+     	private isValid(email: string): boolean {
+     		/* validation */
+     	}
+     }
+     ```
+
+**For complete code design guidelines, see [@docs/code-design-guide.md](docs/code-design-guide.md)**
+
+**Code design violations are considered bugs and must be avoided.**
+
+---
+
 ### Code Style
 
 - Frontend: kebab-case files, camelCase variables, PascalCase components
@@ -220,11 +309,11 @@ Every command should have an input and output struct with the name of the comman
 - Prefer composition over inheritance
 - Domain-driven file organization over feature folders
 
-### Architecture Compliance
+### Code Design Compliance
 
-The project follows the **Framework-Agnostic Frontend Architecture** principles as described in [this article](https://eduardolopes.dev.br/en/blog/framework-agnostic-frontend-architecture/). Key principles:
+The project follows the **Framework-Agnostic Frontend Code Design** principles as described in [this article](https://eduardolopes.dev.br/en/blog/framework-agnostic-frontend-architecture/). Key principles:
 
-**Core Architectural Principles:**
+**Core Code Design Principles:**
 
 1. **Vertical Slice Architecture** - Features organized as self-contained vertical slices
 2. **Domain-Driven Design** - Business logic organized around domain concepts
@@ -246,7 +335,7 @@ The project follows the **Framework-Agnostic Frontend Architecture** principles 
 - `src/store/` - Global state management
 - `static/` - Build-time static assets served from root URL (favicon, robots.txt)
 
-**Architectural Rules:**
+**Code Design Rules:**
 
 - **Domain Isolation**: No direct imports between domains - use global event bus or shared services
 - **Route Files**: Should be thin orchestration layers that compose domain components
