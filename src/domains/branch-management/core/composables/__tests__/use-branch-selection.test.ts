@@ -9,7 +9,7 @@ import type { Repository } from '$services/common';
 let currentRepository: Repository | undefined;
 
 // Mock createGetBranchesQuery to return branch data with filter support
-vi.mock('../queries/create-get-branches-query', () => ({
+vi.mock('../create-get-branches-query', () => ({
 	createGetBranchesQuery: (input: () => { repoId: string; filters?: BranchFilters }) => ({
 		get data() {
 			if (!currentRepository) return { branches: [] };
@@ -59,7 +59,7 @@ vi.mock('../queries/create-get-branches-query', () => ({
 	})
 }));
 
-vi.mock('../../../services/createSelectedBranchesQuery', () => ({
+vi.mock('../createSelectedBranchesQuery', () => ({
 	createSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -79,7 +79,7 @@ vi.mock('../../../services/createSelectedBranchesQuery', () => ({
 }));
 
 // Mock the mutations to actually update the stores
-vi.mock('../../../services/createSelectedBranchesMutations', () => ({
+vi.mock('../createSelectedBranchesMutations', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(async ({ branchNames, isSelected }) => {

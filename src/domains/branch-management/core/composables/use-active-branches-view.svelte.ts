@@ -1,37 +1,39 @@
 /**
- * Deleted Branches View Composable
+ * Active Branches View Composable
  *
- * Provides stateful logic specific to the deleted branches view.
- * Manages repository data, branches query, and search filtering
- * for deleted branches.
+ * Provides stateful logic specific to the active branches view.
+ * Manages repository data, branches query, search filtering, and
+ * active branch-specific derived states like selectable count.
  */
 
 import { onDestroy } from 'svelte';
 import { SvelteDate } from 'svelte/reactivity';
-import { createGetBranchesQuery } from './queries/create-get-branches-query';
-import { createGetRepositoryQuery } from './queries/create-get-repository-query';
+import { createGetBranchesQuery } from './create-get-branches-query';
+import { createGetRepositoryQuery } from './create-get-repository-query';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { buildRepositoryData } from '$domains/branch-management/utils/build-repository-data';
 import { filterBranchesBySearch } from '$domains/branch-management/utils/filter-branches-by-search';
 import { globalStore } from '$store/global-store.svelte';
+import { isEmptyString } from '$utils/string-utils';
 
-interface UseDeletedBranchesViewProps {
+interface UseActiveBranchesViewProps {
 	getId: () => string;
 }
 
-export function useDeletedBranchesView({ getId }: UseDeletedBranchesViewProps) {
+export function useActiveBranchesView({ getId }: UseActiveBranchesViewProps) {
 	const repositoryQuery = createGetRepositoryQuery(() => getId(), {
 		enabled: () => !!getId()
 	});
 
-	const search = $derived(getSearchBranchesStore(`${getId()}-deleted`));
+	const search = $derived(getSearchBranchesStore(`${getId()}-active`));
 
-	// Query for deleted branches
+	// Query for active branches
 	const branchesQuery = createGetBranchesQuery(
 		() => ({
 			repoId: getId() ?? '',
 			filters: {
-				deletionStatus: 'deleted'
+				deletionStatus: 'active',
+				includeCurrent: true
 			}
 		}),
 		{
@@ -62,7 +64,19 @@ export function useDeletedBranchesView({ getId }: UseDeletedBranchesViewProps) {
 		return filterBranchesBySearch(data.branches, search?.state);
 	});
 
+	// Calculate the number of branches that can be selected (excludes current branch and locked branches)
+	const selectibleCount = $derived.by(() => {
+		if (!branches) {
+			return 0;
+		}
+
+		const currentBranch = repositoryQuery.data?.currentBranch;
+		return branches.filter((item) => item.name !== currentBranch && !item.isLocked).length;
+	});
+
 	const searchNoResultsFound = $derived((search?.state?.length ?? 0) > 0 && branches?.length === 0);
+
+	const hasNoBranchesToDelete = $derived(selectibleCount === 0 && isEmptyString(search?.state));
 
 	// Build repository data object from query
 	const currentRepoData = $derived.by(() => {
@@ -87,8 +101,14 @@ export function useDeletedBranchesView({ getId }: UseDeletedBranchesViewProps) {
 		get branches() {
 			return branches;
 		},
+		get selectibleCount() {
+			return selectibleCount;
+		},
 		get searchNoResultsFound() {
 			return searchNoResultsFound;
+		},
+		get hasNoBranchesToDelete() {
+			return hasNoBranchesToDelete;
 		},
 		get currentRepoData() {
 			return currentRepoData;

@@ -8,12 +8,12 @@
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
-	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
-	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
+	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
+	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import {
 		createRestoreDeletedBranchMutation,
 		createRestoreDeletedBranchesMutation
-	} from '$domains/branch-management/services/createRestoreDeletedBranchMutation';
+	} from '$domains/branch-management/core/composables/createRestoreDeletedBranchMutation';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
 	import BranchCard from '$ui/core/branch-card.svelte';

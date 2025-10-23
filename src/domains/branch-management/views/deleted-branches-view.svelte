@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { useDeletedBranchesView } from '../logic/application/use-deleted-branches-view.svelte';
+	import { useDeletedBranchesView } from '../core/composables/use-deleted-branches-view.svelte';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
 	import BranchSelection from '$domains/branch-management/components/branch-selection.svelte';
 	import BranchesEmptyStates from '$domains/branch-management/components/branches-empty-states.svelte';

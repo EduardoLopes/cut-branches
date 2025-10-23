@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getRepositoryStore } from '../../store/repository.svelte';
 import Repository from '../../views/repository-view.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import { createDeleteBranchesMutation } from '$domains/branch-management/services/createDeleteBranchesMutation';
+import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/createDeleteBranchesMutation';
 import * as selectedBranchesStore from '$domains/branch-management/store/selected-branches.svelte';
 
 // Mock the repositories store
@@ -48,7 +48,7 @@ vi.mock('$domains/notifications/store/notifications.svelte', () => ({
 }));
 
 // Mock delete branches mutation
-vi.mock('$domains/branch-management/services/createDeleteBranchesMutation', () => ({
+vi.mock('$domains/branch-management/core/composables/createDeleteBranchesMutation', () => ({
 	createDeleteBranchesMutation: vi.fn().mockReturnValue({
 		mutate: vi.fn(),
 		isPending: false

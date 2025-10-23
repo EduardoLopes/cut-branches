@@ -4,9 +4,9 @@
 	import {
 		createAddLockedBranchesMutation,
 		createRemoveLockedBranchesMutation
-	} from '$domains/branch-management/services/createLockedBranchesMutations';
-	import { createLockedBranchesQuery } from '$domains/branch-management/services/createLockedBranchesQuery';
-	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
+	} from '$domains/branch-management/core/composables/createLockedBranchesMutations';
+	import { createLockedBranchesQuery } from '$domains/branch-management/core/composables/createLockedBranchesQuery';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/createSelectedBranchesMutations';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';

@@ -4,14 +4,14 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
-	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
+	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { getSearchBranchesStore } from '../store/search-branches.svelte';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
-	import { createBranchMergeStatusQuery } from '$domains/branch-management/services/createBranchMergeStatusQuery';
-	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
-	import { createSwitchBranchMutation } from '$domains/branch-management/services/createSwitchBranchMutation';
+	import { createBranchMergeStatusQuery } from '$domains/branch-management/core/composables/createBranchMergeStatusQuery';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/createSelectedBranchesMutations';
+	import { createSwitchBranchMutation } from '$domains/branch-management/core/composables/createSwitchBranchMutation';
 	import {
 		getBranchColorPalette,
 		getBranchAlerts,

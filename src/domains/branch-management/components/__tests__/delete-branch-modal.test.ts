@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { vi } from 'vitest';
 import type { Mock } from 'vitest';
-import { createDeleteBranchesMutation } from '../../services/createDeleteBranchesMutation';
+import { createDeleteBranchesMutation } from '../../core/composables/createDeleteBranchesMutation';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
 import type { Branch } from '$lib/bindings';
@@ -26,7 +26,7 @@ vi.mock('$domains/branch-management/store/deleted-branches.svelte', () => ({
 }));
 
 // Simple mutation mock
-vi.mock('../../services/createDeleteBranchesMutation', () => ({
+vi.mock('../../core/composables/createDeleteBranchesMutation', () => ({
 	createDeleteBranchesMutation: vi.fn().mockReturnValue({
 		mutate: vi.fn(),
 		isPending: false
@@ -34,7 +34,7 @@ vi.mock('../../services/createDeleteBranchesMutation', () => ({
 }));
 
 // Mock clear selected branches mutation
-vi.mock('../../services/createSelectedBranchesMutations', () => ({
+vi.mock('../../core/composables/createSelectedBranchesMutations', () => ({
 	createUpdateBranchSelectionBatchMutation: vi.fn(() => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),
@@ -103,7 +103,7 @@ const mockBranches: Branch[] = [
 ];
 
 // Mock get repository list query
-vi.mock('../../logic/application/queries/create-get-repository-list-query', () => ({
+vi.mock('../../core/composables/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: vi.fn(() => ({
 		data: [
 			{
@@ -124,7 +124,7 @@ vi.mock('../../logic/application/queries/create-get-repository-list-query', () =
 let mockSelectedBranches: string[] = ['feature-1'];
 
 // Mock get branches query with dynamic filtering based on filters
-vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
+vi.mock('../../core/composables/create-get-branches-query', () => ({
 	createGetBranchesQuery: vi.fn((filtersFactory) => {
 		const filters = typeof filtersFactory === 'function' ? filtersFactory() : filtersFactory;
 

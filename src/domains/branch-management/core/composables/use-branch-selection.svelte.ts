@@ -5,8 +5,8 @@
  * Manages selection state, locked branches, and selection operations.
  */
 
-import { createGetBranchesQuery } from './queries/create-get-branches-query';
-import { createSetBranchSelectionAllMutation } from '$domains/branch-management/services/createSelectedBranchesMutations';
+import { createGetBranchesQuery } from './create-get-branches-query';
+import { createSetBranchSelectionAllMutation } from './createSelectedBranchesMutations';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { calculateSelectionState } from '$domains/branch-management/utils/calculate-selection-state';
 import { filterSelectableBranches } from '$domains/branch-management/utils/filter-selectable-branches';

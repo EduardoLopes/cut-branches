@@ -145,7 +145,7 @@ vi.mock('$domains/repository-management/logic/application/queries/get-branch-lis
 }));
 
 // Mock the get branches query used by branch-list component
-vi.mock('$domains/branch-management/logic/application/queries/create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/core/composables/create-get-branches-query', () => ({
 	createGetBranchesQuery: () => ({
 		data: { branches: mockBranches },
 		isLoading: false,
@@ -156,7 +156,7 @@ vi.mock('$domains/branch-management/logic/application/queries/create-get-branche
 }));
 
 // Mock the repository query used by active branches view
-vi.mock('$domains/branch-management/logic/application/queries/create-get-repository-query', () => ({
+vi.mock('$domains/branch-management/core/composables/create-get-repository-query', () => ({
 	createGetRepositoryQuery: () => ({
 		data: {
 			id: 'test-repo-id',
@@ -216,7 +216,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 // Mock branch deletion mutation
-vi.mock('$domains/branch-management/services/createDeleteBranchesMutation', () => ({
+vi.mock('$domains/branch-management/core/composables/createDeleteBranchesMutation', () => ({
 	createDeleteBranchesMutation: vi.fn(({ onSuccess }) => ({
 		mutate: vi.fn((_args) => {
 			setTimeout(() => {
@@ -231,7 +231,7 @@ vi.mock('$domains/branch-management/services/createDeleteBranchesMutation', () =
 }));
 
 // Mock branch selection mutations
-vi.mock('$domains/branch-management/services/createSelectedBranchesMutations', () => ({
+vi.mock('$domains/branch-management/core/composables/createSelectedBranchesMutations', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(({ branchNames, isSelected }) => {
 			const store = getSelectedBranchesStore('test-repo-id');
@@ -252,7 +252,7 @@ vi.mock('$domains/branch-management/services/createSelectedBranchesMutations', (
 }));
 
 // Mock branch merge status query
-vi.mock('$domains/branch-management/services/createBranchMergeStatusQuery', () => ({
+vi.mock('$domains/branch-management/core/composables/createBranchMergeStatusQuery', () => ({
 	createBranchMergeStatusQuery: () => ({
 		data: undefined,
 		isLoading: false,
@@ -261,7 +261,7 @@ vi.mock('$domains/branch-management/services/createBranchMergeStatusQuery', () =
 	})
 }));
 
-vi.mock('$domains/branch-management/services/createSwitchBranchMutation', () => {
+vi.mock('$domains/branch-management/core/composables/createSwitchBranchMutation', () => {
 	return {
 		createSwitchBranchMutation: vi.fn(({ onSuccess }) => {
 			return {

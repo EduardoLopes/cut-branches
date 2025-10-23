@@ -11,7 +11,7 @@ import type { Repository } from '$services/common';
 let mockBranchData: Branch[] = [];
 
 // Mock createGetBranchesQuery with filter support
-vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
+vi.mock('../../core/composables/create-get-branches-query', () => ({
 	createGetBranchesQuery: (input: () => { repoId: string; filters?: BranchFilters }) => ({
 		get data() {
 			const filters = input().filters || {};
@@ -56,7 +56,7 @@ vi.mock('../../logic/application/queries/create-get-branches-query', () => ({
 	})
 }));
 
-vi.mock('../../services/createSelectedBranchesQuery', () => ({
+vi.mock('../../core/composables/createSelectedBranchesQuery', () => ({
 	createSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -76,7 +76,7 @@ vi.mock('../../services/createSelectedBranchesQuery', () => ({
 }));
 
 // Mock the mutations to actually update the stores
-vi.mock('../../services/createSelectedBranchesMutations', () => ({
+vi.mock('../../core/composables/createSelectedBranchesMutations', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),

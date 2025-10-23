@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DeleteBranchModal from '../components/delete-branch-modal.svelte';
-	import { useActiveBranchesView } from '../logic/application/use-active-branches-view.svelte';
+	import { useActiveBranchesView } from '../core/composables/use-active-branches-view.svelte';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
 	import BranchSelection from '$domains/branch-management/components/branch-selection.svelte';
 	import BranchesEmptyStates from '$domains/branch-management/components/branches-empty-states.svelte';

@@ -3,9 +3,9 @@
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
-	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
-	import { createDeleteBranchesMutation } from '$domains/branch-management/services/createDeleteBranchesMutation';
+	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
+	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
+	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/createDeleteBranchesMutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { Branch } from '$lib/bindings';
