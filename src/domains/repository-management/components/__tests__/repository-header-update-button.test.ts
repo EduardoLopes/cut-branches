@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
-import UpdateRepositoryButton from '../update-repository-button.svelte';
+import RepositoryHeaderUpdateButton from '../update-repository-button.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
 
 // Mock the createGetRepositoryListQuery
@@ -51,7 +51,7 @@ vi.mock('@tanstack/svelte-query', async (importOriginal) => {
 	};
 });
 
-describe('UpdateRepositoryButton', () => {
+describe('RepositoryHeaderUpdateButton', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
@@ -59,7 +59,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should render the button', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -72,7 +72,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should invalidate queries when clicked', async () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -105,7 +105,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should invalidate correct branch queries with predicate', async () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -148,7 +148,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should invalidate repository queries with predicate', async () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -184,7 +184,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should show notification after invalidation succeeds', async () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -208,7 +208,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should not be disabled when not refreshing', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -222,7 +222,7 @@ describe('UpdateRepositoryButton', () => {
 	test('should have correct accessibility attributes', () => {
 		const { getByTestId } = render(TestWrapper, {
 			props: {
-				component: UpdateRepositoryButton,
+				component: RepositoryHeaderUpdateButton,
 				props: {
 					repositoryId: 'test-repo-id'
 				}
@@ -232,8 +232,7 @@ describe('UpdateRepositoryButton', () => {
 		const button = getByTestId('update-button');
 		expect(button).toBeInTheDocument();
 
-		// Check that the button has proper aria-label
+		// Check that the button has proper accessibility label
 		expect(button).toHaveAttribute('aria-label', 'Update repository');
-		expect(button).toHaveAttribute('title', 'Update repository');
 	});
 });

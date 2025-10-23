@@ -13,7 +13,6 @@
 	interface Props extends Omit<HTMLInputAttributes, 'oninput'> {
 		repository: Repository | undefined;
 		oninput?: (value: string) => void;
-		onclear?: () => void;
 		placeholder?: string;
 		width?: string;
 		branchContext?: 'active' | 'deleted';
@@ -23,7 +22,6 @@
 	const {
 		repository,
 		oninput,
-		onclear,
 		placeholder = 'Search',
 		width = '130px',
 		branchContext = 'active',
@@ -31,7 +29,7 @@
 		...rest
 	}: Props = $props();
 
-	const search = $derived(getSearchBranchesStore(`${repository?.name}-${branchContext}`));
+	const search = $derived(getSearchBranchesStore(`${repository?.id}-${branchContext}`));
 	const searchToggle = createToggle(false);
 
 	const handleInput = (event: Event) => {
@@ -44,7 +42,8 @@
 	};
 
 	const handleClear = () => {
-		onclear?.();
+		search?.clear();
+		searchToggle.reset();
 	};
 </script>
 

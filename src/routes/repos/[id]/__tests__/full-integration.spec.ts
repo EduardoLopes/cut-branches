@@ -150,6 +150,23 @@ vi.mock('$domains/branch-management/logic/application/queries/create-get-branche
 		data: { branches: mockBranches },
 		isLoading: false,
 		isError: false,
+		error: null,
+		dataUpdatedAt: Date.now()
+	})
+}));
+
+// Mock the repository query used by active branches view
+vi.mock('$domains/branch-management/logic/application/queries/create-get-repository-query', () => ({
+	createGetRepositoryQuery: () => ({
+		data: {
+			id: 'test-repo-id',
+			name: 'test-repo',
+			path: '/path/to/test-repo',
+			currentBranch: 'main',
+			branchesCount: 3
+		},
+		isLoading: false,
+		isError: false,
 		error: null
 	})
 }));
@@ -376,7 +393,7 @@ describe('Repository Page Integration Test', () => {
 		}
 
 		// Render the fixture
-		const { getByRole, findByTestId } = render(RepositoryPageFixture, {
+		const { findByTestId, getByTestId } = render(RepositoryPageFixture, {
 			props: {
 				id: 'test-repo-id'
 			}
@@ -386,7 +403,7 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Additional tick for async updates
 
 		// Find the delete button in the bulk actions and click it
-		const deleteButton = getByRole('button', { name: /delete/i });
+		const deleteButton = getByTestId('open-dialog-button');
 		await fireEvent.click(deleteButton);
 
 		await tick(); // Initial tick
@@ -431,13 +448,13 @@ describe('Repository Page Integration Test', () => {
 
 		// Only branches with "feature" should be visible
 		// The full branches list should be filtered
-		const searchStore = getSearchBranchesStore('test-repo-active');
+		const searchStore = getSearchBranchesStore('test-repo-id-active');
 		expect(searchStore?.state).toBe('feature');
 
-		// Verify that only one branch is rendered
+		// Verify that only one branch is rendered (feature-branch matches "feature")
 		const branchList = screen.getByRole('list');
 		const branchCheckboxes = within(branchList).getAllByRole('checkbox');
-		expect(branchCheckboxes.length).toBe(2);
+		expect(branchCheckboxes.length).toBe(1);
 	});
 
 	it('switches the current branch', async () => {
