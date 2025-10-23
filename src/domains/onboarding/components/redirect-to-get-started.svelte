@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
+	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';

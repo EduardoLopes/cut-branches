@@ -11,7 +11,7 @@
 	import { createSetBranchSelectionAllMutation } from '$domains/branch-management/core/composables/createSelectedBranchesMutations';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createGetRepositoryListQuery } from '$domains/onboarding/logic/application/queries/create-get-repository-list-query';
+	import { createGetRepositoryListQuery } from '$domains/onboarding/core/composables/create-get-repository-list-query';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
