@@ -51,13 +51,28 @@ This domain communicates with other domains exclusively through the global event
 ### Global Services
 
 - `$services/event-bus` - For inter-domain communication
-- `$services/repositories/create-get-repository-list-query` - For fetching repository list
+
+### Domain Composables
+
+- `core/composables/create-get-repository-list-query` - TanStack Query wrapper for fetching repository list
 
 ### UI Components
 
 - `$ui/core/icon-button.svelte` - For the add repository button
 - `@pindoba/svelte-navigation` - External navigation component library
 
+## Domain Structure
+
+This domain follows the standard domain-driven structure:
+
+- `components/` - UI components used within this feature
+  - `app-header.svelte` - Application branding
+  - `repository-list.svelte` - Repository navigation list
+- `core/composables/` - Application logic layer (stateful, framework-dependent)
+  - `create-get-repository-list-query.ts` - TanStack Query wrapper
+- `views/` - Top-level presentational components
+  - `menu-view.svelte` - Main navigation view
+
 ## State Management
 
-This domain uses TanStack Query for server state management via the global `createGetRepositoryListQuery` service. No local domain-specific state management is needed.
+This domain uses TanStack Query for server state management via the domain-specific `createGetRepositoryListQuery` composable. No additional local state management is needed.

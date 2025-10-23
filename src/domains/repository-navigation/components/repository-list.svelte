@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
-	import { createGetRepositoryListQuery } from '../logic/application/queries/create-get-repository-list-query';
+	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
