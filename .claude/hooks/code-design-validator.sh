@@ -6,10 +6,9 @@
 # Log hook execution (optional - for debugging)
 # echo "$(date): Hook executed" >> /Users/eduardolopes/Projects/cut-branches/.claude/hooks/hook-log.txt
 
-cat << 'EOF'
-{
-  "decision": "allow",
-  "additionalContext": "## Code Design Compliance Reminder
+# Read the message content and escape it properly for JSON
+MESSAGE=$(cat << 'MESSAGE_EOF'
+## Code Design Compliance Reminder
 
 Before making any changes, verify compliance with these CRITICAL rules:
 
@@ -41,6 +40,19 @@ Before making any changes, verify compliance with these CRITICAL rules:
 
 **Code design violations are considered bugs and must be avoided.**
 
-Refer to docs/code-design-guide.md for complete guidelines."
+Refer to docs/code-design-guide.md for complete guidelines.
+MESSAGE_EOF
+)
+
+# Properly escape the message for JSON using jq
+MESSAGE_ESCAPED=$(echo "$MESSAGE" | jq -Rs .)
+
+# Output valid JSON with proper schema
+cat <<EOF
+{
+  "hookSpecificOutput": {
+    "hookEventName": "UserPromptSubmit",
+    "additionalContext": $MESSAGE_ESCAPED
+  }
 }
 EOF
