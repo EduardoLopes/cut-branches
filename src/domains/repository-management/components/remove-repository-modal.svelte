@@ -7,8 +7,8 @@
 	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { createClearLockedBranchesMutation } from '$domains/branch-management/core/composables/createLockedBranchesMutations';
-	import { createSetBranchSelectionAllMutation } from '$domains/branch-management/core/composables/createSelectedBranchesMutations';
+	import { createClearLockedBranchesMutation } from '$domains/branch-management/core/composables/create-locked-branches-mutations';
+	import { createSetBranchSelectionAllMutation } from '$domains/branch-management/core/composables/create-selected-branches-mutations';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import { createGetRepositoryListQuery } from '$domains/onboarding/core/composables/create-get-repository-list-query';

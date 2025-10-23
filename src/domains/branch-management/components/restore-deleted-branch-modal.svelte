@@ -13,7 +13,7 @@
 	import {
 		createRestoreDeletedBranchMutation,
 		createRestoreDeletedBranchesMutation
-	} from '$domains/branch-management/core/composables/createRestoreDeletedBranchMutation';
+	} from '$domains/branch-management/core/composables/create-restore-deleted-branch-mutation';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
 	import BranchCard from '$ui/core/branch-card.svelte';

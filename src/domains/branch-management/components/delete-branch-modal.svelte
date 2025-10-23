@@ -5,7 +5,7 @@
 	import Loading from '@pindoba/svelte-loading';
 	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
-	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/createDeleteBranchesMutation';
+	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/create-delete-branches-mutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { Branch } from '$lib/bindings';

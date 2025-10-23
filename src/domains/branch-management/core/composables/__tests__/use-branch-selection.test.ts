@@ -59,7 +59,7 @@ vi.mock('../create-get-branches-query', () => ({
 	})
 }));
 
-vi.mock('../createSelectedBranchesQuery', () => ({
+vi.mock('../create-selected-branches-query', () => ({
 	createSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -79,7 +79,7 @@ vi.mock('../createSelectedBranchesQuery', () => ({
 }));
 
 // Mock the mutations to actually update the stores
-vi.mock('../createSelectedBranchesMutations', () => ({
+vi.mock('../create-selected-branches-mutations', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(async ({ branchNames, isSelected }) => {

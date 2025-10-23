@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { vi } from 'vitest';
 import type { Mock } from 'vitest';
-import { createDeleteBranchesMutation } from '../../core/composables/createDeleteBranchesMutation';
+import { createDeleteBranchesMutation } from '../../core/composables/create-delete-branches-mutation';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
 import type { Branch } from '$lib/bindings';
@@ -26,7 +26,7 @@ vi.mock('$domains/branch-management/store/deleted-branches.svelte', () => ({
 }));
 
 // Simple mutation mock
-vi.mock('../../core/composables/createDeleteBranchesMutation', () => ({
+vi.mock('../../core/composables/create-delete-branches-mutation', () => ({
 	createDeleteBranchesMutation: vi.fn().mockReturnValue({
 		mutate: vi.fn(),
 		isPending: false
@@ -34,7 +34,7 @@ vi.mock('../../core/composables/createDeleteBranchesMutation', () => ({
 }));
 
 // Mock clear selected branches mutation
-vi.mock('../../core/composables/createSelectedBranchesMutations', () => ({
+vi.mock('../../core/composables/create-selected-branches-mutations', () => ({
 	createUpdateBranchSelectionBatchMutation: vi.fn(() => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),
