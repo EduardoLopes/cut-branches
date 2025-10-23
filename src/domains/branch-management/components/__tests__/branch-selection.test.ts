@@ -56,7 +56,7 @@ vi.mock('../../core/composables/create-get-branches-query', () => ({
 	})
 }));
 
-vi.mock('../../core/composables/createSelectedBranchesQuery', () => ({
+vi.mock('../../core/composables/create-selected-branches-query', () => ({
 	createSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -64,7 +64,10 @@ vi.mock('../../core/composables/createSelectedBranchesQuery', () => ({
 		},
 		isLoading: false,
 		isError: false
-	}),
+	})
+}));
+
+vi.mock('../../core/composables/create-deleted-selected-branches-query', () => ({
 	createDeletedSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -76,12 +79,15 @@ vi.mock('../../core/composables/createSelectedBranchesQuery', () => ({
 }));
 
 // Mock the mutations to actually update the stores
-vi.mock('../../core/composables/createSelectedBranchesMutations', () => ({
+vi.mock('../../core/composables/create-update-branch-selection-batch-mutation', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),
 		isPending: false
-	}),
+	})
+}));
+
+vi.mock('../../core/composables/create-set-branch-selection-all-mutation', () => ({
 	createSetBranchSelectionAllMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),

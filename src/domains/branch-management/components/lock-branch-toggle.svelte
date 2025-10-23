@@ -1,12 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
-	import {
-		createAddLockedBranchesMutation,
-		createRemoveLockedBranchesMutation
-	} from '$domains/branch-management/core/composables/create-locked-branches-mutations';
+	import { createAddLockedBranchesMutation } from '$domains/branch-management/core/composables/create-add-locked-branches-mutation';
 	import { createLockedBranchesQuery } from '$domains/branch-management/core/composables/create-locked-branches-query';
-	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-selected-branches-mutations';
+	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/core/composables/create-remove-locked-branches-mutation';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-update-branch-selection-batch-mutation';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';

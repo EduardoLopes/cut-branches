@@ -67,7 +67,10 @@ vi.mock('../create-selected-branches-query', () => ({
 		},
 		isLoading: false,
 		isError: false
-	}),
+	})
+}));
+
+vi.mock('../create-deleted-selected-branches-query', () => ({
 	createDeletedSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -79,7 +82,7 @@ vi.mock('../create-selected-branches-query', () => ({
 }));
 
 // Mock the mutations to actually update the stores
-vi.mock('../create-selected-branches-mutations', () => ({
+vi.mock('../create-update-branch-selection-batch-mutation', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(async ({ branchNames, isSelected }) => {
@@ -94,7 +97,10 @@ vi.mock('../create-selected-branches-mutations', () => ({
 			return { status: 'ok' };
 		}),
 		isPending: false
-	}),
+	})
+}));
+
+vi.mock('../create-set-branch-selection-all-mutation', () => ({
 	createSetBranchSelectionAllMutation: () => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(

@@ -35,9 +35,6 @@ FEEDBACK_ESCAPED=$(echo -e "$FEEDBACK" | jq -Rs .)
 
 cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "Stop",
-    "additionalContext": $FEEDBACK_ESCAPED
-  }
+  "systemMessage": $FEEDBACK_ESCAPED
 }
 EOF

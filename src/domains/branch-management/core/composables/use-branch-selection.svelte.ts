@@ -6,7 +6,7 @@
  */
 
 import { createGetBranchesQuery } from './create-get-branches-query';
-import { createSetBranchSelectionAllMutation } from './create-selected-branches-mutations';
+import { createSetBranchSelectionAllMutation } from './create-set-branch-selection-all-mutation';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { calculateSelectionState } from '$domains/branch-management/utils/calculate-selection-state';
 import { filterSelectableBranches } from '$domains/branch-management/utils/filter-selectable-branches';

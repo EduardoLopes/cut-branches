@@ -34,12 +34,15 @@ vi.mock('../../core/composables/create-delete-branches-mutation', () => ({
 }));
 
 // Mock clear selected branches mutation
-vi.mock('../../core/composables/create-selected-branches-mutations', () => ({
+vi.mock('../../core/composables/create-update-branch-selection-batch-mutation', () => ({
 	createUpdateBranchSelectionBatchMutation: vi.fn(() => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),
 		isPending: false
-	})),
+	}))
+}));
+
+vi.mock('../../core/composables/create-set-branch-selection-all-mutation', () => ({
 	createSetBranchSelectionAllMutation: vi.fn(() => ({
 		mutate: vi.fn(),
 		mutateAsync: vi.fn(),

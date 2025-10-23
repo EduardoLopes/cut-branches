@@ -10,8 +10,8 @@
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
 	import { createBranchMergeStatusQuery } from '$domains/branch-management/core/composables/create-branch-merge-status-query';
-	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-selected-branches-mutations';
 	import { createSwitchBranchMutation } from '$domains/branch-management/core/composables/create-switch-branch-mutation';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-update-branch-selection-batch-mutation';
 	import {
 		getBranchColorPalette,
 		getBranchAlerts,
