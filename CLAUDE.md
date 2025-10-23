@@ -255,4 +255,4 @@ The project follows the **Framework-Agnostic Frontend Architecture** principles 
 - **Shared Code Promotion**: Code needed by multiple domains should be promoted to global directories
 - **Static Assets Strategy**: Hybrid approach with `src/assets/` for source assets and `static/` for build assets (see [@docs/adr/002-static-assets-strategy.md](docs/adr/002-static-assets-strategy.md))
 
-For detailed architectural guidelines, see [@docs/architecture.md](docs/architecture.md)
+For detailed design guidelines, see [@docs/code-design-guide.md](docs/code-design-guide.md)
