@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Group from '@pindoba/svelte-group';
-	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
+	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
 	import RestoreRepositoryButton from './restore-repository-button.svelte';
 	import UpdateRepositoryButton from './update-repository-button.svelte';

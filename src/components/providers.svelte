@@ -8,7 +8,7 @@
 	import { type Snippet } from 'svelte';
 	import DomainsHandlers from './domains-handlers.svelte';
 	import { browser } from '$app/environment';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
+	import { notifications } from '$services/notifications/notifications.svelte';
 	import { createError } from '$utils/error-utils';
 	import { shouldInvalidate } from '$utils/query-key-utils';
 

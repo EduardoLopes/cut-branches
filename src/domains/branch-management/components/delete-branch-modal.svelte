@@ -7,8 +7,8 @@
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/create-delete-branches-mutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { Branch } from '$lib/bindings';
+	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';

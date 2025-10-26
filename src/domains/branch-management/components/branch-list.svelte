@@ -18,8 +18,8 @@
 		getBranchElementId,
 		shouldShowBranchAlerts
 	} from '$domains/branch-management/utils/branch-utils';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
 	import type { Branch } from '$lib/bindings';
+	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/panda/css';

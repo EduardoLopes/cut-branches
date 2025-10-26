@@ -13,7 +13,7 @@
 	import Notification from '$domains/notifications/components/notification.svelte';
 	import { useNotificationGrouping } from '$domains/notifications/core/composables/use-notification-grouping.svelte';
 	import { useNotificationPagination } from '$domains/notifications/core/composables/use-notification-pagination.svelte';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
+	import { notifications } from '$services/notifications/notifications.svelte';
 	import { toUserTimezone } from '$utils/date-utils';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';

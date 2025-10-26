@@ -13,9 +13,14 @@ vi.mock('$app/state', () => {
 	};
 });
 
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+const { mockPush } = vi.hoisted(() => {
+	const mockPush = vi.fn();
+	return { mockPush };
+});
+
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
-		push: vi.fn()
+		push: mockPush
 	}
 }));
 
@@ -335,14 +340,8 @@ describe('DeleteBranchModal Component', () => {
 
 	describe('Success Callbacks', () => {
 		test('executes onSuccess callback and shows notifications', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-			const mockMutate = vi.fn();
-
-			// Create a mock that stores the onSuccess callback
-			(createDeleteBranchesMutation as Mock).mockReturnValue({
-				mutate: mockMutate,
-				isPending: false
-			});
+			// Clear any previous calls
+			(createDeleteBranchesMutation as Mock).mockClear();
 
 			const { getByTestId } = render(TestWrapper, {
 				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
@@ -354,8 +353,10 @@ describe('DeleteBranchModal Component', () => {
 			const deleteButton = getByTestId('delete-button');
 			await fireEvent.click(deleteButton);
 
-			// Get the mutation configuration to test the actual onSuccess implementation
-			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0][0];
+			// Get the mutation configuration from when the component called createDeleteBranchesMutation
+			// The component should have called it during render with configuration options
+			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0]?.[0];
+			expect(mutationConfig).toBeDefined();
 			expect(mutationConfig).toHaveProperty('onSuccess');
 
 			// Mock the delete response data
@@ -376,7 +377,7 @@ describe('DeleteBranchModal Component', () => {
 			mutationConfig.onSuccess(mockDeleteResponse);
 
 			// Verify notification was pushed
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Branch deleted from test-repo repository',
 				message: '- **feature-1** (was abc123)'
@@ -384,17 +385,11 @@ describe('DeleteBranchModal Component', () => {
 		});
 
 		test('handles multiple branch deletion in notifications', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			// Set multiple selected branches
 			mockSelectedBranches = ['feature-1', 'feature-2'];
 
-			const mockMutate = vi.fn();
-
-			// Create a mock that captures the mutation configuration
-			(createDeleteBranchesMutation as Mock).mockReturnValue({
-				mutate: mockMutate,
-				isPending: false
-			});
+			// Clear any previous calls
+			(createDeleteBranchesMutation as Mock).mockClear();
 
 			const { getByTestId } = render(TestWrapper, {
 				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
@@ -406,8 +401,10 @@ describe('DeleteBranchModal Component', () => {
 			const deleteButton = getByTestId('delete-button');
 			await fireEvent.click(deleteButton);
 
-			// Get the mutation configuration
-			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0][0];
+			// Get the mutation configuration from when the component called createDeleteBranchesMutation
+			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0]?.[0];
+			expect(mutationConfig).toBeDefined();
+			expect(mutationConfig).toHaveProperty('onSuccess');
 
 			// Mock the delete response data for multiple branches
 			const mockDeleteResponse = {
@@ -435,7 +432,7 @@ describe('DeleteBranchModal Component', () => {
 			mutationConfig.onSuccess(mockDeleteResponse);
 
 			// Verify notification was pushed with plural form
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Branches deleted from test-repo repository',
 				message: '- **feature-1** (was abc123)\n\n- **feature-2** (was def456)'

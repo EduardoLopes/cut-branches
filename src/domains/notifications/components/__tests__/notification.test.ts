@@ -1,6 +1,6 @@
 import { render, fireEvent } from '@testing-library/svelte';
 import { vi, describe, expect, test, beforeEach } from 'vitest';
-import { notifications, Notification as NotificationModel } from '../../store/notifications.svelte';
+import { Notification as NotificationModel } from '../../store/notifications.svelte';
 import Notification from '../notification.svelte';
 
 // Mock the debounce function to execute immediately
@@ -9,9 +9,14 @@ vi.mock('$utils/svelte-runes-utils', () => ({
 }));
 
 // Mock notifications store
-vi.mock('../../store/notifications.svelte', () => ({
+const { mockDelete } = vi.hoisted(() => {
+	const mockDelete = vi.fn();
+	return { mockDelete };
+});
+
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
-		delete: vi.fn()
+		delete: mockDelete
 	},
 	Notification: class MockNotification {
 		id: string;
@@ -167,7 +172,7 @@ describe('Notification Component', () => {
 		}
 
 		// Check if notifications.delete was called with the correct ID
-		expect(notifications.delete).toHaveBeenCalledWith(['123']);
+		expect(mockDelete).toHaveBeenCalledWith(['123']);
 	});
 
 	test('always renders close button since all notifications have valid IDs', () => {

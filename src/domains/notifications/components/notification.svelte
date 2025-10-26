@@ -3,10 +3,7 @@
 	import Alert, { type AlertProps } from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Markdown from 'svelte-exmarkdown';
-	import {
-		notifications,
-		type Notification
-	} from '$domains/notifications/store/notifications.svelte';
+	import { notifications, type Notification } from '$services/notifications/notifications.svelte';
 	import { safeFormatRelativeDate, safeFormatDateDetailed, isToday } from '$utils/date-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
 	import { isValidDate } from '$utils/validation-utils';

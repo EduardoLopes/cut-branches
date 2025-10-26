@@ -4,8 +4,8 @@
 	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createCreateRepositoryMutation } from '$domains/repository-management/logic/application/mutations/create-create-repository-mutation';
+	import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
+	import { notifications } from '$services/notifications/notifications.svelte';
 	import { css } from '@pindoba/panda/css';
 	import { visuallyHidden } from '@pindoba/panda/patterns';
 

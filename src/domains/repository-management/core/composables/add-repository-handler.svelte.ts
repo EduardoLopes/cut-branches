@@ -8,9 +8,9 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
-import { notifications } from '$domains/notifications/store/notifications.svelte';
-import { createCreateRepositoryMutation } from '$domains/repository-management/logic/application/mutations/create-create-repository-mutation';
+import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
 import { eventBus, Events } from '$services/event-bus';
+import { notifications } from '$services/notifications/notifications.svelte';
 
 export function setupAddRepositoryHandler() {
 	const createRepositoryMutation = createCreateRepositoryMutation({

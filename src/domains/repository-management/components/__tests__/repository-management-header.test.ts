@@ -12,14 +12,15 @@ vi.mock('$app/navigation', () => ({
 // Create mock query function
 const mockGetRepositoryQuery = vi.hoisted(() => ({
 	fn: vi.fn(() => ({
-		data: undefined,
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		data: undefined as any,
 		isLoading: false,
 		isError: false,
 		error: null
 	}))
 }));
 
-vi.mock('../../logic/application/queries/create-get-repository-query', () => ({
+vi.mock('../../core/composables/queries/create-get-repository-query', () => ({
 	createGetRepositoryQuery: mockGetRepositoryQuery.fn
 }));
 
@@ -43,7 +44,7 @@ describe('RepositoryManagementHeader', () => {
 	test('should display repository name when available', async () => {
 		const repoName = 'My-Repository';
 
-		mockGetRepositoryQuery.fn.mockReturnValueOnce({
+		const mockData = {
 			data: {
 				id: 'test-repo-id',
 				name: repoName,
@@ -55,8 +56,9 @@ describe('RepositoryManagementHeader', () => {
 			isLoading: false,
 			isError: false,
 			error: null
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		} as any);
+		};
+
+		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
 		const { getByTestId } = render(TestWrapper, {
 			props: {
@@ -99,7 +101,7 @@ describe('RepositoryManagementHeader', () => {
 	});
 
 	test('should render action buttons', async () => {
-		mockGetRepositoryQuery.fn.mockReturnValueOnce({
+		const mockData = {
 			data: {
 				id: 'test-repo-id',
 				name: 'Test-Repo',
@@ -111,8 +113,9 @@ describe('RepositoryManagementHeader', () => {
 			isLoading: false,
 			isError: false,
 			error: null
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		} as any);
+		};
+
+		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
 		const { container } = render(TestWrapper, {
 			props: {

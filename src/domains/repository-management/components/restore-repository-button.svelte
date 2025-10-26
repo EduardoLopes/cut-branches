@@ -3,7 +3,7 @@
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
-	import { createGetBranchesQuery } from '../logic/application/queries/create-get-branches-query';
+	import { createGetBranchesQuery } from '../core/composables/queries/create-get-branches-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { css } from '@pindoba/panda/css';

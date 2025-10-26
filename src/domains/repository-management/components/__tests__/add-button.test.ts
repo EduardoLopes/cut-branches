@@ -1,150 +1,76 @@
 import '@testing-library/jest-dom';
+import type { MutationOptions } from '@tanstack/svelte-query';
 import { open } from '@tauri-apps/plugin-dialog';
 import { render, fireEvent, waitFor } from '@testing-library/svelte';
-// Import all Svelte-related modules in one place
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createGetRepositoryQuery } from '../../logic/application/queries/create-get-repository-query';
 import AddButton from '../add-button.svelte';
-import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
 import TestWrapper from '$components/test-wrapper.svelte';
-import { notifications } from '$domains/notifications/store/notifications.svelte';
 import type { Repository } from '$services/common';
 
+// Mock Tauri dialog
 vi.mock('@tauri-apps/plugin-dialog', () => ({
-	open: vi.fn().mockResolvedValue('/path/to/existing/repo')
+	open: vi.fn()
 }));
 
-vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
-
-vi.mock('$app/state', () => {
-	return {
-		page: { params: { id: '123' } }
-	};
+// Mock notifications
+const { mockPush, mockMutate, mockInvalidateQueries } = vi.hoisted(() => {
+	const mockPush = vi.fn();
+	const mockMutate = vi.fn();
+	const mockInvalidateQueries = vi.fn();
+	return { mockPush, mockMutate, mockInvalidateQueries };
 });
 
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
-		push: vi.fn()
+		push: mockPush
 	}
 }));
 
-// Mock Tauri commands
-vi.mock('$lib/bindings', () => ({
-	commands: {
-		createRepository: vi.fn().mockResolvedValue({
-			status: 'ok',
-			data: {
-				id: 'test-repo-id',
-				name: 'Test Repo',
-				path: '/path/to/existing/repo',
-				branches: [],
-				currentBranch: 'main',
-				branchesCount: 0
-			}
-		}),
-		getRepository: vi.fn().mockResolvedValue({
-			status: 'ok',
-			data: {
-				id: 'test-repo-id',
-				name: 'Test Repo',
-				path: '/path/to/existing/repo',
-				branches: [],
-				currentBranch: 'main',
-				branchesCount: 0
-			}
-		}),
-		getRepositoryRoot: vi.fn().mockResolvedValue({
-			status: 'ok',
-			data: {
-				rootPath: '/path/to/existing/repo',
-				id: 'test-repo-id'
-			}
-		}),
-		getRepositoryList: vi.fn().mockResolvedValue({
-			status: 'ok',
-			data: []
+vi.mock('@tanstack/svelte-query', async () => {
+	const actual = await vi.importActual('@tanstack/svelte-query');
+	return {
+		...actual,
+		useQueryClient: vi.fn(() => ({
+			invalidateQueries: mockInvalidateQueries
+		}))
+	};
+});
+
+// Mock create repository mutation
+vi.mock(
+	'$domains/repository-management/core/composables/mutations/create-create-repository-mutation',
+	() => ({
+		createCreateRepositoryMutation: vi.fn((options: MutationOptions) => {
+			// Store the options so we can call onSuccess later
+			(globalThis as unknown as { __mutationOptions: MutationOptions }).__mutationOptions = options;
+			return {
+				mutate: mockMutate,
+				isPending: false,
+				isError: false,
+				error: null
+			};
 		})
-	}
-}));
-
-vi.mock('../../logic/application/queries/create-get-repository-query', () => {
-	return {
-		createGetRepositoryQuery: vi.fn()
-	};
-});
-
-vi.mock('../../store/repository.svelte', () => {
-	return {
-		getRepositoryStore: vi.fn(() => ({
-			set: vi.fn(),
-			state: null,
-			clear: vi.fn()
-		})),
-		RepositoryStore: {
-			set: vi.fn(),
-			get: vi.fn()
-		}
-	};
-});
-
-// Mock factory function for query results
-const mockQueryResult = (overrides = {}) =>
-	({
-		isSuccess: false,
-		isLoading: false,
-		isPending: false,
-		isError: false,
-		isLoadingError: false,
-		isRefetchError: false,
-		isPlaceholderData: false,
-		isInitialLoading: false,
-		isPaused: false,
-		isEnabled: true,
-		data: undefined,
-		error: null,
-		status: 'pending' as const,
-		fetchStatus: 'idle' as const,
-		refetch: vi.fn(),
-		promise: Promise.resolve(),
-		dataUpdatedAt: 0,
-		errorUpdatedAt: 0,
-		failureCount: 0,
-		failureReason: null,
-		errorUpdateCount: 0,
-		isFetched: false,
-		isFetchedAfterMount: false,
-		isFetching: false,
-		isRefetching: false,
-		isStale: false,
-		...overrides
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	}) as any;
+	})
+);
 
 describe('AddButton', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Set up default mock for createGetRepositoryQuery
-		const defaultMock = mockQueryResult({
-			isSuccess: false,
-			isLoading: false,
-			isError: false,
-			data: undefined,
-			error: null
-		});
-		vi.mocked(createGetRepositoryQuery).mockImplementation(() => defaultMock);
+		vi.mocked(open).mockResolvedValue('/path/to/repo');
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		delete (globalThis as any).__mutationOptions;
 	});
 
 	describe('Rendering', () => {
-		test('renders correctly with default props', () => {
+		it('renders correctly with default props', () => {
 			const { getByText } = render(TestWrapper, {
 				props: { component: AddButton }
 			});
 			expect(getByText('Add a git repository')).toBeInTheDocument();
 		});
 
-		test('displays visually hidden label when visuallyHiddenLabel is true', () => {
+		it('displays visually hidden label when visuallyHiddenLabel is true', () => {
 			const { container } = render(TestWrapper, {
 				props: { component: AddButton, props: { visuallyHiddenLabel: true } }
 			});
@@ -152,7 +78,7 @@ describe('AddButton', () => {
 			expect(span).toHaveClass('sr_true');
 		});
 
-		test('displays visible label when visuallyHiddenLabel is false', () => {
+		it('displays visible label when visuallyHiddenLabel is false', () => {
 			const { container } = render(TestWrapper, {
 				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
 			});
@@ -162,9 +88,9 @@ describe('AddButton', () => {
 	});
 
 	describe('Interactions', () => {
-		test('calls handleAddClick on button click', async () => {
+		it('calls open function on button click', async () => {
 			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton, props: { visuallyHiddenLabel: true } }
+				props: { component: AddButton }
 			});
 			const button = getByRole('button');
 			await fireEvent.click(button);
@@ -172,32 +98,8 @@ describe('AddButton', () => {
 			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
 		});
 
-		test('calls open function on button click', async () => {
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
-			});
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
-		});
-
-		test('handles case when directory selection returns null', async () => {
-			// Clear any existing calls to notifications.push
-			vi.clearAllMocks();
-
-			// Mock open to return null (user canceled)
-			vi.mocked(open).mockResolvedValueOnce(null);
-
-			// Make sure getRepositoryByPathQuery isn't triggered
-			const mock = mockQueryResult({
-				isSuccess: false,
-				isLoading: false,
-				isError: false,
-				data: undefined,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
+		it('calls mutation when directory is selected', async () => {
+			vi.mocked(open).mockResolvedValue('/path/to/repo');
 
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
@@ -205,347 +107,26 @@ describe('AddButton', () => {
 
 			const button = getByRole('button');
 			await fireEvent.click(button);
-			await waitFor(() => expect(notifications.push).not.toHaveBeenCalled());
-		});
-	});
-
-	describe('Repository handling', () => {
-		let mockRepo: Repository;
-
-		beforeEach(() => {
-			mockRepo = {
-				id: '123',
-				name: 'Existing Repo',
-				path: '/path/to/existing/repo',
-				branches: [],
-				currentBranch: '',
-				branchesCount: 0
-			};
-
-			// Reset the mock for the open function
-			vi.mocked(open).mockReset();
-			vi.mocked(open).mockResolvedValue('/path/to/existing/repo');
-
-			// Mock the query result for existing repo
-			const mock = mockQueryResult({
-				isSuccess: true,
-				isLoading: false,
-				isError: false,
-				data: mockRepo,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementation(() => mock);
-		});
-
-		test('shows warning notification if repository already exists', async () => {
-			// Reset mocks
-			vi.clearAllMocks();
-
-			// Setup the notifications and trigger directly since we're mocking
-			// at a level that's difficult to trigger in component
-			setTimeout(() => {
-				notifications.push({
-					feedback: 'warning',
-					title: 'Repository already exists',
-					message: `The repository ${mockRepo.name} already exists`
-				});
-			}, 100);
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			await waitFor(
-				() => {
-					expect(notifications.push).toHaveBeenCalledWith({
-						feedback: 'warning',
-						title: 'Repository already exists',
-						message: `The repository ${mockRepo.name} already exists`
-					});
-				},
-				{ timeout: 1000 }
-			);
-		});
-
-		test('navigates to existing repository if it already exists by ID', async () => {
-			// Reset mocks
-			vi.clearAllMocks();
-
-			// Mock goto to verify navigation
-			vi.mocked(goto).mockReset();
-
-			// The query should return a successful result
-			const mock = mockQueryResult({
-				isSuccess: true,
-				isLoading: false,
-				isError: false,
-				data: mockRepo,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
-
-			// Since goto is called inside the effect after repository check, we need to manually mock it
-			// This simulates the navigation that would happen in the component
-			setTimeout(() => goto(resolve(`/repos/${mockRepo.name}`)), 100);
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			await waitFor(
-				() => {
-					expect(goto).toHaveBeenCalledWith(`/repos/${mockRepo.name}`);
-				},
-				{ timeout: 3000 }
-			);
-		});
-
-		test('handles error when directory selection fails', async () => {
-			// Mock open to reject
-			vi.mocked(open).mockRejectedValueOnce(new Error('User cancelled'));
-
-			// Ensure the query mock does not indicate success for this specific test
-			const mock = mockQueryResult({
-				isSuccess: false,
-				isLoading: false,
-				isError: false,
-				data: undefined,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementation(() => mock);
-
-			// Reset goto mock to ensure we can test it hasn't been called
-			vi.mocked(goto).mockReset();
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			// Check for the correct notification message
-			await waitFor(() =>
-				expect(notifications.push).toHaveBeenCalledWith(
-					expect.objectContaining({
-						feedback: 'danger',
-						title: 'Error'
-						// Not checking message field because it contains an Error object
-					})
-				)
-			);
-			expect(goto).not.toHaveBeenCalled(); // Navigation should not occur on error
-		});
-
-		test('successfully adds a new repository when it does not exist', async () => {
-			// Reset mocks
-			vi.clearAllMocks();
-
-			// Set up a new repo that doesn't exist in the store
-			const newRepo = {
-				id: '456',
-				name: 'New Repo',
-				path: '/path/to/new/repo',
-				branches: [],
-				currentBranch: '',
-				branchesCount: 0
-			};
-
-			// Mock dialog to return a different path
-			vi.mocked(open).mockResolvedValueOnce('/path/to/new/repo');
-
-			// Mock query to return new repo data
-			const mock = mockQueryResult({
-				isSuccess: true,
-				isLoading: false,
-				isError: false,
-				data: newRepo,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
-
-			// Directly trigger the notification that would happen in the component
-			setTimeout(() => {
-				notifications.push({
-					feedback: 'success',
-					title: 'Repository added',
-					message: `The repository ${newRepo.name} was added successfully`
-				});
-			}, 100);
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			await waitFor(
-				() =>
-					expect(notifications.push).toHaveBeenCalledWith({
-						feedback: 'success',
-						title: 'Repository added',
-						message: `The repository ${newRepo.name} was added successfully`
-					}),
-				{ timeout: 3000 }
-			);
-		});
-
-		test('handles repository query error', async () => {
-			// Reset mocks
-			vi.clearAllMocks();
-
-			// Mock query to return error
-			const errorMessage = 'Repository not found';
-			const errorDescription = 'The specified directory is not a valid git repository';
-
-			// Trigger notification directly - we need this because mocking the whole flow is difficult
-			setTimeout(() => {
-				notifications.push({
-					feedback: 'danger',
-					title: errorMessage,
-					message: errorDescription
-				});
-			}, 100);
-
-			// Mock dialog to return a path
-			vi.mocked(open).mockResolvedValueOnce('/invalid/git/repo');
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			await waitFor(
-				() =>
-					expect(notifications.push).toHaveBeenCalledWith({
-						feedback: 'danger',
-						title: errorMessage,
-						message: errorDescription
-					}),
-				{ timeout: 1000 }
-			);
-		});
-
-		test('shows loading state while repository is being processed', async () => {
-			// Mock query with loading state
-			const mock = mockQueryResult({
-				isSuccess: false,
-				isLoading: true,
-				isError: false,
-				data: null,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
-
-			// Mock dialog to return a path
-			vi.mocked(open).mockResolvedValueOnce('/path/to/loading/repo');
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
-			await waitFor(() => expect(mock.isLoading).toBe(true));
-		});
-	});
-
-	describe('handleAddClick function', () => {
-		it('should set path and add repository when directory is selected', async () => {
-			// Reset all mocks
-			vi.clearAllMocks();
-
-			// Create mock repository data
-			const mockRepo = {
-				id: '789',
-				name: 'Test Repo',
-				path: '/test/directory',
-				branches: [],
-				currentBranch: '',
-				branchesCount: 0
-			};
-
-			// Mock successful directory selection
-			vi.mocked(open).mockResolvedValue('/test/directory');
-
-			// Mock successful repository query
-			const mock = mockQueryResult({
-				isSuccess: true,
-				isLoading: false,
-				isError: false,
-				data: mockRepo,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementation(() => mock);
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			// Click the button to trigger handleAddClick
-			await fireEvent.click(getByRole('button'));
-
-			// Wait for promises to resolve
 			await tick();
 
-			// Verify open was called with the correct parameters
-			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
-
-			// Verify the repository was added successfully via notification
-			await waitFor(() => {
-				expect(notifications.push).toHaveBeenCalledWith({
-					feedback: 'success',
-					title: 'Repository added',
-					message: `The repository ${mockRepo.name} was added successfully`
-				});
-			});
+			expect(mockMutate).toHaveBeenCalledWith({ path: '/path/to/repo' });
 		});
 
-		it('should not set path when no directory is selected', async () => {
-			// Reset all mocks first
-			vi.clearAllMocks();
-
-			// Mock no directory selection (null return)
+		it('does not call mutation when directory selection is cancelled', async () => {
 			vi.mocked(open).mockResolvedValue(null);
 
-			// Mock query to ensure it doesn't return successful state when path is null
-			const mock = mockQueryResult({
-				isSuccess: false,
-				isLoading: false,
-				isError: false,
-				data: undefined,
-				error: null
-			});
-			vi.mocked(createGetRepositoryQuery).mockImplementationOnce(() => mock);
-
 			const { getByRole } = render(TestWrapper, {
 				props: { component: AddButton }
 			});
 
-			// Click the button to trigger handleAddClick
-			await fireEvent.click(getByRole('button'));
-
-			// Wait for promises to resolve
+			const button = getByRole('button');
+			await fireEvent.click(button);
 			await tick();
 
-			// Verify open was called
-			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
-
-			// Verify no notification was pushed (since this is not an error case)
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockMutate).not.toHaveBeenCalled();
 		});
 
-		it('should show error notification when directory selection fails', async () => {
-			// Mock error when opening directory dialog
+		it('shows error notification when directory selection fails', async () => {
 			const mockError = new Error('Failed to open directory');
 			vi.mocked(open).mockRejectedValue(mockError);
 
@@ -553,61 +134,63 @@ describe('AddButton', () => {
 				props: { component: AddButton }
 			});
 
-			// Click the button to trigger handleAddClick
-			await fireEvent.click(getByRole('button'));
+			const button = getByRole('button');
+			await fireEvent.click(button);
 
-			// Wait for promises to resolve
-			await tick();
-
-			// Verify open was called
-			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
-
-			// Verify notification was pushed with the error
-			expect(notifications.push).toHaveBeenCalledWith({
-				title: 'Error',
-				message: mockError.message,
-				feedback: 'danger'
+			await waitFor(() => {
+				expect(mockPush).toHaveBeenCalledWith({
+					title: 'Error',
+					message: mockError.message,
+					feedback: 'danger'
+				});
 			});
 		});
+	});
 
-		it('should show error notification when repository is not a valid git repository', async () => {
-			// Reset all mocks
-			vi.clearAllMocks();
+	describe('Repository Creation Success', () => {
+		it('configures mutation with success callback', async () => {
+			vi.mocked(open).mockResolvedValue('/path/to/new/repo');
 
-			// Mock successful directory selection
-			vi.mocked(open).mockResolvedValue('/invalid/git/repo');
-
-			// Mock repository mutation to throw an error
-			const errorMessage = 'Repository not found';
-			const errorDescription = 'The folder my-vue-app is not a git repository';
-
-			// Import commands and mock createRepository to throw an error
-			const { commands } = await import('$lib/bindings');
-			vi.mocked(commands.createRepository).mockRejectedValue({
-				message: errorMessage,
-				description: errorDescription
-			});
-
-			const { getByRole } = render(TestWrapper, {
+			render(TestWrapper, {
 				props: { component: AddButton }
 			});
 
-			// Click the button to trigger handleAddClick
-			await fireEvent.click(getByRole('button'));
-
-			// Wait for promises to resolve
 			await tick();
 
-			// Verify open was called
-			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
+			// Verify the mutation was configured with onSuccess
+			const options = (globalThis as unknown as { __mutationOptions: MutationOptions })
+				.__mutationOptions;
+			expect(options).toBeDefined();
+			expect(options.onSuccess).toBeDefined();
+			expect(typeof options.onSuccess).toBe('function');
+		});
 
-			// Verify notification was pushed with the error
-			await waitFor(() => {
-				expect(notifications.push).toHaveBeenCalledWith({
-					feedback: 'danger',
-					title: errorMessage,
-					message: errorDescription
-				});
+		it('mutation success callback pushes notification', () => {
+			const mockRepo: Repository = {
+				id: 'new-repo-id',
+				name: 'New Repo',
+				path: '/path/to/new/repo',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			};
+
+			render(TestWrapper, {
+				props: { component: AddButton }
+			});
+
+			// Get the stored mutation options and call onSuccess directly
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const options = (globalThis as any).__mutationOptions;
+			if (options?.onSuccess) {
+				options.onSuccess(mockRepo, undefined, undefined, undefined);
+			}
+
+			// Verify notification was pushed
+			expect(mockPush).toHaveBeenCalledWith({
+				feedback: 'success',
+				title: 'Repository added',
+				message: `The repository ${mockRepo.name} was added successfully`
 			});
 		});
 	});

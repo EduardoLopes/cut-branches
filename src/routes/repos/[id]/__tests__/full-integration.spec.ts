@@ -133,7 +133,7 @@ vi.mock('$domains/onboarding/logic/application/queries/create-get-repository-lis
 }));
 
 // Mock the branch list query
-vi.mock('$domains/repository-management/logic/application/queries/get-branch-list-query', () => ({
+vi.mock('$domains/repository-management/core/composables/queries/get-branch-list-query', () => ({
 	getBranchListQuery: () => ({
 		data: { branches: mockBranches },
 		isLoading: false,

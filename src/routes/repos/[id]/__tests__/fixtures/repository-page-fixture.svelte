@@ -1,5 +1,5 @@
 <script lang="ts">
-	// import { createGetRepositoryQuery } from '$domains/repository-management/logic/application/queries/create-get-repository-query';
+	// import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
 	// This is a test fixture that combines MenuView and Repository components
 	// for integration testing
 	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';

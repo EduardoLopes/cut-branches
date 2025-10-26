@@ -83,7 +83,7 @@ vi.mock('@tauri-apps/api/core', () => ({
 	})
 }));
 
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn()
 	}

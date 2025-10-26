@@ -5,13 +5,13 @@ import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import OnboardingCta from '../onboarding-cta.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import { notifications } from '$domains/notifications/store/notifications.svelte';
+import { notifications } from '$services/notifications/notifications.svelte';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({
 	open: vi.fn().mockResolvedValue('/path/to/existing/repo')
 }));
 
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn()
 	}

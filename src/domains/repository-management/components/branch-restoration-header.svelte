@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
+	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import BackButton from './back-button.svelte';
 	import { css } from '@pindoba/panda/css';
 

@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { Notification, type NotificationData } from '$services/notifications/notification';
+import { Notification, type NotificationData } from './notification';
 import { MapStore } from '$utils/map-store.svelte';
 
 // Define schema for notification data objects that transforms to Notification instances
@@ -54,8 +54,4 @@ export class NotificationStore extends MapStore<string, Notification> {
 export const notifications = new NotificationStore('notifications');
 
 // Re-export types and classes for convenience
-export {
-	Notification,
-	NotificationValidationError,
-	type NotificationData
-} from '$services/notifications/notification';
+export { Notification, NotificationValidationError, type NotificationData } from './notification';

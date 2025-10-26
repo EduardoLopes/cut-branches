@@ -33,7 +33,7 @@ const mockNotifications = vi.hoisted(() => ({
 	push: vi.fn()
 }));
 
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: mockNotifications
 }));
 

@@ -4,7 +4,7 @@
  */
 
 import { onMount, onDestroy } from 'svelte';
-import type { Notification } from '../models/notification';
+import type { Notification } from '$services/notifications/notification';
 
 export interface PaginationOptions {
 	getNotifications: () => Notification[];

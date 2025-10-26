@@ -4,7 +4,7 @@
  */
 
 import { groupNotificationsByDate } from '../../utils/notification-grouping-utils';
-import type { Notification } from '../models/notification';
+import type { Notification } from '$services/notifications/notification';
 
 /**
  * Composable for managing notification grouping state

@@ -85,6 +85,7 @@ export const Events = {
 	REPOSITORY_ADDED: 'repository:added',
 	REPOSITORY_ADD_FAILED: 'repository:add:failed',
 	REPOSITORY_REMOVED: 'repository:removed',
+	REPOSITORY_DELETED: 'repository:deleted',
 	REPOSITORY_UPDATED: 'repository:updated',
 	BRANCH_DELETED: 'branch:deleted',
 	BRANCH_RESTORED: 'branch:restored'

@@ -4,9 +4,14 @@ import Providers from '../providers.svelte';
 import TestWrapper from '../test-wrapper.svelte';
 
 // Mock dependencies following TypeScript guidelines
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+const { mockPush } = vi.hoisted(() => {
+	const mockPush = vi.fn();
+	return { mockPush };
+});
+
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
-		push: vi.fn()
+		push: mockPush
 	}
 }));
 
@@ -96,8 +101,6 @@ describe('Providers', () => {
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {
 				meta: {
 					showSuccessNotification: true,
@@ -110,7 +113,7 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Success Title',
 				message: 'Success Message'
@@ -118,8 +121,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showSuccessNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {
 				meta: {
 					showSuccessNotification: false,
@@ -132,22 +133,18 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {};
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should handle undefined notification info', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {
 				meta: {
 					showSuccessNotification: true
@@ -156,7 +153,7 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: undefined,
 				message: undefined
@@ -175,7 +172,6 @@ describe('Providers', () => {
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Test error');
@@ -192,7 +188,7 @@ describe('Providers', () => {
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Error Title',
 				message: 'Error Message'
@@ -200,7 +196,6 @@ describe('Providers', () => {
 		});
 
 		it('should use error fallbacks when notification info is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Test error');
@@ -213,7 +208,7 @@ describe('Providers', () => {
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Test error', // Uses the error's message when notification.title is undefined
 				message: 'Default error description'
@@ -221,8 +216,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showErrorNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Test error');
 			const mockMutation = {
 				meta: {
@@ -232,18 +225,16 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Test error');
 			const mockMutation = {};
 
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should call createError when showErrorNotification is true', async () => {
@@ -273,8 +264,6 @@ describe('Providers', () => {
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockQuery = {
 				meta: {
 					showSuccessNotification: true,
@@ -287,7 +276,7 @@ describe('Providers', () => {
 
 			_queryCacheHandlers.onSuccess?.('data', mockQuery);
 
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Query Success',
 				message: 'Query completed successfully'
@@ -295,8 +284,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showSuccessNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockQuery = {
 				meta: {
 					showSuccessNotification: false
@@ -305,17 +292,15 @@ describe('Providers', () => {
 
 			_queryCacheHandlers.onSuccess?.('data', mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockQuery = {};
 
 			_queryCacheHandlers.onSuccess?.('data', mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 	});
 
@@ -330,7 +315,6 @@ describe('Providers', () => {
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Query failed');
@@ -347,7 +331,7 @@ describe('Providers', () => {
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Query Error',
 				message: 'Query failed to load'
@@ -355,7 +339,6 @@ describe('Providers', () => {
 		});
 
 		it('should use error fallbacks when notification info is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Query failed');
@@ -368,7 +351,7 @@ describe('Providers', () => {
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Query failed', // Uses the error's message when notification.title is undefined
 				message: 'Default error description'
@@ -376,8 +359,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showErrorNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Query failed');
 			const mockQuery = {
 				meta: {
@@ -387,18 +368,16 @@ describe('Providers', () => {
 
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Query failed');
 			const mockQuery = {};
 
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 	});
 

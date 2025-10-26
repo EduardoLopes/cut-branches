@@ -3,7 +3,7 @@
  * @description Domain-specific utilities for grouping notifications
  */
 
-import type { Notification } from '../core/models/notification';
+import type { Notification } from '$services/notifications/notification';
 import { groupByDate } from '$utils/array-grouping-utils';
 
 /**

@@ -3,15 +3,13 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { createDeleteRepositoryMutation } from '../logic/application/mutations/create-delete-repository-mutation';
-	import { createGetRepositoryQuery } from '../logic/application/queries/create-get-repository-query';
+	import { createDeleteRepositoryMutation } from '../core/composables/mutations/create-delete-repository-mutation';
+	import { createGetRepositoryListQuery } from '../core/composables/queries/create-get-repository-list-query';
+	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { createClearLockedBranchesMutation } from '$domains/branch-management/core/composables/create-clear-locked-branches-mutation';
-	import { createSetBranchSelectionAllMutation } from '$domains/branch-management/core/composables/create-set-branch-selection-all-mutation';
-	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import { createGetRepositoryListQuery } from '$domains/onboarding/core/composables/create-get-repository-list-query';
+	import { eventBus, Events } from '$services/event-bus';
+	import { notifications } from '$services/notifications/notifications.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/panda/css';
@@ -26,23 +24,20 @@
 	let { repositoryId }: Props = $props();
 
 	const queryClient = useQueryClient();
-	const search = $derived(getSearchBranchesStore(repositoryId));
 	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
 
 	// Query for repositories list
 	const repositoriesQuery = createGetRepositoryListQuery();
 	const repositories = $derived(repositoriesQuery.data ?? []);
 
-	// Mutations for clearing database data
-	const setSelectionAllMutation = createSetBranchSelectionAllMutation();
-	const clearLockedMutation = createClearLockedBranchesMutation();
 	const deleteRepositoryMutation = createDeleteRepositoryMutation({
 		onSuccess: async () => {
 			const repoName = ensureString(getRepositoryQuery.data?.name);
 			const deletedId = repositoryId;
 
-			// Clear UI stores
-			search?.clear();
+			// Publish event for other domains to clean up their data
+			// This allows branch-management to clear selections, locked branches, and search state
+			eventBus.publish(Events.REPOSITORY_DELETED, { id: deletedId, repoId: deletedId });
 
 			// Cancel and remove queries for the deleted repository
 			// This prevents get_repository from being called on the deleted repo
@@ -88,11 +83,7 @@
 			return;
 		}
 
-		// Clear database entries for this repository
-		// Note: setSelectionAllMutation and clearLockedMutation will be auto-deleted via CASCADE
-		// but we call them explicitly to be defensive
-		setSelectionAllMutation.mutate({ repoId, isSelected: false, deletionStatus: 'all' });
-		clearLockedMutation.mutate({ repoId });
+		// Delete repository - event bus will notify other domains to clean up
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}
 
