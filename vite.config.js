@@ -1,13 +1,12 @@
 import path from 'path';
 import { sveltekit } from '@sveltejs/kit/vite';
-import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig({
-	plugins: [sveltekit(), svelteTesting()],
+	plugins: [sveltekit()],
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
 	// 1. prevent vite from obscuring rust errors
@@ -47,12 +46,19 @@ export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
 	},
-	resolve: {
-		conditions: ['module', 'browser', 'development|production'],
-		alias: {
-			'@pindoba/styled-system': path.resolve(__dirname, 'styled-system')
-		}
-	},
+	resolve: process.env.VITEST
+		? {
+				conditions: ['browser'],
+				alias: {
+					'@pindoba/styled-system': path.resolve(__dirname, 'styled-system')
+				}
+			}
+		: {
+				conditions: ['module', 'browser', 'development|production'],
+				alias: {
+					'@pindoba/styled-system': path.resolve(__dirname, 'styled-system')
+				}
+			},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 		exclude: ['src/lib/**'],

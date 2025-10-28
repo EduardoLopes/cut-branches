@@ -11,7 +11,7 @@ const config = {
 			strict: false
 		}),
 		alias: {
-			'@pindoba/panda': './styled-system/*',
+			'@pindoba/styled-system': './styled-system/*',
 			$domains: './src/domains',
 			$ui: './src/ui',
 			$utils: './src/utils',
