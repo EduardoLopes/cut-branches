@@ -1,3 +1,4 @@
+import path from 'path';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vite';
@@ -47,7 +48,10 @@ export default defineConfig({
 		__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
 	},
 	resolve: {
-		conditions: ['module', 'browser', 'development|production']
+		conditions: ['module', 'browser', 'development|production'],
+		alias: {
+			'@pindoba/styled-system': path.resolve(__dirname, 'styled-system')
+		}
 	},
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],

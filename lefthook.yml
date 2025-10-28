@@ -29,3 +29,15 @@ commit-msg:
   scripts:
     'commitlint.sh':
       runner: bash
+
+post-commit:
+  commands:
+    restore-pindoba:
+      run: |
+        # Check if .env exists and USE_LOCAL_PINDOBA is true
+        if [ -f .env ] && grep -q "^USE_LOCAL_PINDOBA=true" .env; then
+          echo "🔄 Restoring Pindoba links..."
+          bash scripts/manage-pindoba-links.sh auto-link
+          echo "📦 Installing linked packages..."
+          pnpm install --ignore-scripts
+        fi
