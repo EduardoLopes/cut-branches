@@ -53,7 +53,6 @@ PACKAGES=(
   # Core packages
   "$PINDOBA_PATH/packages/panda-preset"
   "$PINDOBA_PATH/packages/panda-buildinfo"
-  "$PINDOBA_PATH/packages/styles"
 
   # Svelte UI components
   "$PINDOBA_PATH/packages/ui/svelte/alert"

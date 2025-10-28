@@ -20,3 +20,6 @@ tarpaulin-report.html
 /src-tauri/tarpaulin-report.html
 /src-tauri/target/tarpaulin/
 /src-tauri/lcov.info
+
+# Rust build artifacts and rust-analyzer files
+/target
