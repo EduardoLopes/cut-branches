@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
 	import OnboardingCta from '$domains/onboarding/components/onboarding-cta.svelte';
 	import OnboardingHero from '$domains/onboarding/components/onboarding-hero.svelte';
-	import { css } from '@pindoba/panda/css';
 </script>
 
 <div

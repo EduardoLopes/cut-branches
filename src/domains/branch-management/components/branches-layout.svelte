@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { css, cva } from '@pindoba/styled-system/css';
 	import Loading from '@pindoba/svelte-loading';
 	import type { Snippet } from 'svelte';
-	import { css, cva } from '@pindoba/panda/css';
 
 	interface Props {
 		isLoading: boolean;
@@ -55,24 +55,30 @@
 	{isLoading}
 	fillParent
 	passThrough={{
-		root: css.raw({
-			borderRadius: '0',
-			flexGrow: '1',
-			height: 'calc(100% - 60px)',
-			_dark: {
-				background: 'neutral.100'
-			},
-			_light: {
-				background: 'neutral.50'
-			},
-			px: 'md',
-			pb: 'md'
-		}),
-		overlay: css.raw({
-			borderRadius: '0',
-			border: 'none'
-		}),
-		content: contentStyles.raw({ variant })
+		root: {
+			style: css.raw({
+				borderRadius: '0',
+				flexGrow: '1',
+				height: 'calc(100% - 60px)',
+				_dark: {
+					background: 'neutral.100'
+				},
+				_light: {
+					background: 'neutral.50'
+				},
+				px: 'md',
+				pb: 'md'
+			})
+		},
+		overlay: {
+			style: css.raw({
+				borderRadius: '0',
+				border: 'none'
+			})
+		},
+		content: {
+			style: contentStyles.raw({ variant })
+		}
 	}}
 >
 	{@render children()}

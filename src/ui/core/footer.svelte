@@ -1,12 +1,12 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
+	import { spacer } from '@pindoba/styled-system/patterns';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
 	import NotificationsPopover from '$domains/notifications/components/notifications-popover.svelte';
 	import { globalStore } from '$store/global-store.svelte';
-	import { css } from '@pindoba/panda/css';
-	import { spacer } from '@pindoba/panda/patterns';
 
 	let now = $state(Date.now());
 	let intervalID = 0;
@@ -84,19 +84,21 @@
 			buttonProps={{
 				size: 'xs',
 				passThrough: {
-					root: css.raw({
-						'& svg': {
-							width: '14px',
-							height: '14px'
-						},
-						padding: 0,
-						_dark: {
-							color: 'neutral.900'
-						},
-						_light: {
-							color: 'neutral.900'
-						}
-					})
+					root: {
+						style: css.raw({
+							'& svg': {
+								width: '14px',
+								height: '14px'
+							},
+							padding: 0,
+							_dark: {
+								color: 'neutral.900'
+							},
+							_light: {
+								color: 'neutral.900'
+							}
+						})
+					}
 				}
 			}}
 		/>

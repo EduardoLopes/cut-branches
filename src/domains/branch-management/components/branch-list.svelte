@@ -1,5 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
+	import { token } from '@pindoba/styled-system/tokens';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
@@ -22,9 +25,6 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
-	import { token } from '@pindoba/panda/tokens';
 
 	interface Props {
 		repositoryID?: string;
@@ -263,24 +263,28 @@
 
 	{#if branchesQuery.data?.branches.length && branchesQuery.data?.branches.length > 0}
 		<div
-			class={css({
-				p: 'md',
-				translucent: 'md',
-				bottom: '0',
-				position: 'sticky',
-				mt: 'auto',
-				_dark: {
-					borderTop: '1px solid token(colors.neutral.200)'
-				},
-				_light: {
-					borderTop: '1px solid token(colors.neutral.400)'
-				}
-			})}
+			class={css(
+				translucent.raw({
+					blur: 'md'
+				}),
+				css.raw({
+					p: 'md',
+					bottom: '0',
+					position: 'sticky',
+					mt: 'auto',
+					_dark: {
+						borderTop: '1px solid token(colors.neutral.200)'
+					},
+					_light: {
+						borderTop: '1px solid token(colors.neutral.400)'
+					}
+				})
+			)}
 		>
 			<Pagination
 				itemsTotal={branchesQuery.data?.branches.length}
 				bind:itemsPerPage
-				bind:currentPage
+				bind:page={currentPage}
 			/>
 		</div>
 	{/if}

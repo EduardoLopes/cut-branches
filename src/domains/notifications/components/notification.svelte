@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import Alert, { type AlertProps } from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Markdown from 'svelte-exmarkdown';
@@ -7,7 +8,6 @@
 	import { safeFormatRelativeDate, safeFormatDateDetailed, isToday } from '$utils/date-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
 	import { isValidDate } from '$utils/validation-utils';
-	import { css } from '@pindoba/panda/css';
 
 	type Props = {
 		notification: Notification;
@@ -37,10 +37,12 @@
 				}
 			}, 200)}
 			passThrough={{
-				root: css.raw({
-					color: 'neutral.800',
-					p: '0'
-				})
+				root: {
+					style: css.raw({
+						color: 'neutral.800',
+						p: '0'
+					})
+				}
 			}}
 			class={css({
 				position: 'absolute',

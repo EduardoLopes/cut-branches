@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
 	import EmptyState from '$ui/core/empty-state.svelte';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		emptyStateMessage: string;

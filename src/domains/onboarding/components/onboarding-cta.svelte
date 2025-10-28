@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
 	import { notifications } from '$services/notifications/notifications.svelte';
-	import { css } from '@pindoba/panda/css';
 
 	// Mutation to create repository
 	const createRepositoryMutation = createCreateRepositoryMutation({

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	interface Props {
 		repositoryId: string;

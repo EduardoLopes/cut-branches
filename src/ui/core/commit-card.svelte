@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import Markdown from 'svelte-exmarkdown';
 	import type { Commit } from '$lib/bindings';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { cleanEmailString } from '$utils/string-utils';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		commit: Commit;

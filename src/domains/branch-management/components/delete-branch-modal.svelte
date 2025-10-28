@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
@@ -11,7 +12,6 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		id?: string;

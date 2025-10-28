@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { getBranchElementId } from '../utils/branch-utils';
 	import type { Branch } from '$lib/bindings';
 	import { formatString } from '$utils/string-utils';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		alerts: string[];

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	interface Props extends ButtonProps {
 		icon: string;

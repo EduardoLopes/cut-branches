@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
@@ -18,7 +19,6 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		repoId?: string;
@@ -730,12 +730,16 @@
 							!restorationResults[branch.name] &&
 							!pendingConflictBranches.includes(branch.name)}
 						passThrough={{
-							root: css.raw({
-								width: '100%'
-							}),
-							overlay: css.raw({
-								boxShadow: 'none'
-							})
+							root: {
+								style: css.raw({
+									width: '100%'
+								})
+							},
+							overlay: {
+								style: css.raw({
+									boxShadow: 'none'
+								})
+							}
 						}}
 					>
 						<Group direction="vertical">

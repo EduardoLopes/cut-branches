@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
 	import Group from '@pindoba/svelte-group';
 	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
 	import RestoreRepositoryButton from './restore-repository-button.svelte';
 	import UpdateRepositoryButton from './update-repository-button.svelte';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		repositoryId: string;

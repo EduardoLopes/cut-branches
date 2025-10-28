@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
-	import { css } from '@pindoba/panda/css';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -99,16 +99,20 @@
 				visuallyHiddenLabel={true}
 				disabled={isAddingRepository}
 				passThrough={{
-					root: css.raw({})
+					root: {
+						style: css.raw({})
+					}
 				}}
 			/>
 		</div>
 		<Loading
 			isLoading={repositoriesQuery.isLoading || isAddingRepository}
 			passThrough={{
-				root: css.raw({
-					width: 'full'
-				})
+				root: {
+					style: css.raw({
+						width: 'full'
+					})
+				}
 			}}
 		>
 			{#if items.length > 0}
@@ -117,18 +121,20 @@
 					activeItem={page.params.id}
 					direction="vertical"
 					passThrough={{
-						root: css.raw({
-							maxHeight: 'calc(100vh - 146px)',
-							overflowY: 'auto',
-							backdropFilter: 'none',
-							padding: '0',
-							_light: {
-								bg: 'neutral.50'
-							},
-							_dark: {
-								bg: 'neutral.100'
-							}
-						})
+						root: {
+							style: css.raw({
+								maxHeight: 'calc(100vh - 146px)',
+								overflowY: 'auto',
+								backdropFilter: 'none',
+								padding: '0',
+								_light: {
+									bg: 'neutral.50'
+								},
+								_dark: {
+									bg: 'neutral.100'
+								}
+							})
+						}
 					}}
 				/>
 			{:else}

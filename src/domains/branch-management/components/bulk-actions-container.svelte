@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
+	import { translucent } from '@pindoba/styled-system/patterns';
 	import { type Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props extends HTMLAttributes<HTMLDivElement> {
 		left?: Snippet;
@@ -12,23 +13,27 @@
 </script>
 
 <div
-	class={css({
-		display: 'flex',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		padding: 'md',
-		zIndex: '10',
-		flexShrink: '0',
-		position: 'sticky',
-		top: '0',
-		translucent: 'md',
-		_light: {
-			borderBottom: '1px solid token(colors.neutral.400)'
-		},
-		_dark: {
-			borderBottom: '1px solid token(colors.neutral.200)'
-		}
-	})}
+	class={css(
+		translucent.raw({
+			blur: 'md'
+		}),
+		css.raw({
+			display: 'flex',
+			justifyContent: 'space-between',
+			alignItems: 'center',
+			padding: 'md',
+			zIndex: '10',
+			flexShrink: '0',
+			position: 'sticky',
+			top: '0',
+			_light: {
+				borderBottom: '1px solid token(colors.neutral.400)'
+			},
+			_dark: {
+				borderBottom: '1px solid token(colors.neutral.200)'
+			}
+		})
+	)}
 	data-testid="bulk-actions-container"
 	{...rest}
 >

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -12,8 +14,6 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	interface Props {
 		repositoryId: string;

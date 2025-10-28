@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
 	import { type Snippet } from 'svelte';
 	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
-	import { css } from '@pindoba/panda/css';
 	interface Props {
 		children?: Snippet;
 	}

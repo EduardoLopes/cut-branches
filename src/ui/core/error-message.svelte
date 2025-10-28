@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { token } from '@pindoba/styled-system/tokens';
 	import Markdown from 'svelte-exmarkdown';
-	import { css } from '@pindoba/panda/css';
-	import { token } from '@pindoba/panda/tokens';
 
 	interface Props {
 		message: string;

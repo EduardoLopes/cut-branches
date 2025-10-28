@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/panda/css';
+	import { css } from '@pindoba/styled-system/css';
 </script>
 
 <div

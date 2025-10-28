@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
 	import type { Snippet } from 'svelte';
 	import CommitCard from './commit-card.svelte';
 	import type { Branch } from '$lib/bindings';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		branch: Branch;

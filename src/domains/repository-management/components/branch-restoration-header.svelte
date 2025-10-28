@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { css } from '@pindoba/styled-system/css';
 	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import BackButton from './back-button.svelte';
-	import { css } from '@pindoba/panda/css';
 
 	interface Props {
 		repositoryId: string;

@@ -6,6 +6,8 @@
 	 */
 
 	import Icon from '@iconify/svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import { intlFormatDistance } from 'date-fns';
@@ -15,8 +17,6 @@
 	import { useNotificationPagination } from '$domains/notifications/core/composables/use-notification-pagination.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { toUserTimezone } from '$utils/date-utils';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
 
 	// State management
 	let open = $state(false);
@@ -141,58 +141,52 @@
 	onmouseleave={() => {
 		startAutoCloseTimer();
 	}}
-	closeButtonProps={{
-		autofocus: true,
-		'aria-label': 'Close notifications'
-	}}
 	class={css({
 		width: '400px',
 		maxWidth: '95vw'
 	})}
 	passThrough={{
-		header: css.raw({
-			translucent: 'md',
-			background: 'neutral.alpha.50',
-			position: 'sticky',
-			top: '0',
-			zIndex: '1',
-			px: 'md',
-			py: 'xs',
-			marginBottom: 'md',
-			'[data-show-more="true"] &': {
-				marginBottom: '0'
-			},
-			'[data-show-more="false"] &': {
-				_dark: {
-					borderBottom: '1px solid token(colors.neutral.200)'
+		wrapper: {
+			style: css.raw({
+				gap: '0'
+			})
+		},
+		header: {
+			style: css.raw({
+				background: 'neutral.alpha.50',
+				position: 'sticky',
+				top: '0',
+				'[data-show-more="true"] &': {
+					marginBottom: '0'
 				},
-				_light: {
-					borderBottom: '1px solid token(colors.neutral.400)'
+				'[data-show-more="false"] &': {
+					_dark: {
+						borderBottom: '1px solid token(colors.neutral.200)'
+					},
+					_light: {
+						borderBottom: '1px solid token(colors.neutral.400)'
+					}
 				}
+			})
+		},
+		title: {
+			style: css.raw({
+				p: 0
+			})
+		},
+		closeButton: {
+			props: {
+				autofocus: true,
+				'aria-label': 'Close notifications'
 			}
-		}),
-		title: css.raw({
-			p: 0
-		}),
-		closeButton: css.raw({
-			translucent: 'md',
-			background: 'neutral.alpha.50',
-			top: 'xs',
-			right: 'xs'
-		}),
-		content: css.raw({
-			padding: '0',
-			gap: '0',
-			zIndex: '0'
-		}),
-		wrapper: css.raw({
-			display: 'flex',
-			flexDirection: 'column',
-			gap: '0',
-			maxHeight: '80vh',
-			overflowY: 'auto',
-			overflowX: 'hidden'
-		})
+		},
+		content: {
+			style: css.raw({
+				padding: '0',
+				gap: '0',
+				zIndex: '0'
+			})
+		}
 	}}
 >
 	{#snippet trigger(props: TriggerSnippetProps)}
@@ -230,7 +224,6 @@
 		class={css({
 			display: 'flex',
 			padding: '0',
-			pt: '0',
 			flexDirection: 'column'
 		})}
 		role="log"
@@ -281,33 +274,31 @@
 			<div
 				class={css({
 					position: 'sticky',
-					top: '0'
+					top: '0',
+					maxHeight: '60vh',
+					overflowY: 'auto'
 				})}
 			>
 				{#each groupedNotifications as group (group.date.toISOString())}
 					<h4
-						class={css({
-							position: 'sticky',
-							top: '46px',
-							background: 'neutral.alpha.50',
-							translucent: 'md',
-							px: 'md',
-							py: 'xs',
-							margin: '0',
-							zIndex: '1',
-							_dark: {
-								borderBottom: '1px solid token(colors.neutral.200)',
-								borderTop: '1px solid token(colors.neutral.200)'
-							},
-							_light: {
-								borderBottom: '1px solid token(colors.neutral.400)',
-								borderTop: '1px solid token(colors.neutral.400)'
-							},
-							fontSize: 'sm',
-							fontWeight: 'semibold',
-							textTransform: 'capitalize',
-							marginBottom: 'md'
-						})}
+						class={css(
+							translucent.raw({
+								blur: 'md'
+							}),
+							css.raw({
+								position: 'sticky',
+								top: '0',
+								background: 'neutral.alpha.50',
+								px: 'md',
+								py: 'xs',
+								margin: '0',
+								zIndex: '1',
+								fontSize: 'sm',
+								fontWeight: 'semibold',
+								textTransform: 'capitalize',
+								marginBottom: 'md'
+							})
+						)}
 					>
 						{intlFormatDistance(group.date, toUserTimezone(new Date(), userTimeZone), {
 							unit: 'day'
@@ -381,14 +372,17 @@
 			aria-expanded={showMore}
 			aria-controls="notifications-list"
 			passThrough={{
-				root: css.raw({
-					translucent: 'md',
-					borderRadius: '0',
-					bottom: '0',
-					width: '100%',
-					boxShadow: '0 0 0 1px token(colors.neutral.alpha.300)',
-					position: 'sticky'
-				})
+				root: {
+					style: css.raw(
+						css.raw({
+							borderRadius: '0',
+							boxShadow: 'none',
+							bottom: '0',
+							width: '100%',
+							position: 'sticky'
+						})
+					)
+				}
 			}}
 		>
 			Show {showMore ? 'Less' : 'More'}
