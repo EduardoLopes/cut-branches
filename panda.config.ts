@@ -1,5 +1,6 @@
 import { defineConfig } from '@pandacss/dev';
-import { getRadixColorsTokens, getSemanticTokens, pindobaPreset } from '@pindoba/panda-preset';
+import { pandaBuildInfoPath } from '@pindoba/panda-buildinfo';
+import { getRadixColorsTokens, getSemanticTokens, preset } from '@pindoba/panda-preset';
 import { grass, grassDark, grassA, grassDarkA } from '@radix-ui/colors';
 
 export default defineConfig({
@@ -7,13 +8,9 @@ export default defineConfig({
 	preflight: true,
 
 	// Where to look for your css declarations
-	include: [
-		'node_modules/@pindoba/**/*.{ts,tsx,svelte}',
-		'./src/**/*.{ts,tsx,svelte}',
-		'./src/lib/Menu.svelte'
-	],
-	dependencies: ['@pindoba/panda', '@pindoba/styles'],
-	importMap: '@pindoba/panda',
+	include: ['./src/**/*.{ts,tsx,svelte}', pandaBuildInfoPath],
+	dependencies: ['@pindoba/styled-system'],
+	importMap: '@pindoba/styled-system',
 	watch: true,
 	clean: false,
 
@@ -92,7 +89,7 @@ export default defineConfig({
 		}
 	},
 
-	presets: ['@pandacss/dev/presets', pindobaPreset],
+	presets: ['@pandacss/dev/presets', preset],
 	jsxFramework: 'svelte',
 
 	// The output directory for your css system

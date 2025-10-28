@@ -45,6 +45,41 @@ Cut Branches is a Tauri-based desktop application for managing and cleaning up G
 - `pnpm prepare` - Setup project (runs after install)
 - `pnpm update-all` - Update all dependencies (npm + cargo)
 
+### Pindoba Local Development
+
+This project uses Pindoba UI components. You can choose to use either published packages or link to local Pindoba packages for development.
+
+**Environment Configuration:**
+
+Create a `.env` file (see [`.env.example`](.env.example) for reference) and set:
+
+```bash
+# Use local Pindoba packages
+USE_LOCAL_PINDOBA=true
+
+# Or use published packages (default)
+USE_LOCAL_PINDOBA=false
+```
+
+**Manual Commands:**
+
+- `pnpm pindoba:link` - Manually link all local Pindoba packages
+- `pnpm pindoba:unlink` - Unlink and restore published packages
+- `pnpm pindoba:status` - Check current link status
+- `pnpm pindoba:clean` - Clean overrides from package.json
+
+**Requirements for Local Linking:**
+
+- Pindoba repository must be cloned to `../pindoba` (relative to this project)
+- Run `pnpm install` after changing `USE_LOCAL_PINDOBA` in `.env`
+
+**How It Works:**
+
+- The `prepare` script automatically checks `USE_LOCAL_PINDOBA` and links packages if enabled
+- Links are managed via pnpm overrides in `package.json`
+- Lefthook automatically cleans overrides before commits to keep the repository clean
+- The linking script gracefully handles missing packages
+
 ## Architecture
 
 ### Frontend Architecture (Svelte 5 + SvelteKit)
