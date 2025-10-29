@@ -5,7 +5,8 @@ import { getSearchBranchesStore } from '../../store/search-branches.svelte';
 import { getSelectedBranchesStore } from '../../store/selected-branches.svelte';
 import BranchSelection from '../branch-selection.svelte';
 import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
-import type { Branch, BranchFilters } from '$lib/bindings';
+import { Branch } from '$domains/branch-management/core/models/branch';
+import type { Branch as BranchData, BranchFilters } from '$lib/bindings';
 import type { Repository } from '$services/common';
 
 let mockBranchData: Branch[] = [];
@@ -19,32 +20,32 @@ vi.mock('../../core/composables/create-get-branches-query', () => ({
 
 			// Apply deletionStatus filter
 			if (filters.deletionStatus === 'active') {
-				filteredBranches = filteredBranches.filter((b) => !b.deletedAt);
+				filteredBranches = filteredBranches.filter((b) => !b.getDeletedAt());
 			} else if (filters.deletionStatus === 'deleted') {
-				filteredBranches = filteredBranches.filter((b) => b.deletedAt);
+				filteredBranches = filteredBranches.filter((b) => b.getDeletedAt());
 			}
 
 			// Apply selectionStatus filter
 			if (filters.selectionStatus === 'selected') {
 				const store = getSelectedBranchesStore('test-repo');
 				const selectedNames = Array.from(store?.state || []);
-				filteredBranches = filteredBranches.filter((b) => selectedNames.includes(b.name));
+				filteredBranches = filteredBranches.filter((b) => selectedNames.includes(b.getName()));
 			} else if (filters.selectionStatus === 'unselected') {
 				const store = getSelectedBranchesStore('test-repo');
 				const selectedNames = Array.from(store?.state || []);
-				filteredBranches = filteredBranches.filter((b) => !selectedNames.includes(b.name));
+				filteredBranches = filteredBranches.filter((b) => !selectedNames.includes(b.getName()));
 			}
 
 			// Apply lockStatus filter
 			if (filters.lockStatus === 'locked') {
-				filteredBranches = filteredBranches.filter((b) => b.isLocked);
+				filteredBranches = filteredBranches.filter((b) => b.getIsLocked());
 			} else if (filters.lockStatus === 'unlocked') {
-				filteredBranches = filteredBranches.filter((b) => !b.isLocked);
+				filteredBranches = filteredBranches.filter((b) => !b.getIsLocked());
 			}
 
 			// Apply includeCurrent filter
 			if (filters.includeCurrent === false) {
-				filteredBranches = filteredBranches.filter((b) => !b.current);
+				filteredBranches = filteredBranches.filter((b) => !b.isCurrent());
 			}
 
 			return {
@@ -95,13 +96,13 @@ vi.mock('../../core/composables/create-set-branch-selection-all-mutation', () =>
 	})
 }));
 
-const mockBranches: Branch[] = [
+const mockBranchesData: BranchData[] = [
 	{
 		name: 'main',
 		current: true,
 		lastCommit: {
-			sha: 'abc123',
-			shortSha: 'abc123'.substring(0, 7),
+			sha: 'abc1234567890abcdef1234567890abcdef12340',
+			shortSha: 'abc1234',
 			date: '2023-01-01',
 			message: 'Initial commit',
 			author: 'John Doe',
@@ -117,8 +118,8 @@ const mockBranches: Branch[] = [
 		name: 'feature-1',
 		current: false,
 		lastCommit: {
-			sha: 'def456',
-			shortSha: 'def456'.substring(0, 7),
+			sha: 'def4567890abcdef1234567890abcdef12345670',
+			shortSha: 'def4567',
 			date: '2023-01-02',
 			message: 'Add feature 1',
 			author: 'Jane Doe',
@@ -134,8 +135,8 @@ const mockBranches: Branch[] = [
 		name: 'feature-2',
 		current: false,
 		lastCommit: {
-			sha: 'ghi789',
-			shortSha: 'ghi789'.substring(0, 7),
+			sha: 'fed7890abcdef1234567890abcdef123456789a0',
+			shortSha: 'fed7890',
 			date: '2023-01-03',
 			message: 'Add feature 2',
 			author: 'Jim Doe',
@@ -149,13 +150,15 @@ const mockBranches: Branch[] = [
 	}
 ];
 
+const mockBranches = mockBranchesData.map((data) => Branch.fromData(data));
+
 const mockRepo: Repository = {
 	name: 'test-repo',
 	currentBranch: 'main',
 	path: '/path/to/repo',
 	branchesCount: 3,
 	id: '1',
-	branches: mockBranches
+	branches: mockBranchesData
 };
 
 describe('BranchSelection Component', () => {

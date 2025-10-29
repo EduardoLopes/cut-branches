@@ -4,7 +4,8 @@ import type { Mock } from 'vitest';
 import { createDeleteBranchesMutation } from '../../core/composables/create-delete-branches-mutation';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import type { Branch } from '$lib/bindings';
+import { Branch } from '$domains/branch-management/core/models/branch';
+import type { Branch as BranchData } from '$lib/bindings';
 
 // Mock dependencies
 vi.mock('$app/state', () => {
@@ -56,13 +57,13 @@ vi.mock('../../core/composables/create-set-branch-selection-all-mutation', () =>
 }));
 
 // Test data
-const mockBranches: Branch[] = [
+const mockBranchesData: BranchData[] = [
 	{
 		name: 'feature-1',
 		current: false,
 		lastCommit: {
-			sha: 'abc123',
-			shortSha: 'abc123'.substring(0, 7),
+			sha: 'abc1234567890abcdef1234567890abcdef12340',
+			shortSha: 'abc1234',
 			date: '2023-01-01',
 			message: 'Test commit',
 			author: 'Test User',
@@ -78,8 +79,8 @@ const mockBranches: Branch[] = [
 		name: 'feature-2',
 		current: false,
 		lastCommit: {
-			sha: 'def456',
-			shortSha: 'def456'.substring(0, 7),
+			sha: 'def4567890abcdef1234567890abcdef12345670',
+			shortSha: 'def4567',
 			date: '2023-01-02',
 			message: 'Another commit',
 			author: 'Test User',
@@ -95,8 +96,8 @@ const mockBranches: Branch[] = [
 		name: 'main',
 		current: true,
 		lastCommit: {
-			sha: 'ghi789',
-			shortSha: 'ghi789'.substring(0, 7),
+			sha: 'fed7890abcdef1234567890abcdef123456789a0',
+			shortSha: 'fed7890',
 			date: '2023-01-03',
 			message: 'Current branch commit',
 			author: 'Test User',
@@ -109,6 +110,8 @@ const mockBranches: Branch[] = [
 		isLocked: false
 	}
 ];
+
+const mockBranches = mockBranchesData.map((data) => Branch.fromData(data));
 
 // Mock get repository list query
 vi.mock('../../core/composables/create-get-repository-list-query', () => ({
@@ -141,7 +144,7 @@ vi.mock('../../core/composables/create-get-branches-query', () => ({
 			return {
 				get data() {
 					const selectedBranchesData = mockBranches.filter((b) =>
-						mockSelectedBranches.includes(b.name)
+						mockSelectedBranches.includes(b.getName())
 					);
 					return { branches: selectedBranchesData };
 				},

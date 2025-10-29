@@ -1,17 +1,17 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
 	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
+	import { type Branch } from '../core/models/branch';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/create-delete-branches-mutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
-	import type { Branch } from '$lib/bindings';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		id?: string;
@@ -60,10 +60,10 @@
 
 	// current branch first
 	function sort(a: Branch, b: Branch) {
-		if (a.current) {
+		if (a.isCurrent()) {
 			return -1;
 		}
-		if (b.current) {
+		if (b.isCurrent()) {
 			return 1;
 		}
 		// a must be equal to b
@@ -78,7 +78,7 @@
 				{
 					path: repository.path,
 					repoId: id,
-					branches: branches.map((item) => item.name)
+					branches: branches.map((item) => item.getName())
 				},
 				{
 					onSuccess: (data) => {
@@ -128,7 +128,7 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each branches as branch (`${branch.name}-${branch.lastCommit.sha}`)}
+		{#each branches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
 			<BranchCard {branch} selected={true} />
 		{/each}
 	</div>

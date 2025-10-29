@@ -2,6 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { getLockedBranchesStore } from '../../../store/locked-branches.svelte';
 import { getSearchBranchesStore } from '../../../store/search-branches.svelte';
 import { getSelectedBranchesStore } from '../../../store/selected-branches.svelte';
+import { Branch } from '../../models/branch';
 import { useBranchSelection } from '../use-branch-selection.svelte';
 import type { BranchFilters } from '$lib/bindings';
 import type { Repository } from '$services/common';
@@ -14,40 +15,40 @@ vi.mock('../create-get-branches-query', () => ({
 		get data() {
 			if (!currentRepository) return { branches: [] };
 
-			// Use branches from current repository to support dynamic updates
-			const allBranches = currentRepository.branches;
+			// Convert BranchData to Domain Models
+			const allBranches = currentRepository.branches.map((b) => Branch.fromData(b));
 
 			const filters = input().filters || {};
 			let filteredBranches = [...allBranches];
 
 			// Apply deletionStatus filter
 			if (filters.deletionStatus === 'active') {
-				filteredBranches = filteredBranches.filter((b) => !b.deletedAt);
+				filteredBranches = filteredBranches.filter((b) => !b.getDeletedAt());
 			} else if (filters.deletionStatus === 'deleted') {
-				filteredBranches = filteredBranches.filter((b) => b.deletedAt);
+				filteredBranches = filteredBranches.filter((b) => b.getDeletedAt());
 			}
 
 			// Apply selectionStatus filter
 			if (filters.selectionStatus === 'selected') {
 				const store = getSelectedBranchesStore('test-repo');
 				const selectedNames = Array.from(store?.state || []);
-				filteredBranches = filteredBranches.filter((b) => selectedNames.includes(b.name));
+				filteredBranches = filteredBranches.filter((b) => selectedNames.includes(b.getName()));
 			} else if (filters.selectionStatus === 'unselected') {
 				const store = getSelectedBranchesStore('test-repo');
 				const selectedNames = Array.from(store?.state || []);
-				filteredBranches = filteredBranches.filter((b) => !selectedNames.includes(b.name));
+				filteredBranches = filteredBranches.filter((b) => !selectedNames.includes(b.getName()));
 			}
 
 			// Apply lockStatus filter
 			if (filters.lockStatus === 'locked') {
-				filteredBranches = filteredBranches.filter((b) => b.isLocked);
+				filteredBranches = filteredBranches.filter((b) => b.getIsLocked());
 			} else if (filters.lockStatus === 'unlocked') {
-				filteredBranches = filteredBranches.filter((b) => !b.isLocked);
+				filteredBranches = filteredBranches.filter((b) => !b.getIsLocked());
 			}
 
 			// Apply includeCurrent filter
 			if (filters.includeCurrent === false) {
-				filteredBranches = filteredBranches.filter((b) => !b.current);
+				filteredBranches = filteredBranches.filter((b) => !b.isCurrent());
 			}
 
 			return {
@@ -170,8 +171,8 @@ const mockRepo: Repository = {
 			name: 'main',
 			current: true,
 			lastCommit: {
-				sha: 'abc123',
-				shortSha: 'abc123'.substring(0, 7),
+				sha: 'abc1234567890abcdef1234567890abcdef12340',
+				shortSha: 'abc1234',
 				date: '2023-01-01',
 				message: 'Initial commit',
 				author: 'John Doe',
@@ -187,8 +188,8 @@ const mockRepo: Repository = {
 			name: 'feature-1',
 			current: false,
 			lastCommit: {
-				sha: 'def456',
-				shortSha: 'def456'.substring(0, 7),
+				sha: 'def4567890abcdef1234567890abcdef12345670',
+				shortSha: 'def4567',
 				date: '2023-01-02',
 				message: 'Add feature 1',
 				author: 'Jane Doe',
@@ -204,8 +205,8 @@ const mockRepo: Repository = {
 			name: 'feature-2',
 			current: false,
 			lastCommit: {
-				sha: 'ghi789',
-				shortSha: 'ghi789'.substring(0, 7),
+				sha: 'fed7890abcdef1234567890abcdef123456789a0',
+				shortSha: 'fed7890',
 				date: '2023-01-03',
 				message: 'Add feature 2',
 				author: 'Jim Doe',

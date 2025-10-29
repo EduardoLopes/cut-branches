@@ -1,10 +1,11 @@
 import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import CommitCard from '../commit-card.svelte';
-import type { Commit } from '$lib/bindings';
+import { Commit } from '$domains/branch-management/core/models/commit';
+import type { Commit as CommitData } from '$lib/bindings';
 
 describe('CommitCard Component', () => {
-	const mockCommit: Commit = {
+	const mockCommitData: CommitData = {
 		sha: 'abc123def456',
 		shortSha: 'abc123d',
 		date: '2024-01-15T10:30:00Z',
@@ -12,6 +13,8 @@ describe('CommitCard Component', () => {
 		author: 'John Doe',
 		email: 'john.doe@example.com'
 	};
+
+	const mockCommit = Commit.fromData(mockCommitData);
 
 	test('renders commit message', () => {
 		const { getByTestId } = render(CommitCard, {
@@ -24,10 +27,11 @@ describe('CommitCard Component', () => {
 	});
 
 	test('renders commit message with markdown', () => {
-		const commitWithMarkdown: Commit = {
-			...mockCommit,
+		const commitWithMarkdownData: CommitData = {
+			...mockCommitData,
 			message: '**Bold** and *italic* text'
 		};
+		const commitWithMarkdown = Commit.fromData(commitWithMarkdownData);
 
 		const { getByTestId } = render(CommitCard, {
 			props: { commit: commitWithMarkdown }
@@ -98,10 +102,11 @@ describe('CommitCard Component', () => {
 	});
 
 	test('handles different date formats', () => {
-		const commitWithDifferentDate: Commit = {
-			...mockCommit,
+		const commitWithDifferentDateData: CommitData = {
+			...mockCommitData,
 			date: '2023-12-01T00:00:00Z'
 		};
+		const commitWithDifferentDate = Commit.fromData(commitWithDifferentDateData);
 
 		const { getByTestId } = render(CommitCard, {
 			props: { commit: commitWithDifferentDate }
@@ -112,10 +117,11 @@ describe('CommitCard Component', () => {
 	});
 
 	test('handles empty commit message', () => {
-		const commitWithEmptyMessage: Commit = {
-			...mockCommit,
+		const commitWithEmptyMessageData: CommitData = {
+			...mockCommitData,
 			message: ''
 		};
+		const commitWithEmptyMessage = Commit.fromData(commitWithEmptyMessageData);
 
 		const { getByTestId } = render(CommitCard, {
 			props: { commit: commitWithEmptyMessage }
@@ -126,10 +132,11 @@ describe('CommitCard Component', () => {
 	});
 
 	test('handles special characters in author name', () => {
-		const commitWithSpecialChars: Commit = {
-			...mockCommit,
+		const commitWithSpecialCharsData: CommitData = {
+			...mockCommitData,
 			author: "José María O'Brien"
 		};
+		const commitWithSpecialChars = Commit.fromData(commitWithSpecialCharsData);
 
 		const { getByTestId } = render(CommitCard, {
 			props: { commit: commitWithSpecialChars }
@@ -140,10 +147,11 @@ describe('CommitCard Component', () => {
 	});
 
 	test('handles special characters in email', () => {
-		const commitWithSpecialEmail: Commit = {
-			...mockCommit,
+		const commitWithSpecialEmailData: CommitData = {
+			...mockCommitData,
 			email: 'test+tag@example.co.uk'
 		};
+		const commitWithSpecialEmail = Commit.fromData(commitWithSpecialEmailData);
 
 		const { getByTestId } = render(CommitCard, {
 			props: { commit: commitWithSpecialEmail }

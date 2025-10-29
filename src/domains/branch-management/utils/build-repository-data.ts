@@ -1,4 +1,5 @@
-import type { Branch } from '$lib/bindings';
+import { type Branch } from '$domains/branch-management/core/models/branch';
+import { BranchConverters } from '$domains/branch-management/core/models/converters';
 import type { Repository } from '$services/common';
 
 export interface RepositorySource {
@@ -16,7 +17,7 @@ export interface BranchesData {
  * Builds a Repository object from query data
  *
  * @param source - Source repository data
- * @param branchesData - Branches data from query
+ * @param branchesData - Branches data from query (with Domain Models)
  * @returns Repository object or undefined if branchesData is missing
  */
 export function buildRepositoryData(
@@ -33,6 +34,6 @@ export function buildRepositoryData(
 		currentBranch: source.currentBranch ?? '',
 		path: source.path ?? '',
 		branchesCount: branchesData.branches.length,
-		branches: branchesData.branches
+		branches: BranchConverters.toDataArray(branchesData.branches)
 	} as Repository;
 }

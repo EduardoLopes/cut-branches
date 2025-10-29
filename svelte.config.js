@@ -12,6 +12,7 @@ const config = {
 		}),
 		alias: {
 			'@pindoba/styled-system': './styled-system/*',
+			$core: './src/core',
 			$domains: './src/domains',
 			$ui: './src/ui',
 			$utils: './src/utils',

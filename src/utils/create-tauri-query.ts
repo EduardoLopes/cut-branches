@@ -50,9 +50,13 @@ function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey
 // Base query options - using explicit types for better inference
 export type TauriQueryOptions<
 	TCommand extends CommandName,
+	TData = CommandResult<TCommand>,
 	TQueryKey extends QueryKey = QueryKey,
 	TError = AppError
-> = Omit<CreateQueryOptions<CommandResult<TCommand>, TError>, 'queryKey' | 'queryFn'> & {
+> = Omit<
+	CreateQueryOptions<CommandResult<TCommand>, TError, TData, TQueryKey>,
+	'queryKey' | 'queryFn'
+> & {
 	queryKey?: TQueryKey;
 	input?: InputResolver<TCommand>;
 	meta?: {
@@ -84,8 +88,10 @@ function buildQueryFn<TCommand extends CommandName>(
 
 export function createTauriQuery<
 	TCommand extends CommandName,
-	TQueryKey extends QueryKey = QueryKey
->(commandName: TCommand, config: TauriQueryOptions<TCommand, TQueryKey>) {
+	TData = CommandResult<TCommand>,
+	TQueryKey extends QueryKey = QueryKey,
+	TError = AppError
+>(commandName: TCommand, config: TauriQueryOptions<TCommand, TData, TQueryKey, TError>) {
 	const { input, queryKey, meta, ...options } = config;
 
 	const queryClient = useQueryClient();

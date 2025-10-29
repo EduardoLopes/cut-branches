@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { getBranchElementId } from '../utils/branch-utils';
-	import type { Branch } from '$lib/bindings';
+	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import { formatString } from '$utils/string-utils';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		alerts: string[];
@@ -15,10 +15,10 @@
 	let { alerts, branch }: Props = $props();
 </script>
 
-<Group direction="vertical" noBorder id={getBranchElementId(branch.name, 'alerts-group')}>
+<Group direction="vertical" noBorder id={getBranchElementId(branch.getName(), 'alerts-group')}>
 	{#each alerts as alert (alert)}
-		{#if alert === 'fullyMerged' && !branch.current}
-			<Alert id={getBranchElementId(branch.name, `alert-${alert}`)}>
+		{#if alert === 'fullyMerged' && !branch.isCurrent()}
+			<Alert id={getBranchElementId(branch.getName(), `alert-${alert}`)}>
 				<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
 					<Icon icon="lucide:info" />
 					<span>This branch is not fully merged into the current branch!</span>
@@ -26,7 +26,7 @@
 			</Alert>
 		{:else if alert === 'protectedWords'}
 			<Alert
-				id={getBranchElementId(branch.name, `alert-${alert}`)}
+				id={getBranchElementId(branch.getName(), `alert-${alert}`)}
 				data-testid="protected-words-alert"
 				feedback="danger"
 			>
@@ -34,14 +34,14 @@
 					<Icon icon="lucide:alert-triangle" />
 					<span>
 						{formatString('This branch contains protected words ({name})', {
-							name: branch.name
+							name: branch.getName()
 						})}
 					</span>
 				</div>
 			</Alert>
 		{:else if alert === 'offensiveWords'}
 			<Alert
-				id={getBranchElementId(branch.name, `alert-${alert}`)}
+				id={getBranchElementId(branch.getName(), `alert-${alert}`)}
 				data-testid="offensive-words-alert"
 				feedback="warning"
 			>

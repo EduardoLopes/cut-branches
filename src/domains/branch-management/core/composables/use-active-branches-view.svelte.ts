@@ -71,7 +71,8 @@ export function useActiveBranchesView({ getId }: UseActiveBranchesViewProps) {
 		}
 
 		const currentBranch = repositoryQuery.data?.currentBranch;
-		return branches.filter((item) => item.name !== currentBranch && !item.isLocked).length;
+		return branches.filter((item) => item.getName() !== currentBranch && !item.getIsLocked())
+			.length;
 	});
 
 	const searchNoResultsFound = $derived((search?.state?.length ?? 0) > 0 && branches?.length === 0);

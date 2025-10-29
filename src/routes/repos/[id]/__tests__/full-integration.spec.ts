@@ -2,8 +2,10 @@ import { render, fireEvent, waitFor, screen, within } from '@testing-library/sve
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, it, expect } from 'vitest';
 import RepositoryPageFixture from './fixtures/repository-page-fixture.svelte';
+import { Branch } from '$domains/branch-management/core/models/branch';
 import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
+import type { Branch as BranchData } from '$lib/bindings';
 
 // Properly mock @tanstack/svelte-query
 vi.mock('@tanstack/svelte-query', () => {
@@ -67,21 +69,23 @@ vi.mock('@tanstack/svelte-query', () => {
 });
 
 // Mock branch list data
-const mockBranches = [
+const mockBranchesData: BranchData[] = [
 	{
 		name: 'main',
 		current: true,
 		isLocked: false,
 		isSelected: false,
 		lastCommit: {
-			sha: 'abc123',
-			shortSha: 'abc123'.substring(0, 7),
+			sha: 'abc1234567890abcdef1234567890abcdef12340',
+			shortSha: 'abc1234',
 			date: new Date().toISOString(),
 			message: 'Initial commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
-		fullyMerged: true
+		fullyMerged: true,
+		deletedAt: null,
+		isReachable: null
 	},
 	{
 		name: 'feature-branch',
@@ -89,14 +93,16 @@ const mockBranches = [
 		isLocked: false,
 		isSelected: false,
 		lastCommit: {
-			sha: 'def456',
-			shortSha: 'def456'.substring(0, 7),
+			sha: 'def4567890abcdef1234567890abcdef12345670',
+			shortSha: 'def4567',
 			date: new Date().toISOString(),
 			message: 'Add feature',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
-		fullyMerged: false
+		fullyMerged: false,
+		deletedAt: null,
+		isReachable: null
 	},
 	{
 		name: 'bugfix-branch',
@@ -104,16 +110,20 @@ const mockBranches = [
 		isLocked: false,
 		isSelected: false,
 		lastCommit: {
-			sha: 'ghi789',
-			shortSha: 'ghi789'.substring(0, 7),
+			sha: 'fed7890abcdef1234567890abcdef123456789a0',
+			shortSha: 'fed7890',
 			date: new Date().toISOString(),
 			message: 'Fix bug',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
-		fullyMerged: false
+		fullyMerged: false,
+		deletedAt: null,
+		isReachable: null
 	}
 ];
+
+const mockBranches = mockBranchesData.map((data) => Branch.fromData(data));
 
 // Mock the repository list query
 vi.mock('$domains/onboarding/logic/application/queries/create-get-repository-list-query', () => ({

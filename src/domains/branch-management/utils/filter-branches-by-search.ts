@@ -1,4 +1,4 @@
-import type { Branch } from '$lib/bindings';
+import { type Branch } from '$domains/branch-management/core/models/branch';
 import { ensureString } from '$utils/string-utils';
 
 /**
@@ -16,6 +16,6 @@ export function filterBranchesBySearch(branches: Branch[], searchTerm?: string):
 	}
 
 	return branches.filter((branch: Branch) =>
-		branch.name.toLowerCase().trim().includes(normalizedSearchTerm)
+		branch.getName().toLowerCase().trim().includes(normalizedSearchTerm)
 	);
 }

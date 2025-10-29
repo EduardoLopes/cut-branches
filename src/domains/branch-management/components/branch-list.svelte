@@ -1,8 +1,5 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
-	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
-	import { token } from '@pindoba/styled-system/tokens';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
@@ -15,16 +12,19 @@
 	import { createBranchMergeStatusQuery } from '$domains/branch-management/core/composables/create-branch-merge-status-query';
 	import { createSwitchBranchMutation } from '$domains/branch-management/core/composables/create-switch-branch-mutation';
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-update-branch-selection-batch-mutation';
+	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import {
 		getBranchColorPalette,
 		getBranchAlerts,
 		getBranchElementId,
 		shouldShowBranchAlerts
 	} from '$domains/branch-management/utils/branch-utils';
-	import type { Branch } from '$lib/bindings';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
+	import { css } from '@pindoba/styled-system/css';
+	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
+	import { token } from '@pindoba/styled-system/tokens';
 
 	interface Props {
 		repositoryID?: string;
@@ -89,8 +89,8 @@
 
 		updateSelectionMutation.mutate({
 			repoId: repositoryID,
-			branchNames: [branch.name],
-			isSelected: !branch.isSelected
+			branchNames: [branch.getName()],
+			isSelected: !branch.getIsSelected()
 		});
 	}
 
@@ -108,15 +108,23 @@
 
 	let start = $derived(Math.max(0, itemsPerPage * (currentPage - 1)));
 	let end = $derived(start + itemsPerPage);
-	let sortedBranches = $derived(
-		branchesQuery.data?.branches
+	let sortedBranches = $derived.by((): Branch[] | undefined => {
+		const branches = branchesQuery.data?.branches;
+		if (!branches) return undefined;
+
+		return branches
 			.toSorted((a, b) => {
-				if (a.current && !b.current) return -1;
-				if (!a.current && b.current) return 1;
+				if (a.isCurrent() && !b.isCurrent()) return -1;
+				if (!a.isCurrent() && b.isCurrent()) return 1;
 				return 0;
 			})
-			.filter((branch) => branch.name.toLowerCase().includes(search?.state?.toLowerCase() ?? ''))
-	);
+			.filter((branch) =>
+				branch
+					.getName()
+					.toLowerCase()
+					.includes(search?.state?.toLowerCase() ?? '')
+			);
+	});
 	let paginatedBranches = $derived(sortedBranches?.slice(start, end));
 </script>
 
@@ -139,7 +147,7 @@
 		})}
 	>
 		{#if paginatedBranches}
-			{#each paginatedBranches as branch (`${branch.name}-${branch.lastCommit.sha}`)}
+			{#each paginatedBranches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
 				<div
 					role="listitem"
 					class={css({
@@ -149,9 +157,9 @@
 						gap: 'sm',
 						borderRadius: 'sm'
 					})}
-					class:selected={branch.isSelected}
+					class:selected={branch.getIsSelected()}
 				>
-					{#if !branch.current}
+					{#if !branch.isCurrent()}
 						<div
 							class={css({
 								display: 'flex',
@@ -161,34 +169,34 @@
 						>
 							{#if allowSelection}
 								<Checkbox
-									id={`checkbox-${branch.name}`}
+									id={`checkbox-${branch.getName()}`}
 									onclick={() => handleToggleSelect(branch)}
-									checked={branch.isSelected}
-									disabled={branch.isLocked}
+									checked={branch.getIsSelected()}
+									disabled={branch.getIsLocked()}
 								>
 									<div class={visuallyHidden()}>
-										{branch.name}
+										{branch.getName()}
 									</div>
 								</Checkbox>
 							{/if}
 
 							{#if allowSetCurrent}
 								<Loading
-									isLoading={switchBranchMutation.variables?.branch === branch.name &&
+									isLoading={switchBranchMutation.variables?.branch === branch.getName() &&
 										switchBranchMutation.isPending}
 								>
 									<Button
 										size="xs"
 										shape="square"
 										emphasis="secondary"
-										disabled={switchBranchMutation.variables?.branch !== branch.name &&
+										disabled={switchBranchMutation.variables?.branch !== branch.getName() &&
 											switchBranchMutation.isPending}
 										class={css({
 											width: '26px',
 											height: '26px',
 											boxShadow: 'none'
 										})}
-										onclick={() => handleSwitchBranch(branch.name)}
+										onclick={() => handleSwitchBranch(branch.getName())}
 										data-testid="switch-button"
 										title="Set as current"
 									>
@@ -199,12 +207,12 @@
 							{/if}
 
 							{#if allowLocking}
-								<LockBranchToggle {repositoryID} branch={branch.name} />
+								<LockBranchToggle {repositoryID} branch={branch.getName()} />
 							{/if}
 						</div>
 					{/if}
 
-					{#if branch.current}
+					{#if branch.isCurrent()}
 						<div
 							class={css({
 								display: 'flex',
@@ -222,34 +230,34 @@
 								/>
 							</span>
 							{#if allowLocking}
-								<LockBranchToggle {repositoryID} branch={branch.name} />
+								<LockBranchToggle {repositoryID} branch={branch.getName()} />
 							{/if}
 						</div>
 					{/if}
 
 					<BranchCard
 						{branch}
-						selected={branch.isSelected}
-						locked={branch.isLocked && !branch.current}
-						colorPalette={getBranchColorPalette(branch, branch.isSelected ?? false)}
-						id={getBranchElementId(branch.name, 'container')}
-						title={branch.current
+						selected={branch.getIsSelected()}
+						locked={branch.getIsLocked() && !branch.isCurrent()}
+						colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}
+						id={getBranchElementId(branch.getName(), 'container')}
+						title={branch.isCurrent()
 							? 'Current branch'
-							: formatString('{name}', { name: branch.name })}
+							: formatString('{name}', { name: branch.getName() })}
 						{variant}
 					>
 						{@const mergeStatusQuery = createBranchMergeStatusQuery(
 							{
 								path: repositoryPath ?? '',
-								branchName: branch.name
+								branchName: branch.getName()
 							},
 							{
-								enabled: !!repositoryPath && !branch.current
+								enabled: !!repositoryPath && !branch.isCurrent()
 							}
 						)}
 						{@const alerts = getBranchAlerts(
 							branch,
-							branch.isSelected ?? false,
+							branch.getIsSelected() ?? false,
 							mergeStatusQuery.data?.isMerged
 						)}
 						{#if shouldShowBranchAlerts(alerts, branch)}

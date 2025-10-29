@@ -1,10 +1,28 @@
 import { describe, test, expect } from 'vitest';
-import { filterSelectableBranches, type Branch } from '../filter-selectable-branches';
+import { filterSelectableBranches } from '../filter-selectable-branches';
+import { Branch } from '$domains/branch-management/core/models/branch';
+import type { Branch as BranchData } from '$lib/bindings';
 
-const createBranch = (name: string, isLocked = false): Branch => ({
-	name,
-	isLocked
-});
+const createBranch = (name: string, isLocked = false): Branch => {
+	const branchData: BranchData = {
+		name,
+		current: false,
+		fullyMerged: false,
+		lastCommit: {
+			sha: 'abc123def456',
+			shortSha: 'abc123d',
+			date: '2024-01-15T10:30:00Z',
+			message: 'Test commit',
+			author: 'Test User',
+			email: 'test@example.com'
+		},
+		deletedAt: null,
+		isReachable: null,
+		isSelected: false,
+		isLocked
+	};
+	return Branch.fromData(branchData);
+};
 
 describe('filterSelectableBranches', () => {
 	const branches: Branch[] = [
@@ -22,7 +40,7 @@ describe('filterSelectableBranches', () => {
 			});
 
 			expect(result).toHaveLength(3);
-			expect(result.find((b) => b.name === 'main')).toBeUndefined();
+			expect(result.find((b) => b.getName() === 'main')).toBeUndefined();
 		});
 
 		test('includes all branches when currentBranch is undefined', () => {
@@ -59,7 +77,7 @@ describe('filterSelectableBranches', () => {
 			});
 
 			expect(result).toHaveLength(2);
-			expect(result.find((b) => b.name === 'feature-1')).toBeUndefined();
+			expect(result.find((b) => b.getName() === 'feature-1')).toBeUndefined();
 		});
 
 		test('excludes both current and locked branches', () => {
@@ -76,7 +94,7 @@ describe('filterSelectableBranches', () => {
 			});
 
 			expect(result).toHaveLength(1);
-			expect(result[0].name).toBe('feature-2');
+			expect(result[0].getName()).toBe('feature-2');
 		});
 	});
 
@@ -89,7 +107,7 @@ describe('filterSelectableBranches', () => {
 			});
 
 			expect(result).toHaveLength(2);
-			expect(result.map((b) => b.name)).toEqual(['feature-1', 'feature-2']);
+			expect(result.map((b) => b.getName())).toEqual(['feature-1', 'feature-2']);
 		});
 
 		test('search is case-insensitive', () => {
@@ -150,7 +168,7 @@ describe('filterSelectableBranches', () => {
 			});
 
 			expect(result).toHaveLength(1);
-			expect(result[0].name).toBe('hotfix-1');
+			expect(result[0].getName()).toBe('hotfix-1');
 		});
 	});
 
@@ -174,7 +192,7 @@ describe('filterSelectableBranches', () => {
 			// Should include: feature-2, feature-3 (match search)
 			// Should exclude: hotfix-1 (doesn't match search)
 			expect(result).toHaveLength(2);
-			expect(result.map((b) => b.name)).toEqual(['feature-2', 'feature-3']);
+			expect(result.map((b) => b.getName())).toEqual(['feature-2', 'feature-3']);
 		});
 	});
 
@@ -190,8 +208,8 @@ describe('filterSelectableBranches', () => {
 
 		test('handles branches with additional properties', () => {
 			const branchesWithProps: Branch[] = [
-				{ name: 'main', isLocked: false, extraProp: 'value' },
-				{ name: 'feature-1', isLocked: false, anotherProp: 123 }
+				createBranch('main', false),
+				createBranch('feature-1', false)
 			];
 
 			const result = filterSelectableBranches({
@@ -200,7 +218,7 @@ describe('filterSelectableBranches', () => {
 			});
 
 			expect(result).toHaveLength(1);
-			expect(result[0].name).toBe('feature-1');
+			expect(result[0].getName()).toBe('feature-1');
 		});
 	});
 });

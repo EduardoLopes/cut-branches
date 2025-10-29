@@ -1,10 +1,11 @@
 import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import BranchCard from '../branch-card.svelte';
-import type { Branch } from '$lib/bindings';
+import { Branch } from '$domains/branch-management/core/models/branch';
+import type { Branch as BranchData } from '$lib/bindings';
 
 describe('BranchCard Component', () => {
-	const mockBranch: Branch = {
+	const mockBranchData: BranchData = {
 		name: 'feature/new-feature',
 		current: false,
 		fullyMerged: false,
@@ -21,6 +22,8 @@ describe('BranchCard Component', () => {
 		isSelected: false,
 		isLocked: false
 	};
+
+	const mockBranch = Branch.fromData(mockBranchData);
 
 	test('renders branch name', () => {
 		const { getByTestId } = render(BranchCard, {
@@ -44,10 +47,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('applies current class when branch is current', () => {
-		const currentBranch: Branch = {
-			...mockBranch,
+		const currentBranchData: BranchData = {
+			...mockBranchData,
 			current: true
 		};
+		const currentBranch = Branch.fromData(currentBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: currentBranch }
@@ -130,10 +134,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('displays deletedAt info when branch has deletedAt', () => {
-		const deletedBranch: Branch = {
-			...mockBranch,
+		const deletedBranchData: BranchData = {
+			...mockBranchData,
 			deletedAt: '2024-01-20T15:45:00Z'
 		};
+		const deletedBranch = Branch.fromData(deletedBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: deletedBranch }
@@ -154,10 +159,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('displays full date in deletedAt title attribute', () => {
-		const deletedBranch: Branch = {
-			...mockBranch,
+		const deletedBranchData: BranchData = {
+			...mockBranchData,
 			deletedAt: '2024-01-20T15:45:00Z'
 		};
+		const deletedBranch = Branch.fromData(deletedBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: deletedBranch }
@@ -170,10 +176,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('applies multiple state classes simultaneously', () => {
-		const currentBranch: Branch = {
-			...mockBranch,
+		const currentBranchData: BranchData = {
+			...mockBranchData,
 			current: true
 		};
+		const currentBranch = Branch.fromData(currentBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: currentBranch, selected: true, locked: true }
@@ -195,10 +202,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('renders trash icon when branch is deleted', () => {
-		const deletedBranch: Branch = {
-			...mockBranch,
+		const deletedBranchData: BranchData = {
+			...mockBranchData,
 			deletedAt: '2024-01-20T15:45:00Z'
 		};
+		const deletedBranch = Branch.fromData(deletedBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: deletedBranch }
@@ -209,10 +217,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('handles branch with special characters in name', () => {
-		const specialBranch: Branch = {
-			...mockBranch,
+		const specialBranchData: BranchData = {
+			...mockBranchData,
 			name: 'feature/special-chars-@#$%'
 		};
+		const specialBranch = Branch.fromData(specialBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: specialBranch }
@@ -232,10 +241,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('handles branch with isReachable property', () => {
-		const branchWithReachable: Branch = {
-			...mockBranch,
+		const branchWithReachableData: BranchData = {
+			...mockBranchData,
 			isReachable: true
 		};
+		const branchWithReachable = Branch.fromData(branchWithReachableData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: branchWithReachable }
@@ -245,10 +255,11 @@ describe('BranchCard Component', () => {
 	});
 
 	test('handles branch with fullyMerged true', () => {
-		const mergedBranch: Branch = {
-			...mockBranch,
+		const mergedBranchData: BranchData = {
+			...mockBranchData,
 			fullyMerged: true
 		};
+		const mergedBranch = Branch.fromData(mergedBranchData);
 
 		const { getByTestId } = render(BranchCard, {
 			props: { branch: mergedBranch }

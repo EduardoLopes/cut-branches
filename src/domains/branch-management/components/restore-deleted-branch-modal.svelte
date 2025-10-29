@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
@@ -19,6 +18,7 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		repoId?: string;
@@ -110,14 +110,15 @@
 
 			if (response && Array.isArray(response)) {
 				// Extract branch names and find overlaps with our selected branches
-				const existingBranchNames = response?.map((branch) => branch.name) ?? [];
+				const existingBranchNames = response?.map((branch) => branch.getName()) ?? [];
 				existingBranches = existingBranchNames;
 
 				// Initialize preferences for branches that might conflict
 				selectedQuery.data?.branches?.forEach((branch) => {
-					if (existingBranchNames.includes(branch.name)) {
+					const branchName = branch.getName();
+					if (existingBranchNames.includes(branchName)) {
 						// Default to skip for safety
-						branchPreferences[branch.name] = 'Skip';
+						branchPreferences[branchName] = 'Skip';
 					}
 				});
 			}
@@ -334,7 +335,7 @@
 	function processNextConflictBranch() {
 		if (!repository?.path || pendingConflictBranches.length === 0) {
 			// If no more conflicts, process remaining normal branches
-			if (selectedQuery.data?.branches?.some((branch) => !restorationResults[branch.name])) {
+			if (selectedQuery.data?.branches?.some((branch) => !restorationResults[branch.getName()])) {
 				processNextBranch();
 			} else {
 				// All done
@@ -372,7 +373,7 @@
 
 		// Find the next branch to process (one that hasn't been processed yet)
 		const nextBranch = selectedQuery.data?.branches.find(
-			(branch) => !restorationResults[branch.name]
+			(branch) => !restorationResults[branch.getName()]
 		);
 
 		if (!nextBranch) {
@@ -382,12 +383,13 @@
 			return;
 		}
 
+		const nextBranchName = nextBranch.getName();
 		// Set the branch as processing immediately
 		restorationResults = {
 			...restorationResults,
-			[nextBranch.name]: {
-				...(restorationResults[nextBranch.name] || {}),
-				branchName: nextBranch.name,
+			[nextBranchName]: {
+				...(restorationResults[nextBranchName] || {}),
+				branchName: nextBranchName,
 				success: false,
 				skipped: false,
 				requiresUserAction: false,
@@ -403,11 +405,11 @@
 			path: repository.path,
 			repoId: repository.id,
 			branchInfo: {
-				originalName: nextBranch.name,
-				targetName: nextBranch.name,
-				commitSha: nextBranch.lastCommit.shortSha,
+				originalName: nextBranchName,
+				targetName: nextBranchName,
+				commitSha: nextBranch.getLastCommit().getShortSha(),
 				conflictResolution:
-					conflictResolutions[nextBranch.name] || branchPreferences[nextBranch.name] || null
+					conflictResolutions[nextBranchName] || branchPreferences[nextBranchName] || null
 			}
 		});
 	}
@@ -432,12 +434,15 @@
 			processNextBranch();
 		} else {
 			// For multiple branches, use the batch approach for better performance
-			const branchInfos = selectedQuery.data?.branches.map((branch) => ({
-				originalName: branch.name,
-				targetName: branch.name,
-				commitSha: branch.lastCommit.shortSha,
-				conflictResolution: branchPreferences[branch.name] || null // Use preemptive resolution if set
-			}));
+			const branchInfos = selectedQuery.data?.branches.map((branch) => {
+				const branchName = branch.getName();
+				return {
+					originalName: branchName,
+					targetName: branchName,
+					commitSha: branch.getLastCommit().getShortSha(),
+					conflictResolution: branchPreferences[branchName] || null // Use preemptive resolution if set
+				};
+			});
 
 			restoreBatchMutation.mutate({
 				path: repository.path,
@@ -451,7 +456,7 @@
 	function resolveConflict(resolution: ConflictResolution) {
 		if (!currentConflictBranch || !repository?.path) return;
 
-		const branch = selectedQuery.data?.branches.find((b) => b.name === currentConflictBranch);
+		const branch = selectedQuery.data?.branches.find((b) => b.getName() === currentConflictBranch);
 		if (!branch) return;
 
 		// Update conflict resolution and continue
@@ -463,14 +468,15 @@
 		// Clear current conflict branch before starting next one
 		currentConflictBranch = null;
 
+		const branchName = branch.getName();
 		// Continue with the same branch but now with resolution
 		restoreMutation.mutate({
 			path: repository.path,
 			repoId: repository.id,
 			branchInfo: {
-				originalName: branch.name,
-				targetName: branch.name,
-				commitSha: branch.lastCommit.shortSha,
+				originalName: branchName,
+				targetName: branchName,
+				commitSha: branch.getLastCommit().getShortSha(),
 				conflictResolution: resolution
 			}
 		});
@@ -668,20 +674,21 @@
 	>
 		{#each [...(selectedQuery.data?.branches ?? [])].sort((a, b) => {
 			// Sort pending conflicts first
-			const aIsPending = pendingConflictBranches.includes(a.name);
-			const bIsPending = pendingConflictBranches.includes(b.name);
+			const aIsPending = pendingConflictBranches.includes(a.getName());
+			const bIsPending = pendingConflictBranches.includes(b.getName());
 
 			if (aIsPending !== bIsPending) {
 				return aIsPending ? -1 : 1;
 			}
 
 			// Then sort by skipped status
-			const aSkipped = restorationResults[a.name]?.skipped ?? false;
-			const bSkipped = restorationResults[b.name]?.skipped ?? false;
+			const aSkipped = restorationResults[a.getName()]?.skipped ?? false;
+			const bSkipped = restorationResults[b.getName()]?.skipped ?? false;
 			return aSkipped === bSkipped ? 0 : aSkipped ? 1 : -1;
-		}) as branch (`${branch.name}-${branch.lastCommit.shortSha}`)}
+		}) as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
+			{@const branchName = branch.getName()}
 			<div class={css({ position: 'relative' })}>
-				{#if restorationResults[branch.name]}
+				{#if restorationResults[branchName]}
 					<div
 						class={[
 							css({
@@ -693,11 +700,11 @@
 								alignItems: 'center',
 								gap: 'xs'
 							}),
-							getStatusIcon(restorationResults[branch.name]).color === 'success' &&
+							getStatusIcon(restorationResults[branchName]).color === 'success' &&
 								css({ color: 'success.800' }),
-							getStatusIcon(restorationResults[branch.name]).color === 'warning' &&
+							getStatusIcon(restorationResults[branchName]).color === 'warning' &&
 								css({ color: 'warning.800' }),
-							getStatusIcon(restorationResults[branch.name]).color === 'danger' &&
+							getStatusIcon(restorationResults[branchName]).color === 'danger' &&
 								css({ color: 'danger.800' })
 						]}
 					>
@@ -707,11 +714,11 @@
 								flexDirection: 'row'
 							})}
 						>
-							{restorationResults[branch.name].skipped ? 'Skipped' : ''}
-							{pendingConflictBranches.includes(branch.name) ? 'Pending resolution' : ''}
+							{restorationResults[branchName].skipped ? 'Skipped' : ''}
+							{pendingConflictBranches.includes(branchName) ? 'Pending resolution' : ''}
 						</span>
 						<Icon
-							icon={getStatusIcon(restorationResults[branch.name]).icon}
+							icon={getStatusIcon(restorationResults[branchName]).icon}
 							width="20px"
 							height="20px"
 						/>
@@ -725,10 +732,10 @@
 					})}
 				>
 					<Loading
-						isLoading={currentConflictBranch !== branch.name &&
+						isLoading={currentConflictBranch !== branchName &&
 							isProcessing &&
-							!restorationResults[branch.name] &&
-							!pendingConflictBranches.includes(branch.name)}
+							!restorationResults[branchName] &&
+							!pendingConflictBranches.includes(branchName)}
 						passThrough={{
 							root: {
 								style: css.raw({
@@ -744,7 +751,7 @@
 					>
 						<Group direction="vertical">
 							<BranchCard {branch} />
-							{#if !isProcessing && existingBranches.includes(branch.name)}
+							{#if !isProcessing && existingBranches.includes(branchName)}
 								<div
 									class={css({
 										display: 'flex',
@@ -763,8 +770,8 @@
 									<div class={css({ marginLeft: 'auto', display: 'flex', gap: 'xs' })}>
 										<Button
 											size="xs"
-											emphasis={branchPreferences[branch.name] === 'Skip' ? 'primary' : 'secondary'}
-											onclick={() => updateBranchPreference(branch.name, 'Skip')}
+											emphasis={branchPreferences[branchName] === 'Skip' ? 'primary' : 'secondary'}
+											onclick={() => updateBranchPreference(branchName, 'Skip')}
 											data-testid="pre-skip-button"
 										>
 											Skip
@@ -772,10 +779,10 @@
 										<Button
 											size="xs"
 											feedback="danger"
-											emphasis={branchPreferences[branch.name] === 'Overwrite'
+											emphasis={branchPreferences[branchName] === 'Overwrite'
 												? 'primary'
 												: 'secondary'}
-											onclick={() => updateBranchPreference(branch.name, 'Overwrite')}
+											onclick={() => updateBranchPreference(branchName, 'Overwrite')}
 											data-testid="pre-overwrite-button"
 										>
 											Overwrite
@@ -783,7 +790,7 @@
 									</div>
 								</div>
 							{/if}
-							{#if pendingConflictBranches.includes(branch.name) && branch.name !== currentConflictBranch}
+							{#if pendingConflictBranches.includes(branchName) && branchName !== currentConflictBranch}
 								<div
 									class={css({
 										padding: 'xs',
@@ -796,9 +803,9 @@
 									Waiting for user resolution...
 								</div>
 							{/if}
-							{#if restorationResults[branch.name]?.message}
+							{#if restorationResults[branchName]?.message}
 								<Alert feedback="warning">
-									<Markdown md={restorationResults[branch.name].message} />
+									<Markdown md={restorationResults[branchName].message} />
 								</Alert>
 							{/if}
 						</Group>

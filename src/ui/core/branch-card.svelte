@@ -1,10 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
 	import type { Snippet } from 'svelte';
 	import CommitCard from './commit-card.svelte';
-	import type { Branch } from '$lib/bindings';
+	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		branch: Branch;
@@ -71,7 +71,7 @@
 	]}
 	class:disabled
 	class:locked
-	class:current={branch.current}
+	class:current={branch.isCurrent()}
 	class:selected={isVisuallySelected}
 	data-testid="branch-card"
 	data-variant={variant}
@@ -95,7 +95,7 @@
 			})}
 			data-testid="branch-name"
 		>
-			{branch.name}
+			{branch.getName()}
 		</span>
 	</div>
 
@@ -126,10 +126,11 @@
 				height="16px"
 			/> Last commit
 		</div>
-		<CommitCard commit={branch.lastCommit} />
+		<CommitCard commit={branch.getLastCommit()} />
 	</div>
 
-	{#if branch.deletedAt}
+	{#if branch.getDeletedAt()}
+		{@const deletedAt = branch.getDeletedAt()!}
 		<div
 			class={css({
 				display: 'flex',
@@ -146,8 +147,8 @@
 			data-testid="deleted-at-info"
 		>
 			<Icon icon="lucide:trash" width="16px" height="16px" />
-			<span title={safeFormatDate(branch.deletedAt)}>
-				Deleted {safeFormatRelativeDate(branch.deletedAt)}
+			<span title={safeFormatDate(deletedAt)}>
+				Deleted {safeFormatRelativeDate(deletedAt)}
 			</span>
 		</div>
 	{/if}

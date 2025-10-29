@@ -1,11 +1,9 @@
+import { type Branch } from '$domains/branch-management/core/models/branch';
 import { css } from '@pindoba/styled-system/css';
-import { PROTECTED_BRANCH_NAMES, POTENTIALLY_OFFENSIVE_BRANCH_NAMES } from './branch-constants';
-import type { Branch } from '$lib/bindings';
-import { containsAnyWord } from '$utils/string-utils';
 
 /**
  * Gets the appropriate color palette for a branch based on its state
- * @param branch - The branch data
+ * @param branch - The branch domain model
  * @param selected - Whether the branch is selected
  * @returns CSS class string for the color palette
  */
@@ -14,7 +12,7 @@ export function getBranchColorPalette(branch: Branch, selected: boolean): string
 		return css({ colorPalette: 'danger' });
 	}
 
-	if (branch.current) {
+	if (branch.isCurrent()) {
 		return css({ colorPalette: 'primary' });
 	}
 
@@ -23,7 +21,7 @@ export function getBranchColorPalette(branch: Branch, selected: boolean): string
 
 /**
  * Generates alert conditions for a branch
- * @param branch - The branch data
+ * @param branch - The branch domain model
  * @param selected - Whether the branch is selected
  * @param mergeStatus - Optional override for merge status (when fetched via query)
  * @returns Array of alert types that should be shown
@@ -33,19 +31,26 @@ export function getBranchAlerts(
 	selected: boolean,
 	mergeStatus?: boolean
 ): string[] {
-	// Use provided mergeStatus if available, otherwise fall back to branch.fullyMerged
+	// Use provided mergeStatus if available, otherwise fall back to branch.isMerged()
 	// Alert should show when branch is NOT merged (warning about unmerged changes)
-	const isNotMerged = mergeStatus !== undefined ? !mergeStatus : !branch.fullyMerged;
+	const isNotMerged = mergeStatus !== undefined ? !mergeStatus : !branch.isMerged();
 
-	const alerts = Object.entries({
-		fullyMerged: isNotMerged,
-		protectedWords: containsAnyWord(branch.name, [...PROTECTED_BRANCH_NAMES]) && selected,
-		offensiveWords: containsAnyWord(branch.name, [...POTENTIALLY_OFFENSIVE_BRANCH_NAMES])
-	})
-		.filter((item) => item[1] === true)
-		.map((item) => item[0]);
+	const alerts = branch.getAlerts();
+	const filteredAlerts: string[] = [];
 
-	return alerts;
+	if (isNotMerged) {
+		filteredAlerts.push('fullyMerged');
+	}
+
+	if (alerts.includes('protectedWords') && selected) {
+		filteredAlerts.push('protectedWords');
+	}
+
+	if (alerts.includes('offensiveWords')) {
+		filteredAlerts.push('offensiveWords');
+	}
+
+	return filteredAlerts;
 }
 
 /**
@@ -62,14 +67,14 @@ export function getBranchElementId(branchName: string, suffix?: string): string 
 /**
  * Checks if a branch has any alerts that should be displayed
  * @param alerts - Array of alert types
- * @param branch - The branch data
+ * @param branch - The branch domain model
  * @returns Boolean indicating if alerts should be shown
  */
 export function shouldShowBranchAlerts(alerts: string[], branch: Branch): boolean {
 	if (alerts.length === 0) return false;
 
 	// Don't show fully merged alert for current branch
-	if (alerts.length === 1 && alerts[0] === 'fullyMerged' && branch.current) {
+	if (alerts.length === 1 && alerts[0] === 'fullyMerged' && branch.isCurrent()) {
 		return false;
 	}
 
