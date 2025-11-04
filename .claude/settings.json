@@ -10,20 +10,13 @@
 				]
 			}
 		],
-		"PostToolUse": [
+		"Stop": [
 			{
-				"matcher": "Write|Edit",
 				"hooks": [
 					{
 						"type": "command",
 						"command": "/Users/eduardolopes/Projects/cut-branches/.claude/hooks/test-runner.sh"
-					}
-				]
-			}
-		],
-		"Stop": [
-			{
-				"hooks": [
+					},
 					{
 						"type": "command",
 						"command": "/Users/eduardolopes/Projects/cut-branches/.claude/hooks/type-checker.sh"

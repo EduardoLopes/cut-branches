@@ -1,23 +1,11 @@
 #!/bin/bash
 
 # Claude Code Hook: Test Runner
-# Runs file-specific tests after file modifications
+# Runs project-wide tests when Claude finishes responding
 # Provides feedback to Claude without blocking operations
-
-set -e
 
 # Read input from stdin
 INPUT=$(cat)
-
-# Parse the tool name and file path from input
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // ""')
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // ""')
-
-# Only run for TypeScript/Svelte/JavaScript files
-if [[ ! "$FILE_PATH" =~ \.(ts|svelte|js)$ ]]; then
-  echo '{"decision": "allow"}'
-  exit 0
-fi
 
 # Change to project directory
 cd "$(dirname "$0")/../.."
@@ -25,22 +13,26 @@ cd "$(dirname "$0")/../.."
 # Initialize output message
 FEEDBACK=""
 
-# Run file-specific tests silently and capture output
-echo "Running tests for $FILE_PATH..." >&2
-TEST_OUTPUT=$(pnpm test -- "$FILE_PATH" 2>&1 || true)
+# Run all tests and capture output
+echo "Running project-wide tests..." >&2
+set +e  # Temporarily disable exit on error
+TEST_OUTPUT=$(pnpm test 2>&1)
 TEST_EXIT_CODE=$?
+set -e  # Re-enable exit on error
 
 # Build feedback message
 if [ $TEST_EXIT_CODE -ne 0 ]; then
+  # Filter out pnpm's ELIFECYCLE noise and take last 50 lines
+  FILTERED_OUTPUT=$(echo "$TEST_OUTPUT" | grep -v "ELIFECYCLE" | grep -v "ERR_PNPM" | tail -50)
+
   FEEDBACK="## Test Results\n\n"
-  FEEDBACK+="File modified: \`$FILE_PATH\`\n\n"
   FEEDBACK+="### ❌ Tests Failed\n\n"
-  FEEDBACK+="\`\`\`\n$(echo "$TEST_OUTPUT" | tail -50)\n\`\`\`\n\n"
-  FEEDBACK+="**Action Required:** Review test failures. Consider:\n"
+  FEEDBACK+="\`\`\`\n$FILTERED_OUTPUT\n\`\`\`\n\n"
+  FEEDBACK+="**Action Required:** Fix test failures. Consider:\n"
   FEEDBACK+="- Is the new behavior correct? → Update the test\n"
   FEEDBACK+="- Is the test revealing a bug? → Fix the code\n\n"
 else
-  FEEDBACK="✅ Tests passed for \`$FILE_PATH\`"
+  FEEDBACK="✅ All tests passed for the entire project"
 fi
 
 # Output JSON with feedback (escape newlines and quotes for JSON)
@@ -48,9 +40,6 @@ FEEDBACK_ESCAPED=$(echo -e "$FEEDBACK" | jq -Rs .)
 
 cat <<EOF
 {
-  "hookSpecificOutput": {
-    "hookEventName": "PostToolUse",
-    "additionalContext": $FEEDBACK_ESCAPED
-  }
+  "systemMessage": $FEEDBACK_ESCAPED
 }
 EOF
