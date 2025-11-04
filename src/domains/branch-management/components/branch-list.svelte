@@ -273,7 +273,8 @@
 		<div
 			class={css(
 				translucent.raw({
-					blur: 'md'
+					blur: 'md',
+					background: 'neutral.alpha.50 !important'
 				}),
 				css.raw({
 					p: 'md',

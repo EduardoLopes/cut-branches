@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { css } from '@pindoba/styled-system/css';
-	import { translucent } from '@pindoba/styled-system/patterns';
 	import { type Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
+	import { css } from '@pindoba/styled-system/css';
+	import { translucent } from '@pindoba/styled-system/patterns';
 
 	interface Props extends HTMLAttributes<HTMLDivElement> {
 		left?: Snippet;
@@ -15,7 +15,8 @@
 <div
 	class={css(
 		translucent.raw({
-			blur: 'md'
+			blur: 'md',
+			background: 'neutral.alpha.50 !important'
 		}),
 		css.raw({
 			display: 'flex',
