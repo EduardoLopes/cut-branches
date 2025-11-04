@@ -66,12 +66,11 @@ export default defineConfig({
 		setupFiles: ['./vitest-setup.js'],
 		browser: {
 			enabled: true,
+			// Headless mode: defaults to true (good for CI)
+			// Set HEADLESS=false to run with browser UI for local debugging
+			headless: process.env.HEADLESS !== 'false',
 			include: ['src/**/*.spec.{js,ts}'],
-			provider: playwright({
-				launchOptions: {
-					headless: true
-				}
-			}),
+			provider: playwright(),
 			instances: [
 				{
 					browser: 'chromium'

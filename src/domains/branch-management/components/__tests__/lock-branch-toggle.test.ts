@@ -1,5 +1,6 @@
 import { describe, expect, beforeEach, vi } from 'vitest';
 import LockBranchToggle from '../lock-branch-toggle.svelte';
+import { commands } from '$lib/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock state for locked branches
@@ -16,9 +17,13 @@ vi.mock('$lib/bindings', () => ({
 			return Promise.resolve({ status: 'ok', data: {} });
 		}),
 		batchDeleteLockedBranches: vi.fn((input) => {
-			mockLockedBranches = mockLockedBranches.filter((b) => !input.branchNames.includes(b));
+			input.branchNames.forEach((branch: string) => {
+				const index = mockLockedBranches.indexOf(branch);
+				if (index > -1) mockLockedBranches.splice(index, 1);
+			});
 			return Promise.resolve({ status: 'ok', data: {} });
 		}),
+		updateBranchSelectionBatch: vi.fn(() => Promise.resolve({ status: 'ok', data: {} })),
 		batchDeleteSelectedBranches: vi.fn(() => Promise.resolve({ status: 'ok', data: {} }))
 	}
 }));
@@ -26,6 +31,9 @@ vi.mock('$lib/bindings', () => ({
 describe('LockBranchToggle Component', () => {
 	beforeEach(() => {
 		mockLockedBranches = [];
+		vi.mocked(commands.batchCreateLockedBranches).mockClear();
+		vi.mocked(commands.batchDeleteLockedBranches).mockClear();
+		vi.mocked(commands.updateBranchSelectionBatch).mockClear();
 	});
 
 	describe('Rendering', () => {
@@ -59,7 +67,9 @@ describe('LockBranchToggle Component', () => {
 				repositoryID: 'test-repo'
 			});
 			const button = getByTestId('lock-toggle-button');
-			vi.waitFor(() => expect(button).toHaveAttribute('aria-label', 'unlock branch test-branch'));
+			await vi.waitFor(() =>
+				expect(button).toHaveAttribute('aria-label', 'unlock branch test-branch')
+			);
 		});
 
 		test('has correct aria-label when branch is unlocked', () => {
@@ -73,18 +83,53 @@ describe('LockBranchToggle Component', () => {
 	});
 
 	describe('Interactions', () => {
-		test('toggles lock state on click', async () => {
+		test('calls lock mutation when clicking unlocked branch', async () => {
 			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
 			const button = getByTestId('lock-toggle-button');
 
-			await button.click();
-			vi.waitFor(() => expect(mockLockedBranches.includes('test-branch')).toBe(true));
+			// Initially unlocked
+			expect(commands.batchCreateLockedBranches).not.toHaveBeenCalled();
 
+			// Click to lock
 			await button.click();
-			vi.waitFor(() => expect(mockLockedBranches.includes('test-branch')).toBe(false));
+			await vi.waitFor(() => {
+				expect(commands.batchCreateLockedBranches).toHaveBeenCalledWith({
+					repoId: 'test-repo',
+					branchNames: ['test-branch']
+				});
+				expect(commands.updateBranchSelectionBatch).toHaveBeenCalledWith({
+					repoId: 'test-repo',
+					branchNames: ['test-branch'],
+					isSelected: false
+				});
+			});
+		});
+
+		test('calls unlock mutation when clicking locked branch', async () => {
+			mockLockedBranches = ['test-branch'];
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
+			});
+
+			// Wait for query to load
+			await vi.waitFor(() => {
+				expect(getByTestId('lock-icon')).toBeInTheDocument();
+			});
+
+			const button = getByTestId('lock-toggle-button');
+
+			// Click to unlock
+			await button.click();
+			await vi.waitFor(() => {
+				expect(commands.batchDeleteLockedBranches).toHaveBeenCalledWith({
+					repoId: 'test-repo',
+					branchNames: ['test-branch']
+				});
+			});
 		});
 
 		test('handles disabled state correctly', () => {
@@ -95,26 +140,6 @@ describe('LockBranchToggle Component', () => {
 			});
 			const button = getByTestId('lock-toggle-button');
 			expect(button).toHaveAttribute('disabled');
-		});
-
-		test('updates UI when toggling lock state', async () => {
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
-				branch: 'test-branch',
-				repositoryID: 'test-repo'
-			});
-			const button = getByTestId('lock-toggle-button');
-
-			// Initial state - unlocked
-			expect(getByTestId('unlock-icon')).toBeInTheDocument();
-
-			// First click - lock
-			await button.click();
-			vi.waitFor(() => expect(getByTestId('lock-icon')).toBeInTheDocument());
-
-			// Second click - unlock
-			await button.click();
-			vi.waitFor(() => expect(getByTestId('unlock-icon')).toBeInTheDocument());
-			expect(getByTestId('unlock-icon')).toBeInTheDocument();
 		});
 	});
 
