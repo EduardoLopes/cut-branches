@@ -1,44 +1,57 @@
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 import BranchList from '../branch-list.svelte';
+import { Branch } from '$domains/branch-management/core/models/branch';
 import type { UpdateCurrentBranchInput } from '$lib/bindings';
 import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
-// Generate mock branches using factory
+// Generate mock branches using factory and convert to domain models
 function createMockBranches() {
 	return [
-		mockDataFactory.branch({ name: 'feature/test-branch', current: false }),
-		mockDataFactory.branch({ name: 'selected-branch', current: false, isSelected: true }),
-		mockDataFactory.branch({ name: 'locked-branch', current: false, isLocked: true }),
-		mockDataFactory.branch({ name: 'current-branch', current: true })
+		Branch.fromData(mockDataFactory.branch({ name: 'feature/test-branch', current: false })),
+		Branch.fromData(
+			mockDataFactory.branch({ name: 'selected-branch', current: false, isSelected: true })
+		),
+		Branch.fromData(
+			mockDataFactory.branch({ name: 'locked-branch', current: false, isLocked: true })
+		),
+		Branch.fromData(mockDataFactory.branch({ name: 'current-branch', current: true }))
 	];
 }
 
 function createManyMockBranches() {
 	return Array.from({ length: 15 }, (_, i) =>
-		mockDataFactory.branch({
-			name: `branch-${i + 1}`,
-			current: false
-		})
+		Branch.fromData(
+			mockDataFactory.branch({
+				name: `branch-${i + 1}`,
+				current: false
+			})
+		)
 	);
 }
 
-// Variable to track mock branches
-let mockBranches = createMockBranches();
+// Variable to track mock branches - using an object so we can mutate the array reference
+const mockBranchesState = { branches: createMockBranches() };
 
 // Mock the query to return branches data
-vi.mock('../logic/application/queries/create-get-branches-query', () => ({
-	createGetBranchesQuery: () => ({
-		get data() {
-			return { branches: mockBranches };
-		},
-		isLoading: false,
-		isError: false,
-		error: null
-	})
-}));
+vi.mock('../../core/composables/create-get-branches-query', () => {
+	return {
+		createGetBranchesQuery: () => {
+			// Return an object with a getter that always returns current branches
+			const mockQuery = {
+				get data() {
+					return { branches: mockBranchesState.branches };
+				},
+				isLoading: false,
+				isError: false,
+				error: null
+			};
+			return mockQuery;
+		}
+	};
+});
 
-vi.mock('../../services/createSwitchBranchMutation', () => {
+vi.mock('../../core/composables/create-switch-branch-mutation', () => {
 	const mutate = vi.fn();
 	return {
 		createSwitchBranchMutation: () => {
@@ -51,7 +64,7 @@ vi.mock('../../services/createSwitchBranchMutation', () => {
 	};
 });
 
-vi.mock('../../services/createSelectedBranchesMutations', () => ({
+vi.mock('../../core/composables/create-update-branch-selection-batch-mutation', () => ({
 	createUpdateBranchSelectionBatchMutation: () => ({
 		mutate: vi.fn(),
 		isPending: false
@@ -81,7 +94,7 @@ vi.mock('$lib/bindings', async () => {
 			getBranchList: vi.fn(() =>
 				Promise.resolve({
 					status: 'ok' as const,
-					data: { branches: mockBranches }
+					data: { branches: mockBranchesState.branches }
 				})
 			),
 			updateCurrentBranch: vi.fn((input: UpdateCurrentBranchInput) =>
@@ -112,7 +125,7 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	}
 }));
 
-vi.mock('../../services/createBranchMergeStatusQuery', () => ({
+vi.mock('../../core/composables/create-branch-merge-status-query', () => ({
 	createBranchMergeStatusQuery: () => ({
 		data: undefined,
 		isLoading: false,
@@ -124,36 +137,36 @@ vi.mock('../../services/createBranchMergeStatusQuery', () => ({
 describe('BranchList Component', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockBranches = createMockBranches();
+		mockBranchesState.branches = createMockBranches();
 	});
 
-	// TODO: These tests need to be rewritten to work with the new TanStack Query architecture
-	// The component now uses createGetBranchesQuery which integrates with TanStack Query's
-	// QueryClient, making it difficult to properly mock in unit tests.
-	// Consider moving these to integration tests or refactoring the component to be more testable.
-
-	test.skip('renders branches list with checkboxes and switch buttons', () => {
+	test('renders branches list with checkboxes and switch buttons', async () => {
 		const screen = renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
+
+		// Wait for component to render
+		await tick();
 
 		// Check that we have list items
-		const listItems = screen.getByRole('listitem');
-		expect(listItems.length).toBeGreaterThan(0);
+		const list = screen.getByRole('list');
+		expect(list).toBeInTheDocument();
+		const listItems = screen.container.querySelectorAll('[role="listitem"]');
+		expect(listItems.length).toBe(4); // We have 4 branches
 
 		// Check for checkboxes (3 non-current branches should have checkboxes)
-		const checkboxes = screen.getByRole('checkbox');
-		expect(checkboxes.length).toBeGreaterThan(0);
+		const checkboxes = screen.container.querySelectorAll('input[type="checkbox"]');
+		expect(checkboxes.length).toBe(3); // 3 non-current branches
 
 		// Check for switch buttons (non-current branches should have switch buttons)
-		const switchButtons = screen.getByTestId('switch-button');
-		expect(switchButtons.length).toBeGreaterThan(0);
+		const switchButtons = screen.container.querySelectorAll('[data-testid="switch-button"]');
+		expect(switchButtons.length).toBe(3); // 3 non-current branches
 	});
 
-	test.skip('pagination controls are rendered correctly with many branches', async () => {
+	test('pagination controls are rendered correctly with many branches', async () => {
 		// Set many branches
-		mockBranches = createManyMockBranches();
+		mockBranchesState.branches = createManyMockBranches();
 
 		const screen = renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
@@ -163,21 +176,19 @@ describe('BranchList Component', () => {
 		// Wait for component to render
 		await tick();
 
-		// Verify pagination is visible
-		const nextButton = screen.getByText('Next');
-		expect(nextButton).toBeInTheDocument();
+		// Check that only first 10 branches are displayed (default itemsPerPage)
+		const listItems = screen.container.querySelectorAll('[role="listitem"]');
+		expect(listItems.length).toBe(10);
 
-		// Click next
-		await nextButton.click();
+		// Verify pagination controls exist by checking for pagination text
+		const paginationText = screen.getByText('Next');
+		expect(paginationText).toBeInTheDocument();
 
-		// Wait for reactivity
-		await tick();
-
-		// Should not throw any errors
-		expect(nextButton).toBeInTheDocument();
+		// Verify we have 15 total branches (more than 10, so pagination is needed)
+		expect(mockBranchesState.branches.length).toBe(15);
 	});
 
-	test.skip('toggle checkbox should update selected branches state', async () => {
+	test('toggle checkbox should update selected branches state', async () => {
 		const screen = renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
@@ -186,12 +197,16 @@ describe('BranchList Component', () => {
 		// Wait for component to render
 		await tick();
 
-		// Find checkbox for a branch
-		const checkboxes = screen.getByRole('checkbox');
-		expect(checkboxes).toBeInTheDocument();
+		// Find checkbox for the first non-current, non-selected, non-locked branch
+		// That would be 'feature/test-branch' with the id 'checkbox-feature/test-branch'
+		const checkbox = screen.container.querySelector(
+			'#checkbox-feature\\/test-branch'
+		) as HTMLInputElement;
+		expect(checkbox).toBeInTheDocument();
+		expect(checkbox.checked).toBe(false);
 
-		// Click the first checkbox
-		await checkboxes.click();
+		// Click the checkbox
+		checkbox.click();
 
 		// Wait for async mutation to complete
 		await tick();
@@ -199,6 +214,6 @@ describe('BranchList Component', () => {
 		// The component now uses mutations instead of direct store manipulation
 		// The mutation will be called via Tauri command, which is mocked
 		// We just verify the checkbox interaction worked without errors
-		expect(checkboxes).toBeChecked();
+		expect(checkbox.checked).toBe(true);
 	});
 });

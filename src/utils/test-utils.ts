@@ -48,8 +48,8 @@ export const mockDataFactory = {
 		name: 'test-branch',
 		current: false,
 		lastCommit: {
-			sha: 'abc123',
-			shortSha: 'abc123'.substring(0, 7),
+			sha: 'abc1234567890def1234567890abcdef12345678',
+			shortSha: 'abc1234',
 			date: '2023-01-01T00:00:00Z',
 			message: 'Test commit',
 			author: 'Test User',
