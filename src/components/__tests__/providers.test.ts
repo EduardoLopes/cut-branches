@@ -1,7 +1,6 @@
-import { render } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Providers from '../providers.svelte';
-import TestWrapper from '../test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock dependencies following TypeScript guidelines
 const { mockPush } = vi.hoisted(() => {
@@ -43,17 +42,28 @@ let _queryCacheHandlers: QueryCacheHandlers = {};
 
 vi.mock('@tanstack/svelte-query', async () => {
 	const actual = await vi.importActual('@tanstack/svelte-query');
+
+	class MockMutationCache {
+		constructor(config: CacheHandlers) {
+			_mutationCacheHandlers = config;
+		}
+	}
+
+	class MockQueryCache {
+		constructor(config: QueryCacheHandlers) {
+			_queryCacheHandlers = config;
+		}
+	}
+
+	class MockQueryClient {
+		invalidateQueries = vi.fn().mockResolvedValue(undefined);
+	}
+
 	return {
 		...actual,
-		MutationCache: vi.fn().mockImplementation((config: CacheHandlers) => {
-			_mutationCacheHandlers = config;
-			return {};
-		}),
-		QueryCache: vi.fn().mockImplementation((config: QueryCacheHandlers) => {
-			_queryCacheHandlers = config;
-			return {};
-		}),
-		QueryClient: vi.fn().mockImplementation(() => ({})),
+		MutationCache: MockMutationCache,
+		QueryCache: MockQueryCache,
+		QueryClient: MockQueryClient,
 		QueryClientProvider: ({ children }: { children: unknown }) => children
 	};
 });
@@ -68,36 +78,21 @@ describe('Providers', () => {
 	describe('Component Rendering', () => {
 		it('should render without errors', () => {
 			expect(() => {
-				render(TestWrapper, {
-					props: {
-						component: Providers,
-						props: {}
-					}
-				});
+				renderWithTestWrapper(Providers);
 			}).not.toThrow();
 		});
 
 		it('should provide QueryClient context to children', () => {
-			const { container } = render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			const screen = renderWithTestWrapper(Providers);
 
-			expect(container.firstChild).not.toBeNull();
+			expect(screen.container.firstChild).not.toBeNull();
 		});
 	});
 
 	describe('MutationCache onSuccess Handler', () => {
 		beforeEach(() => {
 			// Render the component to initialize the cache handlers
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			renderWithTestWrapper(Providers);
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
@@ -163,12 +158,7 @@ describe('Providers', () => {
 
 	describe('MutationCache onError Handler', () => {
 		beforeEach(() => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			renderWithTestWrapper(Providers);
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
@@ -255,12 +245,7 @@ describe('Providers', () => {
 
 	describe('QueryCache onSuccess Handler', () => {
 		beforeEach(() => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			renderWithTestWrapper(Providers);
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
@@ -306,12 +291,7 @@ describe('Providers', () => {
 
 	describe('QueryCache onError Handler', () => {
 		beforeEach(() => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			renderWithTestWrapper(Providers);
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
@@ -383,12 +363,7 @@ describe('Providers', () => {
 
 	describe('Browser Environment', () => {
 		it('should configure queries to be enabled in browser environment', () => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			renderWithTestWrapper(Providers);
 
 			// The component should render successfully with browser: true
 			// This indirectly tests that the defaultOptions.queries.enabled: browser works

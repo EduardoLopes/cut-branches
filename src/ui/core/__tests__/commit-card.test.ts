@@ -1,8 +1,8 @@
-import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import CommitCard from '../commit-card.svelte';
 import { Commit } from '$domains/branch-management/core/models/commit';
 import type { Commit as CommitData } from '$lib/bindings';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('CommitCard Component', () => {
 	const mockCommitData: CommitData = {
@@ -17,13 +17,13 @@ describe('CommitCard Component', () => {
 	const mockCommit = Commit.fromData(mockCommitData);
 
 	test('renders commit message', () => {
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: mockCommit }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const messageElement = getByTestId('last-commit-message');
 		expect(messageElement).toBeInTheDocument();
-		expect(messageElement.textContent).toContain('feat: add new feature');
+		expect(messageElement.element().textContent).toContain('feat: add new feature');
 	});
 
 	test('renders commit message with markdown', () => {
@@ -33,8 +33,8 @@ describe('CommitCard Component', () => {
 		};
 		const commitWithMarkdown = Commit.fromData(commitWithMarkdownData);
 
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: commitWithMarkdown }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithMarkdown
 		});
 
 		const messageElement = getByTestId('last-commit-message');
@@ -42,50 +42,50 @@ describe('CommitCard Component', () => {
 	});
 
 	test('renders author name', () => {
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: mockCommit }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const authorElement = getByTestId('author-name');
 		expect(authorElement).toBeInTheDocument();
-		expect(authorElement.textContent).toContain('John Doe');
+		expect(authorElement.element().textContent).toContain('John Doe');
 	});
 
-	test('displays email in author title attribute', () => {
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: mockCommit }
+	test('displays email in author title attribute', async () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const authorElement = getByTestId('author-name');
-		expect(authorElement).toHaveAttribute('title', 'john.doe@example.com');
+		await expect.element(authorElement).toHaveAttribute('title', 'john.doe@example.com');
 	});
 
 	test('renders commit date with relative format', () => {
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: mockCommit }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const dateElement = getByTestId('commit-date');
 		expect(dateElement).toBeInTheDocument();
 		// Date should be displayed in relative format
-		expect(dateElement.textContent).toBeTruthy();
+		expect(dateElement.element().textContent).toBeTruthy();
 	});
 
-	test('displays full date in date title attribute', () => {
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: mockCommit }
+	test('displays full date in date title attribute', async () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const dateElement = getByTestId('commit-date');
-		expect(dateElement).toHaveAttribute('title');
+		await expect.element(dateElement).toHaveAttribute('title');
 		// Title should contain formatted date
-		const title = dateElement.getAttribute('title');
+		const title = dateElement.element().getAttribute('title');
 		expect(title).toBeTruthy();
 	});
 
 	test('renders user icon for author', () => {
-		const { container } = render(CommitCard, {
-			props: { commit: mockCommit }
+		const { container } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const authorSection = container.querySelector('[data-testid="author-name"]');
@@ -93,8 +93,8 @@ describe('CommitCard Component', () => {
 	});
 
 	test('renders clock icon for date', () => {
-		const { container } = render(CommitCard, {
-			props: { commit: mockCommit }
+		const { container } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
 		});
 
 		const dateSection = container.querySelector('[data-testid="commit-date"]');
@@ -108,8 +108,8 @@ describe('CommitCard Component', () => {
 		};
 		const commitWithDifferentDate = Commit.fromData(commitWithDifferentDateData);
 
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: commitWithDifferentDate }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithDifferentDate
 		});
 
 		const dateElement = getByTestId('commit-date');
@@ -123,8 +123,8 @@ describe('CommitCard Component', () => {
 		};
 		const commitWithEmptyMessage = Commit.fromData(commitWithEmptyMessageData);
 
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: commitWithEmptyMessage }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithEmptyMessage
 		});
 
 		const messageElement = getByTestId('last-commit-message');
@@ -138,26 +138,26 @@ describe('CommitCard Component', () => {
 		};
 		const commitWithSpecialChars = Commit.fromData(commitWithSpecialCharsData);
 
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: commitWithSpecialChars }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithSpecialChars
 		});
 
 		const authorElement = getByTestId('author-name');
-		expect(authorElement.textContent).toContain("José María O'Brien");
+		expect(authorElement.element().textContent).toContain("José María O'Brien");
 	});
 
-	test('handles special characters in email', () => {
+	test('handles special characters in email', async () => {
 		const commitWithSpecialEmailData: CommitData = {
 			...mockCommitData,
 			email: 'test+tag@example.co.uk'
 		};
 		const commitWithSpecialEmail = Commit.fromData(commitWithSpecialEmailData);
 
-		const { getByTestId } = render(CommitCard, {
-			props: { commit: commitWithSpecialEmail }
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithSpecialEmail
 		});
 
 		const authorElement = getByTestId('author-name');
-		expect(authorElement).toHaveAttribute('title', 'test+tag@example.co.uk');
+		await expect.element(authorElement).toHaveAttribute('title', 'test+tag@example.co.uk');
 	});
 });

@@ -1,8 +1,7 @@
-import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
 import RepositoryManagementHeader from '../repository-management-header.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the navigation module
 vi.mock('$app/navigation', () => ({
@@ -30,13 +29,8 @@ describe('RepositoryManagementHeader', () => {
 	});
 
 	test('should render the component', () => {
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RepositoryManagementHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { container } = renderWithTestWrapper(RepositoryManagementHeader, {
+			repositoryId: 'test-repo-id'
 		});
 		expect(container).toBeInTheDocument();
 	});
@@ -60,20 +54,15 @@ describe('RepositoryManagementHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryManagementHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(RepositoryManagementHeader, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();
 
 		const nameElement = getByTestId('repository-name');
 		expect(nameElement).toBeInTheDocument();
-		expect(nameElement.textContent).toBe(repoName);
+		expect(nameElement.element().textContent).toBe(repoName);
 	});
 
 	test('should display nothing when repository name is not available', async () => {
@@ -84,20 +73,15 @@ describe('RepositoryManagementHeader', () => {
 			error: null
 		});
 
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryManagementHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(RepositoryManagementHeader, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();
 
 		const nameElement = getByTestId('repository-name');
 		expect(nameElement).toBeInTheDocument();
-		expect(nameElement.textContent).toBe('');
+		expect(nameElement.element().textContent).toBe('');
 	});
 
 	test('should render action buttons', async () => {
@@ -117,13 +101,8 @@ describe('RepositoryManagementHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RepositoryManagementHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { container } = renderWithTestWrapper(RepositoryManagementHeader, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();

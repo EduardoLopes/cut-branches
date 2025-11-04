@@ -1,6 +1,6 @@
-import { render } from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 import ReposLayout from '../+layout.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 vi.mock('$domains/repository-navigation/views/menu-view.svelte', () => {
 	const MockMenuView = vi.fn(() => ({
@@ -24,7 +24,7 @@ vi.mock('$domains/repository-navigation/views/menu-view.svelte', () => {
 
 describe('Repos Layout Integration', () => {
 	it('should render the layout and call the mocked menu', async () => {
-		render(ReposLayout);
+		renderWithTestWrapper(ReposLayout);
 		// We can't easily assert the DOM content with this simple mock directly in the layout
 		// Instead, let's check if the mock constructor was called.
 		const MenuViewMock = (

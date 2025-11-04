@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
 	import Alert, { type AlertProps } from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Markdown from 'svelte-exmarkdown';
@@ -8,6 +7,7 @@
 	import { safeFormatRelativeDate, safeFormatDateDetailed, isToday } from '$utils/date-utils';
 	import { debounce } from '$utils/svelte-runes-utils';
 	import { isValidDate } from '$utils/validation-utils';
+	import { css } from '@pindoba/styled-system/css';
 
 	type Props = {
 		notification: Notification;
@@ -62,10 +62,11 @@
 		})}
 	>
 		{#if title}
-			<h3><Markdown md={title} /></h3>
+			<h3 aria-level="3"><Markdown md={title} /></h3>
 		{/if}
 		{#if message}
 			<p
+				role="alert"
 				class={css({
 					'& ul': {
 						listStyle: 'inside',

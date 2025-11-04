@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { css } from '@pindoba/styled-system/css';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
+	import { css } from '@pindoba/styled-system/css';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -45,7 +45,10 @@
 			id: repo.id,
 			label: repo.name,
 			href: `/repos/${repo.id}`,
-			badge: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined
+			badge: {
+				label: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined,
+				'data-testid': `repository-${repo.name}-badge-${repo.id}`
+			}
 		}));
 
 		// Sort by name

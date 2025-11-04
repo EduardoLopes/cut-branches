@@ -1,38 +1,14 @@
-import '@testing-library/jest-dom/vitest';
-import * as matchers from '@testing-library/jest-dom/matchers';
-import { vi, expect, afterEach } from 'vitest';
-
-expect.extend(matchers);
-
-Object.defineProperty(window, 'matchMedia', {
-	writable: true,
-	value: (query) => ({
-		matches: false,
-		media: query,
-		onchange: null,
-		addListener: () => {}, // deprecated
-		removeListener: () => {}, // deprecated
-		addEventListener: () => {},
-		removeEventListener: () => {},
-		dispatchEvent: () => {}
-	})
-});
-
-window.IntersectionObserver = vi.fn().mockImplementation(() => ({
-	observe: vi.fn(),
-	unobserve: vi.fn(),
-	disconnect: vi.fn()
-}));
-
-HTMLDialogElement.prototype.show = vi.fn();
-HTMLDialogElement.prototype.showModal = vi.fn();
-HTMLDialogElement.prototype.close = vi.fn();
+import { vi, afterEach } from 'vitest';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 
 // Mock Tauri API - can be overridden in individual tests
 vi.mock('@tauri-apps/api/core', () => ({
-	invoke: vi.fn()
+	invoke: vi.fn(),
+	Channel: vi.fn().mockImplementation(function () {
+		this.onmessage = null;
+		return this;
+	})
 }));
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({

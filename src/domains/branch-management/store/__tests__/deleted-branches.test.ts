@@ -210,11 +210,11 @@ describe('getDeletedBranchesStore', () => {
 		// Clear the store cache between tests
 		const cacheKey = `deleted_branches_${repositoryId}`;
 		// accessing private cache for testing
-		const globalWithCache = global as typeof global & {
-			__deletedBranchesStoreCache?: Record<string, unknown>;
+		const windowWithCache = window as unknown as Window & {
+			__deletedBranchesStoreCache: Record<string, unknown>;
 		};
-		if (globalWithCache.__deletedBranchesStoreCache) {
-			delete globalWithCache.__deletedBranchesStoreCache[cacheKey];
+		if (windowWithCache.__deletedBranchesStoreCache) {
+			delete windowWithCache.__deletedBranchesStoreCache[cacheKey];
 		}
 	});
 

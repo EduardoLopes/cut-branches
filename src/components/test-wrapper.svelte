@@ -1,32 +1,33 @@
-<script module lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
-	export function testWrapperWithProps<TComponent extends Component<any, any, any>>(
-		component: TComponent,
-		props?: ComponentProps<TComponent>
-	) {
-		return {
-			component,
-			props
-		};
-	}
-</script>
-
-<script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
-	import type { Component, ComponentProps } from 'svelte';
+<script lang="ts" generics="T extends SvelteComponent">
+	import '../styles/app.css';
+	import type { QueryClientConfig } from '@tanstack/svelte-query';
+	import { mergeRight } from 'ramda';
+	import type { Component as SvelteComponent, ComponentProps } from 'svelte';
 	import Providers from '$components/providers.svelte';
 
-	//TODO: the generics here are not working as expected
 	interface Props {
-		component: Component<any, any, any>;
-		props?: ComponentProps<any>;
+		component: T;
+		componentProps?: ComponentProps<T>;
+		queryClientOptions?: QueryClientConfig;
 	}
 
-	const { component: WrappedComponent, props }: Props = $props();
+	const { component: Component, componentProps, queryClientOptions }: Props = $props();
+
+	const mergedQueryClientOptions = $derived(
+		mergeRight(queryClientOptions ?? {}, {
+			defaultOptions: {
+				queries: {
+					retry: false,
+					staleTime: 0,
+					gcTime: 0
+				}
+			}
+		})
+	);
 </script>
 
-<Providers>
-	{#if WrappedComponent}
-		<WrappedComponent {...props} />
+<Providers queryClientOptions={mergedQueryClientOptions}>
+	{#if Component}
+		<Component {...componentProps} />
 	{/if}
 </Providers>

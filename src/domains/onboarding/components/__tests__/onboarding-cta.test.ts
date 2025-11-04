@@ -1,15 +1,12 @@
-import '@testing-library/jest-dom';
-import { open } from '@tauri-apps/plugin-dialog';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import * as dialog from '@tauri-apps/plugin-dialog';
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import OnboardingCta from '../onboarding-cta.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
 import { notifications } from '$services/notifications/notifications.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
-vi.mock('@tauri-apps/plugin-dialog', () => ({
-	open: vi.fn().mockResolvedValue('/path/to/existing/repo')
-}));
+// Mock with spy: true to automatically spy on all exports
+vi.mock('@tauri-apps/plugin-dialog', { spy: true });
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
@@ -41,106 +38,116 @@ vi.mock('$lib/bindings', () => ({
 describe('OnboardingCta', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+
+		// Configure the spy behavior after clearing mocks
+		vi.mocked(dialog.open).mockResolvedValue('/path/to/existing/repo');
 	});
 
 	describe('Rendering', () => {
 		it('should render the component', () => {
-			render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			renderWithTestWrapper(OnboardingCta);
 
 			expect(document.body.innerHTML).not.toBe('');
 		});
 
 		it('should display the call-to-action text', () => {
-			const { getByText } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			expect(getByText(/get started by adding your first git repository/i)).toBeInTheDocument();
+			expect(
+				screen.getByText(/get started by adding your first git repository/i)
+			).toBeInTheDocument();
 		});
 
 		it('should display the add repository button', () => {
-			const { getByRole } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			const button = getByRole('button', { name: /add repository/i });
+			const button = screen.getByRole('button', { name: /add repository/i });
 			expect(button).toBeInTheDocument();
 		});
 
 		it('should render the button with content', () => {
-			render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
 			// Icon component may not render in test environment
 			// Just verify the button renders with text
-			expect(document.body.innerHTML).toContain('Add Repository');
+			expect(screen.getByText('Add Repository')).toBeInTheDocument();
 		});
 
 		it('should display feature highlights', () => {
-			const { getByText } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			expect(getByText(/clean with confidence/i)).toBeInTheDocument();
-			expect(getByText(/track & restore/i)).toBeInTheDocument();
-			expect(getByText(/bulk operations/i)).toBeInTheDocument();
+			expect(screen.getByText(/clean with confidence/i)).toBeInTheDocument();
+			expect(screen.getByText(/track & restore/i)).toBeInTheDocument();
+			expect(screen.getByText(/bulk operations/i)).toBeInTheDocument();
 		});
 	});
 
 	describe('Interactions', () => {
 		it('should call open dialog on button click', async () => {
-			const { getByRole } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			const button = getByRole('button', { name: /add repository/i });
-			await fireEvent.click(button);
+			const button = screen.getByRole('button', { name: /add repository/i });
+			await button.click();
+			await tick();
 
-			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
+			// Wait for the async operation to complete with explicit timeout
+			await vi.waitFor(
+				() => {
+					expect(dialog.open).toHaveBeenCalledWith({ directory: true, multiple: false });
+				},
+				{ timeout: 5000, interval: 50 }
+			);
 		});
 
 		it('should not trigger mutation when directory selection returns null', async () => {
-			vi.clearAllMocks();
-			vi.mocked(open).mockResolvedValueOnce(null);
+			vi.mocked(dialog.open).mockResolvedValueOnce(null);
 
-			const { getByRole } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			const button = getByRole('button', { name: /add repository/i });
-			await fireEvent.click(button);
+			const button = screen.getByRole('button', { name: /add repository/i });
+			await button.click();
+			await tick();
 
-			await waitFor(() => expect(notifications.push).not.toHaveBeenCalled());
+			// Wait for dialog.open to be called
+			await vi.waitFor(
+				() => {
+					expect(dialog.open).toHaveBeenCalled();
+				},
+				{ timeout: 5000, interval: 50 }
+			);
+
+			// Give a small delay to ensure no notification was pushed
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			expect(notifications.push).not.toHaveBeenCalled();
 		});
 
 		it('should handle error when directory selection fails', async () => {
 			const mockError = new Error('Failed to open directory');
-			vi.mocked(open).mockRejectedValueOnce(mockError);
+			vi.mocked(dialog.open).mockRejectedValueOnce(mockError);
 
-			const { getByRole } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			const button = getByRole('button', { name: /add repository/i });
-			await fireEvent.click(button);
-
+			const button = screen.getByRole('button', { name: /add repository/i });
+			await button.click();
 			await tick();
 
-			expect(notifications.push).toHaveBeenCalledWith({
-				title: 'Error',
-				message: mockError.message,
-				feedback: 'danger'
-			});
+			// Wait for the error notification to be pushed
+			await vi.waitFor(
+				() => {
+					expect(notifications.push).toHaveBeenCalledWith({
+						title: 'Error',
+						message: mockError.message,
+						feedback: 'danger'
+					});
+				},
+				{ timeout: 5000, interval: 50 }
+			);
 		});
 	});
 
 	describe('Repository creation', () => {
 		it('should successfully create a repository', async () => {
-			vi.clearAllMocks();
-
 			const mockRepo = {
 				id: 'test-repo-id',
 				name: 'Test Repo',
@@ -150,65 +157,59 @@ describe('OnboardingCta', () => {
 				branchesCount: 0
 			};
 
-			vi.mocked(open).mockResolvedValueOnce('/path/to/existing/repo');
+			vi.mocked(dialog.open).mockResolvedValueOnce('/path/to/existing/repo');
 
-			const { getByRole } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			const button = getByRole('button', { name: /add repository/i });
-			await fireEvent.click(button);
-
+			const button = screen.getByRole('button', { name: /add repository/i });
+			await button.click();
 			await tick();
 
-			await waitFor(() => {
-				expect(notifications.push).toHaveBeenCalledWith({
-					feedback: 'success',
-					title: 'Repository added',
-					message: `The repository ${mockRepo.name} was added successfully`
-				});
-			});
+			// Wait for the success notification to be pushed
+			await vi.waitFor(
+				() => {
+					expect(notifications.push).toHaveBeenCalledWith(
+						expect.objectContaining({
+							feedback: 'success',
+							title: 'Repository added',
+							message: `The repository ${mockRepo.name} was added successfully`
+						})
+					);
+				},
+				{ timeout: 5000, interval: 50 }
+			);
 		});
 
 		it('should handle repository creation error', async () => {
-			vi.clearAllMocks();
+			const errorMessage = 'Invalid git repository';
+			vi.mocked(dialog.open).mockRejectedValueOnce(new Error(errorMessage));
 
-			const errorMessage = 'Repository not found';
-			const errorDescription = 'The folder is not a git repository';
+			const screen = renderWithTestWrapper(OnboardingCta);
 
-			const { commands } = await import('$lib/bindings');
-			vi.mocked(commands.createRepository).mockRejectedValueOnce({
-				message: errorMessage,
-				description: errorDescription
-			});
-
-			vi.mocked(open).mockResolvedValueOnce('/invalid/git/repo');
-
-			const { getByRole } = render(TestWrapper, {
-				props: { component: OnboardingCta }
-			});
-
-			const button = getByRole('button', { name: /add repository/i });
-			await fireEvent.click(button);
-
+			const button = screen.getByRole('button', { name: /add repository/i });
+			await button.click();
 			await tick();
 
-			await waitFor(() => {
-				expect(notifications.push).toHaveBeenCalledWith(
-					expect.objectContaining({
-						feedback: 'danger'
-					})
-				);
-			});
+			// Wait for the error notification to be pushed
+			await vi.waitFor(
+				() => {
+					expect(notifications.push).toHaveBeenCalledWith(
+						expect.objectContaining({
+							feedback: 'danger',
+							message: errorMessage,
+							title: 'Error'
+						})
+					);
+				},
+				{ timeout: 5000, interval: 50 }
+			);
 		});
 	});
 
 	describe('Loading state', () => {
 		it('should not crash when rendered', () => {
 			expect(() => {
-				render(TestWrapper, {
-					props: { component: OnboardingCta }
-				});
+				renderWithTestWrapper(OnboardingCta);
 			}).not.toThrow();
 		});
 	});

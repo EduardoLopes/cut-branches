@@ -1,9 +1,8 @@
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import { describe, expect, vi, beforeEach } from 'vitest';
 import RemoveRepositoryModal from '../remove-repository-modal.svelte';
 import { goto } from '$app/navigation';
-import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
 import type { Repository } from '$services/common';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 const mockRepository: Repository = {
 	name: 'test-repo',
@@ -77,20 +76,20 @@ describe('RemoveRepositoryModal', () => {
 
 	describe('Modal Rendering', () => {
 		test('renders with correct initial state', () => {
-			const { getByText } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByText } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			expect(getByText('Remove repository')).toBeInTheDocument();
 		});
 
 		test('renders repository name in modal content', async () => {
-			const { getByTestId, getByText } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId, getByText } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			expect(getByText(/Are you sure you want to remove/)).toHaveTextContent(mockRepository.name);
 		});
@@ -98,84 +97,86 @@ describe('RemoveRepositoryModal', () => {
 
 	describe('Modal Interaction', () => {
 		test('should open and close the modal', async () => {
-			const { getByTestId, queryByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId, container } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
-			expect(queryByTestId('remove-modal')).toBeInTheDocument();
+			const modal = container.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			expect(modal).toBeInTheDocument();
 
 			const cancelButton = getByTestId('cancel-remove');
-			await fireEvent.click(cancelButton);
+			await cancelButton.click();
 
 			// Modal should still be in the document but closed
-			expect(queryByTestId('remove-modal')).toBeInTheDocument();
+			expect(modal).toBeInTheDocument();
 		});
 
 		test('closes modal after repository removal', async () => {
-			const { getByTestId, queryByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId, container } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
-			await fireEvent.click(removeButton);
+			await removeButton.click();
 
 			// Modal should be closed
-			expect(queryByTestId('remove-modal')).not.toHaveAttribute('open');
+			const modal = container.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			await expect.element(modal).not.toHaveAttribute('open');
 		});
 	});
 
 	describe('Repository Removal', () => {
 		test('should remove the repository from database', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
-			await fireEvent.click(removeButton);
+			await removeButton.click();
 
-			await waitFor(() => {
+			await vi.waitFor(() => {
 				expect(mockRepositories.find((r) => r.id === mockRepository.id)).toBeUndefined();
 			});
 		});
 
 		test('clears the search store for removed repository', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
-			await fireEvent.click(removeButton);
+			await removeButton.click();
 
 			// Check that the mocked clear function was called
-			await waitFor(() => expect(mockSearchClear).toHaveBeenCalled());
+			await vi.waitFor(() => expect(mockSearchClear).toHaveBeenCalled());
 		});
 
 		test('shows notification after repository removal', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
-			await fireEvent.click(removeButton);
+			await removeButton.click();
 
 			// Notification is shown via mutation meta, which is tested in providers.test.ts
 			// Here we just verify the mutation completes
-			await waitFor(() => {
+			await vi.waitFor(() => {
 				expect(mockRepositories.find((r) => r.id === mockRepository.id)).toBeUndefined();
 			});
 		});
@@ -186,35 +187,35 @@ describe('RemoveRepositoryModal', () => {
 			// Set up only the test repository (single repo scenario)
 			mockRepositories = [mockRepository];
 
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
-			await fireEvent.click(removeButton);
+			await removeButton.click();
 
 			// Should navigate away after deletion
-			await waitFor(() => expect(goto).toHaveBeenCalled());
+			await vi.waitFor(() => expect(goto).toHaveBeenCalled());
 		});
 
 		test('should navigate to get-started when no repositories remain', async () => {
 			// Set up only the test repository
 			mockRepositories = [mockRepository];
 
-			const { getByTestId } = render(TestWrapper, {
-				props: testWrapperWithProps(RemoveRepositoryModal, { repositoryId: mockRepository.id })
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
-			await fireEvent.click(openButton);
+			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
-			await fireEvent.click(removeButton);
+			await removeButton.click();
 
-			await waitFor(() => expect(goto).toHaveBeenCalledWith('/get-started'));
+			await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/get-started'));
 		});
 	});
 });

@@ -1,43 +1,45 @@
-import { render, waitFor } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { describe, it, expect, vi } from 'vitest';
 import MenuView from '../menu-view.svelte';
-import TestWrapper, { testWrapperWithProps } from '$components/test-wrapper.svelte';
-
-// Repository type uses camelCase fields (from bindings)
-const mockRepositories = [
-	{
-		id: '1',
-		name: 'repo1',
-		path: '/path/repo1',
-		currentBranch: 'main',
-		branchesCount: 5,
-		createdAt: new Date().toISOString(),
-		updatedAt: new Date().toISOString()
-	},
-	{
-		id: '2',
-		name: 'repo2',
-		path: '/path/repo2',
-		currentBranch: 'main',
-		branchesCount: 3,
-		createdAt: new Date().toISOString(),
-		updatedAt: new Date().toISOString()
-	},
-	{
-		id: '3',
-		name: 'repo3',
-		path: '/path/repo3',
-		currentBranch: 'main',
-		branchesCount: 0,
-		createdAt: new Date().toISOString(),
-		updatedAt: new Date().toISOString()
-	}
-];
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock Tauri commands
 vi.mock('$lib/bindings', () => ({
 	commands: {
-		getRepositoryList: vi.fn(() => Promise.resolve({ status: 'ok', data: mockRepositories }))
+		getRepositoryList: vi.fn(() =>
+			Promise.resolve({
+				status: 'ok',
+				data: [
+					{
+						id: '1',
+						name: 'repo1',
+						path: '/path/repo1',
+						currentBranch: 'main',
+						branchesCount: 5,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString()
+					},
+					{
+						id: '2',
+						name: 'repo2',
+						path: '/path/repo2',
+						currentBranch: 'main',
+						branchesCount: 3,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString()
+					},
+					{
+						id: '3',
+						name: 'repo3',
+						path: '/path/repo3',
+						currentBranch: 'main',
+						branchesCount: 0,
+						createdAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString()
+					}
+				]
+			})
+		)
 	}
 }));
 
@@ -50,49 +52,56 @@ vi.mock('$app/state', () => ({
 
 describe('MenuView Component', () => {
 	it('renders all repositories in the list', async () => {
-		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(MenuView)
-		});
+		const screen = renderWithTestWrapper(MenuView);
 
-		await waitFor(() => expect(getByText('repo1')).toBeInTheDocument());
-		expect(getByText('repo2')).toBeInTheDocument();
-		expect(getByText('repo3')).toBeInTheDocument();
+		await tick();
+		await tick();
+
+		expect(screen.getByText('repo1')).toBeInTheDocument();
+		expect(screen.getByText('repo2')).toBeInTheDocument();
+		expect(screen.getByText('repo3')).toBeInTheDocument();
 	});
 
 	it('displays badge counts for repositories with branches', async () => {
-		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(MenuView)
-		});
+		const screen = renderWithTestWrapper(MenuView);
 
-		await waitFor(() => expect(getByText('5')).toBeInTheDocument()); // repo1 has 5 branches
-		expect(getByText('3')).toBeInTheDocument(); // repo2 has 3 branches
+		await tick();
+		await tick();
 
-		// repo3 has 0 branches, so no badge should be displayed
-		expect(() => getByText('0')).toThrow();
+		const repo1Badge = screen.getByTestId('repository-repo1-badge-1');
+		expect(repo1Badge).toBeInTheDocument();
+		expect(repo1Badge).toHaveTextContent('5'); // repo1 has 5 branches
+
+		const repo2Badge = screen.getByTestId('repository-repo2-badge-2');
+		expect(repo2Badge).toBeInTheDocument();
+		expect(repo2Badge).toHaveTextContent('3'); // repo2 has 3 branches
+
+		// repo3 with 0 branches renders badge but without text content
+		const repo3Badge = screen.getByTestId('repository-repo3-badge-3');
+		expect(repo3Badge).toBeInTheDocument();
+		// Badge is rendered but should be empty (no text)
+		expect(repo3Badge).toHaveTextContent('');
 	});
 
 	it('renders the app title correctly', () => {
-		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(MenuView)
-		});
+		const screen = renderWithTestWrapper(MenuView);
 
-		expect(getByText('Cut Branches')).toBeInTheDocument();
+		expect(screen.getByText('Cut Branches')).toBeInTheDocument();
 	});
 
-	it('displays the repositories heading', () => {
-		const { getByText } = render(TestWrapper, {
-			props: testWrapperWithProps(MenuView)
-		});
+	it('displays the repositories heading', async () => {
+		const screen = renderWithTestWrapper(MenuView);
 
-		expect(getByText('Repositories')).toBeInTheDocument();
+		await tick();
+		await tick();
+
+		expect(screen.getByText('Repositories')).toBeInTheDocument();
 	});
 
 	it('renders the add button for adding new repositories', () => {
-		const { getByRole } = render(TestWrapper, {
-			props: testWrapperWithProps(MenuView)
-		});
+		const screen = renderWithTestWrapper(MenuView);
 
 		// Check for the add button using accessible role and name
-		expect(getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();
 	});
 });

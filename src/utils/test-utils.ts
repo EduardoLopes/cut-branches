@@ -1,9 +1,36 @@
+import type { QueryClientConfig } from '@tanstack/svelte-query';
+import type { Component, ComponentProps } from 'svelte';
 import { vi, type MockedFunction } from 'vitest';
+import { render } from 'vitest-browser-svelte';
+import TestWrapper from '$components/test-wrapper.svelte';
 import type { Branch } from '$lib/bindings';
 import type { Repository } from '$services/common';
 
 // Type for the mocked invoke function
 export type MockedInvoke = MockedFunction<typeof import('@tauri-apps/api/core').invoke>;
+
+/**
+ * Custom render function that wraps components with TanStack Query's QueryClientProvider
+ *
+ * @param component - The Svelte component to render
+ * @param options - Props to pass to the component
+ * @param queryClient - Optional custom QueryClient instance (a fresh one is created by default)
+ * @returns The rendered screen with locator methods
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function renderWithTestWrapper<T extends Component<any, any, string>>(
+	component: T,
+	props?: ComponentProps<T>,
+	queryClientConfig?: QueryClientConfig
+) {
+	// Render the component wrapped with QueryClientProvider
+	// Let vitest-browser-svelte handle the target container automatically
+	return render(TestWrapper, {
+		component,
+		componentProps: props,
+		queryClientOptions: queryClientConfig
+	});
+}
 
 /**
  * Cast a mocked function to the proper MockedInvoke type

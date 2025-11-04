@@ -252,27 +252,27 @@ describe('date-utils', () => {
 
 		beforeEach(() => {
 			// Save the original Date constructor
-			realDate = global.Date;
+			realDate = window.Date;
 		});
 
 		afterEach(() => {
 			// Restore the original Date constructor
-			global.Date = realDate;
+			window.Date = realDate;
 			vi.restoreAllMocks();
 		});
 
 		it('should return true when date is today', () => {
 			// Setup a mock date implementation for "today"
 			const mockToday = new Date('2023-05-17');
-			global.Date = class extends realDate {
+			window.Date = class extends realDate {
 				constructor() {
 					super();
 					return mockToday;
 				}
 			} as DateConstructor;
-			global.Date.now = () => mockToday.getTime();
-			global.Date.parse = realDate.parse;
-			global.Date.UTC = realDate.UTC;
+			window.Date.now = () => mockToday.getTime();
+			window.Date.parse = realDate.parse;
+			window.Date.UTC = realDate.UTC;
 
 			// Use the same date as our mock "today"
 			const result = isToday(mockToday);

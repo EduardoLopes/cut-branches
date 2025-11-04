@@ -1,8 +1,7 @@
-import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
 import BackButton from '../back-button.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the navigation module
 vi.mock('$app/navigation', () => ({
@@ -15,13 +14,8 @@ describe('BackButton', () => {
 	});
 
 	test('should render the button', () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: BackButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(BackButton, {
+			repositoryId: 'test-repo-id'
 		});
 
 		expect(getByTestId('back-button')).toBeInTheDocument();
@@ -31,37 +25,27 @@ describe('BackButton', () => {
 		const { goto } = await import('$app/navigation');
 		const repositoryId = 'test-repo-id';
 
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: BackButton,
-				props: {
-					repositoryId
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(BackButton, {
+			repositoryId
 		});
 
 		await tick();
 
 		const button = getByTestId('back-button');
-		await fireEvent.click(button);
+		await button.click();
 
 		expect(goto).toHaveBeenCalledWith(`/repos/${repositoryId}`);
 	});
 
 	test('should have correct accessibility attributes', () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: BackButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(BackButton, {
+			repositoryId: 'test-repo-id'
 		});
 
 		const button = getByTestId('back-button');
 		expect(button).toBeInTheDocument();
 
 		// Check that the "Back" text is present (even if visually hidden)
-		expect(button.textContent).toContain('Back');
+		expect(button.element().textContent).toContain('Back');
 	});
 });

@@ -1,12 +1,12 @@
-import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import ErrorMessage from '../error-message.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('ErrorMessage Component', () => {
 	test('renders message correctly', () => {
 		const message = 'Error occurred';
-		const { getByText } = render(ErrorMessage, {
-			props: { message }
+		const { getByText } = renderWithTestWrapper(ErrorMessage, {
+			message
 		});
 
 		expect(getByText(message)).toBeInTheDocument();
@@ -15,8 +15,9 @@ describe('ErrorMessage Component', () => {
 	test('renders description when provided', () => {
 		const message = 'Error occurred';
 		const description = 'This is a detailed error description';
-		const { getByText } = render(ErrorMessage, {
-			props: { message, description }
+		const { getByText } = renderWithTestWrapper(ErrorMessage, {
+			message,
+			description
 		});
 
 		expect(getByText(description)).toBeInTheDocument();
@@ -24,8 +25,8 @@ describe('ErrorMessage Component', () => {
 
 	test('does not render description when not provided', () => {
 		const message = 'Error occurred';
-		const { container } = render(ErrorMessage, {
-			props: { message }
+		const { container } = renderWithTestWrapper(ErrorMessage, {
+			message
 		});
 
 		const descriptionElements = container.querySelectorAll('.message + div');
@@ -33,8 +34,8 @@ describe('ErrorMessage Component', () => {
 	});
 
 	test('renders component with default icon', () => {
-		const { container } = render(ErrorMessage, {
-			props: { message: 'Error occurred' }
+		const { container } = renderWithTestWrapper(ErrorMessage, {
+			message: 'Error occurred'
 		});
 
 		// Instead of checking for the svg, check if the outer div exists
@@ -44,11 +45,9 @@ describe('ErrorMessage Component', () => {
 
 	test('renders component with custom icon', () => {
 		const customIcon = 'mdi:alert';
-		const { container } = render(ErrorMessage, {
-			props: {
-				message: 'Error occurred',
-				icon: customIcon
-			}
+		const { container } = renderWithTestWrapper(ErrorMessage, {
+			message: 'Error occurred',
+			icon: customIcon
 		});
 
 		// Instead of checking for the svg, check if the message is rendered
@@ -58,11 +57,9 @@ describe('ErrorMessage Component', () => {
 
 	test('renders component with custom icon color', () => {
 		const customColor = '#FF0000';
-		const { container } = render(ErrorMessage, {
-			props: {
-				message: 'Error occurred',
-				iconColor: customColor
-			}
+		const { container } = renderWithTestWrapper(ErrorMessage, {
+			message: 'Error occurred',
+			iconColor: customColor
 		});
 
 		// Instead of checking for the svg, check if the message is rendered

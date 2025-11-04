@@ -1,5 +1,6 @@
 import path from 'path';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vite';
 // https://vitejs.dev/config/
 
@@ -62,8 +63,21 @@ export default defineConfig({
 	test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 		exclude: ['src/lib/**'],
-		environment: 'jsdom',
-		setupFiles: './vitest-setup.js',
+		setupFiles: ['./vitest-setup.js'],
+		browser: {
+			enabled: true,
+			include: ['src/**/*.spec.{js,ts}'],
+			provider: playwright({
+				launchOptions: {
+					headless: true
+				}
+			}),
+			instances: [
+				{
+					browser: 'chromium'
+				}
+			]
+		},
 		globals: true,
 		coverage: {
 			enabled: true,
@@ -73,6 +87,9 @@ export default defineConfig({
 			exclude: [
 				'src/lib/**',
 				'src/**/*.d.ts',
+				'src/**/*.md',
+				'src/**/.DS_Store',
+				'src/app.html',
 				'src/routes/+layout.svelte',
 				'src/routes/+layout.ts',
 				'src/routes/+page.svelte',

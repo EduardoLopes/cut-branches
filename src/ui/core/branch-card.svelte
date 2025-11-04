@@ -147,7 +147,7 @@
 			data-testid="deleted-at-info"
 		>
 			<Icon icon="lucide:trash" width="16px" height="16px" />
-			<span title={safeFormatDate(deletedAt)}>
+			<span title={safeFormatDate(deletedAt)} data-testid={`deleted-at-title-${branch.getName()}`}>
 				Deleted {safeFormatRelativeDate(deletedAt)}
 			</span>
 		</div>

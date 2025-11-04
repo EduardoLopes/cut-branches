@@ -1,8 +1,7 @@
-import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
 import RepositoryHeaderUpdateButton from '../update-repository-button.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the createGetRepositoryListQuery
 const mockRepositoryListQuery = vi.hoisted(() => ({
@@ -57,32 +56,22 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should render the button', () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
 
-		expect(getByTestId('update-button')).toBeInTheDocument();
+		expect(screen.getByTestId('update-button')).toBeInTheDocument();
 	});
 
 	test('should invalidate queries when clicked', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();
 
-		const button = getByTestId('update-button');
-		await fireEvent.click(button);
+		const button = screen.getByTestId('update-button');
+		await button.click(button);
 
 		await tick();
 
@@ -103,19 +92,13 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should invalidate correct branch queries with predicate', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
-
 		await tick();
 
-		const button = getByTestId('update-button');
-		await fireEvent.click(button);
+		const button = screen.getByTestId('update-button');
+		await button.click();
 
 		await tick();
 
@@ -146,19 +129,13 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should invalidate repository queries with predicate', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
-
 		await tick();
 
-		const button = getByTestId('update-button');
-		await fireEvent.click(button);
+		const button = screen.getByTestId('update-button');
+		await button.click();
 
 		await tick();
 
@@ -182,19 +159,13 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should show notification after invalidation succeeds', async () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
-
 		await tick();
 
-		const button = getByTestId('update-button');
-		await fireEvent.click(button);
+		const button = screen.getByTestId('update-button');
+		await button.click();
 
 		await tick();
 
@@ -206,30 +177,19 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should not be disabled when not refreshing', () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
 
-		const button = getByTestId('update-button');
+		const button = screen.getByTestId('update-button');
 		expect(button).not.toBeDisabled();
 	});
 
 	test('should have correct accessibility attributes', () => {
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: RepositoryHeaderUpdateButton,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+			repositoryId: 'test-repo-id'
 		});
-
-		const button = getByTestId('update-button');
+		const button = screen.getByTestId('update-button');
 		expect(button).toBeInTheDocument();
 
 		// Check that the button has proper accessibility label

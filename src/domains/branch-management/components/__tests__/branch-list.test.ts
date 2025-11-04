@@ -1,9 +1,8 @@
-import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 import BranchList from '../branch-list.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
-import { mockDataFactory } from '$utils/test-utils';
+import type { UpdateCurrentBranchInput } from '$lib/bindings';
+import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
 // Generate mock branches using factory
 function createMockBranches() {
@@ -73,15 +72,39 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
-// Mock Tauri invoke for any potential queries/mutations
-vi.mock('@tauri-apps/api/core', () => ({
-	invoke: vi.fn((command: string) => {
-		if (command === 'get_branch_list') {
-			return Promise.resolve({ branches: mockBranches });
+// Mock Tauri commands via bindings
+vi.mock('$lib/bindings', async () => {
+	const actual = await vi.importActual<typeof import('$lib/bindings')>('$lib/bindings');
+	return {
+		...actual,
+		commands: {
+			getBranchList: vi.fn(() =>
+				Promise.resolve({
+					status: 'ok' as const,
+					data: { branches: mockBranches }
+				})
+			),
+			updateCurrentBranch: vi.fn((input: UpdateCurrentBranchInput) =>
+				Promise.resolve({
+					status: 'ok' as const,
+					data: { currentBranch: input.branch }
+				})
+			),
+			updateBranchSelectionBatch: vi.fn(() =>
+				Promise.resolve({
+					status: 'ok' as const,
+					data: {}
+				})
+			),
+			getBranchMergeStatus: vi.fn(() =>
+				Promise.resolve({
+					status: 'ok' as const,
+					data: { isMerged: false }
+				})
+			)
 		}
-		return Promise.resolve(null);
-	})
-}));
+	};
+});
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
@@ -110,26 +133,21 @@ describe('BranchList Component', () => {
 	// Consider moving these to integration tests or refactoring the component to be more testable.
 
 	test.skip('renders branches list with checkboxes and switch buttons', () => {
-		const { getAllByRole, getAllByTestId } = render(TestWrapper, {
-			props: {
-				component: BranchList,
-				props: {
-					repositoryID: 'repo1',
-					repositoryPath: '/test/repo/path'
-				}
-			}
+		const screen = renderWithTestWrapper(BranchList, {
+			repositoryID: 'repo1',
+			repositoryPath: '/test/repo/path'
 		});
 
 		// Check that we have list items
-		const listItems = getAllByRole('listitem');
+		const listItems = screen.getByRole('listitem');
 		expect(listItems.length).toBeGreaterThan(0);
 
 		// Check for checkboxes (3 non-current branches should have checkboxes)
-		const checkboxes = getAllByRole('checkbox');
+		const checkboxes = screen.getByRole('checkbox');
 		expect(checkboxes.length).toBeGreaterThan(0);
 
 		// Check for switch buttons (non-current branches should have switch buttons)
-		const switchButtons = getAllByTestId('switch-button');
+		const switchButtons = screen.getByTestId('switch-button');
 		expect(switchButtons.length).toBeGreaterThan(0);
 	});
 
@@ -137,25 +155,20 @@ describe('BranchList Component', () => {
 		// Set many branches
 		mockBranches = createManyMockBranches();
 
-		const { getByText } = render(TestWrapper, {
-			props: {
-				component: BranchList,
-				props: {
-					repositoryID: 'repo1',
-					repositoryPath: '/test/repo/path'
-				}
-			}
+		const screen = renderWithTestWrapper(BranchList, {
+			repositoryID: 'repo1',
+			repositoryPath: '/test/repo/path'
 		});
 
 		// Wait for component to render
 		await tick();
 
 		// Verify pagination is visible
-		const nextButton = getByText('Next');
+		const nextButton = screen.getByText('Next');
 		expect(nextButton).toBeInTheDocument();
 
 		// Click next
-		await fireEvent.click(nextButton);
+		await nextButton.click();
 
 		// Wait for reactivity
 		await tick();
@@ -165,25 +178,20 @@ describe('BranchList Component', () => {
 	});
 
 	test.skip('toggle checkbox should update selected branches state', async () => {
-		const { getAllByRole } = render(TestWrapper, {
-			props: {
-				component: BranchList,
-				props: {
-					repositoryID: 'repo1',
-					repositoryPath: '/test/repo/path'
-				}
-			}
+		const screen = renderWithTestWrapper(BranchList, {
+			repositoryID: 'repo1',
+			repositoryPath: '/test/repo/path'
 		});
 
 		// Wait for component to render
 		await tick();
 
 		// Find checkbox for a branch
-		const checkboxes = getAllByRole('checkbox');
-		expect(checkboxes.length).toBeGreaterThan(0);
+		const checkboxes = screen.getByRole('checkbox');
+		expect(checkboxes).toBeInTheDocument();
 
 		// Click the first checkbox
-		await fireEvent.click(checkboxes[0]);
+		await checkboxes.click();
 
 		// Wait for async mutation to complete
 		await tick();
@@ -191,6 +199,6 @@ describe('BranchList Component', () => {
 		// The component now uses mutations instead of direct store manipulation
 		// The mutation will be called via Tauri command, which is mocked
 		// We just verify the checkbox interaction worked without errors
-		expect(checkboxes[0]).toBeInTheDocument();
+		expect(checkboxes).toBeChecked();
 	});
 });

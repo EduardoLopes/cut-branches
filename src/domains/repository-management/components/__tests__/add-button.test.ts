@@ -1,12 +1,11 @@
-import '@testing-library/jest-dom';
 import type { MutationOptions } from '@tanstack/svelte-query';
 import { open } from '@tauri-apps/plugin-dialog';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddButton from '../add-button.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
-import type { Repository } from '$services/common';
+import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
+import { notifications } from '$services/notifications/notifications.svelte';
+import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock Tauri dialog
 vi.mock('@tauri-apps/plugin-dialog', () => ({
@@ -64,24 +63,20 @@ describe('AddButton', () => {
 
 	describe('Rendering', () => {
 		it('renders correctly with default props', () => {
-			const { getByText } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-			expect(getByText('Add a git repository')).toBeInTheDocument();
+			const screen = renderWithTestWrapper(AddButton);
+			expect(screen.getByText('Add a git repository')).toBeInTheDocument();
 		});
 
 		it('displays visually hidden label when visuallyHiddenLabel is true', () => {
-			const { container } = render(TestWrapper, {
-				props: { component: AddButton, props: { visuallyHiddenLabel: true } }
-			});
+			const screen = renderWithTestWrapper(AddButton, { visuallyHiddenLabel: true });
+			const container = screen.container;
 			const span = container.querySelector('span');
 			expect(span).toHaveClass('sr_true');
 		});
 
 		it('displays visible label when visuallyHiddenLabel is false', () => {
-			const { container } = render(TestWrapper, {
-				props: { component: AddButton, props: { visuallyHiddenLabel: false } }
-			});
+			const screen = renderWithTestWrapper(AddButton, { visuallyHiddenLabel: false });
+			const container = screen.container;
 			const span = container.querySelector('span');
 			expect(span).not.toHaveClass('sr_true');
 		});
@@ -89,11 +84,9 @@ describe('AddButton', () => {
 
 	describe('Interactions', () => {
 		it('calls open function on button click', async () => {
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-			const button = getByRole('button');
-			await fireEvent.click(button);
+			const screen = renderWithTestWrapper(AddButton);
+			const button = screen.getByRole('button', { name: /add a git repository/i });
+			await button.click();
 
 			expect(open).toHaveBeenCalledWith({ directory: true, multiple: false });
 		});
@@ -101,12 +94,9 @@ describe('AddButton', () => {
 		it('calls mutation when directory is selected', async () => {
 			vi.mocked(open).mockResolvedValue('/path/to/repo');
 
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
+			const screen = renderWithTestWrapper(AddButton);
+			const button = screen.getByRole('button', { name: /add a git repository/i });
+			await button.click();
 			await tick();
 
 			expect(mockMutate).toHaveBeenCalledWith({ path: '/path/to/repo' });
@@ -115,12 +105,9 @@ describe('AddButton', () => {
 		it('does not call mutation when directory selection is cancelled', async () => {
 			vi.mocked(open).mockResolvedValue(null);
 
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
-			const button = getByRole('button');
-			await fireEvent.click(button);
+			const screen = renderWithTestWrapper(AddButton);
+			const button = screen.getByRole('button', { name: /add a git repository/i });
+			await button.click();
 			await tick();
 
 			expect(mockMutate).not.toHaveBeenCalled();
@@ -130,19 +117,15 @@ describe('AddButton', () => {
 			const mockError = new Error('Failed to open directory');
 			vi.mocked(open).mockRejectedValue(mockError);
 
-			const { getByRole } = render(TestWrapper, {
-				props: { component: AddButton }
-			});
+			const screen = renderWithTestWrapper(AddButton);
+			const button = screen.getByRole('button', { name: /add a git repository/i });
+			await button.click();
+			await tick();
 
-			const button = getByRole('button');
-			await fireEvent.click(button);
-
-			await waitFor(() => {
-				expect(mockPush).toHaveBeenCalledWith({
-					title: 'Error',
-					message: mockError.message,
-					feedback: 'danger'
-				});
+			expect(notifications.push).toHaveBeenCalledWith({
+				title: 'Error',
+				message: mockError.message,
+				feedback: 'danger'
 			});
 		});
 	});
@@ -151,46 +134,29 @@ describe('AddButton', () => {
 		it('configures mutation with success callback', async () => {
 			vi.mocked(open).mockResolvedValue('/path/to/new/repo');
 
-			render(TestWrapper, {
-				props: { component: AddButton }
-			});
-
+			// Render component to trigger mutation creation
+			renderWithTestWrapper(AddButton);
 			await tick();
 
-			// Verify the mutation was configured with onSuccess
-			const options = (globalThis as unknown as { __mutationOptions: MutationOptions })
-				.__mutationOptions;
-			expect(options).toBeDefined();
-			expect(options.onSuccess).toBeDefined();
-			expect(typeof options.onSuccess).toBe('function');
-		});
-
-		it('mutation success callback pushes notification', () => {
-			const mockRepo: Repository = {
-				id: 'new-repo-id',
-				name: 'New Repo',
-				path: '/path/to/new/repo',
-				branches: [],
-				currentBranch: 'main',
-				branchesCount: 0
-			};
-
-			render(TestWrapper, {
-				props: { component: AddButton }
+			// Now verify the mutation was called with correct options
+			expect(createCreateRepositoryMutation).toHaveBeenCalledWith({
+				onSuccess: expect.any(Function),
+				meta: { showErrorNotification: true }
 			});
 
 			// Get the stored mutation options and call onSuccess directly
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const options = (globalThis as any).__mutationOptions;
 			if (options?.onSuccess) {
-				options.onSuccess(mockRepo, undefined, undefined, undefined);
+				options.onSuccess(mockDataFactory.repository(), undefined, undefined, undefined);
+				await tick();
 			}
 
 			// Verify notification was pushed
 			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Repository added',
-				message: `The repository ${mockRepo.name} was added successfully`
+				message: `The repository ${mockDataFactory.repository().name} was added successfully`
 			});
 		});
 	});

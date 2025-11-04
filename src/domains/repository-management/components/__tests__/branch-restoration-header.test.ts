@@ -1,8 +1,7 @@
-import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { vi } from 'vitest';
 import BranchRestorationHeader from '../branch-restoration-header.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the navigation module
 vi.mock('$app/navigation', () => ({
@@ -30,13 +29,8 @@ describe('BranchRestorationHeader', () => {
 	});
 
 	test('should render the component', () => {
-		const { container } = render(TestWrapper, {
-			props: {
-				component: BranchRestorationHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { container } = renderWithTestWrapper(BranchRestorationHeader, {
+			repositoryId: 'test-repo-id'
 		});
 		expect(container).toBeInTheDocument();
 	});
@@ -61,20 +55,15 @@ describe('BranchRestorationHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: BranchRestorationHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(BranchRestorationHeader, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();
 
 		const titleElement = getByTestId('restoration-title');
 		expect(titleElement).toBeInTheDocument();
-		expect(titleElement.textContent).toBe(`Restore branches from ${repoName}`);
+		expect(titleElement.element().textContent).toBe(`Restore branches from ${repoName}`);
 	});
 
 	test('should display nothing when repository name is not available', async () => {
@@ -85,20 +74,15 @@ describe('BranchRestorationHeader', () => {
 			error: null
 		});
 
-		const { getByTestId } = render(TestWrapper, {
-			props: {
-				component: BranchRestorationHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { getByTestId } = renderWithTestWrapper(BranchRestorationHeader, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();
 
 		const titleElement = getByTestId('restoration-title');
 		expect(titleElement).toBeInTheDocument();
-		expect(titleElement.textContent).toBe('');
+		expect(titleElement.element().textContent).toBe('');
 	});
 
 	test('should render back button', async () => {
@@ -118,13 +102,8 @@ describe('BranchRestorationHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { container } = render(TestWrapper, {
-			props: {
-				component: BranchRestorationHeader,
-				props: {
-					repositoryId: 'test-repo-id'
-				}
-			}
+		const { container } = renderWithTestWrapper(BranchRestorationHeader, {
+			repositoryId: 'test-repo-id'
 		});
 
 		await tick();

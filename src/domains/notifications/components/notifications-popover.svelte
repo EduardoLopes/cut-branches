@@ -6,8 +6,6 @@
 	 */
 
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
-	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import { intlFormatDistance } from 'date-fns';
@@ -17,6 +15,8 @@
 	import { useNotificationPagination } from '$domains/notifications/core/composables/use-notification-pagination.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { toUserTimezone } from '$utils/date-utils';
+	import { css } from '@pindoba/styled-system/css';
+	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	// State management
 	let open = $state(false);
@@ -196,6 +196,7 @@
 			emphasis="ghost"
 			{...props}
 			aria-label={notificationCountLabel}
+			data-testid="notifications-trigger"
 		>
 			<Icon
 				icon="mingcute:notification-fill"

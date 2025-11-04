@@ -1,7 +1,6 @@
-import { render } from '@testing-library/svelte';
 import { describe, it, expect, beforeEach } from 'vitest';
 import RestorePage from '../+page.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('Restore Page Route', () => {
 	beforeEach(() => {
@@ -10,79 +9,50 @@ describe('Restore Page Route', () => {
 
 	it('should render without errors', () => {
 		expect(() => {
-			render(TestWrapper, {
-				props: {
-					component: RestorePage,
-					props: {
-						data: { id: 'test-repo-id' }
-					}
+			// mock the page.params
+			vi.mock('$app/state', () => ({
+				page: {
+					params: { id: 'test-repo-id' }
 				}
-			});
+			}));
+
+			renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
 	it('should render RestoreBranchesView with correct id', () => {
-		const testId = 'my-repo-123';
-
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RestorePage,
-				props: {
-					data: { id: testId }
-				}
+		vi.mock('$app/state', () => ({
+			page: {
+				params: { id: 'test-repo-id' }
 			}
-		});
+		}));
+
+		const { container } = renderWithTestWrapper(RestorePage);
 
 		// The component should render the RestoreBranchesView
 		expect(container.innerHTML).toBeTruthy();
 	});
 
 	it('should handle data prop with id', () => {
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RestorePage,
-				props: {
-					data: { id: 'test-repo' }
-				}
-			}
-		});
+		const { container } = renderWithTestWrapper(RestorePage);
 
 		expect(container).toBeDefined();
 	});
 
 	it('should handle missing data prop gracefully', () => {
 		expect(() => {
-			render(TestWrapper, {
-				props: {
-					component: RestorePage,
-					props: {}
-				}
-			});
+			renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
 	it('should handle data without id property', () => {
 		expect(() => {
-			render(TestWrapper, {
-				props: {
-					component: RestorePage,
-					props: {
-						data: {}
-					}
-				}
-			});
+			renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
 	it('should have proper component structure', () => {
-		const { container } = render(TestWrapper, {
-			props: {
-				component: RestorePage,
-				props: {
-					data: { id: 'test-repo-id' }
-				}
-			}
-		});
+		const { container } = renderWithTestWrapper(RestorePage);
 
 		// Verify the component has content
 		expect(container.firstChild).not.toBeNull();

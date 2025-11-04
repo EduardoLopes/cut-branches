@@ -1,31 +1,20 @@
-import { render, fireEvent, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, beforeEach, afterEach, vi, test } from 'vitest';
 import { notifications } from '../../store/notifications.svelte';
 import NotificationsPopover from '../notifications-popover.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock IntersectionObserver
-const mockIntersectionObserver = vi.fn();
-mockIntersectionObserver.mockReturnValue({
-	observe: vi.fn(),
-	unobserve: vi.fn(),
-	disconnect: vi.fn()
+const mockIntersectionObserver = vi.fn(function (this: {
+	observe: ReturnType<typeof vi.fn>;
+	unobserve: ReturnType<typeof vi.fn>;
+	disconnect: ReturnType<typeof vi.fn>;
+}) {
+	this.observe = vi.fn();
+	this.unobserve = vi.fn();
+	this.disconnect = vi.fn();
 });
-window.IntersectionObserver = mockIntersectionObserver;
-
-// Mock formatInTimeZone from date-fns-tz
-vi.mock('date-fns-tz', () => ({
-	formatInTimeZone: vi.fn((_date, _timezone, _format) => {
-		return new Date(_date).toISOString().split('T')[0];
-	})
-}));
-
-// Mock intlFormatDistance from date-fns
-vi.mock('date-fns', () => ({
-	intlFormatDistance: vi.fn().mockReturnValue('1 day ago'),
-	intlFormat: vi.fn().mockReturnValue('January 1, 2023, 12:00 PM')
-}));
+window.IntersectionObserver = mockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 describe('NotificationsPopover Component', () => {
 	beforeEach(() => {
@@ -45,9 +34,7 @@ describe('NotificationsPopover Component', () => {
 	});
 
 	test('renders button with correct aria-label when no notifications', () => {
-		const { getByRole } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole } = renderWithTestWrapper(NotificationsPopover);
 
 		const button = getByRole('button');
 		expect(button).toHaveAttribute('aria-label', 'No new notifications');
@@ -61,21 +48,17 @@ describe('NotificationsPopover Component', () => {
 			feedback: 'success'
 		});
 
-		const { getByRole } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole } = renderWithTestWrapper(NotificationsPopover);
 
 		const button = getByRole('button');
 		expect(button).toHaveAttribute('aria-label', '1 notification');
 	});
 
 	test('opens popover when clicked', async () => {
-		const { getByRole, getByTestId } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole, getByTestId } = renderWithTestWrapper(NotificationsPopover);
 
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 
 		// Wait for popover to open
 		await tick();
@@ -85,91 +68,100 @@ describe('NotificationsPopover Component', () => {
 	});
 
 	test('auto-closes popover after delay', async () => {
-		const { getByRole, getByTestId } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
-
-		// Click to open popover
-		const button = getByRole('button');
-		await fireEvent.click(button);
-		await tick();
+		const { getByTestId } = renderWithTestWrapper(NotificationsPopover);
 
 		// Get popover element
 		const popover = getByTestId('notifications');
+		const popoverElement = popover.element();
 
-		// Verify popover is open
-		expect(popover.getAttribute('data-open')).toBe('true');
+		// Add a notification AFTER component is rendered so it triggers auto-open
+		notifications.push({
+			title: 'Test',
+			message: 'Test message',
+			feedback: 'default'
+		});
+		await tick();
+		await tick(); // Extra tick for the reactive effect to trigger
 
-		// Advance timer beyond auto-close delay (2000ms + buffer)
-		vi.advanceTimersByTime(2100);
+		// Wait for the auto-open effect to settle
+		await vi.waitFor(
+			() => {
+				expect(popoverElement.getAttribute('data-open')).toBe('true');
+			},
+			{ timeout: 5000 }
+		);
+
+		// Now advance timer to trigger auto-close (2000ms + small buffer)
+		await vi.advanceTimersByTimeAsync(2100);
 		await tick();
 
 		// Verify popover closed
-		expect(popover.getAttribute('data-open')).toBe('false');
+		await vi.waitFor(
+			() => {
+				expect(popoverElement.getAttribute('data-open')).toBe('false');
+			},
+			{ timeout: 5000 }
+		);
 	});
 
 	test('stops auto-close timer on mouseenter', async () => {
-		const { getByRole, getByTestId } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole, getByTestId } = renderWithTestWrapper(NotificationsPopover);
 
 		// Click to open popover
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 		await tick();
 
 		// Get popover element
 		const popover = getByTestId('notifications');
-		expect(popover.getAttribute('data-open')).toBe('true');
+		const popoverElement = popover.element();
+		expect(popoverElement.getAttribute('data-open')).toBe('true');
 
 		// Trigger mouseenter to stop auto-close
-		await fireEvent.mouseEnter(popover);
+		await popoverElement.dispatchEvent(new Event('mouseenter'));
 
 		// Advance timer beyond auto-close delay
 		vi.advanceTimersByTime(3000);
 		await tick();
 
 		// Verify popover is still open
-		expect(popover.getAttribute('data-open')).toBe('true');
+		expect(popoverElement.getAttribute('data-open')).toBe('true');
 	});
 
 	test('restarts auto-close timer on mouseleave', async () => {
-		const { getByRole, findByTestId } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole, getByTestId } = renderWithTestWrapper(NotificationsPopover);
 
 		// Click to open popover
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 		await tick();
 
 		// Get popover element
-		const popover = await findByTestId('notifications');
+		const popover = await getByTestId('notifications');
+		const popoverElement = popover.element();
 
 		// Trigger mouseenter to stop auto-close
-		await fireEvent.mouseEnter(popover);
+		await popoverElement.dispatchEvent(new Event('mouseenter'));
 
-		expect(popover.getAttribute('data-open')).toBe('true');
+		expect(popoverElement.getAttribute('data-open')).toBe('true');
 
 		// Advance timer (popover should stay open)
 		vi.advanceTimersByTime(1000);
 
 		// Trigger mouseleave to restart auto-close
-		await fireEvent.mouseLeave(popover);
+		await popoverElement.dispatchEvent(new Event('mouseleave'));
 
 		// Advance timer beyond auto-close delay
 		vi.advanceTimersByTime(2100);
 		await tick();
 
 		// Verify popover closed
-		expect(popover.getAttribute('data-open')).toBe('false');
+		expect(popoverElement.getAttribute('data-open')).toBe('false');
 	});
 
 	test('displays empty state message when no notifications', async () => {
 		// Render component
-		const { getByRole, getByTestId, getByText } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole, getByTestId, getByText } = renderWithTestWrapper(NotificationsPopover);
 
 		// Start with a clean state
 		notifications.clear();
@@ -181,21 +173,22 @@ describe('NotificationsPopover Component', () => {
 
 		// Click to open popover
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 		await tick();
 
 		// Verify popover is open
 		const popover = getByTestId('notifications');
-		expect(popover.getAttribute('data-open')).toBe('true');
+		const popoverElement = popover.element();
+		expect(popoverElement.getAttribute('data-open')).toBe('true');
 
 		// Stop auto-close timer
-		await fireEvent.mouseEnter(popover);
+		await popoverElement.dispatchEvent(new Event('mouseenter'));
 		await tick();
 
 		// Verify empty state message
 		const emptyMessage = getByText('You have no new notifications at the moment.');
 		expect(emptyMessage).toBeInTheDocument();
-		expect(emptyMessage.textContent).toBe('You have no new notifications at the moment.');
+		expect(emptyMessage.element().textContent).toBe('You have no new notifications at the moment.');
 	});
 
 	test('displays last notification when notifications exist', async () => {
@@ -206,18 +199,28 @@ describe('NotificationsPopover Component', () => {
 			feedback: 'success'
 		});
 
-		const { getByRole, getByText } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByTestId } = renderWithTestWrapper(NotificationsPopover);
 
 		// Click to open popover
-		const button = getByRole('button');
-		await fireEvent.click(button);
+		const button = getByTestId('notifications-trigger');
+		await button.click();
 		await tick();
 
-		// Check if notification is displayed
-		expect(getByText('Test Notification')).toBeInTheDocument();
-		expect(getByText('This is a test notification')).toBeInTheDocument();
+		// Get the popover element and query within it
+		const popover = getByTestId('notifications');
+
+		// Use role-based queries for more specific matching
+		await vi.waitFor(() => {
+			// Title should be in a heading element
+			expect(popover.getByRole('heading', { name: /Test Notification/i })).toBeInTheDocument();
+		});
+
+		// Message should be in the alert (Alert component has role="alert" by default)
+		const alert = popover.getByRole('alert');
+		await vi.waitFor(() => {
+			expect(alert).toBeInTheDocument();
+			expect(alert.element().textContent).toContain('This is a test notification');
+		});
 	});
 
 	test('toggles between showing last notification and all notifications', async () => {
@@ -236,26 +239,24 @@ describe('NotificationsPopover Component', () => {
 			date: Date.now()
 		});
 
-		const { getByRole, getByText } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole, getByText } = renderWithTestWrapper(NotificationsPopover);
 
 		// Click to open popover
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 		await tick();
 
 		// Should see only the last notification initially
-		expect(getByText('Second Notification')).toBeInTheDocument();
+		expect(getByRole('heading', { name: /Second Notification/i })).toBeInTheDocument();
 
 		// Click Show More button
 		const showMoreButton = getByText('Show More');
-		await fireEvent.click(showMoreButton);
+		await showMoreButton.click();
 		await tick();
 
 		// Should now see both notifications
-		expect(getByText('First Notification')).toBeInTheDocument();
-		expect(getByText('Second Notification')).toBeInTheDocument();
+		expect(getByRole('heading', { name: /First Notification/i })).toBeInTheDocument();
+		expect(getByRole('heading', { name: /Second Notification/i })).toBeInTheDocument();
 
 		// Verify Show Less button exists
 		expect(getByText('Show Less')).toBeInTheDocument();
@@ -272,9 +273,7 @@ describe('NotificationsPopover Component', () => {
 			});
 		}
 
-		render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		renderWithTestWrapper(NotificationsPopover);
 
 		// Verify IntersectionObserver was initialized
 		expect(mockIntersectionObserver).toHaveBeenCalled();
@@ -291,22 +290,28 @@ describe('NotificationsPopover Component', () => {
 			});
 		}
 
-		const { getByRole, getByText } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByRole, getByText } = renderWithTestWrapper(NotificationsPopover);
 
 		// Open popover
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 
 		// Click Show More
 		const showMoreButton = getByText('Show More');
-		await fireEvent.click(showMoreButton);
+		await showMoreButton.click();
 		await tick();
 
 		// Simulate intersection observer callback
-		const observerCallback = mockIntersectionObserver.mock.calls[0][0];
-		observerCallback([{ isIntersecting: true }]);
+		const calls = mockIntersectionObserver.mock.calls as unknown as Array<
+			[IntersectionObserverCallback, ...unknown[]]
+		>;
+		const observerCallback = calls[0]?.[0];
+		if (observerCallback) {
+			observerCallback(
+				[{ isIntersecting: true } as IntersectionObserverEntry],
+				{} as IntersectionObserver
+			);
+		}
 		await tick();
 
 		// Verify page state was updated (indirectly testing that more items would be loaded)
@@ -315,13 +320,11 @@ describe('NotificationsPopover Component', () => {
 	});
 
 	test('auto-opens when new notifications arrive', async () => {
-		const { queryByTestId } = render(TestWrapper, {
-			props: { component: NotificationsPopover }
-		});
+		const { getByTestId } = renderWithTestWrapper(NotificationsPopover);
 
 		// Initially popover should be closed
-		const initialPopover = queryByTestId('notifications');
-		expect(initialPopover?.getAttribute('data-open')).toBe('false');
+		const initialPopover = getByTestId('notifications');
+		expect(initialPopover.element().getAttribute('data-open')).toBe('false');
 
 		// Add a new notification
 		notifications.push({
@@ -334,7 +337,7 @@ describe('NotificationsPopover Component', () => {
 		await tick();
 
 		// Popover should now be open
-		const popover = screen.getByTestId('notifications');
-		expect(popover.getAttribute('data-open')).toBe('true');
+		const popover = getByTestId('notifications');
+		expect(popover.element().getAttribute('data-open')).toBe('true');
 	});
 });

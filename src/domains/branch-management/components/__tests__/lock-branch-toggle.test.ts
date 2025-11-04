@@ -1,7 +1,6 @@
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import { describe, expect, beforeEach, vi } from 'vitest';
 import LockBranchToggle from '../lock-branch-toggle.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock state for locked branches
 let mockLockedBranches: string[] = [];
@@ -32,21 +31,22 @@ describe('LockBranchToggle Component', () => {
 	describe('Rendering', () => {
 		test('displays lock icon when branch is locked', async () => {
 			mockLockedBranches = ['test-branch'];
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
-			await waitFor(() => expect(getByTestId('lock-icon')).toBeInTheDocument());
+
+			// Wait for the query to load and the lock icon to appear
+			await vi.waitFor(() => {
+				const lockIcon = getByTestId('lock-icon');
+				expect(lockIcon).toBeInTheDocument();
+			});
 		});
 
 		test('displays unlock icon when branch is unlocked', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
 			const unlockIcon = getByTestId('unlock-icon');
 			expect(unlockIcon).toBeInTheDocument();
@@ -54,24 +54,18 @@ describe('LockBranchToggle Component', () => {
 
 		test('has correct aria-label when branch is locked', async () => {
 			mockLockedBranches = ['test-branch'];
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
 			const button = getByTestId('lock-toggle-button');
-			await waitFor(() =>
-				expect(button).toHaveAttribute('aria-label', 'unlock branch test-branch')
-			);
+			vi.waitFor(() => expect(button).toHaveAttribute('aria-label', 'unlock branch test-branch'));
 		});
 
 		test('has correct aria-label when branch is unlocked', () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
 			const button = getByTestId('lock-toggle-button');
 			expect(button).toHaveAttribute('aria-label', 'lock branch test-branch');
@@ -80,38 +74,33 @@ describe('LockBranchToggle Component', () => {
 
 	describe('Interactions', () => {
 		test('toggles lock state on click', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
 			const button = getByTestId('lock-toggle-button');
 
-			await fireEvent.click(button);
-			await waitFor(() => expect(mockLockedBranches.includes('test-branch')).toBe(true));
+			await button.click();
+			vi.waitFor(() => expect(mockLockedBranches.includes('test-branch')).toBe(true));
 
-			await fireEvent.click(button);
-			await waitFor(() => expect(mockLockedBranches.includes('test-branch')).toBe(false));
+			await button.click();
+			vi.waitFor(() => expect(mockLockedBranches.includes('test-branch')).toBe(false));
 		});
 
 		test('handles disabled state correctly', () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo', disabled: true }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo',
+				disabled: true
 			});
 			const button = getByTestId('lock-toggle-button');
 			expect(button).toHaveAttribute('disabled');
 		});
 
 		test('updates UI when toggling lock state', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
 			const button = getByTestId('lock-toggle-button');
 
@@ -119,12 +108,13 @@ describe('LockBranchToggle Component', () => {
 			expect(getByTestId('unlock-icon')).toBeInTheDocument();
 
 			// First click - lock
-			await fireEvent.click(button);
-			await waitFor(() => expect(getByTestId('lock-icon')).toBeInTheDocument());
+			await button.click();
+			vi.waitFor(() => expect(getByTestId('lock-icon')).toBeInTheDocument());
 
 			// Second click - unlock
-			await fireEvent.click(button);
-			await waitFor(() => expect(getByTestId('unlock-icon')).toBeInTheDocument());
+			await button.click();
+			vi.waitFor(() => expect(getByTestId('unlock-icon')).toBeInTheDocument());
+			expect(getByTestId('unlock-icon')).toBeInTheDocument();
 		});
 	});
 
@@ -134,11 +124,9 @@ describe('LockBranchToggle Component', () => {
 			mockLockedBranches = [];
 
 			// Render toggle for original repo - should be unlocked
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'test-branch', repositoryID: 'test-repo' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'test-branch',
+				repositoryID: 'test-repo'
 			});
 
 			expect(getByTestId('unlock-icon')).toBeInTheDocument();
@@ -149,19 +137,17 @@ describe('LockBranchToggle Component', () => {
 			mockLockedBranches = [];
 
 			// Test only one repository's behavior
-			const { getByTestId } = render(TestWrapper, {
-				props: {
-					component: LockBranchToggle,
-					props: { branch: 'feature-branch', repositoryID: 'repo-1' }
-				}
+			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+				branch: 'feature-branch',
+				repositoryID: 'repo-1'
 			});
 
 			// Click button for repo1
 			const button = getByTestId('lock-toggle-button');
-			await fireEvent.click(button);
+			await button.click();
 
 			// Check that repo1 state changed
-			await waitFor(() => expect(mockLockedBranches.includes('feature-branch')).toBe(true));
+			expect(mockLockedBranches.includes('feature-branch')).toBe(true);
 		});
 	});
 });

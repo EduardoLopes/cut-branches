@@ -1,10 +1,9 @@
-import { render, screen } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getRepositoryStore } from '../../store/repository.svelte';
 import Repository from '../../views/repository-view.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
 import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/create-delete-branches-mutation';
 import * as selectedBranchesStore from '$domains/branch-management/store/selected-branches.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the repositories store
 vi.mock('../../store/repository.svelte', () => {
@@ -227,18 +226,11 @@ describe('Repository Integration', () => {
 	});
 
 	it('renders repository with header and branch list', () => {
-		render(TestWrapper, {
-			props: {
-				component: Repository,
-				props: {
-					id: 'test-repo-id'
-				}
-			}
-		});
+		const { getByTestId } = renderWithTestWrapper(Repository, {});
 
 		// Check that repository components are rendered
-		expect(screen.getByTestId('mock-repository-header')).toBeInTheDocument();
-		expect(screen.getByTestId('mock-branch-list')).toBeInTheDocument();
+		expect(getByTestId('mock-repository-header')).toBeInTheDocument();
+		expect(getByTestId('mock-branch-list')).toBeInTheDocument();
 	});
 
 	it('allows branch selection and bulk actions', async () => {
@@ -248,14 +240,7 @@ describe('Repository Integration', () => {
 			vi.mocked(selectedStore.add).mockClear();
 		}
 
-		render(TestWrapper, {
-			props: {
-				component: Repository,
-				props: {
-					id: 'test-repo-id'
-				}
-			}
-		});
+		renderWithTestWrapper(Repository, {});
 
 		// Call add method directly
 		if (selectedStore) {

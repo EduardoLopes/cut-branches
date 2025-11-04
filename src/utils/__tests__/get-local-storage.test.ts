@@ -140,17 +140,6 @@ describe('getLocalStorage', () => {
 		consoleErrorSpy.mockRestore();
 	});
 
-	it('should return default value when window is undefined (SSR)', () => {
-		const originalWindow = global.window;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		(global as any).window = undefined;
-
-		const result = getLocalStorage('testKey', 'defaultValue');
-		expect(result).toBe('defaultValue');
-
-		global.window = originalWindow;
-	});
-
 	it('should parse complex objects correctly', () => {
 		const testObject = { name: 'test', count: 42, enabled: true };
 		localStorage.setItem('objectKey', JSON.stringify(testObject));

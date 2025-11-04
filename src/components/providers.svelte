@@ -5,6 +5,8 @@
 		QueryClient,
 		QueryClientProvider
 	} from '@tanstack/svelte-query';
+	import type { QueryClientConfig } from '@tanstack/svelte-query';
+	import { mergeRight } from 'ramda';
 	import { type Snippet } from 'svelte';
 	import DomainsHandlers from './domains-handlers.svelte';
 	import { browser } from '$app/environment';
@@ -13,10 +15,11 @@
 	import { shouldInvalidate } from '$utils/query-key-utils';
 
 	interface Props {
+		queryClientOptions?: QueryClientConfig;
 		children?: Snippet;
 	}
 
-	let { children }: Props = $props();
+	let { children, queryClientOptions }: Props = $props();
 
 	const mutationCache = new MutationCache({
 		onSuccess: async (_data, _variabled, _context, mutation) => {
@@ -117,18 +120,26 @@
 		}
 	});
 
-	const queryClient = new QueryClient({
-		mutationCache,
-		queryCache,
-		defaultOptions: {
-			queries: {
-				enabled: browser,
-				retry: 0,
-				refetchOnWindowFocus: false,
-				staleTime: 1000 * 60 * 1 // 1 minute
+	const mergedQueryClientOptions = $derived(
+		mergeRight(queryClientOptions ?? {}, {
+			defaultOptions: {
+				queries: {
+					enabled: browser,
+					retry: 0,
+					refetchOnWindowFocus: false,
+					staleTime: 1000 * 60 * 1 // 1 minute
+				}
 			}
-		}
-	});
+		})
+	);
+
+	const queryClient = $derived(
+		new QueryClient({
+			mutationCache,
+			queryCache,
+			...mergedQueryClientOptions
+		})
+	);
 </script>
 
 <QueryClientProvider client={queryClient}>

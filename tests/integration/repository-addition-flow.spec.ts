@@ -1,10 +1,9 @@
 import { open } from '@tauri-apps/plugin-dialog';
-import { render, fireEvent, waitFor } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import TestWrapper from '$components/test-wrapper.svelte';
 import { notifications } from '$domains/notifications/store/notifications.svelte';
 import AddButton from '$domains/repository-management/components/add-button.svelte';
 import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock navigation
 vi.mock('$app/navigation', () => ({
@@ -78,18 +77,14 @@ describe('Navigation Integration', () => {
 		});
 
 		// Render component
-		const { getByRole } = render(TestWrapper, {
-			props: {
-				component: AddButton
-			}
-		});
+		const { getByRole } = renderWithTestWrapper(AddButton, {});
 
 		// Find and click the button
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 
 		// Verify error notification
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(notifications.push).toHaveBeenCalledWith(
 				expect.objectContaining({
 					title: 'Error',
@@ -134,18 +129,14 @@ describe('Navigation Integration', () => {
 		});
 
 		// Render component
-		const { getByRole } = render(TestWrapper, {
-			props: {
-				component: AddButton
-			}
-		});
+		const { getByRole } = renderWithTestWrapper(AddButton, {});
 
 		// Find and click the button
 		const button = getByRole('button');
-		await fireEvent.click(button);
+		await button.click();
 
 		// Verify success notification was shown
-		await waitFor(() => {
+		await vi.waitFor(() => {
 			expect(notifications.push).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Repository added',

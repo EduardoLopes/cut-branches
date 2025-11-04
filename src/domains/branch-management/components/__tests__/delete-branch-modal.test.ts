@@ -1,11 +1,12 @@
-import { render, fireEvent } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { createDeleteBranchesMutation } from '../../core/composables/create-delete-branches-mutation';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
-import TestWrapper from '$components/test-wrapper.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
+import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 import type { Branch as BranchData } from '$lib/bindings';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock dependencies
 vi.mock('$app/state', () => {
@@ -14,9 +15,10 @@ vi.mock('$app/state', () => {
 	};
 });
 
-const { mockPush } = vi.hoisted(() => {
+const { mockPush, mockAddDeletedBranch } = vi.hoisted(() => {
 	const mockPush = vi.fn();
-	return { mockPush };
+	const mockAddDeletedBranch = vi.fn();
+	return { mockPush, mockAddDeletedBranch };
 });
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
@@ -27,7 +29,7 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 
 vi.mock('$domains/branch-management/store/deleted-branches.svelte', () => ({
 	getDeletedBranchesStore: vi.fn(() => ({
-		addDeletedBranch: vi.fn()
+		addDeletedBranch: mockAddDeletedBranch
 	}))
 }));
 
@@ -175,67 +177,87 @@ describe('DeleteBranchModal Component', () => {
 
 	describe('Rendering', () => {
 		test('renders correctly with default state', () => {
-			const { getByText } = render(TestWrapper, {
-				props: { component: DeleteBranchModal }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
-			expect(getByText('Delete branches')).toBeInTheDocument();
+			expect(screen.getByText('Delete branches')).toBeInTheDocument();
 		});
 
 		test('renders delete button in disabled state when no branches selected', () => {
 			// Set no selected branches
 			mockSelectedBranches = [];
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
 
-			const button = getByTestId('open-dialog-button');
+			const button = screen.getByTestId('open-dialog-button');
 			expect(button).toBeDisabled();
 		});
 
 		test('renders delete button in enabled state when branches are selected', () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
 
-			const button = getByTestId('open-dialog-button');
+			const button = screen.getByTestId('open-dialog-button');
 			expect(button).not.toBeDisabled();
 		});
 	});
 
 	describe('Modal Interaction', () => {
 		test('opens modal on button click', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
-			const dialogQuestion = getByTestId('delete-branch-dialog-question');
-			expect(dialogQuestion).toHaveTextContent(
-				'Are you sure you want these branches from the repository test-repo?'
-			);
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
+
+			vi.waitFor(() => {
+				const dialogQuestion = screen.getByTestId('delete-branch-dialog-question');
+				expect(dialogQuestion).toHaveTextContent(
+					'Are you sure you want these branches from the repository test-repo?'
+				);
+			});
 		});
 
 		// Skip this test as it appears to be timing-related in Svelte 5
 		// The modal state change doesn't seem to properly propagate in the test environment
 		test('closes modal on cancel button click', async () => {
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
 
-			const cancelButton = getByTestId('cancel-button');
-			await fireEvent.click(cancelButton);
+			const dialog = screen.getByTestId('delete-branch-dialog');
+			const dialogElement = dialog.element() as HTMLDialogElement;
 
-			// In Svelte 5, state updates might not propagate immediately in the test environment
-			await new Promise((resolve) => setTimeout(resolve, 100));
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			// Instead of checking for the dialog to be removed from the DOM,
-			// we'll check if the dialog's open attribute has been set to false
-			// This is more aligned with how Svelte 5 handles dialog state
-			const dialog = getByTestId('delete-branch-dialog');
-			expect(dialog.getAttribute('open')).toBeFalsy();
+			// Wait for multiple ticks to ensure the dialog opens
+			await tick();
+			await tick();
+
+			await vi.waitFor(
+				() => {
+					expect(dialogElement.open).toBe(true);
+				},
+				{ timeout: 5000 }
+			);
+
+			const cancelButton = screen.getByTestId('cancel-button');
+			await cancelButton.click();
+
+			// Wait for multiple ticks to ensure the dialog closes
+			await tick();
+			await tick();
+
+			await vi.waitFor(
+				() => {
+					expect(dialogElement.open).toBe(false);
+				},
+				{ timeout: 5000 }
+			);
 		});
 	});
 
@@ -243,14 +265,26 @@ describe('DeleteBranchModal Component', () => {
 		test('calls handleDelete with correct branches on delete button click', async () => {
 			const deleteMutate = createDeleteBranchesMutation();
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			const deleteButton = getByTestId('delete-button');
-			await fireEvent.click(deleteButton);
+			// Wait for the dialog to open and render
+			await tick();
+			await tick();
+
+			// Wait for the delete button to be visible
+			const deleteButton = screen.getByTestId('delete-button');
+			await vi.waitFor(
+				() => {
+					expect(deleteButton).toBeInTheDocument();
+				},
+				{ timeout: 5000 }
+			);
+
+			await deleteButton.click({ timeout: 5000 });
 
 			// Check that mutate was called
 			expect(deleteMutate.mutate).toHaveBeenCalled();
@@ -275,15 +309,14 @@ describe('DeleteBranchModal Component', () => {
 
 			const deleteMutate = createDeleteBranchesMutation();
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
-
-			const deleteButton = getByTestId('delete-button');
-			await fireEvent.click(deleteButton);
+			const deleteButton = screen.getByTestId('delete-button');
+			await deleteButton.click();
 
 			// Check that mutate was called
 			expect(deleteMutate.mutate).toHaveBeenCalled();
@@ -313,15 +346,14 @@ describe('DeleteBranchModal Component', () => {
 			// Clear previous calls
 			mockMutate.mockClear();
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
-
-			const deleteButton = getByTestId('delete-button');
-			await fireEvent.click(deleteButton);
+			const deleteButton = screen.getByTestId('delete-button');
+			await deleteButton.click();
 
 			// Verify the call happened
 			expect(mockMutate).toHaveBeenCalled();
@@ -346,44 +378,46 @@ describe('DeleteBranchModal Component', () => {
 			// Clear any previous calls
 			(createDeleteBranchesMutation as Mock).mockClear();
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
 
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			const deleteButton = getByTestId('delete-button');
-			await fireEvent.click(deleteButton);
+			const deleteButton = screen.getByTestId('delete-button');
+			await deleteButton.click();
 
-			// Get the mutation configuration from when the component called createDeleteBranchesMutation
-			// The component should have called it during render with configuration options
-			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0]?.[0];
-			expect(mutationConfig).toBeDefined();
-			expect(mutationConfig).toHaveProperty('onSuccess');
+			vi.waitFor(() => {
+				// Get the mutation configuration from when the component called createDeleteBranchesMutation
+				// The component should have called it during render with configuration options
+				const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0]?.[0];
+				expect(mutationConfig).toBeDefined();
+				expect(mutationConfig).toHaveProperty('onSuccess');
 
-			// Mock the delete response data
-			const mockDeleteResponse = {
-				deletedBranches: [
-					{
-						branch: {
-							name: 'feature-1',
-							lastCommit: {
-								shortSha: 'abc123'
+				// Mock the delete response data
+				const mockDeleteResponse = {
+					deletedBranches: [
+						{
+							branch: {
+								name: 'feature-1',
+								lastCommit: {
+									shortSha: 'abc123'
+								}
 							}
 						}
-					}
-				]
-			};
+					]
+				};
 
-			// Execute the mutation's onSuccess callback directly
-			mutationConfig.onSuccess(mockDeleteResponse);
+				// Execute the mutation's onSuccess callback directly
+				mutationConfig.onSuccess(mockDeleteResponse);
 
-			// Verify notification was pushed
-			expect(mockPush).toHaveBeenCalledWith({
-				feedback: 'success',
-				title: 'Branch deleted from test-repo repository',
-				message: '- **feature-1** (was abc123)'
+				// Verify notification was pushed
+				expect(mockPush).toHaveBeenCalledWith({
+					feedback: 'success',
+					title: 'Branch deleted from test-repo repository',
+					message: '- **feature-1** (was abc123)'
+				});
 			});
 		});
 
@@ -394,51 +428,53 @@ describe('DeleteBranchModal Component', () => {
 			// Clear any previous calls
 			(createDeleteBranchesMutation as Mock).mockClear();
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
 
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			const deleteButton = getByTestId('delete-button');
-			await fireEvent.click(deleteButton);
+			const deleteButton = screen.getByTestId('delete-button');
+			await deleteButton.click();
 
 			// Get the mutation configuration from when the component called createDeleteBranchesMutation
-			const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0]?.[0];
-			expect(mutationConfig).toBeDefined();
-			expect(mutationConfig).toHaveProperty('onSuccess');
+			vi.waitFor(() => {
+				const mutationConfig = (createDeleteBranchesMutation as Mock).mock.calls[0]?.[0];
+				expect(mutationConfig).toBeDefined();
+				expect(mutationConfig).toHaveProperty('onSuccess');
 
-			// Mock the delete response data for multiple branches
-			const mockDeleteResponse = {
-				deletedBranches: [
-					{
-						branch: {
-							name: 'feature-1',
-							lastCommit: {
-								shortSha: 'abc123'
+				// Mock the delete response data for multiple branches
+				const mockDeleteResponse = {
+					deletedBranches: [
+						{
+							branch: {
+								name: 'feature-1',
+								lastCommit: {
+									shortSha: 'abc123'
+								}
+							}
+						},
+						{
+							branch: {
+								name: 'feature-2',
+								lastCommit: {
+									shortSha: 'def456'
+								}
 							}
 						}
-					},
-					{
-						branch: {
-							name: 'feature-2',
-							lastCommit: {
-								shortSha: 'def456'
-							}
-						}
-					}
-				]
-			};
+					]
+				};
 
-			// Execute the mutation's onSuccess callback
-			mutationConfig.onSuccess(mockDeleteResponse);
+				// Execute the mutation's onSuccess callback
+				mutationConfig.onSuccess(mockDeleteResponse);
 
-			// Verify notification was pushed with plural form
-			expect(mockPush).toHaveBeenCalledWith({
-				feedback: 'success',
-				title: 'Branches deleted from test-repo repository',
-				message: '- **feature-1** (was abc123)\n\n- **feature-2** (was def456)'
+				// Verify notification was pushed with plural form
+				expect(mockPush).toHaveBeenCalledWith({
+					feedback: 'success',
+					title: 'Branches deleted from test-repo repository',
+					message: '- **feature-1** (was abc123)\n\n- **feature-2** (was def456)'
+				});
 			});
 		});
 	});
@@ -448,37 +484,31 @@ describe('DeleteBranchModal Component', () => {
 			// Include current branch in selection
 			mockSelectedBranches = ['feature-1', 'main'];
 
-			const { getByTestId, getAllByText } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
 
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
 			// The current branch (main) should appear first in the list
 			// This tests the sort function that puts current: true branches first
-			const branchElements = getAllByText(/^(main|feature-1)$/);
+			const branchElements = screen.getByText(/^(main|feature-1)$/);
 			expect(branchElements.length).toBeGreaterThan(0);
 		});
 
 		test('adds deleted branches to deleted branches store on success', async () => {
-			const { getDeletedBranchesStore } = await import(
-				'$domains/branch-management/store/deleted-branches.svelte'
-			);
-			const mockStore = { addDeletedBranch: vi.fn() };
-			(getDeletedBranchesStore as Mock).mockReturnValue(mockStore);
-
 			const deleteMutate = createDeleteBranchesMutation();
 
-			const { getByTestId } = render(TestWrapper, {
-				props: { component: DeleteBranchModal, props: { id: 'test-repo' } }
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
 			});
 
-			const button = getByTestId('open-dialog-button');
-			await fireEvent.click(button);
+			const button = screen.getByTestId('open-dialog-button');
+			await button.click();
 
-			const deleteButton = getByTestId('delete-button');
-			await fireEvent.click(deleteButton);
+			const deleteButton = screen.getByTestId('delete-button');
+			await deleteButton.click();
 
 			// Get the handleDelete onSuccess callback (second argument, onSuccess property)
 			const callArgs = (deleteMutate.mutate as Mock).mock.calls[0];
@@ -510,7 +540,7 @@ describe('DeleteBranchModal Component', () => {
 
 			// Verify deleted branch was added to store
 			expect(getDeletedBranchesStore).toHaveBeenCalledWith('test-repo'); // repository id
-			expect(mockStore.addDeletedBranch).toHaveBeenCalledWith(
+			expect(mockAddDeletedBranch).toHaveBeenCalledWith(
 				mockDeleteResponse.deletedBranches[0].branch
 			);
 		});

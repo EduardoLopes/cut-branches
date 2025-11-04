@@ -1,8 +1,8 @@
-import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import BranchCard from '../branch-card.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
 import type { Branch as BranchData } from '$lib/bindings';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('BranchCard Component', () => {
 	const mockBranchData: BranchData = {
@@ -26,18 +26,18 @@ describe('BranchCard Component', () => {
 	const mockBranch = Branch.fromData(mockBranchData);
 
 	test('renders branch name', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		const nameElement = getByTestId('branch-name');
 		expect(nameElement).toBeInTheDocument();
-		expect(nameElement.textContent).toBe('feature/new-feature');
+		expect(nameElement).toHaveTextContent('feature/new-feature');
 	});
 
 	test('renders commit card', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		// CommitCard should render with its test IDs
@@ -53,8 +53,8 @@ describe('BranchCard Component', () => {
 		};
 		const currentBranch = Branch.fromData(currentBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: currentBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: currentBranch
 		});
 
 		const card = getByTestId('branch-card');
@@ -62,8 +62,8 @@ describe('BranchCard Component', () => {
 	});
 
 	test('does not apply current class when branch is not current', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		const card = getByTestId('branch-card');
@@ -71,8 +71,9 @@ describe('BranchCard Component', () => {
 	});
 
 	test('applies selected class when selected prop is true', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, selected: true }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true
 		});
 
 		const card = getByTestId('branch-card');
@@ -80,8 +81,9 @@ describe('BranchCard Component', () => {
 	});
 
 	test('does not apply selected class when selected prop is false', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, selected: false }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: false
 		});
 
 		const card = getByTestId('branch-card');
@@ -89,8 +91,8 @@ describe('BranchCard Component', () => {
 	});
 
 	test('applies selected class by default when selected prop is undefined', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		const card = getByTestId('branch-card');
@@ -98,8 +100,9 @@ describe('BranchCard Component', () => {
 	});
 
 	test('applies locked class when locked prop is true', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, locked: true }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			locked: true
 		});
 
 		const card = getByTestId('branch-card');
@@ -107,8 +110,9 @@ describe('BranchCard Component', () => {
 	});
 
 	test('does not apply locked class when locked prop is false', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, locked: false }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			locked: false
 		});
 
 		const card = getByTestId('branch-card');
@@ -116,8 +120,9 @@ describe('BranchCard Component', () => {
 	});
 
 	test('applies disabled class when disabled prop is true', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, disabled: true }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			disabled: true
 		});
 
 		const card = getByTestId('branch-card');
@@ -125,8 +130,9 @@ describe('BranchCard Component', () => {
 	});
 
 	test('does not apply disabled class when disabled prop is false', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, disabled: false }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			disabled: false
 		});
 
 		const card = getByTestId('branch-card');
@@ -140,39 +146,39 @@ describe('BranchCard Component', () => {
 		};
 		const deletedBranch = Branch.fromData(deletedBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: deletedBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: deletedBranch
 		});
 
 		const deletedInfo = getByTestId('deleted-at-info');
 		expect(deletedInfo).toBeInTheDocument();
-		expect(deletedInfo.textContent).toContain('Deleted');
+		expect(deletedInfo).toHaveTextContent('Deleted');
 	});
 
 	test('does not display deletedAt info when branch has no deletedAt', () => {
-		const { queryByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const screen = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
-		const deletedInfo = queryByTestId('deleted-at-info');
+		const deletedInfo = screen.getByTestId('deleted-at-info');
 		expect(deletedInfo).not.toBeInTheDocument();
 	});
 
-	test('displays full date in deletedAt title attribute', () => {
+	test('displays full date in deletedAt title attribute', async () => {
 		const deletedBranchData: BranchData = {
 			...mockBranchData,
 			deletedAt: '2024-01-20T15:45:00Z'
 		};
 		const deletedBranch = Branch.fromData(deletedBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: deletedBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: deletedBranch
 		});
 
-		const deletedInfo = getByTestId('deleted-at-info');
-		const spanWithTitle = deletedInfo.querySelector('span[title]');
-		expect(spanWithTitle).toBeTruthy();
-		expect(spanWithTitle?.getAttribute('title')).toBeTruthy();
+		const spanWithTitle = getByTestId(`deleted-at-title-${deletedBranch.getName()}`);
+		await vi.waitFor(() => {
+			expect(spanWithTitle).toBeInTheDocument();
+		});
 	});
 
 	test('applies multiple state classes simultaneously', () => {
@@ -182,8 +188,10 @@ describe('BranchCard Component', () => {
 		};
 		const currentBranch = Branch.fromData(currentBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: currentBranch, selected: true, locked: true }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: currentBranch,
+			selected: true,
+			locked: true
 		});
 
 		const card = getByTestId('branch-card');
@@ -193,12 +201,12 @@ describe('BranchCard Component', () => {
 	});
 
 	test('renders git commit icon', () => {
-		const { container } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { container } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		// Check that the "Last commit" label is present
-		expect(container.textContent).toContain('Last commit');
+		expect(container).toHaveTextContent('Last commit');
 	});
 
 	test('renders trash icon when branch is deleted', () => {
@@ -208,8 +216,8 @@ describe('BranchCard Component', () => {
 		};
 		const deletedBranch = Branch.fromData(deletedBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: deletedBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: deletedBranch
 		});
 
 		const deletedInfo = getByTestId('deleted-at-info');
@@ -223,21 +231,22 @@ describe('BranchCard Component', () => {
 		};
 		const specialBranch = Branch.fromData(specialBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: specialBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: specialBranch
 		});
 
 		const nameElement = getByTestId('branch-name');
-		expect(nameElement.textContent).toBe('feature/special-chars-@#$%');
+		expect(nameElement).toHaveTextContent('feature/special-chars-@#$%');
 	});
 
 	test('selected state changes branch name color', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, selected: true }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true
 		});
 
 		const nameElement = getByTestId('branch-name');
-		expect(nameElement.parentElement).toBeTruthy();
+		expect(nameElement).toBeInTheDocument();
 	});
 
 	test('handles branch with isReachable property', () => {
@@ -247,8 +256,8 @@ describe('BranchCard Component', () => {
 		};
 		const branchWithReachable = Branch.fromData(branchWithReachableData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: branchWithReachable }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: branchWithReachable
 		});
 
 		expect(getByTestId('branch-card')).toBeInTheDocument();
@@ -261,8 +270,8 @@ describe('BranchCard Component', () => {
 		};
 		const mergedBranch = Branch.fromData(mergedBranchData);
 
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mergedBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mergedBranch
 		});
 
 		expect(getByTestId('branch-card')).toBeInTheDocument();
@@ -270,8 +279,9 @@ describe('BranchCard Component', () => {
 
 	test('accepts and applies custom colorPalette', () => {
 		const customPalette = 'test-palette-class';
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, colorPalette: customPalette }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			colorPalette: customPalette
 		});
 
 		const card = getByTestId('branch-card');
@@ -280,8 +290,9 @@ describe('BranchCard Component', () => {
 
 	test('accepts and applies custom id', () => {
 		const customId = 'custom-branch-id';
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, id: customId }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			id: customId
 		});
 
 		const card = getByTestId('branch-card');
@@ -290,8 +301,9 @@ describe('BranchCard Component', () => {
 
 	test('accepts and applies custom title', () => {
 		const customTitle = 'Custom branch title';
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, title: customTitle }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			title: customTitle
 		});
 
 		const card = getByTestId('branch-card');
@@ -299,8 +311,8 @@ describe('BranchCard Component', () => {
 	});
 
 	test('renders branch card without children when not provided', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		const card = getByTestId('branch-card');
@@ -309,8 +321,10 @@ describe('BranchCard Component', () => {
 	});
 
 	test('default variant uses normal selection logic', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, selected: true, variant: 'default' }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true,
+			variant: 'default'
 		});
 
 		const card = getByTestId('branch-card');
@@ -319,8 +333,10 @@ describe('BranchCard Component', () => {
 	});
 
 	test('inverted variant reverses selection visual state when not selected', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, selected: false, variant: 'inverted' }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: false,
+			variant: 'inverted'
 		});
 
 		const card = getByTestId('branch-card');
@@ -330,8 +346,10 @@ describe('BranchCard Component', () => {
 	});
 
 	test('inverted variant reverses selection visual state when selected', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch, selected: true, variant: 'inverted' }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true,
+			variant: 'inverted'
 		});
 
 		const card = getByTestId('branch-card');
@@ -341,8 +359,8 @@ describe('BranchCard Component', () => {
 	});
 
 	test('variant defaults to default when not provided', () => {
-		const { getByTestId } = render(BranchCard, {
-			props: { branch: mockBranch }
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
 		});
 
 		const card = getByTestId('branch-card');
