@@ -155,9 +155,9 @@ describe('BranchList Component', () => {
 		const listItems = screen.container.querySelectorAll('[role="listitem"]');
 		expect(listItems.length).toBe(4); // We have 4 branches
 
-		// Check for checkboxes (3 non-current branches should have checkboxes)
+		// Check for checkboxes (2 non-current branches should have checkboxes)
 		const checkboxes = screen.container.querySelectorAll('input[type="checkbox"]');
-		expect(checkboxes.length).toBe(3); // 3 non-current branches
+		expect(checkboxes.length).toBe(2); // 2 non-current branches
 
 		// Check for switch buttons (non-current branches should have switch buttons)
 		const switchButtons = screen.container.querySelectorAll('[data-testid="switch-button"]');

@@ -75,7 +75,8 @@ export default defineConfig({
 				{
 					browser: 'chromium'
 				}
-			]
+			],
+			screenshotFailures: false
 		},
 		globals: true,
 		coverage: {

@@ -167,7 +167,7 @@
 								gap: 'xs'
 							})}
 						>
-							{#if allowSelection}
+							{#if allowSelection && !branch.getIsLocked()}
 								<Checkbox
 									id={`checkbox-${branch.getName()}`}
 									onclick={() => handleToggleSelect(branch)}
