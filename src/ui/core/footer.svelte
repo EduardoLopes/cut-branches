@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { css } from '@pindoba/styled-system/css';
-	import { spacer } from '@pindoba/styled-system/patterns';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
 	import NotificationsPopover from '$domains/notifications/components/notifications-popover.svelte';
 	import { globalStore } from '$store/global-store.svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { spacer } from '@pindoba/styled-system/patterns';
 
 	let now = $state(Date.now());
 	let intervalID = 0;
@@ -58,7 +58,7 @@
 			alignItems: 'center',
 			height: 'calc((token(spacing.sm)) * 2.5)',
 			width: '259px',
-			p: 'token(spacing.xxs)'
+			p: 'token(spacing.2xs)'
 		})}
 		data-testid="version-container"
 	>
@@ -106,7 +106,7 @@
 	<div class={spacer()}></div>
 	<div
 		class={css({
-			p: 'token(spacing.xxs)',
+			p: 'token(spacing.2xs)',
 			display: 'flex',
 			gap: 'xs',
 			alignItems: 'center'

@@ -46,8 +46,8 @@
 			}}
 			class={css({
 				position: 'absolute',
-				top: 'xxs',
-				right: 'xxs'
+				top: '2xs',
+				right: '2xs'
 			})}
 		>
 			<Icon icon="mi:close" width="12px" height="12px" />

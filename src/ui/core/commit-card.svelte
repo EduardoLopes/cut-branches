@@ -44,7 +44,7 @@
 				display: 'flex',
 				flexDirection: 'row',
 				alignItems: 'center',
-				gap: 'xxs',
+				gap: '2xs',
 				pindobaTransition: 'fast',
 				color: 'neutral.900'
 			})}
@@ -60,7 +60,7 @@
 				display: 'flex',
 				flexDirection: 'row',
 				alignItems: 'center',
-				gap: 'xxs',
+				gap: '2xs',
 				pindobaTransition: 'fast',
 				color: 'neutral.900'
 			})}

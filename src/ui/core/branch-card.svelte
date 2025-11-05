@@ -113,7 +113,7 @@
 				display: 'flex',
 				flexDirection: 'row',
 				alignItems: 'center',
-				gap: 'xxs',
+				gap: '2xs',
 				pindobaTransition: 'fast',
 				color: 'neutral.600',
 				fontWeight: 'bold'
@@ -137,7 +137,7 @@
 				flexDirection: 'row',
 				alignItems: 'center',
 				justifyContent: 'flex-end',
-				gap: 'xxs',
+				gap: '2xs',
 				fontSize: 'sm',
 				color: 'danger.800',
 				pt: 'xs',
