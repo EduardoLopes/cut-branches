@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import TextInput, { type TextInputProps } from '@pindoba/svelte-text-input';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import type { Repository } from '$services/common';
 	import { createToggle } from '$utils/svelte-runes-utils';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props extends TextInputProps {
 		repository: Repository | undefined;
@@ -53,22 +53,33 @@
 		{disabled}
 		value={search?.state}
 		{...rest}
-	/>
-	<Button
-		size="sm"
-		onclick={handleClear}
-		disabled={!search?.state}
-		data-testid="clear-search-button"
 	>
-		<div
-			class={css({
-				display: 'flex',
-				alignItems: 'center',
-				gap: 'xs'
-			})}
-		>
-			<Icon icon="mdi:clear" width="16px" height="16px" />
-			<span class={visuallyHidden()}>Clear search</span>
-		</div>
-	</Button>
+		{#snippet fieldSuffix()}
+			<Button
+				size="sm"
+				shape="square"
+				onclick={handleClear}
+				disabled={!search?.state}
+				passThrough={{
+					root: {
+						style: css.raw({
+							borderLeftRadius: '0'
+						})
+					}
+				}}
+				data-testid="clear-search-button"
+			>
+				<div
+					class={css({
+						display: 'flex',
+						alignItems: 'center',
+						gap: 'xs'
+					})}
+				>
+					<Icon icon="mdi:clear" width="16px" height="16px" />
+					<span class={visuallyHidden()}>Clear search</span>
+				</div>
+			</Button>
+		{/snippet}
+	</TextInput>
 </Group>
