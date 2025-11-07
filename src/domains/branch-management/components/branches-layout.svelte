@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { css, cva } from '@pindoba/styled-system/css';
 	import Loading from '@pindoba/svelte-loading';
 	import type { Snippet } from 'svelte';
+	import { css, cva } from '@pindoba/styled-system/css';
 
 	interface Props {
 		isLoading: boolean;
@@ -21,6 +21,8 @@
 			overflowY: 'auto',
 			overflowX: 'hidden',
 			borderRadius: 'md',
+
+			borderTopLeftRadius: 0,
 			border: '1px solid'
 		},
 		variants: {
@@ -59,7 +61,7 @@
 			style: css.raw({
 				borderRadius: '0',
 				flexGrow: '1',
-				height: 'calc(100% - 60px)',
+				height: 'calc(100% - 93px)',
 				_dark: {
 					background: 'neutral.100'
 				},

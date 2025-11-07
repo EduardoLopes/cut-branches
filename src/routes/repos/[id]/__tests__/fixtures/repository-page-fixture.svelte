@@ -2,10 +2,10 @@
 	// import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
 	// This is a test fixture that combines MenuView and Repository components
 	// for integration testing
-	import { css } from '@pindoba/styled-system/css';
 	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
+	import { css } from '@pindoba/styled-system/css';
 
 	// Define props using $props()
 	const { id }: { id: string } = $props();
@@ -16,7 +16,7 @@
 		<MenuView />
 	</div>
 	<div class={css({ flex: 1 })} data-testid="repository-container">
-		<Repository>
+		<Repository repositoryId={id}>
 			<ActiveBranchesView {id} />
 		</Repository>
 	</div>

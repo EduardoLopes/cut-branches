@@ -157,7 +157,8 @@
 						display: 'grid',
 						gridTemplateColumns: 'auto 1fr',
 						gap: 'sm',
-						borderRadius: 'sm'
+						borderRadius: 'sm',
+						borderTopLeftRadius: 0
 					})}
 					class:selected={branch.getIsSelected()}
 				>

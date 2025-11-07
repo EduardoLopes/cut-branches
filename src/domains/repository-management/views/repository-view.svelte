@@ -1,12 +1,14 @@
 <script lang="ts">
-	import { css } from '@pindoba/styled-system/css';
 	import type { Snippet } from 'svelte';
+	import RepositoryManagementHeader from '../components/repository-management-header.svelte';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		children?: Snippet;
+		repositoryId: string;
 	}
 
-	const { children }: Props = $props();
+	const { children, repositoryId }: Props = $props();
 </script>
 
 <div
@@ -32,6 +34,7 @@
 			}
 		})}
 	>
+		<RepositoryManagementHeader {repositoryId} />
 		{#if children}
 			{@render children()}
 		{/if}

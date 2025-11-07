@@ -1,6 +1,46 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import RestorePage from '../+page.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
+
+// Mock $app/state module
+vi.mock('$app/state', () => ({
+	page: {
+		params: { id: 'test-repo-id' },
+		url: { pathname: '/repos/test-repo-id/restore' }
+	}
+}));
+
+// Mock the queries used by Repository and RepositoryManagementHeader
+vi.mock(
+	'$domains/repository-management/core/composables/queries/create-get-repository-query',
+	() => ({
+		createGetRepositoryQuery: () => ({
+			data: {
+				id: 'test-repo-id',
+				name: 'Test Repository',
+				path: '/test/path',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			},
+			isLoading: false,
+			isError: false,
+			error: null
+		})
+	})
+);
+
+vi.mock('$domains/branch-management/core/composables/queries/create-get-branches-query', () => ({
+	createGetBranchesQuery: () => ({
+		data: {
+			branches: [],
+			total: 0
+		},
+		isLoading: false,
+		isError: false,
+		error: null
+	})
+}));
 
 describe('Restore Page Route', () => {
 	beforeEach(() => {
@@ -9,24 +49,11 @@ describe('Restore Page Route', () => {
 
 	it('should render without errors', () => {
 		expect(() => {
-			// mock the page.params
-			vi.mock('$app/state', () => ({
-				page: {
-					params: { id: 'test-repo-id' }
-				}
-			}));
-
 			renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
 	it('should render RestoreBranchesView with correct id', () => {
-		vi.mock('$app/state', () => ({
-			page: {
-				params: { id: 'test-repo-id' }
-			}
-		}));
-
 		const { container } = renderWithTestWrapper(RestorePage);
 
 		// The component should render the RestoreBranchesView
