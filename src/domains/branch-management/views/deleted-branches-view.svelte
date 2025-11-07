@@ -62,6 +62,7 @@
 				allowLocking={false}
 				allowSelection={true}
 				allowSetCurrent={false}
+				showAlerts={false}
 				variant="inverted"
 			/>
 		{/if}

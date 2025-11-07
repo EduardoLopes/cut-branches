@@ -32,6 +32,7 @@
 		allowLocking?: boolean;
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
+		showAlerts?: boolean;
 		variant?: 'default' | 'inverted';
 	}
 
@@ -41,7 +42,8 @@
 		allowLocking = true,
 		allowSelection = true,
 		allowSetCurrent = true,
-		variant = 'default'
+		variant = 'default',
+		showAlerts = true
 	}: Props = $props();
 
 	const search = $derived(
@@ -260,7 +262,7 @@
 							branch.getIsSelected() ?? false,
 							mergeStatusQuery.data?.isMerged
 						)}
-						{#if shouldShowBranchAlerts(alerts, branch)}
+						{#if showAlerts && shouldShowBranchAlerts(alerts, branch)}
 							<BranchAlerts {alerts} {branch} />
 						{/if}
 					</BranchCard>
