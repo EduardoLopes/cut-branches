@@ -4,6 +4,24 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@pindoba/svelte-checkbox': link:../pindoba/packages/ui/svelte/checkbox
+  '@pindoba/svelte-button': link:../pindoba/packages/ui/svelte/button
+  '@pindoba/svelte-dialog': link:../pindoba/packages/ui/svelte/dialog
+  '@pindoba/svelte-loading': link:../pindoba/packages/ui/svelte/loading
+  '@pindoba/svelte-alert': link:../pindoba/packages/ui/svelte/alert
+  '@pindoba/svelte-navigation': link:../pindoba/packages/ui/svelte/navigation
+  '@pindoba/svelte-badge': link:../pindoba/packages/ui/svelte/badge
+  '@pindoba/svelte-select': link:../pindoba/packages/ui/svelte/select
+  '@pindoba/svelte-group': link:../pindoba/packages/ui/svelte/group
+  '@pindoba/svelte-radio': link:../pindoba/packages/ui/svelte/radio
+  '@pindoba/svelte-popover': link:../pindoba/packages/ui/svelte/popover
+  '@pindoba/svelte-theme-mode-select': link:../pindoba/packages/blocks/svelte/theme-mode-select
+  '@pindoba/svelte-pagination': link:../pindoba/packages/blocks/svelte/pagination
+  '@pindoba/svelte-text-input': link:../pindoba/packages/ui/svelte/text-input
+  '@pindoba/panda-preset': link:../pindoba/packages/panda-preset
+  '@pindoba/panda-buildinfo': link:../pindoba/packages/panda-buildinfo
+
 patchedDependencies:
   '@changesets/changelog-github@0.5.1':
     hash: 026117a25a069a095e46ce32764485e66dd46948fce2a3b1709f11b48b61c199
