@@ -1,7 +1,5 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -13,7 +11,7 @@
 	import { eventBus, Events } from '$services/event-bus';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { formatString, ensureString } from '$utils/string-utils';
-	import { debounce } from '$utils/svelte-runes-utils';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		repositoryId: string;
@@ -87,6 +85,10 @@
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}
 
+	function handleOpen() {
+		open = true;
+	}
+
 	function handleCancel() {
 		open = false;
 	}
@@ -124,14 +126,19 @@
 
 <Button
 	emphasis="ghost"
-	size="md"
+	size="sm"
 	feedback="danger"
-	onclick={debounce(() => {
-		open = true;
-	}, 200)}
-	shape="square"
+	onclick={handleOpen}
 	data-testid="open-remove-modal"
+	passThrough={{
+		root: {
+			style: css.raw({
+				gap: 'xs',
+				justifyContent: 'flex-start'
+			})
+		}
+	}}
 >
-	<Icon icon="lucide:circle-x" width="20px" height="20px" />
-	<span class={visuallyHidden()}>Remove</span>
+	<Icon icon="lucide:circle-x" width="16px" height="16px" />
+	Remove
 </Button>

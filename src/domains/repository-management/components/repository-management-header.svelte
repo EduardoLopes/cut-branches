@@ -1,8 +1,12 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	import Badge from '@pindoba/svelte-badge';
+	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
+	import Loading from '@pindoba/svelte-loading';
 	import Radio from '@pindoba/svelte-radio';
 	import { onMount } from 'svelte';
+	import Popover from '../../../../../pindoba/packages/ui/svelte/popover/dist/popover.svelte';
 	import { createGetBranchesQuery } from '../core/composables/queries/create-get-branches-query';
 	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
@@ -60,6 +64,32 @@
 		pt: 'md'
 	})}
 >
+	{#if getRepositoryQuery.isLoading}
+		<Loading
+			isLoading={getRepositoryQuery.isLoading}
+			passThrough={{
+				root: {
+					style: css.raw({
+						width: 'full',
+						borderRadius: '0',
+						height: 'full',
+						position: 'absolute',
+						top: '0',
+						left: '0',
+						right: '0',
+						bottom: '0'
+					})
+				},
+				overlay: {
+					style: css.raw({
+						borderRadius: '0'
+					})
+				}
+			}}
+			fillParent
+		/>
+	{/if}
+
 	<div
 		class={css({
 			display: 'flex',
@@ -70,19 +100,18 @@
 		{#key getRepositoryQuery.data?.name}
 			<h2
 				class={css({
-					textStyle: '4xl'
+					textStyle: '4xl',
+					minHeight: '25px'
 				})}
 				data-testid="repository-name"
 			>
-				{#if getRepositoryQuery.data?.name}
-					<span
-						class={css({
-							textTransform: 'uppercase'
-						})}
-					>
-						{getRepositoryQuery.data.name}
-					</span>
-				{/if}
+				<span
+					class={css({
+						textTransform: 'uppercase'
+					})}
+				>
+					{getRepositoryQuery.data?.name}
+				</span>
 			</h2>
 			<div
 				class={css({
@@ -119,9 +148,31 @@
 			</div>
 		{/key}
 	</div>
+	<Popover
+		showCloseButton={false}
+		passThrough={{
+			root: {
+				style: css.raw({
+					width: '180px'
+				})
+			},
+			content: {
+				style: css.raw({
+					p: 'xs',
+					pt: 'xs'
+				})
+			}
+		}}
+	>
+		{#snippet trigger(props)}
+			<Button emphasis="ghost" size="md" shape="square" data-testid="update-button" {...props}>
+				<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
+			</Button>
+		{/snippet}
 
-	<Group direction="horizontal">
-		<UpdateRepositoryButton {repositoryId} />
-		<RemoveRepositoryModal {repositoryId} />
-	</Group>
+		<Group direction="vertical">
+			<UpdateRepositoryButton {repositoryId} />
+			<RemoveRepositoryModal {repositoryId} />
+		</Group>
+	</Popover>
 </div>

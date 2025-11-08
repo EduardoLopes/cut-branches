@@ -6,6 +6,7 @@
 	import { createGetRepositoryListQuery } from '$domains/onboarding/core/composables/create-get-repository-list-query';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { hasRepoId, hasPath } from '$utils/query-type-guards';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		repositoryId: string;
@@ -62,15 +63,23 @@
 <Loading isLoading={isRefreshing}>
 	<Button
 		emphasis="ghost"
-		size="md"
+		size="sm"
 		onclick={handleUpdate}
 		disabled={isRefreshing}
 		title="Update repository"
 		aria-label="Update repository"
 		aria-describedby="Update repository"
-		shape="square"
 		data-testid="update-button"
+		passThrough={{
+			root: {
+				style: css.raw({
+					gap: 'xs',
+					justifyContent: 'flex-start'
+				})
+			}
+		}}
 	>
-		<Icon icon="lucide:refresh-cw" width="20px" height="20px" />
+		<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
+		Update
 	</Button>
 </Loading>
