@@ -97,14 +97,15 @@ describe('RemoveRepositoryModal', () => {
 
 	describe('Modal Interaction', () => {
 		test('should open and close the modal', async () => {
-			const { getByTestId, container } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id
 			});
 
 			const openButton = getByTestId('open-remove-modal');
 			await openButton.click();
 
-			const modal = container.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			// Modal is portaled to document.body, so we need to query the document
+			const modal = document.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
 			expect(modal).toBeInTheDocument();
 
 			const cancelButton = getByTestId('cancel-remove');
@@ -115,7 +116,7 @@ describe('RemoveRepositoryModal', () => {
 		});
 
 		test('closes modal after repository removal', async () => {
-			const { getByTestId, container } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id
 			});
 
@@ -125,8 +126,8 @@ describe('RemoveRepositoryModal', () => {
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();
 
-			// Modal should be closed
-			const modal = container.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			// Modal is portaled to document.body, so we need to query the document
+			const modal = document.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
 			await expect.element(modal).not.toHaveAttribute('open');
 		});
 	});
