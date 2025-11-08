@@ -10,6 +10,7 @@
 	import { resolve } from '$app/paths';
 	import { eventBus, Events } from '$services/event-bus';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -94,35 +95,38 @@
 	}
 </script>
 
-<Dialog
-	bind:open
-	title="Remove repository"
-	aria-label="Remove repository"
-	aria-describedby="Remove repository"
-	data-testid="remove-modal"
->
-	<p>
-		Are you sure you want to remove the repository <strong
-			class={css({
-				color: 'danger.800',
-				fontSize: 'lg'
-			})}>{getRepositoryQuery.data?.name ?? repositoryId}</strong
-		>?
-	</p>
-
-	<div
-		class={css({
-			display: 'flex',
-			justifyContent: 'flex-end',
-			gap: 'md'
-		})}
+<div use:portal>
+	<Dialog
+		bind:open
+		title="Remove repository"
+		aria-label="Remove repository"
+		aria-describedby="Remove repository"
+		data-testid="remove-modal"
 	>
-		<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-remove">Cancel</Button>
-		<Button feedback="danger" autofocus onclick={handleRemove} data-testid="confirm-remove"
-			>Remove</Button
+		<p>
+			Are you sure you want to remove the repository <strong
+				class={css({
+					color: 'danger.800',
+					fontSize: 'lg'
+				})}>{getRepositoryQuery.data?.name ?? repositoryId}</strong
+			>?
+		</p>
+
+		<div
+			class={css({
+				display: 'flex',
+				justifyContent: 'flex-end',
+				gap: 'md'
+			})}
 		>
-	</div>
-</Dialog>
+			<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-remove">Cancel</Button
+			>
+			<Button feedback="danger" autofocus onclick={handleRemove} data-testid="confirm-remove"
+				>Remove</Button
+			>
+		</div>
+	</Dialog>
+</div>
 
 <Button
 	emphasis="ghost"
