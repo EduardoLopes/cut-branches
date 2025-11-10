@@ -6,7 +6,6 @@ export function createSwitchBranchMutation(options?: TauriMutationOptions<'updat
 		...options,
 		meta: {
 			...options?.meta,
-			showSuccessNotification: true,
 			awaitInvalidates: [[extractResource('getRepository')]]
 		}
 	});

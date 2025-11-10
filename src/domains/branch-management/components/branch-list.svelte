@@ -65,27 +65,25 @@
 	// Unified mutation for selected branches
 	const updateSelectionMutation = createUpdateBranchSelectionBatchMutation();
 
-	const switchBranchMutation = $derived(
-		createSwitchBranchMutation({
-			onSuccess: ({ currentBranch }) => {
-				notifications.push({
-					title: 'Branch switched',
-					message: `Successfully switched to branch **${currentBranch}**`,
-					feedback: 'success'
-				});
+	const switchBranchMutation = createSwitchBranchMutation({
+		onSuccess: ({ currentBranch }) => {
+			notifications.push({
+				title: 'Branch switched',
+				message: `Successfully switched to branch **${currentBranch}**`,
+				feedback: 'success'
+			});
 
-				// Remove from selected branches in database - invalidation happens automatically
-				if (repositoryID) {
-					updateSelectionMutation.mutate({
-						repoId: repositoryID,
-						branchNames: [currentBranch],
-						isSelected: false
-					});
-				}
-			},
-			meta: { showErrorNotification: true }
-		})
-	);
+			// Remove from selected branches in database - invalidation happens automatically
+			if (repositoryID) {
+				updateSelectionMutation.mutate({
+					repoId: repositoryID,
+					branchNames: [currentBranch],
+					isSelected: false
+				});
+			}
+		}
+	});
+
 	function handleToggleSelect(branch: Branch) {
 		if (!repositoryID) return;
 
