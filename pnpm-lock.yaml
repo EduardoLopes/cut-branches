@@ -4,24 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@pindoba/svelte-checkbox': link:../pindoba/packages/ui/svelte/checkbox
-  '@pindoba/svelte-button': link:../pindoba/packages/ui/svelte/button
-  '@pindoba/svelte-dialog': link:../pindoba/packages/ui/svelte/dialog
-  '@pindoba/svelte-loading': link:../pindoba/packages/ui/svelte/loading
-  '@pindoba/svelte-alert': link:../pindoba/packages/ui/svelte/alert
-  '@pindoba/svelte-navigation': link:../pindoba/packages/ui/svelte/navigation
-  '@pindoba/svelte-badge': link:../pindoba/packages/ui/svelte/badge
-  '@pindoba/svelte-select': link:../pindoba/packages/ui/svelte/select
-  '@pindoba/svelte-group': link:../pindoba/packages/ui/svelte/group
-  '@pindoba/svelte-radio': link:../pindoba/packages/ui/svelte/radio
-  '@pindoba/svelte-popover': link:../pindoba/packages/ui/svelte/popover
-  '@pindoba/svelte-theme-mode-select': link:../pindoba/packages/blocks/svelte/theme-mode-select
-  '@pindoba/svelte-pagination': link:../pindoba/packages/blocks/svelte/pagination
-  '@pindoba/svelte-text-input': link:../pindoba/packages/ui/svelte/text-input
-  '@pindoba/panda-preset': link:../pindoba/packages/panda-preset
-  '@pindoba/panda-buildinfo': link:../pindoba/packages/panda-buildinfo
-
 patchedDependencies:
   '@changesets/changelog-github@0.5.1':
     hash: 026117a25a069a095e46ce32764485e66dd46948fce2a3b1709f11b48b61c199
@@ -858,6 +840,9 @@ packages:
 
   '@pandacss/types@1.4.3':
     resolution: {integrity: sha512-8bz5jqQLhHTYlzVUBxpWMf+lzexQqlZJY8Cot2B7wJjg9T+VK3guTxNJV1ioiGexwcDQrn/MJiNszd6C28djqw==}
+
+  '@pindoba/panda-preset@0.0.0-alpha-20250910225440':
+    resolution: {integrity: sha512-rJg3/rBSnxpxZc8GPL3BBM3IPO42QfiA9uQaraanujyzitBPhRHpaTPKC7siWCVvT5clZw4OTL0zXAj+5QZO7A==}
 
   '@pindoba/panda@0.0.0-alpha-20250910225440':
     resolution: {integrity: sha512-rQNpj3/2JWDIAAsEyfmLwrsSRa4IGE7lzdYCZ16PyIKNGIaY1ROu56yQay7L6otdhHawTogkJhH92ktR4kdZ4A==}
@@ -4910,9 +4895,13 @@ snapshots:
 
   '@pandacss/types@1.4.3': {}
 
+  '@pindoba/panda-preset@0.0.0-alpha-20250910225440':
+    dependencies:
+      '@radix-ui/colors': 3.0.0
+
   '@pindoba/panda@0.0.0-alpha-20250910225440':
     dependencies:
-      '@pindoba/panda-preset': link:../pindoba/packages/panda-preset
+      '@pindoba/panda-preset': 0.0.0-alpha-20250910225440
 
   '@polka/url@1.0.0-next.29': {}
 

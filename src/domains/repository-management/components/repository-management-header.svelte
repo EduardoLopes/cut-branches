@@ -120,7 +120,24 @@
 					justifyContent: 'flex-end'
 				})}
 			>
-				<Group direction="horizontal" noBorderRadius="bottom">
+				<Group
+					direction="horizontal"
+					noBorderRadius="bottom"
+					noBorder
+					passThrough={{
+						root: {
+							style: css.raw({
+								_light: {
+									background: 'neutral.200 !important'
+								},
+								_dark: {
+									background: 'neutral.50 !important'
+								},
+								borderRadius: 'md'
+							})
+						}
+					}}
+				>
 					<Radio
 						id="branches"
 						name="repository-management"

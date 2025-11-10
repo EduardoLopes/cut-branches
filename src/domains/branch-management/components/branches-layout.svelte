@@ -1,56 +1,14 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
 	import type { Snippet } from 'svelte';
-	import { css, cva } from '@pindoba/styled-system/css';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		isLoading: boolean;
-		variant?: 'default' | 'inverted';
 		children: Snippet;
 	}
 
-	const { isLoading, variant = 'default', children }: Props = $props();
-
-	const contentStyles = cva({
-		base: {
-			display: 'flex',
-			flexGrow: '1',
-			flexDirection: 'column',
-			width: '100%',
-			height: 'auto',
-			overflowY: 'auto',
-			overflowX: 'hidden',
-			borderRadius: 'md',
-
-			borderTopLeftRadius: 0,
-			border: '1px solid'
-		},
-		variants: {
-			variant: {
-				default: {
-					borderColor: 'transparent',
-					_light: {
-						background: 'neutral.200'
-					},
-					_dark: {
-						background: 'neutral.50'
-					}
-				},
-				inverted: {
-					borderColor: 'danger.600',
-					_light: {
-						background: 'danger.200'
-					},
-					_dark: {
-						background: 'danger.50'
-					}
-				}
-			}
-		},
-		defaultVariants: {
-			variant: 'default'
-		}
-	});
+	const { isLoading, children }: Props = $props();
 </script>
 
 <Loading
@@ -79,7 +37,24 @@
 			})
 		},
 		content: {
-			style: contentStyles.raw({ variant })
+			style: css.raw({
+				display: 'flex',
+				flexGrow: '1',
+				flexDirection: 'column',
+				width: '100%',
+				height: 'auto',
+				overflowY: 'auto',
+				overflowX: 'hidden',
+				borderRadius: 'md',
+				borderTopLeftRadius: 0,
+				borderColor: 'transparent',
+				_light: {
+					background: 'neutral.200'
+				},
+				_dark: {
+					background: 'neutral.50'
+				}
+			})
 		}
 	}}
 >

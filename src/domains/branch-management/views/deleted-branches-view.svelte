@@ -18,7 +18,7 @@
 	const viewState = useDeletedBranchesView({ getId: () => id });
 </script>
 
-<BranchesLayout isLoading={viewState.isLoading} variant="inverted">
+<BranchesLayout isLoading={viewState.isLoading}>
 	<BulkActionsContainer>
 		{#snippet left()}
 			<BranchSelection repository={viewState.currentRepoData} branchContext="deleted" />

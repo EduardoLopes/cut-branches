@@ -18,7 +18,7 @@
 	const viewState = useActiveBranchesView({ getId: () => id });
 </script>
 
-<BranchesLayout isLoading={viewState.isLoading} variant="default">
+<BranchesLayout isLoading={viewState.isLoading}>
 	<BulkActionsContainer>
 		{#snippet left()}
 			<BranchSelection repository={viewState.currentRepoData} branchContext="active" />
