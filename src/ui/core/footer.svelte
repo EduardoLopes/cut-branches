@@ -36,6 +36,7 @@
 		_light: {
 			background: 'neutral.400'
 		},
+		marginTop: 'auto',
 		height: 'calc((token(spacing.sm)) * 2.5)',
 		borderLeft: '1px dashed token(colors.primary.300)',
 		display: 'flex',
