@@ -19,7 +19,7 @@ pre-commit:
     test:
       priority: 4
       glob: '*.{js,ts,jsx,tsx,svelte}'
-      run: pnpm vitest related {staged_files} --run --silent --coverage=false
+      run: HEADLESS=true pnpm vitest related {staged_files} --run --silent --coverage=false
     tauri-tests:
       priority: 4
       glob: '*.rs'
