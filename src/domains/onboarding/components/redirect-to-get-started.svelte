@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Loading from '@pindoba/svelte-loading';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -30,3 +31,6 @@
 		// Do not redirect if on any other page - preserve current location
 	});
 </script>
+
+<Loading isLoading={repositoriesQuery.isPending || repositoriesQuery.isLoading} fillParent
+></Loading>
