@@ -42,6 +42,27 @@ vi.mock('$domains/branch-management/core/composables/queries/create-get-branches
 	})
 }));
 
+vi.mock(
+	'$domains/repository-management/core/composables/queries/create-get-repository-list-query',
+	() => ({
+		createGetRepositoryListQuery: () => ({
+			data: [
+				{
+					id: 'test-repo-id',
+					name: 'Test Repository',
+					path: '/test/path',
+					branches: [],
+					currentBranch: 'main',
+					branchesCount: 0
+				}
+			],
+			isLoading: false,
+			isError: false,
+			error: null
+		})
+	})
+);
+
 describe('Restore Page Route', () => {
 	beforeEach(() => {
 		document.body.innerHTML = '';

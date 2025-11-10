@@ -6,6 +6,7 @@ import {
 	type FetchQueryOptions,
 	useQueryClient
 } from '@tanstack/svelte-query';
+import debounce from 'just-debounce-it';
 import { getResource } from './query-key-utils';
 import {
 	type CommandName,
@@ -168,4 +169,39 @@ export function createTauriPrefetcher<
 			...options
 		});
 	};
+}
+
+/**
+ * Creates a debounced prefetch function for Tauri commands
+ * Useful for prefetching on hover to avoid excessive calls on quick mouse movements
+ *
+ * @param queryClient - TanStack Query client instance
+ * @param commandName - The Tauri command to prefetch
+ * @param config - Query configuration including input resolver and fetch options
+ * @param delay - Debounce delay in milliseconds (default: 200ms)
+ * @returns A debounced prefetch function that cancels pending calls
+ *
+ * @example
+ * const debouncedPrefetch = createDebouncedTauriPrefetcher(
+ *   queryClient,
+ *   'getBranchList',
+ *   { input: () => ({ repoId: '123' }) },
+ *   200
+ * );
+ *
+ * // On hover - only executes after 200ms of no calls
+ * element.onmouseenter = () => debouncedPrefetch();
+ */
+export function createDebouncedTauriPrefetcher<
+	TCommand extends CommandName,
+	TQueryKey extends QueryKey = QueryKey
+>(
+	queryClient: QueryClient,
+	commandName: TCommand,
+	config: TauriFetchQueryOptions<TCommand, TQueryKey>,
+	delay: number = 200
+) {
+	return debounce(() => {
+		return prefetchTauriQuery(queryClient, commandName, config);
+	}, delay);
 }

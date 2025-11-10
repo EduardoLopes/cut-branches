@@ -2,6 +2,7 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
+	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
@@ -9,6 +10,9 @@
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
+
+	// Prefetch function for repository data on hover
+	const prefetchRepositoryData = createPrefetchRepositoryData();
 
 	// Track if repository is being added
 	let isAddingRepository = $state(false);
@@ -41,18 +45,22 @@
 		}
 
 		const repositories = repositoriesQuery.data;
-		const mappedItems = repositories.map((repo) => ({
-			id: repo.id,
-			label: repo.name,
-			href: `/repos/${repo.id}`,
-			badge: {
-				label: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined,
-				'data-testid': `repository-${repo.name}-badge-${repo.id}`
-			}
-		}));
+		const mappedItems = repositories.map(
+			(repo): NavigationItem => ({
+				id: repo.id,
+				label: repo.name,
+				href: `/repos/${repo.id}`,
+				badge: {
+					label: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined,
+					'data-testid': `repository-${repo.name}-badge-${repo.id}`
+				},
+				// Prefetch repository data on hover for instant navigation
+				onmouseenter: () => prefetchRepositoryData(repo.id)
+			})
+		) satisfies NavigationItem[];
 
 		// Sort by name
-		return [...mappedItems].sort((a, b) => a.label.localeCompare(b.label));
+		return [...mappedItems].sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
 	});
 
 	function handleAddRepository() {
