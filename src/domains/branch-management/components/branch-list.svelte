@@ -103,10 +103,10 @@
 		}
 	}
 
-	let currentPage = $state(1);
+	let currentPage = $state(0);
 	let itemsPerPage = $state(10);
 
-	let start = $derived(Math.max(0, itemsPerPage * (currentPage - 1)));
+	let start = $derived(Math.max(0, itemsPerPage * currentPage));
 	let end = $derived(start + itemsPerPage);
 	let sortedBranches = $derived.by((): Branch[] | undefined => {
 		const branches = branchesQuery.data?.branches;
