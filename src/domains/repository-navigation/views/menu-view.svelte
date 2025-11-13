@@ -1,13 +1,21 @@
 <script lang="ts">
-	import { css } from '@pindoba/styled-system/css';
 	import AppHeader from '$domains/repository-navigation/components/app-header.svelte';
 	import RepositoryList from '$domains/repository-navigation/components/repository-list.svelte';
+	import { css } from '@pindoba/styled-system/css';
 </script>
 
 <section
 	class={css({
 		display: 'grid',
-		gridTemplateRows: 'min-content auto min-content'
+		gridTemplateRows: 'min-content auto min-content',
+		_dark: {
+			background: 'neutral.100',
+			boxShadow: 'inset -1px 0 0px 0px token(colors.neutral.50)'
+		},
+		_light: {
+			background: 'neutral.50',
+			boxShadow: 'inset -1px 0 0px 0px token(colors.neutral.200)'
+		}
 	})}
 >
 	<AppHeader />

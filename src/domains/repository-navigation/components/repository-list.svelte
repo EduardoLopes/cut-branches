@@ -78,8 +78,15 @@
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
-			gap: 'sm',
-			borderTopRadius: 'md'
+			gap: 'xs',
+			borderRadius: 'md',
+			padding: 'xs',
+			_dark: {
+				background: 'neutral.50'
+			},
+			_light: {
+				background: 'neutral.200'
+			}
 		})}
 	>
 		<div
@@ -94,7 +101,7 @@
 					fontSize: 'xs',
 					textTransform: 'uppercase',
 					opacity: 0.6,
-					color: 'neutral.950',
+					color: 'neutral.950.contrast',
 					margin: '0'
 				})}
 			>
