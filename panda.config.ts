@@ -8,11 +8,18 @@ export default defineConfig({
 	preflight: true,
 
 	// Where to look for your css declarations
-	include: ['./src/**/*.{ts,tsx,svelte}', pandaBuildInfoPath],
+	include: ['./src/**/*.{ts,tsx,svelte}', 'node_modules/@pindoba/**/*.{ts}', pandaBuildInfoPath],
 	dependencies: ['@pindoba/styled-system'],
 	importMap: '@pindoba/styled-system',
 	watch: true,
 	clean: false,
+	globalCss: {
+		'body, html': {
+			_dark: {
+				filter: 'saturate(85%)'
+			}
+		}
+	},
 
 	// Useful for theme customization
 	theme: {
