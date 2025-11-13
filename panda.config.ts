@@ -14,6 +14,9 @@ export default defineConfig({
 	watch: true,
 	clean: false,
 	globalCss: {
+		'*': {
+			overscrollBehavior: 'none'
+		},
 		'body, html': {
 			_dark: {
 				filter: 'saturate(85%)'
