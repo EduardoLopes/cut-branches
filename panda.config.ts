@@ -8,7 +8,12 @@ export default defineConfig({
 	preflight: true,
 
 	// Where to look for your css declarations
-	include: ['./src/**/*.{ts,tsx,svelte}', 'node_modules/@pindoba/**/*.{ts}', pandaBuildInfoPath],
+	include: [
+		'./src/**/*.{ts,tsx,svelte}',
+		`../pindoba/packages/panda-buildinfo/dist/panda.buildinfo.json`,
+		pandaBuildInfoPath
+	],
+	exclude: [''],
 	dependencies: ['@pindoba/styled-system'],
 	importMap: '@pindoba/styled-system',
 	watch: true,
