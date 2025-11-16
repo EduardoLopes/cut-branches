@@ -99,7 +99,7 @@ export function createTauriQuery<
 
 	function invalidate() {
 		return queryClient.invalidateQueries({
-			queryKey: queryKey ?? createQueryKey<TCommand, TQueryKey>(commandName, resolveInput(input))
+			queryKey: queryKey ?? createQueryKey(commandName, resolveInput(input))
 		});
 	}
 
