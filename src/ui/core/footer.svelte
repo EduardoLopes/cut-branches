@@ -36,8 +36,8 @@
 		_light: {
 			background: 'neutral.400'
 		},
+		borderTop: '1px solid token(colors.neutral.50)',
 		marginTop: 'auto',
-		height: 'calc((token(spacing.sm)) * 2.5)',
 		borderLeft: '1px dashed token(colors.primary.300)',
 		display: 'flex',
 		justifyContent: 'flex-end',
@@ -58,7 +58,8 @@
 			justifyContent: 'center',
 			alignItems: 'center',
 			height: 'calc((token(spacing.sm)) * 2.5)',
-			width: '259px',
+			width: '258px',
+			alignSelf: 'stretch',
 			p: 'token(spacing.2xs)'
 		})}
 		data-testid="version-container"
@@ -91,7 +92,6 @@
 								width: '14px',
 								height: '14px'
 							},
-							padding: 0,
 							_dark: {
 								color: 'neutral.900'
 							},
@@ -107,10 +107,11 @@
 	<div class={spacer()}></div>
 	<div
 		class={css({
-			p: 'token(spacing.2xs)',
 			display: 'flex',
 			gap: 'xs',
-			alignItems: 'center'
+			alignItems: 'center',
+			flexShrink: '0',
+			alignSelf: 'stretch'
 		})}
 		data-testid="last-updated-container"
 	>
