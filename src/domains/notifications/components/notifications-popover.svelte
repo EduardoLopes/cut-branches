@@ -200,8 +200,8 @@
 		>
 			<Icon
 				icon="mingcute:notification-fill"
-				width="16px"
-				height="16px"
+				width="14px"
+				height="14px"
 				class={css({
 					_dark: {
 						color: 'neutral.900'
@@ -265,8 +265,7 @@
 		{:else if notifications.last && !showMore}
 			<div
 				class={css({
-					px: 'md',
-					pb: 'md'
+					p: 'md'
 				})}
 			>
 				<Notification notification={notifications.last} />
@@ -296,8 +295,7 @@
 								zIndex: '1',
 								fontSize: 'sm',
 								fontWeight: 'semibold',
-								textTransform: 'capitalize',
-								marginBottom: 'md'
+								textTransform: 'capitalize'
 							})
 						)}
 					>
@@ -320,11 +318,10 @@
 
 					<div
 						class={css({
-							px: 'md',
-							pb: 'md',
+							p: 'md',
 							display: 'flex',
 							flexDirection: 'column',
-							gap: 'md'
+							gap: 'sm'
 						})}
 					>
 						{#each group.notifications as notif (notif.id)}
