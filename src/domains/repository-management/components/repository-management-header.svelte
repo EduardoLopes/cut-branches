@@ -120,24 +120,7 @@
 					justifyContent: 'flex-end'
 				})}
 			>
-				<Group
-					direction="horizontal"
-					noBorderRadius="bottom"
-					noBorder
-					passThrough={{
-						root: {
-							style: css.raw({
-								_light: {
-									background: 'neutral.200 !important'
-								},
-								_dark: {
-									background: 'neutral.50 !important'
-								},
-								borderRadius: 'md'
-							})
-						}
-					}}
-				>
+				<Group direction="horizontal" noBorderRadius="bottom">
 					<Radio
 						id="branches"
 						name="repository-management"
@@ -176,7 +159,8 @@
 			content: {
 				style: css.raw({
 					p: 'xs',
-					pt: 'xs'
+					pt: 'xs',
+					gap: '2xs'
 				})
 			}
 		}}
@@ -187,9 +171,7 @@
 			</Button>
 		{/snippet}
 
-		<Group direction="vertical">
-			<UpdateRepositoryButton {repositoryId} />
-			<RemoveRepositoryModal {repositoryId} />
-		</Group>
+		<UpdateRepositoryButton {repositoryId} />
+		<RemoveRepositoryModal {repositoryId} />
 	</Popover>
 </div>

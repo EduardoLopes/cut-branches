@@ -60,7 +60,7 @@
 	}
 </script>
 
-<Loading isLoading={isRefreshing}>
+<Loading isLoading={isRefreshing} passThrough={{ root: { style: css.raw({ width: 'full' }) } }}>
 	<Button
 		emphasis="ghost"
 		size="sm"
@@ -74,12 +74,12 @@
 			root: {
 				style: css.raw({
 					gap: 'xs',
-					justifyContent: 'flex-start'
+					justifyContent: 'space-between'
 				})
 			}
 		}}
 	>
-		<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
 		Update
+		<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
 	</Button>
 </Loading>

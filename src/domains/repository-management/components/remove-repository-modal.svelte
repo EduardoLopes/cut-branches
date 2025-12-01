@@ -138,11 +138,12 @@
 		root: {
 			style: css.raw({
 				gap: 'xs',
-				justifyContent: 'flex-start'
+				justifyContent: 'space-between',
+				width: 'full'
 			})
 		}
 	}}
 >
-	<Icon icon="lucide:circle-x" width="16px" height="16px" />
 	Remove
+	<Icon icon="lucide:circle-x" width="16px" height="16px" />
 </Button>
