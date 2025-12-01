@@ -15,7 +15,7 @@
 	let { alerts, branch }: Props = $props();
 </script>
 
-<Group direction="vertical" noBorder id={getBranchElementId(branch.getName(), 'alerts-group')}>
+<Group direction="vertical" id={getBranchElementId(branch.getName(), 'alerts-group')}>
 	{#each alerts as alert (alert)}
 		{#if alert === 'fullyMerged' && !branch.isCurrent()}
 			<Alert id={getBranchElementId(branch.getName(), `alert-${alert}`)}>
