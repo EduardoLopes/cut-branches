@@ -51,7 +51,7 @@
 				label: repo.name,
 				href: `/repos/${repo.id}`,
 				badge: {
-					label: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined,
+					children: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined,
 					'data-testid': `repository-${repo.name}-badge-${repo.id}`
 				},
 				// Prefetch repository data on hover for instant navigation
@@ -144,13 +144,7 @@
 								maxHeight: 'calc(100vh - 146px)',
 								overflowY: 'auto',
 								backdropFilter: 'none',
-								padding: '0',
-								_light: {
-									bg: 'neutral.50'
-								},
-								_dark: {
-									bg: 'neutral.100'
-								}
+								padding: '0'
 							})
 						}
 					}}
