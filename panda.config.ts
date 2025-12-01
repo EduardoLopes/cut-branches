@@ -1,7 +1,16 @@
 import { defineConfig } from '@pandacss/dev';
 import { pandaBuildInfoPath } from '@pindoba/panda-buildinfo';
 import { getRadixColorsTokens, getSemanticTokens, preset } from '@pindoba/panda-preset';
-import { grass, grassDark, grassA, grassDarkA } from '@radix-ui/colors';
+import {
+	olive,
+	oliveDark,
+	oliveA,
+	oliveDarkA,
+	grass,
+	grassDark,
+	grassA,
+	grassDarkA
+} from '@radix-ui/colors';
 
 export default defineConfig({
 	// Whether to use css reset
@@ -40,6 +49,13 @@ export default defineConfig({
 						dark: grassDark,
 						lightAlpha: grassA,
 						darkAlpha: grassDarkA
+					}),
+					...getRadixColorsTokens({
+						colorName: 'olive',
+						light: olive,
+						dark: oliveDark,
+						lightAlpha: oliveA,
+						darkAlpha: oliveDarkA
 					})
 				}
 			},
@@ -51,7 +67,8 @@ export default defineConfig({
 							_light: `#000`
 						}
 					},
-					...getSemanticTokens('primary', 'grass')
+					...getSemanticTokens('primary', 'grass'),
+					...getSemanticTokens('neutral', 'olive')
 				}
 			},
 			keyframes: {
