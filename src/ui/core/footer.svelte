@@ -91,12 +91,6 @@
 							'& svg': {
 								width: '14px',
 								height: '14px'
-							},
-							_dark: {
-								color: 'neutral.900'
-							},
-							_light: {
-								color: 'neutral.900'
 							}
 						})
 					}
