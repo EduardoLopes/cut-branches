@@ -62,7 +62,7 @@
 
 <Loading isLoading={isRefreshing} passThrough={{ root: { style: css.raw({ width: 'full' }) } }}>
 	<Button
-		emphasis="ghost"
+		emphasis="secondary"
 		size="sm"
 		onclick={handleUpdate}
 		disabled={isRefreshing}

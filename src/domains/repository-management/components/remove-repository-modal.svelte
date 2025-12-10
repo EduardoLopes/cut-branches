@@ -129,7 +129,7 @@
 </div>
 
 <Button
-	emphasis="ghost"
+	emphasis="secondary"
 	size="sm"
 	feedback="danger"
 	onclick={handleOpen}

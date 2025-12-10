@@ -120,7 +120,19 @@
 					justifyContent: 'flex-end'
 				})}
 			>
-				<Group direction="horizontal" noBorderRadius="bottom">
+				<Group
+					direction="horizontal"
+					noBorderRadius="bottom"
+					bordered="separated"
+					radius="md"
+					passThrough={{
+						root: {
+							style: css.raw({
+								borderBottom: 'none'
+							})
+						}
+					}}
+				>
 					<Radio
 						id="branches"
 						name="repository-management"
@@ -150,6 +162,7 @@
 	</div>
 	<Popover
 		showCloseButton={false}
+		emphasis="default"
 		passThrough={{
 			root: {
 				style: css.raw({
