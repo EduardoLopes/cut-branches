@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
+	import Panel from '@pindoba/svelte-panel';
 	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { type Branch } from '../core/models/branch';
@@ -119,7 +120,11 @@
 		>?
 	</p>
 
-	<div
+	<Panel
+		title="Branches to delete"
+		aria-label="Branches to delete"
+		aria-describedby="Branches to delete"
+		radius="md"
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
@@ -131,7 +136,7 @@
 		{#each branches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
 			<BranchCard {branch} selected={true} />
 		{/each}
-	</div>
+	</Panel>
 
 	<div
 		class={css({
