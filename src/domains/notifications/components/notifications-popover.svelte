@@ -7,6 +7,7 @@
 
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
+	import Panel from '@pindoba/svelte-panel';
 	import Popover, { type TriggerSnippetProps } from '@pindoba/svelte-popover';
 	import { intlFormatDistance } from 'date-fns';
 	import { untrack, onMount, onDestroy } from 'svelte';
@@ -146,34 +147,6 @@
 		maxWidth: '95vw'
 	})}
 	passThrough={{
-		wrapper: {
-			style: css.raw({
-				gap: '0'
-			})
-		},
-		header: {
-			style: css.raw({
-				background: 'neutral.alpha.50',
-				position: 'sticky',
-				top: '0',
-				'[data-show-more="true"] &': {
-					marginBottom: '0'
-				},
-				'[data-show-more="false"] &': {
-					_dark: {
-						borderBottom: '1px solid token(colors.neutral.200)'
-					},
-					_light: {
-						borderBottom: '1px solid token(colors.neutral.400)'
-					}
-				}
-			})
-		},
-		title: {
-			style: css.raw({
-				p: 0
-			})
-		},
 		closeButton: {
 			props: {
 				autofocus: true,
@@ -182,9 +155,8 @@
 		},
 		content: {
 			style: css.raw({
-				padding: '0',
-				gap: '0',
-				zIndex: '0'
+				padding: 'none',
+				gap: 'none'
 			})
 		}
 	}}
@@ -198,26 +170,7 @@
 			aria-label={notificationCountLabel}
 			data-testid="notifications-trigger"
 		>
-			<Icon
-				icon="mingcute:notification-fill"
-				width="14px"
-				height="14px"
-				class={css({
-					_dark: {
-						color: 'neutral.900'
-					},
-					_light: {
-						color: 'neutral.900'
-					},
-					_hover: {
-						color: 'primary.950',
-						_light: {
-							color: 'primary.800'
-						}
-					}
-				})}
-				aria-hidden="true"
-			/>
+			<Icon icon="mingcute:notification-fill" width="14px" height="14px" aria-hidden="true" />
 			<span class={visuallyHidden()}>{notificationCountLabel}</span>
 		</Button>
 	{/snippet}
@@ -276,7 +229,8 @@
 					position: 'sticky',
 					top: '0',
 					maxHeight: '60vh',
-					overflowY: 'auto'
+					overflowY: 'auto',
+					pb: 'md'
 				})}
 			>
 				{#each groupedNotifications as group (group.date.toISOString())}
@@ -292,6 +246,7 @@
 								px: 'md',
 								py: 'xs',
 								margin: '0',
+								mt: 'md',
 								zIndex: '1',
 								fontSize: 'sm',
 								fontWeight: 'semibold',
@@ -316,24 +271,27 @@
 						</span>
 					</h4>
 
-					<div
-						class={css({
-							p: 'md',
-							display: 'flex',
-							flexDirection: 'column',
-							gap: 'sm'
+					<Panel
+						title={intlFormatDistance(group.date, toUserTimezone(new Date(), userTimeZone), {
+							unit: 'month'
 						})}
+						passThrough={{
+							root: {
+								style: css.raw({
+									p: 'md',
+									display: 'flex',
+									flexDirection: 'column',
+									gap: 'sm',
+									mx: 'sm',
+									width: 'auto'
+								})
+							}
+						}}
 					>
 						{#each group.notifications as notif (notif.id)}
-							<div
-								class={css({
-									zIndex: '0'
-								})}
-							>
-								<Notification notification={notif} />
-							</div>
+							<Notification notification={notif} />
 						{/each}
-					</div>
+					</Panel>
 				{/each}
 			</div>
 
@@ -377,7 +335,13 @@
 							boxShadow: 'none',
 							bottom: '0',
 							width: '100%',
-							position: 'sticky'
+							position: 'sticky',
+							borderTopStyle: 'solid',
+							borderTopWidth: '1px',
+							borderTopColor: {
+								_light: 'neutral.200',
+								_dark: 'neutral.400'
+							}
 						})
 					)
 				}
