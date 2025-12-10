@@ -46,7 +46,7 @@
 		class={css({
 			width
 		})}
-		heightSize="sm"
+		controlSize="sm"
 		oninput={handleInput}
 		autocorrect="off"
 		{placeholder}
