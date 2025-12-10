@@ -67,6 +67,8 @@ PACKAGES=(
   "$PINDOBA_PATH/packages/ui/svelte/radio"
   "$PINDOBA_PATH/packages/ui/svelte/select"
   "$PINDOBA_PATH/packages/ui/svelte/text-input"
+  "$PINDOBA_PATH/packages/ui/svelte/tabs"
+  "$PINDOBA_PATH/packages/ui/svelte/panel"
 
   # Svelte blocks
   "$PINDOBA_PATH/packages/blocks/svelte/pagination"
