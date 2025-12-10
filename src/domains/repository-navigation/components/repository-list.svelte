@@ -146,6 +146,11 @@
 								backdropFilter: 'none',
 								padding: '0'
 							})
+						},
+						item: {
+							style: css.raw({
+								pr: '2xs'
+							})
 						}
 					}}
 				/>
