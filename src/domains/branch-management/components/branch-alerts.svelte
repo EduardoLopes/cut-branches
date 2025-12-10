@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Group from '@pindoba/svelte-group';
 	import { getBranchElementId } from '../utils/branch-utils';
@@ -20,7 +19,6 @@
 		{#if alert === 'fullyMerged' && !branch.isCurrent()}
 			<Alert id={getBranchElementId(branch.getName(), `alert-${alert}`)}>
 				<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-					<Icon icon="lucide:info" />
 					<span>This branch is not fully merged into the current branch!</span>
 				</div>
 			</Alert>
@@ -31,7 +29,6 @@
 				feedback="danger"
 			>
 				<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-					<Icon icon="lucide:alert-triangle" />
 					<span>
 						{formatString('This branch contains protected words ({name})', {
 							name: branch.getName()
@@ -46,7 +43,6 @@
 				feedback="warning"
 			>
 				<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
-					<Icon icon="lucide:info" />
 					<span>
 						This branch contains potentially offensive words (e.g. 'master'). Consider renaming it
 						to align with inclusive terminology.
