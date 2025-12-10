@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Alert from '@pindoba/svelte-alert';
-	import Group from '@pindoba/svelte-group';
 	import { getBranchElementId } from '../utils/branch-utils';
 	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import { formatString } from '$utils/string-utils';
@@ -14,7 +13,10 @@
 	let { alerts, branch }: Props = $props();
 </script>
 
-<Group direction="vertical" id={getBranchElementId(branch.getName(), 'alerts-group')}>
+<div
+	class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}
+	id={getBranchElementId(branch.getName(), 'alerts-group')}
+>
 	{#each alerts as alert (alert)}
 		{#if alert === 'fullyMerged' && !branch.isCurrent()}
 			<Alert id={getBranchElementId(branch.getName(), `alert-${alert}`)}>
@@ -51,4 +53,4 @@
 			</Alert>
 		{/if}
 	{/each}
-</Group>
+</div>
