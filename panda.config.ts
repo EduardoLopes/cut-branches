@@ -1,16 +1,6 @@
 import { defineConfig } from '@pandacss/dev';
 import { pandaBuildInfoPath } from '@pindoba/panda-buildinfo';
-import { getRadixColorsTokens, getSemanticTokens, preset } from '@pindoba/panda-preset';
-import {
-	olive,
-	oliveDark,
-	oliveA,
-	oliveDarkA,
-	grass,
-	grassDark,
-	grassA,
-	grassDarkA
-} from '@radix-ui/colors';
+import { preset } from '@pindoba/panda-preset';
 
 export default defineConfig({
 	// Whether to use css reset
@@ -41,24 +31,24 @@ export default defineConfig({
 	// Useful for theme customization
 	theme: {
 		extend: {
-			tokens: {
-				colors: {
-					...getRadixColorsTokens({
-						colorName: 'grass',
-						light: grass,
-						dark: grassDark,
-						lightAlpha: grassA,
-						darkAlpha: grassDarkA
-					}),
-					...getRadixColorsTokens({
-						colorName: 'olive',
-						light: olive,
-						dark: oliveDark,
-						lightAlpha: oliveA,
-						darkAlpha: oliveDarkA
-					})
-				}
-			},
+			// tokens: {
+			// 	colors: {
+			// 		...getRadixColorsTokens({
+			// 			colorName: 'grass',
+			// 			light: grass,
+			// 			dark: grassDark,
+			// 			lightAlpha: grassA,
+			// 			darkAlpha: grassDarkA
+			// 		}),
+			// 		...getRadixColorsTokens({
+			// 			colorName: 'olive',
+			// 			light: olive,
+			// 			dark: oliveDark,
+			// 			lightAlpha: oliveA,
+			// 			darkAlpha: oliveDarkA
+			// 		})
+			// 	}
+			// },
 			semanticTokens: {
 				colors: {
 					contrast: {
@@ -66,9 +56,9 @@ export default defineConfig({
 							base: `#fff`,
 							_light: `#000`
 						}
-					},
-					...getSemanticTokens('primary', 'grass'),
-					...getSemanticTokens('neutral', 'olive')
+					}
+					// ...getSemanticTokens('primary', 'grass'),
+					// ...getSemanticTokens('neutral', 'olive')
 				}
 			},
 			keyframes: {

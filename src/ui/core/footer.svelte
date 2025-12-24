@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Panel from '@pindoba/svelte-panel';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
@@ -28,38 +29,33 @@
 	});
 </script>
 
-<div
+<Panel
+	emphasis="sunken"
 	class={css({
-		_dark: {
-			background: 'neutral.200'
-		},
-		_light: {
-			background: 'neutral.400'
-		},
-		borderTop: '1px solid token(colors.neutral.50)',
 		marginTop: 'auto',
-		borderLeft: '1px dashed token(colors.primary.300)',
+		borderTop: '1px solid token(colors.neutral.border)',
 		display: 'flex',
+		flexDirection: 'row',
+		p: 'none',
 		justifyContent: 'flex-end',
 		alignItems: 'center',
 		gap: 'md'
 	})}
 	data-testid="footer"
 >
-	<div
+	<Panel
+		emphasis="surface"
+		radius="none"
+		padding="none"
 		class={css({
-			_dark: {
-				background: 'neutral.400'
-			},
-			_light: {
-				background: 'neutral.600'
-			},
 			display: 'flex',
+			flexDirection: 'row',
 			justifyContent: 'center',
 			alignItems: 'center',
 			height: 'calc((token(spacing.sm)) * 2.5)',
-			width: '258px',
+			width: '260px',
 			alignSelf: 'stretch',
+			borderRight: '1px solid token(colors.neutral.border)',
 			p: 'token(spacing.2xs)'
 		})}
 		data-testid="version-container"
@@ -67,13 +63,9 @@
 		<div
 			class={css({
 				fontSize: 'sm',
-				_dark: {
-					color: 'neutral.900'
-				},
-				_light: {
-					color: 'neutral.900'
-				},
-				display: 'flex'
+				color: 'neutral.text.muted',
+				display: 'flex',
+				width: 'full'
 			})}
 			data-testid="app-version"
 		>
@@ -88,6 +80,7 @@
 				passThrough: {
 					root: {
 						style: css.raw({
+							color: 'neutral.text.muted',
 							'& svg': {
 								width: '14px',
 								height: '14px'
@@ -97,17 +90,20 @@
 				}
 			}}
 		/>
-	</div>
+	</Panel>
 	<div class={spacer()}></div>
-	<div
+	<Panel
+		emphasis="transparent"
 		class={css({
 			display: 'flex',
+			flexDirection: 'row',
 			gap: 'xs',
+			width: 'auto',
 			alignItems: 'center',
 			flexShrink: '0',
 			alignSelf: 'stretch'
 		})}
-		data-testid="last-updated-container"
+		padding="none"
 	>
 		{#if lastUpdatedAt && globalStore.lastUpdatedAt}
 			<time
@@ -126,12 +122,7 @@
 					<div
 						class={css({
 							fontSize: 'sm',
-							_dark: {
-								color: 'neutral.900'
-							},
-							_light: {
-								color: 'neutral.900'
-							}
+							color: 'neutral.text.muted'
 						})}
 						data-testid="last-updated-text"
 					>
@@ -169,5 +160,5 @@
 				<SvelteQueryDevtools />
 			</div>
 		{/if}
-	</div>
-</div>
+	</Panel>
+</Panel>

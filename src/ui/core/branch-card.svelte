@@ -5,6 +5,7 @@
 	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { css } from '@pindoba/styled-system/css';
+	import { token } from '@pindoba/styled-system/tokens';
 
 	interface Props {
 		branch: Branch;
@@ -44,16 +45,11 @@
 			flexDirection: 'column',
 			borderRadius: 'md',
 			borderWidth: '1px',
-			borderColor: 'neutral.400',
+			borderColor: 'colorPalette.border',
 			colorPalette: 'neutral',
 			p: 'md',
 			gap: 'md',
-			_light: {
-				background: 'neutral.50'
-			},
-			_dark: {
-				background: 'neutral.100'
-			},
+			background: 'neutral.background.surface',
 			'&.disabled, &.locked': {
 				opacity: 0.5,
 				pointerEvents: 'none',
@@ -115,15 +111,15 @@
 				alignItems: 'center',
 				gap: '2xs',
 				pindobaTransition: 'fast',
-				color: 'neutral.600',
+				color: 'neutral.text.muted',
 				fontWeight: 'bold'
 			})}
 		>
 			<Icon
-				class={css({ color: 'neutral.800' })}
 				icon="lucide:git-commit-horizontal"
 				width="16px"
 				height="16px"
+				color={token('colors.neutral.text.muted')}
 			/> Last commit
 		</div>
 		<CommitCard commit={branch.getLastCommit()} />
@@ -139,7 +135,7 @@
 				justifyContent: 'flex-end',
 				gap: '2xs',
 				fontSize: 'sm',
-				color: 'danger.800',
+				color: 'danger.text',
 				pt: 'xs',
 				borderTopWidth: '1px',
 				borderTopColor: 'neutral.300'

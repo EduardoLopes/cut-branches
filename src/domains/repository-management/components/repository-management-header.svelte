@@ -121,9 +121,10 @@
 				})}
 			>
 				<Group
+					emphasis="sunken"
 					direction="horizontal"
 					noBorderRadius="bottom"
-					bordered="separated"
+					bordered="default"
 					radius="md"
 					passThrough={{
 						root: {
@@ -162,7 +163,7 @@
 	</div>
 	<Popover
 		showCloseButton={false}
-		emphasis="default"
+		emphasis="sunken"
 		passThrough={{
 			root: {
 				style: css.raw({

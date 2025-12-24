@@ -20,12 +20,7 @@
 				borderRadius: '0',
 				flexGrow: '1',
 				height: 'calc(100% - 93px)',
-				_dark: {
-					background: 'neutral.100'
-				},
-				_light: {
-					background: 'neutral.50'
-				},
+				background: 'neutral.background.surface',
 				px: 'md',
 				pb: 'md'
 			})
@@ -47,13 +42,7 @@
 				overflowX: 'hidden',
 				borderRadius: 'md',
 				borderTopLeftRadius: 0,
-				borderColor: 'transparent',
-				_light: {
-					background: 'neutral.200'
-				},
-				_dark: {
-					background: 'neutral.50'
-				}
+				border: '1px solid token(colors.neutral.border)'
 			})
 		}
 	}}

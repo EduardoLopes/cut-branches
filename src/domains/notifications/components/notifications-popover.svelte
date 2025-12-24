@@ -338,10 +338,7 @@
 							position: 'sticky',
 							borderTopStyle: 'solid',
 							borderTopWidth: '1px',
-							borderTopColor: {
-								_light: 'neutral.200',
-								_dark: 'neutral.400'
-							}
+							borderTopColor: 'neutral.border'
 						})
 					)
 				}

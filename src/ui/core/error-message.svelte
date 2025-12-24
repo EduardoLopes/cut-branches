@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Markdown from 'svelte-exmarkdown';
 	import { css } from '@pindoba/styled-system/css';
 	import { token } from '@pindoba/styled-system/tokens';
-	import Markdown from 'svelte-exmarkdown';
 
 	interface Props {
 		message: string;
@@ -15,7 +15,7 @@
 		message,
 		description,
 		icon = 'material-symbols:dangerous-rounded',
-		iconColor = token('colors.danger.700')
+		iconColor = token('colors.danger.accent')
 	}: Props = $props();
 </script>
 

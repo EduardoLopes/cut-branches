@@ -63,7 +63,10 @@
 				passThrough={{
 					root: {
 						style: css.raw({
-							borderLeftRadius: '0'
+							borderLeftRadius: '0',
+							borderRightRadius: 'md',
+							height: '30px',
+							boxShadow: 'none'
 						})
 					}
 				}}

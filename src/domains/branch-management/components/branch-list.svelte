@@ -132,7 +132,8 @@
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
-		flex: 1
+		flex: 1,
+		background: 'neutral.background.sunken'
 	})}
 >
 	<div
@@ -193,9 +194,8 @@
 										disabled={switchBranchMutation.variables?.branch !== branch.getName() &&
 											switchBranchMutation.isPending}
 										class={css({
-											width: '26px',
-											height: '26px',
-											boxShadow: 'none'
+											width: '24px',
+											height: '24px'
 										})}
 										onclick={() => handleSwitchBranch(branch.getName())}
 										data-testid="switch-button"
@@ -227,7 +227,7 @@
 									icon="lucide:map-pin"
 									width="24px"
 									height="24px"
-									color={token('colors.primary.800')}
+									color={token('colors.primary.text')}
 								/>
 							</span>
 							{#if allowLocking}
@@ -282,12 +282,7 @@
 					bottom: '0',
 					position: 'sticky',
 					mt: 'auto',
-					_dark: {
-						borderTop: '1px solid token(colors.neutral.200)'
-					},
-					_light: {
-						borderTop: '1px solid token(colors.neutral.400)'
-					}
+					borderTop: '1px solid token(colors.neutral.border)'
 				})
 			)}
 		>

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button from '@pindoba/svelte-button';
 	import { createAddLockedBranchesMutation } from '$domains/branch-management/core/composables/create-add-locked-branches-mutation';
 	import { createLockedBranchesQuery } from '$domains/branch-management/core/composables/create-locked-branches-query';
 	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/core/composables/create-remove-locked-branches-mutation';
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-update-branch-selection-batch-mutation';
 	import { formatString } from '$utils/string-utils';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		branch: string;
@@ -55,16 +55,9 @@
 	shape="square"
 	emphasis={isLocked ? 'primary' : 'secondary'}
 	class={css({
-		width: '26px',
-		height: '26px'
+		width: '24px',
+		height: '24px'
 	})}
-	passThrough={{
-		root: {
-			style: css.raw({
-				boxShadow: 'none'
-			})
-		}
-	}}
 	onclick={toggleLock}
 	data-testid="lock-toggle-button"
 	aria-label={formatString('{action} branch {name}', {

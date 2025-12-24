@@ -19,7 +19,7 @@
 >
 	{#each alerts as alert (alert)}
 		{#if alert === 'fullyMerged' && !branch.isCurrent()}
-			<Alert id={getBranchElementId(branch.getName(), `alert-${alert}`)}>
+			<Alert id={getBranchElementId(branch.getName(), `alert-${alert}`)} emphasis="secondary">
 				<div class={css({ display: 'flex', gap: 'xs', alignItems: 'center' })}>
 					<span>This branch is not fully merged into the current branch!</span>
 				</div>

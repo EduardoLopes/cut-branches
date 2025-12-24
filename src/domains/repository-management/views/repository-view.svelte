@@ -26,12 +26,7 @@
 			overflow: 'hidden',
 			position: 'relative',
 			height: '100%',
-			_light: {
-				background: 'neutral.50'
-			},
-			_dark: {
-				background: 'neutral.100'
-			}
+			background: 'neutral.background.surface'
 		})}
 	>
 		<RepositoryManagementHeader {repositoryId} />

@@ -81,12 +81,7 @@
 			gap: 'xs',
 			borderRadius: 'md',
 			padding: 'xs',
-			_dark: {
-				background: 'neutral.50'
-			},
-			_light: {
-				background: 'neutral.200'
-			}
+			background: 'neutral.background.sunken'
 		})}
 	>
 		<div
@@ -101,7 +96,7 @@
 					fontSize: 'xs',
 					textTransform: 'uppercase',
 					opacity: 0.6,
-					color: 'neutral.950.contrast',
+					color: 'neutral.text',
 					margin: '0'
 				})}
 			>
@@ -159,7 +154,7 @@
 					class={css({
 						textAlign: 'center',
 						padding: 'md',
-						color: 'neutral.800.contrast',
+						color: 'neutral.text.muted',
 						opacity: 0.7
 					})}
 				>

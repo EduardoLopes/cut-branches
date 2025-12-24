@@ -5,6 +5,7 @@
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { cleanEmailString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
+	import { token } from '@pindoba/styled-system/tokens';
 
 	interface Props {
 		commit: Commit;
@@ -22,7 +23,6 @@
 	<span
 		class={css({
 			fontSize: 'sm',
-			color: 'neutral.950',
 			pindobaTransition: 'fast',
 			mb: 'xs'
 		})}
@@ -45,13 +45,17 @@
 				flexDirection: 'row',
 				alignItems: 'center',
 				gap: '2xs',
-				pindobaTransition: 'fast',
-				color: 'neutral.900'
+				pindobaTransition: 'fast'
 			})}
 			title={cleanEmailString(commit.getEmail())}
 			data-testid="author-name"
 		>
-			<Icon icon="lucide:circle-user-round" width="16px" height="16px" />
+			<Icon
+				icon="lucide:circle-user-round"
+				width="16px"
+				height="16px"
+				color={token('colors.neutral.text.muted')}
+			/>
 			{commit.getAuthor()}
 		</span>
 		<span

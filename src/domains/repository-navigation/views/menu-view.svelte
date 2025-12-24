@@ -8,14 +8,8 @@
 	class={css({
 		display: 'grid',
 		gridTemplateRows: 'min-content auto min-content',
-		_dark: {
-			background: 'neutral.100',
-			boxShadow: 'inset -1px 0 0px 0px token(colors.neutral.50)'
-		},
-		_light: {
-			background: 'neutral.50',
-			boxShadow: 'inset -1px 0 0px 0px token(colors.neutral.200)'
-		}
+		background: 'neutral.background.surface',
+		boxShadow: 'inset -1px 0 0px 0px token(colors.neutral.border)'
 	})}
 >
 	<AppHeader />
