@@ -8,6 +8,7 @@
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
 	import { css } from '@pindoba/styled-system/css';
+	import Stamp from '@pindoba/svelte-stamp';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -68,7 +69,9 @@
 </script>
 
 {#snippet repoIcon()}
-	<Icon icon="lucide:folder-git-2" width="14px" height="14px" />
+	<Stamp emphasis="muted" border="none" background="transparent"
+		><Icon icon="lucide:folder-git-2" width="14px" height="14px" /></Stamp
+	>
 {/snippet}
 
 <div
