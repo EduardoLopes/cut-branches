@@ -47,38 +47,32 @@ Cut Branches is a Tauri-based desktop application for managing and cleaning up G
 
 ### Pindoba Local Development
 
-This project uses Pindoba UI components. You can choose to use either published packages or link to local Pindoba packages for development.
+This project uses Pindoba UI components. By default, all `@pindoba/*` packages resolve from npm against the `alpha` tag. For local Pindoba development, Vite path-aliasing redirects each `@pindoba/svelte-*` import to a sibling Pindoba checkout's built `dist/` folders — no `pnpm install`, no symlinks, no `package.json` mutation.
 
 **Environment Configuration:**
 
 Create a `.env` file (see [`.env.example`](.env.example) for reference) and set:
 
 ```bash
-# Use local Pindoba packages
+# Use local Pindoba dist folders via Vite aliases
 USE_LOCAL_PINDOBA=true
 
-# Or use published packages (default)
+# Or use published packages from npm (default)
 USE_LOCAL_PINDOBA=false
 ```
 
-**Manual Commands:**
+**Requirements for Local Mode:**
 
-- `pnpm pindoba:link` - Manually link all local Pindoba packages
-- `pnpm pindoba:unlink` - Unlink and restore published packages
-- `pnpm pindoba:status` - Check current link status
-- `pnpm pindoba:clean` - Clean overrides from package.json
-
-**Requirements for Local Linking:**
-
-- Pindoba repository must be cloned to `../pindoba` (relative to this project)
-- Run `pnpm install` after changing `USE_LOCAL_PINDOBA` in `.env`
+- Pindoba repository cloned to `../pindoba` (relative to this project)
+- Each consumed package must be built so `dist/` exists
+- For HMR while editing Pindoba sources, run the package watcher in `../pindoba`, e.g. `pnpm --filter @pindoba/svelte-button dev` — it rewrites `dist/` on save and Vite hot-reloads the consumer
+- Restart the Vite dev server after toggling `USE_LOCAL_PINDOBA` (no `pnpm install` needed)
 
 **How It Works:**
 
-- The `prepare` script automatically checks `USE_LOCAL_PINDOBA` and links packages if enabled
-- Links are managed via pnpm overrides in `package.json`
-- Lefthook automatically cleans overrides before commits to keep the repository clean
-- The linking script gracefully handles missing packages
+- `vite.config.js` reads `USE_LOCAL_PINDOBA` via `loadEnv` and conditionally registers `resolve.alias` entries pointing each `@pindoba/svelte-*` package to `../pindoba/packages/<path>/dist/index.js`
+- `tsconfig.json` declares matching `paths` so editor + `svelte-check` resolve types from the same `dist/*.d.ts` files; when local Pindoba is absent, TS falls back to `node_modules`
+- `@pindoba/panda-preset` and `@pindoba/panda-buildinfo` are loaded by the Panda CLI (Node side) and always resolve from `node_modules`
 
 ## Architecture
 

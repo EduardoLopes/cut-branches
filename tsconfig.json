@@ -8,7 +8,46 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"types": ["vitest/globals", "@testing-library/jest-dom"]
+		"types": ["vitest/globals", "@testing-library/jest-dom"],
+		"baseUrl": ".",
+		"paths": {
+			"@pindoba/svelte-alert": ["../pindoba/packages/ui/svelte/alert/dist/index.d.ts"],
+			"@pindoba/svelte-alert/*": ["../pindoba/packages/ui/svelte/alert/dist/*"],
+			"@pindoba/svelte-badge": ["../pindoba/packages/ui/svelte/badge/dist/index.d.ts"],
+			"@pindoba/svelte-badge/*": ["../pindoba/packages/ui/svelte/badge/dist/*"],
+			"@pindoba/svelte-button": ["../pindoba/packages/ui/svelte/button/dist/index.d.ts"],
+			"@pindoba/svelte-button/*": ["../pindoba/packages/ui/svelte/button/dist/*"],
+			"@pindoba/svelte-checkbox": ["../pindoba/packages/ui/svelte/checkbox/dist/index.d.ts"],
+			"@pindoba/svelte-checkbox/*": ["../pindoba/packages/ui/svelte/checkbox/dist/*"],
+			"@pindoba/svelte-dialog": ["../pindoba/packages/ui/svelte/dialog/dist/index.d.ts"],
+			"@pindoba/svelte-dialog/*": ["../pindoba/packages/ui/svelte/dialog/dist/*"],
+			"@pindoba/svelte-group": ["../pindoba/packages/ui/svelte/group/dist/index.d.ts"],
+			"@pindoba/svelte-group/*": ["../pindoba/packages/ui/svelte/group/dist/*"],
+			"@pindoba/svelte-input": ["../pindoba/packages/ui/svelte/input/dist/index.d.ts"],
+			"@pindoba/svelte-input/*": ["../pindoba/packages/ui/svelte/input/dist/*"],
+			"@pindoba/svelte-loading": ["../pindoba/packages/ui/svelte/loading/dist/index.d.ts"],
+			"@pindoba/svelte-loading/*": ["../pindoba/packages/ui/svelte/loading/dist/*"],
+			"@pindoba/svelte-navigation": ["../pindoba/packages/ui/svelte/navigation/dist/index.d.ts"],
+			"@pindoba/svelte-navigation/*": ["../pindoba/packages/ui/svelte/navigation/dist/*"],
+			"@pindoba/svelte-panel": ["../pindoba/packages/ui/svelte/panel/dist/index.d.ts"],
+			"@pindoba/svelte-panel/*": ["../pindoba/packages/ui/svelte/panel/dist/*"],
+			"@pindoba/svelte-popover": ["../pindoba/packages/ui/svelte/popover/dist/index.d.ts"],
+			"@pindoba/svelte-popover/*": ["../pindoba/packages/ui/svelte/popover/dist/*"],
+			"@pindoba/svelte-radio": ["../pindoba/packages/ui/svelte/radio/dist/index.d.ts"],
+			"@pindoba/svelte-radio/*": ["../pindoba/packages/ui/svelte/radio/dist/*"],
+			"@pindoba/svelte-select": ["../pindoba/packages/ui/svelte/select/dist/index.d.ts"],
+			"@pindoba/svelte-select/*": ["../pindoba/packages/ui/svelte/select/dist/*"],
+			"@pindoba/svelte-pagination": [
+				"../pindoba/packages/blocks/svelte/pagination/dist/index.d.ts"
+			],
+			"@pindoba/svelte-pagination/*": ["../pindoba/packages/blocks/svelte/pagination/dist/*"],
+			"@pindoba/svelte-theme-mode-select": [
+				"../pindoba/packages/blocks/svelte/theme-mode-select/dist/index.d.ts"
+			],
+			"@pindoba/svelte-theme-mode-select/*": [
+				"../pindoba/packages/blocks/svelte/theme-mode-select/dist/*"
+			]
+		}
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//
