@@ -4,7 +4,6 @@
 	import Banner from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
-	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
 	import Progress from '@pindoba/svelte-progress';
 	import { listen } from '@tauri-apps/api/event';
@@ -540,15 +539,30 @@
 	}}
 >
 	{#if currentConflictBranch}
-		<Banner feedback="warning" heading="Branch Name Conflict">
-			{#snippet leading()}
-				<Icon icon="ion:alert-circle" width="24px" height="24px" />
-			{/snippet}
-			<p>
-				A branch named <strong>"{currentConflictBranch}"</strong> already exists. How would you like
-				to proceed?
+		<div
+			class={css({
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 'xs',
+				background: 'neutral.surface.deep',
+				p: 'sm',
+				borderRadius: 'lg',
+				border: '1px solid token(colors.neutral.border.muted)'
+			})}
+		>
+			<Banner feedback="warning" heading="Branch Name Conflict">
+				{#snippet leading()}
+					<Icon icon="ion:alert-circle" width="24px" height="24px" />
+				{/snippet}
+			</Banner>
+			<p
+				class={css({
+					color: 'warning.text.accent'
+				})}
+			>
+				A branch named <strong>{currentConflictBranch}</strong> already exists. How would you like to
+				proceed?
 			</p>
-
 			<div
 				class={css({
 					display: 'flex',
@@ -573,7 +587,7 @@
 					Skip
 				</Button>
 			</div>
-		</Banner>
+		</div>
 	{:else}
 		<p data-testid="restore-branch-dialog-text">
 			{#if isProcessing && !isRestorationComplete}
@@ -654,42 +668,6 @@
 		}) as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
 			{@const branchName = branch.getName()}
 			<div class={css({ position: 'relative' })}>
-				{#if restorationResults[branchName]}
-					<div
-						class={[
-							css({
-								position: 'absolute',
-								top: '8px',
-								right: '8px',
-								zIndex: 10,
-								display: 'flex',
-								alignItems: 'center',
-								gap: 'xs'
-							}),
-							getStatusIcon(restorationResults[branchName]).color === 'success' &&
-								css({ color: 'success.800' }),
-							getStatusIcon(restorationResults[branchName]).color === 'warning' &&
-								css({ color: 'warning.800' }),
-							getStatusIcon(restorationResults[branchName]).color === 'danger' &&
-								css({ color: 'danger.800' })
-						]}
-					>
-						<span
-							class={css({
-								fontSize: 'xs',
-								flexDirection: 'row'
-							})}
-						>
-							{restorationResults[branchName].skipped ? 'Skipped' : ''}
-							{pendingConflictBranches.includes(branchName) ? 'Pending resolution' : ''}
-						</span>
-						<Icon
-							icon={getStatusIcon(restorationResults[branchName]).icon}
-							width="20px"
-							height="20px"
-						/>
-					</div>
-				{/if}
 				<div
 					class={css({
 						'& > div': {
@@ -710,16 +688,50 @@
 							}
 						}}
 					>
-						<Group
-							orientation="vertical"
-							passThrough={{
-								root: {
-									style: css.raw({
-										width: 'full'
-									})
-								}
-							}}
+						<div
+							class={css({
+								display: 'flex',
+								flexDirection: 'column',
+								gap: 'sm',
+								width: 'full',
+								background: 'neutral.surface.deep',
+								p: 'sm',
+								borderRadius: 'lg'
+							})}
 						>
+							{#if restorationResults[branchName]}
+								<div
+									class={[
+										css({
+											display: 'flex',
+											alignItems: 'center',
+											justifyContent: 'flex-end',
+											gap: 'xs'
+										}),
+										getStatusIcon(restorationResults[branchName]).color === 'success' &&
+											css({ color: 'success.800' }),
+										getStatusIcon(restorationResults[branchName]).color === 'warning' &&
+											css({ color: 'warning.800' }),
+										getStatusIcon(restorationResults[branchName]).color === 'danger' &&
+											css({ color: 'danger.800' })
+									]}
+								>
+									<span
+										class={css({
+											fontSize: 'xs',
+											flexDirection: 'row'
+										})}
+									>
+										{restorationResults[branchName].skipped ? 'Skipped' : ''}
+										{pendingConflictBranches.includes(branchName) ? 'Pending resolution' : ''}
+									</span>
+									<Icon
+										icon={getStatusIcon(restorationResults[branchName]).icon}
+										width="20px"
+										height="20px"
+									/>
+								</div>
+							{/if}
 							<BranchCard {branch} />
 							{#if !isProcessing && existingBranches.includes(branchName)}
 								<div
@@ -778,7 +790,7 @@
 									<Markdown md={restorationResults[branchName].message} />
 								</Alert>
 							{/if}
-						</Group>
+						</div>
 					</Loading>
 				</div>
 			</div>
