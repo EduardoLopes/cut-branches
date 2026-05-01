@@ -28,7 +28,13 @@ importers:
       '@pindoba/svelte-alert':
         specifier: alpha
         version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-attachment':
+        specifier: alpha
+        version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/svelte-badge':
+        specifier: alpha
+        version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-banner':
         specifier: alpha
         version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/svelte-button':
@@ -61,15 +67,27 @@ importers:
       '@pindoba/svelte-popover':
         specifier: alpha
         version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-progress':
+        specifier: alpha
+        version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/svelte-radio':
         specifier: alpha
         version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/svelte-select':
         specifier: alpha
         version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-stamp':
+        specifier: alpha
+        version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/svelte-theme-mode-select':
         specifier: alpha
         version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-toast':
+        specifier: alpha
+        version: 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-tooltip':
+        specifier: alpha
+        version: 0.0.0-alpha-20260427023500(svelte@5.43.3)(typescript@5.9.3)
       '@radix-ui/colors':
         specifier: ^3.0.0
         version: 3.0.0
@@ -900,6 +918,9 @@ packages:
   '@pindoba/core-alert@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-77wUhbOdhaDMSUGMmOdtotccsWYMdLDIug6HL1De4Buv6+NJXwH9e9pad56Y7Cz1ZdX0TJK8QQ1x42OnMWAqUA==}
 
+  '@pindoba/core-attachment@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-By6SV+h30Q1VsPilqlvvwP9ZzlPbWeMEOhJny+U4uzLWXU4I0HDYmbN/GfCRpbUZkGRrAuT5pcRSuhe88hGoOg==}
+
   '@pindoba/core-badge@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-1DcCRH+smMV3OrvFeXhsAkBqOJgWZVcLvk4xDsxUQrH3zMkZl+33uXcvS0IgKiTg8qeDVeP1XSgCwbEuF0zFqA==}
 
@@ -933,6 +954,9 @@ packages:
   '@pindoba/core-popover@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-q1RQn0Z5pbsYVIs6vGpCakZzlH2l0cB8/fVg6O4GYc4Kfe0mQWOvwMkmGk2Cf1DTMDSkMpxNUw8r29DbDuircQ==}
 
+  '@pindoba/core-progress@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-NlxDtqpCIWHOo9UJgeyuaCbsbdZrx+/AJr4fopWRPsddVLXd11exjml45Nx+od4PHKw5xG549ygm/y4vXqlXug==}
+
   '@pindoba/core-radio@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-kumDBxHGGqNWbI8RC8InJlfw3WLImZcLoJmW9KMjpYEZfYd3b7U5c1MO74GAhF/IHoEjxhdp8d3aIYjFHgjwIA==}
 
@@ -941,6 +965,12 @@ packages:
 
   '@pindoba/core-stamp@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-pAGgIC7skSzyfn1tvFy/sPuhHG9rGUyCJbDMsHB0tKbs9pBKLBGeteBIWCvibHo5x+3pt/JFP+BGpr1ZqgWrXw==}
+
+  '@pindoba/core-toast@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-xgibI38NVgzhTV+ahv9mEkeu0QOmXUqJA7orr1ETzE2x8kHhDqT7yWuZ43AK6dQYlZBK571wIBLzvs6LS+DwPg==}
+
+  '@pindoba/core-tooltip@0.0.0-alpha-20260427023500':
+    resolution: {integrity: sha512-xztHaZYDoWp4F+lNPJYMLaRPEsam4GMCui3bICEr1g6QV6C3cX0r5lQBhdrtW3pfeD8jMJIuvdpuZ5VolMZvLg==}
 
   '@pindoba/panda-buildinfo@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-1z/oMOECP7VxRAD3fLcpvstN0F51VlivtHtdy6zuiwPD8UnIjMUwIvRbcoLA6t9K1PhQXd0jxH/+SXvK5zgCBQ==}
@@ -959,6 +989,9 @@ packages:
 
   '@pindoba/styles-alert@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-dDwdRMiRBXKn2whriLwCp3GwnBpubwS/8P7tOyHIyH5WN40hI30pDWFKlnUt+zwT+avVTohzKfiBwIq6Wj85Tw==}
+
+  '@pindoba/styles-attachment@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-6p96X17TORiIxiuAcnZD7JVcWrY7h7TaK4uKTJOgGj3ZbOFws4U92EbxRGMcX2Y8/fLekaH+7ehhayaP5PCR/g==}
 
   '@pindoba/styles-badge@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-5hWTUI36bLS35mL+GrnwwiXFLSiQ/0ExP04p0HWIcu858gebc2ZTBAQHnglmhcLQYZ/oY0C6uhlkqpfcrbOxoA==}
@@ -1002,6 +1035,9 @@ packages:
   '@pindoba/styles-popover@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-JpEW18xRCtze5B74WMUJ0Ol2DL0HZzv0TUUkf4FJLkIEEI4dCR9UckziXKDf6CrYg1tsC3c7jg23gLfX0FB+5Q==}
 
+  '@pindoba/styles-progress@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-51YFvRwq6INmEtAbT6YDbdBeGrcZm2BJIttQyWI8qy9XPlXYJIzO4u93/OkyRij+Bt4VACrEuxRwU0ZYBIbiMw==}
+
   '@pindoba/styles-radio@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-61p7xkVPh/WMGqw5dtsfse/hk7GcUiMKz5Yk3sJGIEWxNUlof49pjEDyC4mGd8B7wDIf1Hnz9GZfNs3xco9+4A==}
 
@@ -1020,6 +1056,12 @@ packages:
   '@pindoba/styles-timeline@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-Cbe5QbZV6rr08IpVAcarpretw/y8qgOtXTNudpkXLahidtzCVaeklTZsT93zorZCim02IP1lONYYAR8P7mmRkA==}
 
+  '@pindoba/styles-toast@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-A0wSRZfcf52EpPtJVbCUV3TbpSmxwlmsBcwgKqHJgQJZGCPxIA7iSGUvr681leP17XCrtOYkZfTJ2aBA0rhcVA==}
+
+  '@pindoba/styles-tooltip@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-fUtX1MmeLdNo0wAVE/wRfZsTx+W9/0TUBMPnVucrXwANBwaATUH0RJWaNk6AAzOz5UZlP2BzsoDsLu8K9hi9DA==}
+
   '@pindoba/styles-topbar@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-FtLbolOpgOp9YvJsUW/f96+htDvdBvO6Pr128KcUpgtODS9gFkWgj5jXsTFwgYJVnTA7jfHiogtxWmxqO0wIqw==}
 
@@ -1028,6 +1070,11 @@ packages:
 
   '@pindoba/svelte-alert@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-1iyXElNsWHGh4+LudCGU/DVTCEU42Af2EAAteWRaJQHzuYzGnpaOw+lP+XmTNOIVMhAFcnTyS8v87MAw5SXCtQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-attachment@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-Xe0H0KkBU8i/NjkXqmmW8Rws6JIarIy03VmNMmSys3f69AVgPImNBvNx9qwOSSoG2SpcyHi7qiqVFnvmrS1ziA==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1091,6 +1138,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-progress@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-oz2YQqT91c7fQnr8yl52+9yDxsqdms+7Pghhmhl/4vu48ajhlWEzWNlsaCGLER8+p24ZKjfP72+szqkozinDRw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-radio@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-+MbNY5Nv+YiWh/+cErJP8aTK0S8ko9LzYjdK1IHZ7X3IxfTsIxOqaQg/2ssH4m3AzG27ixT2sJ9LSpEZzVbhEw==}
     peerDependencies:
@@ -1108,6 +1160,16 @@ packages:
 
   '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20260427001736':
     resolution: {integrity: sha512-5QJcYWWXv1UtYSZjP2R79YY+xxuES+f3biu9ac2JIXN/6u9cwcqT9JZN8GRb2EtLkpCiSPS097NkLf3XEHDJuQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-toast@0.0.0-alpha-20260427001736':
+    resolution: {integrity: sha512-7KamIwF8J1O/Xu8dYPFiS4jFivtM3Q1GmSkiWuqwrg2ywhaiPYeHD7udVM7SJDorxfiAqCG6SoG9mDl2uFFBmQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-tooltip@0.0.0-alpha-20260427023500':
+    resolution: {integrity: sha512-ohmGqfRy9UUXp+x8FdaKp2EArwnZ66QXU1LfN6bflS8mcUT7Z/kBD7GXzOiphrCb0PfoCtK1uZMF4IkaaJHaJg==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -5537,6 +5599,18 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-attachment@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@floating-ui/dom': 1.7.6
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      '@pindoba/styles-attachment': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      nanostores: 1.3.0
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
   '@pindoba/core-badge@0.0.0-alpha-20260427001736(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-panel': 0.0.0-alpha-20260427001736(typescript@5.9.3)
@@ -5664,6 +5738,16 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-progress@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      '@pindoba/styles-progress': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
   '@pindoba/core-radio@0.0.0-alpha-20260427001736(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-panel': 0.0.0-alpha-20260427001736(typescript@5.9.3)
@@ -5698,6 +5782,23 @@ snapshots:
       - jsdom
       - supports-color
       - typescript
+
+  '@pindoba/core-toast@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      '@pindoba/styles-toast': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260427001736
+      nanostores: 1.3.0
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/core-tooltip@0.0.0-alpha-20260427023500':
+    dependencies:
+      '@floating-ui/dom': 1.7.6
+      nanostores: 1.3.0
 
   '@pindoba/panda-buildinfo@0.0.0-alpha-20260427001736(typescript@5.9.3)':
     dependencies:
@@ -5747,6 +5848,16 @@ snapshots:
       '@pindoba/panda-preset': 0.0.0-alpha-20260427001736
 
   '@pindoba/styles-alert@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.10.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/styles-attachment@0.0.0-alpha-20260427001736(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.10.0(typescript@5.9.3)
       '@pindoba/styled-system': 0.0.0-alpha-20260427001736
@@ -5896,6 +6007,16 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-progress@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.10.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
   '@pindoba/styles-radio@0.0.0-alpha-20260427001736(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.10.0(typescript@5.9.3)
@@ -5956,6 +6077,26 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-toast@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.10.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/styles-tooltip@0.0.0-alpha-20260427001736(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.10.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
   '@pindoba/styles-topbar@0.0.0-alpha-20260427001736(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.10.0(typescript@5.9.3)
@@ -5984,6 +6125,19 @@ snapshots:
       '@pindoba/svelte-stamp': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/utils': 0.0.0-alpha-20260427001736
       lucide-svelte: 1.0.1(svelte@5.43.3)
+      svelte: 5.43.3
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/svelte-attachment@0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-attachment': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       svelte: 5.43.3
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -6150,6 +6304,17 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-progress@0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-progress': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      svelte: 5.43.3
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
   '@pindoba/svelte-radio@0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-radio': 0.0.0-alpha-20260427001736(typescript@5.9.3)
@@ -6195,6 +6360,40 @@ snapshots:
       '@pindoba/svelte-radio': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/utils': 0.0.0-alpha-20260427001736
       lucide-svelte: 1.0.1(svelte@5.43.3)
+      svelte: 5.43.3
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/svelte-toast@0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-toast': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      '@pindoba/styles-alert': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      '@pindoba/svelte-alert': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-attachment': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-dialog': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-group': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-radio': 0.0.0-alpha-20260427001736(svelte@5.43.3)(typescript@5.9.3)
+      lucide-svelte: 1.0.1(svelte@5.43.3)
+      svelte: 5.43.3
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/svelte-tooltip@0.0.0-alpha-20260427023500(svelte@5.43.3)(typescript@5.9.3)':
+    dependencies:
+      '@floating-ui/dom': 1.7.6
+      '@pindoba/core-tooltip': 0.0.0-alpha-20260427023500
+      '@pindoba/styled-system': 0.0.0-alpha-20260427001736
+      '@pindoba/styles-tooltip': 0.0.0-alpha-20260427001736(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260427001736
       svelte: 5.43.3
     transitivePeerDependencies:
       - '@cfworker/json-schema'

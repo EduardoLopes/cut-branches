@@ -249,7 +249,7 @@ vi.mock('$app/page', () => ({
 }));
 
 // Mock the notifications store
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn().mockImplementation((notification) => {
 			console.log('Mock push called with:', notification);

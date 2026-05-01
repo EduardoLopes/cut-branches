@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { createAddLockedBranchesMutation } from '$domains/branch-management/core/composables/create-add-locked-branches-mutation';
 	import { createLockedBranchesQuery } from '$domains/branch-management/core/composables/create-locked-branches-query';
 	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/core/composables/create-remove-locked-branches-mutation';
@@ -50,38 +51,48 @@
 	}
 </script>
 
-<Button
-	size="xs"
-	shape="square"
-	emphasis={isLocked ? 'primary' : 'secondary'}
-	class={css({
-		width: '24px',
-		height: '24px'
-	})}
-	onclick={toggleLock}
-	data-testid="lock-toggle-button"
-	aria-label={formatString('{action} branch {name}', {
+<Tooltip
+	content={formatString('{action} branch {name}', {
 		action: isLocked ? 'unlock' : 'lock',
 		name: branch
 	})}
-	{disabled}
 >
-	{#if isLocked}
-		<div data-testid="lock-icon">
-			<Icon icon="lucide:lock" width="14px" height="14px" />
-		</div>
-	{/if}
+	{#snippet children(triggerProps)}
+		<Button
+			size="xs"
+			shape="square"
+			emphasis={isLocked ? 'primary' : 'secondary'}
+			class={css({
+				width: '24px',
+				height: '24px'
+			})}
+			onclick={toggleLock}
+			data-testid="lock-toggle-button"
+			aria-label={formatString('{action} branch {name}', {
+				action: isLocked ? 'unlock' : 'lock',
+				name: branch
+			})}
+			{disabled}
+			{...triggerProps}
+		>
+			{#if isLocked}
+				<div data-testid="lock-icon">
+					<Icon icon="lucide:lock" width="14px" height="14px" />
+				</div>
+			{/if}
 
-	{#if !isLocked}
-		<div data-testid="unlock-icon">
-			<Icon icon="lucide:lock-open" width="14px" height="14px" />
-		</div>
-	{/if}
+			{#if !isLocked}
+				<div data-testid="unlock-icon">
+					<Icon icon="lucide:lock-open" width="14px" height="14px" />
+				</div>
+			{/if}
 
-	<span class={visuallyHidden()}>
-		{formatString('{action} branch {name}', {
-			action: isLocked ? 'unlock' : 'lock',
-			name: branch
-		})}
-	</span>
-</Button>
+			<span class={visuallyHidden()}>
+				{formatString('{action} branch {name}', {
+					action: isLocked ? 'unlock' : 'lock',
+					name: branch
+				})}
+			</span>
+		</Button>
+	{/snippet}
+</Tooltip>

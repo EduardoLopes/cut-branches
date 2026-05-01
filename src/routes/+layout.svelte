@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../styles/app.css';
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
+	import Toaster from '@pindoba/svelte-toast';
 	import { type Snippet } from 'svelte';
 	import Providers from '$components/providers.svelte';
 	import RedirectToGetStarted from '$domains/onboarding/components/redirect-to-get-started.svelte';
@@ -38,4 +39,5 @@
 
 		<Footer />
 	</div>
+	<Toaster position="top-right" enableHistory />
 </Providers>

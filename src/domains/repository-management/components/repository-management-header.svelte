@@ -4,9 +4,10 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
+	import Popover from '@pindoba/svelte-popover';
 	import Radio from '@pindoba/svelte-radio';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { onMount } from 'svelte';
-	import Popover from '../../../../../pindoba/packages/ui/svelte/popover/dist/popover.svelte';
 	import { createGetBranchesQuery } from '../core/composables/queries/create-get-branches-query';
 	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
@@ -119,7 +120,7 @@
 					passThrough={{
 						root: {
 							style: css.raw({
-								outlineColor: ' neutral.border.muted'
+								outlineColor: 'neutral.border.muted'
 							})
 						}
 					}}
@@ -179,9 +180,19 @@
 			}}
 		>
 			{#snippet trigger(props)}
-				<Button emphasis="secondary" shape="square" data-testid="update-button" {...props}>
-					<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
-				</Button>
+				<Tooltip content="Repository options">
+					{#snippet children(tipProps)}
+						<Button
+							emphasis="secondary"
+							shape="square"
+							data-testid="update-button"
+							{...props}
+							{...tipProps}
+						>
+							<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
+						</Button>
+					{/snippet}
+				</Tooltip>
 			{/snippet}
 
 			<UpdateRepositoryButton {repositoryId} />

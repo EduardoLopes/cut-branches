@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
@@ -51,6 +52,7 @@
 				label: repo.branchesCount > 0 ? `${repo.name} (${repo.branchesCount})` : repo.name,
 				href: `/repos/${repo.id}`,
 				'data-testid': `repository-${repo.name}-${repo.id}`,
+				leading: repoIcon as NavigationItem['leading'],
 				// Prefetch repository data on hover for instant navigation
 				onmouseenter: () => prefetchRepositoryData(repo.id)
 			})
@@ -64,6 +66,10 @@
 		eventBus.publish(Events.REPOSITORY_ADD_REQUESTED);
 	}
 </script>
+
+{#snippet repoIcon()}
+	<Icon icon="lucide:folder-git-2" width="14px" height="14px" />
+{/snippet}
 
 <div
 	class={css({

@@ -1,10 +1,12 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
+	import Banner from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
+	import Progress from '@pindoba/svelte-progress';
 	import { listen } from '@tauri-apps/api/event';
 	import { onMount, onDestroy } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
@@ -538,30 +540,10 @@
 	}}
 >
 	{#if currentConflictBranch}
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 'md',
-				padding: 'md',
-				backgroundColor: 'warning.50',
-				borderRadius: 'md'
-			})}
-		>
-			<div
-				class={css({
-					fontWeight: 'medium',
-					fontSize: 'lg',
-					display: 'flex',
-					alignItems: 'center',
-					gap: 'sm',
-					color: 'warning.800'
-				})}
-			>
+		<Banner feedback="warning" heading="Branch Name Conflict">
+			{#snippet leading()}
 				<Icon icon="ion:alert-circle" width="24px" height="24px" />
-				Branch Name Conflict
-			</div>
-
+			{/snippet}
 			<p>
 				A branch named <strong>"{currentConflictBranch}"</strong> already exists. How would you like
 				to proceed?
@@ -591,7 +573,7 @@
 					Skip
 				</Button>
 			</div>
-		</div>
+		</Banner>
 	{:else}
 		<p data-testid="restore-branch-dialog-text">
 			{#if isProcessing && !isRestorationComplete}
@@ -643,32 +625,7 @@
 					>
 				{/if}
 			</div>
-			<div
-				class={css({
-					width: '100%',
-					height: '12px',
-					borderStyle: 'solid',
-					borderWidth: '1px',
-					borderColor: 'neutral.400',
-					_light: {
-						backgroundColor: 'neutral.50'
-					},
-					_dark: {
-						backgroundColor: 'neutral.200'
-					},
-					borderRadius: 'full',
-					overflow: 'hidden'
-				})}
-			>
-				<div
-					class={css({
-						height: '100%',
-						backgroundColor: 'primary.800'
-					})}
-					style={`width: ${progress}%`}
-					data-testid="progress-bar"
-				></div>
-			</div>
+			<Progress value={progress} max={100} feedback="primary" data-testid="progress-bar" />
 		</div>
 	{/if}
 

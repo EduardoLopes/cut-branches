@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
@@ -16,7 +17,18 @@
 	}
 </script>
 
-<Button emphasis="ghost" size="md" onclick={navigateBack} shape="square" data-testid="back-button">
-	<Icon icon="lucide:arrow-left" width="24px" height="24px" />
-	<span class={visuallyHidden()}>Back</span>
-</Button>
+<Tooltip content="Back">
+	{#snippet children(triggerProps)}
+		<Button
+			emphasis="ghost"
+			size="md"
+			onclick={navigateBack}
+			shape="square"
+			data-testid="back-button"
+			{...triggerProps}
+		>
+			<Icon icon="lucide:arrow-left" width="24px" height="24px" />
+			<span class={visuallyHidden()}>Back</span>
+		</Button>
+	{/snippet}
+</Tooltip>

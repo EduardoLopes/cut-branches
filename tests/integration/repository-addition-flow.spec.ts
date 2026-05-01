@@ -1,8 +1,8 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { notifications } from '$domains/notifications/store/notifications.svelte';
 import AddButton from '$domains/repository-management/components/add-button.svelte';
 import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
+import { notifications } from '$services/notifications/notifications.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock navigation
@@ -16,7 +16,7 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 }));
 
 // Mock notifications
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
 		push: vi.fn()
 	}

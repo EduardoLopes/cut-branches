@@ -1,13 +1,26 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
+	import Attachment from '@pindoba/svelte-attachment';
+	import Button from '@pindoba/svelte-button';
 	import Panel from '@pindoba/svelte-panel';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
+	import { $unreadCount as unreadCountAtom, toggleCenter } from '@pindoba/svelte-toast';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
-	import NotificationsPopover from '$domains/notifications/components/notifications-popover.svelte';
 	import { globalStore } from '$store/global-store.svelte';
 	import { css } from '@pindoba/styled-system/css';
-	import { spacer } from '@pindoba/styled-system/patterns';
+	import { spacer, visuallyHidden } from '@pindoba/styled-system/patterns';
+
+	let unread = $state(0);
+	let ringKey = $state(0);
+	$effect(() =>
+		unreadCountAtom.subscribe((v) => {
+			if (v > unread) ringKey += 1;
+			unread = v;
+		})
+	);
 
 	let now = $state(Date.now());
 	let intervalID = 0;
@@ -132,7 +145,64 @@
 				{/key}
 			</time>
 		{/if}
-		<NotificationsPopover />
+		<Tooltip content="Notifications">
+			{#snippet children(triggerProps)}
+				<Attachment placement="top-end" anchor="corner" shape="rect">
+					<Button
+						emphasis="ghost"
+						size="xs"
+						shape="square"
+						onclick={() => toggleCenter()}
+						data-testid="notifications-trigger"
+						aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
+						{...triggerProps}
+					>
+						{#key ringKey}
+							<span
+								class={css({
+									display: 'inline-flex',
+									transformOrigin: 'top center',
+									animation:
+										unread > 0
+											? 'bellRing 800ms ease-in-out, pulse 2s ease-in-out 800ms infinite'
+											: 'none'
+								})}
+								aria-hidden="true"
+							>
+								<Icon icon="mingcute:notification-fill" width="12px" height="12px" />
+							</span>
+						{/key}
+						<span class={visuallyHidden()}>
+							{unread > 0 ? `${unread} unread notifications` : 'Notifications'}
+						</span>
+					</Button>
+					{#snippet content()}
+						{#if unread > 0}
+							<span
+								class={css({
+									minWidth: '14px',
+									height: '14px',
+									px: '4xs',
+									borderRadius: 'full',
+									background: 'danger.surface.deep',
+									color: 'danger.text.contrast',
+									fontSize: '9px',
+									fontWeight: 'bold',
+									lineHeight: '1',
+									display: 'inline-flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									pointerEvents: 'none'
+								})}
+								data-testid="notifications-badge"
+							>
+								{unread > 99 ? '99+' : unread}
+							</span>
+						{/if}
+					{/snippet}
+				</Attachment>
+			{/snippet}
+		</Tooltip>
 		{#if import.meta.env.DEV}
 			<div
 				class={css({

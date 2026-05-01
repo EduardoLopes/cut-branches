@@ -8,7 +8,9 @@ const host = process.env.TAURI_DEV_HOST;
 
 const PINDOBA_PACKAGES = {
 	'@pindoba/svelte-alert': 'ui/svelte/alert',
+	'@pindoba/svelte-attachment': 'ui/svelte/attachment',
 	'@pindoba/svelte-badge': 'ui/svelte/badge',
+	'@pindoba/svelte-banner': 'ui/svelte/banner',
 	'@pindoba/svelte-button': 'ui/svelte/button',
 	'@pindoba/svelte-checkbox': 'ui/svelte/checkbox',
 	'@pindoba/svelte-dialog': 'ui/svelte/dialog',
@@ -18,10 +20,14 @@ const PINDOBA_PACKAGES = {
 	'@pindoba/svelte-navigation': 'ui/svelte/navigation',
 	'@pindoba/svelte-panel': 'ui/svelte/panel',
 	'@pindoba/svelte-popover': 'ui/svelte/popover',
+	'@pindoba/svelte-progress': 'ui/svelte/progress',
 	'@pindoba/svelte-radio': 'ui/svelte/radio',
 	'@pindoba/svelte-select': 'ui/svelte/select',
+	'@pindoba/svelte-stamp': 'ui/svelte/stamp',
+	'@pindoba/svelte-tooltip': 'ui/svelte/tooltip',
 	'@pindoba/svelte-pagination': 'blocks/svelte/pagination',
-	'@pindoba/svelte-theme-mode-select': 'blocks/svelte/theme-mode-select'
+	'@pindoba/svelte-theme-mode-select': 'blocks/svelte/theme-mode-select',
+	'@pindoba/svelte-toast': 'blocks/svelte/toast'
 };
 
 export default defineConfig(({ mode }) => {

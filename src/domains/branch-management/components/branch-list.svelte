@@ -4,6 +4,8 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
+	import Stamp from '@pindoba/svelte-stamp';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { getSearchBranchesStore } from '../store/search-branches.svelte';
 	import { page } from '$app/state';
@@ -24,7 +26,6 @@
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
-	import { token } from '@pindoba/styled-system/tokens';
 
 	interface Props {
 		repositoryID?: string;
@@ -188,23 +189,27 @@
 									loading={switchBranchMutation.variables?.branch === branch.getName() &&
 										switchBranchMutation.isPending}
 								>
-									<Button
-										size="xs"
-										shape="square"
-										emphasis="secondary"
-										disabled={switchBranchMutation.variables?.branch !== branch.getName() &&
-											switchBranchMutation.isPending}
-										class={css({
-											width: '24px',
-											height: '24px'
-										})}
-										onclick={() => handleSwitchBranch(branch.getName())}
-										data-testid="switch-button"
-										title="Set as current"
-									>
-										<Icon icon="lucide:map-pin" width="14px" height="14px" />
-										<span class={visuallyHidden()}>Set as current</span>
-									</Button>
+									<Tooltip content="Set as current">
+										{#snippet children(triggerProps)}
+											<Button
+												size="xs"
+												shape="square"
+												emphasis="secondary"
+												disabled={switchBranchMutation.variables?.branch !== branch.getName() &&
+													switchBranchMutation.isPending}
+												class={css({
+													width: '24px',
+													height: '24px'
+												})}
+												onclick={() => handleSwitchBranch(branch.getName())}
+												data-testid="switch-button"
+												{...triggerProps}
+											>
+												<Icon icon="lucide:map-pin" width="14px" height="14px" />
+												<span class={visuallyHidden()}>Set as current</span>
+											</Button>
+										{/snippet}
+									</Tooltip>
 								</Loading>
 							{/if}
 
@@ -223,14 +228,13 @@
 								gap: 'sm'
 							})}
 						>
-							<span title="Current branch">
-								<Icon
-									icon="lucide:map-pin"
-									width="24px"
-									height="24px"
-									color={token('colors.primary.text')}
-								/>
-							</span>
+							<Tooltip content="Current branch">
+								{#snippet children(triggerProps)}
+									<Stamp feedback="primary" size="sm" shape="circle" {...triggerProps}>
+										<Icon icon="lucide:map-pin" width="10px" height="10px" />
+									</Stamp>
+								{/snippet}
+							</Tooltip>
 							{#if allowLocking}
 								<LockBranchToggle {repositoryID} branch={branch.getName()} />
 							{/if}

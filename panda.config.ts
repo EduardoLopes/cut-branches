@@ -71,6 +71,14 @@ export default defineConfig({
 					'0%, 100%': { opacity: '1', transform: 'scale(1)' },
 					'50%': { opacity: '0.8', transform: 'scale(1.05)' }
 				},
+				bellRing: {
+					'0%, 100%': { transform: 'rotate(0deg)' },
+					'15%': { transform: 'rotate(14deg)' },
+					'30%': { transform: 'rotate(-12deg)' },
+					'45%': { transform: 'rotate(10deg)' },
+					'60%': { transform: 'rotate(-8deg)' },
+					'75%': { transform: 'rotate(4deg)' }
+				},
 				fadeIn: {
 					from: { opacity: '0', transform: 'translateY(20px)' },
 					to: { opacity: '1', transform: 'translateY(0)' }

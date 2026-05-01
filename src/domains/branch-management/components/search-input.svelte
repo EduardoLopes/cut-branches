@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Input, { type InputProps } from '@pindoba/svelte-input';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import type { Repository } from '$services/common';
 	import { createToggle } from '$utils/svelte-runes-utils';
@@ -55,34 +56,31 @@
 		{...rest}
 	>
 		{#snippet fieldSuffix()}
-			<Button
-				size="sm"
-				shape="square"
-				onclick={handleClear}
-				disabled={!search?.state}
-				passThrough={{
-					root: {
-						style: css.raw({
-							borderLeftRadius: '0',
-							borderRightRadius: 'md',
-							height: '30px',
-							boxShadow: 'none'
-						})
-					}
-				}}
-				data-testid="clear-search-button"
-			>
-				<div
-					class={css({
-						display: 'flex',
-						alignItems: 'center',
-						gap: 'xs'
-					})}
-				>
-					<Icon icon="mdi:clear" width="16px" height="16px" />
-					<span class={visuallyHidden()}>Clear search</span>
-				</div>
-			</Button>
+			<Tooltip content="Clear search">
+				{#snippet children(triggerProps)}
+					<Button
+						size="sm"
+						shape="square"
+						onclick={handleClear}
+						disabled={!search?.state}
+						passThrough={{
+							root: {
+								style: css.raw({
+									borderLeftRadius: '0',
+									borderRightRadius: 'md',
+									height: '30px',
+									boxShadow: 'none'
+								})
+							}
+						}}
+						data-testid="clear-search-button"
+						{...triggerProps}
+					>
+						<Icon icon="mdi:clear" width="16px" height="16px" />
+						<span class={visuallyHidden()}>Clear search</span>
+					</Button>
+				{/snippet}
+			</Tooltip>
 		{/snippet}
 	</Input>
 </Group>
