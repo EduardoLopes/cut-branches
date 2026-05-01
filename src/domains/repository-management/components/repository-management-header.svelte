@@ -59,14 +59,12 @@
 		justifyContent: 'space-between',
 		top: '0',
 		zIndex: '20',
-		flexShrink: '0',
-		px: 'md',
-		pt: 'md'
+		flexShrink: '0'
 	})}
 >
 	{#if getRepositoryQuery.isLoading}
 		<Loading
-			isLoading={getRepositoryQuery.isLoading}
+			loading={getRepositoryQuery.isLoading}
 			passThrough={{
 				root: {
 					style: css.raw({
@@ -79,14 +77,8 @@
 						right: '0',
 						bottom: '0'
 					})
-				},
-				overlay: {
-					style: css.raw({
-						borderRadius: '0'
-					})
 				}
 			}}
-			fillParent
 		/>
 	{/if}
 
@@ -101,7 +93,9 @@
 			<h2
 				class={css({
 					textStyle: '4xl',
-					minHeight: '25px'
+					minHeight: '25px',
+					px: 'sm',
+					pt: 'sm'
 				})}
 				data-testid="repository-name"
 			>
@@ -117,19 +111,15 @@
 				class={css({
 					display: 'flex',
 					alignItems: 'flex-end',
-					justifyContent: 'flex-end'
+					marginLeft: 'sm'
 				})}
 			>
 				<Group
-					emphasis="sunken"
-					direction="horizontal"
-					noBorderRadius="bottom"
-					bordered="default"
-					radius="md"
+					orientation="horizontal"
 					passThrough={{
 						root: {
 							style: css.raw({
-								borderBottom: 'none'
+								outlineColor: ' neutral.border.muted'
 							})
 						}
 					}}
@@ -139,6 +129,7 @@
 						name="repository-management"
 						value="active-branches"
 						appearance="tab-horizontal"
+						background="surface.deep"
 						checked={selectedTab === 'active-branches'}
 						role="tab"
 						onchange={goToBranches}
@@ -151,6 +142,7 @@
 						value="restore"
 						appearance="tab-horizontal"
 						feedback="danger"
+						background="surface.deep"
 						checked={selectedTab === 'deleted-branches'}
 						role="tab"
 						onchange={goToDeletedBranches}
@@ -161,31 +153,39 @@
 			</div>
 		{/key}
 	</div>
-	<Popover
-		showCloseButton={false}
-		emphasis="sunken"
-		passThrough={{
-			root: {
-				style: css.raw({
-					width: '180px'
-				})
-			},
-			content: {
-				style: css.raw({
-					p: 'xs',
-					pt: 'xs',
-					gap: '2xs'
-				})
-			}
-		}}
+	<div
+		class={css({
+			padding: 'sm'
+		})}
 	>
-		{#snippet trigger(props)}
-			<Button emphasis="ghost" size="md" shape="square" data-testid="update-button" {...props}>
-				<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
-			</Button>
-		{/snippet}
+		<Popover
+			showCloseButton={false}
+			background="surface.deep"
+			passThrough={{
+				root: {
+					style: css.raw({
+						width: '180px',
+						borderRadius: 'sm'
+					})
+				},
+				content: {
+					style: css.raw({
+						p: 'xs',
+						pt: 'xs',
+						gap: '2xs',
+						flexDirection: 'column'
+					})
+				}
+			}}
+		>
+			{#snippet trigger(props)}
+				<Button emphasis="secondary" shape="square" data-testid="update-button" {...props}>
+					<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
+				</Button>
+			{/snippet}
 
-		<UpdateRepositoryButton {repositoryId} />
-		<RemoveRepositoryModal {repositoryId} />
-	</Popover>
+			<UpdateRepositoryButton {repositoryId} />
+			<RemoveRepositoryModal {repositoryId} />
+		</Popover>
+	</div>
 </div>

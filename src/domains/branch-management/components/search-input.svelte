@@ -2,14 +2,14 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
-	import TextInput, { type TextInputProps } from '@pindoba/svelte-text-input';
+	import Input, { type InputProps } from '@pindoba/svelte-input';
 	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
 	import type { Repository } from '$services/common';
 	import { createToggle } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
-	interface Props extends TextInputProps {
+	interface Props extends InputProps {
 		repository: Repository | undefined;
 		width?: string;
 		branchContext?: 'active' | 'deleted';
@@ -42,11 +42,11 @@
 </script>
 
 <Group>
-	<TextInput
+	<Input
 		class={css({
 			width
 		})}
-		controlSize="sm"
+		size="sm"
 		oninput={handleInput}
 		autocorrect="off"
 		{placeholder}
@@ -84,5 +84,5 @@
 				</div>
 			</Button>
 		{/snippet}
-	</TextInput>
+	</Input>
 </Group>

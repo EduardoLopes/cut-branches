@@ -156,7 +156,8 @@
 		content: {
 			style: css.raw({
 				padding: 'none',
-				gap: 'none'
+				gap: 'none',
+				flexDirection: 'column'
 			})
 		}
 	}}
@@ -242,7 +243,7 @@
 							css.raw({
 								position: 'sticky',
 								top: '0',
-								background: 'neutral.alpha.50',
+								background: 'neutral.50/50',
 								px: 'md',
 								py: 'xs',
 								margin: '0',

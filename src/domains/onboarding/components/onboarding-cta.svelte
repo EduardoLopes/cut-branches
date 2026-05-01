@@ -84,7 +84,7 @@
 			}
 		})}
 	>
-		<Loading isLoading={createRepositoryMutation.isPending}>
+		<Loading loading={createRepositoryMutation.isPending}>
 			<Button onclick={handleAddClick} size="lg" emphasis="primary">
 				<div
 					class={css({

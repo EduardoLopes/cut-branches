@@ -527,6 +527,15 @@
 	class={css({
 		width: '600px'
 	})}
+	passThrough={{
+		content: {
+			style: css.raw({
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 'md'
+			})
+		}
+	}}
 >
 	{#if currentConflictBranch}
 		<div
@@ -732,7 +741,7 @@
 					})}
 				>
 					<Loading
-						isLoading={currentConflictBranch !== branchName &&
+						loading={currentConflictBranch !== branchName &&
 							isProcessing &&
 							!restorationResults[branchName] &&
 							!pendingConflictBranches.includes(branchName)}
@@ -741,15 +750,19 @@
 								style: css.raw({
 									width: '100%'
 								})
-							},
-							overlay: {
-								style: css.raw({
-									boxShadow: 'none'
-								})
 							}
 						}}
 					>
-						<Group direction="vertical">
+						<Group
+							orientation="vertical"
+							passThrough={{
+								root: {
+									style: css.raw({
+										width: 'full'
+									})
+								}
+							}}
+						>
 							<BranchCard {branch} />
 							{#if !isProcessing && existingBranches.includes(branchName)}
 								<div
@@ -843,7 +856,7 @@
 				Cancel
 			</Button>
 			{#if !currentConflictBranch}
-				<Loading isLoading={isProcessing && !isRestorationComplete}>
+				<Loading loading={isProcessing && !isRestorationComplete}>
 					<Button emphasis="primary" autofocus onclick={handleRestore} data-testid="restore-button">
 						Restore
 					</Button>

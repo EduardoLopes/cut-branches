@@ -111,7 +111,7 @@ export default defineConfig({
 		}
 	},
 
-	presets: ['@pandacss/dev/presets', preset],
+	presets: ['@pandacss/dev/presets', preset()],
 	jsxFramework: 'svelte',
 
 	// The output directory for your css system

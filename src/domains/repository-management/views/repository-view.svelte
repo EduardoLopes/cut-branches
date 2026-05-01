@@ -15,8 +15,7 @@
 	class={css({
 		overflow: 'hidden',
 		position: 'relative',
-		height: 'calc(100vh - 30px)',
-		pl: 0
+		height: 'calc(100vh - 30px)'
 	})}
 >
 	<main
@@ -26,7 +25,7 @@
 			overflow: 'hidden',
 			position: 'relative',
 			height: '100%',
-			background: 'neutral.background.surface'
+			background: 'neutral.surface.step.1'
 		})}
 	>
 		<RepositoryManagementHeader {repositoryId} />

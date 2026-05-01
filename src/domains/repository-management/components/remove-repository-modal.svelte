@@ -102,6 +102,15 @@
 		aria-label="Remove repository"
 		aria-describedby="Remove repository"
 		data-testid="remove-modal"
+		passThrough={{
+			content: {
+				style: css.raw({
+					display: 'flex',
+					flexDirection: 'column',
+					gap: 'md'
+				})
+			}
+		}}
 	>
 		<p>
 			Are you sure you want to remove the repository <strong

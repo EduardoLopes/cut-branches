@@ -48,12 +48,9 @@
 		const mappedItems = repositories.map(
 			(repo): NavigationItem => ({
 				id: repo.id,
-				label: repo.name,
+				label: repo.branchesCount > 0 ? `${repo.name} (${repo.branchesCount})` : repo.name,
 				href: `/repos/${repo.id}`,
-				badge: {
-					children: repo.branchesCount > 0 ? `${repo.branchesCount}` : undefined,
-					'data-testid': `repository-${repo.name}-badge-${repo.id}`
-				},
+				'data-testid': `repository-${repo.name}-${repo.id}`,
 				// Prefetch repository data on hover for instant navigation
 				onmouseenter: () => prefetchRepositoryData(repo.id)
 			})
@@ -81,7 +78,7 @@
 			gap: 'xs',
 			borderRadius: 'md',
 			padding: 'xs',
-			background: 'neutral.background.sunken'
+			background: 'neutral.surface.deep'
 		})}
 	>
 		<div
@@ -119,11 +116,14 @@
 			/>
 		</div>
 		<Loading
-			isLoading={repositoriesQuery.isLoading || isAddingRepository}
+			loading={repositoriesQuery.isLoading || isAddingRepository}
 			passThrough={{
 				root: {
 					style: css.raw({
-						width: 'full'
+						width: 'full',
+						maxHeight: 'calc(100vh - 146px)',
+						overflowY: 'auto',
+						backdropFilter: 'none'
 					})
 				}
 			}}
@@ -134,14 +134,6 @@
 					activeItem={page.params.id}
 					direction="vertical"
 					passThrough={{
-						root: {
-							style: css.raw({
-								maxHeight: 'calc(100vh - 146px)',
-								overflowY: 'auto',
-								backdropFilter: 'none',
-								padding: '0'
-							})
-						},
 						item: {
 							style: css.raw({
 								pr: '2xs'

@@ -66,7 +66,7 @@
 				alignItems: 'center',
 				gap: '2xs',
 				pindobaTransition: 'fast',
-				color: 'neutral.900'
+				color: 'neutral.text.muted'
 			})}
 			title={safeFormatDate(commit.getDate())}
 			data-testid="commit-date"

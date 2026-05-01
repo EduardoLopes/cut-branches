@@ -40,14 +40,14 @@
 				background:
 					'linear-gradient(135deg, token(colors.primary.100) 0%, token(colors.primary.300) 50%, token(colors.success.200) 100%)',
 				border: '1px solid',
-				borderColor: 'primary.alpha.200',
+				borderColor: 'primary.200/50',
 				overflow: 'hidden',
 				transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
 				color: 'primary.800',
 				_hover: {
 					transform: 'scale(1.08) rotate(5deg) translateY(-70px)',
 					border: '1px solid',
-					borderColor: 'primary.alpha.600',
+					borderColor: 'primary.600/50',
 					color: 'primary.800.contrast'
 				},
 				'&::before': {

@@ -32,5 +32,4 @@
 	});
 </script>
 
-<Loading isLoading={repositoriesQuery.isPending || repositoriesQuery.isLoading} fillParent
-></Loading>
+<Loading loading={repositoriesQuery.isPending || repositoriesQuery.isLoading}></Loading>

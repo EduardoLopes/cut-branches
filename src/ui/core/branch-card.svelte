@@ -45,24 +45,23 @@
 			flexDirection: 'column',
 			borderRadius: 'md',
 			borderWidth: '1px',
-			borderColor: 'colorPalette.border',
+			borderColor: 'colorPalette.border.muted',
 			colorPalette: 'neutral',
 			p: 'md',
 			gap: 'md',
-			background: 'neutral.background.surface',
+			background: 'neutral.surface.soft',
 			'&.disabled, &.locked': {
 				opacity: 0.5,
 				pointerEvents: 'none',
 				filter: 'grayscale(1)'
 			},
 			'&.selected': {
-				borderColor: 'danger.800',
+				borderColor: 'danger',
 				borderStyle: 'dashed'
 			},
 			'&.current': {
-				borderColor: 'primary.400'
-			},
-			pindobaTransition: 'fast'
+				borderColor: 'primary'
+			}
 		})
 	]}
 	class:disabled
@@ -80,7 +79,7 @@
 			}),
 			isVisuallySelected &&
 				css({
-					color: 'danger.800'
+					color: 'danger'
 				})
 		]}
 	>
@@ -138,7 +137,7 @@
 				color: 'danger.text',
 				pt: 'xs',
 				borderTopWidth: '1px',
-				borderTopColor: 'neutral.300'
+				borderTopColor: 'neutral.border.muted'
 			})}
 			data-testid="deleted-at-info"
 		>

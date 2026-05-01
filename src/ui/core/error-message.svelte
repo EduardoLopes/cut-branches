@@ -15,7 +15,7 @@
 		message,
 		description,
 		icon = 'material-symbols:dangerous-rounded',
-		iconColor = token('colors.danger.accent')
+		iconColor = token('colors.danger.text.accent')
 	}: Props = $props();
 </script>
 

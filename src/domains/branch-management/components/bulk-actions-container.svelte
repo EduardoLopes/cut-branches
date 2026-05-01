@@ -15,7 +15,8 @@
 <div
 	class={css(
 		translucent.raw({
-			blur: 'md'
+			blur: 'md',
+			background: 'neutral.surface.soft/50 !important'
 		}),
 		css.raw({
 			display: 'flex',
@@ -26,7 +27,8 @@
 			flexShrink: '0',
 			position: 'sticky',
 			top: '0',
-			borderBottom: '1px solid token(colors.neutral.border)'
+			borderTop: '1px solid token(colors.neutral.border.muted)',
+			borderBottom: '1px solid token(colors.neutral.border.muted)'
 		})
 	)}
 	data-testid="bulk-actions-container"

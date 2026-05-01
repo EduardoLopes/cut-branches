@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props extends ButtonProps {
 		icon?: string;
@@ -60,7 +60,7 @@
 	}
 </script>
 
-<Loading isLoading={createRepositoryMutation.isPending}>
+<Loading loading={createRepositoryMutation.isPending}>
 	<Button onclick={handleAddClick} {size} {emphasis} {...props}>
 		<div
 			class={css({

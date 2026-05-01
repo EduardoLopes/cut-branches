@@ -30,9 +30,9 @@ export default defineConfig(({ mode }) => {
 
 	const pindobaAliases = useLocalPindoba
 		? Object.fromEntries(
-				Object.entries(PINDOBA_PACKAGES).map(([pkg, p]) => [
-					pkg,
-					path.resolve(__dirname, `../pindoba/packages/${p}/dist/index.js`)
+				Object.entries(PINDOBA_PACKAGES).flatMap(([pkg, p]) => [
+					[`${pkg}/`, path.resolve(__dirname, `../pindoba/packages/${p}/dist/`) + '/'],
+					[pkg, path.resolve(__dirname, `../pindoba/packages/${p}/dist/index.js`)]
 				])
 			)
 		: {};

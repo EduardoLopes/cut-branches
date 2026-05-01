@@ -15,7 +15,7 @@
 	const {
 		message,
 		icon = 'material-symbols:search-off',
-		iconColor = token('colors.danger.accent'),
+		iconColor = token('colors.danger.text.accent'),
 		testId
 	}: Props = $props();
 

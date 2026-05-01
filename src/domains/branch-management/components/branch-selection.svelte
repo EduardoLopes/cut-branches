@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { useBranchSelection } from '$domains/branch-management/core/composables/use-branch-selection.svelte';
 	import type { Repository } from '$services/common';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		repository: Repository | undefined;
@@ -42,6 +42,7 @@
 		>
 			<Checkbox
 				id="select-all"
+				size="lg"
 				bind:indeterminate={isIndeterminate}
 				onclick={selection.handleSelectAll}
 				bind:checked={isAllSelected}

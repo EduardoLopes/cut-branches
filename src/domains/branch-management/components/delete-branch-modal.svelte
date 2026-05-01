@@ -110,11 +110,20 @@
 	aria-describedby="Delete branches"
 	data-testid="delete-branch-dialog"
 	showCloseButton={!deleteMutation.isPending}
+	passThrough={{
+		content: {
+			style: css.raw({
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 'md'
+			})
+		}
+	}}
 >
 	<p data-testid="delete-branch-dialog-question">
 		Are you sure you want these branches from the repository <strong
 			class={css({
-				color: 'danger.800',
+				color: 'danger',
 				fontSize: 'lg'
 			})}>{repository?.name}</strong
 		>?
@@ -125,12 +134,14 @@
 		aria-label="Branches to delete"
 		aria-describedby="Branches to delete"
 		radius="md"
+		padding="none"
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
 			gap: 'sm',
 			maxHeight: '50vh',
-			overflowY: 'auto'
+			overflowY: 'auto',
+			py: '1px'
 		})}
 	>
 		{#each branches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
@@ -151,7 +162,7 @@
 			data-testid="cancel-button"
 			disabled={deleteMutation.isPending}>Cancel</Button
 		>
-		<Loading isLoading={deleteMutation.isPending}
+		<Loading loading={deleteMutation.isPending}
 			><Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
 				>Delete</Button
 			></Loading

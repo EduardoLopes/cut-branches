@@ -30,10 +30,11 @@
 </script>
 
 <Panel
-	emphasis="sunken"
+	background="surface.deep"
+	radius="none"
 	class={css({
 		marginTop: 'auto',
-		borderTop: '1px solid token(colors.neutral.border)',
+		borderTop: '1px solid token(colors.neutral.border.muted)',
 		display: 'flex',
 		flexDirection: 'row',
 		p: 'none',
@@ -44,7 +45,7 @@
 	data-testid="footer"
 >
 	<Panel
-		emphasis="surface"
+		background="surface.soft"
 		radius="none"
 		padding="none"
 		class={css({
@@ -53,9 +54,9 @@
 			justifyContent: 'center',
 			alignItems: 'center',
 			height: 'calc((token(spacing.sm)) * 2.5)',
-			width: '260px',
+			width: '261px',
 			alignSelf: 'stretch',
-			borderRight: '1px solid token(colors.neutral.border)',
+			borderRight: '1px solid token(colors.neutral.border.muted)',
 			p: 'token(spacing.2xs)'
 		})}
 		data-testid="version-container"
@@ -93,7 +94,7 @@
 	</Panel>
 	<div class={spacer()}></div>
 	<Panel
-		emphasis="transparent"
+		background="transparent"
 		class={css({
 			display: 'flex',
 			flexDirection: 'row',

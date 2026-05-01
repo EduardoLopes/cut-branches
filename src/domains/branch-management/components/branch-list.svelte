@@ -133,7 +133,7 @@
 		display: 'flex',
 		flexDirection: 'column',
 		flex: 1,
-		background: 'neutral.background.sunken'
+		background: 'neutral.surface.deep'
 	})}
 >
 	<div
@@ -171,6 +171,7 @@
 						>
 							{#if allowSelection && !branch.getIsLocked()}
 								<Checkbox
+									size="lg"
 									id={`checkbox-${branch.getName()}`}
 									onclick={() => handleToggleSelect(branch)}
 									checked={branch.getIsSelected()}
@@ -184,7 +185,7 @@
 
 							{#if allowSetCurrent}
 								<Loading
-									isLoading={switchBranchMutation.variables?.branch === branch.getName() &&
+									loading={switchBranchMutation.variables?.branch === branch.getName() &&
 										switchBranchMutation.isPending}
 								>
 									<Button
@@ -275,14 +276,14 @@
 			class={css(
 				translucent.raw({
 					blur: 'md',
-					background: 'neutral.alpha.50 !important'
+					background: 'neutral.surface.soft/50 !important'
 				}),
 				css.raw({
 					p: 'md',
 					bottom: '0',
 					position: 'sticky',
 					mt: 'auto',
-					borderTop: '1px solid token(colors.neutral.border)'
+					borderTop: '1px solid token(colors.neutral.border.muted)'
 				})
 			)}
 		>

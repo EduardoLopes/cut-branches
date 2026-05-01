@@ -60,7 +60,7 @@
 	}
 </script>
 
-<Loading isLoading={isRefreshing} passThrough={{ root: { style: css.raw({ width: 'full' }) } }}>
+<Loading loading={isRefreshing} passThrough={{ root: { style: css.raw({ width: 'full' }) } }}>
 	<Button
 		emphasis="secondary"
 		size="sm"
