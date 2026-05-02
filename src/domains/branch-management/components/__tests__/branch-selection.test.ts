@@ -336,7 +336,7 @@ describe('BranchSelection Component', () => {
 
 			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
 
-			const checkbox = screen.getByTestId('select-all-checkbox');
+			const checkbox = screen.getByRole('checkbox', { name: /select all/i });
 			expect(checkbox).toBeChecked();
 		});
 
@@ -346,7 +346,7 @@ describe('BranchSelection Component', () => {
 
 			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
 
-			const checkbox = screen.getByTestId('select-all-checkbox');
+			const checkbox = screen.getByRole('checkbox', { name: /select all/i });
 			expect(checkbox).toHaveAttribute('aria-checked', 'mixed');
 		});
 	});
