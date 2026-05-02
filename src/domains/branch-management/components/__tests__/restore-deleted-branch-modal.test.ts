@@ -83,7 +83,8 @@ describe('RestoreDeletedBranchModal', () => {
 		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 		const button = screen.getByTestId('open-restore-dialog-button');
 		expect(button).toBeInTheDocument();
-		expect(button).toHaveTextContent('Restore (1)');
+		expect(button).toHaveTextContent('Restore');
+		expect(button).toHaveTextContent('1');
 	});
 
 	test('disables the trigger when no branches are selected', () => {

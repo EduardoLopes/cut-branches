@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
@@ -211,12 +212,17 @@
 	emphasis="primary"
 	size="sm"
 	disabled={selectedQuery.data?.branches.length === 0}
-	class={css({ gap: 'xs', display: 'flex', whiteSpace: 'nowrap' })}
+	class={css({ whiteSpace: 'nowrap' })}
 	onclick={() => {
 		open = true;
 	}}
 	data-testid="open-restore-dialog-button"
 >
-	<Icon icon="lucide:undo" width="16px" height="16px" />
-	Restore ({selectedQuery.data?.branches.length})
+	Restore
+	{#snippet leading()}
+		<Icon icon="lucide:undo" width="16px" height="16px" />
+	{/snippet}
+	{#snippet trailing()}
+		<Badge size="sm" emphasis="adaptive">{selectedQuery.data?.branches.length ?? 0}</Badge>
+	{/snippet}
 </Button>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
@@ -182,8 +183,11 @@
 	}}
 	data-testid="open-dialog-button"
 >
-	Delete ({selectedCount})
+	Delete
 	{#snippet leading()}
 		<Icon icon="ion:trash-outline" width="16px" height="16px" />
+	{/snippet}
+	{#snippet trailing()}
+		<Badge size="sm" emphasis="adaptive">{selectedCount}</Badge>
 	{/snippet}
 </Button>
