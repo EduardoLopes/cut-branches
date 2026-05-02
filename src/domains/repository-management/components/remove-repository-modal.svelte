@@ -154,5 +154,7 @@
 	}}
 >
 	Remove
-	<Icon icon="lucide:circle-x" width="16px" height="16px" />
+	{#snippet trailing()}
+		<Icon icon="lucide:circle-x" width="16px" height="16px" />
+	{/snippet}
 </Button>

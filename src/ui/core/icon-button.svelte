@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
-	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props extends ButtonProps {
@@ -20,20 +19,16 @@
 	}: Props = $props();
 </script>
 
-<Button {size} {emphasis} {...props}>
-	<div
-		class={css({
-			display: 'flex',
-			alignItems: 'center',
-			gap: 'sm'
-		})}
-	>
-		{#if visuallyHiddenLabel}
-			<span class={visuallyHidden()}>{label}</span>
-		{:else}
-			<span>{label}</span>
-		{/if}
-
+{#if visuallyHiddenLabel}
+	<Button {size} {emphasis} {...props}>
 		<Icon {icon} width="20px" height="20px" data-testid="icon-button-icon" />
-	</div>
-</Button>
+		<span class={visuallyHidden()}>{label}</span>
+	</Button>
+{:else}
+	<Button {size} {emphasis} {...props}>
+		{label}
+		{#snippet trailing()}
+			<Icon {icon} width="20px" height="20px" data-testid="icon-button-icon" />
+		{/snippet}
+	</Button>
+{/if}

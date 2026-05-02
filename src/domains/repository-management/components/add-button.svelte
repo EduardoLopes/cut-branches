@@ -6,7 +6,6 @@
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
 	import { notifications } from '$services/notifications/notifications.svelte';
-	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props extends ButtonProps {
@@ -61,21 +60,17 @@
 </script>
 
 <Loading loading={createRepositoryMutation.isPending}>
-	<Button onclick={handleAddClick} {size} {emphasis} {...props}>
-		<div
-			class={css({
-				display: 'flex',
-				alignItems: 'center',
-				gap: 'sm'
-			})}
-		>
-			{#if visuallyHiddenLabel}
-				<span class={visuallyHidden()}>Add a git repository</span>
-			{:else}
-				<span>Add a git repository</span>
-			{/if}
-
+	{#if visuallyHiddenLabel}
+		<Button onclick={handleAddClick} {size} {emphasis} {...props}>
 			<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
-		</div>
-	</Button>
+			<span class={visuallyHidden()}>Add a git repository</span>
+		</Button>
+	{:else}
+		<Button onclick={handleAddClick} {size} {emphasis} {...props}>
+			Add a git repository
+			{#snippet trailing()}
+				<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
+			{/snippet}
+		</Button>
+	{/if}
 </Loading>

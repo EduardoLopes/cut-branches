@@ -21,6 +21,7 @@
 					target: element,
 					props: {
 						size: 'sm',
+						emphasis: 'adaptive',
 						label: count > 0 ? String(count) : '',
 						'data-testid': `repository-${name}-badge-${id}`
 					}
@@ -93,8 +94,7 @@
 
 {#snippet repoIcon()}
 	<Stamp
-		emphasis="primary"
-		feedback="primary"
+		emphasis="ghost"
 		border="none"
 		background="transparent"
 		passThrough={{

@@ -175,8 +175,6 @@
 	size="sm"
 	disabled={selectedCount === 0}
 	class={css({
-		gap: 'xs',
-		display: 'flex',
 		whiteSpace: 'nowrap'
 	})}
 	onclick={() => {
@@ -184,6 +182,8 @@
 	}}
 	data-testid="open-dialog-button"
 >
-	<Icon icon="ion:trash-outline" width="16px" height="16px" />
 	Delete ({selectedCount})
+	{#snippet leading()}
+		<Icon icon="ion:trash-outline" width="16px" height="16px" />
+	{/snippet}
 </Button>

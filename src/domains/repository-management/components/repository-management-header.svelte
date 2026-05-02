@@ -135,7 +135,10 @@
 						role="tab"
 						onchange={goToBranches}
 					>
-						Branches <Badge size="sm">{activeBranchesCount}</Badge>
+						Branches
+						{#snippet trailing()}
+							<Badge size="sm">{activeBranchesCount}</Badge>
+						{/snippet}
 					</Radio>
 					<Radio
 						id="deleted-branches"
@@ -148,7 +151,10 @@
 						role="tab"
 						onchange={goToDeletedBranches}
 					>
-						Restore <Badge size="sm" feedback="danger">{deletedBranchesCount}</Badge>
+						Restore
+						{#snippet trailing()}
+							<Badge size="sm" feedback="danger">{deletedBranchesCount}</Badge>
+						{/snippet}
 					</Radio>
 				</Group>
 			</div>

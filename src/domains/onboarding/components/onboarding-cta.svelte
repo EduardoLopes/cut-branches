@@ -86,21 +86,15 @@
 	>
 		<Loading loading={createRepositoryMutation.isPending}>
 			<Button onclick={handleAddClick} size="lg" emphasis="primary">
-				<div
-					class={css({
-						display: 'flex',
-						alignItems: 'center',
-						gap: 'sm'
-					})}
-				>
+				Add Repository
+				{#snippet leading()}
 					<Icon
 						icon="material-symbols:add-circle-outline-rounded"
 						width="24px"
 						height="24px"
 						data-testid="onboarding-cta-icon"
 					/>
-					<span>Add Repository</span>
-				</div>
+				{/snippet}
 			</Button>
 		</Loading>
 	</div>

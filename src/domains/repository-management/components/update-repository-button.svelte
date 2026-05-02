@@ -70,16 +70,10 @@
 		aria-label="Update repository"
 		aria-describedby="Update repository"
 		data-testid="update-button"
-		passThrough={{
-			root: {
-				style: css.raw({
-					gap: 'xs',
-					justifyContent: 'space-between'
-				})
-			}
-		}}
 	>
 		Update
-		<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
+		{#snippet trailing()}
+			<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
+		{/snippet}
 	</Button>
 </Loading>
