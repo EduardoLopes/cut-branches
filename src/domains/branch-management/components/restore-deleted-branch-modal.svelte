@@ -1,24 +1,14 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Alert from '@pindoba/svelte-alert';
-	import Banner from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import Progress from '@pindoba/svelte-progress';
-	import { listen } from '@tauri-apps/api/event';
-	import { onMount, onDestroy } from 'svelte';
-	import Markdown from 'svelte-exmarkdown';
 	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
-	import {
-		createRestoreDeletedBranchMutation,
-		createRestoreDeletedBranchesMutation
-	} from '$domains/branch-management/core/composables/create-restore-deleted-branch-mutation';
-	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
-	import { notifications } from '$services/notifications/notifications.svelte';
-	import BranchCard from '$ui/core/branch-card.svelte';
-	import { formatString, ensureString } from '$utils/string-utils';
+	import { useRestoreFlow } from '../core/composables/use-restore-flow.svelte';
+	import RestoreBranchStatusCard from './restore-branch-status-card.svelte';
+	import RestoreConflictPrompt from './restore-conflict-prompt.svelte';
+	import RestoreProgressBar from './restore-progress-bar.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -32,490 +22,73 @@
 		repoId: repoId ?? '',
 		filters: { deletionStatus: 'active' }
 	}));
-
-	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === repoId));
-
-	// Get selected branches from database
 	const selectedQuery = createGetBranchesQuery(() => ({
 		repoId: repoId ?? '',
 		filters: { selectionStatus: 'selected', deletionStatus: 'deleted' }
 	}));
 
+	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === repoId));
+
 	let open = $state(false);
-	let isProcessing = $state(false);
-	// Extended type to include processing state
-	type ExtendedRestoreBranchResult = RestoreBranchResult & { processing: boolean };
-	let restorationResults = $state<Record<string, ExtendedRestoreBranchResult>>({});
-	let conflictResolutions = $state<Record<string, ConflictResolution>>({});
-	let currentConflictBranch = $state<string | null>(null);
+	let prefsInitialized = $state(false);
 
-	// New state for preemptive conflict resolution
-	let branchPreferences = $state<Record<string, ConflictResolution>>({});
-	let existingBranches = $state<string[]>([]);
-
-	// Track branches with pending conflicts
-	let pendingConflictBranches = $state<string[]>([]);
-
-	// Progress tracking
-	let progress = $state(0);
-	let startTime = $state<number | null>(null);
-	let estimatedTimeRemaining = $state<string | null>(null);
-	let processedCount = $state(0);
-	let initialSelectedCount = $state(0);
-
-	let unlisten: (() => void) | null = null;
-
-	onMount(async () => {
-		// Listen for branch restoration events
-		unlisten = await listen('branch-restored', () => {
-			// Instead of directly incrementing processedCount, we'll let updateProgress handle it
-			// based on the restorationResults
-			updateProgress();
-		});
-	});
-
-	onDestroy(() => {
-		if (unlisten) {
-			unlisten();
+	const flow = useRestoreFlow({
+		getRepository: () => {
+			if (!repository) return undefined;
+			return { id: repository.id, name: repository.name, path: repository.path };
+		},
+		getBranches: () => selectedQuery.data?.branches ?? [],
+		onComplete: () => {
+			open = false;
 		}
 	});
 
-	// Reset the state when the modal is closed
+	const existingBranches = $derived.by(() => {
+		if (!open) return [];
+		const response = getBranchesQuery.data?.branches;
+		return Array.isArray(response) ? response.map((branch) => branch.getName()) : [];
+	});
+
+	// Reset flow + prefs-init flag whenever the modal closes.
 	$effect(() => {
 		if (!open) {
-			// Only reset when modal is closed, not when opened
-			restorationResults = {};
-			conflictResolutions = {};
-			currentConflictBranch = null;
-			isProcessing = false;
-			progress = 0;
-			startTime = null;
-			estimatedTimeRemaining = null;
-			processedCount = 0;
-			initialSelectedCount = 0;
-			branchPreferences = {};
-			pendingConflictBranches = [];
-		} else {
-			// When modal opens, check if any branches already exist
-			checkExistingBranches();
+			flow.reset();
+			prefsInitialized = false;
 		}
 	});
 
-	// Check which branches already exist in the repository
-	async function checkExistingBranches() {
-		if (!repository?.path) return;
-
-		try {
-			// Get existing branches from the repository
-			const response = getBranchesQuery.data?.branches;
-
-			if (response && Array.isArray(response)) {
-				// Extract branch names and find overlaps with our selected branches
-				const existingBranchNames = response?.map((branch) => branch.getName()) ?? [];
-				existingBranches = existingBranchNames;
-
-				// Initialize preferences for branches that might conflict
-				selectedQuery.data?.branches?.forEach((branch) => {
-					const branchName = branch.getName();
-					if (existingBranchNames.includes(branchName)) {
-						// Default to skip for safety
-						branchPreferences[branchName] = 'Skip';
-					}
-				});
-			}
-		} catch (error) {
-			console.error('Failed to check existing branches', error);
-		}
-	}
-
-	// Update progress and estimated time
-	function updateProgress() {
-		if (initialSelectedCount === 0) return;
-
-		// Calculate processed count based on actual results, not an incrementing counter
-		// const completedCount = Object.values(restorationResults).filter(
-		// 	(result) => !result.requiresUserAction || result.skipped || result.processing
-		// ).length;
-
-		processedCount++;
-		progress = (processedCount / initialSelectedCount) * 100;
-
-		if (startTime && processedCount > 0) {
-			const elapsedTime = Date.now() - startTime;
-			const timePerBranch = elapsedTime / processedCount;
-			const remainingBranches = initialSelectedCount - processedCount;
-			const estimatedTimeMs = timePerBranch * remainingBranches;
-
-			if (estimatedTimeMs > 0) {
-				if (estimatedTimeMs < 60000) {
-					estimatedTimeRemaining = `${Math.ceil(estimatedTimeMs / 1000)} seconds`;
-				} else {
-					estimatedTimeRemaining = `${Math.ceil(estimatedTimeMs / 60000)} minutes`;
-				}
-			} else {
-				estimatedTimeRemaining = 'Almost done';
-			}
-		}
-	}
-
-	const restoreMutation = createRestoreDeletedBranchMutation({
-		async onSuccess(data, variables) {
-			const branchName = variables.branchInfo.originalName;
-
-			// Update results immediately when the mutation starts
-			restorationResults = {
-				...restorationResults,
-				[branchName]: { ...data.result, processing: false }
-			};
-
-			// If we have a conflict that needs resolution (even after an attempt)
-			if (data.result.requiresUserAction && data.result.conflictDetails) {
-				currentConflictBranch = branchName; // Keep or set it as current
-
-				// Ensure it's in pending if not already (should be there from batch or previous step)
-				if (!pendingConflictBranches.includes(branchName)) {
-					pendingConflictBranches = [...pendingConflictBranches, branchName];
-				}
-
-				// Update progress after each branch (even for conflicts)
-				updateProgress();
-				return; // Stop here and wait for user input
-			}
-
-			// Branch was successfully restored or skipped (no longer requiresUserAction)
-			// So, it's no longer a "pending conflict" in the interactive sense.
-			currentConflictBranch = null; // Explicitly clear before potentially setting the next one
-			pendingConflictBranches = pendingConflictBranches.filter((b) => b !== branchName);
-
-			if (data.result.success) {
-				// If successfully restored
-				if (data.result.success && !data.result.skipped) {
-					try {
-						notifications.push({
-							feedback: 'success',
-							title: formatString('Branch restored to {repo} repository', {
-								repo: ensureString(repository?.name)
-							}),
-							message: formatString('- **{name}** (at {sha})', {
-								name: ensureString(branchName).trim(),
-								sha: data.result.branch
-									? ensureString(data.result.branch.lastCommit.shortSha).trim()
-									: ''
-							})
-						});
-
-						open = false;
-					} catch (e) {
-						console.error('Error during notification or query invalidation:', e);
-					}
-				}
-			}
-
-			// Update progress after each branch
-			updateProgress();
-
-			// Continue to next branch if there are more to process
-			if (pendingConflictBranches.length > 0) {
-				// Process the next conflict branch
-				processNextConflictBranch(); // This will set currentConflictBranch
-			} else {
-				// Process next normal branch
-				processNextBranch(); // This will attempt to restore non-conflicting branches
-			}
-		},
-		onError(error, variables) {
-			const branchName = variables.branchInfo.originalName;
-			notifications.push({
-				feedback: 'danger',
-				title: `Error restoring branch ${branchName}`,
-				message: error.message
-			});
-
-			// Treat error as a "processed" branch for progress, but not successful
-			restorationResults = {
-				...restorationResults,
-				[branchName]: {
-					branchName,
-					success: false,
-					skipped: false,
-					requiresUserAction: false,
-					message: error.message,
-					conflictDetails: null,
-					branch: null,
-					processing: false
-				}
-			};
-			currentConflictBranch = null; // Clear current conflict on error for this branch
-			pendingConflictBranches = pendingConflictBranches.filter((b) => b !== branchName);
-			updateProgress(); // Update progress even on error
-
-			// Continue with next branch instead of stopping entirely
-			if (pendingConflictBranches.length > 0) {
-				processNextConflictBranch();
-			} else {
-				processNextBranch();
-			}
-		}
-	});
-
-	// New mutation for batch processing
-	const restoreBatchMutation = createRestoreDeletedBranchesMutation({
-		async onSuccess(data) {
-			// Process all the results
-			for (const result of data.results) {
-				const branchName = result.branchName;
-				// Update results immediately when the mutation starts
-				restorationResults = {
-					...restorationResults,
-					[branchName]: { ...result, processing: false }
-				};
-
-				// Collect branches that need conflict resolution
-				if (result.requiresUserAction && result.conflictDetails) {
-					pendingConflictBranches = [...pendingConflictBranches, branchName];
-				}
-			}
-
-			// Update progress
-			updateProgress();
-
-			// Show success notification for batch operations
-			const restoredBranches = data.results.filter(
-				(result: RestoreBranchResult) => result.success && !result.skipped
-			);
-
-			if (restoredBranches.length > 0) {
-				try {
-					const m = restoredBranches
-						.map((result: RestoreBranchResult) => {
-							// Use the branch information from the result
-							const branch = result.branch;
-							return formatString('- **{name}** (at {sha})', {
-								name: ensureString(result.branchName).trim(),
-								sha: branch ? ensureString(branch.lastCommit.shortSha).trim() : ''
-							});
-						})
-						.join('\n\n');
-
-					notifications.push({
-						feedback: 'success',
-						title: formatString('{type} restored to {repo} repository', {
-							type: restoredBranches.length > 1 ? 'Branches' : 'Branch',
-							repo: ensureString(repository?.name)
-						}),
-						message: m
-					});
-
-					open = false;
-				} catch (e) {
-					console.error('Error during batch notification or query invalidation:', e);
-				}
-			}
-
-			// If we have conflicts to resolve, handle the first one
-			if (pendingConflictBranches.length > 0) {
-				processNextConflictBranch();
-			} else {
-				// Otherwise, we're done
-				isProcessing = false;
-				open = false;
-			}
-		},
-		onError(error) {
-			notifications.push({
-				feedback: 'danger',
-				title: 'Error restoring branches',
-				message: error.message
-			});
-
-			isProcessing = false;
-		}
-	});
-
-	// Process the next branch that has a conflict
-	function processNextConflictBranch() {
-		if (!repository?.path || pendingConflictBranches.length === 0) {
-			// If no more conflicts, process remaining normal branches
-			if (selectedQuery.data?.branches?.some((branch) => !restorationResults[branch.getName()])) {
-				processNextBranch();
-			} else {
-				// All done
-				isProcessing = false;
-			}
-			return;
-		}
-
-		// Get the next conflict branch
-		const nextConflictName = pendingConflictBranches[0];
-		currentConflictBranch = nextConflictName;
-
-		// Set the branch as processing immediately
-		restorationResults = {
-			...restorationResults,
-			[nextConflictName]: {
-				...(restorationResults[nextConflictName] || {}),
-				branchName: nextConflictName,
-				success: false,
-				skipped: false,
-				requiresUserAction: true,
-				message: '',
-				conflictDetails: null,
-				branch: null,
-				processing: true
-			}
-		};
-
-		// Don't remove from pendingConflictBranches yet - this will happen in onSuccess
-	}
-
-	// Process branches one by one
-	function processNextBranch() {
-		if (!repository?.path) return;
-
-		// Find the next branch to process (one that hasn't been processed yet)
-		const nextBranch = selectedQuery.data?.branches.find(
-			(branch) => !restorationResults[branch.getName()]
-		);
-
-		if (!nextBranch) {
-			// All branches processed
-			isProcessing = false;
-			open = false;
-			return;
-		}
-
-		const nextBranchName = nextBranch.getName();
-		// Set the branch as processing immediately
-		restorationResults = {
-			...restorationResults,
-			[nextBranchName]: {
-				...(restorationResults[nextBranchName] || {}),
-				branchName: nextBranchName,
-				success: false,
-				skipped: false,
-				requiresUserAction: false,
-				message: '',
-				conflictDetails: null,
-				branch: null,
-				processing: true
-			}
-		};
-
-		// Restore the next branch
-		restoreMutation.mutate({
-			path: repository.path,
-			repoId: repository.id,
-			branchInfo: {
-				originalName: nextBranchName,
-				targetName: nextBranchName,
-				commitSha: nextBranch.getLastCommit().getShortSha(),
-				conflictResolution:
-					conflictResolutions[nextBranchName] || branchPreferences[nextBranchName] || null
+	// Seed default Skip preferences ONCE per modal-open, after data is available.
+	// Re-running on later query refetches would clobber the user's choices.
+	$effect(() => {
+		if (!open || prefsInitialized) return;
+		if (existingBranches.length === 0 && !getBranchesQuery.data) return;
+		selectedQuery.data?.branches?.forEach((branch) => {
+			const name = branch.getName();
+			if (existingBranches.includes(name)) {
+				flow.setPreference(name, 'Skip');
 			}
 		});
-	}
-
-	// Start the restoration process
-	function handleRestore() {
-		if (!repository?.path) return;
-
-		isProcessing = true;
-		restorationResults = {};
-		conflictResolutions = {};
-		currentConflictBranch = null;
-		pendingConflictBranches = [];
-		progress = 0;
-		startTime = Date.now();
-		estimatedTimeRemaining = 'Calculating...';
-		processedCount = 0;
-		initialSelectedCount = selectedQuery.data?.branches.length ?? 0;
-
-		if (selectedQuery.data?.branches.length && selectedQuery.data?.branches.length <= 1) {
-			// For a single branch, use the regular approach
-			processNextBranch();
-		} else {
-			// For multiple branches, use the batch approach for better performance
-			const branchInfos = selectedQuery.data?.branches.map((branch) => {
-				const branchName = branch.getName();
-				return {
-					originalName: branchName,
-					targetName: branchName,
-					commitSha: branch.getLastCommit().getShortSha(),
-					conflictResolution: branchPreferences[branchName] || null // Use preemptive resolution if set
-				};
-			});
-
-			restoreBatchMutation.mutate({
-				path: repository.path,
-				repoId: repository.id,
-				branchInfos: branchInfos ?? []
-			});
-		}
-	}
-
-	// Handle conflict resolution
-	function resolveConflict(resolution: ConflictResolution) {
-		if (!currentConflictBranch || !repository?.path) return;
-
-		const branch = selectedQuery.data?.branches.find((b) => b.getName() === currentConflictBranch);
-		if (!branch) return;
-
-		// Update conflict resolution and continue
-		conflictResolutions = {
-			...conflictResolutions,
-			[currentConflictBranch]: resolution
-		};
-
-		// Clear current conflict branch before starting next one
-		currentConflictBranch = null;
-
-		const branchName = branch.getName();
-		// Continue with the same branch but now with resolution
-		restoreMutation.mutate({
-			path: repository.path,
-			repoId: repository.id,
-			branchInfo: {
-				originalName: branchName,
-				targetName: branchName,
-				commitSha: branch.getLastCommit().getShortSha(),
-				conflictResolution: resolution
-			}
-		});
-	}
-
-	// Update preference for a branch before restoration
-	function updateBranchPreference(branchName: string, resolution: ConflictResolution) {
-		branchPreferences = {
-			...branchPreferences,
-			[branchName]: resolution
-		};
-	}
+		prefsInitialized = true;
+	});
 
 	function handleCancel() {
-		if (isProcessing) return; // Don't allow canceling while processing
+		if (flow.isProcessing) return;
 		open = false;
 	}
 
-	// Get the status icon for a branch
-	function getStatusIcon(result: ExtendedRestoreBranchResult | undefined) {
-		if (!result) return { icon: 'ion:ellipse-outline', color: 'gray.500' };
-
-		if (result.success) {
-			return { icon: 'ion:checkmark-circle', color: 'success' };
-		} else if (result.requiresUserAction) {
-			return { icon: 'ion:alert-circle', color: 'warning' };
-		} else {
-			return { icon: 'ion:close-circle', color: 'danger' };
-		}
-	}
-
-	// Check if restoration is complete (for conditional UI rendering)
-	const isRestorationComplete = $derived(
-		isProcessing === false &&
-			Object.keys(restorationResults).length > 0 &&
-			pendingConflictBranches.length === 0 &&
-			!currentConflictBranch
-	);
+	const sortedBranches = $derived.by(() => {
+		const branches = [...(selectedQuery.data?.branches ?? [])];
+		return branches.sort((a, b) => {
+			const aIsPending = flow.pendingConflictBranches.includes(a.getName());
+			const bIsPending = flow.pendingConflictBranches.includes(b.getName());
+			if (aIsPending !== bIsPending) {
+				return aIsPending ? -1 : 1;
+			}
+			const aSkipped = flow.restorationResults[a.getName()]?.skipped ?? false;
+			const bSkipped = flow.restorationResults[b.getName()]?.skipped ?? false;
+			return aSkipped === bSkipped ? 0 : aSkipped ? 1 : -1;
+		});
+	});
 </script>
 
 <Dialog
@@ -524,81 +97,31 @@
 	aria-label="Restore Deleted Branches"
 	aria-describedby="Restore Deleted Branches"
 	data-testid="restore-branch-dialog"
-	showCloseButton={!isProcessing || isRestorationComplete}
-	class={css({
-		width: '600px'
-	})}
+	showCloseButton={!flow.isProcessing || flow.isRestorationComplete}
+	class={css({ width: '600px' })}
 	passThrough={{
 		content: {
-			style: css.raw({
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 'md'
-			})
+			style: css.raw({ display: 'flex', flexDirection: 'column', gap: 'md' })
 		}
 	}}
 >
-	{#if currentConflictBranch}
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 'xs',
-				background: 'neutral.surface.deep',
-				p: 'sm',
-				borderRadius: 'lg',
-				border: '1px solid token(colors.neutral.border.muted)'
-			})}
-		>
-			<Banner feedback="warning" heading="Branch Name Conflict">
-				{#snippet leading()}
-					<Icon icon="ion:alert-circle" width="24px" height="24px" />
-				{/snippet}
-			</Banner>
-			<p
-				class={css({
-					color: 'warning.text.accent'
-				})}
-			>
-				A branch named <strong>{currentConflictBranch}</strong> already exists. How would you like to
-				proceed?
-			</p>
-			<div
-				class={css({
-					display: 'flex',
-					gap: 'md',
-					marginLeft: 'auto'
-				})}
-			>
-				<Button
-					feedback="danger"
-					emphasis="secondary"
-					onclick={() => resolveConflict('Overwrite')}
-					data-testid="overwrite-button"
-				>
-					Overwrite Existing
-				</Button>
-
-				<Button
-					emphasis="secondary"
-					onclick={() => resolveConflict('Skip')}
-					data-testid="skip-button"
-				>
-					Skip
-				</Button>
-			</div>
-		</div>
+	{#if flow.currentConflictBranch}
+		<RestoreConflictPrompt
+			branchName={flow.currentConflictBranch}
+			onOverwrite={() => flow.resolveConflict('Overwrite')}
+			onSkip={() => flow.resolveConflict('Skip')}
+		/>
 	{:else}
 		<p data-testid="restore-branch-dialog-text">
-			{#if isProcessing && !isRestorationComplete}
+			{#if flow.isProcessing && !flow.isRestorationComplete}
 				Restoring selected branches...
-				{#if pendingConflictBranches.length > 0}
+				{#if flow.pendingConflictBranches.length > 0}
 					<span class={css({ color: 'warning.600', fontWeight: 'medium' })}>
-						({pendingConflictBranches.length}
-						{pendingConflictBranches.length === 1 ? 'branch needs' : 'branches need'} resolution)
+						({flow.pendingConflictBranches.length}
+						{flow.pendingConflictBranches.length === 1 ? 'branch needs' : 'branches need'} resolution)
 					</span>
 				{/if}
-			{:else if isRestorationComplete}
+			{:else if flow.isRestorationComplete}
 				Restoration complete.
 			{:else}
 				Are you sure you want to restore
@@ -607,40 +130,19 @@
 					{selectedQuery.data?.branches.length === 1 ? 'branch' : 'branches'}
 				</strong>
 				from repository
-				<strong class={css({ color: 'primary.800' })}>
-					{repository?.name}
-				</strong>?
+				<strong class={css({ color: 'primary.800' })}>{repository?.name}</strong>?
 			{/if}
 		</p>
 	{/if}
 
-	{#if isProcessing && !isRestorationComplete}
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 'xs'
-			})}
-			data-testid="progress-container"
-		>
-			<div
-				class={css({
-					display: 'flex',
-					justifyContent: 'space-between',
-					fontSize: 'sm'
-				})}
-			>
-				<span data-testid="progress-text"
-					>{processedCount} of {initialSelectedCount} branches restored</span
-				>
-				{#if estimatedTimeRemaining && pendingConflictBranches.length === 0}
-					<span data-testid="time-remaining"
-						>Estimated time remaining: {estimatedTimeRemaining}</span
-					>
-				{/if}
-			</div>
-			<Progress value={progress} max={100} feedback="primary" data-testid="progress-bar" />
-		</div>
+	{#if flow.isProcessing && !flow.isRestorationComplete}
+		<RestoreProgressBar
+			processed={flow.processedCount}
+			total={flow.initialSelectedCount}
+			progress={flow.progress}
+			estimatedTimeRemaining={flow.estimatedTimeRemaining}
+			pendingConflicts={flow.pendingConflictBranches.length}
+		/>
 	{/if}
 
 	<div
@@ -652,148 +154,19 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each [...(selectedQuery.data?.branches ?? [])].sort((a, b) => {
-			// Sort pending conflicts first
-			const aIsPending = pendingConflictBranches.includes(a.getName());
-			const bIsPending = pendingConflictBranches.includes(b.getName());
-
-			if (aIsPending !== bIsPending) {
-				return aIsPending ? -1 : 1;
-			}
-
-			// Then sort by skipped status
-			const aSkipped = restorationResults[a.getName()]?.skipped ?? false;
-			const bSkipped = restorationResults[b.getName()]?.skipped ?? false;
-			return aSkipped === bSkipped ? 0 : aSkipped ? 1 : -1;
-		}) as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
+		{#each sortedBranches as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
 			{@const branchName = branch.getName()}
-			<div class={css({ position: 'relative' })}>
-				<div
-					class={css({
-						'& > div': {
-							marginBottom: '0'
-						}
-					})}
-				>
-					<Loading
-						loading={currentConflictBranch !== branchName &&
-							isProcessing &&
-							!restorationResults[branchName] &&
-							!pendingConflictBranches.includes(branchName)}
-						passThrough={{
-							root: {
-								style: css.raw({
-									width: '100%'
-								})
-							}
-						}}
-					>
-						<div
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								gap: 'sm',
-								width: 'full',
-								background: 'neutral.surface.deep',
-								p: 'sm',
-								borderRadius: 'lg'
-							})}
-						>
-							{#if restorationResults[branchName]}
-								<div
-									class={[
-										css({
-											display: 'flex',
-											alignItems: 'center',
-											justifyContent: 'flex-end',
-											gap: 'xs'
-										}),
-										getStatusIcon(restorationResults[branchName]).color === 'success' &&
-											css({ color: 'success.800' }),
-										getStatusIcon(restorationResults[branchName]).color === 'warning' &&
-											css({ color: 'warning.800' }),
-										getStatusIcon(restorationResults[branchName]).color === 'danger' &&
-											css({ color: 'danger.800' })
-									]}
-								>
-									<span
-										class={css({
-											fontSize: 'xs',
-											flexDirection: 'row'
-										})}
-									>
-										{restorationResults[branchName].skipped ? 'Skipped' : ''}
-										{pendingConflictBranches.includes(branchName) ? 'Pending resolution' : ''}
-									</span>
-									<Icon
-										icon={getStatusIcon(restorationResults[branchName]).icon}
-										width="20px"
-										height="20px"
-									/>
-								</div>
-							{/if}
-							<BranchCard {branch} />
-							{#if !isProcessing && existingBranches.includes(branchName)}
-								<div
-									class={css({
-										display: 'flex',
-										alignItems: 'center',
-										gap: 'md',
-										padding: 'xs',
-										backgroundColor: 'warning.50',
-										borderRadius: 'md'
-									})}
-									data-testid="branch-conflict-warning"
-								>
-									<Icon icon="ion:alert-circle" width="16px" height="16px" color="#f59e0b" />
-									<span class={css({ fontSize: 'sm', color: 'warning.800' })}>
-										Branch already exists
-									</span>
-									<div class={css({ marginLeft: 'auto', display: 'flex', gap: 'xs' })}>
-										<Button
-											size="xs"
-											emphasis={branchPreferences[branchName] === 'Skip' ? 'primary' : 'secondary'}
-											onclick={() => updateBranchPreference(branchName, 'Skip')}
-											data-testid="pre-skip-button"
-										>
-											Skip
-										</Button>
-										<Button
-											size="xs"
-											feedback="danger"
-											emphasis={branchPreferences[branchName] === 'Overwrite'
-												? 'primary'
-												: 'secondary'}
-											onclick={() => updateBranchPreference(branchName, 'Overwrite')}
-											data-testid="pre-overwrite-button"
-										>
-											Overwrite
-										</Button>
-									</div>
-								</div>
-							{/if}
-							{#if pendingConflictBranches.includes(branchName) && branchName !== currentConflictBranch}
-								<div
-									class={css({
-										padding: 'xs',
-										backgroundColor: 'warning.50',
-										borderRadius: 'md',
-										fontSize: 'sm',
-										color: 'warning.800'
-									})}
-								>
-									Waiting for user resolution...
-								</div>
-							{/if}
-							{#if restorationResults[branchName]?.message}
-								<Alert feedback="warning">
-									<Markdown md={restorationResults[branchName].message} />
-								</Alert>
-							{/if}
-						</div>
-					</Loading>
-				</div>
-			</div>
+			<RestoreBranchStatusCard
+				{branch}
+				result={flow.restorationResults[branchName]}
+				isPending={flow.pendingConflictBranches.includes(branchName)}
+				isCurrentConflict={flow.currentConflictBranch === branchName}
+				isInFlight={flow.inFlightBranches.includes(branchName)}
+				existsAlready={existingBranches.includes(branchName)}
+				preference={flow.branchPreferences[branchName]}
+				isProcessing={flow.isProcessing}
+				onSetPreference={(resolution) => flow.setPreference(branchName, resolution)}
+			/>
 		{/each}
 	</div>
 
@@ -805,28 +178,27 @@
 			marginTop: 'md'
 		})}
 	>
-		{#if isRestorationComplete}
-			<Button
-				emphasis="primary"
-				onclick={() => {
-					open = false;
-				}}
-				data-testid="done-button"
-			>
+		{#if flow.isRestorationComplete}
+			<Button emphasis="primary" onclick={() => (open = false)} data-testid="done-button">
 				Done
 			</Button>
 		{:else}
 			<Button
 				emphasis="secondary"
 				onclick={handleCancel}
-				disabled={isProcessing && !isRestorationComplete}
+				disabled={flow.isProcessing && !flow.isRestorationComplete}
 				data-testid="cancel-button"
 			>
 				Cancel
 			</Button>
-			{#if !currentConflictBranch}
-				<Loading loading={isProcessing && !isRestorationComplete}>
-					<Button emphasis="primary" autofocus onclick={handleRestore} data-testid="restore-button">
+			{#if !flow.currentConflictBranch}
+				<Loading loading={flow.isProcessing && !flow.isRestorationComplete}>
+					<Button
+						emphasis="primary"
+						autofocus
+						onclick={() => flow.start()}
+						data-testid="restore-button"
+					>
 						Restore
 					</Button>
 				</Loading>
@@ -839,11 +211,7 @@
 	emphasis="primary"
 	size="sm"
 	disabled={selectedQuery.data?.branches.length === 0}
-	class={css({
-		gap: 'xs',
-		display: 'flex',
-		whiteSpace: 'nowrap'
-	})}
+	class={css({ gap: 'xs', display: 'flex', whiteSpace: 'nowrap' })}
 	onclick={() => {
 		open = true;
 	}}
