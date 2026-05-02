@@ -2,13 +2,13 @@
 	import Icon from '@iconify/svelte';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
 	import { css } from '@pindoba/styled-system/css';
-	import Stamp from '@pindoba/svelte-stamp';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -69,9 +69,21 @@
 </script>
 
 {#snippet repoIcon()}
-	<Stamp emphasis="muted" border="none" background="transparent"
-		><Icon icon="lucide:folder-git-2" width="14px" height="14px" /></Stamp
+	<Stamp
+		emphasis="primary"
+		feedback="primary"
+		border="none"
+		background="transparent"
+		passThrough={{
+			root: {
+				style: css.raw({
+					opacity: '0.7'
+				})
+			}
+		}}
 	>
+		<Icon icon="lucide:folder-git-2" width="14px" height="14px" />
+	</Stamp>
 {/snippet}
 
 <div
