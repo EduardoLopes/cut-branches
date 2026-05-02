@@ -6,6 +6,7 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Popover from '@pindoba/svelte-popover';
 	import Radio from '@pindoba/svelte-radio';
+	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { onMount } from 'svelte';
 	import { createGetBranchesQuery } from '../core/composables/queries/create-get-branches-query';
@@ -136,6 +137,11 @@
 						onchange={goToBranches}
 					>
 						Branches
+						{#snippet leading()}
+							<Stamp emphasis="ghost" border="none" background="transparent">
+								<Icon icon="lucide:git-branch" width="14px" height="14px" />
+							</Stamp>
+						{/snippet}
 						{#snippet trailing()}
 							<Badge size="sm">{activeBranchesCount}</Badge>
 						{/snippet}
@@ -152,6 +158,11 @@
 						onchange={goToDeletedBranches}
 					>
 						Restore
+						{#snippet leading()}
+							<Stamp emphasis="ghost" feedback="danger" border="none" background="transparent">
+								<Icon icon="lucide:undo" width="14px" height="14px" />
+							</Stamp>
+						{/snippet}
 						{#snippet trailing()}
 							<Badge size="sm" feedback="danger">{deletedBranchesCount}</Badge>
 						{/snippet}
