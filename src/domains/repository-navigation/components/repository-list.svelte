@@ -1,14 +1,36 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import Stamp from '@pindoba/svelte-stamp';
+	import { createRawSnippet, mount, unmount } from 'svelte';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { page } from '$app/state';
 	import { eventBus, Events } from '$services/event-bus';
 	import IconButton from '$ui/core/icon-button.svelte';
 	import { css } from '@pindoba/styled-system/css';
+
+	function makeBadgeSnippet(name: string, id: string, count: number): NavigationItem['trailing'] {
+		return createRawSnippet(() => ({
+			render: () => '<span style="display:contents"></span>',
+			setup: (element) => {
+				element.innerHTML = '';
+				const instance = mount(Badge, {
+					target: element,
+					props: {
+						size: 'sm',
+						label: count > 0 ? String(count) : '',
+						'data-testid': `repository-${name}-badge-${id}`
+					}
+				});
+				return () => {
+					unmount(instance);
+				};
+			}
+		}));
+	}
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -50,10 +72,11 @@
 		const mappedItems = repositories.map(
 			(repo): NavigationItem => ({
 				id: repo.id,
-				label: repo.branchesCount > 0 ? `${repo.name} (${repo.branchesCount})` : repo.name,
+				label: repo.name,
 				href: `/repos/${repo.id}`,
 				'data-testid': `repository-${repo.name}-${repo.id}`,
 				leading: repoIcon as NavigationItem['leading'],
+				trailing: makeBadgeSnippet(repo.name, repo.id, repo.branchesCount),
 				// Prefetch repository data on hover for instant navigation
 				onmouseenter: () => prefetchRepositoryData(repo.id)
 			})
@@ -150,18 +173,7 @@
 			}}
 		>
 			{#if items.length > 0}
-				<Navigation
-					{items}
-					activeItem={page.params.id}
-					direction="vertical"
-					passThrough={{
-						item: {
-							style: css.raw({
-								pr: '2xs'
-							})
-						}
-					}}
-				/>
+				<Navigation {items} activeItem={page.params.id} direction="vertical" />
 			{:else}
 				<p
 					class={css({
