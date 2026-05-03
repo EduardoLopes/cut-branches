@@ -138,7 +138,7 @@
 					>
 						Branches
 						{#snippet leading()}
-							<Stamp emphasis="ghost" border="none" background="transparent">
+							<Stamp emphasis="ghost" border="none" background="transparent" iconFill>
 								<Icon icon="lucide:git-branch" width="14px" height="14px" />
 							</Stamp>
 						{/snippet}
@@ -159,7 +159,13 @@
 					>
 						Restore
 						{#snippet leading()}
-							<Stamp emphasis="ghost" feedback="danger" border="none" background="transparent">
+							<Stamp
+								emphasis="ghost"
+								feedback="danger"
+								border="none"
+								background="transparent"
+								iconFill
+							>
 								<Icon icon="lucide:undo" width="14px" height="14px" />
 							</Stamp>
 						{/snippet}

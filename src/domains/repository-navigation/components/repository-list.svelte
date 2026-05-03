@@ -97,6 +97,7 @@
 		emphasis="ghost"
 		border="none"
 		background="transparent"
+		iconFill
 		passThrough={{
 			root: {
 				style: css.raw({
