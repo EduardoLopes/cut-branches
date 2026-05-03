@@ -56,11 +56,11 @@
 				filter: 'grayscale(1)'
 			},
 			'&.selected': {
-				borderColor: 'danger',
+				borderColor: 'danger.border.accent',
 				borderStyle: 'dashed'
 			},
 			'&.current': {
-				borderColor: 'primary'
+				borderColor: 'primary.border.accent'
 			}
 		})
 	]}
@@ -79,7 +79,7 @@
 			}),
 			isVisuallySelected &&
 				css({
-					color: 'danger'
+					color: 'danger.text.accent'
 				})
 		]}
 	>
