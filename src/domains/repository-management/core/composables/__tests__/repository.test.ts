@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getRepositoryStore, RepositoryStore } from '../../store/repository.svelte';
+import { getRepositoryStore, RepositoryStore } from '../repository.svelte';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
 import type { Repository } from '$services/common';

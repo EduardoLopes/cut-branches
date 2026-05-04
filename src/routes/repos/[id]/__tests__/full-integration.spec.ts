@@ -2,9 +2,9 @@ import { tick } from 'svelte';
 import { vi, beforeEach, describe, it, expect } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import RepositoryPageFixture from './fixtures/repository-page-fixture.svelte';
+import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
+import { getSelectedBranchesStore } from '$domains/branch-management/core/composables/selected-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
-import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
 import type { Branch as BranchData } from '$lib/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 

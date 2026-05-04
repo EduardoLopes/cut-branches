@@ -52,6 +52,7 @@ diesel::table! {
         updated_at -> Timestamp,
         last_sync_hash -> Nullable<Text>,
         last_sync_timestamp -> Nullable<Integer>,
+        last_synced_at -> Nullable<Timestamp>,
     }
 }
 

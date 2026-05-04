@@ -120,6 +120,7 @@ pub async fn create_repository(
         branches_count: branches_count as i32,
         last_sync_hash: None, // Deprecated
         last_sync_timestamp: Some(initial_timestamp),
+        last_synced_at: Some(chrono::Utc::now().naive_utc()),
     };
 
     // Use a transaction to ensure atomicity and improve performance

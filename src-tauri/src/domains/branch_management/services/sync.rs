@@ -131,6 +131,14 @@ fn sync_branches_to_db_internal(
             })?;
     }
 
+    crate::db::operations::bump_last_synced_at(&mut conn, repo_id).map_err(|e| {
+        AppError::new(
+            "Failed to record sync timestamp".to_string(),
+            "db_update_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
     Ok(git_branches.len())
 }
 

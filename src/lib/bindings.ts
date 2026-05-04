@@ -502,7 +502,7 @@ export type GetBranchMergeStatusOutput = { isMerged: boolean }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
 export type GetRepositoryInput = { id: string }
-export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
+export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string; lastSyncedAt: string | null }
 export type GetRepositoryRootInput = { path: string }
 export type GetRepositoryRootOutput = { rootPath: string; id: string | null }
 export type ListBranchSelectionInput = { repoId: string }
@@ -545,7 +545,7 @@ export type MergeStatusFilter =
 "all"
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
-export type Repository = { id: string; name: string; path: string; currentBranch: string; branchesCount: number; createdAt: string; updatedAt: string; lastSyncHash: string | null; lastSyncTimestamp: number | null }
+export type Repository = { id: string; name: string; path: string; currentBranch: string; branchesCount: number; createdAt: string; updatedAt: string; lastSyncHash: string | null; lastSyncTimestamp: number | null; lastSyncedAt: string | null }
 export type RepositoryLoadedEvent = { repositoryPath: string; repositoryName: string; branchesCount: number }
 export type RestoreBranchResult = { success: boolean; branchName: string; message: string; requiresUserAction: boolean; conflictDetails: ConflictDetails | null; skipped: boolean; branch: Branch | null }
 /**

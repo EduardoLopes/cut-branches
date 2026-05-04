@@ -3,8 +3,8 @@ import { vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { createDeleteBranchesMutation } from '../../core/composables/create-delete-branches-mutation';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
+import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
 import type { Branch as BranchData } from '$lib/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -27,7 +27,7 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	}
 }));
 
-vi.mock('$domains/branch-management/store/deleted-branches.svelte', () => ({
+vi.mock('$domains/branch-management/core/composables/deleted-branches.svelte', () => ({
 	getDeletedBranchesStore: vi.fn(() => ({
 		addDeletedBranch: mockAddDeletedBranch
 	}))

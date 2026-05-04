@@ -53,6 +53,19 @@ pub fn delete_repository(conn: &mut SqliteConnection, repo_id: &str) -> Result<u
     diesel::delete(repositories::table.find(repo_id)).execute(conn)
 }
 
+/// Records that this repository was just synced from git. Bumped on every
+/// command that reads from git and writes to the DB so the FE can show a
+/// "Last synced X ago" indicator that survives app restarts.
+pub fn bump_last_synced_at(
+    conn: &mut SqliteConnection,
+    repo_id: &str,
+) -> Result<usize, DieselError> {
+    let now = chrono::Utc::now().naive_utc();
+    diesel::update(repositories::table.find(repo_id))
+        .set(repositories::last_synced_at.eq(Some(now)))
+        .execute(conn)
+}
+
 // Branch operations
 pub fn create_branch(
     conn: &mut SqliteConnection,

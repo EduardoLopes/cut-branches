@@ -14,6 +14,7 @@ pub struct GitDirResponse {
     pub branches_count: u32,
     pub name: String,
     pub id: String,
+    pub last_synced_at: Option<chrono::NaiveDateTime>,
 }
 
 /// Get information about a git repository from the database.
@@ -103,6 +104,7 @@ pub async fn get_repository(
         branches_count: updated_repo.branches_count as u32,
         name: updated_repo.name,
         id: updated_repo.id,
+        last_synced_at: updated_repo.last_synced_at,
     })
 }
 
@@ -167,6 +169,7 @@ async fn sync_repository_if_needed(
             branches_count,
             last_sync_hash: None, // Deprecated, keeping for backward compatibility
             last_sync_timestamp: Some(current_timestamp),
+            last_synced_at: Some(chrono::Utc::now().naive_utc()),
         };
 
         operations::update_repository(&mut conn, repo_name, updated_repo).map_err(|e| {
@@ -198,6 +201,13 @@ async fn sync_repository_if_needed(
             "Repository state unchanged (timestamp: {}), skipping sync",
             current_timestamp
         );
+        operations::bump_last_synced_at(&mut conn, repo_name).map_err(|e| {
+            AppError::new(
+                "Failed to record sync timestamp".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
     }
 
     Ok(())

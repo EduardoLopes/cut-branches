@@ -19,6 +19,7 @@ pub struct GetRepositoryOutput {
     pub branches_count: u32,
     pub name: String,
     pub id: String,
+    pub last_synced_at: Option<chrono::NaiveDateTime>,
 }
 
 /// Gets information about a git repository.
@@ -46,6 +47,7 @@ pub async fn get_repository(
         branches_count: response.branches_count,
         name: response.name,
         id: response.id,
+        last_synced_at: response.last_synced_at,
     })
 }
 

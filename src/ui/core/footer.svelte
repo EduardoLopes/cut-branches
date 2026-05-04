@@ -9,7 +9,8 @@
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
-	import { globalStore } from '$store/global-store.svelte';
+	import { page } from '$app/state';
+	import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
 	import { css } from '@pindoba/styled-system/css';
 	import { spacer, visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -35,10 +36,18 @@
 		clearInterval(intervalID);
 	});
 
+	const repositoryQuery = createGetRepositoryQuery(() => ({ id: page.params.id ?? '' }));
+
+	const lastUpdatedAtDate = $derived.by(() => {
+		const raw = repositoryQuery.data?.lastSyncedAt;
+		if (!raw) return undefined;
+		// chrono::NaiveDateTime serializes without a timezone, but we always
+		// store UTC server-side. Tag it explicitly so JS parses as UTC.
+		return new Date(raw.endsWith('Z') ? raw : `${raw}Z`);
+	});
+
 	const lastUpdatedAt = $derived.by(() => {
-		return globalStore.lastUpdatedAt
-			? intlFormatDistance(globalStore.lastUpdatedAt, now)
-			: undefined;
+		return lastUpdatedAtDate ? intlFormatDistance(lastUpdatedAtDate, now) : undefined;
 	});
 </script>
 
@@ -119,10 +128,10 @@
 		})}
 		padding="none"
 	>
-		{#if lastUpdatedAt && globalStore.lastUpdatedAt}
+		{#if lastUpdatedAt && lastUpdatedAtDate}
 			<time
-				datetime={globalStore.lastUpdatedAt.toISOString()}
-				title={intlFormat(globalStore.lastUpdatedAt, {
+				datetime={lastUpdatedAtDate.toISOString()}
+				title={intlFormat(lastUpdatedAtDate, {
 					year: 'numeric',
 					month: 'long',
 					day: 'numeric',

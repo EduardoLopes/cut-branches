@@ -9,7 +9,7 @@
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { type Branch } from '../core/models/branch';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/create-delete-branches-mutation';
-	import { getDeletedBranchesStore } from '$domains/branch-management/store/deleted-branches.svelte';
+	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';

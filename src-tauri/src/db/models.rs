@@ -19,6 +19,7 @@ pub struct Repository {
     pub updated_at: NaiveDateTime,
     pub last_sync_hash: Option<String>,
     pub last_sync_timestamp: Option<i32>,
+    pub last_synced_at: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
@@ -32,6 +33,7 @@ pub struct NewRepository {
     pub branches_count: i32,
     pub last_sync_hash: Option<String>,
     pub last_sync_timestamp: Option<i32>,
+    pub last_synced_at: Option<NaiveDateTime>,
 }
 
 // Branch models

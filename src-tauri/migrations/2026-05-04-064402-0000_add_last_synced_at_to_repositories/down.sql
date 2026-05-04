@@ -1,0 +1,2 @@
+-- SQLite doesn't support DROP COLUMN cleanly without table rebuild; left as no-op.
+-- If reverting, simply ignore the column in code.

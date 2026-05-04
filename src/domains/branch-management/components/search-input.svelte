@@ -3,7 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Input, { type InputProps } from '@pindoba/svelte-input';
-	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
+	import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
 	import type { Repository } from '$services/common';
 	import { createToggle } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/styled-system/css';

@@ -1,8 +1,8 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { getLockedBranchesStore } from '../../../store/locked-branches.svelte';
-import { getSearchBranchesStore } from '../../../store/search-branches.svelte';
-import { getSelectedBranchesStore } from '../../../store/selected-branches.svelte';
 import { Branch } from '../../models/branch';
+import { getLockedBranchesStore } from '../locked-branches.svelte';
+import { getSearchBranchesStore } from '../search-branches.svelte';
+import { getSelectedBranchesStore } from '../selected-branches.svelte';
 import { useBranchSelection } from '../use-branch-selection.svelte';
 import type { BranchFilters } from '$lib/bindings';
 import type { Repository } from '$services/common';

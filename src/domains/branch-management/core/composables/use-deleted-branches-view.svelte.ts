@@ -6,14 +6,11 @@
  * for deleted branches.
  */
 
-import { onDestroy } from 'svelte';
-import { SvelteDate } from 'svelte/reactivity';
 import { createGetBranchesQuery } from './create-get-branches-query';
 import { createGetRepositoryQuery } from './create-get-repository-query';
-import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
+import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
 import { buildRepositoryData } from '$domains/branch-management/utils/build-repository-data';
 import { filterBranchesBySearch } from '$domains/branch-management/utils/filter-branches-by-search';
-import { globalStore } from '$store/global-store.svelte';
 
 interface UseDeletedBranchesViewProps {
 	getId: () => string;
@@ -38,18 +35,6 @@ export function useDeletedBranchesView({ getId }: UseDeletedBranchesViewProps) {
 			enabled: () => !!getId()
 		}
 	);
-
-	// Update global store with last updated timestamp
-	$effect(() => {
-		if (repositoryQuery.data?.path && branchesQuery) {
-			globalStore.lastUpdatedAt = new SvelteDate(branchesQuery.dataUpdatedAt);
-		}
-	});
-
-	// Cleanup on destroy
-	onDestroy(() => {
-		globalStore.lastUpdatedAt = undefined;
-	});
 
 	// Filter branches by search term
 	const branches = $derived.by(() => {
