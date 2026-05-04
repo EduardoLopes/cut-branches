@@ -12,5 +12,5 @@ use std::path::Path;
 ///
 /// * `Result<String, AppError>` - The new current branch name or an error
 pub fn switch_branch(path: &Path, branch: &str) -> Result<String, AppError> {
-    super::super::git::branch::switch_branch(path, branch)
+    super::super::super::git::branch::switch_branch(path, branch)
 }

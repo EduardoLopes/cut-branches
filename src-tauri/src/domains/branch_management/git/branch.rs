@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::Emitter;
 
-use super::super::services::deletion::{
+use super::super::core::models::deletion::{
     ConflictDetails, ConflictResolution, DeletedBranch, DeletedBranchInfo, RestoreBranchResult,
 };
 use super::commit::is_commit_reachable;

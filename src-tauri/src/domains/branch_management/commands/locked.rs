@@ -65,7 +65,7 @@ pub fn list_locked_branches(
     input: ListLockedBranchesInput,
 ) -> Result<ListLockedBranchesOutput, AppError> {
     let branches =
-        super::super::services::locked_branches::get_locked_branches(&db, &input.repo_id)?;
+        super::super::core::application::locked_branches::get_locked_branches(&db, &input.repo_id)?;
     Ok(ListLockedBranchesOutput { branches })
 }
 
@@ -85,7 +85,7 @@ pub fn batch_create_locked_branches(
     db: State<'_, DatabaseState>,
     input: BatchCreateLockedBranchesInput,
 ) -> Result<BatchCreateLockedBranchesOutput, AppError> {
-    super::super::services::locked_branches::add_locked_branches(
+    super::super::core::application::locked_branches::add_locked_branches(
         &db,
         &input.repo_id,
         input.branch_names,
@@ -109,7 +109,7 @@ pub fn batch_delete_locked_branches(
     db: State<'_, DatabaseState>,
     input: BatchDeleteLockedBranchesInput,
 ) -> Result<BatchDeleteLockedBranchesOutput, AppError> {
-    super::super::services::locked_branches::remove_locked_branches(
+    super::super::core::application::locked_branches::remove_locked_branches(
         &db,
         &input.repo_id,
         input.branch_names,
@@ -133,6 +133,6 @@ pub fn delete_all_locked_branches(
     db: State<'_, DatabaseState>,
     input: DeleteAllLockedBranchesInput,
 ) -> Result<DeleteAllLockedBranchesOutput, AppError> {
-    super::super::services::locked_branches::clear_locked_branches(&db, &input.repo_id)?;
+    super::super::core::application::locked_branches::clear_locked_branches(&db, &input.repo_id)?;
     Ok(DeleteAllLockedBranchesOutput {})
 }

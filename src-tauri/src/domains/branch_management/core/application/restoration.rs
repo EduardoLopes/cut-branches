@@ -1,4 +1,4 @@
-use super::deletion::{DeletedBranch, RestoreBranchResult};
+use super::super::models::deletion::{DeletedBranch, RestoreBranchResult};
 use crate::shared::error::AppError;
 use std::path::Path;
 
@@ -18,7 +18,7 @@ pub fn restore_deleted_branch(
     branch_info: &DeletedBranch,
     app: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, AppError> {
-    super::super::git::branch::restore_deleted_branch(path, branch_info, app)
+    super::super::super::git::branch::restore_deleted_branch(path, branch_info, app)
 }
 
 /// Restore multiple deleted branches in a git repository.
@@ -37,7 +37,8 @@ pub fn restore_deleted_branches(
     branch_infos: &[DeletedBranch],
     app: Option<&tauri::AppHandle>,
 ) -> Result<Vec<RestoreBranchResult>, AppError> {
-    let results = super::super::git::branch::restore_deleted_branches(path, branch_infos, app)?;
+    let results =
+        super::super::super::git::branch::restore_deleted_branches(path, branch_infos, app)?;
     // Extract just the RestoreBranchResult from the (String, RestoreBranchResult) tuples
     Ok(results.into_iter().map(|(_, result)| result).collect())
 }

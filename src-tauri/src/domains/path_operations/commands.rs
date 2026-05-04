@@ -31,7 +31,7 @@ pub async fn get_repository_root(
     input: GetRepositoryRootInput,
 ) -> Result<GetRepositoryRootOutput, AppError> {
     let _raw_path = Path::new(&input.path); // Unused for now, but kept for future validation
-    let response = super::service::get_root_path(input.path).await?;
+    let response = super::core::application::get_root_path(input.path).await?;
 
     Ok(GetRepositoryRootOutput {
         root_path: response.root_path,

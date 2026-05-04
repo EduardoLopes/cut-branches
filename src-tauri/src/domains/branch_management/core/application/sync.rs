@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::path::Path;
 use tauri::State;
 
-use super::super::git::branch::{
+use super::super::super::git::branch::{
     get_all_branches_with_last_commit, get_all_branches_with_last_commit_fast, Branch,
 };
 

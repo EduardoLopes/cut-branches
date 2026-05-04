@@ -2,20 +2,8 @@ use std::path::Path;
 use tauri::State;
 
 use crate::db::{models::NewRepository, operations, DatabaseState};
-use crate::domains::branch_management::git::branch::Branch;
+use crate::domains::repository_management::core::models::GitDirResponse;
 use crate::shared::error::AppError;
-
-#[derive(serde::Serialize, serde::Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct GitDirResponse {
-    pub path: String,
-    pub branches: Vec<Branch>,
-    pub current_branch: String,
-    pub branches_count: u32,
-    pub name: String,
-    pub id: String,
-    pub last_synced_at: Option<chrono::NaiveDateTime>,
-}
 
 /// Get information about a git repository from the database.
 /// This is a DB-first operation that only syncs if the repository data is stale.
@@ -181,7 +169,7 @@ async fn sync_repository_if_needed(
         })?;
 
         // Sync branches to database, passing the already-fetched branches
-        crate::domains::branch_management::services::sync::sync_branches_to_db(
+        crate::domains::branch_management::core::application::sync::sync_branches_to_db(
             Some(&branches),
             None,
             repo_name,

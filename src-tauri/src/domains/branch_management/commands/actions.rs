@@ -1,7 +1,7 @@
 use std::path::Path;
 use tauri::State;
 
-use super::super::services::deletion::{DeletedBranch, RestoreBranchResult};
+use super::super::core::models::deletion::{DeletedBranch, RestoreBranchResult};
 use crate::db::DatabaseState;
 use crate::shared::error::AppError;
 use serde::{Deserialize, Serialize};
@@ -66,7 +66,7 @@ pub async fn create_branch_restoration(
     input: CreateBranchRestorationInput,
 ) -> Result<CreateBranchRestorationOutput, AppError> {
     let raw_path = Path::new(&input.path);
-    let result = super::super::services::restoration::restore_deleted_branch(
+    let result = super::super::core::application::restoration::restore_deleted_branch(
         raw_path,
         &input.branch_info,
         Some(&app),
@@ -118,7 +118,7 @@ pub async fn batch_create_branch_restorations(
     input: BatchCreateBranchRestorationsInput,
 ) -> Result<BatchCreateBranchRestorationsOutput, AppError> {
     let raw_path = Path::new(&input.path);
-    let results = super::super::services::restoration::restore_deleted_branches(
+    let results = super::super::core::application::restoration::restore_deleted_branches(
         raw_path,
         &input.branch_infos,
         Some(&app),
@@ -172,7 +172,8 @@ pub async fn update_current_branch(
     input: UpdateCurrentBranchInput,
 ) -> Result<UpdateCurrentBranchOutput, AppError> {
     let raw_path = Path::new(&input.path);
-    let current_branch = super::super::services::switching::switch_branch(raw_path, &input.branch)?;
+    let current_branch =
+        super::super::core::application::switching::switch_branch(raw_path, &input.branch)?;
 
     Ok(UpdateCurrentBranchOutput { current_branch })
 }

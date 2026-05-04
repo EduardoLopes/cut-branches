@@ -55,7 +55,7 @@ pub fn update_branch_selection_batch(
     db: State<'_, DatabaseState>,
     input: UpdateBranchSelectionBatchInput,
 ) -> Result<UpdateBranchSelectionBatchOutput, AppError> {
-    super::super::services::selected_branches::update_branch_selection_batch(
+    super::super::core::application::selected_branches::update_branch_selection_batch(
         &db,
         &input.repo_id,
         input.branch_names,
@@ -80,7 +80,7 @@ pub fn set_branch_selection_all(
     db: State<'_, DatabaseState>,
     input: SetBranchSelectionAllInput,
 ) -> Result<SetBranchSelectionAllOutput, AppError> {
-    super::super::services::selected_branches::set_branch_selection_all(
+    super::super::core::application::selected_branches::set_branch_selection_all(
         &db,
         &input.repo_id,
         input.is_selected,
@@ -121,8 +121,10 @@ pub fn list_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListBranchSelectionInput,
 ) -> Result<ListBranchSelectionOutput, AppError> {
-    let branches =
-        super::super::services::selected_branches::get_branch_selection_list(&db, &input.repo_id)?;
+    let branches = super::super::core::application::selected_branches::get_branch_selection_list(
+        &db,
+        &input.repo_id,
+    )?;
     Ok(ListBranchSelectionOutput { branches })
 }
 
@@ -154,9 +156,10 @@ pub fn list_deleted_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListDeletedBranchSelectionInput,
 ) -> Result<ListDeletedBranchSelectionOutput, AppError> {
-    let branches = super::super::services::selected_branches::get_deleted_branch_selection_list(
-        &db,
-        &input.repo_id,
-    )?;
+    let branches =
+        super::super::core::application::selected_branches::get_deleted_branch_selection_list(
+            &db,
+            &input.repo_id,
+        )?;
     Ok(ListDeletedBranchSelectionOutput { branches })
 }

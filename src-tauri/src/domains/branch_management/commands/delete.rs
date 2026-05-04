@@ -1,7 +1,7 @@
 use std::path::Path;
 use tauri::State;
 
-use super::super::services::deletion::DeletedBranchInfo;
+use super::super::core::models::DeletedBranchInfo;
 use crate::db::DatabaseState;
 use crate::shared::error::AppError;
 use serde::{Deserialize, Serialize};
@@ -40,7 +40,7 @@ pub async fn batch_delete_branches(
 
     // Delete branches from Git
     let deleted_branch_infos: Vec<DeletedBranchInfo> =
-        super::super::services::deletion::delete_branches(raw_path, &input.branches)?;
+        super::super::core::application::deletion::delete_branches(raw_path, &input.branches)?;
 
     // Soft-delete branches in database
     let branch_names: Vec<String> = deleted_branch_infos

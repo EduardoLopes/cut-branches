@@ -79,7 +79,7 @@ pub fn set_branch_selection_all(
     db: &State<'_, DatabaseState>,
     repo_id: &str,
     is_selected: bool,
-    deletion_status: super::super::filters::DeletionStatusFilter,
+    deletion_status: super::super::super::filters::DeletionStatusFilter,
     exclude_locked: bool,
     exclude_current: bool,
 ) -> Result<(), AppError> {

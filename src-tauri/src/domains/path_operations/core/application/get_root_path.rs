@@ -3,57 +3,17 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
+use crate::domains::path_operations::core::models::RootPathResponse;
 use crate::domains::path_operations::error::PathError;
 use crate::shared::error::AppError;
+use crate::shared::git::is_git_repository;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
-#[serde(rename_all = "camelCase")]
-pub struct RootPathResponse {
-    pub root_path: String,
-    pub id: Option<String>,
-}
-
-impl PartialEq for RootPathResponse {
-    fn eq(&self, other: &Self) -> bool {
-        self.root_path == other.root_path
-    }
-}
-
-impl Eq for RootPathResponse {}
-
-impl Hash for RootPathResponse {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.root_path.hash(state);
-    }
-}
-
-/// Calculates a hash for a hashable type.
-///
-/// # Arguments
-///
-/// * `t` - The value to hash
-///
-/// # Returns
-///
-/// * `u64` - The calculated hash
 fn calculate_hash<T: Hash + ?Sized>(t: &T) -> u64 {
     let mut s = DefaultHasher::new();
     t.hash(&mut s);
     s.finish()
 }
 
-// Import shared git validation
-use crate::shared::git::is_git_repository;
-
-/// Gets the root path of a git repository.
-///
-/// # Arguments
-///
-/// * `path` - Path to check for a git repository
-///
-/// # Returns
-///
-/// * `Result<RootPathResponse, AppError>` - The root path and ID, or an error
 pub async fn get_root_path(path: String) -> Result<RootPathResponse, AppError> {
     let raw_path = Path::new(&path);
 

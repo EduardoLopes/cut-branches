@@ -45,7 +45,7 @@ pub async fn create_repository(
     let raw_path = Path::new(&input.path);
 
     // Check if it's a git repository
-    if !super::super::services::validation::is_git_repository(raw_path)? {
+    if !super::super::core::application::validation::is_git_repository(raw_path)? {
         return Err(AppError::new(
             format!(
                 "The folder **{}** is not a git repository",
@@ -64,7 +64,8 @@ pub async fn create_repository(
 
     // Get root path using path operations domain
     let root_path_response =
-        crate::domains::path_operations::service::get_root_path(input.path.clone()).await?;
+        crate::domains::path_operations::core::application::get_root_path(input.path.clone())
+            .await?;
     let root_path = root_path_response.root_path;
 
     let raw_root_path = Path::new(&root_path);
@@ -110,7 +111,7 @@ pub async fn create_repository(
 
     // Compute initial state timestamp
     let initial_timestamp =
-        super::super::services::state_hash::compute_repo_state_timestamp(raw_root_path)?;
+        super::super::core::application::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
     let new_repo = NewRepository {
         id: repo_name.clone(),
@@ -153,7 +154,7 @@ pub async fn create_repository(
 
     // Sync branches from Git to database, passing already-fetched branches
     // This is done in its own transaction in sync_branches_to_db
-    crate::domains::branch_management::services::sync::sync_branches_to_db(
+    crate::domains::branch_management::core::application::sync::sync_branches_to_db(
         Some(&branches),
         None,
         &repo_name,
