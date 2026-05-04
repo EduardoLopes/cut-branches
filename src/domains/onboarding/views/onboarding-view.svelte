@@ -1,7 +1,14 @@
 <script lang="ts">
+	import { type Snippet } from 'svelte';
 	import OnboardingCta from '$domains/onboarding/components/onboarding-cta.svelte';
 	import OnboardingHero from '$domains/onboarding/components/onboarding-hero.svelte';
 	import { css } from '@pindoba/styled-system/css';
+
+	interface Props {
+		actionButton: Snippet<[]>;
+	}
+
+	const { actionButton }: Props = $props();
 </script>
 
 <div
@@ -50,6 +57,6 @@
 		})}
 	>
 		<OnboardingHero />
-		<OnboardingCta />
+		<OnboardingCta {actionButton} />
 	</div>
 </div>

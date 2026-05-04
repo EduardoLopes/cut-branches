@@ -1,7 +1,11 @@
-import { tick } from 'svelte';
+import { createRawSnippet, tick } from 'svelte';
 import { describe, it, expect, vi } from 'vitest';
 import MenuView from '../menu-view.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
+
+const repositoryListAction = createRawSnippet(() => ({
+	render: () => '<button type="button">Add a git repository</button>'
+}));
 
 // Mock Tauri commands
 vi.mock('$lib/bindings', () => ({
@@ -52,7 +56,7 @@ vi.mock('$app/state', () => ({
 
 describe('MenuView Component', () => {
 	it('renders all repositories in the list', async () => {
-		const screen = renderWithTestWrapper(MenuView);
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -63,7 +67,7 @@ describe('MenuView Component', () => {
 	});
 
 	it('displays badge counts for repositories with branches', async () => {
-		const screen = renderWithTestWrapper(MenuView);
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -84,13 +88,13 @@ describe('MenuView Component', () => {
 	});
 
 	it('renders the app title correctly', () => {
-		const screen = renderWithTestWrapper(MenuView);
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
 
 		expect(screen.getByText('Cut Branches')).toBeInTheDocument();
 	});
 
 	it('displays the repositories heading', async () => {
-		const screen = renderWithTestWrapper(MenuView);
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -99,7 +103,7 @@ describe('MenuView Component', () => {
 	});
 
 	it('renders the add button for adding new repositories', () => {
-		const screen = renderWithTestWrapper(MenuView);
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
 
 		// Check for the add button using accessible role and name
 		expect(screen.getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();

@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import AddButton from '$domains/repository-management/components/add-button.svelte';
 	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
 	import { css } from '@pindoba/styled-system/css';
+
 	interface Props {
 		children?: Snippet;
 	}
@@ -23,7 +27,18 @@
 			gridTemplateColumns: 'max-content auto'
 		})}
 	>
-		<MenuView />
+		<MenuView>
+			{#snippet repositoryListAction()}
+				<AddButton
+					size="sm"
+					shape="square"
+					emphasis="ghost"
+					icon="material-symbols:add-rounded"
+					visuallyHiddenLabel
+					onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}
+				/>
+			{/snippet}
+		</MenuView>
 		{@render children?.()}
 	</div>
 </div>

@@ -1,7 +1,14 @@
 <script lang="ts">
+	import { type Snippet } from 'svelte';
 	import AppHeader from '$domains/repository-navigation/components/app-header.svelte';
 	import RepositoryList from '$domains/repository-navigation/components/repository-list.svelte';
 	import { css } from '@pindoba/styled-system/css';
+
+	interface Props {
+		repositoryListAction?: Snippet<[]>;
+	}
+
+	const { repositoryListAction }: Props = $props();
 </script>
 
 <section
@@ -15,5 +22,5 @@
 	})}
 >
 	<AppHeader />
-	<RepositoryList />
+	<RepositoryList headerAction={repositoryListAction} />
 </section>

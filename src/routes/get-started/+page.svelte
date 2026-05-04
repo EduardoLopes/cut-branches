@@ -1,5 +1,10 @@
 <script lang="ts">
 	import OnboardingView from '$domains/onboarding/views/onboarding-view.svelte';
+	import AddButton from '$domains/repository-management/components/add-button.svelte';
 </script>
 
-<OnboardingView />
+<OnboardingView>
+	{#snippet actionButton()}
+		<AddButton size="lg" emphasis="primary" />
+	{/snippet}
+</OnboardingView>

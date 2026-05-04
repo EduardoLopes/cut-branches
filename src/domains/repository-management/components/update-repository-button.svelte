@@ -3,7 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { createGetRepositoryListQuery } from '$domains/onboarding/core/composables/create-get-repository-list-query';
+	import { createGetRepositoryListQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-list-query';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { hasRepoId, hasPath } from '$utils/query-type-guards';
 	import { css } from '@pindoba/styled-system/css';

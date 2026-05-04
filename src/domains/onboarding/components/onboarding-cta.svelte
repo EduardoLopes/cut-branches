@@ -1,43 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Button from '@pindoba/svelte-button';
-	import Loading from '@pindoba/svelte-loading';
-	import { open } from '@tauri-apps/plugin-dialog';
-	import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
-	import { notifications } from '$services/notifications/notifications.svelte';
+	import { type Snippet } from 'svelte';
 	import { css } from '@pindoba/styled-system/css';
 
-	// Mutation to create repository
-	const createRepositoryMutation = createCreateRepositoryMutation({
-		onSuccess: (data) => {
-			if (data) {
-				notifications.push({
-					feedback: 'success',
-					title: 'Repository added',
-					message: `The repository ${data.name} was added successfully`
-				});
-			}
-		},
-		meta: {
-			showErrorNotification: true
-		}
-	});
-
-	function handleAddClick() {
-		open({ directory: true, multiple: false })
-			.then((dir) => {
-				if (dir !== null) {
-					createRepositoryMutation.mutate({ path: dir });
-				}
-			})
-			.catch((error) => {
-				notifications.push({
-					title: 'Error',
-					message: error.message || String(error),
-					feedback: 'danger'
-				});
-			});
+	interface Props {
+		actionButton: Snippet<[]>;
 	}
+
+	const { actionButton }: Props = $props();
 </script>
 
 <div
@@ -84,19 +54,7 @@
 			}
 		})}
 	>
-		<Loading loading={createRepositoryMutation.isPending}>
-			<Button onclick={handleAddClick} size="lg" emphasis="primary">
-				Add Repository
-				{#snippet leading()}
-					<Icon
-						icon="material-symbols:add-circle-outline-rounded"
-						width="24px"
-						height="24px"
-						data-testid="onboarding-cta-icon"
-					/>
-				{/snippet}
-			</Button>
-		</Loading>
+		{@render actionButton()}
 	</div>
 
 	<!-- Feature highlights -->

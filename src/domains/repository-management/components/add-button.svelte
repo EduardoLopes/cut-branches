@@ -5,12 +5,14 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
+	import type { CreateRepositoryOutput } from '$lib/bindings';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props extends ButtonProps {
 		icon?: string;
 		visuallyHiddenLabel?: boolean;
+		onSuccess?: (data: CreateRepositoryOutput) => void;
 	}
 
 	const {
@@ -18,15 +20,14 @@
 		emphasis = 'primary',
 		icon = 'material-symbols:add-circle-outline-rounded',
 		visuallyHiddenLabel = false,
+		onSuccess,
 		...props
 	}: Props = $props();
 
 	const queryClient = useQueryClient();
 
-	// Mutation to create repository
 	const createRepositoryMutation = createCreateRepositoryMutation({
 		onSuccess: (data) => {
-			// Invalidate repositories query to refetch the list
 			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
 
 			if (data) {
@@ -35,6 +36,7 @@
 					title: 'Repository added',
 					message: `The repository ${data.name} was added successfully`
 				});
+				onSuccess?.(data);
 			}
 		},
 		meta: {

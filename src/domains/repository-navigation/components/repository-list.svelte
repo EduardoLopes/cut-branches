@@ -4,13 +4,17 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import Stamp from '@pindoba/svelte-stamp';
-	import { createRawSnippet, mount, unmount } from 'svelte';
+	import { createRawSnippet, mount, unmount, type Snippet } from 'svelte';
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { page } from '$app/state';
-	import { useAddRepository } from '$domains/repository-management/core/composables/use-add-repository.svelte';
-	import IconButton from '$ui/core/icon-button.svelte';
 	import { css } from '@pindoba/styled-system/css';
+
+	interface Props {
+		headerAction?: Snippet<[]>;
+	}
+
+	const { headerAction }: Props = $props();
 
 	function makeBadgeSnippet(name: string, id: string, count: number): NavigationItem['trailing'] {
 		return createRawSnippet(() => ({
@@ -39,8 +43,6 @@
 	// Prefetch function for repository data on hover
 	const prefetchRepositoryData = createPrefetchRepositoryData();
 
-	const addRepository = useAddRepository();
-
 	// Map repository data to navigation items
 	const items = $derived.by<NavigationItem[]>(() => {
 		if (!repositoriesQuery.data) {
@@ -64,10 +66,6 @@
 		// Sort by name
 		return [...mappedItems].sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
 	});
-
-	function handleAddRepository() {
-		addRepository.addRepository();
-	}
 </script>
 
 {#snippet repoIcon()}
@@ -123,23 +121,12 @@
 				Repositories
 			</h2>
 
-			<IconButton
-				onclick={handleAddRepository}
-				size="sm"
-				shape="square"
-				icon="material-symbols:add-rounded"
-				label="Add a git repository"
-				visuallyHiddenLabel={true}
-				disabled={addRepository.isPending}
-				passThrough={{
-					root: {
-						style: css.raw({})
-					}
-				}}
-			/>
+			{#if headerAction}
+				{@render headerAction()}
+			{/if}
 		</div>
 		<Loading
-			loading={repositoriesQuery.isLoading || addRepository.isPending}
+			loading={repositoriesQuery.isLoading}
 			passThrough={{
 				root: {
 					style: css.raw({
