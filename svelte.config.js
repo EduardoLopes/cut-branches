@@ -18,7 +18,8 @@ const config = {
 			$utils: './src/utils',
 			$services: './src/services',
 			$components: './src/components',
-			$infrastructure: './src/infrastructure'
+			$infrastructure: './src/infrastructure',
+			$types: './src/types'
 		}
 	}
 };

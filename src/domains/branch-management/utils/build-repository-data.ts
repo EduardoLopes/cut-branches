@@ -1,6 +1,6 @@
 import { type Branch } from '$domains/branch-management/core/models/branch';
 import { BranchConverters } from '$domains/branch-management/core/models/converters';
-import type { Repository } from '$services/common';
+import type { Repository } from '$types/repository';
 
 export interface RepositorySource {
 	id: string;

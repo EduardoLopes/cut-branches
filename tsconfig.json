@@ -25,6 +25,8 @@
 			"$components/*": ["src/components/*"],
 			"$infrastructure": ["src/infrastructure"],
 			"$infrastructure/*": ["src/infrastructure/*"],
+			"$types": ["src/types"],
+			"$types/*": ["src/types/*"],
 			"@pindoba/styled-system": ["styled-system"],
 			"@pindoba/styled-system/*": ["styled-system/*"],
 			"@pindoba/svelte-alert": ["../pindoba/packages/ui/svelte/alert/dist/index.d.ts"],

@@ -14,7 +14,7 @@ import {
 	formatSearchInfoText,
 	formatCountInfoText
 } from '$domains/branch-management/utils/format-branch-selection-text';
-import type { Repository } from '$services/common';
+import type { Repository } from '$types/repository';
 
 interface UseBranchSelectionProps {
 	repository: () => Repository | undefined;

@@ -1,7 +1,7 @@
 import { describe, expect, vi, beforeEach } from 'vitest';
 import RemoveRepositoryModal from '../remove-repository-modal.svelte';
 import { goto } from '$app/navigation';
-import type { Repository } from '$services/common';
+import type { Repository } from '$types/repository';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 const mockRepository: Repository = {

@@ -4,7 +4,7 @@
 	import Group from '@pindoba/svelte-group';
 	import Input, { type InputProps } from '@pindoba/svelte-input';
 	import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
-	import type { Repository } from '$services/common';
+	import type { Repository } from '$types/repository';
 	import { createToggle } from '$utils/svelte-runes-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';

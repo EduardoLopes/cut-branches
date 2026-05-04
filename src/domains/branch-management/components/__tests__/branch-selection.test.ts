@@ -5,7 +5,7 @@ import { getSelectedBranchesStore } from '../../core/composables/selected-branch
 import BranchSelection from '../branch-selection.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
 import type { Branch as BranchData, BranchFilters } from '$infrastructure/bindings';
-import type { Repository } from '$services/common';
+import type { Repository } from '$types/repository';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 let mockBranchData: Branch[] = [];

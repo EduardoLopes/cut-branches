@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { useBranchSelection } from '$domains/branch-management/core/composables/use-branch-selection.svelte';
-	import type { Repository } from '$services/common';
+	import type { Repository } from '$types/repository';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getRepositoryStore, RepositoryStore } from '../repository.svelte';
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
-import type { Repository } from '$services/common';
+import type { Repository } from '$types/repository';
 
 vi.mock('$app/navigation', () => ({
 	goto: vi.fn()

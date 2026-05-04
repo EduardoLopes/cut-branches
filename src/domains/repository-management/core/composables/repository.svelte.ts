@@ -1,6 +1,6 @@
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
-import { RepositorySchema, type Repository } from '$services/common';
+import { RepositorySchema, type Repository } from '$types/repository';
 import { Store } from '$utils/store.svelte';
 
 /**
