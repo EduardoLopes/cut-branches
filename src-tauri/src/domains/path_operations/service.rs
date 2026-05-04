@@ -3,6 +3,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
+use crate::domains::path_operations::error::PathError;
 use crate::shared::error::AppError;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, specta::Type)]
@@ -57,37 +58,23 @@ pub async fn get_root_path(path: String) -> Result<RootPathResponse, AppError> {
     let raw_path = Path::new(&path);
 
     if !is_git_repository(raw_path)? {
-        return Err(AppError::new(
-            format!(
-                "The folder **{}** is not a git repository",
-                raw_path
-                    .file_name()
-                    .unwrap_or(raw_path.as_os_str())
-                    .to_string_lossy()
-            ),
-            "is_not_git_repository",
-            Some(format!(
-                "The path **{}** does not contain a .git directory",
-                raw_path.display()
-            )),
-        ));
+        return Err(PathError::NotGitRepository {
+            name: raw_path
+                .file_name()
+                .unwrap_or(raw_path.as_os_str())
+                .to_string_lossy()
+                .into_owned(),
+            path: raw_path.to_path_buf(),
+        }
+        .into());
     }
 
-    let repo = Repository::open(raw_path).map_err(|e| {
-        AppError::new(
-            format!("Failed to open git repository: {}", e),
-            "git_repository_error",
-            Some(e.to_string()),
-        )
+    let repo = Repository::open(raw_path).map_err(|source| PathError::GitRepositoryOpenFailed {
+        path: raw_path.to_path_buf(),
+        source,
     })?;
 
-    let workdir = repo.workdir().ok_or_else(|| {
-        AppError::new(
-            "Repository has no working directory".to_string(),
-            "no_workdir",
-            Some("The git repository is bare".to_string()),
-        )
-    })?;
+    let workdir = repo.workdir().ok_or(PathError::NoWorkdir)?;
 
     let rootpath = workdir.to_string_lossy().to_string();
 

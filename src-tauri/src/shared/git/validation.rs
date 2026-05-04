@@ -1,66 +1,42 @@
 use git2::Repository;
 use std::path::Path;
 
-use crate::shared::error::AppError;
+use crate::domains::path_operations::error::PathError;
 
-/// Checks if the given path is a git repository.
-///
-/// # Arguments
-///
-/// * `path` - The path to check
-///
-/// # Returns
-///
-/// * `Result<bool, AppError>` - true if it's a git repository, or an error
-pub fn is_git_repository(path: &Path) -> Result<bool, AppError> {
+pub fn is_git_repository(path: &Path) -> Result<bool, PathError> {
     match Repository::open(path) {
         Ok(repo) => validate_repository(&repo, path),
-        Err(e) => {
-            if e.code() == git2::ErrorCode::NotFound {
+        Err(source) => {
+            if source.code() == git2::ErrorCode::NotFound {
                 Ok(false)
             } else {
-                Err(AppError::new(
-                    format!("Failed to open git repository at {}: {}", path.display(), e),
-                    "git_repository_error",
-                    Some(e.to_string()),
-                ))
+                Err(PathError::GitRepositoryOpenFailed {
+                    path: path.to_path_buf(),
+                    source,
+                })
             }
         }
     }
 }
 
-/// Validates a git repository by checking its config and HEAD.
-fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, AppError> {
-    // Check if config is valid
-    if let Err(e) = repo.config() {
-        return Err(AppError::new(
-            format!(
-                "Failed to read git repository config at {}: {}",
-                path.display(),
-                e
-            ),
-            "git_repository_error",
-            Some(e.to_string()),
-        ));
+fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, PathError> {
+    if let Err(source) = repo.config() {
+        return Err(PathError::GitConfigUnreadable {
+            path: path.to_path_buf(),
+            source,
+        });
     }
 
-    // Check if HEAD is valid
     match repo.head() {
         Ok(_) => Ok(true),
-        Err(e) => {
-            // If the repository is bare, it's still valid
+        Err(source) => {
             if repo.is_bare() {
                 Ok(true)
             } else {
-                Err(AppError::new(
-                    format!(
-                        "Failed to read git repository HEAD at {}: {}",
-                        path.display(),
-                        e
-                    ),
-                    "git_repository_error",
-                    Some(e.to_string()),
-                ))
+                Err(PathError::GitHeadUnreadable {
+                    path: path.to_path_buf(),
+                    source,
+                })
             }
         }
     }
