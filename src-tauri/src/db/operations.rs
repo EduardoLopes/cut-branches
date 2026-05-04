@@ -24,15 +24,6 @@ pub fn get_repository(
     repositories::table.find(repo_id).first(conn)
 }
 
-pub fn get_repository_by_name(
-    conn: &mut SqliteConnection,
-    name: &str,
-) -> Result<Repository, DieselError> {
-    repositories::table
-        .filter(repositories::name.eq(name))
-        .first(conn)
-}
-
 pub fn get_repository_list(conn: &mut SqliteConnection) -> Result<Vec<Repository>, DieselError> {
     repositories::table.load(conn)
 }
@@ -67,20 +58,6 @@ pub fn bump_last_synced_at(
 }
 
 // Branch operations
-pub fn create_branch(
-    conn: &mut SqliteConnection,
-    new_branch: NewBranchRecord,
-) -> Result<BranchRecord, DieselError> {
-    diesel::insert_into(branches::table)
-        .values(&new_branch)
-        .execute(conn)?;
-
-    branches::table
-        .filter(branches::repository_id.eq(&new_branch.repository_id))
-        .filter(branches::name.eq(&new_branch.name))
-        .first(conn)
-}
-
 pub fn get_branches_for_repository(
     conn: &mut SqliteConnection,
     repo_id: &str,
@@ -154,72 +131,6 @@ pub fn get_branches_for_repository(
         DeletionStatusFilter::Deleted => query.order(branches::deleted_at.desc()).load(conn),
         _ => query.order(branches::name.asc()).load(conn),
     }
-}
-
-/// Deprecated: Use get_branches_for_repository with DeletionStatusFilter::Deleted instead
-#[deprecated(
-    since = "0.1.0",
-    note = "Use get_branches_for_repository with filters.deletion_status = DeletionStatusFilter::Deleted"
-)]
-pub fn get_deleted_branches_for_repository(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-) -> Result<Vec<BranchRecord>, DieselError> {
-    let filters = crate::domains::branch_management::filters::BranchFilters {
-        deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter::Deleted,
-        ..Default::default()
-    };
-    get_branches_for_repository(conn, repo_id, &filters)
-}
-
-pub fn update_branch(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-    branch_name: &str,
-    updated_branch: NewBranchRecord,
-) -> Result<BranchRecord, DieselError> {
-    diesel::update(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::name.eq(branch_name)),
-    )
-    .set(&updated_branch)
-    .execute(conn)?;
-
-    branches::table
-        .filter(branches::repository_id.eq(repo_id))
-        .filter(branches::name.eq(branch_name))
-        .first(conn)
-}
-
-pub fn delete_branch(
-    conn: &mut SqliteConnection,
-    repo_id: &str,
-    branch_name: &str,
-) -> Result<usize, DieselError> {
-    diesel::delete(
-        branches::table
-            .filter(branches::repository_id.eq(repo_id))
-            .filter(branches::name.eq(branch_name)),
-    )
-    .execute(conn)
-}
-
-pub fn upsert_branch(
-    conn: &mut SqliteConnection,
-    branch: NewBranchRecord,
-) -> Result<BranchRecord, DieselError> {
-    diesel::insert_into(branches::table)
-        .values(&branch)
-        .on_conflict((branches::repository_id, branches::name))
-        .do_update()
-        .set(&branch)
-        .execute(conn)?;
-
-    branches::table
-        .filter(branches::repository_id.eq(&branch.repository_id))
-        .filter(branches::name.eq(&branch.name))
-        .first(conn)
 }
 
 /// Batch upsert branches for better performance when syncing many branches
@@ -518,113 +429,4 @@ pub fn clear_locked_branches(
     )
     .set(branches::is_locked.eq(false))
     .execute(conn)
-}
-
-// Settings operations
-pub fn set_setting(
-    conn: &mut SqliteConnection,
-    new_setting: NewSetting,
-) -> Result<Setting, DieselError> {
-    diesel::insert_into(settings::table)
-        .values(&new_setting)
-        .on_conflict((settings::repository_id, settings::key))
-        .do_update()
-        .set(&new_setting)
-        .execute(conn)?;
-
-    // Handle NULL comparison for repository_id
-    let mut query = settings::table.into_boxed();
-    match &new_setting.repository_id {
-        Some(id) => query = query.filter(settings::repository_id.eq(id)),
-        None => query = query.filter(settings::repository_id.is_null()),
-    }
-    query.filter(settings::key.eq(&new_setting.key)).first(conn)
-}
-
-pub fn get_setting(
-    conn: &mut SqliteConnection,
-    repo_id: Option<&str>,
-    key: &str,
-) -> Result<Setting, DieselError> {
-    // Handle NULL comparison for repository_id
-    let mut query = settings::table.into_boxed();
-    match repo_id {
-        Some(id) => query = query.filter(settings::repository_id.eq(id)),
-        None => query = query.filter(settings::repository_id.is_null()),
-    }
-    query.filter(settings::key.eq(key)).first(conn)
-}
-
-pub fn delete_setting(
-    conn: &mut SqliteConnection,
-    repo_id: Option<&str>,
-    key: &str,
-) -> Result<usize, DieselError> {
-    // Handle NULL comparison for repository_id
-    match repo_id {
-        Some(id) => diesel::delete(
-            settings::table
-                .filter(settings::repository_id.eq(id))
-                .filter(settings::key.eq(key)),
-        )
-        .execute(conn),
-        None => diesel::delete(
-            settings::table
-                .filter(settings::repository_id.is_null())
-                .filter(settings::key.eq(key)),
-        )
-        .execute(conn),
-    }
-}
-
-// Notification operations
-pub fn create_notification(
-    conn: &mut SqliteConnection,
-    new_notification: NewNotification,
-) -> Result<Notification, DieselError> {
-    diesel::insert_into(notifications::table)
-        .values(&new_notification)
-        .execute(conn)?;
-
-    notifications::table.find(&new_notification.id).first(conn)
-}
-
-pub fn get_notifications(
-    conn: &mut SqliteConnection,
-    limit: i64,
-) -> Result<Vec<Notification>, DieselError> {
-    notifications::table
-        .order(notifications::date.desc())
-        .limit(limit)
-        .load(conn)
-}
-
-pub fn delete_notification(
-    conn: &mut SqliteConnection,
-    notification_id: &str,
-) -> Result<usize, DieselError> {
-    diesel::delete(notifications::table.find(notification_id)).execute(conn)
-}
-
-pub fn clear_notifications(conn: &mut SqliteConnection) -> Result<usize, DieselError> {
-    diesel::delete(notifications::table).execute(conn)
-}
-
-// Metadata operations
-pub fn set_metadata(
-    conn: &mut SqliteConnection,
-    new_metadata: NewMetadata,
-) -> Result<Metadata, DieselError> {
-    diesel::insert_into(metadata::table)
-        .values(&new_metadata)
-        .on_conflict(metadata::key)
-        .do_update()
-        .set(&new_metadata)
-        .execute(conn)?;
-
-    metadata::table.find(&new_metadata.key).first(conn)
-}
-
-pub fn get_metadata(conn: &mut SqliteConnection, key: &str) -> Result<Metadata, DieselError> {
-    metadata::table.find(key).first(conn)
 }

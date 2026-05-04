@@ -10,6 +10,7 @@ use thiserror::Error;
 use crate::shared::error::AppError;
 
 #[derive(Debug, Error)]
+#[allow(clippy::enum_variant_names)]
 pub enum DatabaseError {
     #[error("Failed to acquire database connection: {reason}")]
     ConnectionFailed { reason: String },
