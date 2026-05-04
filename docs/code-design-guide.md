@@ -78,16 +78,18 @@ For complex features, `core/` should be split to respect Domain-Driven Design (D
 
 #### **1.3. Inter-Domain Code Sharing**
 
-**Directly importing deep internal code from one domain into another is forbidden.** It creates tight coupling.
+**A domain must never import from another domain.** No exceptions. It does not matter whether the target path is linter-public or internal, whether the symbol is a model or a utility, or whether the import "feels harmless" — domain-to-domain imports are forbidden.
+
+When two domains need the same concept, the import does not go _between_ them; it goes _upward_. Both domains import from a shared scope (`@/shared/`), are wired together at the composition root, or coordinate via a cache or event boundary (§1.5). The boundary between domains is solid, not porous.
 
 - **The Solution (Promotion):** If logic from Domain A is genuinely needed in Domain B _and represents the same concept_, promote it to a shared scope and have both domains import it from there. Read Section 1.4 first—most apparent shared concepts are actually two different concepts wearing the same name.
 - **Duplicate by default; extract when the abstraction is obvious and stable.** The "Rule of Three" is a useful heuristic but not a law. In practice, three independent implementations often diverge in subtle ways (different validation rules, different field names), and reconciling them later is harder than recognizing the shared concept early. Conversely, premature extraction creates a god-module that every domain imports from and no one owns. The real test is not a count—it is whether you can name the abstraction precisely without weasel words like "thing" or "info."
 - **When in doubt, prefer duplication.** A second copy of a 30-line function is cheap. A wrong shared abstraction is expensive: it accumulates flags, optional parameters, and special cases until it is unmaintainable.
 
-**Example violation (anti-pattern):**
+**Example violation:**
 
 ```ts
-// Domain B reaches directly into Domain A's internals
+// Forbidden: any import path that starts with another domain's name
 import { UserId } from '@/domains/identity/models/user';
 ```
 
@@ -157,23 +159,45 @@ This is the baseline vocabulary; resist adding more verbs unless your team genui
 
 #### **1.7. Domain Public API**
 
-Each domain must have a single module-entry file (`index.ts`, `mod.rs`, etc.) that defines its public surface. A domain exposes only what its module-entry file re-exports; other domains may import only those explicit symbols. Symbols not re-exported are strictly internal.
+Each domain has a _public surface_ — the symbols importable from outside the domain. **Other domains never import from this surface** (§1.3 is absolute). The public surface exists for the composition root (which wires use-cases into routes), the routing/entry layer (which mounts views or controllers), and tests. Everything else is strictly internal. How the surface is expressed depends on whether the domain is a folder (single-package project) or a package (monorepo).
 
-There is a real tension to acknowledge here. The barrel-file pattern is excellent for _boundary enforcement_ but historically has costs: bundlers may not tree-shake through it, dev-server cold-starts get slower, and circular imports become easier to trip into.
+##### **Single-package projects: direct imports + linter rules. No domain-level barrels.**
 
-The right approach depends on whether you are in a single-package project or a monorepo. **Most projects are single-package**, and for them the answer is simple:
+The barrel-file pattern (a single `index.ts` per domain that re-exports the public symbols) is tempting because it locates the public API in one readable file. In practice it carries real costs:
 
-- **Single-package projects (any language):** Define a single module-entry file (`index.ts`, `mod.rs`, `__init__.py`) per domain. Re-export the public symbols there. Pair it with a linter rule that forbids deep imports across domains (Section 6 covers the tooling). The boundary is convention plus tooling, not a language feature, but the linter makes it real.
-- **Monorepos (Section 7):** Each domain becomes its own package, and the package boundary itself becomes the API. Consumers can only see what the package's entry point exports—the language and bundler enforce it for free.
+- Bundlers and dev servers can struggle to tree-shake through barrels — fast on paper, slow in production builds.
+- Circular imports become much easier to introduce, and far harder to diagnose when they occur.
+- The barrel becomes a dumping ground that nobody reviews carefully, and the "public API" silently grows to mean "everything."
 
-Per-language notes that apply in both cases:
+The recommended approach: consumers import directly from the file that owns the symbol. The boundary is enforced by a linter, not by a re-export file.
 
-- **Rust:** Use `pub`, `pub(crate)`, and `pub use` in `mod.rs`. The compiler enforces visibility, no extra tooling needed.
+```ts
+// Direct import — explicit, tree-shake-friendly, no barrel needed
+import { Branch } from '@/domains/branch-management/models/branch';
+import { listBranches } from '@/domains/branch-management/application/list-branches';
+```
+
+A linter rule (`dependency-cruiser`, `eslint-plugin-boundaries`, `import-linter` for Python) declares which paths inside each domain are importable from outside the domain. A common pattern: `<domain>/models/**` and `<domain>/application/**` are public to the composition root, the routing layer, and tests; `<domain>/infrastructure/**`, `<domain>/utils/**`, and `<domain>/__tests__/**` are internal. The same linter must also enforce that _no domain ever imports from another domain_ — public surface or not (§1.3). Section 6 covers the tooling.
+
+##### **Monorepos: choose between a single entry point and explicit subpath exports.**
+
+When a domain is its own package, the package boundary itself is the API. Two acceptable patterns — pick one and apply it across the workspace:
+
+- **Single entry point.** `package.json` declares `"exports": { ".": "./src/index.ts" }`. The entry file re-exports the public symbols. Consuming code imports from the package name only: `import { Branch } from '@my-org/branch-management'`. Idiomatic and simple. The barrel costs (tree-shaking, circular imports) still apply, but only at one place per package — they scale with the number of packages, not with the size of each package's API.
+- **Explicit subpath exports.** `package.json` declares an `"exports"` map with multiple entry points (`"./models"`, `"./application"`, etc.), each pointing at a specific file. Consumers import from the subpath: `import { Branch } from '@my-org/branch-management/models'`. No re-export file, better tree-shaking, finer-grained API, and the public surface is a flat list visible directly in `package.json`. Slightly more verbose at call sites.
+
+Either is fine; just don't mix both styles in the same workspace.
+
+**Important:** package boundaries make the public surface explicit, but they do _not_ prevent one domain package from importing another. `@my-org/domain-a` can syntactically depend on `@my-org/domain-b` — the package manager won't stop you. The no-cross-domain rule (§1.3) still has to be enforced by a linter or by CI rules that reject such dependencies in `package.json`. Domain packages depend on `@my-org/shared`, never on each other.
+
+##### **Per-language notes**
+
+- **Rust:** Use `pub`, `pub(crate)`, and `pub use`. The compiler enforces visibility — no extra tooling required, and the `mod.rs` `pub use` pattern is the language's idiom (not a tooling workaround). This is different from a TypeScript barrel: the compiler actually checks it.
 - **Go:** Capitalization (`PublicName` vs. `privateName`) plus `internal/` directories give you compiler-level boundary enforcement.
-- **TypeScript / JavaScript:** A barrel `index.ts` is the standard mechanism. Modern bundlers (Vite, esbuild, Rollup with proper config) tree-shake through barrels well; the historical tooling tax has mostly been paid down.
-- **Python:** A barrel `__init__.py` listing `__all__` is idiomatic.
+- **TypeScript / JavaScript:** Configure path aliases (`@/domains/*`) for readable imports. Pair with `dependency-cruiser` or `eslint-plugin-boundaries` to enforce which subpaths are public.
+- **Python:** Use `import-linter` layered contracts to declare which submodules are importable from outside the package. Avoid mass `__init__.py` re-exports.
 
-Whichever mechanism you use, the rule is the same: there is _one_ place that defines what a domain exposes, and consumers must respect it.
+Whichever path you take, the rule is the same: there is a defined public surface, and consumers must respect it.
 
 #### **1.8. Managing Complex "Fat" Domains**
 
@@ -293,13 +317,16 @@ A rule that depends on developer memory has a half-life of months. Codify the ru
 
 The minimum:
 
-- **Boundary enforcement.** Forbid deep imports across domains, enforce unidirectional dependencies (Delivery → Application → Domain), and prevent core code from importing infrastructure.
-  - **TypeScript:** [`dependency-cruiser`](https://github.com/sverweij/dependency-cruiser) or [`eslint-plugin-boundaries`](https://github.com/javierbrea/eslint-plugin-boundaries). Both let you write rules like "files in `core/` may not import from `infrastructure/`."
+- **Boundary enforcement.** Three rules to encode in your linter, in order of importance:
+  1. **No cross-domain imports.** A file inside `domains/A/` may not import from `domains/B/`. This is the single most important rule (§1.3) and the easiest to violate by accident.
+  2. **Unidirectional dependencies inside a domain.** Delivery → Application → Domain. Infrastructure depends on Domain (via ports), never the reverse.
+  3. **Core may not import infrastructure.** `core/` code reaches infrastructure only through ports defined in `core/`.
+  - **TypeScript:** [`dependency-cruiser`](https://github.com/sverweij/dependency-cruiser) or [`eslint-plugin-boundaries`](https://github.com/javierbrea/eslint-plugin-boundaries). Both let you write rules like "files in `domains/A/` may not import from `domains/B/`" and "files in `core/` may not import from `infrastructure/`."
   - **Python:** [`import-linter`](https://import-linter.readthedocs.io/) with layered contracts.
-  - **JVM:** ArchUnit—test architecture rules as JUnit tests.
-  - **Rust:** Module visibility (`pub`, `pub(crate)`) is enforced by the compiler; lean on it.
+  - **JVM:** ArchUnit — test architecture rules as JUnit tests.
+  - **Rust:** Module visibility (`pub`, `pub(crate)`) is enforced by the compiler; lean on it. For workspace-level domain isolation, separate crates are the cleanest answer.
   - **Go:** `internal/` directories are enforced by the compiler.
-- **Public API enforcement.** Use the mechanism described in Section 1.7 for your language—module-entry barrels for single-package projects, package boundaries for monorepos, plus `pub`/`internal/` visibility where the language provides it.
+- **Public API enforcement.** Use the mechanism described in Section 1.7 for your language — linter-enforced path rules in single-package projects, package boundaries (single entry or subpath exports) in monorepos, plus `pub`/`internal/` visibility where the language provides it.
 - **Naming conventions.** There is no off-the-shelf rule for "function returning a single resource must be named `getX`," but a small custom ESLint rule (or a regex-based linter check in CI) can pin the prefixes from §1.6. Most teams rely on code review for this rather than tooling—either is fine, as long as the convention is held to.
 - **Pre-commit hooks** (`lefthook`, `husky`, `pre-commit`) to run the architecture linters locally before they reach CI.
 
@@ -339,7 +366,7 @@ The hard parts of monorepos are rarely the structure—they are the day-two oper
 
 - **Aggregate:** A group of related objects treated as a single unit when persisting. _Example: An `Order` and its `OrderLines`. You do not save an `OrderLine` directly; you save the `Order`, which owns its lines._ Repositories operate on aggregates, not on their internals.
 - **Anti-Corruption Layer (ACL):** A translation layer at the boundary between your domain and a foreign or legacy model. Keeps the foreign model from polluting your clean one. Lives in `infrastructure/`.
-- **Barrel File:** A single file (`index.ts`, `mod.rs`) that imports and re-exports modules from a directory. Useful at the root of a domain to define its Public API; less useful for global UI libraries where it can interfere with tree-shaking.
+- **Barrel File:** A single file (`index.ts`, `mod.rs`, `__init__.py`) that imports and re-exports modules from a directory. This guide recommends _against_ barrel files at the domain level in single-package projects (see §1.7) — they hurt tree-shaking and make circular imports easy to introduce. They remain acceptable as the single entry point of a monorepo package, where the cost is paid once per package rather than per domain.
 - **Bounded Context:** A boundary inside which a model has a single, consistent meaning. The `User` in `identity/` and the `User` in `billing/` are typically two different bounded contexts that happen to share an identifier.
 - **Business Logic:** The real-world rules your software enforces. _"A user must be 18 to buy this item" is business logic; "make this button red" is UI logic._
 - **Co-location:** Placing related files physically close to each other. _A component, its tests, and its styles in the same folder, rather than split across the project._
