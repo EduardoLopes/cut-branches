@@ -1,10 +1,8 @@
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import RepositoryList from '../repository-list.svelte';
-import { eventBus, Events } from '$services/event-bus';
 import { renderWithTestWrapper, mockDataFactory } from '$utils/test-utils';
 
-// Mock the query composables
 const mockRepositories = [
 	mockDataFactory.repository({ id: '1', name: 'repo-1', branchesCount: 5 }),
 	mockDataFactory.repository({ id: '2', name: 'repo-2', branchesCount: 3 }),
@@ -21,14 +19,24 @@ vi.mock('$domains/repository-navigation/core/composables/create-get-repository-l
 	}))
 }));
 
-// Mock the prefetch composable
 const mockPrefetchRepositoryData = vi.fn();
 
 vi.mock('$domains/repository-navigation/core/composables/create-prefetch-repository-data', () => ({
 	createPrefetchRepositoryData: vi.fn(() => mockPrefetchRepositoryData)
 }));
 
-// Mock page state
+const mockAddRepository = vi.fn();
+let mockIsPending = false;
+
+vi.mock('$domains/repository-management/core/composables/use-add-repository.svelte', () => ({
+	useAddRepository: vi.fn(() => ({
+		addRepository: mockAddRepository,
+		get isPending() {
+			return mockIsPending;
+		}
+	}))
+}));
+
 vi.mock('$app/state', () => ({
 	page: {
 		params: {
@@ -40,6 +48,7 @@ vi.mock('$app/state', () => ({
 describe('RepositoryList', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockIsPending = false;
 	});
 
 	describe('Rendering', () => {
@@ -52,72 +61,35 @@ describe('RepositoryList', () => {
 
 	describe('Hover Prefetching', () => {
 		it('creates prefetch function on component mount', () => {
-			// Simply verify the component renders without errors
-			// The prefetch composable mock will be called during component initialization
 			const screen = renderWithTestWrapper(RepositoryList);
 			expect(screen.container).toBeInTheDocument();
 		});
 	});
 
-	describe('Event Bus Integration', () => {
-		it('publishes REPOSITORY_ADD_REQUESTED event when add button is clicked', async () => {
-			const publishSpy = vi.spyOn(eventBus, 'publish');
-
+	describe('Add repository', () => {
+		it('calls addRepository when add button is clicked', async () => {
 			const screen = renderWithTestWrapper(RepositoryList);
 			const addButton = screen.getByRole('button', { name: /add a git repository/i });
 
 			await addButton.click();
 			await tick();
 
-			expect(publishSpy).toHaveBeenCalledWith(Events.REPOSITORY_ADD_REQUESTED);
+			expect(mockAddRepository).toHaveBeenCalledTimes(1);
 		});
 
-		it('disables add button when repository is being added', async () => {
+		it('disables add button while the mutation is pending', async () => {
+			mockIsPending = true;
 			const screen = renderWithTestWrapper(RepositoryList);
 			const addButton = screen.getByRole('button', { name: /add a git repository/i });
 
-			// Initially enabled
-			expect(addButton).not.toBeDisabled();
-
-			// Publish REPOSITORY_ADDING event
-			eventBus.publish(Events.REPOSITORY_ADDING);
-			await tick();
-
-			// Button should be disabled
 			expect(addButton).toBeDisabled();
 		});
 
-		it('enables add button after repository is added successfully', async () => {
+		it('enables add button when the mutation is idle', () => {
+			mockIsPending = false;
 			const screen = renderWithTestWrapper(RepositoryList);
 			const addButton = screen.getByRole('button', { name: /add a git repository/i });
 
-			// Simulate adding process
-			eventBus.publish(Events.REPOSITORY_ADDING);
-			await tick();
-			expect(addButton).toBeDisabled();
-
-			// Simulate successful add
-			eventBus.publish(Events.REPOSITORY_ADDED);
-			await tick();
-
-			// Button should be enabled again
-			expect(addButton).not.toBeDisabled();
-		});
-
-		it('enables add button after repository add fails', async () => {
-			const screen = renderWithTestWrapper(RepositoryList);
-			const addButton = screen.getByRole('button', { name: /add a git repository/i });
-
-			// Simulate adding process
-			eventBus.publish(Events.REPOSITORY_ADDING);
-			await tick();
-			expect(addButton).toBeDisabled();
-
-			// Simulate failed add
-			eventBus.publish(Events.REPOSITORY_ADD_FAILED);
-			await tick();
-
-			// Button should be enabled again
 			expect(addButton).not.toBeDisabled();
 		});
 	});

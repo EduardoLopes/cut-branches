@@ -8,7 +8,6 @@
 	import type { QueryClientConfig } from '@tanstack/svelte-query';
 	import { mergeRight } from 'ramda';
 	import { type Snippet } from 'svelte';
-	import DomainsHandlers from './domains-handlers.svelte';
 	import { browser } from '$app/environment';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { createError } from '$utils/error-utils';
@@ -143,7 +142,5 @@
 </script>
 
 <QueryClientProvider client={queryClient}>
-	<DomainsHandlers>
-		{@render children?.()}
-	</DomainsHandlers>
+	{@render children?.()}
 </QueryClientProvider>

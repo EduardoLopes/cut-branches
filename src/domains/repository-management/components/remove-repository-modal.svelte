@@ -8,7 +8,6 @@
 	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { eventBus, Events } from '$services/event-bus';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';
@@ -34,21 +33,11 @@
 			const repoName = ensureString(getRepositoryQuery.data?.name);
 			const deletedId = repositoryId;
 
-			// Publish event for other domains to clean up their data
-			// This allows branch-management to clear selections, locked branches, and search state
-			eventBus.publish(Events.REPOSITORY_DELETED, { id: deletedId, repoId: deletedId });
-
-			// Cancel and remove queries for the deleted repository
-			// This prevents get_repository from being called on the deleted repo
 			if (deletedId) {
-				queryClient.cancelQueries({ queryKey: ['getRepository', { id: deletedId }] });
-				queryClient.removeQueries({ queryKey: ['getRepository', { id: deletedId }] });
+				queryClient.cancelQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
+				queryClient.removeQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
 			}
 
-			// Invalidate repositories list so it refreshes
-			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
-
-			// Find another repository to navigate to using current list
 			const otherRepository = repositories.find((repository) => repository.id !== deletedId);
 
 			// Navigate away immediately
@@ -82,7 +71,6 @@
 			return;
 		}
 
-		// Delete repository - event bus will notify other domains to clean up
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}
 

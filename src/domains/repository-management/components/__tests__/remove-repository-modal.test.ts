@@ -54,18 +54,6 @@ vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
 }));
 
-const mockSearchClear = vi.fn();
-
-vi.mock('$domains/branch-management/store/search-branches.svelte', () => ({
-	getSearchBranchesStore: vi.fn().mockImplementation((name) => {
-		if (!name) return undefined;
-		return {
-			clear: mockSearchClear,
-			state: undefined
-		};
-	})
-}));
-
 describe('RemoveRepositoryModal', () => {
 	beforeEach(() => {
 		// Reset mock repositories state
@@ -147,21 +135,6 @@ describe('RemoveRepositoryModal', () => {
 			await vi.waitFor(() => {
 				expect(mockRepositories.find((r) => r.id === mockRepository.id)).toBeUndefined();
 			});
-		});
-
-		test('clears the search store for removed repository', async () => {
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
-			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
-
-			const removeButton = getByTestId('confirm-remove');
-			await removeButton.click();
-
-			// Check that the mocked clear function was called
-			await vi.waitFor(() => expect(mockSearchClear).toHaveBeenCalled());
 		});
 
 		test('shows notification after repository removal', async () => {

@@ -8,7 +8,7 @@
 	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { page } from '$app/state';
-	import { eventBus, Events } from '$services/event-bus';
+	import { useAddRepository } from '$domains/repository-management/core/composables/use-add-repository.svelte';
 	import IconButton from '$ui/core/icon-button.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -39,29 +39,7 @@
 	// Prefetch function for repository data on hover
 	const prefetchRepositoryData = createPrefetchRepositoryData();
 
-	// Track if repository is being added
-	let isAddingRepository = $state(false);
-
-	// Subscribe to repository adding events
-	$effect(() => {
-		const addingSubscription = eventBus.subscribe(Events.REPOSITORY_ADDING, () => {
-			isAddingRepository = true;
-		});
-
-		const addedSubscription = eventBus.subscribe(Events.REPOSITORY_ADDED, () => {
-			isAddingRepository = false;
-		});
-
-		const failedSubscription = eventBus.subscribe(Events.REPOSITORY_ADD_FAILED, () => {
-			isAddingRepository = false;
-		});
-
-		return () => {
-			addingSubscription.unsubscribe();
-			addedSubscription.unsubscribe();
-			failedSubscription.unsubscribe();
-		};
-	});
+	const addRepository = useAddRepository();
 
 	// Map repository data to navigation items
 	const items = $derived.by<NavigationItem[]>(() => {
@@ -88,7 +66,7 @@
 	});
 
 	function handleAddRepository() {
-		eventBus.publish(Events.REPOSITORY_ADD_REQUESTED);
+		addRepository.addRepository();
 	}
 </script>
 
@@ -152,7 +130,7 @@
 				icon="material-symbols:add-rounded"
 				label="Add a git repository"
 				visuallyHiddenLabel={true}
-				disabled={isAddingRepository}
+				disabled={addRepository.isPending}
 				passThrough={{
 					root: {
 						style: css.raw({})
@@ -161,7 +139,7 @@
 			/>
 		</div>
 		<Loading
-			loading={repositoriesQuery.isLoading || isAddingRepository}
+			loading={repositoriesQuery.isLoading || addRepository.isPending}
 			passThrough={{
 				root: {
 					style: css.raw({
