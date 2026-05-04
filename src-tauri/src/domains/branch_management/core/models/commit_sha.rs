@@ -151,4 +151,41 @@ mod tests {
         let sha = CommitSha::new("abc1234").unwrap();
         assert_eq!(sha.short(Some(20)), "abc1234");
     }
+
+    /// Pins the FE/BE contract — see branch_name.rs for the pattern.
+    #[test]
+    fn commit_sha_contract() {
+        const CASES: &str = include_str!("../../../../../../tests/contracts/commit-sha.cases.json");
+
+        #[derive(serde::Deserialize)]
+        struct InvalidCase {
+            input: String,
+            reason: String,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct Cases {
+            valid: Vec<String>,
+            invalid: Vec<InvalidCase>,
+        }
+
+        let cases: Cases = serde_json::from_str(CASES).expect("contract JSON parses");
+
+        for input in &cases.valid {
+            assert!(
+                CommitSha::new(input).is_ok(),
+                "expected valid case {:?} to be accepted",
+                input
+            );
+        }
+
+        for case in &cases.invalid {
+            assert!(
+                CommitSha::new(&case.input).is_err(),
+                "expected invalid case {:?} ({}) to be rejected",
+                case.input,
+                case.reason
+            );
+        }
+    }
 }

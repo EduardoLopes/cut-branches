@@ -1,0 +1,23 @@
+{
+	"description": "Shared test cases for CommitSha Value Object. Both FE (src/core/commit-sha.ts) and BE (src-tauri/src/domains/branch_management/core/models/commit_sha.rs) must agree: every 'valid' input is accepted, every 'invalid' input is rejected. Length 7-40, hex characters only, normalised to lowercase.",
+	"valid": [
+		"abc1234",
+		"abc12345",
+		"abc1234567890abcdef1234567890abcdef12340",
+		"0000000",
+		"fffffff",
+		"deadbeef",
+		"ABC1234",
+		"AbC1234567890aBcDef1234567890abcdef12340"
+	],
+	"invalid": [
+		{ "input": "", "reason": "empty" },
+		{ "input": "   ", "reason": "whitespace only" },
+		{ "input": "abc123", "reason": "too short (6 chars)" },
+		{ "input": "abc1234567890abcdef1234567890abcdef123401", "reason": "too long (41 chars)" },
+		{ "input": "xyz1234", "reason": "non-hex characters" },
+		{ "input": "ghij567", "reason": "non-hex characters" },
+		{ "input": "abc 1234", "reason": "contains space (not hex)" },
+		{ "input": "abc-1234", "reason": "contains dash (not hex)" }
+	]
+}

@@ -5,8 +5,9 @@
 //! git-check-ref-format rules: https://git-scm.com/docs/git-check-ref-format
 //!
 //! Mirrors the FE Value Object at
-//! src/domains/branch-management/core/models/branch-name.ts — keep validation
-//! rules in sync (or pin via contract tests, §5).
+//! src/domains/branch-management/core/models/branch-name.ts — kept in sync
+//! via the shared contract fixture at tests/contracts/branch-name.cases.json
+//! (asserted by `branch_name_contract` below and the matching FE test).
 
 #![allow(dead_code)]
 
@@ -225,5 +226,46 @@ mod tests {
         let a = BranchName::new("main").unwrap();
         let b = BranchName::new("main").unwrap();
         assert_eq!(a, b);
+    }
+
+    /// Pins the FE/BE contract by running every case in
+    /// `tests/contracts/branch-name.cases.json` through `BranchName::new`.
+    /// The matching FE test runs the same JSON through the TS Value Object.
+    /// Both sides must agree on accept/reject for every input.
+    #[test]
+    fn branch_name_contract() {
+        const CASES: &str =
+            include_str!("../../../../../../tests/contracts/branch-name.cases.json");
+
+        #[derive(serde::Deserialize)]
+        struct InvalidCase {
+            input: String,
+            reason: String,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct Cases {
+            valid: Vec<String>,
+            invalid: Vec<InvalidCase>,
+        }
+
+        let cases: Cases = serde_json::from_str(CASES).expect("contract JSON parses");
+
+        for input in &cases.valid {
+            assert!(
+                BranchName::new(input).is_ok(),
+                "expected valid case {:?} to be accepted",
+                input
+            );
+        }
+
+        for case in &cases.invalid {
+            assert!(
+                BranchName::new(&case.input).is_err(),
+                "expected invalid case {:?} ({}) to be rejected",
+                case.input,
+                case.reason
+            );
+        }
     }
 }

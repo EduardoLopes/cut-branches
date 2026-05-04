@@ -1,0 +1,111 @@
+{
+	"description": "Shared test cases for BranchName Value Object. Both FE (src/domains/branch-management/core/models/branch-name.ts) and BE (src-tauri/src/domains/branch_management/core/models/branch_name.rs) must agree: every 'valid' input is accepted, every 'invalid' input is rejected. Rules mirror git-check-ref-format.",
+	"valid": [
+		"main",
+		"master",
+		"develop",
+		"feature/login",
+		"feature/sub/nested",
+		"v1.0.0",
+		"v1.0.0-rc",
+		"release-2024",
+		"hotfix/security-patch",
+		"bugfix/issue-123",
+		"a",
+		"a-b-c",
+		"camelCase",
+		"PascalCase",
+		"snake_case",
+		"with.dots.allowed.midway"
+	],
+	"invalid": [
+		{
+			"input": "",
+			"reason": "empty"
+		},
+		{
+			"input": "   ",
+			"reason": "whitespace only"
+		},
+		{
+			"input": ".starts-with-dot",
+			"reason": "leading dot"
+		},
+		{
+			"input": "ends-with-dot.",
+			"reason": "trailing dot"
+		},
+		{
+			"input": "ends-with-lock.lock",
+			"reason": "trailing .lock"
+		},
+		{
+			"input": "/leading-slash",
+			"reason": "leading slash"
+		},
+		{
+			"input": "trailing-slash/",
+			"reason": "trailing slash"
+		},
+		{
+			"input": "a..b",
+			"reason": "consecutive dots"
+		},
+		{
+			"input": "a//b",
+			"reason": "consecutive slashes"
+		},
+		{
+			"input": "@",
+			"reason": "single at-sign"
+		},
+		{
+			"input": "foo@{1}",
+			"reason": "contains @{ sequence"
+		},
+		{
+			"input": "back\\slash",
+			"reason": "backslash"
+		},
+		{
+			"input": "with space",
+			"reason": "space"
+		},
+		{
+			"input": "with~tilde",
+			"reason": "tilde"
+		},
+		{
+			"input": "with^caret",
+			"reason": "caret"
+		},
+		{
+			"input": "with:colon",
+			"reason": "colon"
+		},
+		{
+			"input": "with?q",
+			"reason": "question mark"
+		},
+		{
+			"input": "with*star",
+			"reason": "asterisk"
+		},
+		{
+			"input": "with[bracket",
+			"reason": "open bracket"
+		},
+		{
+			"input": "with]bracket",
+			"reason": "close bracket"
+		},
+		{
+			"input": "with\nnewline",
+			"reason": "ASCII control (newline)"
+		},
+		{
+			"input": "with\ttab",
+			"reason": "ASCII control (tab)"
+		}
+	]
+}

@@ -137,4 +137,42 @@ mod tests {
             Err(RepositoryPathError::ContainsNul(_))
         ));
     }
+
+    /// Pins the FE/BE contract — see branch_name.rs for the pattern.
+    #[test]
+    fn repository_path_contract() {
+        const CASES: &str =
+            include_str!("../../../../../../tests/contracts/repository-path.cases.json");
+
+        #[derive(serde::Deserialize)]
+        struct InvalidCase {
+            input: String,
+            reason: String,
+        }
+
+        #[derive(serde::Deserialize)]
+        struct Cases {
+            valid: Vec<String>,
+            invalid: Vec<InvalidCase>,
+        }
+
+        let cases: Cases = serde_json::from_str(CASES).expect("contract JSON parses");
+
+        for input in &cases.valid {
+            assert!(
+                RepositoryPath::new(input.clone()).is_ok(),
+                "expected valid case {:?} to be accepted",
+                input
+            );
+        }
+
+        for case in &cases.invalid {
+            assert!(
+                RepositoryPath::new(case.input.clone()).is_err(),
+                "expected invalid case {:?} ({}) to be rejected",
+                case.input,
+                case.reason
+            );
+        }
+    }
 }
