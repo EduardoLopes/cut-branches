@@ -1,7 +1,4 @@
 pub mod commands;
-pub mod error;
-pub mod service;
-pub mod types;
-
-pub use commands::*;
-pub use error::PathError;
+pub(crate) mod error;
+pub(crate) mod service;
+pub(crate) mod types;

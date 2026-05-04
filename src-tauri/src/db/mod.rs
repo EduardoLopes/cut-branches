@@ -1,9 +1,7 @@
-pub mod error;
-pub mod models;
-pub mod operations;
-pub mod schema;
-
-pub use error::DatabaseError;
+pub(crate) mod error;
+pub(crate) mod models;
+pub(crate) mod operations;
+pub(crate) mod schema;
 
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, Pool};
