@@ -5,7 +5,7 @@ import RepositoryPageFixture from './fixtures/repository-page-fixture.svelte';
 import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
 import { getSelectedBranchesStore } from '$domains/branch-management/core/composables/selected-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock branch list data

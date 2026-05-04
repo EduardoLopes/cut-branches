@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import { filterSelectableBranches } from '../filter-selectable-branches';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 
 const createBranch = (name: string, isLocked = false): Branch => {
 	const branchData: BranchData = {

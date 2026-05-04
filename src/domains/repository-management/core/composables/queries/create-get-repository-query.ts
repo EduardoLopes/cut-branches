@@ -1,4 +1,4 @@
-import type { GetRepositoryInput } from '$lib/bindings';
+import type { GetRepositoryInput } from '$infrastructure/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 export function createGetRepositoryQuery(

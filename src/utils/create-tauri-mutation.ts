@@ -11,7 +11,7 @@ import {
 	type CommandResult,
 	executeCommand
 } from './tauri-commands';
-import { type AppError } from '$lib/bindings';
+import { type AppError } from '$infrastructure/bindings';
 
 // Configuration for automatic query invalidation
 export interface QueryInvalidationConfig {

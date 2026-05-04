@@ -1,6 +1,6 @@
 import { BranchName } from './branch-name';
 import { Commit } from './commit';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 
 /**
  * Branch alert types

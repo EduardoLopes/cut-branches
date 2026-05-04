@@ -8,7 +8,7 @@ const repositoryListAction = createRawSnippet(() => ({
 }));
 
 // Mock Tauri commands
-vi.mock('$lib/bindings', () => ({
+vi.mock('$infrastructure/bindings', () => ({
 	commands: {
 		getRepositoryList: vi.fn(() =>
 			Promise.resolve({

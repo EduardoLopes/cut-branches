@@ -1,5 +1,5 @@
 import { type CreateQueryOptions } from '@tanstack/svelte-query';
-import { type AppError, type ListLockedBranchesOutput } from '$lib/bindings';
+import { type AppError, type ListLockedBranchesOutput } from '$infrastructure/bindings';
 import { createTauriQuery, type InputResolver } from '$utils/create-tauri-query';
 
 export function createLockedBranchesQuery(

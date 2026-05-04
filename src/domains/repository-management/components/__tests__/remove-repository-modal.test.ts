@@ -26,7 +26,7 @@ const mockRepository2: Repository = {
 let mockRepositories: Repository[] = [mockRepository, mockRepository2];
 
 // Mock Tauri commands
-vi.mock('$lib/bindings', () => ({
+vi.mock('$infrastructure/bindings', () => ({
 	commands: {
 		listRepositories: vi
 			.fn()

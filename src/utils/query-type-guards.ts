@@ -1,4 +1,4 @@
-import type { GetBranchListInput, GetRepositoryInput } from '$lib/bindings';
+import type { GetBranchListInput, GetRepositoryInput } from '$infrastructure/bindings';
 
 /**
  * Type guard to check if a value has a repoId property

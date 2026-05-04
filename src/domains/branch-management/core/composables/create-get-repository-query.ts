@@ -1,6 +1,6 @@
 import type { Branch } from '../models/branch';
 import { BranchConverters } from '../models/converters';
-import type { GetRepositoryOutput as GetRepositoryOutputData } from '$lib/bindings';
+import type { GetRepositoryOutput as GetRepositoryOutputData } from '$infrastructure/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 // Repository output type with Domain Model branches

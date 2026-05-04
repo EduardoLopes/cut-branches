@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Branch } from '../branch';
 import { Commit } from '../commit';
 import { BranchConverters, CommitConverters } from '../converters';
-import type { Branch as BranchData, Commit as CommitData } from '$lib/bindings';
+import type { Branch as BranchData, Commit as CommitData } from '$infrastructure/bindings';
 
 describe('Converters', () => {
 	describe('BranchConverters', () => {

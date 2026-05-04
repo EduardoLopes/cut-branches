@@ -70,7 +70,7 @@ fn main() {
     builder
         .export(
             specta_typescript::Typescript::default(),
-            "../src/lib/bindings.ts",
+            "../src/infrastructure/bindings.ts",
         )
         .expect("Failed to export typescript bindings");
 

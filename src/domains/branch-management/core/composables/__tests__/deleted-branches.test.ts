@@ -4,7 +4,7 @@ import {
 	getDeletedBranchesStore,
 	type DeletedBranchesState
 } from '../deleted-branches.svelte';
-import type { Branch } from '$lib/bindings';
+import type { Branch } from '$infrastructure/bindings';
 
 // Mock localStorage
 const localStorageMock = {

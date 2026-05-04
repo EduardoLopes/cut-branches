@@ -1,6 +1,6 @@
 import { Branch } from './branch';
 import { Commit } from './commit';
-import type { Branch as BranchData, Commit as CommitData } from '$lib/bindings';
+import type { Branch as BranchData, Commit as CommitData } from '$infrastructure/bindings';
 
 /**
  * Conversion utilities for transforming between data types and domain models.

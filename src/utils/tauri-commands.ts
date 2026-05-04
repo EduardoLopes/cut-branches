@@ -1,4 +1,4 @@
-import { commands, type AppError, type Result } from '$lib/bindings';
+import { commands, type AppError, type Result } from '$infrastructure/bindings';
 
 // Shared type utilities for Tauri commands
 export type CommandName = keyof typeof commands;

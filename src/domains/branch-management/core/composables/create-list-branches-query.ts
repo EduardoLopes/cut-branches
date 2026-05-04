@@ -3,7 +3,7 @@ import { BranchConverters } from '../models/converters';
 import {
 	type GetBranchListInput,
 	type GetBranchListOutput as GetBranchListOutputData
-} from '$lib/bindings';
+} from '$infrastructure/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 // Output type with Domain Models instead of Data types

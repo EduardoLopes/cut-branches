@@ -1,4 +1,4 @@
-import type { GetCommitReachabilityInput } from '$lib/bindings';
+import type { GetCommitReachabilityInput } from '$infrastructure/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 type CommitReachableQueryOptions = TauriQueryOptions<

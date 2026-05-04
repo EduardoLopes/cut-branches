@@ -102,7 +102,7 @@ export default defineConfig(({ mode }) => {
 				},
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}'],
-			exclude: ['src/lib/**'],
+			exclude: ['src/infrastructure/**'],
 			setupFiles: ['./vitest-setup.js'],
 			browser: {
 				enabled: true,
@@ -125,7 +125,7 @@ export default defineConfig(({ mode }) => {
 				all: true,
 				include: ['src/**'],
 				exclude: [
-					'src/lib/**',
+					'src/infrastructure/**',
 					'src/**/*.d.ts',
 					'src/**/*.md',
 					'src/**/.DS_Store',

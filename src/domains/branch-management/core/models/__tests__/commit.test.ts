@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { Commit } from '../commit';
 import { Email } from '$core/email';
-import type { Commit as CommitData } from '$lib/bindings';
+import type { Commit as CommitData } from '$infrastructure/bindings';
 
 describe('Commit', () => {
 	let mockCommitData: CommitData;

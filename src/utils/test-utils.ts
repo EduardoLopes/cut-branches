@@ -3,7 +3,7 @@ import type { Component, ComponentProps } from 'svelte';
 import { vi, type MockedFunction } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import TestWrapper from '$components/test-wrapper.svelte';
-import type { Branch } from '$lib/bindings';
+import type { Branch } from '$infrastructure/bindings';
 import type { Repository } from '$services/common';
 
 // Type for the mocked invoke function

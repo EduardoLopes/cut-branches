@@ -3,7 +3,7 @@ import {
 	type AppError,
 	type ListDeletedBranchSelectionInput,
 	type ListDeletedBranchSelectionOutput
-} from '$lib/bindings';
+} from '$infrastructure/bindings';
 import { createTauriQuery } from '$utils/create-tauri-query';
 
 export function createDeletedSelectedBranchesQuery(

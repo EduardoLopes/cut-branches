@@ -14,7 +14,7 @@ import {
 	type CommandResult,
 	buildCommandExecutor
 } from './tauri-commands';
-import { type AppError } from '$lib/bindings';
+import { type AppError } from '$infrastructure/bindings';
 
 // Helper to resolve input (static value or function)
 export type InputResolver<TCommand extends CommandName> =

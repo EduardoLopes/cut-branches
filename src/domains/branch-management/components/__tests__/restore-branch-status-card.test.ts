@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
 import { Branch } from '../../core/models/branch';
 import RestoreBranchStatusCard from '../restore-branch-status-card.svelte';
-import type { Branch as BranchData, RestoreBranchResult } from '$lib/bindings';
+import type { Branch as BranchData, RestoreBranchResult } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 const validSha = 'abc1234567890abc1234567890abc1234567890a';

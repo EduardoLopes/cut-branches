@@ -4,7 +4,7 @@ import { getLockedBranchesStore } from '../locked-branches.svelte';
 import { getSearchBranchesStore } from '../search-branches.svelte';
 import { getSelectedBranchesStore } from '../selected-branches.svelte';
 import { useBranchSelection } from '../use-branch-selection.svelte';
-import type { BranchFilters } from '$lib/bindings';
+import type { BranchFilters } from '$infrastructure/bindings';
 import type { Repository } from '$services/common';
 
 let currentRepository: Repository | undefined;

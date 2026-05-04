@@ -163,7 +163,7 @@ branch-management/
 
 #### To Global Services
 
-- Tauri commands for Git operations via `$lib/bindings`
+- Tauri commands for Git operations via `$infrastructure/bindings`
 - TanStack Query for data fetching and caching
 
 ### Communication Patterns

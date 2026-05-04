@@ -1,13 +1,13 @@
 import { describe, expect, beforeEach, vi } from 'vitest';
 import LockBranchToggle from '../lock-branch-toggle.svelte';
-import { commands } from '$lib/bindings';
+import { commands } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock state for locked branches
 let mockLockedBranches: string[] = [];
 
 // Mock Tauri commands
-vi.mock('$lib/bindings', () => ({
+vi.mock('$infrastructure/bindings', () => ({
 	commands: {
 		listLockedBranches: vi.fn(() =>
 			Promise.resolve({ status: 'ok', data: { branches: mockLockedBranches } })

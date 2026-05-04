@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Branch, type BranchAlert } from '../branch';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 
 describe('Branch', () => {
 	let mockBranchData: BranchData;

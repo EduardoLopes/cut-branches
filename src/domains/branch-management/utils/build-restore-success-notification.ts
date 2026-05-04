@@ -1,4 +1,4 @@
-import type { RestoreBranchResult } from '$lib/bindings';
+import type { RestoreBranchResult } from '$infrastructure/bindings';
 import type { NotificationData } from '$services/notifications/notifications.svelte';
 import { ensureString, formatString } from '$utils/string-utils';
 

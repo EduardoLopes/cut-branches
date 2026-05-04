@@ -1,4 +1,4 @@
-import type { BranchFilters, GetBranchListInput } from '$lib/bindings';
+import type { BranchFilters, GetBranchListInput } from '$infrastructure/bindings';
 import { createTauriQuery, type TauriQueryOptions } from '$utils/create-tauri-query';
 
 /**

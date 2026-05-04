@@ -47,7 +47,7 @@ vi.mock('$domains/repository-management/store/repository.svelte', () => {
 });
 
 // Mock Tauri commands
-vi.mock('$lib/bindings', () => ({
+vi.mock('$infrastructure/bindings', () => ({
 	commands: {
 		createRepository: vi.fn(),
 		getRepositoryRoot: vi.fn(),
@@ -100,7 +100,7 @@ describe('Navigation Integration', () => {
 		(open as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce('/path/to/repo');
 
 		// Mock the createRepository command to return success
-		const { commands } = await import('$lib/bindings');
+		const { commands } = await import('$infrastructure/bindings');
 		(commands.createRepository as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
 			status: 'ok',
 			data: {

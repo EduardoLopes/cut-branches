@@ -1,6 +1,6 @@
 import { CommitSha } from '$core/commit-sha';
 import { Email } from '$core/email';
-import type { Commit as CommitData } from '$lib/bindings';
+import type { Commit as CommitData } from '$infrastructure/bindings';
 
 /**
  * Commit Domain Model

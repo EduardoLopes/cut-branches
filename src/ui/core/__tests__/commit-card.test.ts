@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import CommitCard from '../commit-card.svelte';
 import { Commit } from '$domains/branch-management/core/models/commit';
-import type { Commit as CommitData } from '$lib/bindings';
+import type { Commit as CommitData } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('CommitCard Component', () => {

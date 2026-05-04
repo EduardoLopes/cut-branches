@@ -4,7 +4,7 @@ import { getSearchBranchesStore } from '../../core/composables/search-branches.s
 import { getSelectedBranchesStore } from '../../core/composables/selected-branches.svelte';
 import BranchSelection from '../branch-selection.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { Branch as BranchData, BranchFilters } from '$lib/bindings';
+import type { Branch as BranchData, BranchFilters } from '$infrastructure/bindings';
 import type { Repository } from '$services/common';
 import { renderWithTestWrapper } from '$utils/test-utils';
 

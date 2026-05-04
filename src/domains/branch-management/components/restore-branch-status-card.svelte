@@ -5,7 +5,7 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Markdown from 'svelte-exmarkdown';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
-	import type { ConflictResolution, RestoreBranchResult } from '$lib/bindings';
+	import type { ConflictResolution, RestoreBranchResult } from '$infrastructure/bindings';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 

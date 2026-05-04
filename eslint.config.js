@@ -29,7 +29,7 @@ export default ts.config(
 			'yarn.lock',
 			'styled-system',
 			'html',
-			'src/lib/bindings.ts'
+			'src/infrastructure/bindings.ts'
 		]
 	},
 	{

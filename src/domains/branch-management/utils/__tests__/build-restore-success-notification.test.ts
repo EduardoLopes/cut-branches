@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 import { buildRestoreSuccessNotification } from '../build-restore-success-notification';
-import type { Branch, RestoreBranchResult } from '$lib/bindings';
+import type { Branch, RestoreBranchResult } from '$infrastructure/bindings';
 
 function makeResult(name: string, shortSha: string | null = 'abc1234'): RestoreBranchResult {
 	const branch: Branch | null = shortSha

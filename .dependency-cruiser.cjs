@@ -57,7 +57,7 @@ module.exports = {
 	],
 	options: {
 		doNotFollow: {
-			path: ['node_modules', 'styled-system', 'src/lib/bindings.ts']
+			path: ['node_modules', 'styled-system', 'src/infrastructure/bindings.ts']
 		},
 		exclude: {
 			path: [
@@ -65,7 +65,7 @@ module.exports = {
 				'styled-system',
 				'\\.svelte-kit',
 				'src-tauri',
-				'src/lib/bindings.ts',
+				'src/infrastructure/bindings.ts',
 				'\\.test\\.(ts|js)$',
 				'\\.spec\\.(ts|js)$',
 				'/test-utils\\.ts$',

@@ -5,7 +5,7 @@ import { createDeleteBranchesMutation } from '../../core/composables/create-dele
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock dependencies

@@ -8,7 +8,7 @@ import type {
 	Branch as BranchData,
 	CreateBranchRestorationOutput,
 	RestoreBranchResult
-} from '$lib/bindings';
+} from '$infrastructure/bindings';
 import { withEffectRoot } from '$utils/with-effect-root.svelte';
 
 vi.mock('@tauri-apps/api/event', () => ({

@@ -2,7 +2,7 @@ import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 import BranchList from '../branch-list.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { UpdateCurrentBranchInput } from '$lib/bindings';
+import type { UpdateCurrentBranchInput } from '$infrastructure/bindings';
 import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
 // Generate mock branches using factory and convert to domain models
@@ -86,8 +86,8 @@ vi.mock('$app/state', () => ({
 }));
 
 // Mock Tauri commands via bindings
-vi.mock('$lib/bindings', async () => {
-	const actual = await vi.importActual<typeof import('$lib/bindings')>('$lib/bindings');
+vi.mock('$infrastructure/bindings', async () => {
+	const actual = await vi.importActual<typeof import('$infrastructure/bindings')>('$infrastructure/bindings');
 	return {
 		...actual,
 		commands: {

@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { Branch } from '../../core/models/branch';
 import RestoreDeletedBranchModal from '../restore-deleted-branch-modal.svelte';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // State machine end-to-end is covered in use-restore-flow.test.ts.

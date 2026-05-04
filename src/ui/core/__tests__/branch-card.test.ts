@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import BranchCard from '../branch-card.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { Branch as BranchData } from '$lib/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('BranchCard Component', () => {
