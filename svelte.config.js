@@ -18,7 +18,6 @@ const config = {
 			$utils: './src/utils',
 			$services: './src/services',
 			$store: './src/store',
-			$actions: './src/actions',
 			$components: './src/components'
 		}
 	}
