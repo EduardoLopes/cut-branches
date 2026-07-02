@@ -21,12 +21,16 @@
 			render: () => '<span style="display:contents"></span>',
 			setup: (element) => {
 				element.innerHTML = '';
+				const badgeText = count > 0 ? String(count) : '';
+				const badgeLabel = createRawSnippet(() => ({
+					render: () => `<span>${badgeText}</span>`
+				}));
 				const instance = mount(Badge, {
 					target: element,
 					props: {
 						size: 'sm',
 						emphasis: 'adaptive',
-						label: count > 0 ? String(count) : '',
+						children: badgeLabel,
 						'data-testid': `repository-${name}-badge-${id}`
 					}
 				});

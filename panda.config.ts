@@ -1,6 +1,27 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import { defineConfig } from '@pandacss/dev';
 import { pandaBuildInfoPath } from '@pindoba/panda-buildinfo';
 import { preset } from '@pindoba/panda-preset';
+
+// The Panda CLI runs as a standalone Node process and does not auto-load `.env`
+// the way Vite does. Read it ourselves so `USE_LOCAL_PINDOBA=true` in `.env`
+// affects both the JS aliases (vite.config.js) and the Panda include list.
+function readDotenv(file: string): Record<string, string> {
+	try {
+		const out: Record<string, string> = {};
+		for (const line of readFileSync(file, 'utf8').split('\n')) {
+			const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+			if (m) out[m[1]] = m[2].replace(/^["']|["']$/g, '');
+		}
+		return out;
+	} catch {
+		return {};
+	}
+}
+
+const dotenv = readDotenv(path.resolve(process.cwd(), '.env'));
+const useLocalPindoba = (process.env.USE_LOCAL_PINDOBA ?? dotenv.USE_LOCAL_PINDOBA) === 'true';
 
 export default defineConfig({
 	// Whether to use css reset
@@ -9,7 +30,9 @@ export default defineConfig({
 	// Where to look for your css declarations
 	include: [
 		'./src/**/*.{ts,tsx,svelte}',
-		`../pindoba/packages/panda-buildinfo/dist/panda.buildinfo.json`,
+		// Only reference the sibling checkout's buildinfo in local mode; in CI /
+		// release the `../pindoba` sibling does not exist.
+		...(useLocalPindoba ? ['../pindoba/packages/panda-buildinfo/dist/panda.buildinfo.json'] : []),
 		pandaBuildInfoPath
 	],
 	exclude: [''],
