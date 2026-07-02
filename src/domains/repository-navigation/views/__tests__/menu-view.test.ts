@@ -1,5 +1,5 @@
 import { createRawSnippet, tick } from 'svelte';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MenuView from '../menu-view.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -55,6 +55,10 @@ vi.mock('$app/state', () => ({
 }));
 
 describe('MenuView Component', () => {
+	beforeEach(() => {
+		localStorage.clear();
+	});
+
 	it('renders all repositories in the list', async () => {
 		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
 
@@ -107,5 +111,57 @@ describe('MenuView Component', () => {
 
 		// Check for the add button using accessible role and name
 		expect(screen.getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();
+	});
+
+	it('collapses to a rail and expands again via the toggle', async () => {
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+
+		await tick();
+		await tick();
+
+		// Expanded by default: brand title and section heading are visible
+		expect(screen.getByText('Cut Branches')).toBeInTheDocument();
+		expect(screen.getByText('Repositories')).toBeInTheDocument();
+
+		await screen.getByRole('button', { name: /collapse sidebar/i }).click();
+		await tick();
+
+		// Collapsed: title and heading are hidden, the expand toggle appears
+		expect(screen.getByText('Cut Branches')).not.toBeInTheDocument();
+		expect(screen.getByText('Repositories')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
+
+		// Repository labels are kept in the DOM for screen readers in the rail
+		expect(screen.getByText('repo1')).toBeInTheDocument();
+
+		await screen.getByRole('button', { name: /expand sidebar/i }).click();
+		await tick();
+
+		expect(screen.getByText('Cut Branches')).toBeInTheDocument();
+		expect(screen.getByText('Repositories')).toBeInTheDocument();
+	});
+
+	it('persists the collapsed state to localStorage', async () => {
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+
+		await tick();
+
+		await screen.getByRole('button', { name: /collapse sidebar/i }).click();
+		await tick();
+
+		expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
+	});
+
+	it('restores the collapsed state from localStorage on mount', async () => {
+		localStorage.setItem('sidebar-collapsed', 'true');
+
+		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+
+		await tick();
+		await tick();
+
+		// Starts collapsed: heading hidden and the expand toggle is shown
+		expect(screen.getByText('Repositories')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
 	});
 });

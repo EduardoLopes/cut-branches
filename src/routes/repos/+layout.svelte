@@ -30,9 +30,9 @@
 		<MenuView>
 			{#snippet repositoryListAction()}
 				<AddButton
-					size="sm"
+					size="md"
 					shape="square"
-					emphasis="ghost"
+					emphasis="secondary"
 					icon="material-symbols:add-rounded"
 					visuallyHiddenLabel
 					onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}

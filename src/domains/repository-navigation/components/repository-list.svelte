@@ -12,9 +12,13 @@
 
 	interface Props {
 		headerAction?: Snippet<[]>;
+		/** When `'icon'`, the list collapses to an icons-only rail with auto tooltips. */
+		compact?: 'none' | 'icon';
 	}
 
-	const { headerAction }: Props = $props();
+	const { headerAction, compact = 'none' }: Props = $props();
+
+	const isRail = $derived(compact === 'icon');
 
 	function makeBadgeSnippet(name: string, id: string, count: number): NavigationItem['trailing'] {
 		return createRawSnippet(() => ({
@@ -61,7 +65,9 @@
 				href: `/repos/${repo.id}`,
 				'data-testid': `repository-${repo.name}-${repo.id}`,
 				leading: repoIcon as NavigationItem['leading'],
-				trailing: makeBadgeSnippet(repo.name, repo.id, repo.branchesCount),
+				// In the icon rail the branch-count badge has no room; drop it and let
+				// the Navigation auto-derive a tooltip from `label` instead.
+				trailing: isRail ? undefined : makeBadgeSnippet(repo.name, repo.id, repo.branchesCount),
 				// Prefetch repository data on hover for instant navigation
 				onmouseenter: () => prefetchRepositoryData(repo.id)
 			})
@@ -73,35 +79,23 @@
 </script>
 
 {#snippet repoIcon()}
-	<Stamp
-		emphasis="ghost"
-		border="none"
-		background="transparent"
-		iconFill
-		passThrough={{
-			root: {
-				style: css.raw({
-					opacity: '0.7'
-				})
-			}
-		}}
-	>
-		<Icon icon="lucide:folder-git-2" width="14px" height="14px" />
+	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
+		<Icon icon="lucide:folder-git-2" />
 	</Stamp>
 {/snippet}
 
 <div
 	class={css({
-		minWidth: '260px',
 		px: 'md'
 	})}
+	style:min-width={isRail ? 'auto' : '260px'}
 >
 	<div
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
 			gap: 'xs',
-			borderRadius: 'md',
+			borderRadius: 'lg',
 			padding: 'xs',
 			background: 'neutral.surface.deep'
 		})}
@@ -109,21 +103,25 @@
 		<div
 			class={css({
 				display: 'flex',
-				justifyContent: 'space-between',
-				alignItems: 'center'
+				alignItems: 'center',
+				minHeight: '2rem'
 			})}
+			style:justify-content={isRail ? 'center' : 'space-between'}
 		>
-			<h2
-				class={css({
-					fontSize: 'xs',
-					textTransform: 'uppercase',
-					opacity: 0.6,
-					color: 'neutral.text',
-					margin: '0'
-				})}
-			>
-				Repositories
-			</h2>
+			{#if !isRail}
+				<h2
+					class={css({
+						fontSize: 'xs',
+						textTransform: 'uppercase',
+						opacity: 0.6,
+						color: 'neutral.text',
+						margin: '0',
+						alignSelf: 'flex-end'
+					})}
+				>
+					Repositories
+				</h2>
+			{/if}
 
 			{#if headerAction}
 				{@render headerAction()}
@@ -143,7 +141,14 @@
 			}}
 		>
 			{#if items.length > 0}
-				<Navigation {items} activeItem={page.params.id} direction="vertical" />
+				<Navigation
+					{items}
+					activeItem={page.params.id}
+					direction="vertical"
+					emphasis="neutral"
+					background="transparent"
+					{compact}
+				/>
 			{:else}
 				<p
 					class={css({
