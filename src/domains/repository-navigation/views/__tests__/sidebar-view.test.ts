@@ -1,6 +1,6 @@
 import { createRawSnippet, tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import MenuView from '../menu-view.svelte';
+import SidebarView from '../sidebar-view.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 const repositoryListAction = createRawSnippet(() => ({
@@ -54,13 +54,13 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
-describe('MenuView Component', () => {
+describe('SidebarView Component', () => {
 	beforeEach(() => {
 		localStorage.clear();
 	});
 
 	it('renders all repositories in the list', async () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -71,7 +71,7 @@ describe('MenuView Component', () => {
 	});
 
 	it('displays badge counts for repositories with branches', async () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -92,13 +92,13 @@ describe('MenuView Component', () => {
 	});
 
 	it('renders the app title correctly', () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		expect(screen.getByText('Cut Branches')).toBeInTheDocument();
 	});
 
 	it('displays the repositories heading', async () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -107,14 +107,14 @@ describe('MenuView Component', () => {
 	});
 
 	it('renders the add button for adding new repositories', () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		// Check for the add button using accessible role and name
 		expect(screen.getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();
 	});
 
 	it('collapses to a rail and expands again via the toggle', async () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -142,7 +142,7 @@ describe('MenuView Component', () => {
 	});
 
 	it('persists the collapsed state to localStorage', async () => {
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 
@@ -155,7 +155,7 @@ describe('MenuView Component', () => {
 	it('restores the collapsed state from localStorage on mount', async () => {
 		localStorage.setItem('sidebar-collapsed', 'true');
 
-		const screen = renderWithTestWrapper(MenuView, { repositoryListAction });
+		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();

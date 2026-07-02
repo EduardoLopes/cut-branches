@@ -5,8 +5,8 @@
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { createRawSnippet, mount, unmount, type Snippet } from 'svelte';
-	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
+	import { createGetRepositoryListQuery } from '../infrastructure/queries/create-get-repository-list-query';
 	import { page } from '$app/state';
 	import { css } from '@pindoba/styled-system/css';
 

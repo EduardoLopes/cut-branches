@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import ReposLayout from '../+layout.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
-vi.mock('$domains/repository-navigation/views/menu-view.svelte', () => {
-	const MockMenuView = vi.fn(() => ({
+vi.mock('$domains/repository-navigation/views/sidebar-view.svelte', () => {
+	const MockSidebarView = vi.fn(() => ({
 		// Basic Svelte component mock structure
 		$$: { ctx: {} },
 		$capture_state: () => {},
@@ -13,13 +13,13 @@ vi.mock('$domains/repository-navigation/views/menu-view.svelte', () => {
 		$on: vi.fn()
 	}));
 	// Expose a an element for the test to find
-	MockMenuView.prototype.render_element = () => {
+	MockSidebarView.prototype.render_element = () => {
 		const el = document.createElement('div');
-		el.textContent = 'Mock MenuView';
-		el.setAttribute('data-testid', 'mock-menu-view');
+		el.textContent = 'Mock SidebarView';
+		el.setAttribute('data-testid', 'mock-sidebar-view');
 		return el;
 	};
-	return { default: MockMenuView };
+	return { default: MockSidebarView };
 });
 
 describe('Repos Layout Integration', () => {
@@ -27,10 +27,10 @@ describe('Repos Layout Integration', () => {
 		renderWithTestWrapper(ReposLayout);
 		// We can't easily assert the DOM content with this simple mock directly in the layout
 		// Instead, let's check if the mock constructor was called.
-		const MenuViewMock = (
-			await import('../../../domains/repository-navigation/views/menu-view.svelte')
+		const SidebarViewMock = (
+			await import('../../../domains/repository-navigation/views/sidebar-view.svelte')
 		).default;
-		expect(MenuViewMock).toHaveBeenCalled();
+		expect(SidebarViewMock).toHaveBeenCalled();
 
 		// And we can try to find the element if the layout appends it somehow,
 		// or if the mock itself appended to a known global testing container,

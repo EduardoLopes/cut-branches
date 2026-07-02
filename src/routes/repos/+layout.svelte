@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import AddButton from '$domains/repository-management/components/add-button.svelte';
-	import MenuView from '$domains/repository-navigation/views/menu-view.svelte';
+	import SidebarView from '$domains/repository-navigation/views/sidebar-view.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -27,7 +27,7 @@
 			gridTemplateColumns: 'max-content auto'
 		})}
 	>
-		<MenuView>
+		<SidebarView>
 			{#snippet repositoryListAction()}
 				<AddButton
 					size="md"
@@ -38,7 +38,7 @@
 					onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}
 				/>
 			{/snippet}
-		</MenuView>
+		</SidebarView>
 		{@render children?.()}
 	</div>
 </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
-	import AppHeader from '$domains/repository-navigation/components/app-header.svelte';
-	import RepositoryList from '$domains/repository-navigation/components/repository-list.svelte';
+	import RepositoryNavList from '$domains/repository-navigation/components/repository-nav-list.svelte';
+	import SidebarBrand from '$domains/repository-navigation/components/sidebar-brand.svelte';
 	import { getLocalStorage } from '$utils/get-local-storage';
 	import { setLocalStorage } from '$utils/set-local-storage';
 	import { css } from '@pindoba/styled-system/css';
@@ -34,6 +34,6 @@
 		borderRightColor: 'neutral.border.muted'
 	})}
 >
-	<AppHeader {collapsed} onToggle={toggleSidebar} />
-	<RepositoryList headerAction={repositoryListAction} compact={collapsed ? 'icon' : 'none'} />
+	<SidebarBrand {collapsed} onToggle={toggleSidebar} />
+	<RepositoryNavList headerAction={repositoryListAction} compact={collapsed ? 'icon' : 'none'} />
 </section>

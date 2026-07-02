@@ -2,77 +2,82 @@
 
 ## Purpose
 
-The repository-navigation domain is responsible for providing the main application navigation structure, including the app header/branding and repository list navigation menu.
+The repository-navigation domain provides the application sidebar: brand header, the
+repository navigation list, and the collapsible-rail behavior. It lets the user switch
+between repositories and see per-repository branch counts.
 
 ## Key Responsibilities
 
-- Display application branding (logo and title)
-- Render the list of repositories as navigation items
-- Trigger repository addition through the global event bus
+- Display application branding (logo + title) via the pindoba `Banner`
+- Render the list of repositories as navigation items (`@pindoba/svelte-navigation`)
 - Show repository metadata (branch counts) as badges
-- Maintain active state for current repository
+- Maintain active state for the current repository (from the route param)
+- Collapse to an icons-only rail (persisted across sessions) and prefetch repository data on hover
 
 ## Components
 
-### Views
+### Views (Delivery)
 
-- `menu-view.svelte` - Main navigation view that composes the header and repository list
+- `sidebar-view.svelte` - Top-level sidebar; owns the collapsed UI state and composes the brand + list
 
-### Components
+### Components (Delivery)
 
-- `app-header.svelte` - Application branding and header section
-- `repository-list.svelte` - Repository navigation list with add button
+- `sidebar-brand.svelte` - Brand header (logo Stamp + title) and the collapse/expand toggle
+- `repository-nav-list.svelte` - Repository navigation list; renders the "Repositories" panel
 
 ## Business Rules
 
 1. Repositories are displayed in alphabetical order by name
 2. Branch count badges are only shown when count > 0
-3. The navigation uses the global event bus to request repository additions (does not directly import from other domains)
+3. In the collapsed rail the list drops badges and auto-derives tooltips from the repo name
 4. The active repository is highlighted based on the current route parameter
+5. The collapsed/expanded preference is persisted to `localStorage` (`sidebar-collapsed`)
 
 ## Inter-Domain Communication
 
-This domain communicates with other domains exclusively through the global event bus:
-
-### Published Events
-
-- None (this domain only subscribes)
-
-### Subscribed Events
-
-- None currently (may subscribe to REPOSITORY_ADDED in the future to show success feedback)
-
-### Event Bus Requests
-
-- `Events.REPOSITORY_ADD_REQUESTED` - Published when user clicks the add repository button
+This domain never imports from other domains (§1.3). The add-repository button belongs to
+`repository-management`; the route (`routes/repos/+layout.svelte`) acts as the composition
+root and injects it into `sidebar-view` through the `repositoryListAction` snippet slot,
+which flows down to `repository-nav-list` as `headerAction`. Cross-domain data refresh
+happens through the shared TanStack Query cache, not direct calls.
 
 ## Dependencies
 
-### Global Services
+### Application (`core/composables/`)
 
-- `$services/event-bus` - For inter-domain communication
+- `create-prefetch-repository-data.ts` - Use-case: debounced prefetch of a repo's branch
+  list + details on hover (via the shared `$utils/create-tauri-query` transport)
 
-### Domain Composables
+### Infrastructure (`infrastructure/queries/`)
 
-- `core/composables/create-get-repository-list-query` - TanStack Query wrapper for fetching repository list
+- `create-get-repository-list-query.ts` - Transport adapter wrapping the `getRepositoryList`
+  Tauri command (§1.2). Duplicated per-domain by design; not shared across domains (§1.3–1.4).
 
 ### UI Components
 
-- `$ui/core/icon-button.svelte` - For the add repository button
-- `@pindoba/svelte-navigation` - External navigation component library
+- `$ui/core/icon-button.svelte` - The collapse/expand toggle
+- `@pindoba/svelte-banner`, `@pindoba/svelte-navigation`, `@pindoba/svelte-stamp`,
+  `@pindoba/svelte-badge`, `@pindoba/svelte-loading`
 
 ## Domain Structure
 
-This domain follows the standard domain-driven structure:
+```
+repository-navigation/
+├─ views/                    # Delivery — top-level sidebar
+│  └─ sidebar-view.svelte
+├─ components/               # Delivery — sidebar pieces
+│  ├─ sidebar-brand.svelte
+│  └─ repository-nav-list.svelte
+├─ core/composables/         # Application — use-cases / consuming logic
+│  └─ create-prefetch-repository-data.ts
+└─ infrastructure/queries/   # Infrastructure — transport adapters
+   └─ create-get-repository-list-query.ts
+```
 
-- `components/` - UI components used within this feature
-  - `app-header.svelte` - Application branding
-  - `repository-list.svelte` - Repository navigation list
-- `core/composables/` - Application logic layer (stateful, framework-dependent)
-  - `create-get-repository-list-query.ts` - TanStack Query wrapper
-- `views/` - Top-level presentational components
-  - `menu-view.svelte` - Main navigation view
+Dependency flow: `views/ → components/ → core/composables/ → infrastructure/queries/`.
 
 ## State Management
 
-This domain uses TanStack Query for server state management via the domain-specific `createGetRepositoryListQuery` composable. No additional local state management is needed.
+Server state uses TanStack Query (`createGetRepositoryListQuery`). The only local state is
+the sidebar's collapsed flag, held in `sidebar-view.svelte` (delivery-layer UI state) and
+persisted to `localStorage`.
