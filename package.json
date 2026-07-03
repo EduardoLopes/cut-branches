@@ -91,6 +91,7 @@
 		"@pindoba/svelte-badge": "alpha",
 		"@pindoba/svelte-banner": "alpha",
 		"@pindoba/svelte-button": "alpha",
+		"@pindoba/svelte-card": "alpha",
 		"@pindoba/svelte-checkbox": "alpha",
 		"@pindoba/svelte-dialog": "alpha",
 		"@pindoba/svelte-group": "alpha",

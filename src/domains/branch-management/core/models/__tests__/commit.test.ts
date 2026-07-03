@@ -217,6 +217,34 @@ describe('Commit', () => {
 		});
 	});
 
+	describe('getMessageBody', () => {
+		it('should return an empty string for a single-line message', () => {
+			const commit = Commit.fromData(mockCommitData);
+
+			expect(commit.getMessageBody()).toBe('');
+		});
+
+		it('should return the body after the subject line', () => {
+			const data = {
+				...mockCommitData,
+				message: 'feat: add feature\n\nDetailed description\nMore details'
+			};
+			const commit = Commit.fromData(data);
+
+			expect(commit.getMessageBody()).toBe('Detailed description\nMore details');
+		});
+
+		it('should return an empty string when only a trailing newline follows the subject', () => {
+			const data = {
+				...mockCommitData,
+				message: 'First line\n'
+			};
+			const commit = Commit.fromData(data);
+
+			expect(commit.getMessageBody()).toBe('');
+		});
+	});
+
 	describe('getAuthor', () => {
 		it('should return the author name', () => {
 			const commit = Commit.fromData(mockCommitData);

@@ -41,6 +41,8 @@
 			"@pindoba/svelte-banner/*": ["../pindoba/packages/ui/svelte/banner/dist/*"],
 			"@pindoba/svelte-button": ["../pindoba/packages/ui/svelte/button/dist/index.d.ts"],
 			"@pindoba/svelte-button/*": ["../pindoba/packages/ui/svelte/button/dist/*"],
+			"@pindoba/svelte-card": ["../pindoba/packages/ui/svelte/card/dist/index.d.ts"],
+			"@pindoba/svelte-card/*": ["../pindoba/packages/ui/svelte/card/dist/*"],
 			"@pindoba/svelte-checkbox": ["../pindoba/packages/ui/svelte/checkbox/dist/index.d.ts"],
 			"@pindoba/svelte-checkbox/*": ["../pindoba/packages/ui/svelte/checkbox/dist/*"],
 			"@pindoba/svelte-dialog": ["../pindoba/packages/ui/svelte/dialog/dist/index.d.ts"],

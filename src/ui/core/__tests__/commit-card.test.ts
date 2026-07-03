@@ -41,6 +41,46 @@ describe('CommitCard Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
+	test('renders only the subject line in the message when the commit has a body', () => {
+		const commitWithBodyData: CommitData = {
+			...mockCommitData,
+			message: 'feat: add new feature\n\nDetailed description line'
+		};
+		const commitWithBody = Commit.fromData(commitWithBodyData);
+
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithBody
+		});
+
+		const messageElement = getByTestId('last-commit-message');
+		expect(messageElement.element().textContent).toContain('feat: add new feature');
+		expect(messageElement.element().textContent).not.toContain('Detailed description line');
+	});
+
+	test('renders the description body when the commit message has one', () => {
+		const commitWithBodyData: CommitData = {
+			...mockCommitData,
+			message: 'feat: add new feature\n\nDetailed description line'
+		};
+		const commitWithBody = Commit.fromData(commitWithBodyData);
+
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: commitWithBody
+		});
+
+		const descriptionElement = getByTestId('commit-description');
+		expect(descriptionElement).toBeInTheDocument();
+		expect(descriptionElement.element().textContent).toContain('Detailed description line');
+	});
+
+	test('does not render a description when the commit message is a single line', () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
+		});
+
+		expect(getByTestId('commit-description')).not.toBeInTheDocument();
+	});
+
 	test('renders author name', () => {
 		const { getByTestId } = renderWithTestWrapper(CommitCard, {
 			commit: mockCommit

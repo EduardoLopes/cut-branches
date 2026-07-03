@@ -115,6 +115,19 @@ export class Commit {
 	}
 
 	/**
+	 * Gets the commit message body — everything after the first line (the
+	 * subject), with surrounding blank lines trimmed.
+	 * @returns The description body, or an empty string for single-line messages
+	 */
+	getMessageBody(): string {
+		const firstLineEnd = this.message.indexOf('\n');
+		if (firstLineEnd === -1) {
+			return '';
+		}
+		return this.message.substring(firstLineEnd + 1).trim();
+	}
+
+	/**
 	 * Gets the commit author name
 	 * @returns The author name
 	 */
