@@ -1,9 +1,8 @@
 use std::path::Path;
-use tauri::State;
 
 use crate::domains::repository_management::core::models::GitDirResponse;
 use crate::shared::error::AppError;
-use crate::shared::infrastructure::db::{models::NewRepository, operations, DatabaseState};
+use crate::shared::infrastructure::db::{models::NewRepository, operations, DbConnection};
 
 /// Get information about a git repository from the database.
 /// This is a DB-first operation that only syncs if the repository data is stale.
@@ -11,27 +10,19 @@ use crate::shared::infrastructure::db::{models::NewRepository, operations, Datab
 /// # Arguments
 ///
 /// * `repo_id` - Repository ID
-/// * `db` - Database state for persisting repository data
+/// * `conn` - Pooled database connection (resolved by the delivery layer)
 ///
 /// # Returns
 ///
 /// * `Result<GitDirResponse, AppError>` - Repository information or an error
 pub async fn get_repository(
     repo_id: &str,
-    db: &State<'_, DatabaseState>,
+    conn: &mut DbConnection,
 ) -> Result<GitDirResponse, AppError> {
     println!("get_repository called for id: {}", repo_id);
 
     // DB-FIRST: Get repository from database
-    let mut conn = db.get_connection().map_err(|e| {
-        AppError::new(
-            "Failed to get database connection".to_string(),
-            "db_connection_failed",
-            Some(e),
-        )
-    })?;
-
-    let db_repo = operations::get_repository(&mut conn, repo_id).map_err(|_| {
+    let db_repo = operations::get_repository(conn, repo_id).map_err(|_| {
         AppError::new(
             format!("Repository '{}' not found", repo_id),
             "repository_not_found",
@@ -67,10 +58,10 @@ pub async fn get_repository(
     }
 
     // Repository exists in DB - sync if needed
-    sync_repository_if_needed(raw_root_path, repo_id, &root_path, db).await?;
+    sync_repository_if_needed(raw_root_path, repo_id, &root_path, conn).await?;
 
     // Get fresh data from DB after sync
-    let updated_repo = operations::get_repository(&mut conn, repo_id).map_err(|e| {
+    let updated_repo = operations::get_repository(conn, repo_id).map_err(|e| {
         AppError::new(
             "Failed to get updated repository from database".to_string(),
             "db_query_failed",
@@ -102,21 +93,12 @@ async fn sync_repository_if_needed(
     raw_root_path: &Path,
     repo_name: &str,
     root_path: &str,
-    db: &State<'_, DatabaseState>,
+    conn: &mut DbConnection,
 ) -> Result<(), AppError> {
     // Compute current repository state timestamp (ultra-fast: ~0.5-2ms)
     let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
-    // Get database connection
-    let mut conn = db.get_connection().map_err(|e| {
-        AppError::new(
-            "Failed to get database connection".to_string(),
-            "db_connection_failed",
-            Some(e),
-        )
-    })?;
-
-    let db_repo = operations::get_repository(&mut conn, repo_name).map_err(|e| {
+    let db_repo = operations::get_repository(conn, repo_name).map_err(|e| {
         AppError::new(
             "Failed to get repository from database".to_string(),
             "db_query_failed",
@@ -162,7 +144,7 @@ async fn sync_repository_if_needed(
             last_synced_at: Some(chrono::Utc::now().naive_utc()),
         };
 
-        operations::update_repository(&mut conn, repo_name, updated_repo).map_err(|e| {
+        operations::update_repository(conn, repo_name, updated_repo).map_err(|e| {
             AppError::new(
                 "Failed to update repository in database".to_string(),
                 "db_update_failed",
@@ -175,7 +157,7 @@ async fn sync_repository_if_needed(
             Some(&branches),
             None,
             repo_name,
-            db,
+            conn,
         )
         .map_err(|e| {
             AppError::new(
@@ -191,7 +173,7 @@ async fn sync_repository_if_needed(
             "Repository state unchanged (timestamp: {}), skipping sync",
             current_timestamp
         );
-        operations::bump_last_synced_at(&mut conn, repo_name).map_err(|e| {
+        operations::bump_last_synced_at(conn, repo_name).map_err(|e| {
             AppError::new(
                 "Failed to record sync timestamp".to_string(),
                 "db_update_failed",

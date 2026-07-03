@@ -163,7 +163,7 @@ pub async fn create_repository(
         Some(&branches),
         None,
         &repo_name,
-        &db,
+        &mut conn,
     )
     .map_err(|e| {
         AppError::new(

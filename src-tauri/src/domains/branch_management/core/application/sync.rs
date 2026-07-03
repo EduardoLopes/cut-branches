@@ -1,8 +1,7 @@
 use crate::shared::error::AppError;
-use crate::shared::infrastructure::db::{models::NewBranchRecord, DatabaseState};
+use crate::shared::infrastructure::db::{models::NewBranchRecord, DbConnection};
 use std::collections::HashSet;
 use std::path::Path;
-use tauri::State;
 
 use crate::domains::branch_management::infrastructure::git::branch::{
     get_all_branches_with_last_commit, get_all_branches_with_last_commit_fast, Branch,
@@ -19,7 +18,7 @@ use crate::domains::branch_management::infrastructure::git::branch::{
 /// * `git_branches` - Pre-fetched branches from Git (pass None to fetch internally)
 /// * `path` - Path to the git repository (only used if git_branches is None)
 /// * `repo_id` - Repository ID in database
-/// * `db` - Database state
+/// * `conn` - Pooled database connection (resolved by the caller from `DatabaseState`)
 ///
 /// # Returns
 ///
@@ -28,9 +27,9 @@ pub fn sync_branches_to_db(
     git_branches: Option<&[Branch]>,
     path: Option<&Path>,
     repo_id: &str,
-    db: &State<DatabaseState>,
+    conn: &mut DbConnection,
 ) -> Result<usize, AppError> {
-    sync_branches_to_db_internal(git_branches, path, repo_id, db, true)
+    sync_branches_to_db_internal(git_branches, path, repo_id, conn, true)
 }
 
 /// Internal sync function with option to skip expensive merge check
@@ -38,7 +37,7 @@ fn sync_branches_to_db_internal(
     git_branches: Option<&[Branch]>,
     path: Option<&Path>,
     repo_id: &str,
-    db: &State<DatabaseState>,
+    conn: &mut DbConnection,
     skip_merge_check: bool,
 ) -> Result<usize, AppError> {
     // Get branches from Git - either use provided or fetch
@@ -63,22 +62,13 @@ fn sync_branches_to_db_internal(
         }
     };
 
-    // Get database connection
-    let mut conn = db.get_connection().map_err(|e| {
-        AppError::new(
-            "Failed to get database connection".to_string(),
-            "db_connection_failed",
-            Some(e),
-        )
-    })?;
-
     // Get existing branches from database for this repository (both active and deleted)
     let filters = crate::domains::branch_management::filters::BranchFilters {
         deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter::All,
         ..Default::default()
     };
     let db_branches = crate::shared::infrastructure::db::operations::get_branches_for_repository(
-        &mut conn, repo_id, &filters,
+        conn, repo_id, &filters,
     )
     .map_err(|e| {
         AppError::new(
@@ -122,7 +112,7 @@ fn sync_branches_to_db_internal(
 
     if !branches_to_mark_deleted.is_empty() {
         crate::shared::infrastructure::db::operations::mark_branches_deleted(
-            &mut conn,
+            conn,
             repo_id,
             &branches_to_mark_deleted,
         )
@@ -135,14 +125,15 @@ fn sync_branches_to_db_internal(
         })?;
     }
 
-    crate::shared::infrastructure::db::operations::bump_last_synced_at(&mut conn, repo_id)
-        .map_err(|e| {
+    crate::shared::infrastructure::db::operations::bump_last_synced_at(conn, repo_id).map_err(
+        |e| {
             AppError::new(
                 "Failed to record sync timestamp".to_string(),
                 "db_update_failed",
                 Some(e.to_string()),
             )
-        })?;
+        },
+    )?;
 
     Ok(git_branches.len())
 }
@@ -152,9 +143,9 @@ fn sync_branches_to_db_internal(
 pub fn sync_branches_to_db_legacy(
     path: &Path,
     repo_id: &str,
-    db: &State<DatabaseState>,
+    conn: &mut DbConnection,
 ) -> Result<usize, AppError> {
-    sync_branches_to_db(None, Some(path), repo_id, db)
+    sync_branches_to_db(None, Some(path), repo_id, conn)
 }
 
 /// Converts a Git branch to a NewBranchRecord for database insertion

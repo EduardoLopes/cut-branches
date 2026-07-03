@@ -38,8 +38,9 @@ pub async fn get_repository(
     db: State<'_, DatabaseState>,
     input: GetRepositoryInput,
 ) -> Result<GetRepositoryOutput, AppError> {
+    let mut conn = db.connection()?;
     let response =
-        super::super::core::application::discovery::get_repository(&input.id, &db).await?;
+        super::super::core::application::discovery::get_repository(&input.id, &mut conn).await?;
 
     Ok(GetRepositoryOutput {
         path: response.path,

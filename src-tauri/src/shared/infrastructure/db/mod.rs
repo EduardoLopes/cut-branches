@@ -105,6 +105,19 @@ impl DatabaseState {
             None => Err("Database not initialized".to_string()),
         }
     }
+
+    /// Resolve a pooled connection, translating the low-level error into the
+    /// shared `AppError` vocabulary. Delivery handlers call this and hand the
+    /// connection to application use-cases (which no longer know about Tauri).
+    pub fn connection(&self) -> Result<DbConnection, crate::shared::error::AppError> {
+        self.get_connection().map_err(|e| {
+            crate::shared::error::AppError::new(
+                "Failed to get database connection".to_string(),
+                "db_connection_failed",
+                Some(e),
+            )
+        })
+    }
 }
 
 impl Default for DatabaseState {

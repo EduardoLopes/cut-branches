@@ -55,8 +55,9 @@ pub fn update_branch_selection_batch(
     db: State<'_, DatabaseState>,
     input: UpdateBranchSelectionBatchInput,
 ) -> Result<UpdateBranchSelectionBatchOutput, AppError> {
+    let mut conn = db.connection()?;
     super::super::core::application::selected_branches::update_branch_selection_batch(
-        &db,
+        &mut conn,
         &input.repo_id,
         input.branch_names,
         input.is_selected,
@@ -80,8 +81,9 @@ pub fn set_branch_selection_all(
     db: State<'_, DatabaseState>,
     input: SetBranchSelectionAllInput,
 ) -> Result<SetBranchSelectionAllOutput, AppError> {
+    let mut conn = db.connection()?;
     super::super::core::application::selected_branches::set_branch_selection_all(
-        &db,
+        &mut conn,
         &input.repo_id,
         input.is_selected,
         input.deletion_status,
@@ -121,8 +123,9 @@ pub fn list_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListBranchSelectionInput,
 ) -> Result<ListBranchSelectionOutput, AppError> {
+    let mut conn = db.connection()?;
     let branches = super::super::core::application::selected_branches::get_branch_selection_list(
-        &db,
+        &mut conn,
         &input.repo_id,
     )?;
     Ok(ListBranchSelectionOutput { branches })
@@ -156,9 +159,10 @@ pub fn list_deleted_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListDeletedBranchSelectionInput,
 ) -> Result<ListDeletedBranchSelectionOutput, AppError> {
+    let mut conn = db.connection()?;
     let branches =
         super::super::core::application::selected_branches::get_deleted_branch_selection_list(
-            &db,
+            &mut conn,
             &input.repo_id,
         )?;
     Ok(ListDeletedBranchSelectionOutput { branches })

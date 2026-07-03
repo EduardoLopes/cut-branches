@@ -64,8 +64,11 @@ pub fn list_locked_branches(
     db: State<'_, DatabaseState>,
     input: ListLockedBranchesInput,
 ) -> Result<ListLockedBranchesOutput, AppError> {
-    let branches =
-        super::super::core::application::locked_branches::get_locked_branches(&db, &input.repo_id)?;
+    let mut conn = db.connection()?;
+    let branches = super::super::core::application::locked_branches::get_locked_branches(
+        &mut conn,
+        &input.repo_id,
+    )?;
     Ok(ListLockedBranchesOutput { branches })
 }
 
@@ -85,8 +88,9 @@ pub fn batch_create_locked_branches(
     db: State<'_, DatabaseState>,
     input: BatchCreateLockedBranchesInput,
 ) -> Result<BatchCreateLockedBranchesOutput, AppError> {
+    let mut conn = db.connection()?;
     super::super::core::application::locked_branches::add_locked_branches(
-        &db,
+        &mut conn,
         &input.repo_id,
         input.branch_names,
     )?;
@@ -109,8 +113,9 @@ pub fn batch_delete_locked_branches(
     db: State<'_, DatabaseState>,
     input: BatchDeleteLockedBranchesInput,
 ) -> Result<BatchDeleteLockedBranchesOutput, AppError> {
+    let mut conn = db.connection()?;
     super::super::core::application::locked_branches::remove_locked_branches(
-        &db,
+        &mut conn,
         &input.repo_id,
         input.branch_names,
     )?;
@@ -133,6 +138,10 @@ pub fn delete_all_locked_branches(
     db: State<'_, DatabaseState>,
     input: DeleteAllLockedBranchesInput,
 ) -> Result<DeleteAllLockedBranchesOutput, AppError> {
-    super::super::core::application::locked_branches::clear_locked_branches(&db, &input.repo_id)?;
+    let mut conn = db.connection()?;
+    super::super::core::application::locked_branches::clear_locked_branches(
+        &mut conn,
+        &input.repo_id,
+    )?;
     Ok(DeleteAllLockedBranchesOutput {})
 }
