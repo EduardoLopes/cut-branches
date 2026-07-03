@@ -7,6 +7,15 @@ on:
   workflow_call:
 
 jobs:
+  boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check domain boundaries (§1.3)
+        working-directory: src-tauri
+        run: bash scripts/check-domain-boundaries.sh
+
   fmt:
     runs-on: ubuntu-latest
     steps:

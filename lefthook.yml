@@ -21,6 +21,10 @@ pre-commit:
       priority: 4
       glob: '*.rs'
       run: pnpm test:cargo
+    domain-boundaries:
+      priority: 3
+      glob: '*.rs'
+      run: bash src-tauri/scripts/check-domain-boundaries.sh
 
 commit-msg:
   scripts:
