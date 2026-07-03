@@ -2,7 +2,7 @@ import type { MutationOptions } from '@tanstack/svelte-query';
 import { open } from '@tauri-apps/plugin-dialog';
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import AddButton from '../add-button.svelte';
+import AddButton from '../add-repository-button.svelte';
 import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
 import { notifications } from '$services/notifications/notifications.svelte';
 import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';

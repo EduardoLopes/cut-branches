@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import { vi } from 'vitest';
-import RepositoryManagementHeader from '../repository-management-header.svelte';
+import RepositoryHeader from '../repository-header.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the navigation module
@@ -23,13 +23,13 @@ vi.mock('../../core/composables/queries/create-get-repository-query', () => ({
 	createGetRepositoryQuery: mockGetRepositoryQuery.fn
 }));
 
-describe('RepositoryManagementHeader', () => {
+describe('RepositoryHeader', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
 
 	test('should render the component', () => {
-		const { container } = renderWithTestWrapper(RepositoryManagementHeader, {
+		const { container } = renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 		expect(container).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('RepositoryManagementHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { getByTestId } = renderWithTestWrapper(RepositoryManagementHeader, {
+		const { getByTestId } = renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -73,7 +73,7 @@ describe('RepositoryManagementHeader', () => {
 			error: null
 		});
 
-		const { getByTestId } = renderWithTestWrapper(RepositoryManagementHeader, {
+		const { getByTestId } = renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -101,7 +101,7 @@ describe('RepositoryManagementHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { container } = renderWithTestWrapper(RepositoryManagementHeader, {
+		const { container } = renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 

@@ -10,7 +10,7 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
-// Mock the queries used by Repository and RepositoryManagementHeader
+// Mock the queries used by Repository and RepositoryHeader
 vi.mock(
 	'$domains/repository-management/core/composables/queries/create-get-repository-query',
 	() => ({

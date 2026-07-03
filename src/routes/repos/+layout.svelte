@@ -2,7 +2,7 @@
 	import { type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import AddButton from '$domains/repository-management/components/add-button.svelte';
+	import AddButton from '$domains/repository-management/components/add-repository-button.svelte';
 	import SidebarView from '$domains/repository-navigation/views/sidebar-view.svelte';
 	import { css } from '@pindoba/styled-system/css';
 

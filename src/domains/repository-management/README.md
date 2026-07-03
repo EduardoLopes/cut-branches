@@ -2,185 +2,67 @@
 
 ## Purpose
 
-The Repository Management domain handles all operations related to Git repository lifecycle within the application. It provides functionality for adding, viewing, updating, and removing repositories from the application's workspace.
+Handles the Git repository lifecycle within the app: adding, viewing, updating, and
+removing repositories, plus the header shown at the top of a repository view.
 
 ## Responsibilities
 
-### Core Responsibilities
+- **Add** a repository by selecting a Git folder (validated on the backend)
+- **View** repository metadata (name) and, in the header, the active/deleted branch counts
+- **Update** a repository (invalidate its cached branch + repository queries to refetch)
+- **Remove** a repository, then navigate to another repository or to onboarding
 
-- **Repository Discovery**: Allow users to select and add Git repositories to the application
-- **Repository Information**: Display repository metadata (name, path, current branch, branch count)
-- **Repository Removal**: Handle safe removal of repositories from the application
-- **Repository Navigation**: Manage navigation between repository views
-- **Repository State**: Track current active repository state
-
-### Business Rules
-
-1. **Repository Path Validation**: Only valid Git repositories can be added
-2. **Unique Repository Paths**: The same repository path cannot be added twice
-3. **Safe Removal**: When removing a repository:
-   - Clear all associated branch selections
-   - Clear all locked branches
-   - Clear search state
-   - Navigate to another repository or onboarding if none remain
-4. **Current Repository Tracking**: The application always knows which repository is currently active
-
-## Domain Structure
+## Structure
 
 ```
 repository-management/
-├── README.md                    # This file
-├── components/                  # UI components specific to repository management
-│   ├── __tests__/              # Component tests
-│   ├── add-button.svelte       # Button to add new repositories
-│   ├── back-button.svelte      # Navigation back button
-│   ├── branch-restoration-header.svelte
-│   ├── remove-repository-modal.svelte
-│   ├── repository-management-header.svelte
-│   ├── restore-repository-button.svelte
-│   └── update-repository-button.svelte
-├── core/                        # Core business logic (renamed from logic/)
-│   └── composables/            # Application logic layer
-│       ├── __tests__/          # Composable tests
-│       ├── add-repository-handler.svelte.ts
-│       ├── mutations/          # TanStack Query mutations
-│       │   ├── create-create-repository-mutation.ts
-│       │   └── create-delete-repository-mutation.ts
-│       └── queries/            # TanStack Query queries
-│           ├── create-get-branches-query.ts
-│           ├── create-get-repository-list-query.ts
-│           ├── create-get-repository-query.ts
-│           └── get-branch-list-query.ts
-├── store/                       # Domain-specific state management
-│   └── repository.svelte.ts    # Repository UI state store
-└── views/                       # Top-level view components
-    ├── __tests__/              # View tests
-    └── repository-view.svelte  # Main repository view
+├── components/                         # Delivery
+│   ├── add-repository-button.svelte    # Opens the folder dialog and creates a repository
+│   ├── back-button.svelte              # Generic back-navigation button
+│   ├── repository-header.svelte        # Repo name + Active/Deleted branch tabs + options popover
+│   ├── update-repository-button.svelte # Refetches the repo's branch/repository data
+│   └── remove-repository-modal.svelte  # Confirm + delete a repository
+├── core/composables/                   # Application — consuming hooks / stateful logic
+│   ├── repository.svelte.ts            # RepositoryStore (per-repo UI state)
+│   ├── queries/                        # TanStack Query hooks (wrap $utils/create-tauri-query)
+│   │   ├── create-get-repository-query.ts
+│   │   ├── create-get-repository-list-query.ts
+│   │   ├── create-get-branches-query.ts
+│   │   └── get-branch-list-query.ts
+│   └── mutations/
+│       ├── create-create-repository-mutation.ts
+│       └── create-delete-repository-mutation.ts
+└── views/
+    └── repository-view.svelte          # Composes the header + page content (children)
 ```
 
-## Key Interactions
+Dependency flow: `views/ → components/ → core/composables/`. The query/mutation hooks call
+the global transport (`$utils/create-tauri-query` / `$utils/create-tauri-mutation` over
+`$infrastructure/bindings`), so the domain holds no transport code of its own.
 
-### Event Bus Communication
+## Inter-Domain Communication
 
-This domain communicates with other domains through the global event bus:
+This domain does **not** import from other domains (§1.3). The `add-repository-button` is
+injected into other domains' UI (the sidebar, onboarding) via snippet slots wired by the
+route (the composition root) — e.g. `routes/repos/+layout.svelte` and
+`routes/get-started/+page.svelte`. Cross-domain data refresh happens through the shared
+TanStack Query cache (invalidation), not direct calls or an event bus.
 
-**Published Events:**
+## External Dependencies
 
-- `REPOSITORY_ADD_REQUESTED` - Request to add a new repository
-- `REPOSITORY_ADDING` - Repository creation in progress
-- `REPOSITORY_ADDED` - Repository successfully added (payload: Repository)
-- `REPOSITORY_ADD_FAILED` - Repository addition failed
-- `REPOSITORY_DELETED` - Repository removed from application (payload: { id, repoId })
+- **Tauri commands** (via bindings): `createRepository`, `deleteRepository`, `getRepository`,
+  `getRepositoryList`, `getBranchList`
+- **TanStack Query** — server-state caching
+- **SvelteKit** — `goto` / `resolve` for navigation
 
-**Subscribed Events:**
+## Testing
 
-- `REPOSITORY_ADD_REQUESTED` - Listens for add requests to trigger folder selection dialog
+- Component tests in `components/__tests__/`, composable tests in `core/composables/__tests__/`
+- 100% branch coverage for new code
 
-### Global Services Used
+## Known cleanup opportunities
 
-- `$services/event-bus` - Cross-domain event communication
-- `$services/notifications` - Global notification system (promoted from notifications domain)
-- `$services/common` - Shared type definitions and schemas
-
-### External Dependencies
-
-- **Tauri Commands**: `createRepository`, `deleteRepository`, `getRepository`, `getRepositoryList`
-- **TanStack Query**: For server state management and caching
-- **Svelte Navigation**: `goto`, `resolve` from `$app/navigation`
-
-## Data Flow
-
-### Adding a Repository
-
-1. User clicks "Add Repository" button
-2. Button publishes `REPOSITORY_ADD_REQUESTED` event
-3. `add-repository-handler` subscribes to event and opens folder dialog
-4. On folder selection, creates repository via `createCreateRepositoryMutation`
-5. Publishes `REPOSITORY_ADDING` event
-6. On success:
-   - Shows success notification
-   - Publishes `REPOSITORY_ADDED` event
-   - Navigates to new repository view
-7. On error:
-   - Shows error notification
-   - Publishes `REPOSITORY_ADD_FAILED` event
-
-### Removing a Repository
-
-1. User clicks "Remove" button in repository header
-2. Modal opens for confirmation
-3. On confirmation:
-   - Publishes `REPOSITORY_DELETED` event (other domains clean up their data)
-   - Clears branch selections via mutation
-   - Clears locked branches via mutation
-   - Deletes repository via `createDeleteRepositoryMutation`
-   - Navigates to another repository or onboarding
-   - Shows success notification
-
-## Testing Strategy
-
-### Unit Tests
-
-- Component behavior tests in `components/__tests__/`
-- View tests in `views/__tests__/`
-- Composable tests in `core/composables/__tests__/` (TODO: to be added)
-
-### Coverage Requirements
-
-- 100% branch coverage for all new code
-- Integration tests for complex repository flows
-
-## Key Patterns
-
-### Composable Pattern
-
-- Stateful logic encapsulated in composables
-- Reactive state using Svelte 5 runes (`$derived`, `$effect`)
-- Return getter-based API for reactive access
-
-### Query/Mutation Pattern
-
-- Separation of reads (queries) and writes (mutations)
-- Factory functions for query/mutation creation
-- Automatic cache invalidation and refetch
-
-### Event-Driven Architecture
-
-- Domains publish events for state changes
-- Domains subscribe to events they care about
-- No direct coupling between domains
-
-## Architecture Compliance
-
-This domain follows the **Framework-Agnostic Frontend Architecture** principles:
-
-- ✅ Self-contained vertical slice
-- ✅ High cohesion (all repository logic together)
-- ⚠️ Low coupling (needs refactoring to remove direct domain imports)
-- ✅ Clear separation of concerns (composables, components, views)
-- ⚠️ Domain isolation (partially - some components still import from other domains)
-
-## Known Issues & Technical Debt
-
-1. **Domain Isolation Violations** (CRITICAL):
-   - `remove-repository-modal.svelte` directly imports from `branch-management`, `notifications`, and `onboarding` domains
-   - Should be refactored to use event bus for cross-domain communication
-
-2. **Missing Tests**:
-   - No tests for composables in `core/composables/`
-   - Need comprehensive test coverage for business logic
-
-3. **Directory Structure**:
-   - Currently using `logic/application/` - should be renamed to `core/composables/` per guidelines
-
-4. **Value Objects**:
-   - Could benefit from Value Objects for `RepositoryPath`, `RepositoryId`, `RepositoryName`
-   - Would provide better validation and type safety
-
-## Future Improvements
-
-- [ ] Refactor `remove-repository-modal.svelte` to use event bus
-- [ ] Add comprehensive tests for all composables
-- [ ] Introduce Value Objects for domain concepts
-- [ ] Complete directory structure migration to `core/composables/`
-- [ ] Document all event payloads in a shared event contract
+The following carry no production importer (only tests/mocks) and are candidates for removal:
+`components/back-button.svelte`, `core/composables/repository.svelte.ts` (`RepositoryStore`,
+which also calls `goto()` inside `set()` — delivery logic leaking into a store), and
+`core/composables/queries/get-branch-list-query.ts` (duplicates `create-get-branches-query.ts`).

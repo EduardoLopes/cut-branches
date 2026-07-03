@@ -8,7 +8,6 @@
 	import Radio from '@pindoba/svelte-radio';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
-	import { onMount } from 'svelte';
 	import { createGetBranchesQuery } from '../core/composables/queries/create-get-branches-query';
 	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
@@ -44,15 +43,11 @@
 		goto(resolve(`/repos/${repositoryId}/restore`));
 	}
 
-	let selectedTab = $state('active-branches');
-
-	onMount(() => {
-		if (page.url.pathname.includes('restore')) {
-			selectedTab = 'deleted-branches';
-		} else {
-			selectedTab = 'active-branches';
-		}
-	});
+	// Derive the active tab from the route so it stays in sync when navigating
+	// between the branches and restore views without remounting.
+	const selectedTab = $derived(
+		page.url.pathname.includes('restore') ? 'deleted-branches' : 'active-branches'
+	);
 </script>
 
 <div
@@ -130,15 +125,23 @@
 						id="branches"
 						name="repository-management"
 						value="active-branches"
-						appearance="tab-horizontal"
+						appearance="button"
 						background="surface.deep"
 						checked={selectedTab === 'active-branches'}
 						role="tab"
 						onchange={goToBranches}
+						passThrough={{
+							root: {
+								style: css.raw({
+									borderBottomRadius: '0',
+									borderBottomWidth: '0'
+								})
+							}
+						}}
 					>
-						Branches
+						Active
 						{#snippet leading()}
-							<Stamp emphasis="ghost" border="none" background="transparent" iconFill>
+							<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
 								<Icon icon="lucide:git-branch" width="14px" height="14px" />
 							</Stamp>
 						{/snippet}
@@ -150,23 +153,25 @@
 						id="deleted-branches"
 						name="repository-management"
 						value="restore"
-						appearance="tab-horizontal"
+						appearance="button"
 						feedback="danger"
 						background="surface.deep"
 						checked={selectedTab === 'deleted-branches'}
 						role="tab"
 						onchange={goToDeletedBranches}
+						passThrough={{
+							root: {
+								style: css.raw({
+									borderBottomRadius: '0',
+									borderBottomWidth: '0'
+								})
+							}
+						}}
 					>
-						Restore
+						Deleted
 						{#snippet leading()}
-							<Stamp
-								emphasis="ghost"
-								feedback="danger"
-								border="none"
-								background="transparent"
-								iconFill
-							>
-								<Icon icon="lucide:undo" width="14px" height="14px" />
+							<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
+								<Icon icon="lucide:trash-2" width="14px" height="14px" />
 							</Stamp>
 						{/snippet}
 						{#snippet trailing()}
@@ -189,21 +194,21 @@
 				root: {
 					style: css.raw({
 						width: '180px',
-						borderRadius: 'sm'
+						// Concentric with the inner menu items: inner radius (md) + content padding (3xs)
+						borderRadius: 'calc(var(--radii-md) + var(--spacing-3xs))'
 					})
 				},
 				content: {
 					style: css.raw({
-						p: 'xs',
-						pt: 'xs',
-						gap: '2xs',
+						p: '3xs',
+						gap: '3xs',
 						flexDirection: 'column'
 					})
 				}
 			}}
 		>
 			{#snippet trigger(props)}
-				<Tooltip content="Repository options">
+				<Tooltip content="Repository options" placement="left">
 					{#snippet children(tipProps)}
 						<Button
 							emphasis="secondary"

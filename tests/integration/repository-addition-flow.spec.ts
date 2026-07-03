@@ -1,6 +1,6 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import AddButton from '$domains/repository-management/components/add-button.svelte';
+import AddButton from '$domains/repository-management/components/add-repository-button.svelte';
 import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
 import { notifications } from '$services/notifications/notifications.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';

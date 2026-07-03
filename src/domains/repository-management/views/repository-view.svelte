@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import RepositoryManagementHeader from '../components/repository-management-header.svelte';
+	import RepositoryHeader from '../components/repository-header.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -28,7 +28,7 @@
 			background: 'neutral.surface.step.1'
 		})}
 	>
-		<RepositoryManagementHeader {repositoryId} />
+		<RepositoryHeader {repositoryId} />
 		{#if children}
 			{@render children()}
 		{/if}

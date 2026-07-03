@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import { vi } from 'vitest';
-import RepositoryHeaderUpdateButton from '../update-repository-button.svelte';
+import UpdateRepositoryButton from '../update-repository-button.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock the createGetRepositoryListQuery
@@ -53,13 +53,13 @@ vi.mock('@tanstack/svelte-query', async (importOriginal) => {
 	};
 });
 
-describe('RepositoryHeaderUpdateButton', () => {
+describe('UpdateRepositoryButton', () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 	});
 
 	test('should render the button', () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -67,7 +67,7 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should invalidate queries when clicked', async () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -95,7 +95,7 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should invalidate correct branch queries with predicate', async () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 		await tick();
@@ -132,7 +132,7 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should invalidate repository queries with predicate', async () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 		await tick();
@@ -162,7 +162,7 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should show notification after invalidation succeeds', async () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 		await tick();
@@ -180,7 +180,7 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should not be disabled when not refreshing', () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -189,7 +189,7 @@ describe('RepositoryHeaderUpdateButton', () => {
 	});
 
 	test('should have correct accessibility attributes', () => {
-		const screen = renderWithTestWrapper(RepositoryHeaderUpdateButton, {
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'
 		});
 		const button = screen.getByTestId('update-button');
