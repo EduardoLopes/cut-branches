@@ -194,6 +194,20 @@ export default defineConfig(({ mode }) => {
 		define: {
 			__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
 		},
+		// Pre-bundle the Tauri deps so the browser-mode test server optimizes them
+		// up front. Otherwise `vitest related <subset>` discovers them mid-run
+		// (notably @tauri-apps/api/webviewWindow via bindings.ts), re-optimizes, and
+		// reloads the page — which crashes the run ("Vitest failed to find the
+		// runner"). Listed explicitly here to keep the pre-commit test hook stable.
+		optimizeDeps: {
+			include: [
+				'@tauri-apps/api/core',
+				'@tauri-apps/api/event',
+				'@tauri-apps/api/webviewWindow',
+				'@tauri-apps/plugin-dialog',
+				'@tanstack/svelte-query'
+			]
+		},
 		resolve: process.env.VITEST
 			? {
 					conditions: ['browser'],
