@@ -3,6 +3,7 @@
 	import Attachment from '@pindoba/svelte-attachment';
 	import Button from '@pindoba/svelte-button';
 	import Panel from '@pindoba/svelte-panel';
+	import Stamp from '@pindoba/svelte-stamp';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { $unreadCount as unreadCountAtom, toggleCenter } from '@pindoba/svelte-toast';
 	import Tooltip from '@pindoba/svelte-tooltip';
@@ -178,7 +179,9 @@
 								})}
 								aria-hidden="true"
 							>
-								<Icon icon="mingcute:notification-fill" width="12px" height="12px" />
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="mingcute:notification-fill" width="12px" height="12px" />
+								</Stamp>
 							</span>
 						{/key}
 						<span class={visuallyHidden()}>

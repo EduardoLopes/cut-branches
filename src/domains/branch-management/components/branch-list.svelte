@@ -205,7 +205,9 @@
 												data-testid="switch-button"
 												{...triggerProps}
 											>
-												<Icon icon="lucide:map-pin" width="14px" height="14px" />
+												<Stamp emphasis="ghost" border="none" background="transparent">
+													<Icon icon="lucide:map-pin" width="14px" height="14px" />
+												</Stamp>
 												<span class={visuallyHidden()}>Set as current</span>
 											</Button>
 										{/snippet}

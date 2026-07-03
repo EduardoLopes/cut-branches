@@ -69,16 +69,14 @@ describe('AddButton', () => {
 
 		it('displays visually hidden label when visuallyHiddenLabel is true', () => {
 			const screen = renderWithTestWrapper(AddButton, { visuallyHiddenLabel: true });
-			const container = screen.container;
-			const span = container.querySelector('span');
-			expect(span).toHaveClass('sr_true');
+			const label = screen.getByText('Add a git repository');
+			expect(label).toHaveClass('sr_true');
 		});
 
 		it('displays visible label when visuallyHiddenLabel is false', () => {
 			const screen = renderWithTestWrapper(AddButton, { visuallyHiddenLabel: false });
-			const container = screen.container;
-			const span = container.querySelector('span');
-			expect(span).not.toHaveClass('sr_true');
+			const label = screen.getByText('Add a git repository');
+			expect(label).not.toHaveClass('sr_true');
 		});
 	});
 

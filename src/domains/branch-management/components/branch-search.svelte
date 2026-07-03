@@ -3,6 +3,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Input, { type InputProps } from '@pindoba/svelte-input';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
 	import { createToggle } from '$lib/svelte-runes-utils';
 	import type { Repository } from '$types/repository';
@@ -61,7 +62,9 @@
 		disabled={!search?.state}
 		data-testid="clear-search-button"
 	>
-		<Icon icon="mdi:clear" width="16px" height="16px" />
+		<Stamp emphasis="ghost" border="none" background="transparent">
+			<Icon icon="mdi:clear" width="16px" height="16px" />
+		</Stamp>
 		<span class={visuallyHidden()}>Clear search</span>
 	</Button>
 </Group>

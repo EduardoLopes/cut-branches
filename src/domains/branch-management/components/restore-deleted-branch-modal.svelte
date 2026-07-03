@@ -4,6 +4,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useRestoreFlow } from '../core/composables/use-restore-flow.svelte';
 	import RestoreBranchStatusCard from './restore-branch-status-card.svelte';
 	import RestoreConflictPrompt from './restore-conflict-prompt.svelte';
@@ -220,7 +221,9 @@
 >
 	Restore
 	{#snippet leading()}
-		<Icon icon="lucide:undo" width="16px" height="16px" />
+		<Stamp emphasis="ghost" border="none" background="transparent">
+			<Icon icon="lucide:undo" width="16px" height="16px" />
+		</Stamp>
 	{/snippet}
 	{#snippet trailing()}
 		<Badge size="sm" emphasis="adaptive">{selectedQuery.data?.branches.length ?? 0}</Badge>

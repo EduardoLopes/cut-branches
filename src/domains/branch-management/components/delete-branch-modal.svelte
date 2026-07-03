@@ -5,6 +5,7 @@
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
 	import Panel from '@pindoba/svelte-panel';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { type Branch } from '../core/models/branch';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
@@ -185,7 +186,9 @@
 >
 	Delete
 	{#snippet leading()}
-		<Icon icon="ion:trash-outline" width="16px" height="16px" />
+		<Stamp emphasis="ghost" border="none" background="transparent">
+			<Icon icon="ion:trash-outline" width="16px" height="16px" />
+		</Stamp>
 	{/snippet}
 	{#snippet trailing()}
 		<Badge size="sm" emphasis="adaptive">{selectedCount}</Badge>

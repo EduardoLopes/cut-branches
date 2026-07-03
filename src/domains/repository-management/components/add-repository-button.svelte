@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { open } from '@tauri-apps/plugin-dialog';
 	import { createCreateRepositoryMutation } from '$domains/repository-management/infrastructure/mutations/create-create-repository-mutation';
@@ -64,14 +65,18 @@
 <Loading loading={createRepositoryMutation.isPending}>
 	{#if visuallyHiddenLabel}
 		<Button onclick={handleAddClick} {size} {emphasis} {...props}>
-			<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
+			</Stamp>
 			<span class={visuallyHidden()}>Add a git repository</span>
 		</Button>
 	{:else}
 		<Button onclick={handleAddClick} {size} {emphasis} {...props}>
 			Add a git repository
 			{#snippet trailing()}
-				<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
+				<Stamp emphasis="ghost" border="none" background="transparent">
+					<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
+				</Stamp>
 			{/snippet}
 		</Button>
 	{/if}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
+	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { createAddLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-add-locked-branches-mutation';
 	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-remove-locked-branches-mutation';
@@ -77,13 +78,17 @@
 		>
 			{#if isLocked}
 				<div data-testid="lock-icon">
-					<Icon icon="lucide:lock" width="14px" height="14px" />
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:lock" width="14px" height="14px" />
+					</Stamp>
 				</div>
 			{/if}
 
 			{#if !isLocked}
 				<div data-testid="unlock-icon">
-					<Icon icon="lucide:lock-open" width="14px" height="14px" />
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:lock-open" width="14px" height="14px" />
+					</Stamp>
 				</div>
 			{/if}
 

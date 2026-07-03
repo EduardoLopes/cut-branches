@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
+	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -27,7 +28,9 @@
 			data-testid="back-button"
 			{...triggerProps}
 		>
-			<Icon icon="lucide:arrow-left" width="24px" height="24px" />
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon icon="lucide:arrow-left" width="24px" height="24px" />
+			</Stamp>
 			<span class={visuallyHidden()}>Back</span>
 		</Button>
 	{/snippet}

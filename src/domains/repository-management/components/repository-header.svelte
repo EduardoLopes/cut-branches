@@ -217,7 +217,9 @@
 							{...props}
 							{...tipProps}
 						>
-							<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
+							<Stamp emphasis="ghost" border="none" background="transparent">
+								<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
+							</Stamp>
 						</Button>
 					{/snippet}
 				</Tooltip>
