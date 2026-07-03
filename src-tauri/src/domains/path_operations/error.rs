@@ -15,20 +15,6 @@ pub enum PathError {
         source: git2::Error,
     },
 
-    #[error("Failed to read git repository config at {path}: {source}")]
-    GitConfigUnreadable {
-        path: PathBuf,
-        #[source]
-        source: git2::Error,
-    },
-
-    #[error("Failed to read git repository HEAD at {path}: {source}")]
-    GitHeadUnreadable {
-        path: PathBuf,
-        #[source]
-        source: git2::Error,
-    },
-
     #[error("Repository has no working directory")]
     NoWorkdir,
 }
@@ -37,9 +23,7 @@ impl From<PathError> for AppError {
     fn from(err: PathError) -> Self {
         let kind = match &err {
             PathError::NotGitRepository { .. } => "is_not_git_repository",
-            PathError::GitRepositoryOpenFailed { .. }
-            | PathError::GitConfigUnreadable { .. }
-            | PathError::GitHeadUnreadable { .. } => "git_repository_error",
+            PathError::GitRepositoryOpenFailed { .. } => "git_repository_error",
             PathError::NoWorkdir => "no_workdir",
         };
 
@@ -48,9 +32,7 @@ impl From<PathError> for AppError {
                 "The path **{}** does not contain a .git directory",
                 path.display()
             )),
-            PathError::GitRepositoryOpenFailed { source, .. }
-            | PathError::GitConfigUnreadable { source, .. }
-            | PathError::GitHeadUnreadable { source, .. } => Some(source.to_string()),
+            PathError::GitRepositoryOpenFailed { source, .. } => Some(source.to_string()),
             PathError::NoWorkdir => Some("The git repository is bare".to_string()),
         };
 

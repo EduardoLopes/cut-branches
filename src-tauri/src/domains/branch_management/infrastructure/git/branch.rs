@@ -1,41 +1,19 @@
 use chrono::{DateTime, FixedOffset, TimeZone};
 use git2::{BranchType, Repository};
-use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::Emitter;
 
-use super::super::core::models::deletion::{
+use super::commit::is_commit_reachable;
+use crate::domains::branch_management::core::models::deletion::{
     ConflictDetails, ConflictResolution, DeletedBranch, DeletedBranchInfo, RestoreBranchResult,
 };
-use super::commit::is_commit_reachable;
 use crate::shared::error::AppError;
+// `Branch`/`Commit` are shared-kernel contracts (§1.4); the DB-row → domain
+// mapping below stays here in branch infrastructure.
+pub use crate::shared::kernel::branch::{Branch, Commit};
 
-#[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Commit {
-    pub sha: String,
-    pub short_sha: String,
-    pub date: String,
-    pub message: String,
-    pub author: String,
-    pub email: String,
-}
-
-#[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct Branch {
-    pub name: String,
-    pub fully_merged: bool,
-    pub last_commit: Commit,
-    pub current: bool,
-    pub deleted_at: Option<String>,
-    pub is_reachable: Option<bool>,
-    pub is_selected: bool,
-    pub is_locked: bool,
-}
-
-impl From<crate::db::models::BranchRecord> for Branch {
-    fn from(record: crate::db::models::BranchRecord) -> Self {
+impl From<crate::shared::infrastructure::db::models::BranchRecord> for Branch {
+    fn from(record: crate::shared::infrastructure::db::models::BranchRecord) -> Self {
         Branch {
             name: record.name,
             fully_merged: record.fully_merged,

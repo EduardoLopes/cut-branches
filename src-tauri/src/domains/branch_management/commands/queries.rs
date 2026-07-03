@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use crate::db::DatabaseState;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::DatabaseState;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -29,7 +29,7 @@ pub struct GetBranchListInput {
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct GetBranchListOutput {
-    pub branches: Vec<crate::domains::branch_management::git::branch::Branch>,
+    pub branches: Vec<crate::shared::kernel::branch::Branch>,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -60,7 +60,11 @@ pub async fn get_commit_reachability(
     input: GetCommitReachabilityInput,
 ) -> Result<GetCommitReachabilityOutput, AppError> {
     let raw_path = Path::new(&input.path);
-    let is_reachable = super::super::git::commit::is_commit_reachable(raw_path, &input.commit_sha)?;
+    let is_reachable =
+        crate::domains::branch_management::infrastructure::git::commit::is_commit_reachable(
+            raw_path,
+            &input.commit_sha,
+        )?;
 
     Ok(GetCommitReachabilityOutput { is_reachable })
 }
@@ -89,23 +93,24 @@ pub fn get_branch_list(
         )
     })?;
 
-    let branch_records = crate::db::operations::get_branches_for_repository(
-        &mut conn,
-        &input.repo_id,
-        &input.filters,
-    )
-    .map_err(|e| {
-        AppError::new(
-            "Failed to get branches from database".to_string(),
-            "db_query_failed",
-            Some(e.to_string()),
+    let branch_records =
+        crate::shared::infrastructure::db::operations::get_branches_for_repository(
+            &mut conn,
+            &input.repo_id,
+            &input.filters,
         )
-    })?;
+        .map_err(|e| {
+            AppError::new(
+                "Failed to get branches from database".to_string(),
+                "db_query_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     // Convert BranchRecord to Branch
-    let branches: Vec<crate::domains::branch_management::git::branch::Branch> = branch_records
+    let branches: Vec<crate::shared::kernel::branch::Branch> = branch_records
         .into_iter()
-        .map(crate::domains::branch_management::git::branch::Branch::from)
+        .map(crate::shared::kernel::branch::Branch::from)
         .collect();
 
     Ok(GetBranchListOutput { branches })
@@ -128,7 +133,10 @@ pub async fn get_branch_merge_status(
 ) -> Result<GetBranchMergeStatusOutput, AppError> {
     let raw_path = Path::new(&input.path);
     let is_merged =
-        super::super::git::branch::check_branch_merge_status(raw_path, &input.branch_name)?;
+        crate::domains::branch_management::infrastructure::git::branch::check_branch_merge_status(
+            raw_path,
+            &input.branch_name,
+        )?;
 
     Ok(GetBranchMergeStatusOutput { is_merged })
 }

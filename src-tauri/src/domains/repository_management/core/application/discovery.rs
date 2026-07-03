@@ -1,9 +1,9 @@
 use std::path::Path;
 use tauri::State;
 
-use crate::db::{models::NewRepository, operations, DatabaseState};
 use crate::domains::repository_management::core::models::GitDirResponse;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::{models::NewRepository, operations, DatabaseState};
 
 /// Get information about a git repository from the database.
 /// This is a DB-first operation that only syncs if the repository data is stale.
@@ -80,7 +80,7 @@ pub async fn get_repository(
 
     // Get branches from branch management domain (use fast version for performance)
     let mut branches =
-        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
+        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
             raw_root_path,
         )?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
@@ -105,7 +105,7 @@ async fn sync_repository_if_needed(
     db: &State<'_, DatabaseState>,
 ) -> Result<(), AppError> {
     // Compute current repository state timestamp (ultra-fast: ~0.5-2ms)
-    let current_timestamp = super::state_hash::compute_repo_state_timestamp(raw_root_path)?;
+    let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
     // Get database connection
     let mut conn = db.get_connection().map_err(|e| {
@@ -139,14 +139,16 @@ async fn sync_repository_if_needed(
 
         // Get full branch list (use fast version for better performance)
         let branches =
-            crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
+            crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
                 raw_root_path,
             )?;
         let branches_count = branches.len() as i32;
 
         // Get current branch name
         let current_branch =
-            crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
+            crate::domains::branch_management::infrastructure::git::branch::get_current_branch(
+                raw_root_path,
+            )?;
 
         // Update repository metadata with new timestamp
         let updated_repo = NewRepository {

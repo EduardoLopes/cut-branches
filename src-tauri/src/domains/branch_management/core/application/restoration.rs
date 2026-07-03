@@ -18,7 +18,11 @@ pub fn restore_deleted_branch(
     branch_info: &DeletedBranch,
     app: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, AppError> {
-    super::super::super::git::branch::restore_deleted_branch(path, branch_info, app)
+    crate::domains::branch_management::infrastructure::git::branch::restore_deleted_branch(
+        path,
+        branch_info,
+        app,
+    )
 }
 
 /// Restore multiple deleted branches in a git repository.
@@ -38,7 +42,11 @@ pub fn restore_deleted_branches(
     app: Option<&tauri::AppHandle>,
 ) -> Result<Vec<RestoreBranchResult>, AppError> {
     let results =
-        super::super::super::git::branch::restore_deleted_branches(path, branch_infos, app)?;
+        crate::domains::branch_management::infrastructure::git::branch::restore_deleted_branches(
+            path,
+            branch_infos,
+            app,
+        )?;
     // Extract just the RestoreBranchResult from the (String, RestoreBranchResult) tuples
     Ok(results.into_iter().map(|(_, result)| result).collect())
 }

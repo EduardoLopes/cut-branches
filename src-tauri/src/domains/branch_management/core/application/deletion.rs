@@ -8,5 +8,5 @@ pub fn delete_branches(
     path: &Path,
     branches: &[String],
 ) -> Result<Vec<DeletedBranchInfo>, AppError> {
-    super::super::super::git::branch::delete_branches(path, branches)
+    crate::domains::branch_management::infrastructure::git::branch::delete_branches(path, branches)
 }

@@ -2,8 +2,8 @@ use std::path::Path;
 use tauri::State;
 
 use super::super::core::models::DeletedBranchInfo;
-use crate::db::DatabaseState;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::DatabaseState;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -57,14 +57,18 @@ pub async fn batch_delete_branches(
             )
         })?;
 
-        crate::db::operations::mark_branches_deleted(&mut conn, &input.repo_id, &branch_names)
-            .map_err(|e| {
-                AppError::new(
-                    "Failed to mark branches as deleted in database".to_string(),
-                    "db_update_failed",
-                    Some(e.to_string()),
-                )
-            })?;
+        crate::shared::infrastructure::db::operations::mark_branches_deleted(
+            &mut conn,
+            &input.repo_id,
+            &branch_names,
+        )
+        .map_err(|e| {
+            AppError::new(
+                "Failed to mark branches as deleted in database".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
     }
 
     Ok(BatchDeleteBranchesOutput {

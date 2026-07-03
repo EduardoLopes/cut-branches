@@ -2,8 +2,8 @@ use std::path::Path;
 use tauri::State;
 
 use super::super::core::models::deletion::{DeletedBranch, RestoreBranchResult};
-use crate::db::DatabaseState;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::DatabaseState;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -82,7 +82,7 @@ pub async fn create_branch_restoration(
             )
         })?;
 
-        crate::db::operations::mark_branches_as_active(
+        crate::shared::infrastructure::db::operations::mark_branches_as_active(
             &mut conn,
             &input.repo_id,
             std::slice::from_ref(&result.branch_name),
@@ -140,7 +140,7 @@ pub async fn batch_create_branch_restorations(
             )
         })?;
 
-        crate::db::operations::mark_branches_as_active(
+        crate::shared::infrastructure::db::operations::mark_branches_as_active(
             &mut conn,
             &input.repo_id,
             &successful_branch_names,

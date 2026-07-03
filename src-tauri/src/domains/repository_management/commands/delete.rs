@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::db::DatabaseState;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::DatabaseState;
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -43,14 +43,15 @@ pub fn delete_repository(
     })?;
 
     let rows_affected =
-        crate::db::operations::delete_repository(&mut conn, &input.id).map_err(|e| {
-            println!("Error deleting repository: {:?}", e);
-            AppError::new(
-                "Failed to delete repository".to_string(),
-                "db_delete_failed",
-                Some(e.to_string()),
-            )
-        })?;
+        crate::shared::infrastructure::db::operations::delete_repository(&mut conn, &input.id)
+            .map_err(|e| {
+                println!("Error deleting repository: {:?}", e);
+                AppError::new(
+                    "Failed to delete repository".to_string(),
+                    "db_delete_failed",
+                    Some(e.to_string()),
+                )
+            })?;
 
     // Force a WAL checkpoint to ensure the deletion is written to disk
     use diesel::RunQueryDsl;

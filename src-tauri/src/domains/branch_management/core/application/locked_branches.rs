@@ -1,7 +1,7 @@
 use tauri::State;
 
-use crate::db::{operations, DatabaseState};
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::{operations, DatabaseState};
 
 /// Get all locked branches for a repository
 pub fn get_locked_branches(

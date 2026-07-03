@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::db::DatabaseState;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::DatabaseState;
 
 // Helper function for default true values
 fn default_true() -> bool {

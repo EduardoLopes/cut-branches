@@ -1,12 +1,12 @@
-use git2::Repository;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 
 use crate::domains::path_operations::core::models::RootPathResponse;
 use crate::domains::path_operations::error::PathError;
+use crate::domains::path_operations::infrastructure::git::resolve_workdir;
 use crate::shared::error::AppError;
-use crate::shared::git::is_git_repository;
+use crate::shared::infrastructure::git::is_git_repository;
 
 fn calculate_hash<T: Hash + ?Sized>(t: &T) -> u64 {
     let mut s = DefaultHasher::new();
@@ -29,14 +29,7 @@ pub async fn get_root_path(path: String) -> Result<RootPathResponse, AppError> {
         .into());
     }
 
-    let repo = Repository::open(raw_path).map_err(|source| PathError::GitRepositoryOpenFailed {
-        path: raw_path.to_path_buf(),
-        source,
-    })?;
-
-    let workdir = repo.workdir().ok_or(PathError::NoWorkdir)?;
-
-    let rootpath = workdir.to_string_lossy().to_string();
+    let rootpath = resolve_workdir(raw_path)?;
 
     Ok(RootPathResponse {
         root_path: rootpath.clone(),

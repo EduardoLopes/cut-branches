@@ -5,10 +5,10 @@
 
 extern crate execute;
 
-pub mod db;
 pub mod domains;
 pub mod shared;
 
+use shared::infrastructure::db;
 use tauri::Manager;
 
 use domains::branch_management::commands::{

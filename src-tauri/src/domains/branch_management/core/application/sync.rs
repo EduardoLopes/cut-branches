@@ -1,10 +1,10 @@
-use crate::db::{models::NewBranchRecord, DatabaseState};
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::{models::NewBranchRecord, DatabaseState};
 use std::collections::HashSet;
 use std::path::Path;
 use tauri::State;
 
-use super::super::super::git::branch::{
+use crate::domains::branch_management::infrastructure::git::branch::{
     get_all_branches_with_last_commit, get_all_branches_with_last_commit_fast, Branch,
 };
 
@@ -77,7 +77,7 @@ fn sync_branches_to_db_internal(
         deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter::All,
         ..Default::default()
     };
-    let db_branches = crate::db::operations::get_branches_for_repository(
+    let db_branches = crate::shared::infrastructure::db::operations::get_branches_for_repository(
         &mut conn, repo_id, &filters,
     )
     .map_err(|e| {
@@ -100,7 +100,7 @@ fn sync_branches_to_db_internal(
     // Use batch upsert for better performance with many branches
     use diesel::Connection;
     conn.transaction::<_, diesel::result::Error, _>(|conn| {
-        crate::db::operations::upsert_branches_batch(conn, &new_branches)?;
+        crate::shared::infrastructure::db::operations::upsert_branches_batch(conn, &new_branches)?;
         Ok(())
     })
     .map_err(|e| {
@@ -121,23 +121,28 @@ fn sync_branches_to_db_internal(
         .collect();
 
     if !branches_to_mark_deleted.is_empty() {
-        crate::db::operations::mark_branches_deleted(&mut conn, repo_id, &branches_to_mark_deleted)
-            .map_err(|e| {
-                AppError::new(
-                    "Failed to mark branches as deleted in database".to_string(),
-                    "db_update_failed",
-                    Some(e.to_string()),
-                )
-            })?;
+        crate::shared::infrastructure::db::operations::mark_branches_deleted(
+            &mut conn,
+            repo_id,
+            &branches_to_mark_deleted,
+        )
+        .map_err(|e| {
+            AppError::new(
+                "Failed to mark branches as deleted in database".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
     }
 
-    crate::db::operations::bump_last_synced_at(&mut conn, repo_id).map_err(|e| {
-        AppError::new(
-            "Failed to record sync timestamp".to_string(),
-            "db_update_failed",
-            Some(e.to_string()),
-        )
-    })?;
+    crate::shared::infrastructure::db::operations::bump_last_synced_at(&mut conn, repo_id)
+        .map_err(|e| {
+            AppError::new(
+                "Failed to record sync timestamp".to_string(),
+                "db_update_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     Ok(git_branches.len())
 }

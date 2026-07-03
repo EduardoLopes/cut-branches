@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::db::DatabaseState;
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::DatabaseState;
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -14,7 +14,7 @@ pub struct GetRepositoryInput {
 #[serde(rename_all = "camelCase")]
 pub struct GetRepositoryOutput {
     pub path: String,
-    pub branches: Vec<crate::domains::branch_management::git::branch::Branch>,
+    pub branches: Vec<crate::shared::kernel::branch::Branch>,
     pub current_branch: String,
     pub branches_count: u32,
     pub name: String,
@@ -60,12 +60,12 @@ pub async fn get_repository(
 ///
 /// # Returns
 ///
-/// * `Result<Vec<crate::db::models::Repository>, AppError>` - List of repositories or an error
+/// * `Result<Vec<crate::shared::infrastructure::db::models::Repository>, AppError>` - List of repositories or an error
 #[tauri::command]
 #[specta::specta]
 pub fn get_repository_list(
     db: State<'_, DatabaseState>,
-) -> Result<Vec<crate::db::models::Repository>, AppError> {
+) -> Result<Vec<crate::shared::infrastructure::db::models::Repository>, AppError> {
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
             "Failed to get database connection".to_string(),
@@ -74,13 +74,14 @@ pub fn get_repository_list(
         )
     })?;
 
-    let repos = crate::db::operations::get_repository_list(&mut conn).map_err(|e| {
-        AppError::new(
-            "Failed to get repository list".to_string(),
-            "db_list_failed",
-            Some(e.to_string()),
-        )
-    })?;
+    let repos = crate::shared::infrastructure::db::operations::get_repository_list(&mut conn)
+        .map_err(|e| {
+            AppError::new(
+                "Failed to get repository list".to_string(),
+                "db_list_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     println!("get_repository_list: Found {} repositories", repos.len());
     for repo in &repos {

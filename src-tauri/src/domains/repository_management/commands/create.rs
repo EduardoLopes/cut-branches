@@ -3,8 +3,8 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-use crate::db::{models::NewRepository, DatabaseState};
 use crate::shared::error::AppError;
+use crate::shared::infrastructure::db::{models::NewRepository, DatabaseState};
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -16,7 +16,7 @@ pub struct CreateRepositoryInput {
 #[serde(rename_all = "camelCase")]
 pub struct CreateRepositoryOutput {
     pub path: String,
-    pub branches: Vec<crate::domains::branch_management::git::branch::Branch>,
+    pub branches: Vec<crate::shared::kernel::branch::Branch>,
     pub current_branch: String,
     pub branches_count: u32,
     pub name: String,
@@ -72,12 +72,14 @@ pub async fn create_repository(
 
     // Get branches from branch management domain (use fast version for performance)
     let mut branches =
-        crate::domains::branch_management::git::branch::get_all_branches_with_last_commit_fast(
+        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
             raw_root_path,
         )?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
     let current =
-        crate::domains::branch_management::git::branch::get_current_branch(raw_root_path)?;
+        crate::domains::branch_management::infrastructure::git::branch::get_current_branch(
+            raw_root_path,
+        )?;
 
     // Extract repository name
     let repo_name = raw_root_path
@@ -111,7 +113,7 @@ pub async fn create_repository(
 
     // Compute initial state timestamp
     let initial_timestamp =
-        super::super::core::application::state_hash::compute_repo_state_timestamp(raw_root_path)?;
+        crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
     let new_repo = NewRepository {
         id: repo_name.clone(),
@@ -128,7 +130,8 @@ pub async fn create_repository(
     use diesel::Connection;
     conn.transaction::<_, AppError, _>(|conn| {
         // Check if repository already exists
-        let existing = crate::db::operations::get_repository(conn, &repo_name);
+        let existing =
+            crate::shared::infrastructure::db::operations::get_repository(conn, &repo_name);
         if existing.is_ok() {
             return Err(AppError::new(
                 format!("Repository '{}' already exists", repo_name),
@@ -141,13 +144,15 @@ pub async fn create_repository(
         }
 
         // Create the repository
-        crate::db::operations::create_repository(conn, new_repo).map_err(|e| {
-            AppError::new(
-                "Failed to create repository in database".to_string(),
-                "db_create_failed",
-                Some(e.to_string()),
-            )
-        })?;
+        crate::shared::infrastructure::db::operations::create_repository(conn, new_repo).map_err(
+            |e| {
+                AppError::new(
+                    "Failed to create repository in database".to_string(),
+                    "db_create_failed",
+                    Some(e.to_string()),
+                )
+            },
+        )?;
 
         Ok(())
     })?;

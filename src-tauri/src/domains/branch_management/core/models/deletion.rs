@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::super::super::git::branch::Branch;
+use crate::shared::kernel::branch::Branch;
 
 #[derive(Serialize, Deserialize, specta::Type, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
