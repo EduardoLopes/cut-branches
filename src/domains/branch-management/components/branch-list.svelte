@@ -6,15 +6,15 @@
 	import Pagination from '@pindoba/svelte-pagination';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
-	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
 	import { getSearchBranchesStore } from '../core/composables/search-branches.svelte';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
-	import { createBranchMergeStatusQuery } from '$domains/branch-management/core/composables/create-branch-merge-status-query';
-	import { createSwitchBranchMutation } from '$domains/branch-management/core/composables/create-switch-branch-mutation';
-	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-update-branch-selection-batch-mutation';
 	import { type Branch } from '$domains/branch-management/core/models/branch';
+	import { createSwitchBranchMutation } from '$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
+	import { createBranchMergeStatusQuery } from '$domains/branch-management/infrastructure/queries/create-branch-merge-status-query';
+	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import {
 		getBranchColorPalette,
 		getBranchAlerts,

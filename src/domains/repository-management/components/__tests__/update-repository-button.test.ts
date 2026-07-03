@@ -23,12 +23,9 @@ const mockRepositoryListQuery = vi.hoisted(() => ({
 	}))
 }));
 
-vi.mock(
-	'$domains/repository-management/core/composables/queries/create-get-repository-list-query',
-	() => ({
-		createGetRepositoryListQuery: mockRepositoryListQuery.fn
-	})
-);
+vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
+	createGetRepositoryListQuery: mockRepositoryListQuery.fn
+}));
 
 // Mock notifications
 const mockNotifications = vi.hoisted(() => ({

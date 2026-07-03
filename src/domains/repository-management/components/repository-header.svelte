@@ -8,13 +8,13 @@
 	import Radio from '@pindoba/svelte-radio';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
-	import { createGetBranchesQuery } from '../core/composables/queries/create-get-branches-query';
-	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
+	import { createGetBranchesQuery } from '../infrastructure/queries/create-get-branches-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
 	import UpdateRepositoryButton from './update-repository-button.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {

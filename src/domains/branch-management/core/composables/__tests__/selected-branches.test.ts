@@ -3,7 +3,7 @@ import {
 	getSelectedBranchesStore,
 	getSelectedDeletedBranchesStore
 } from '../selected-branches.svelte';
-import { SetStore } from '$utils/set-store.svelte';
+import { SetStore } from '$lib/set-store.svelte';
 
 describe('Selected Branches Stores', () => {
 	describe('getSelectedBranchesStore', () => {

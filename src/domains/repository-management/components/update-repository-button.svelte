@@ -4,9 +4,9 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { createGetRepositoryListQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-list-query';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { hasRepoId, hasPath } from '$infrastructure/query-type-guards';
 	import { notifications } from '$services/notifications/notifications.svelte';
-	import { hasRepoId, hasPath } from '$utils/query-type-guards';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {

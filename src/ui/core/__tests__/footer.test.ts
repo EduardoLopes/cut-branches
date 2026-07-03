@@ -21,20 +21,17 @@ vi.mock('$app/state', () => ({
 
 let mockedLastSyncedAt: string | null = null;
 
-vi.mock(
-	'$domains/repository-management/core/composables/queries/create-get-repository-query',
-	() => ({
-		createGetRepositoryQuery: () => ({
-			get data() {
-				return mockedLastSyncedAt
-					? { id: 'repo-1', name: 'r', lastSyncedAt: mockedLastSyncedAt }
-					: undefined;
-			},
-			isLoading: false,
-			isError: false
-		})
+vi.mock('$infrastructure/queries/create-get-repository-query', () => ({
+	createGetRepositoryQuery: () => ({
+		get data() {
+			return mockedLastSyncedAt
+				? { id: 'repo-1', name: 'r', lastSyncedAt: mockedLastSyncedAt }
+				: undefined;
+		},
+		isLoading: false,
+		isError: false
 	})
-);
+}));
 
 describe('Footer Component', () => {
 	describe('Time Display', () => {

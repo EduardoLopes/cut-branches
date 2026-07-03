@@ -1,7 +1,7 @@
 import { goto } from '$app/navigation';
 import { resolve } from '$app/paths';
+import { Store } from '$lib/store.svelte';
 import { RepositorySchema, type Repository } from '$types/repository';
-import { Store } from '$utils/store.svelte';
 
 /**
  * RepositoryStore - Manages individual repository UI state

@@ -36,12 +36,15 @@ function makeBranchData(name: string): BranchData {
 
 let selectedBranches: Branch[] = [];
 
-vi.mock('../../core/composables/create-restore-deleted-branch-mutation', () => ({
-	createRestoreDeletedBranchMutation: () => ({ mutate: vi.fn() }),
-	createRestoreDeletedBranchesMutation: () => ({ mutate: vi.fn() })
-}));
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-restore-deleted-branch-mutation',
+	() => ({
+		createRestoreDeletedBranchMutation: () => ({ mutate: vi.fn() }),
+		createRestoreDeletedBranchesMutation: () => ({ mutate: vi.fn() })
+	})
+);
 
-vi.mock('../../core/composables/create-get-repository-list-query', () => ({
+vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: () => ({
 		data: [
 			{
@@ -55,7 +58,7 @@ vi.mock('../../core/composables/create-get-repository-list-query', () => ({
 	})
 }));
 
-vi.mock('../../core/composables/create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: (input: () => { filters?: { selectionStatus?: string } }) => ({
 		get data() {
 			const filters = input().filters || {};

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Loading from '@pindoba/svelte-loading';
-	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();

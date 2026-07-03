@@ -9,9 +9,9 @@
 	import { mergeRight } from 'ramda';
 	import { type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
+	import { shouldInvalidate } from '$infrastructure/query-key-utils';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { createError } from '$utils/error-utils';
-	import { shouldInvalidate } from '$utils/query-key-utils';
 
 	interface Props {
 		queryClientOptions?: QueryClientConfig;

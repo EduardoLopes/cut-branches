@@ -11,26 +11,23 @@ vi.mock('$app/state', () => ({
 }));
 
 // Mock the queries used by Repository and RepositoryHeader
-vi.mock(
-	'$domains/repository-management/core/composables/queries/create-get-repository-query',
-	() => ({
-		createGetRepositoryQuery: () => ({
-			data: {
-				id: 'test-repo-id',
-				name: 'Test Repository',
-				path: '/test/path',
-				branches: [],
-				currentBranch: 'main',
-				branchesCount: 0
-			},
-			isLoading: false,
-			isError: false,
-			error: null
-		})
+vi.mock('$infrastructure/queries/create-get-repository-query', () => ({
+	createGetRepositoryQuery: () => ({
+		data: {
+			id: 'test-repo-id',
+			name: 'Test Repository',
+			path: '/test/path',
+			branches: [],
+			currentBranch: 'main',
+			branchesCount: 0
+		},
+		isLoading: false,
+		isError: false,
+		error: null
 	})
-);
+}));
 
-vi.mock('$domains/branch-management/core/composables/queries/create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: () => ({
 		data: {
 			branches: [],
@@ -42,26 +39,23 @@ vi.mock('$domains/branch-management/core/composables/queries/create-get-branches
 	})
 }));
 
-vi.mock(
-	'$domains/repository-management/core/composables/queries/create-get-repository-list-query',
-	() => ({
-		createGetRepositoryListQuery: () => ({
-			data: [
-				{
-					id: 'test-repo-id',
-					name: 'Test Repository',
-					path: '/test/path',
-					branches: [],
-					currentBranch: 'main',
-					branchesCount: 0
-				}
-			],
-			isLoading: false,
-			isError: false,
-			error: null
-		})
+vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
+	createGetRepositoryListQuery: () => ({
+		data: [
+			{
+				id: 'test-repo-id',
+				name: 'Test Repository',
+				path: '/test/path',
+				branches: [],
+				currentBranch: 'main',
+				branchesCount: 0
+			}
+		],
+		isLoading: false,
+		isError: false,
+		error: null
 	})
-);
+}));
 
 describe('Restore Page Route', () => {
 	beforeEach(() => {

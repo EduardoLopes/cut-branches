@@ -11,7 +11,7 @@ import { renderWithTestWrapper } from '$utils/test-utils';
 let mockBranchData: Branch[] = [];
 
 // Mock createGetBranchesQuery with filter support
-vi.mock('../../core/composables/create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: (input: () => { repoId: string; filters?: BranchFilters }) => ({
 		get data() {
 			const filters = input().filters || {};
@@ -56,7 +56,7 @@ vi.mock('../../core/composables/create-get-branches-query', () => ({
 	})
 }));
 
-vi.mock('../../core/composables/create-selected-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-selected-branches-query', () => ({
 	createSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -67,33 +67,42 @@ vi.mock('../../core/composables/create-selected-branches-query', () => ({
 	})
 }));
 
-vi.mock('../../core/composables/create-deleted-selected-branches-query', () => ({
-	createDeletedSelectedBranchesQuery: () => ({
-		get data() {
-			const store = getSelectedBranchesStore('test-repo');
-			return { branches: Array.from(store?.state || []) };
-		},
-		isLoading: false,
-		isError: false
+vi.mock(
+	'$domains/branch-management/infrastructure/queries/create-deleted-selected-branches-query',
+	() => ({
+		createDeletedSelectedBranchesQuery: () => ({
+			get data() {
+				const store = getSelectedBranchesStore('test-repo');
+				return { branches: Array.from(store?.state || []) };
+			},
+			isLoading: false,
+			isError: false
+		})
 	})
-}));
+);
 
 // Mock the mutations to actually update the stores
-vi.mock('../../core/composables/create-update-branch-selection-batch-mutation', () => ({
-	createUpdateBranchSelectionBatchMutation: () => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(),
-		isPending: false
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation',
+	() => ({
+		createUpdateBranchSelectionBatchMutation: () => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false
+		})
 	})
-}));
+);
 
-vi.mock('../../core/composables/create-set-branch-selection-all-mutation', () => ({
-	createSetBranchSelectionAllMutation: () => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(),
-		isPending: false
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-set-branch-selection-all-mutation',
+	() => ({
+		createSetBranchSelectionAllMutation: () => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false
+		})
 	})
-}));
+);
 
 const mockBranchesData: BranchData[] = [
 	{

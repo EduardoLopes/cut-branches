@@ -19,7 +19,7 @@ const mockGetRepositoryQuery = vi.hoisted(() => ({
 	}))
 }));
 
-vi.mock('../../core/composables/queries/create-get-repository-query', () => ({
+vi.mock('$infrastructure/queries/create-get-repository-query', () => ({
 	createGetRepositoryQuery: mockGetRepositoryQuery.fn
 }));
 

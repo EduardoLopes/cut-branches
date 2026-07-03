@@ -9,7 +9,7 @@ import type {
 	CreateBranchRestorationOutput,
 	RestoreBranchResult
 } from '$infrastructure/bindings';
-import { withEffectRoot } from '$utils/with-effect-root.svelte';
+import { withEffectRoot } from '$lib/with-effect-root.svelte';
 
 vi.mock('@tauri-apps/api/event', () => ({
 	listen: vi.fn().mockResolvedValue(() => {})
@@ -29,16 +29,19 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: { push: mockPush }
 }));
 
-vi.mock('../create-restore-deleted-branch-mutation', () => ({
-	createRestoreDeletedBranchMutation: (opts: unknown) => {
-		captureSingleConfig.current = opts;
-		return { mutate: singleMutate };
-	},
-	createRestoreDeletedBranchesMutation: (opts: unknown) => {
-		captureBatchConfig.current = opts;
-		return { mutate: batchMutate };
-	}
-}));
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-restore-deleted-branch-mutation',
+	() => ({
+		createRestoreDeletedBranchMutation: (opts: unknown) => {
+			captureSingleConfig.current = opts;
+			return { mutate: singleMutate };
+		},
+		createRestoreDeletedBranchesMutation: (opts: unknown) => {
+			captureBatchConfig.current = opts;
+			return { mutate: batchMutate };
+		}
+	})
+);
 
 let shaCounter = 0;
 function nextSha() {

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getSearchBranchesStore, pruneOrphanedSearchKeys } from '../search-branches.svelte';
-import { Store } from '$utils/store.svelte';
+import { Store } from '$lib/store.svelte';
 
 describe('getSearchBranchesStore', () => {
 	it('should return undefined if no repository is provided', () => {

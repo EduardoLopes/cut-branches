@@ -8,7 +8,7 @@ vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
 }));
 
-vi.mock('$utils/set-store.svelte', () => ({
+vi.mock('$lib/set-store.svelte', () => ({
 	SetStore: {
 		getInstance: vi.fn().mockReturnValue({
 			delete: vi.fn(),

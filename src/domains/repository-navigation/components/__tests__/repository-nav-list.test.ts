@@ -9,18 +9,15 @@ const mockRepositories = [
 	mockDataFactory.repository({ id: '3', name: 'repo-3', branchesCount: 10 })
 ];
 
-vi.mock(
-	'$domains/repository-navigation/infrastructure/queries/create-get-repository-list-query',
-	() => ({
-		createGetRepositoryListQuery: vi.fn(() => ({
-			get data() {
-				return mockRepositories;
-			},
-			isLoading: false,
-			isError: false
-		}))
-	})
-);
+vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
+	createGetRepositoryListQuery: vi.fn(() => ({
+		get data() {
+			return mockRepositories;
+		},
+		isLoading: false,
+		isError: false
+	}))
+}));
 
 const mockPrefetchRepositoryData = vi.fn();
 

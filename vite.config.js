@@ -225,7 +225,10 @@ export default defineConfig(({ mode }) => {
 				},
 		test: {
 			include: ['src/**/*.{test,spec}.{js,ts}'],
-			exclude: ['src/infrastructure/**'],
+			// Only the generated bindings are exempt; hand-written infrastructure
+			// adapters (tauri query/mutation wrappers, promoted query adapters)
+			// keep their co-located tests running.
+			exclude: ['src/infrastructure/bindings.ts'],
 			setupFiles: ['./vitest-setup.js'],
 			browser: {
 				enabled: true,
@@ -248,7 +251,7 @@ export default defineConfig(({ mode }) => {
 				all: true,
 				include: ['src/**'],
 				exclude: [
-					'src/infrastructure/**',
+					'src/infrastructure/bindings.ts',
 					'src/**/*.d.ts',
 					'src/**/*.md',
 					'src/**/.DS_Store',

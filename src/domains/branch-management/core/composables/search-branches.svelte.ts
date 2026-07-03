@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { Store } from '$utils/store.svelte';
+import { Store } from '$lib/store.svelte';
 
 const searchSchema = z.string().optional();
 

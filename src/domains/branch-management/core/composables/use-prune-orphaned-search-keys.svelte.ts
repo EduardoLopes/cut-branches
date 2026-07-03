@@ -1,5 +1,5 @@
-import { createGetRepositoryListQuery } from './create-get-repository-list-query';
 import { pruneOrphanedSearchKeys } from '$domains/branch-management/core/composables/search-branches.svelte';
+import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 
 let alreadyPrunedThisSession = false;
 

@@ -18,7 +18,7 @@ vi.mock('@tanstack/svelte-query', async () => {
 });
 
 // Mock the Tauri commands
-vi.mock('$utils/tauri-commands', () => ({
+vi.mock('$infrastructure/tauri-commands', () => ({
 	buildCommandExecutor: vi.fn((commandName) => {
 		// Return different mock data based on command
 		if (commandName === 'getBranchList') {

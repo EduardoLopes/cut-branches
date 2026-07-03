@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getLockedBranchesStore } from '../locked-branches.svelte';
-import { SetStore } from '$utils/set-store.svelte';
+import { SetStore } from '$lib/set-store.svelte';
 
 describe('getLockedBranchesStore', () => {
 	it('should return undefined if no repository is provided', () => {

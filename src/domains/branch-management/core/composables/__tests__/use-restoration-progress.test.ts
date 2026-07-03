@@ -1,7 +1,7 @@
 import { flushSync } from 'svelte';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { useRestorationProgress } from '../use-restoration-progress.svelte';
-import { withEffectRoot } from '$utils/with-effect-root.svelte';
+import { withEffectRoot } from '$lib/with-effect-root.svelte';
 
 const mockUnlisten = vi.fn();
 const mockListen = vi.fn();

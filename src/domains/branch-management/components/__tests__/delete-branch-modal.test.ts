@@ -1,10 +1,10 @@
 import { tick } from 'svelte';
 import { vi } from 'vitest';
 import type { Mock } from 'vitest';
-import { createDeleteBranchesMutation } from '../../core/composables/create-delete-branches-mutation';
 import DeleteBranchModal from '../delete-branch-modal.svelte';
 import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
+import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
 import type { Branch as BranchData } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -34,29 +34,38 @@ vi.mock('$domains/branch-management/core/composables/deleted-branches.svelte', (
 }));
 
 // Simple mutation mock
-vi.mock('../../core/composables/create-delete-branches-mutation', () => ({
-	createDeleteBranchesMutation: vi.fn().mockReturnValue({
-		mutate: vi.fn(),
-		isPending: false
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation',
+	() => ({
+		createDeleteBranchesMutation: vi.fn().mockReturnValue({
+			mutate: vi.fn(),
+			isPending: false
+		})
 	})
-}));
+);
 
 // Mock clear selected branches mutation
-vi.mock('../../core/composables/create-update-branch-selection-batch-mutation', () => ({
-	createUpdateBranchSelectionBatchMutation: vi.fn(() => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(),
-		isPending: false
-	}))
-}));
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation',
+	() => ({
+		createUpdateBranchSelectionBatchMutation: vi.fn(() => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false
+		}))
+	})
+);
 
-vi.mock('../../core/composables/create-set-branch-selection-all-mutation', () => ({
-	createSetBranchSelectionAllMutation: vi.fn(() => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(),
-		isPending: false
-	}))
-}));
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-set-branch-selection-all-mutation',
+	() => ({
+		createSetBranchSelectionAllMutation: vi.fn(() => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(),
+			isPending: false
+		}))
+	})
+);
 
 // Test data
 const mockBranchesData: BranchData[] = [
@@ -116,7 +125,7 @@ const mockBranchesData: BranchData[] = [
 const mockBranches = mockBranchesData.map((data) => Branch.fromData(data));
 
 // Mock get repository list query
-vi.mock('../../core/composables/create-get-repository-list-query', () => ({
+vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: vi.fn(() => ({
 		data: [
 			{
@@ -137,7 +146,7 @@ vi.mock('../../core/composables/create-get-repository-list-query', () => ({
 let mockSelectedBranches: string[] = ['feature-1'];
 
 // Mock get branches query with dynamic filtering based on filters
-vi.mock('../../core/composables/create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: vi.fn((filtersFactory) => {
 		const filters = typeof filtersFactory === 'function' ? filtersFactory() : filtersFactory;
 

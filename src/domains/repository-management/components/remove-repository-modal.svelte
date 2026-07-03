@@ -4,11 +4,11 @@
 	import Dialog from '@pindoba/svelte-dialog';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { createDeleteRepositoryMutation } from '../core/composables/mutations/create-delete-repository-mutation';
-	import { createGetRepositoryListQuery } from '../core/composables/queries/create-get-repository-list-query';
-	import { createGetRepositoryQuery } from '../core/composables/queries/create-get-repository-query';
+	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';

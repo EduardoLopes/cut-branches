@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { SetStore } from '$utils/set-store.svelte';
+import { SetStore } from '$lib/set-store.svelte';
 
 // Schema for branch names (strings)
 const branchNameSchema = z.string();

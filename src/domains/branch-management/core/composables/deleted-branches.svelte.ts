@@ -1,7 +1,7 @@
 import { SvelteDate } from 'svelte/reactivity';
 import { z } from 'zod/v4';
 import type { Branch } from '$infrastructure/bindings';
-import { Store } from '$utils/store.svelte';
+import { Store } from '$lib/store.svelte';
 
 export interface DeletedBranchesState {
 	branches: Branch[];

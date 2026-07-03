@@ -5,11 +5,11 @@
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
 	import Panel from '@pindoba/svelte-panel';
-	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
-	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { type Branch } from '../core/models/branch';
-	import { createDeleteBranchesMutation } from '$domains/branch-management/core/composables/create-delete-branches-mutation';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
+	import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
+	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';

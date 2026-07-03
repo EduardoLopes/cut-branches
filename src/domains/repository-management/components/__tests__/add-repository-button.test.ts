@@ -3,7 +3,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddButton from '../add-repository-button.svelte';
-import { createCreateRepositoryMutation } from '$domains/repository-management/core/composables/mutations/create-create-repository-mutation';
+import { createCreateRepositoryMutation } from '$domains/repository-management/infrastructure/mutations/create-create-repository-mutation';
 import { notifications } from '$services/notifications/notifications.svelte';
 import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
@@ -38,7 +38,7 @@ vi.mock('@tanstack/svelte-query', async () => {
 
 // Mock create repository mutation
 vi.mock(
-	'$domains/repository-management/core/composables/mutations/create-create-repository-mutation',
+	'$domains/repository-management/infrastructure/mutations/create-create-repository-mutation',
 	() => ({
 		createCreateRepositoryMutation: vi.fn((options: MutationOptions) => {
 			// Store the options so we can call onSuccess later

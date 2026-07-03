@@ -66,7 +66,7 @@ const mockBranchesData: BranchData[] = [
 const mockBranches = mockBranchesData.map((data) => Branch.fromData(data));
 
 // Mock the repository list query
-vi.mock('$domains/onboarding/logic/application/queries/create-get-repository-list-query', () => ({
+vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: () => ({
 		data: [
 			{
@@ -83,7 +83,7 @@ vi.mock('$domains/onboarding/logic/application/queries/create-get-repository-lis
 }));
 
 // Mock the branch list query
-vi.mock('$domains/repository-management/core/composables/queries/get-branch-list-query', () => ({
+vi.mock('$domains/repository-management/infrastructure/queries/get-branch-list-query', () => ({
 	getBranchListQuery: () => ({
 		data: { branches: mockBranches },
 		isLoading: false,
@@ -95,7 +95,7 @@ vi.mock('$domains/repository-management/core/composables/queries/get-branch-list
 }));
 
 // Mock the get branches query used by branch-list component
-vi.mock('$domains/branch-management/core/composables/create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: () => ({
 		data: { branches: mockBranches },
 		isLoading: false,
@@ -106,7 +106,7 @@ vi.mock('$domains/branch-management/core/composables/create-get-branches-query',
 }));
 
 // Mock the repository query used by active branches view
-vi.mock('$domains/branch-management/core/composables/create-get-repository-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-repository-query', () => ({
 	createGetRepositoryQuery: () => ({
 		data: {
 			id: 'test-repo-id',
@@ -260,6 +260,7 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 // Mock $app/state
 vi.mock('$app/state', () => ({
 	page: {
+		params: { id: 'test-repo-id' },
 		url: {
 			pathname: '/repos/test-repo-id'
 		}

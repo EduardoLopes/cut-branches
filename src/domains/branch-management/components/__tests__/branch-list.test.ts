@@ -34,7 +34,7 @@ function createManyMockBranches() {
 const mockBranchesState = { branches: createMockBranches() };
 
 // Mock the query to return branches data
-vi.mock('../../core/composables/create-get-branches-query', () => {
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => {
 	return {
 		createGetBranchesQuery: () => {
 			// Return an object with a getter that always returns current branches
@@ -51,7 +51,7 @@ vi.mock('../../core/composables/create-get-branches-query', () => {
 	};
 });
 
-vi.mock('../../core/composables/create-switch-branch-mutation', () => {
+vi.mock('$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation', () => {
 	const mutate = vi.fn();
 	return {
 		createSwitchBranchMutation: () => {
@@ -64,12 +64,15 @@ vi.mock('../../core/composables/create-switch-branch-mutation', () => {
 	};
 });
 
-vi.mock('../../core/composables/create-update-branch-selection-batch-mutation', () => ({
-	createUpdateBranchSelectionBatchMutation: () => ({
-		mutate: vi.fn(),
-		isPending: false
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation',
+	() => ({
+		createUpdateBranchSelectionBatchMutation: () => ({
+			mutate: vi.fn(),
+			isPending: false
+		})
 	})
-}));
+);
 
 vi.mock('../../store/search-branches.svelte', () => ({
 	getSearchBranchesStore: () => ({
@@ -87,7 +90,9 @@ vi.mock('$app/state', () => ({
 
 // Mock Tauri commands via bindings
 vi.mock('$infrastructure/bindings', async () => {
-	const actual = await vi.importActual<typeof import('$infrastructure/bindings')>('$infrastructure/bindings');
+	const actual = await vi.importActual<typeof import('$infrastructure/bindings')>(
+		'$infrastructure/bindings'
+	);
 	return {
 		...actual,
 		commands: {
@@ -125,14 +130,17 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	}
 }));
 
-vi.mock('../../core/composables/create-branch-merge-status-query', () => ({
-	createBranchMergeStatusQuery: () => ({
-		data: undefined,
-		isLoading: false,
-		isError: false,
-		error: null
+vi.mock(
+	'$domains/branch-management/infrastructure/queries/create-branch-merge-status-query',
+	() => ({
+		createBranchMergeStatusQuery: () => ({
+			data: undefined,
+			isLoading: false,
+			isError: false,
+			error: null
+		})
 	})
-}));
+);
 
 describe('BranchList Component', () => {
 	beforeEach(() => {

@@ -11,6 +11,8 @@
 		"types": ["vitest/globals", "@testing-library/jest-dom"],
 		"baseUrl": ".",
 		"paths": {
+			"$lib": ["src/lib"],
+			"$lib/*": ["src/lib/*"],
 			"$core": ["src/core"],
 			"$core/*": ["src/core/*"],
 			"$domains": ["src/domains"],

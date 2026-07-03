@@ -6,8 +6,8 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import { createRawSnippet, mount, unmount, type Snippet } from 'svelte';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
-	import { createGetRepositoryListQuery } from '../infrastructure/queries/create-get-repository-list-query';
 	import { page } from '$app/state';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {

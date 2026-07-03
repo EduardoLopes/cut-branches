@@ -6,9 +6,9 @@
  * active branch-specific derived states like selectable count.
  */
 
-import { createGetBranchesQuery } from './create-get-branches-query';
-import { createGetRepositoryQuery } from './create-get-repository-query';
 import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
+import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
+import { createGetRepositoryQuery } from '$domains/branch-management/infrastructure/queries/create-get-repository-query';
 import { buildRepositoryData } from '$domains/branch-management/utils/build-repository-data';
 import { filterBranchesBySearch } from '$domains/branch-management/utils/filter-branches-by-search';
 import { isEmptyString } from '$utils/string-utils';

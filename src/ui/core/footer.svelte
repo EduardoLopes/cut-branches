@@ -10,7 +10,7 @@
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
+	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { css } from '@pindoba/styled-system/css';
 	import { spacer, visuallyHidden } from '@pindoba/styled-system/patterns';
 

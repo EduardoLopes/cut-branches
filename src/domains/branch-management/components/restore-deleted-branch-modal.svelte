@@ -4,12 +4,12 @@
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import { createGetBranchesQuery } from '../core/composables/create-get-branches-query';
-	import { createGetRepositoryListQuery } from '../core/composables/create-get-repository-list-query';
 	import { useRestoreFlow } from '../core/composables/use-restore-flow.svelte';
 	import RestoreBranchStatusCard from './restore-branch-status-card.svelte';
 	import RestoreConflictPrompt from './restore-conflict-prompt.svelte';
 	import RestoreProgressBar from './restore-progress-bar.svelte';
+	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {

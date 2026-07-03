@@ -2,10 +2,10 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Tooltip from '@pindoba/svelte-tooltip';
-	import { createAddLockedBranchesMutation } from '$domains/branch-management/core/composables/create-add-locked-branches-mutation';
-	import { createLockedBranchesQuery } from '$domains/branch-management/core/composables/create-locked-branches-query';
-	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/core/composables/create-remove-locked-branches-mutation';
-	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/core/composables/create-update-branch-selection-batch-mutation';
+	import { createAddLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-add-locked-branches-mutation';
+	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-remove-locked-branches-mutation';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
+	import { createLockedBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-locked-branches-query';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';

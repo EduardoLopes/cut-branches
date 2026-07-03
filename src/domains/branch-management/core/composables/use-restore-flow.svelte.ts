@@ -9,12 +9,12 @@
  *   while conflicts are still pending.
  */
 
+import { useRestorationProgress } from './use-restoration-progress.svelte';
+import type { Branch } from '$domains/branch-management/core/models/branch';
 import {
 	createRestoreDeletedBranchMutation,
 	createRestoreDeletedBranchesMutation
-} from './create-restore-deleted-branch-mutation';
-import { useRestorationProgress } from './use-restoration-progress.svelte';
-import type { Branch } from '$domains/branch-management/core/models/branch';
+} from '$domains/branch-management/infrastructure/mutations/create-restore-deleted-branch-mutation';
 import { buildRestoreSuccessNotification } from '$domains/branch-management/utils/build-restore-success-notification';
 import type { ConflictResolution, RestoreBranchResult } from '$infrastructure/bindings';
 import { notifications } from '$services/notifications/notifications.svelte';

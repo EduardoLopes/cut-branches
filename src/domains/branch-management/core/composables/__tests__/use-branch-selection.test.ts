@@ -10,7 +10,7 @@ import type { Repository } from '$types/repository';
 let currentRepository: Repository | undefined;
 
 // Mock createGetBranchesQuery to return branch data with filter support
-vi.mock('../create-get-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: (input: () => { repoId: string; filters?: BranchFilters }) => ({
 		get data() {
 			if (!currentRepository) return { branches: [] };
@@ -60,7 +60,7 @@ vi.mock('../create-get-branches-query', () => ({
 	})
 }));
 
-vi.mock('../create-selected-branches-query', () => ({
+vi.mock('$domains/branch-management/infrastructure/queries/create-selected-branches-query', () => ({
 	createSelectedBranchesQuery: () => ({
 		get data() {
 			const store = getSelectedBranchesStore('test-repo');
@@ -71,94 +71,103 @@ vi.mock('../create-selected-branches-query', () => ({
 	})
 }));
 
-vi.mock('../create-deleted-selected-branches-query', () => ({
-	createDeletedSelectedBranchesQuery: () => ({
-		get data() {
-			const store = getSelectedBranchesStore('test-repo');
-			return { branches: Array.from(store?.state || []) };
-		},
-		isLoading: false,
-		isError: false
+vi.mock(
+	'$domains/branch-management/infrastructure/queries/create-deleted-selected-branches-query',
+	() => ({
+		createDeletedSelectedBranchesQuery: () => ({
+			get data() {
+				const store = getSelectedBranchesStore('test-repo');
+				return { branches: Array.from(store?.state || []) };
+			},
+			isLoading: false,
+			isError: false
+		})
 	})
-}));
+);
 
 // Mock the mutations to actually update the stores
-vi.mock('../create-update-branch-selection-batch-mutation', () => ({
-	createUpdateBranchSelectionBatchMutation: () => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(async ({ branchNames, isSelected }) => {
-			const store = getSelectedBranchesStore('test-repo');
-			if (isSelected) {
-				store?.add(branchNames);
-			} else {
-				for (const name of branchNames) {
-					store?.delete([name]);
-				}
-			}
-			return { status: 'ok' };
-		}),
-		isPending: false
-	})
-}));
-
-vi.mock('../create-set-branch-selection-all-mutation', () => ({
-	createSetBranchSelectionAllMutation: () => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(
-			async ({ isSelected, deletionStatus, excludeCurrent = true, excludeLocked = true }) => {
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation',
+	() => ({
+		createUpdateBranchSelectionBatchMutation: () => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(async ({ branchNames, isSelected }) => {
 				const store = getSelectedBranchesStore('test-repo');
-
-				if (!isSelected) {
-					// Deselect all
-					store?.clear();
+				if (isSelected) {
+					store?.add(branchNames);
 				} else {
-					// Select all branches matching the criteria
-					if (!currentRepository) return { status: 'ok' };
-
-					const branchesToSelect = currentRepository.branches
-						.filter((b) => {
-							// Filter by deletion status
-							if (deletionStatus === 'deleted' && !b.deletedAt) return false;
-							if (deletionStatus === 'active' && b.deletedAt) return false;
-
-							// Filter by current and locked status
-							if (excludeCurrent && b.current) return false;
-							if (excludeLocked && b.isLocked) return false;
-
-							return true;
-						})
-						.map((b) => b.name);
-
-					store?.add(branchesToSelect);
+					for (const name of branchNames) {
+						store?.delete([name]);
+					}
 				}
-
 				return { status: 'ok' };
-			}
-		),
-		isPending: false
-	}),
-	createAddDeletedSelectedBranchesMutation: () => ({
-		mutate: vi.fn(),
-		mutateAsync: vi.fn(async ({ branchNames }) => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.add(branchNames);
-			return { status: 'ok' };
-		}),
-		isPending: false
-	}),
-	createClearDeletedSelectedBranchesMutation: () => ({
-		mutate: vi.fn(() => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-		}),
-		mutateAsync: vi.fn(async () => {
-			const store = getSelectedBranchesStore('test-repo');
-			store?.clear();
-			return { status: 'ok' };
-		}),
-		isPending: false
+			}),
+			isPending: false
+		})
 	})
-}));
+);
+
+vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-set-branch-selection-all-mutation',
+	() => ({
+		createSetBranchSelectionAllMutation: () => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(
+				async ({ isSelected, deletionStatus, excludeCurrent = true, excludeLocked = true }) => {
+					const store = getSelectedBranchesStore('test-repo');
+
+					if (!isSelected) {
+						// Deselect all
+						store?.clear();
+					} else {
+						// Select all branches matching the criteria
+						if (!currentRepository) return { status: 'ok' };
+
+						const branchesToSelect = currentRepository.branches
+							.filter((b) => {
+								// Filter by deletion status
+								if (deletionStatus === 'deleted' && !b.deletedAt) return false;
+								if (deletionStatus === 'active' && b.deletedAt) return false;
+
+								// Filter by current and locked status
+								if (excludeCurrent && b.current) return false;
+								if (excludeLocked && b.isLocked) return false;
+
+								return true;
+							})
+							.map((b) => b.name);
+
+						store?.add(branchesToSelect);
+					}
+
+					return { status: 'ok' };
+				}
+			),
+			isPending: false
+		}),
+		createAddDeletedSelectedBranchesMutation: () => ({
+			mutate: vi.fn(),
+			mutateAsync: vi.fn(async ({ branchNames }) => {
+				const store = getSelectedBranchesStore('test-repo');
+				store?.add(branchNames);
+				return { status: 'ok' };
+			}),
+			isPending: false
+		}),
+		createClearDeletedSelectedBranchesMutation: () => ({
+			mutate: vi.fn(() => {
+				const store = getSelectedBranchesStore('test-repo');
+				store?.clear();
+			}),
+			mutateAsync: vi.fn(async () => {
+				const store = getSelectedBranchesStore('test-repo');
+				store?.clear();
+				return { status: 'ok' };
+			}),
+			isPending: false
+		})
+	})
+);
 
 const mockRepo: Repository = {
 	name: 'test-repo',

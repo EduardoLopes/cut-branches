@@ -1,7 +1,7 @@
 import { open } from '@tauri-apps/plugin-dialog';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AddButton from '$domains/repository-management/components/add-repository-button.svelte';
-import { createGetRepositoryQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-query';
+import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 import { notifications } from '$services/notifications/notifications.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -23,12 +23,9 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 }));
 
 // Mock the repository query
-vi.mock(
-	'$domains/repository-management/core/composables/queries/create-get-repository-query',
-	() => ({
-		createGetRepositoryQuery: vi.fn()
-	})
-);
+vi.mock('$infrastructure/queries/create-get-repository-query', () => ({
+	createGetRepositoryQuery: vi.fn()
+}));
 
 // Mock the repository store
 vi.mock('$domains/repository-management/store/repository.svelte', () => {

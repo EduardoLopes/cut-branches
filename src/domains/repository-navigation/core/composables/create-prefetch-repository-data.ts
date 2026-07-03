@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/svelte-query';
 import debounce from 'just-debounce-it';
-import { prefetchTauriQuery } from '$utils/create-tauri-query';
+import { prefetchTauriQuery } from '$infrastructure/create-tauri-query';
 
 /**
  * Creates a prefetch function for repository data (branches and repository details)
