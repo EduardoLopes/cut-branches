@@ -1,8 +1,8 @@
 import { createRawSnippet } from 'svelte';
-import BulkActionsContainer from '../bulk-actions-container.svelte';
+import BulkActionsToolbar from '../bulk-actions-toolbar.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
-describe('BulkActionsContainer Component', () => {
+describe('BulkActionsToolbar Component', () => {
 	test('renders container with correct structure', () => {
 		const leftSnippet = createRawSnippet(() => {
 			return {
@@ -15,7 +15,7 @@ describe('BulkActionsContainer Component', () => {
 			};
 		});
 
-		const screen = renderWithTestWrapper(BulkActionsContainer, {
+		const screen = renderWithTestWrapper(BulkActionsToolbar, {
 			left: leftSnippet,
 			right: rightSnippet
 		});
@@ -25,7 +25,7 @@ describe('BulkActionsContainer Component', () => {
 	});
 
 	test('renders empty sections when no snippets are provided', () => {
-		const screen = renderWithTestWrapper(BulkActionsContainer);
+		const screen = renderWithTestWrapper(BulkActionsToolbar);
 		const leftSection = screen.getByTestId('bulk-actions-left');
 		const rightSection = screen.getByTestId('bulk-actions-right');
 
@@ -36,7 +36,7 @@ describe('BulkActionsContainer Component', () => {
 	});
 
 	test('forwards additional HTML attributes to root element', () => {
-		const screen = renderWithTestWrapper(BulkActionsContainer, {
+		const screen = renderWithTestWrapper(BulkActionsToolbar, {
 			'data-custom': 'test-value'
 		});
 		const container = screen.getByTestId('bulk-actions-container');

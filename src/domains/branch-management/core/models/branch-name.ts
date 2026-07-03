@@ -1,7 +1,4 @@
-import {
-	PROTECTED_BRANCH_NAMES,
-	POTENTIALLY_OFFENSIVE_BRANCH_NAMES
-} from '../../utils/branch-constants';
+import { PROTECTED_BRANCH_NAMES, POTENTIALLY_OFFENSIVE_BRANCH_NAMES } from './branch-constants';
 
 /**
  * BranchName Value Object

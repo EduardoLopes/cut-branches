@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { useDeletedBranchesView } from '../core/composables/use-deleted-branches-view.svelte';
+	import BranchListEmptyState from '$domains/branch-management/components/branch-list-empty-state.svelte';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
+	import BranchSearch from '$domains/branch-management/components/branch-search.svelte';
 	import BranchSelection from '$domains/branch-management/components/branch-selection.svelte';
-	import BranchesEmptyStates from '$domains/branch-management/components/branches-empty-states.svelte';
-	import BranchesLayout from '$domains/branch-management/components/branches-layout.svelte';
-	import BulkActionsContainer from '$domains/branch-management/components/bulk-actions-container.svelte';
+	import BulkActionsToolbar from '$domains/branch-management/components/bulk-actions-toolbar.svelte';
 	import RestoreDeletedBranchModal from '$domains/branch-management/components/restore-deleted-branch-modal.svelte';
-	import SearchInput from '$domains/branch-management/components/search-input.svelte';
+	import BranchesLayout from '$domains/branch-management/layouts/branches-layout.svelte';
 	import ErrorMessage from '$ui/core/error-message.svelte';
 
 	interface Props {
@@ -19,12 +19,12 @@
 </script>
 
 <BranchesLayout isLoading={viewState.isLoading}>
-	<BulkActionsContainer>
+	<BulkActionsToolbar>
 		{#snippet left()}
 			<BranchSelection repository={viewState.currentRepoData} branchContext="deleted" />
 		{/snippet}
 		{#snippet right()}
-			<SearchInput
+			<BranchSearch
 				repository={viewState.currentRepoData}
 				branchContext="deleted"
 				placeholder="Search branches"
@@ -36,7 +36,7 @@
 				</div>
 			{/if}
 		{/snippet}
-	</BulkActionsContainer>
+	</BulkActionsToolbar>
 
 	{#if viewState.isError && viewState.error}
 		<ErrorMessage
@@ -45,7 +45,7 @@
 		/>
 	{/if}
 
-	<BranchesEmptyStates
+	<BranchListEmptyState
 		emptyStateMessage="No deleted branches found!"
 		searchNoResultsFound={viewState.searchNoResultsFound}
 		searchTerm={viewState.search?.state}

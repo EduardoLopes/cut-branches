@@ -2,12 +2,12 @@
 	import DeleteBranchModal from '../components/delete-branch-modal.svelte';
 	import { useActiveBranchesView } from '../core/composables/use-active-branches-view.svelte';
 	import { usePruneOrphanedSearchKeys } from '../core/composables/use-prune-orphaned-search-keys.svelte';
+	import BranchListEmptyState from '$domains/branch-management/components/branch-list-empty-state.svelte';
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
+	import BranchSearch from '$domains/branch-management/components/branch-search.svelte';
 	import BranchSelection from '$domains/branch-management/components/branch-selection.svelte';
-	import BranchesEmptyStates from '$domains/branch-management/components/branches-empty-states.svelte';
-	import BranchesLayout from '$domains/branch-management/components/branches-layout.svelte';
-	import BulkActionsContainer from '$domains/branch-management/components/bulk-actions-container.svelte';
-	import SearchInput from '$domains/branch-management/components/search-input.svelte';
+	import BulkActionsToolbar from '$domains/branch-management/components/bulk-actions-toolbar.svelte';
+	import BranchesLayout from '$domains/branch-management/layouts/branches-layout.svelte';
 	import ErrorMessage from '$ui/core/error-message.svelte';
 
 	interface Props {
@@ -21,12 +21,12 @@
 </script>
 
 <BranchesLayout isLoading={viewState.isLoading}>
-	<BulkActionsContainer>
+	<BulkActionsToolbar>
 		{#snippet left()}
 			<BranchSelection repository={viewState.currentRepoData} branchContext="active" />
 		{/snippet}
 		{#snippet right()}
-			<SearchInput
+			<BranchSearch
 				repository={viewState.currentRepoData}
 				branchContext="active"
 				placeholder="Search branches"
@@ -38,7 +38,7 @@
 				</div>
 			{/if}
 		{/snippet}
-	</BulkActionsContainer>
+	</BulkActionsToolbar>
 
 	{#if viewState.isError && viewState.error}
 		<ErrorMessage
@@ -47,7 +47,7 @@
 		/>
 	{/if}
 
-	<BranchesEmptyStates
+	<BranchListEmptyState
 		emptyStateMessage="This repository has no branches!"
 		infoMessage={viewState.hasNoBranchesToDelete
 			? 'This repository has no branches to delete.'
