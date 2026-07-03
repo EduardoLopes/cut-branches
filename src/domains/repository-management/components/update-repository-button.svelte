@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createGetRepositoryListQuery } from '$domains/repository-management/core/composables/queries/create-get-repository-list-query';
 	import { notifications } from '$services/notifications/notifications.svelte';
@@ -62,8 +63,8 @@
 
 <Loading loading={isRefreshing} passThrough={{ root: { style: css.raw({ width: 'full' }) } }}>
 	<Button
-		emphasis="secondary"
-		size="sm"
+		emphasis="ghost"
+		size="md"
 		onclick={handleUpdate}
 		disabled={isRefreshing}
 		title="Update repository"
@@ -73,7 +74,9 @@
 	>
 		Update
 		{#snippet trailing()}
-			<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon icon="lucide:refresh-cw" width="16px" height="16px" />
+			</Stamp>
 		{/snippet}
 	</Button>
 </Loading>

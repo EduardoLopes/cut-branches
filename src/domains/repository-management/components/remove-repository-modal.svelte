@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../core/composables/mutations/create-delete-repository-mutation';
 	import { createGetRepositoryListQuery } from '../core/composables/queries/create-get-repository-list-query';
@@ -126,8 +127,8 @@
 </div>
 
 <Button
-	emphasis="secondary"
-	size="sm"
+	emphasis="ghost"
+	size="md"
 	feedback="danger"
 	onclick={handleOpen}
 	data-testid="open-remove-modal"
@@ -143,6 +144,8 @@
 >
 	Remove
 	{#snippet trailing()}
-		<Icon icon="lucide:circle-x" width="16px" height="16px" />
+		<Stamp emphasis="ghost" feedback="danger" border="none" background="transparent">
+			<Icon icon="lucide:circle-x" width="16px" height="16px" />
+		</Stamp>
 	{/snippet}
 </Button>
