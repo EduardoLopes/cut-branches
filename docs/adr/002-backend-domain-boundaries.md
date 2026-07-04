@@ -77,6 +77,14 @@ from another. Enforcement therefore has to be external.
   inversion: **cross-domain violations are now 0**, and enforcement was flipped to
   `--strict` (any violation now fails CI and pre-commit).
 
+## Accepted deviation: delivery folder stays `commands/`, not `ipc/`
+
+The guide names the Tauri delivery-layer folder `ipc/` (§1.1). We keep `commands/`: it is the
+near-universal Tauri convention (it holds `#[tauri::command]` handlers), and `#[tauri::command]`
+derives the IPC command name from the function, not the module path — so the folder name is
+purely internal and a rename would be broad churn for no functional or contract gain. This is a
+deliberate §0.6 deviation; the delivery _role_ and its boundary rules are unchanged.
+
 ## Deferred (planned, not yet implemented)
 
 - **Physical schema split + cross-domain FKs (guide §1.3).** `schema.rs` (the `table!`
