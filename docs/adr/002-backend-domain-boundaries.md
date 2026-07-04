@@ -107,14 +107,23 @@ on repository delete, and removing it would require the branch domain to own tha
 injected port or delete event). To remove later: drop the FK, and have repository deletion invoke a
 branch-domain cleanup use-case through a port (same pattern as `BranchGateway`).
 
+- **Value objects wired at command boundaries (the `step-10` marker, §1.2).** The formerly
+  dead-code `BranchName`/`CommitSha`/`RepositoryPath` VOs are now constructed at their delivery
+  boundaries — `get_branch_merge_status` (`BranchName`), `get_commit_reachability` (`CommitSha`),
+  `create_repository` (`RepositoryPath`) — validating/normalizing input once at entry, with
+  `From<VOError> for AppError` surfacing failures. Safe because the frontend already validates via
+  the shared contract (`tests/contracts/branch-name.cases.json`) and the normalization (lowercased
+  SHA, trimmed/separator-stripped path) is git-safe and paths are not DB lookup keys. `RepositoryPath`
+  is adopted only inside `repository_management`, its owning domain (§1.3).
+
 ## Deferred (planned, not yet implemented)
 
 - **Physical `schema.rs`/`models.rs` split.** The `table!` definitions and row DTOs still live in
   shared infrastructure (the _queries_ are already split per domain). Splitting the generated
   `schema.rs` per domain is possible but low-value while the app is a single crate.
-- **Value-object adoption (the `step-10` marker).** Wire the `BranchName`/`CommitSha`/
-  `RepositoryPath` value objects (currently dead-code) through call sites that pass raw strings.
-  **Note:** unlike the error adoption, this is _not_ a pure refactor — constructing a value object
-  at a boundary runs its validation, which can reject inputs that previously flowed through
-  (e.g. `BranchName` enforces `git check-ref-format`). Adopt at boundaries deliberately, deciding
-  per site whether the new validation is desired.
+- **Broader value-object rollout.** The remaining raw-string sites are the bulk-operation
+  `branch_names: Vec<String>` inputs (locked/selected commands) and the `commit_sha`/`target_name`
+  fields nested in `DeletedBranchInfo`. These are low-ROI: the names originate from git (already
+  valid) so per-element construction is validate-then-discard, and the `#![allow(dead_code)]` on the
+  VO helper methods (`into_inner`, etc.) stays until such uses appear. Roll out only if uniform
+  type-safety on those paths is wanted.
