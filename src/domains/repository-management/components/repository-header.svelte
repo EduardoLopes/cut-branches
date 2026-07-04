@@ -194,6 +194,7 @@
 		})}
 	>
 		<Popover
+			autoFocus
 			showCloseButton={false}
 			background="surface.deep"
 			passThrough={{
