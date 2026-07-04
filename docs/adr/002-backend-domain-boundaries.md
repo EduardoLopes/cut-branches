@@ -73,6 +73,13 @@ from another. Enforcement therefore has to be external.
   already sets it on create/update (the redundant bump was dropped). This cleared the last
   inversion: **cross-domain violations are now 0**, and enforcement was flipped to
   `--strict` (any violation now fails CI and pre-commit).
+- **Domain error adoption complete (the `step-4` marker, §3.2).** `branch_management`'s 39
+  git call sites now return typed `BranchError` variants (git2 error carried as `#[source]`);
+  `repository_management`'s 5 domain-meaningful failures return `RepositoryError`. Both convert
+  to `AppError` at the delivery boundary via `From`, byte-identical to the previous output
+  (verified across all 44 sites). Per §3.3, unexpected DB-infrastructure failures deliberately
+  remain opaque `AppError`s rather than becoming domain-error variants. `path_operations` already
+  used `PathError`.
 
 ## Accepted deviation: delivery folder stays `commands/`, not `ipc/`
 
@@ -105,6 +112,9 @@ branch-domain cleanup use-case through a port (same pattern as `BranchGateway`).
 - **Physical `schema.rs`/`models.rs` split.** The `table!` definitions and row DTOs still live in
   shared infrastructure (the _queries_ are already split per domain). Splitting the generated
   `schema.rs` per domain is possible but low-value while the app is a single crate.
-- **Domain error + value-object adoption (the `step-4`/`step-10` markers).** Wire the
-  `BranchError`/`RepositoryError` enums and `BranchName`/`CommitSha`/`RepositoryPath` value
-  objects (currently dead-code) at call sites.
+- **Value-object adoption (the `step-10` marker).** Wire the `BranchName`/`CommitSha`/
+  `RepositoryPath` value objects (currently dead-code) through call sites that pass raw strings.
+  **Note:** unlike the error adoption, this is _not_ a pure refactor — constructing a value object
+  at a boundary runs its validation, which can reject inputs that previously flowed through
+  (e.g. `BranchName` enforces `git check-ref-format`). Adopt at boundaries deliberately, deciding
+  per site whether the new validation is desired.
