@@ -56,20 +56,33 @@ from another. Enforcement therefore has to be external.
 - **Rust caveat:** enforcement is a CI grep, not the compiler. Compiler-enforced isolation
   would require one crate per domain in a Cargo workspace (guide §1.7) — out of scope here.
 
+## Done since acceptance
+
+- **Application layer decoupled from Tauri (guide §0.3).** Use-cases (`sync`, locked/selected
+  branches, repository discovery) now take a pooled `DbConnection` instead of `tauri::State`;
+  delivery handlers resolve it via `DatabaseState::connection()`. `core/application/` no longer
+  imports the delivery framework.
+- **Cross-domain dependencies inverted via ports (guide §1.3/§1.5).** `repository_management`
+  defines `BranchGateway`/`PathGateway` ports in `core/ports.rs`; adapters at the crate-root
+  composition module (`composition.rs`) are injected through Tauri managed state
+  (`RepositoryServices`). The domain no longer imports `branch_management` or `path_operations`.
+  Cross-domain violations dropped **4 → 1**; the baseline now holds only the
+  `db/operations.rs → filters` inversion below.
+
 ## Deferred (planned, not yet implemented)
 
-- **Layer boundaries via ports (guide §0.3, §1.2 — the existing `step-4`/`step-10`
-  migration).** Define `BranchRepository`/`GitBranchService` + a unit-of-work port in each
-  `core/`; remove `tauri::State` from the application layer; route delivery handlers through
-  use-cases; inject branch behavior into `repository_management` at the composition root
-  (`main.rs`) so its `core/` stops importing `branch_management`. Adopt the domain error
-  enums and value objects (`BranchName`, `CommitSha`, `RepositoryPath`), currently
-  dead-code behind `TODO(step-…)` markers. This clears the three remaining baseline entries.
 - **Data ownership (guide §1.3).** Split the shared Diesel `schema.rs`/`models.rs`/
   `operations.rs` so each domain owns its tables (`branches` → `branch_management`;
   `repositories`/`settings`/`metadata` → `repository_management`; `notifications` → a new
-  domain), keeping the pool + migrations in shared infrastructure. This clears the
-  `db/operations.rs` inversion.
+  domain), keeping the pool + migrations in shared infrastructure. This clears the last
+  `db/operations.rs` inversion. **Note:** the split surfaces a real coupling —
+  `bump_last_synced_at` writes the `repositories` table but is called from
+  `branch_management`'s `sync`. The clean fix is to let the repository flow own that timestamp
+  bump (it already sets `last_synced_at` on create/update), removing the redundant write from
+  branch sync — a small behavioural change to confirm before landing.
+- **Domain error + value-object adoption (the `step-4`/`step-10` markers).** Wire the
+  `BranchError`/`RepositoryError` enums and `BranchName`/`CommitSha`/`RepositoryPath` value
+  objects (currently dead-code) at call sites.
 - **Cross-domain foreign keys.** The schema declares `branches → repositories` and
   `settings → repositories` FKs. Guide §1.3 forbids FK across a domain boundary; in the
   single-shared-DB phase these are retained as **documented debt**, to be replaced by
