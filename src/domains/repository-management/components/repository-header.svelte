@@ -10,6 +10,7 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { useRepositoryWatch } from '../core/composables/use-repository-watch.svelte';
 	import { createGetBranchesQuery } from '../infrastructure/queries/create-get-branches-query';
+	import OpenRepositoryButton from './open-repository-button.svelte';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
 	import UpdateRepositoryButton from './update-repository-button.svelte';
 	import { goto } from '$app/navigation';
@@ -235,6 +236,7 @@
 			{#if repositoryWatch.outOfSync}
 				<UpdateRepositoryButton {repositoryId} onRefresh={repositoryWatch.refresh} />
 			{/if}
+			<OpenRepositoryButton {repositoryId} />
 			<RemoveRepositoryModal {repositoryId} />
 		</Popover>
 	</div>
