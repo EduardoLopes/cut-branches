@@ -9,6 +9,7 @@
 
 use thiserror::Error;
 
+use crate::domains::repository_management::core::models::repository_path::RepositoryPathError;
 use crate::shared::error::AppError;
 
 #[derive(Debug, Error)]
@@ -58,6 +59,14 @@ impl From<RepositoryError> for AppError {
         };
 
         AppError::new(err.to_string(), kind, description)
+    }
+}
+
+/// `RepositoryPath` validation errors (§1.2) surface as a domain error at the
+/// delivery boundary.
+impl From<RepositoryPathError> for AppError {
+    fn from(err: RepositoryPathError) -> Self {
+        AppError::new(err.to_string(), "invalid_repository_path", None)
     }
 }
 

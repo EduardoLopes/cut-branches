@@ -8,6 +8,8 @@
 
 use thiserror::Error;
 
+use crate::domains::branch_management::core::models::branch_name::BranchNameError;
+use crate::domains::branch_management::core::models::commit_sha::CommitShaError;
 use crate::shared::error::AppError;
 
 #[derive(Debug, Error)]
@@ -200,6 +202,20 @@ impl From<BranchError> for AppError {
         };
 
         AppError::new(err.to_string(), kind, description)
+    }
+}
+
+/// Value-object validation errors (§1.2) surface as domain errors at the
+/// delivery boundary. The message carries the specific reason.
+impl From<BranchNameError> for AppError {
+    fn from(err: BranchNameError) -> Self {
+        AppError::new(err.to_string(), "invalid_branch_name", None)
+    }
+}
+
+impl From<CommitShaError> for AppError {
+    fn from(err: CommitShaError) -> Self {
+        AppError::new(err.to_string(), "invalid_commit_sha", None)
     }
 }
 

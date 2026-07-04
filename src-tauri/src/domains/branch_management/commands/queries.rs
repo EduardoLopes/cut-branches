@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use crate::domains::branch_management::core::models::branch_name::BranchName;
+use crate::domains::branch_management::core::models::commit_sha::CommitSha;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DatabaseState;
 use serde::{Deserialize, Serialize};
@@ -59,11 +61,14 @@ pub struct GetBranchMergeStatusOutput {
 pub async fn get_commit_reachability(
     input: GetCommitReachabilityInput,
 ) -> Result<GetCommitReachabilityOutput, AppError> {
+    // Validate the SHA at the boundary (§1.2); downstream git ops get a
+    // normalized, checked value.
+    let commit_sha = CommitSha::new(&input.commit_sha)?;
     let raw_path = Path::new(&input.path);
     let is_reachable =
         crate::domains::branch_management::infrastructure::git::commit::is_commit_reachable(
             raw_path,
-            &input.commit_sha,
+            commit_sha.as_str(),
         )?;
 
     Ok(GetCommitReachabilityOutput { is_reachable })
@@ -131,11 +136,13 @@ pub fn get_branch_list(
 pub async fn get_branch_merge_status(
     input: GetBranchMergeStatusInput,
 ) -> Result<GetBranchMergeStatusOutput, AppError> {
+    // Validate the branch name at the boundary (§1.2).
+    let branch_name = BranchName::new(input.branch_name)?;
     let raw_path = Path::new(&input.path);
     let is_merged =
         crate::domains::branch_management::infrastructure::git::branch::check_branch_merge_status(
             raw_path,
-            &input.branch_name,
+            branch_name.as_str(),
         )?;
 
     Ok(GetBranchMergeStatusOutput { is_merged })

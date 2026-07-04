@@ -3,6 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
+use crate::domains::repository_management::core::models::repository_path::RepositoryPath;
 use crate::domains::repository_management::core::ports::RepositoryServices;
 use crate::domains::repository_management::error::RepositoryError;
 use crate::shared::error::AppError;
@@ -45,7 +46,9 @@ pub async fn create_repository(
 ) -> Result<CreateRepositoryOutput, AppError> {
     println!("create_repository called for path: {}", input.path);
 
-    let raw_path = Path::new(&input.path);
+    // Validate/normalize the path at the boundary (§1.2).
+    let repo_path = RepositoryPath::new(input.path)?;
+    let raw_path = repo_path.as_path();
 
     // Check if it's a git repository
     if !super::super::core::application::validation::is_git_repository(raw_path)? {
