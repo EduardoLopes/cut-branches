@@ -48,11 +48,8 @@ from another. Enforcement therefore has to be external.
 
 - **Positive:** Cross-domain coupling is now visible and cannot silently grow. The
   `Branch` type coupling is resolved; the generated `bindings.ts` TS contract is unchanged.
-- **Cost / accepted debt (baseline entries, to be cleared in the deferred phases below):**
-  - `repository_management` still calls `branch_management`'s git functions + `sync`
-    (`discovery.rs`, `create.rs`) and `path_operations::get_root_path` (`create.rs`).
-  - `shared/infrastructure/db/operations.rs` imports `branch_management::filters`
-    (infrastructure-depends-on-domain inversion).
+  (The cross-domain call/import debt this section originally recorded has since been cleared —
+  see "Done since acceptance" below; enforcement now runs in `--strict` mode.)
 - **Rust caveat:** enforcement is a CI grep, not the compiler. Compiler-enforced isolation
   would require one crate per domain in a Cargo workspace (guide §1.7) — out of scope here.
 
@@ -97,8 +94,3 @@ deliberate §0.6 deviation; the delivery _role_ and its boundary rules are uncha
 - **Domain error + value-object adoption (the `step-4`/`step-10` markers).** Wire the
   `BranchError`/`RepositoryError` enums and `BranchName`/`CommitSha`/`RepositoryPath` value
   objects (currently dead-code) at call sites.
-- **Cross-domain foreign keys.** The schema declares `branches → repositories` and
-  `settings → repositories` FKs. Guide §1.3 forbids FK across a domain boundary; in the
-  single-shared-DB phase these are retained as **documented debt**, to be replaced by
-  reference-by-id in a follow-up SQLite migration (test against a copy of a real
-  `app_data.db` first).
