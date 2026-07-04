@@ -13,6 +13,8 @@
     "dialog:allow-ask",
     "dialog:allow-confirm",
     "dialog:default",
-    "shell:default"
+    "shell:default",
+    "opener:default",
+    "log:default"
   ]
 }

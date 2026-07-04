@@ -36,6 +36,39 @@ use domains::repository_management::events::{
 };
 use shared::infrastructure::watcher::WatcherState;
 
+/// Default log verbosity when `CUT_BRANCHES_LOG` is unset: quieter in release
+/// (warnings and errors only) and chattier in dev (adds info-level events).
+fn default_log_level() -> log::LevelFilter {
+    if cfg!(debug_assertions) {
+        log::LevelFilter::Info
+    } else {
+        log::LevelFilter::Warn
+    }
+}
+
+/// Parses a log level from the optional `CUT_BRANCHES_LOG` value. Accepts the
+/// standard level names plus `off`, case- and whitespace-insensitive. `None` or
+/// an unrecognized value falls back to [`default_log_level`]. Kept free of env
+/// access so it stays unit-testable.
+fn parse_log_level(value: Option<&str>) -> log::LevelFilter {
+    use log::LevelFilter;
+    match value.map(|v| v.trim().to_ascii_lowercase()).as_deref() {
+        Some("off") => LevelFilter::Off,
+        Some("error") => LevelFilter::Error,
+        Some("warn") | Some("warning") => LevelFilter::Warn,
+        Some("info") => LevelFilter::Info,
+        Some("debug") => LevelFilter::Debug,
+        Some("trace") => LevelFilter::Trace,
+        _ => default_log_level(),
+    }
+}
+
+/// Resolves the runtime log level from the `CUT_BRANCHES_LOG` environment
+/// variable, e.g. `CUT_BRANCHES_LOG=debug pnpm run dev` to see verbose tracing.
+fn resolve_log_level() -> log::LevelFilter {
+    parse_log_level(std::env::var("CUT_BRANCHES_LOG").ok().as_deref())
+}
+
 fn main() {
     let _ = fix_path_env::fix();
 
@@ -85,9 +118,39 @@ fn main() {
         )
         .expect("Failed to export typescript bindings");
 
-    tauri::Builder::default()
+    let mut tauri_builder = tauri::Builder::default();
+
+    // The single-instance plugin must be the FIRST plugin registered so it can
+    // short-circuit a duplicate launch before any other setup runs. A second
+    // instance would otherwise fight this one over the shared SQLite database
+    // and the filesystem watcher. Desktop-only.
+    #[cfg(desktop)]
+    {
+        tauri_builder =
+            tauri_builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+                // Bring the already-running window to the front instead of
+                // spawning a new instance.
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.set_focus();
+                }
+            }));
+    }
+
+    tauri_builder
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+                        file_name: None,
+                    }),
+                ])
+                .level(resolve_log_level())
+                .build(),
+        )
         .manage(db::DatabaseState::new())
         .manage(WatcherState::new())
         .manage(RepositoryServices {
@@ -108,7 +171,7 @@ fn main() {
             let watcher = app.state::<WatcherState>();
             if let Err(e) = watcher.init(WATCH_DEBOUNCE, build_watch_callback(app.handle().clone()))
             {
-                eprintln!("[watcher] init failed: {e}");
+                log::error!("[watcher] init failed: {e}");
             }
             register_all_repositories(app.handle());
 
@@ -127,6 +190,40 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use super::{default_log_level, parse_log_level};
+    use log::LevelFilter;
+
+    #[test]
+    fn parse_log_level_recognizes_all_names() {
+        assert_eq!(parse_log_level(Some("off")), LevelFilter::Off);
+        assert_eq!(parse_log_level(Some("error")), LevelFilter::Error);
+        assert_eq!(parse_log_level(Some("warn")), LevelFilter::Warn);
+        assert_eq!(parse_log_level(Some("warning")), LevelFilter::Warn);
+        assert_eq!(parse_log_level(Some("info")), LevelFilter::Info);
+        assert_eq!(parse_log_level(Some("debug")), LevelFilter::Debug);
+        assert_eq!(parse_log_level(Some("trace")), LevelFilter::Trace);
+    }
+
+    #[test]
+    fn parse_log_level_is_case_and_whitespace_insensitive() {
+        assert_eq!(parse_log_level(Some("  DEBUG ")), LevelFilter::Debug);
+        assert_eq!(parse_log_level(Some("Info")), LevelFilter::Info);
+        assert_eq!(parse_log_level(Some("WARN")), LevelFilter::Warn);
+    }
+
+    #[test]
+    fn parse_log_level_falls_back_on_unknown_empty_or_none() {
+        assert_eq!(parse_log_level(Some("bogus")), default_log_level());
+        assert_eq!(parse_log_level(Some("")), default_log_level());
+        assert_eq!(parse_log_level(None), default_log_level());
+    }
+
+    #[test]
+    fn default_log_level_is_info_in_debug_builds() {
+        // Tests run under debug_assertions, so the dev default applies.
+        assert_eq!(default_log_level(), LevelFilter::Info);
+    }
+
     #[test]
     fn test_fix_path_env() {
         // Test that fix_path_env does not panic
