@@ -24,7 +24,7 @@ pre-commit:
     domain-boundaries:
       priority: 3
       glob: '*.rs'
-      run: bash src-tauri/scripts/check-domain-boundaries.sh
+      run: bash src-tauri/scripts/check-domain-boundaries.sh --strict
 
 commit-msg:
   scripts:
