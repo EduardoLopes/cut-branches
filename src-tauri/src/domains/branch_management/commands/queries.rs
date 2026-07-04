@@ -94,7 +94,7 @@ pub fn get_branch_list(
     })?;
 
     let branch_records =
-        crate::shared::infrastructure::db::operations::get_branches_for_repository(
+        crate::domains::branch_management::infrastructure::repositories::get_branches_for_repository(
             &mut conn,
             &input.repo_id,
             &input.filters,

@@ -43,15 +43,17 @@ pub fn delete_repository(
     })?;
 
     let rows_affected =
-        crate::shared::infrastructure::db::operations::delete_repository(&mut conn, &input.id)
-            .map_err(|e| {
-                println!("Error deleting repository: {:?}", e);
-                AppError::new(
-                    "Failed to delete repository".to_string(),
-                    "db_delete_failed",
-                    Some(e.to_string()),
-                )
-            })?;
+        crate::domains::repository_management::infrastructure::repositories::delete_repository(
+            &mut conn, &input.id,
+        )
+        .map_err(|e| {
+            println!("Error deleting repository: {:?}", e);
+            AppError::new(
+                "Failed to delete repository".to_string(),
+                "db_delete_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     // Force a WAL checkpoint to ensure the deletion is written to disk
     use diesel::RunQueryDsl;

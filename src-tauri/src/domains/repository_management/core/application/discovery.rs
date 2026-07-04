@@ -2,8 +2,9 @@ use std::path::Path;
 
 use crate::domains::repository_management::core::models::GitDirResponse;
 use crate::domains::repository_management::core::ports::BranchGateway;
+use crate::domains::repository_management::infrastructure::repositories as operations;
 use crate::shared::error::AppError;
-use crate::shared::infrastructure::db::{models::NewRepository, operations, DbConnection};
+use crate::shared::infrastructure::db::{models::NewRepository, DbConnection};
 
 /// Get information about a git repository from the database.
 /// This is a DB-first operation that only syncs if the repository data is stale.

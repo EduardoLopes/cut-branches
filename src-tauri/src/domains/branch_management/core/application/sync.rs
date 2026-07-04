@@ -67,7 +67,7 @@ fn sync_branches_to_db_internal(
         deletion_status: crate::domains::branch_management::filters::DeletionStatusFilter::All,
         ..Default::default()
     };
-    let db_branches = crate::shared::infrastructure::db::operations::get_branches_for_repository(
+    let db_branches = crate::domains::branch_management::infrastructure::repositories::get_branches_for_repository(
         conn, repo_id, &filters,
     )
     .map_err(|e| {
@@ -90,7 +90,10 @@ fn sync_branches_to_db_internal(
     // Use batch upsert for better performance with many branches
     use diesel::Connection;
     conn.transaction::<_, diesel::result::Error, _>(|conn| {
-        crate::shared::infrastructure::db::operations::upsert_branches_batch(conn, &new_branches)?;
+        crate::domains::branch_management::infrastructure::repositories::upsert_branches_batch(
+            conn,
+            &new_branches,
+        )?;
         Ok(())
     })
     .map_err(|e| {
@@ -111,7 +114,7 @@ fn sync_branches_to_db_internal(
         .collect();
 
     if !branches_to_mark_deleted.is_empty() {
-        crate::shared::infrastructure::db::operations::mark_branches_deleted(
+        crate::domains::branch_management::infrastructure::repositories::mark_branches_deleted(
             conn,
             repo_id,
             &branches_to_mark_deleted,
@@ -125,15 +128,9 @@ fn sync_branches_to_db_internal(
         })?;
     }
 
-    crate::shared::infrastructure::db::operations::bump_last_synced_at(conn, repo_id).map_err(
-        |e| {
-            AppError::new(
-                "Failed to record sync timestamp".to_string(),
-                "db_update_failed",
-                Some(e.to_string()),
-            )
-        },
-    )?;
+    // Note: the repository's `last_synced_at` is owned by repository_management,
+    // which sets it when creating/updating the repo record — branch sync no longer
+    // writes the repositories table (data ownership, ADR 002).
 
     Ok(git_branches.len())
 }

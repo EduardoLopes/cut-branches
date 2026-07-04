@@ -57,7 +57,7 @@ pub async fn batch_delete_branches(
             )
         })?;
 
-        crate::shared::infrastructure::db::operations::mark_branches_deleted(
+        crate::domains::branch_management::infrastructure::repositories::mark_branches_deleted(
             &mut conn,
             &input.repo_id,
             &branch_names,

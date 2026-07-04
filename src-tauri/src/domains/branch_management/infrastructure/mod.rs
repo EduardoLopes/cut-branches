@@ -3,3 +3,4 @@
 //! `core/models/`; depends downward on the domain and shared kernel only.
 
 pub(crate) mod git;
+pub(crate) mod repositories;

@@ -82,7 +82,7 @@ pub async fn create_branch_restoration(
             )
         })?;
 
-        crate::shared::infrastructure::db::operations::mark_branches_as_active(
+        crate::domains::branch_management::infrastructure::repositories::mark_branches_as_active(
             &mut conn,
             &input.repo_id,
             std::slice::from_ref(&result.branch_name),
@@ -140,7 +140,7 @@ pub async fn batch_create_branch_restorations(
             )
         })?;
 
-        crate::shared::infrastructure::db::operations::mark_branches_as_active(
+        crate::domains::branch_management::infrastructure::repositories::mark_branches_as_active(
             &mut conn,
             &input.repo_id,
             &successful_branch_names,

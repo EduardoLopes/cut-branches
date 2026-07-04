@@ -81,7 +81,10 @@ pub fn get_repository_list(
         )
     })?;
 
-    let repos = crate::shared::infrastructure::db::operations::get_repository_list(&mut conn)
+    let repos =
+        crate::domains::repository_management::infrastructure::repositories::get_repository_list(
+            &mut conn,
+        )
         .map_err(|e| {
             AppError::new(
                 "Failed to get repository list".to_string(),

@@ -1,5 +1,6 @@
+use crate::domains::branch_management::infrastructure::repositories as operations;
 use crate::shared::error::AppError;
-use crate::shared::infrastructure::db::{operations, DbConnection};
+use crate::shared::infrastructure::db::DbConnection;
 
 /// Update selection status for specific branches
 pub fn update_branch_selection_batch(

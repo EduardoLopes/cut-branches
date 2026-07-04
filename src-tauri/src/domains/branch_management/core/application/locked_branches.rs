@@ -1,5 +1,6 @@
+use crate::domains::branch_management::infrastructure::repositories as operations;
 use crate::shared::error::AppError;
-use crate::shared::infrastructure::db::{operations, DbConnection};
+use crate::shared::infrastructure::db::DbConnection;
 
 /// Get all locked branches for a repository
 pub fn get_locked_branches(

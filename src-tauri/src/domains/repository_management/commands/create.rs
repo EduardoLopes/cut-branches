@@ -124,7 +124,9 @@ pub async fn create_repository(
     conn.transaction::<_, AppError, _>(|conn| {
         // Check if repository already exists
         let existing =
-            crate::shared::infrastructure::db::operations::get_repository(conn, &repo_name);
+            crate::domains::repository_management::infrastructure::repositories::get_repository(
+                conn, &repo_name,
+            );
         if existing.is_ok() {
             return Err(AppError::new(
                 format!("Repository '{}' already exists", repo_name),
@@ -137,15 +139,16 @@ pub async fn create_repository(
         }
 
         // Create the repository
-        crate::shared::infrastructure::db::operations::create_repository(conn, new_repo).map_err(
-            |e| {
-                AppError::new(
-                    "Failed to create repository in database".to_string(),
-                    "db_create_failed",
-                    Some(e.to_string()),
-                )
-            },
-        )?;
+        crate::domains::repository_management::infrastructure::repositories::create_repository(
+            conn, new_repo,
+        )
+        .map_err(|e| {
+            AppError::new(
+                "Failed to create repository in database".to_string(),
+                "db_create_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
         Ok(())
     })?;

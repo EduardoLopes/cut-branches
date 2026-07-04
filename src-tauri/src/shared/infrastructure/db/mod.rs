@@ -1,6 +1,5 @@
 pub(crate) mod error;
 pub(crate) mod models;
-pub(crate) mod operations;
 pub(crate) mod schema;
 
 use diesel::prelude::*;
