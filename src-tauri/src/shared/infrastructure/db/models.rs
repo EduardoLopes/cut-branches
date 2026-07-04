@@ -17,7 +17,6 @@ pub struct Repository {
     pub branches_count: i32,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
-    pub last_sync_hash: Option<String>,
     pub last_sync_timestamp: Option<i32>,
     pub last_synced_at: Option<NaiveDateTime>,
 }
@@ -31,7 +30,6 @@ pub struct NewRepository {
     pub path: String,
     pub current_branch: String,
     pub branches_count: i32,
-    pub last_sync_hash: Option<String>,
     pub last_sync_timestamp: Option<i32>,
     pub last_synced_at: Option<NaiveDateTime>,
 }
@@ -82,75 +80,4 @@ pub struct NewBranchRecord {
     pub is_reachable: Option<bool>,
     pub is_selected: bool,
     pub is_locked: bool,
-}
-
-// Settings models
-#[derive(
-    Debug, Clone, Queryable, Selectable, Identifiable, Associations, Serialize, Deserialize, Type,
-)]
-#[diesel(belongs_to(Repository, foreign_key = repository_id))]
-#[diesel(table_name = settings)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[serde(rename_all = "camelCase")]
-pub struct Setting {
-    pub id: Option<i32>,
-    pub repository_id: Option<String>,
-    pub key: String,
-    pub value: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
-}
-
-#[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
-#[diesel(table_name = settings)]
-#[serde(rename_all = "camelCase")]
-pub struct NewSetting {
-    pub repository_id: Option<String>,
-    pub key: String,
-    pub value: String,
-}
-
-// Notification models
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize, Type)]
-#[diesel(table_name = notifications)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[serde(rename_all = "camelCase")]
-pub struct Notification {
-    pub id: String,
-    pub title: Option<String>,
-    pub message: Option<String>,
-    pub feedback: Option<String>,
-    pub date: i32,
-    pub created_at: NaiveDateTime,
-}
-
-#[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
-#[diesel(table_name = notifications)]
-#[serde(rename_all = "camelCase")]
-pub struct NewNotification {
-    pub id: String,
-    pub title: Option<String>,
-    pub message: Option<String>,
-    pub feedback: Option<String>,
-    pub date: i32,
-}
-
-// Metadata models
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize, Type)]
-#[diesel(table_name = metadata)]
-#[diesel(primary_key(key))]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[serde(rename_all = "camelCase")]
-pub struct Metadata {
-    pub key: String,
-    pub value: String,
-    pub updated_at: NaiveDateTime,
-}
-
-#[derive(Debug, Clone, Insertable, AsChangeset, Serialize, Deserialize, Type)]
-#[diesel(table_name = metadata)]
-#[serde(rename_all = "camelCase")]
-pub struct NewMetadata {
-    pub key: String,
-    pub value: String,
 }

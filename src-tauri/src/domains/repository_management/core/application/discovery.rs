@@ -134,7 +134,6 @@ async fn sync_repository_if_needed(
             path: root_path.to_string(),
             current_branch: current_branch.to_string(),
             branches_count,
-            last_sync_hash: None, // Deprecated, keeping for backward compatibility
             last_sync_timestamp: Some(current_timestamp),
             last_synced_at: Some(chrono::Utc::now().naive_utc()),
         };

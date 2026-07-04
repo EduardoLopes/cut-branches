@@ -23,25 +23,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    metadata (key) {
-        key -> Text,
-        value -> Text,
-        updated_at -> Timestamp,
-    }
-}
-
-diesel::table! {
-    notifications (id) {
-        id -> Text,
-        title -> Nullable<Text>,
-        message -> Nullable<Text>,
-        feedback -> Nullable<Text>,
-        date -> Integer,
-        created_at -> Timestamp,
-    }
-}
-
-diesel::table! {
     repositories (id) {
         id -> Text,
         name -> Text,
@@ -50,30 +31,11 @@ diesel::table! {
         branches_count -> Integer,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-        last_sync_hash -> Nullable<Text>,
         last_sync_timestamp -> Nullable<Integer>,
         last_synced_at -> Nullable<Timestamp>,
     }
 }
 
-diesel::table! {
-    settings (id) {
-        id -> Nullable<Integer>,
-        repository_id -> Nullable<Text>,
-        key -> Text,
-        value -> Text,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
-    }
-}
-
 diesel::joinable!(branches -> repositories (repository_id));
-diesel::joinable!(settings -> repositories (repository_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    branches,
-    metadata,
-    notifications,
-    repositories,
-    settings,
-);
+diesel::allow_tables_to_appear_in_same_query!(branches, repositories,);

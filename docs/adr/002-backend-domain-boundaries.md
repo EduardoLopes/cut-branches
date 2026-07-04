@@ -82,15 +82,29 @@ derives the IPC command name from the function, not the module path — so the f
 purely internal and a rename would be broad churn for no functional or contract gain. This is a
 deliberate §0.6 deviation; the delivery _role_ and its boundary rules are unchanged.
 
+## Migrations squashed to a single baseline (pre-release)
+
+The SQLite schema had never shipped, so the 9 incremental migrations (which included
+create-then-replace churn: `last_sync_hash` → timestamp, `selected/locked_branches` tables →
+columns on `branches`) were squashed into one `create_initial_schema` baseline. While squashing
+we also dropped dead schema: the unused `settings`, `notifications`, and `metadata` tables (+ their
+model structs) and the deprecated `last_sync_hash` column. The baseline owns exactly two tables —
+`repositories` and `branches` — and keeps the `branches → repositories` FK with `ON DELETE CASCADE`
+as the accepted single-DB-phase cross-domain-FK debt below.
+
+## Accepted debt: cross-domain FK (single shared DB)
+
+The baseline keeps `branches.repository_id → repositories(id) ON DELETE CASCADE`. Guide §1.3 forbids
+FKs across a domain boundary; here it is retained deliberately because the DB handles branch cleanup
+on repository delete, and removing it would require the branch domain to own that cleanup (via an
+injected port or delete event). To remove later: drop the FK, and have repository deletion invoke a
+branch-domain cleanup use-case through a port (same pattern as `BranchGateway`).
+
 ## Deferred (planned, not yet implemented)
 
-- **Physical schema split + cross-domain FKs (guide §1.3).** `schema.rs` (the `table!`
-  definitions) and `models.rs` (row DTOs) still live in shared infrastructure, and the schema
-  declares `joinable!` FKs `branches → repositories` and `settings → repositories`. Moving each
-  table's `table!`/row structs into its owning domain and replacing cross-domain FKs with
-  reference-by-id both require a SQLite migration — retained as **documented debt** (test against
-  a copy of a real `app_data.db` first). The `notifications`/`settings`/`metadata` tables also
-  still need a clear owning domain.
+- **Physical `schema.rs`/`models.rs` split.** The `table!` definitions and row DTOs still live in
+  shared infrastructure (the _queries_ are already split per domain). Splitting the generated
+  `schema.rs` per domain is possible but low-value while the app is a single crate.
 - **Domain error + value-object adoption (the `step-4`/`step-10` markers).** Wire the
   `BranchError`/`RepositoryError` enums and `BranchName`/`CommitSha`/`RepositoryPath` value
   objects (currently dead-code) at call sites.

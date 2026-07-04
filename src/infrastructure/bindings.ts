@@ -635,7 +635,6 @@ export type Repository = {
 	branchesCount: number;
 	createdAt: string;
 	updatedAt: string;
-	lastSyncHash: string | null;
 	lastSyncTimestamp: number | null;
 	lastSyncedAt: string | null;
 };

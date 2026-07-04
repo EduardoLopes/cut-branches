@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS branches;
+DROP TABLE IF EXISTS repositories;
