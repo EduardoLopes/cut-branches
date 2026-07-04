@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::domains::repository_management::core::ports::RepositoryServices;
+use crate::domains::repository_management::error::RepositoryError;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::{models::NewRepository, DatabaseState};
 
@@ -77,21 +78,9 @@ pub async fn create_repository(
     // Extract repository name
     let repo_name = raw_root_path
         .file_name()
-        .ok_or_else(|| {
-            AppError::new(
-                "Failed to get repository name".to_string(),
-                "repo_name_failed",
-                Some("Could not extract the repository name from the file path".to_string()),
-            )
-        })?
+        .ok_or(RepositoryError::NameExtractionFailed)?
         .to_str()
-        .ok_or_else(|| {
-            AppError::new(
-                "Failed to convert repository name to string".to_string(),
-                "repo_name_failed",
-                Some("Repository name contains invalid UTF-8 characters".to_string()),
-            )
-        })?
+        .ok_or(RepositoryError::NameNotUtf8)?
         .to_string();
     let branches_count = branches.len() as u32;
 
@@ -127,14 +116,10 @@ pub async fn create_repository(
                 conn, &repo_name,
             );
         if existing.is_ok() {
-            return Err(AppError::new(
-                format!("Repository '{}' already exists", repo_name),
-                "repository_already_exists",
-                Some(format!(
-                    "A repository with the name '{}' is already in the database",
-                    repo_name
-                )),
-            ));
+            return Err(RepositoryError::AlreadyExists {
+                name: repo_name.clone(),
+            }
+            .into());
         }
 
         // Create the repository

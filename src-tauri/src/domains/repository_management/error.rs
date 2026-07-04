@@ -1,7 +1,11 @@
-// TODO(step-4-migration): Foundation only. Replace direct `AppError::new(...)`
-// call sites in `commands/*.rs` and `services/*.rs` with `RepositoryError`
-// variants. Existing `AppError` returns continue to work via
-// `From<RepositoryError> for AppError`; migrate file-by-file.
+//! Repository-management domain error vocabulary (§1.1, §3.2).
+//!
+//! Covers the domain-meaningful failures of this feature. Unexpected
+//! infrastructure failures (DB connection/query errors) are deliberately NOT
+//! modelled here — per §3.3 they stay as opaque `AppError`s rather than growing
+//! per-infrastructure-failure domain variants. The `#[error]` messages and the
+//! `kind`/`description` mapping reproduce the exact strings the frontend
+//! already receives (a pure refactor, not a contract change).
 
 use thiserror::Error;
 
@@ -9,23 +13,20 @@ use crate::shared::error::AppError;
 
 #[derive(Debug, Error)]
 pub enum RepositoryError {
-    #[error("Repository not found: {id}")]
+    #[error("Repository '{id}' not found")]
     NotFound { id: String },
 
     #[error("Repository '{name}' already exists")]
     AlreadyExists { name: String },
 
-    #[error("Failed to read repository name: {source}")]
-    NameFailed {
-        #[source]
-        source: git2::Error,
-    },
+    #[error("Failed to get repository name")]
+    NameExtractionFailed,
 
-    #[error("Repository path is missing")]
-    MissingPath,
+    #[error("Failed to convert repository name to string")]
+    NameNotUtf8,
 
-    #[error("Failed to compute time: {reason}")]
-    TimeError { reason: String },
+    #[error("Failed to get current time")]
+    CurrentTimeFailed { detail: String },
 }
 
 impl From<RepositoryError> for AppError {
@@ -33,15 +34,27 @@ impl From<RepositoryError> for AppError {
         let kind = match &err {
             RepositoryError::NotFound { .. } => "repository_not_found",
             RepositoryError::AlreadyExists { .. } => "repository_already_exists",
-            RepositoryError::NameFailed { .. } => "repo_name_failed",
-            RepositoryError::MissingPath => "missing_path",
-            RepositoryError::TimeError { .. } => "time_error",
+            RepositoryError::NameExtractionFailed => "repo_name_failed",
+            RepositoryError::NameNotUtf8 => "repo_name_failed",
+            RepositoryError::CurrentTimeFailed { .. } => "time_error",
         };
 
         let description = match &err {
-            RepositoryError::NameFailed { source } => Some(source.to_string()),
-            RepositoryError::TimeError { reason } => Some(reason.clone()),
-            _ => None,
+            RepositoryError::NotFound { id } => Some(format!(
+                "Please add the repository with ID '{}' first before accessing it",
+                id
+            )),
+            RepositoryError::AlreadyExists { name } => Some(format!(
+                "A repository with the name '{}' is already in the database",
+                name
+            )),
+            RepositoryError::NameExtractionFailed => {
+                Some("Could not extract the repository name from the file path".to_string())
+            }
+            RepositoryError::NameNotUtf8 => {
+                Some("Repository name contains invalid UTF-8 characters".to_string())
+            }
+            RepositoryError::CurrentTimeFailed { detail } => Some(detail.clone()),
         };
 
         AppError::new(err.to_string(), kind, description)
@@ -53,21 +66,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn maps_not_found_to_legacy_kind() {
+    fn not_found_preserves_message_and_description() {
         let app: AppError = RepositoryError::NotFound {
             id: "abc-123".into(),
         }
         .into();
         assert_eq!(app.kind, "repository_not_found");
-        assert!(app.message.contains("abc-123"));
+        assert_eq!(app.message, "Repository 'abc-123' not found");
+        assert_eq!(
+            app.description.as_deref(),
+            Some("Please add the repository with ID 'abc-123' first before accessing it")
+        );
     }
 
     #[test]
-    fn maps_already_exists_to_legacy_kind() {
+    fn already_exists_preserves_message_and_description() {
         let app: AppError = RepositoryError::AlreadyExists {
             name: "my-repo".into(),
         }
         .into();
         assert_eq!(app.kind, "repository_already_exists");
+        assert_eq!(app.message, "Repository 'my-repo' already exists");
+        assert_eq!(
+            app.description.as_deref(),
+            Some("A repository with the name 'my-repo' is already in the database")
+        );
+    }
+
+    #[test]
+    fn name_variants_share_kind_with_distinct_messages() {
+        let a: AppError = RepositoryError::NameExtractionFailed.into();
+        let b: AppError = RepositoryError::NameNotUtf8.into();
+        assert_eq!(a.kind, "repo_name_failed");
+        assert_eq!(b.kind, "repo_name_failed");
+        assert_eq!(a.message, "Failed to get repository name");
+        assert_eq!(b.message, "Failed to convert repository name to string");
+    }
+
+    #[test]
+    fn current_time_failed_carries_detail() {
+        let app: AppError = RepositoryError::CurrentTimeFailed {
+            detail: "clock went backwards".into(),
+        }
+        .into();
+        assert_eq!(app.kind, "time_error");
+        assert_eq!(app.message, "Failed to get current time");
+        assert_eq!(app.description.as_deref(), Some("clock went backwards"));
     }
 }

@@ -2,6 +2,7 @@ use std::path::Path;
 
 use crate::domains::repository_management::core::models::GitDirResponse;
 use crate::domains::repository_management::core::ports::BranchGateway;
+use crate::domains::repository_management::error::RepositoryError;
 use crate::domains::repository_management::infrastructure::repositories as operations;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::{models::NewRepository, DbConnection};
@@ -25,16 +26,10 @@ pub async fn get_repository(
     println!("get_repository called for id: {}", repo_id);
 
     // DB-FIRST: Get repository from database
-    let db_repo = operations::get_repository(conn, repo_id).map_err(|_| {
-        AppError::new(
-            format!("Repository '{}' not found", repo_id),
-            "repository_not_found",
-            Some(format!(
-                "Please add the repository with ID '{}' first before accessing it",
-                repo_id
-            )),
-        )
-    })?;
+    let db_repo =
+        operations::get_repository(conn, repo_id).map_err(|_| RepositoryError::NotFound {
+            id: repo_id.to_string(),
+        })?;
 
     println!("Repository found in DB: {}", db_repo.name);
 

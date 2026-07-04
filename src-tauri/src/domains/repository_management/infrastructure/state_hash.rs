@@ -1,5 +1,6 @@
 use std::path::Path;
 
+use crate::domains::repository_management::error::RepositoryError;
 use crate::shared::error::AppError;
 
 /// Computes a fast timestamp representing the current state of the repository.
@@ -90,12 +91,8 @@ pub fn compute_repo_state_timestamp(path: &Path) -> Result<i32, AppError> {
         // This ensures we at least have a valid timestamp
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| {
-                AppError::new(
-                    "Failed to get current time".to_string(),
-                    "time_error",
-                    Some(e.to_string()),
-                )
+            .map_err(|e| RepositoryError::CurrentTimeFailed {
+                detail: e.to_string(),
             })?;
         max_timestamp = now.as_secs() as i32;
     }
