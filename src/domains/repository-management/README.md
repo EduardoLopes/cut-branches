@@ -43,9 +43,10 @@ the global transport (`$utils/create-tauri-query` / `$utils/create-tauri-mutatio
 ## Inter-Domain Communication
 
 This domain does **not** import from other domains (§1.3). The `add-repository-button` is
-injected into other domains' UI (the sidebar, onboarding) via snippet slots wired by the
-route (the composition root) — e.g. `routes/repos/+layout.svelte` and
-`routes/get-started/+page.svelte`. Cross-domain data refresh happens through the shared
+injected into other domains' UI (the sidebar, the onboarding welcome modal) via snippet
+slots wired by the composition root — e.g. `routes/repos/+layout.svelte`,
+`routes/repos/+page.svelte`, and `routes/+layout.svelte` (which injects it into the
+onboarding `welcome-modal`). Cross-domain data refresh happens through the shared
 TanStack Query cache (invalidation), not direct calls or an event bus.
 
 ## External Dependencies

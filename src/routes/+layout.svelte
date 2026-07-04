@@ -4,7 +4,9 @@
 	import Toaster from '@pindoba/svelte-toast';
 	import { type Snippet } from 'svelte';
 	import Providers from '$components/providers.svelte';
-	import RedirectToGetStarted from '$domains/onboarding/components/redirect-to-get-started.svelte';
+	import RedirectToApp from '$domains/onboarding/components/redirect-to-app.svelte';
+	import WelcomeModal from '$domains/onboarding/components/welcome-modal.svelte';
+	import AddButton from '$domains/repository-management/components/add-repository-button.svelte';
 	import Footer from '$ui/core/footer.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -35,7 +37,13 @@
 	>
 		{@render children?.()}
 
-		<RedirectToGetStarted />
+		<RedirectToApp />
+
+		<WelcomeModal>
+			{#snippet actionButton()}
+				<AddButton size="lg" emphasis="primary" />
+			{/snippet}
+		</WelcomeModal>
 
 		<Footer />
 	</div>

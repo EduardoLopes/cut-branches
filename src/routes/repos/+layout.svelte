@@ -24,7 +24,9 @@
 	<div
 		class={css({
 			display: 'grid',
-			gridTemplateColumns: 'max-content auto'
+			gridTemplateColumns: 'max-content auto',
+			flex: 1,
+			minHeight: 0
 		})}
 	>
 		<SidebarView>

@@ -2,32 +2,26 @@
 
 ## Purpose
 
-The onboarding domain handles the first-time user experience for Cut Branches. It guides users through selecting their first Git repository and getting started with the application.
+The onboarding domain handles the first-time user experience for Cut Branches. Rather than a dedicated full-screen page, it presents a **welcome modal** over the real app shell and lets users add their first Git repository from there.
 
 ## Key Responsibilities
 
-- Display welcome screen with hero message and call-to-action
-- Provide repository selection interface for new users
-- Redirect users to main application after onboarding completion
-- Handle empty state when no repositories are configured
+- Present a welcome modal (hero + call-to-action) whenever no repositories are configured
+- Route users into the app shell (`/repos`) so the sidebar and empty state are visible behind the modal
+- Redirect users to their first repository once one exists
 
 ## Business Rules
 
-- Users must select at least one repository before proceeding to the main application
-- Onboarding is shown only when no repositories are configured
-- Users can skip directly to repository management if preferred
+- The welcome modal is shown whenever the repository list is empty
+- Closing the modal (`Continue`, Escape, or the close button) dismisses it for the session; it re-arms if every repository is later removed
+- Adding a repository closes the modal and navigates to that repository
 
 ## Structure
 
 ### Components
 
-- `onboarding-hero.svelte` - Welcome message and application introduction
-- `onboarding-cta.svelte` - Call-to-action button for repository selection
-- `redirect-to-get-started.svelte` - Navigation component for routing users
-
-### Views
-
-- `onboarding-view.svelte` - Main onboarding page composition
+- `welcome-modal.svelte` - Two-panel welcome modal (info panel + accent visual panel) shown when the repository list is empty; receives the add-repository action as a snippet from the composition root
+- `redirect-to-app.svelte` - Routes empty users to the app shell and users with repositories to their first repository
 
 ### Core Logic
 

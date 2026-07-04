@@ -175,7 +175,7 @@ describe('RemoveRepositoryModal', () => {
 			await vi.waitFor(() => expect(goto).toHaveBeenCalled());
 		});
 
-		test('should navigate to get-started when no repositories remain', async () => {
+		test('should navigate to the repos index when no repositories remain', async () => {
 			// Set up only the test repository
 			mockRepositories = [mockRepository];
 
@@ -189,7 +189,7 @@ describe('RemoveRepositoryModal', () => {
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();
 
-			await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/get-started'));
+			await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos'));
 		});
 	});
 });

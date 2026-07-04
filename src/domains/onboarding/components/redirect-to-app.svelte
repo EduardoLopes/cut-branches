@@ -17,15 +17,15 @@
 		const first = repositoriesQuery.data?.[0];
 		const hasRepositories = (repositoriesQuery.data?.length ?? 0) > 0;
 		const currentPath = page.url.pathname;
-		const isOnGetStartedPage = currentPath === resolve('/get-started');
+		const isOnReposIndex = currentPath === resolve('/repos');
 		const isOnRootPage = currentPath === resolve('/');
 
-		// Redirect to /get-started if no repositories exist and not already there
-		if (!hasRepositories && !isOnGetStartedPage) {
-			goto(resolve('/get-started'));
+		// Land empty users in the app shell (the /repos index) if not already there
+		if (!hasRepositories && !isOnReposIndex) {
+			goto(resolve('/repos'));
 		}
-		// Redirect to first repository ONLY if on /get-started or root page with repositories
-		else if (hasRepositories && (isOnGetStartedPage || isOnRootPage) && first) {
+		// Redirect to first repository ONLY if on the /repos index or root page with repositories
+		else if (hasRepositories && (isOnReposIndex || isOnRootPage) && first) {
 			goto(resolve(`/repos/${first.id}`));
 		}
 		// Do not redirect if on any other page - preserve current location
