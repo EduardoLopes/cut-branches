@@ -93,9 +93,9 @@ pub fn get_repository_list(
             )
         })?;
 
-    println!("get_repository_list: Found {} repositories", repos.len());
+    log::debug!("get_repository_list: Found {} repositories", repos.len());
     for repo in &repos {
-        println!("  - {} (id: {})", repo.name, repo.id);
+        log::debug!("  - {} (id: {})", repo.name, repo.id);
     }
 
     Ok(repos)

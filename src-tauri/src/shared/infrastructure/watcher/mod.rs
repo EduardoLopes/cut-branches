@@ -54,7 +54,7 @@ impl WatcherState {
                 // Never crash the watcher thread — log and keep going.
                 Err(errors) => {
                     for e in errors {
-                        eprintln!("[watcher] notify error: {e:?}");
+                        log::error!("[watcher] notify error: {e:?}");
                     }
                 }
             },

@@ -34,7 +34,7 @@ pub fn delete_repository(
     watcher: State<'_, WatcherState>,
     input: DeleteRepositoryInput,
 ) -> Result<DeleteRepositoryOutput, AppError> {
-    println!("Attempting to delete repository with ID: {}", input.id);
+    log::info!("Attempting to delete repository with ID: {}", input.id);
 
     let mut conn = db.get_connection().map_err(|e| {
         AppError::new(
@@ -57,7 +57,7 @@ pub fn delete_repository(
             &mut conn, &input.id,
         )
         .map_err(|e| {
-            println!("Error deleting repository: {:?}", e);
+            log::error!("Error deleting repository: {:?}", e);
             AppError::new(
                 "Failed to delete repository".to_string(),
                 "db_delete_failed",
@@ -71,7 +71,7 @@ pub fn delete_repository(
         .execute(&mut *conn)
         .ok(); // Ignore errors, this is just for ensuring persistence
 
-    println!("Deleted repository. Rows affected: {}", rows_affected);
+    log::info!("Deleted repository. Rows affected: {}", rows_affected);
 
     // Drop the connection explicitly to return it to the pool
     drop(conn);

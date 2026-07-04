@@ -46,7 +46,7 @@ pub async fn create_repository(
     watcher: State<'_, WatcherState>,
     input: CreateRepositoryInput,
 ) -> Result<CreateRepositoryOutput, AppError> {
-    println!("create_repository called for path: {}", input.path);
+    log::debug!("create_repository called for path: {}", input.path);
 
     // Validate/normalize the path at the boundary (§1.2).
     let repo_path = RepositoryPath::new(input.path)?;
@@ -158,7 +158,7 @@ pub async fn create_repository(
     // Start watching the new repository's git ref surface for external changes.
     super::watch::watch_repository(&watcher, &root_path);
 
-    println!("Repository created successfully: {}", repo_name);
+    log::info!("Repository created successfully: {}", repo_name);
 
     Ok(CreateRepositoryOutput {
         path: root_path,

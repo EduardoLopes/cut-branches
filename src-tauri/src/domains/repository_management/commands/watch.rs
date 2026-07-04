@@ -60,7 +60,7 @@ pub fn register_all_repositories(app: &AppHandle) {
     let mut conn = match db.connection() {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("[watcher] register_all: db connection failed: {e}");
+            log::error!("[watcher] register_all: db connection failed: {e}");
             return;
         }
     };
@@ -70,7 +70,7 @@ pub fn register_all_repositories(app: &AppHandle) {
                 watch_repository(&watcher, &repo.path);
             }
         }
-        Err(e) => eprintln!("[watcher] register_all: failed to list repositories: {e}"),
+        Err(e) => log::error!("[watcher] register_all: failed to list repositories: {e}"),
     }
 }
 
@@ -109,14 +109,14 @@ pub fn build_watch_callback(app: AppHandle) -> WatchCallback {
         let mut conn = match db.connection() {
             Ok(c) => c,
             Err(e) => {
-                eprintln!("[watcher] db connection failed: {e}");
+                log::error!("[watcher] db connection failed: {e}");
                 return;
             }
         };
         let repos = match operations::get_repository_list(&mut conn) {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("[watcher] failed to list repositories: {e}");
+                log::error!("[watcher] failed to list repositories: {e}");
                 return;
             }
         };
@@ -135,7 +135,7 @@ pub fn build_watch_callback(app: AppHandle) -> WatchCallback {
                 continue;
             }
             if !Path::new(&repo.path).join(".git").exists() {
-                eprintln!("[watcher] {} .git disappeared; skipping sync", repo.id);
+                log::warn!("[watcher] {} .git disappeared; skipping sync", repo.id);
                 continue;
             }
             if let Err(e) = discovery::resync_repository(
@@ -144,7 +144,7 @@ pub fn build_watch_callback(app: AppHandle) -> WatchCallback {
                 &mut conn,
                 services.branch.as_ref(),
             ) {
-                eprintln!("[watcher] resync failed for {}: {e}", repo.id);
+                log::error!("[watcher] resync failed for {}: {e}", repo.id);
                 continue;
             }
             let _ = RepositoryChangedEvent {

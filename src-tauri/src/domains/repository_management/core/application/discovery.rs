@@ -23,7 +23,7 @@ pub async fn get_repository(
     conn: &mut DbConnection,
     branch: &dyn BranchGateway,
 ) -> Result<GitDirResponse, AppError> {
-    println!("get_repository called for id: {}", repo_id);
+    log::debug!("get_repository called for id: {}", repo_id);
 
     // DB-FIRST: Get repository from database
     let db_repo =
@@ -31,7 +31,7 @@ pub async fn get_repository(
             id: repo_id.to_string(),
         })?;
 
-    println!("Repository found in DB: {}", db_repo.name);
+    log::debug!("Repository found in DB: {}", db_repo.name);
 
     // Get path from database
     let root_path = db_repo.path.clone();
@@ -108,7 +108,7 @@ async fn sync_repository_if_needed(
     };
 
     if needs_sync {
-        println!(
+        log::info!(
             "Repository state changed (fingerprint: {} -> {}), syncing...",
             db_repo.last_sync_timestamp.unwrap_or(0),
             current_timestamp
@@ -116,9 +116,9 @@ async fn sync_repository_if_needed(
 
         resync_repository(raw_root_path, repo_name, conn, branch)?;
 
-        println!("Sync completed");
+        log::info!("Sync completed");
     } else {
-        println!(
+        log::debug!(
             "Repository state unchanged (fingerprint: {}), skipping sync",
             current_timestamp
         );
