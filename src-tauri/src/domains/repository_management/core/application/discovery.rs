@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use crate::domains::repository_management::core::models::GitDirResponse;
+use crate::domains::repository_management::core::ports::BranchGateway;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::{models::NewRepository, operations, DbConnection};
 
@@ -18,6 +19,7 @@ use crate::shared::infrastructure::db::{models::NewRepository, operations, DbCon
 pub async fn get_repository(
     repo_id: &str,
     conn: &mut DbConnection,
+    branch: &dyn BranchGateway,
 ) -> Result<GitDirResponse, AppError> {
     println!("get_repository called for id: {}", repo_id);
 
@@ -58,7 +60,7 @@ pub async fn get_repository(
     }
 
     // Repository exists in DB - sync if needed
-    sync_repository_if_needed(raw_root_path, repo_id, &root_path, conn).await?;
+    sync_repository_if_needed(raw_root_path, repo_id, &root_path, conn, branch).await?;
 
     // Get fresh data from DB after sync
     let updated_repo = operations::get_repository(conn, repo_id).map_err(|e| {
@@ -69,11 +71,8 @@ pub async fn get_repository(
         )
     })?;
 
-    // Get branches from branch management domain (use fast version for performance)
-    let mut branches =
-        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
-            raw_root_path,
-        )?;
+    // Get branches through the branch gateway (use fast version for performance)
+    let mut branches = branch.list_branches_fast(raw_root_path)?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
 
     Ok(GitDirResponse {
@@ -94,6 +93,7 @@ async fn sync_repository_if_needed(
     repo_name: &str,
     root_path: &str,
     conn: &mut DbConnection,
+    branch: &dyn BranchGateway,
 ) -> Result<(), AppError> {
     // Compute current repository state timestamp (ultra-fast: ~0.5-2ms)
     let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
@@ -120,17 +120,11 @@ async fn sync_repository_if_needed(
         );
 
         // Get full branch list (use fast version for better performance)
-        let branches =
-            crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
-                raw_root_path,
-            )?;
+        let branches = branch.list_branches_fast(raw_root_path)?;
         let branches_count = branches.len() as i32;
 
         // Get current branch name
-        let current_branch =
-            crate::domains::branch_management::infrastructure::git::branch::get_current_branch(
-                raw_root_path,
-            )?;
+        let current_branch = branch.current_branch(raw_root_path)?;
 
         // Update repository metadata with new timestamp
         let updated_repo = NewRepository {
@@ -152,20 +146,16 @@ async fn sync_repository_if_needed(
             )
         })?;
 
-        // Sync branches to database, passing the already-fetched branches
-        crate::domains::branch_management::core::application::sync::sync_branches_to_db(
-            Some(&branches),
-            None,
-            repo_name,
-            conn,
-        )
-        .map_err(|e| {
-            AppError::new(
-                "Failed to sync branches to database".to_string(),
-                "branch_sync_failed",
-                Some(e.to_string()),
-            )
-        })?;
+        // Sync branches to database through the branch gateway
+        branch
+            .sync_branches(&branches, repo_name, conn)
+            .map_err(|e| {
+                AppError::new(
+                    "Failed to sync branches to database".to_string(),
+                    "branch_sync_failed",
+                    Some(e.to_string()),
+                )
+            })?;
 
         println!("Sync completed");
     } else {

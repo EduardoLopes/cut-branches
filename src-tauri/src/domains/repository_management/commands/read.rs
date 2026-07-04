@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
+use crate::domains::repository_management::core::ports::RepositoryServices;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DatabaseState;
 
@@ -36,11 +37,16 @@ pub struct GetRepositoryOutput {
 #[specta::specta]
 pub async fn get_repository(
     db: State<'_, DatabaseState>,
+    services: State<'_, RepositoryServices>,
     input: GetRepositoryInput,
 ) -> Result<GetRepositoryOutput, AppError> {
     let mut conn = db.connection()?;
-    let response =
-        super::super::core::application::discovery::get_repository(&input.id, &mut conn).await?;
+    let response = super::super::core::application::discovery::get_repository(
+        &input.id,
+        &mut conn,
+        services.branch.as_ref(),
+    )
+    .await?;
 
     Ok(GetRepositoryOutput {
         path: response.path,

@@ -3,6 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
+use crate::domains::repository_management::core::ports::RepositoryServices;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::{models::NewRepository, DatabaseState};
 
@@ -38,6 +39,7 @@ pub struct CreateRepositoryOutput {
 #[specta::specta]
 pub async fn create_repository(
     db: State<'_, DatabaseState>,
+    services: State<'_, RepositoryServices>,
     input: CreateRepositoryInput,
 ) -> Result<CreateRepositoryOutput, AppError> {
     println!("create_repository called for path: {}", input.path);
@@ -62,24 +64,15 @@ pub async fn create_repository(
         ));
     }
 
-    // Get root path using path operations domain
-    let root_path_response =
-        crate::domains::path_operations::core::application::get_root_path(input.path.clone())
-            .await?;
-    let root_path = root_path_response.root_path;
+    // Resolve the repository root through the path gateway
+    let root_path = services.path.resolve_root_path(raw_path)?;
 
     let raw_root_path = Path::new(&root_path);
 
-    // Get branches from branch management domain (use fast version for performance)
-    let mut branches =
-        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
-            raw_root_path,
-        )?;
+    // Get branches through the branch gateway (use fast version for performance)
+    let mut branches = services.branch.list_branches_fast(raw_root_path)?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
-    let current =
-        crate::domains::branch_management::infrastructure::git::branch::get_current_branch(
-            raw_root_path,
-        )?;
+    let current = services.branch.current_branch(raw_root_path)?;
 
     // Extract repository name
     let repo_name = raw_root_path
@@ -159,19 +152,16 @@ pub async fn create_repository(
 
     // Sync branches from Git to database, passing already-fetched branches
     // This is done in its own transaction in sync_branches_to_db
-    crate::domains::branch_management::core::application::sync::sync_branches_to_db(
-        Some(&branches),
-        None,
-        &repo_name,
-        &mut conn,
-    )
-    .map_err(|e| {
-        AppError::new(
-            "Failed to sync branches to database".to_string(),
-            "branch_sync_failed",
-            Some(e.to_string()),
-        )
-    })?;
+    services
+        .branch
+        .sync_branches(&branches, &repo_name, &mut conn)
+        .map_err(|e| {
+            AppError::new(
+                "Failed to sync branches to database".to_string(),
+                "branch_sync_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     println!("Repository created successfully: {}", repo_name);
 

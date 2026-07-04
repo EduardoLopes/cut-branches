@@ -5,11 +5,16 @@
 
 extern crate execute;
 
+pub mod composition;
 pub mod domains;
 pub mod shared;
 
+use std::sync::Arc;
+
 use shared::infrastructure::db;
 use tauri::Manager;
+
+use domains::repository_management::core::ports::RepositoryServices;
 
 use domains::branch_management::commands::{
     batch_create_branch_restorations, batch_create_locked_branches, batch_delete_branches,
@@ -78,6 +83,10 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(db::DatabaseState::new())
+        .manage(RepositoryServices {
+            branch: Arc::new(composition::BranchManagementGateway),
+            path: Arc::new(composition::PathOperationsGateway),
+        })
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
             // Initialize database
