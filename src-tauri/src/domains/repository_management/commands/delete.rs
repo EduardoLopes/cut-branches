@@ -3,6 +3,7 @@ use tauri::State;
 
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DatabaseState;
+use crate::shared::infrastructure::watcher::WatcherState;
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -30,6 +31,7 @@ pub struct DeleteRepositoryOutput {
 #[specta::specta]
 pub fn delete_repository(
     db: State<'_, DatabaseState>,
+    watcher: State<'_, WatcherState>,
     input: DeleteRepositoryInput,
 ) -> Result<DeleteRepositoryOutput, AppError> {
     println!("Attempting to delete repository with ID: {}", input.id);
@@ -41,6 +43,14 @@ pub fn delete_repository(
             Some(e),
         )
     })?;
+
+    // Resolve the repo's path before deletion so we can stop watching it.
+    let repo_root =
+        crate::domains::repository_management::infrastructure::repositories::get_repository(
+            &mut conn, &input.id,
+        )
+        .ok()
+        .map(|repo| repo.path);
 
     let rows_affected =
         crate::domains::repository_management::infrastructure::repositories::delete_repository(
@@ -65,6 +75,11 @@ pub fn delete_repository(
 
     // Drop the connection explicitly to return it to the pool
     drop(conn);
+
+    // Stop watching the removed repository's git ref surface.
+    if let Some(root) = repo_root {
+        super::watch::unwatch_repository(&watcher, &root);
+    }
 
     Ok(DeleteRepositoryOutput { success: true })
 }

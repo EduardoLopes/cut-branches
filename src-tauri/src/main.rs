@@ -28,9 +28,13 @@ use domains::branch_management::events::{
 };
 use domains::path_operations::commands::get_repository_root;
 use domains::repository_management::commands::{
-    create_repository, delete_repository, get_repository, get_repository_list,
+    build_watch_callback, create_repository, delete_repository, get_repository,
+    get_repository_list, get_repository_sync_status, register_all_repositories, WATCH_DEBOUNCE,
 };
-use domains::repository_management::events::{NotificationEvent, RepositoryLoadedEvent};
+use domains::repository_management::events::{
+    NotificationEvent, RepositoryChangedEvent, RepositoryLoadedEvent,
+};
+use shared::infrastructure::watcher::WatcherState;
 
 fn main() {
     let _ = fix_path_env::fix();
@@ -44,6 +48,7 @@ fn main() {
             get_repository,
             get_repository_list,
             delete_repository,
+            get_repository_sync_status,
             // Branch management
             get_branch_list,
             update_current_branch,
@@ -68,6 +73,7 @@ fn main() {
             BranchRestoredEvent,
             BranchSwitchedEvent,
             RepositoryLoadedEvent,
+            RepositoryChangedEvent,
             NotificationEvent
         ]);
 
@@ -83,6 +89,7 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(db::DatabaseState::new())
+        .manage(WatcherState::new())
         .manage(RepositoryServices {
             branch: Arc::new(composition::BranchManagementGateway),
             path: Arc::new(composition::PathOperationsGateway),
@@ -95,11 +102,27 @@ fn main() {
                 .initialize(app.handle())
                 .expect("Failed to initialize database");
 
+            // Initialize the shared filesystem watcher and start watching every
+            // registered repository so branch state (incl. sidebar counts) stays
+            // in sync with external git changes.
+            let watcher = app.state::<WatcherState>();
+            if let Err(e) = watcher.init(WATCH_DEBOUNCE, build_watch_callback(app.handle().clone()))
+            {
+                eprintln!("[watcher] init failed: {e}");
+            }
+            register_all_repositories(app.handle());
+
             builder.mount_events(app);
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            // Deterministically stop the filesystem watcher on exit.
+            if let tauri::RunEvent::Exit = event {
+                app.state::<WatcherState>().shutdown();
+            }
+        });
 }
 
 #[cfg(test)]

@@ -8,6 +8,7 @@
 	import Radio from '@pindoba/svelte-radio';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
+	import { useRepositoryWatch } from '../core/composables/use-repository-watch.svelte';
 	import { createGetBranchesQuery } from '../infrastructure/queries/create-get-branches-query';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
 	import UpdateRepositoryButton from './update-repository-button.svelte';
@@ -22,6 +23,11 @@
 	}
 
 	const { repositoryId }: Props = $props();
+
+	// Safety net for the active repo: detects (and heals) drift the global
+	// watcher may have missed. Exposes `outOfSync` so the manual Update button
+	// only appears when the projection is actually behind git.
+	const repositoryWatch = useRepositoryWatch(() => repositoryId);
 
 	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
 	const getDeletedBranchesQuery = createGetBranchesQuery(() => ({
@@ -225,7 +231,9 @@
 				</Tooltip>
 			{/snippet}
 
-			<UpdateRepositoryButton {repositoryId} />
+			{#if repositoryWatch.outOfSync}
+				<UpdateRepositoryButton {repositoryId} onRefresh={repositoryWatch.refresh} />
+			{/if}
 			<RemoveRepositoryModal {repositoryId} />
 		</Popover>
 	</div>

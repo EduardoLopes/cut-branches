@@ -14,6 +14,19 @@ impl Event for RepositoryLoadedEvent {
     const NAME: &'static str = "repository-loaded";
 }
 
+/// Emitted when the filesystem watcher detects an external change to a watched
+/// repository and has re-synced it to the database. The frontend listens for
+/// this and invalidates the affected TanStack queries.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RepositoryChangedEvent {
+    pub repository_id: String,
+}
+
+impl Event for RepositoryChangedEvent {
+    const NAME: &'static str = "repository-changed";
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct NotificationEvent {

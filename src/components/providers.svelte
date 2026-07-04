@@ -6,12 +6,18 @@
 		QueryClientProvider
 	} from '@tanstack/svelte-query';
 	import type { QueryClientConfig } from '@tanstack/svelte-query';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 	import { mergeRight } from 'ramda';
 	import { type Snippet } from 'svelte';
 	import { browser } from '$app/environment';
-	import { shouldInvalidate } from '$infrastructure/query-key-utils';
+	import { matchesRepositoryChange, shouldInvalidate } from '$infrastructure/query-key-utils';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { createError } from '$utils/error-utils';
+
+	/** Payload of the backend `repository-changed` event (serde camelCase). */
+	interface RepositoryChangedPayload {
+		repositoryId: string;
+	}
 
 	interface Props {
 		queryClientOptions?: QueryClientConfig;
@@ -139,6 +145,29 @@
 			...mergedQueryClientOptions
 		})
 	);
+
+	// App-global bridge: the backend filesystem watcher emits `repository-changed`
+	// for ANY registered repository (not just the open one), so this lives here
+	// rather than in a per-repo composable — it keeps the sidebar branch counts
+	// live for repos that aren't currently open.
+	$effect(() => {
+		const client = queryClient;
+		let unlisten: UnlistenFn | null = null;
+		listen<RepositoryChangedPayload>('repository-changed', (event) => {
+			const { repositoryId } = event.payload;
+			client.invalidateQueries({
+				predicate: (query) => matchesRepositoryChange(query.queryKey, repositoryId)
+			});
+		})
+			.then((fn) => {
+				unlisten = fn;
+			})
+			.catch(() => {
+				// Event bridge unavailable (e.g. non-Tauri context); nothing to do.
+			});
+
+		return () => unlisten?.();
+	});
 </script>
 
 <QueryClientProvider client={queryClient}>

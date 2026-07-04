@@ -1,25 +1,37 @@
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::path::Path;
 
 use crate::domains::repository_management::error::RepositoryError;
 use crate::shared::error::AppError;
 
-/// Computes a fast timestamp representing the current state of the repository.
-/// This timestamp changes when branches are added, deleted, or commits are made.
+/// Computes a content fingerprint representing the current branch state of the
+/// repository. The value changes **iff** the branch state actually changes
+/// (a ref added/removed/moved, HEAD moved, or refs repacked).
 ///
-/// Uses filesystem mtimes which is much faster than git2 API calls:
-/// - `.git/refs/heads/` directory mtime (changes when branches added/deleted)
-/// - `.git/packed-refs` file mtime (changes when refs are packed)
-/// - `.git/HEAD` file mtime (changes when HEAD moves/commits made)
+/// Unlike a filesystem-mtime approach, this hashes the *contents* of the ref
+/// surface, so it is immune to second-granularity collisions (two changes in
+/// the same wall-clock second) and to filesystems that preserve or coarsen
+/// mtimes. It reads only tiny files (~41 bytes per loose ref, plus `packed-refs`
+/// and `HEAD`), so it stays in the low-millisecond range regardless of repo size.
 ///
-/// This is extremely fast (~0.5-2ms) regardless of repository size.
+/// The digest is the low 32 bits of a SipHash `u64`, reinterpreted as `i32` so
+/// it fits the existing DB column with no data migration. 32 bits is ample for
+/// a change-detection fingerprint (collision odds ~2⁻³² per change, and this is
+/// only a fallback — the filesystem watcher never relies on it).
+///
+/// Hashed inputs, in a stable (sorted) order:
+/// - every `.git/refs/heads/**` ref: its path relative to `refs/heads` + contents
+/// - the full contents of `.git/packed-refs` (if present)
+/// - the full contents of `.git/HEAD`
 ///
 /// # Arguments
 ///
-/// * `path` - Path to the git repository
+/// * `path` - Path to the git repository (working directory root)
 ///
 /// # Returns
 ///
-/// * `Result<i32, AppError>` - Unix timestamp (seconds since epoch) or an error
+/// * `Result<i32, AppError>` - Content fingerprint or an error
 pub fn compute_repo_state_timestamp(path: &Path) -> Result<i32, AppError> {
     let git_dir = path.join(".git");
 
@@ -32,72 +44,66 @@ pub fn compute_repo_state_timestamp(path: &Path) -> Result<i32, AppError> {
         ));
     }
 
-    let mut max_timestamp: i32 = 0;
+    let mut hasher = DefaultHasher::new();
 
-    // Check .git/refs/heads/ directory mtime
+    // Loose branch refs under refs/heads/** — collect (relative path, contents)
+    // and hash them in a deterministic sorted order.
     let refs_heads = git_dir.join("refs").join("heads");
-    if refs_heads.exists() {
-        if let Ok(metadata) = std::fs::metadata(&refs_heads) {
-            if let Ok(modified) = metadata.modified() {
-                if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
-                    max_timestamp = max_timestamp.max(duration.as_secs() as i32);
-                }
-            }
-        }
+    let mut loose_refs: Vec<(String, Vec<u8>)> = Vec::new();
+    collect_ref_files(&refs_heads, &refs_heads, &mut loose_refs);
+    loose_refs.sort_by(|a, b| a.0.cmp(&b.0));
+    for (rel_path, contents) in &loose_refs {
+        rel_path.hash(&mut hasher);
+        contents.hash(&mut hasher);
     }
 
-    // Check .git/packed-refs file mtime
+    // packed-refs: refs can live here instead of / in addition to loose files.
     let packed_refs = git_dir.join("packed-refs");
-    if packed_refs.exists() {
-        if let Ok(metadata) = std::fs::metadata(&packed_refs) {
-            if let Ok(modified) = metadata.modified() {
-                if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
-                    max_timestamp = max_timestamp.max(duration.as_secs() as i32);
-                }
-            }
-        }
+    if let Ok(contents) = std::fs::read(&packed_refs) {
+        "packed-refs".hash(&mut hasher);
+        contents.hash(&mut hasher);
     }
 
-    // Check .git/HEAD file mtime
+    // HEAD: changes when the checked-out branch changes.
     let head_file = git_dir.join("HEAD");
-    if head_file.exists() {
-        if let Ok(metadata) = std::fs::metadata(&head_file) {
-            if let Ok(modified) = metadata.modified() {
-                if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
-                    max_timestamp = max_timestamp.max(duration.as_secs() as i32);
-                }
-            }
+    if let Ok(contents) = std::fs::read(&head_file) {
+        "HEAD".hash(&mut hasher);
+        contents.hash(&mut hasher);
+    }
+
+    // If we somehow read nothing (e.g. a bare or unusual layout), fall back to a
+    // stable non-zero sentinel so callers always get a valid, comparable value.
+    let digest = hasher.finish();
+    if digest == 0 {
+        return Err(RepositoryError::CurrentTimeFailed {
+            detail: "empty repository fingerprint".to_string(),
+        }
+        .into());
+    }
+
+    // Take the low 32 bits and reinterpret as i32 to fit the DB column.
+    Ok(digest as u32 as i32)
+}
+
+/// Recursively collects loose ref files under `dir`, keying each by its path
+/// relative to `root` (so namespaced branches like `feature/foo` hash stably).
+fn collect_ref_files(dir: &Path, root: &Path, out: &mut Vec<(String, Vec<u8>)>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let entry_path = entry.path();
+        if entry_path.is_dir() {
+            collect_ref_files(&entry_path, root, out);
+        } else if let Ok(contents) = std::fs::read(&entry_path) {
+            let rel = entry_path
+                .strip_prefix(root)
+                .unwrap_or(&entry_path)
+                .to_string_lossy()
+                .replace('\\', "/");
+            out.push((rel, contents));
         }
     }
-
-    // Also check individual ref files in refs/heads/ for changes
-    // This catches branch updates even if directory mtime isn't updated
-    if refs_heads.exists() {
-        if let Ok(entries) = std::fs::read_dir(&refs_heads) {
-            for entry in entries.flatten() {
-                if let Ok(metadata) = entry.metadata() {
-                    if let Ok(modified) = metadata.modified() {
-                        if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
-                            max_timestamp = max_timestamp.max(duration.as_secs() as i32);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if max_timestamp == 0 {
-        // Fallback: use current time if we couldn't get any timestamps
-        // This ensures we at least have a valid timestamp
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_err(|e| RepositoryError::CurrentTimeFailed {
-                detail: e.to_string(),
-            })?;
-        max_timestamp = now.as_secs() as i32;
-    }
-
-    Ok(max_timestamp)
 }
 
 #[cfg(test)]
@@ -105,8 +111,6 @@ mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
     use std::process::Command;
-    use std::thread;
-    use std::time::Duration;
 
     #[test]
     fn test_compute_repo_state_timestamp() {
@@ -114,91 +118,75 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let ts1 = compute_repo_state_timestamp(path);
-        assert!(ts1.is_ok(), "Failed to compute timestamp: {:?}", ts1.err());
+        let fp1 = compute_repo_state_timestamp(path);
+        assert!(
+            fp1.is_ok(),
+            "Failed to compute fingerprint: {:?}",
+            fp1.err()
+        );
 
-        // Timestamp should be consistent (within same second)
-        let ts2 = compute_repo_state_timestamp(path);
-        assert!(ts2.is_ok());
-        assert_eq!(ts1.unwrap(), ts2.unwrap(), "Timestamp should be stable");
+        // Fingerprint is stable when nothing changes (no sleep needed).
+        let fp2 = compute_repo_state_timestamp(path);
+        assert!(fp2.is_ok());
+        assert_eq!(fp1.unwrap(), fp2.unwrap(), "Fingerprint should be stable");
     }
 
     #[test]
-    fn test_timestamp_changes_on_new_branch() {
+    fn test_fingerprint_changes_on_new_branch() {
         let _guard = DirectoryGuard::new();
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let ts1 = compute_repo_state_timestamp(path).unwrap();
+        let fp1 = compute_repo_state_timestamp(path).unwrap();
 
-        // Sleep to ensure filesystem timestamp changes
-        thread::sleep(Duration::from_millis(1100));
-
-        // Create a new branch
         Command::new("git")
             .args(["branch", "test-new-branch"])
             .current_dir(path)
             .output()
             .unwrap();
 
-        let ts2 = compute_repo_state_timestamp(path).unwrap();
-        assert!(
-            ts2 > ts1,
-            "Timestamp should increase when new branch is created: {} <= {}",
-            ts2,
-            ts1
+        let fp2 = compute_repo_state_timestamp(path).unwrap();
+        assert_ne!(
+            fp1, fp2,
+            "Fingerprint should change when a new branch is created"
         );
     }
 
     #[test]
-    fn test_timestamp_changes_on_branch_delete() {
+    fn test_fingerprint_changes_on_branch_delete() {
         let _guard = DirectoryGuard::new();
         let repo = setup_test_repo();
         let path = repo.path();
 
-        // Create a branch
         Command::new("git")
             .args(["branch", "test-delete-branch"])
             .current_dir(path)
             .output()
             .unwrap();
 
-        // Sleep to ensure filesystem timestamp changes
-        thread::sleep(Duration::from_millis(1100));
+        let fp1 = compute_repo_state_timestamp(path).unwrap();
 
-        let ts1 = compute_repo_state_timestamp(path).unwrap();
-
-        // Sleep again
-        thread::sleep(Duration::from_millis(1100));
-
-        // Delete the branch
         Command::new("git")
             .args(["branch", "-D", "test-delete-branch"])
             .current_dir(path)
             .output()
             .unwrap();
 
-        let ts2 = compute_repo_state_timestamp(path).unwrap();
-        assert!(
-            ts2 > ts1,
-            "Timestamp should increase when branch is deleted: {} <= {}",
-            ts2,
-            ts1
+        let fp2 = compute_repo_state_timestamp(path).unwrap();
+        assert_ne!(
+            fp1, fp2,
+            "Fingerprint should change when a branch is deleted"
         );
     }
 
     #[test]
-    fn test_timestamp_changes_on_new_commit() {
+    fn test_fingerprint_changes_on_new_commit() {
         let _guard = DirectoryGuard::new();
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let ts1 = compute_repo_state_timestamp(path).unwrap();
+        let fp1 = compute_repo_state_timestamp(path).unwrap();
 
-        // Sleep to ensure filesystem timestamp changes
-        thread::sleep(Duration::from_millis(1100));
-
-        // Create a new commit
         std::fs::write(path.join("test_file.txt"), "test content").unwrap();
         Command::new("git")
             .args(["add", "test_file.txt"])
@@ -211,44 +199,43 @@ mod tests {
             .output()
             .unwrap();
 
-        let ts2 = compute_repo_state_timestamp(path).unwrap();
-        assert!(
-            ts2 > ts1,
-            "Timestamp should increase when new commit is made: {} <= {}",
-            ts2,
-            ts1
+        let fp2 = compute_repo_state_timestamp(path).unwrap();
+        assert_ne!(
+            fp1, fp2,
+            "Fingerprint should change when a new commit moves the branch ref"
         );
     }
 
     #[test]
-    fn test_timestamp_errors() {
+    fn test_fingerprint_distinguishes_branch_names() {
+        let _guard = DirectoryGuard::new();
+        let repo_a = setup_test_repo();
+        Command::new("git")
+            .args(["branch", "alpha"])
+            .current_dir(repo_a.path())
+            .output()
+            .unwrap();
+        let fp_a = compute_repo_state_timestamp(repo_a.path()).unwrap();
+
+        let repo_b = setup_test_repo();
+        Command::new("git")
+            .args(["branch", "beta"])
+            .current_dir(repo_b.path())
+            .output()
+            .unwrap();
+        let fp_b = compute_repo_state_timestamp(repo_b.path()).unwrap();
+
+        // Same shape, different branch name → different fingerprint.
+        assert_ne!(fp_a, fp_b, "Different branch names should hash differently");
+    }
+
+    #[test]
+    fn test_fingerprint_errors_on_non_git() {
         let _guard = DirectoryGuard::new();
         let temp_dir = tempfile::tempdir().unwrap();
         let non_git_path = temp_dir.path();
 
         let result = compute_repo_state_timestamp(non_git_path);
         assert!(result.is_err(), "Should error on non-git directory");
-    }
-
-    #[test]
-    fn test_timestamp_is_recent() {
-        let _guard = DirectoryGuard::new();
-        let repo = setup_test_repo();
-        let path = repo.path();
-
-        let ts = compute_repo_state_timestamp(path).unwrap();
-        let now = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_secs() as i32;
-
-        // Timestamp should be recent (within last hour)
-        assert!(
-            now - ts < 3600,
-            "Timestamp should be recent: now={}, ts={}, diff={}",
-            now,
-            ts,
-            now - ts
-        );
     }
 }

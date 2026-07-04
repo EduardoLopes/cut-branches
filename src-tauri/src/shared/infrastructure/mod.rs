@@ -5,3 +5,4 @@
 
 pub mod db;
 pub(crate) mod git;
+pub mod watcher;

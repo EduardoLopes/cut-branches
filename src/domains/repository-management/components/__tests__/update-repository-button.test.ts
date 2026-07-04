@@ -176,6 +176,29 @@ describe('UpdateRepositoryButton', () => {
 		});
 	});
 
+	test('should delegate to onRefresh when provided instead of invalidating directly', async () => {
+		const onRefresh = vi.fn(() => Promise.resolve());
+		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
+			repositoryId: 'test-repo-id',
+			onRefresh
+		});
+		await tick();
+
+		const button = screen.getByTestId('update-button');
+		await button.click();
+		await tick();
+
+		expect(onRefresh).toHaveBeenCalledTimes(1);
+		// The local invalidation path is bypassed when onRefresh is supplied.
+		expect(mockInvalidateQueries).not.toHaveBeenCalled();
+		// Success notification still fires.
+		expect(mockNotifications.push).toHaveBeenCalledWith({
+			title: 'Repository updated',
+			message: 'The repository **Test-Repo** was updated',
+			feedback: 'success'
+		});
+	});
+
 	test('should not be disabled when not refreshing', () => {
 		const screen = renderWithTestWrapper(UpdateRepositoryButton, {
 			repositoryId: 'test-repo-id'

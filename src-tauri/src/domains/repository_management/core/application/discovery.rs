@@ -56,7 +56,7 @@ pub async fn get_repository(
     }
 
     // Repository exists in DB - sync if needed
-    sync_repository_if_needed(raw_root_path, repo_id, &root_path, conn, branch).await?;
+    sync_repository_if_needed(raw_root_path, repo_id, conn, branch).await?;
 
     // Get fresh data from DB after sync
     let updated_repo = operations::get_repository(conn, repo_id).map_err(|e| {
@@ -87,11 +87,10 @@ pub async fn get_repository(
 async fn sync_repository_if_needed(
     raw_root_path: &Path,
     repo_name: &str,
-    root_path: &str,
     conn: &mut DbConnection,
     branch: &dyn BranchGateway,
 ) -> Result<(), AppError> {
-    // Compute current repository state timestamp (ultra-fast: ~0.5-2ms)
+    // Compute current repository state fingerprint (ultra-fast: ~1-2ms)
     let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
     let db_repo = operations::get_repository(conn, repo_name).map_err(|e| {
@@ -110,52 +109,17 @@ async fn sync_repository_if_needed(
 
     if needs_sync {
         println!(
-            "Repository state changed (timestamp: {} -> {}), syncing...",
+            "Repository state changed (fingerprint: {} -> {}), syncing...",
             db_repo.last_sync_timestamp.unwrap_or(0),
             current_timestamp
         );
 
-        // Get full branch list (use fast version for better performance)
-        let branches = branch.list_branches_fast(raw_root_path)?;
-        let branches_count = branches.len() as i32;
-
-        // Get current branch name
-        let current_branch = branch.current_branch(raw_root_path)?;
-
-        // Update repository metadata with new timestamp
-        let updated_repo = NewRepository {
-            id: repo_name.to_string(),
-            name: repo_name.to_string(),
-            path: root_path.to_string(),
-            current_branch: current_branch.to_string(),
-            branches_count,
-            last_sync_timestamp: Some(current_timestamp),
-            last_synced_at: Some(chrono::Utc::now().naive_utc()),
-        };
-
-        operations::update_repository(conn, repo_name, updated_repo).map_err(|e| {
-            AppError::new(
-                "Failed to update repository in database".to_string(),
-                "db_update_failed",
-                Some(e.to_string()),
-            )
-        })?;
-
-        // Sync branches to database through the branch gateway
-        branch
-            .sync_branches(&branches, repo_name, conn)
-            .map_err(|e| {
-                AppError::new(
-                    "Failed to sync branches to database".to_string(),
-                    "branch_sync_failed",
-                    Some(e.to_string()),
-                )
-            })?;
+        resync_repository(raw_root_path, repo_name, conn, branch)?;
 
         println!("Sync completed");
     } else {
         println!(
-            "Repository state unchanged (timestamp: {}), skipping sync",
+            "Repository state unchanged (fingerprint: {}), skipping sync",
             current_timestamp
         );
         operations::bump_last_synced_at(conn, repo_name).map_err(|e| {
@@ -166,6 +130,71 @@ async fn sync_repository_if_needed(
             )
         })?;
     }
+
+    Ok(())
+}
+
+/// Force a re-sync of a repository's branches from disk into the database.
+///
+/// Unlike [`sync_repository_if_needed`], this does **not** short-circuit on the
+/// state fingerprint — callers (notably the filesystem watcher) already know
+/// something changed, so recomputing and comparing would be wasted work. It
+/// recomputes the fingerprint, refreshes the repository row's metadata, and
+/// reconciles branches through the [`BranchGateway`].
+///
+/// Synchronous by design so it can run on the watcher's debouncer thread
+/// (no `.await`, no pooled connection held across an await point).
+///
+/// # Arguments
+///
+/// * `raw_root_path` - Working-directory root of the repository
+/// * `repo_id` - Repository ID in the database
+/// * `conn` - Pooled database connection
+/// * `branch` - Branch gateway used to list git branches and sync them to the DB
+pub(crate) fn resync_repository(
+    raw_root_path: &Path,
+    repo_id: &str,
+    conn: &mut DbConnection,
+    branch: &dyn BranchGateway,
+) -> Result<(), AppError> {
+    let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
+
+    // Get full branch list (use fast version for better performance)
+    let branches = branch.list_branches_fast(raw_root_path)?;
+    let branches_count = branches.len() as i32;
+
+    // Get current branch name
+    let current_branch = branch.current_branch(raw_root_path)?;
+
+    // Update repository metadata with the new fingerprint
+    let updated_repo = NewRepository {
+        id: repo_id.to_string(),
+        name: repo_id.to_string(),
+        path: raw_root_path.to_string_lossy().into_owned(),
+        current_branch,
+        branches_count,
+        last_sync_timestamp: Some(current_timestamp),
+        last_synced_at: Some(chrono::Utc::now().naive_utc()),
+    };
+
+    operations::update_repository(conn, repo_id, updated_repo).map_err(|e| {
+        AppError::new(
+            "Failed to update repository in database".to_string(),
+            "db_update_failed",
+            Some(e.to_string()),
+        )
+    })?;
+
+    // Sync branches to database through the branch gateway
+    branch
+        .sync_branches(&branches, repo_id, conn)
+        .map_err(|e| {
+            AppError::new(
+                "Failed to sync branches to database".to_string(),
+                "branch_sync_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     Ok(())
 }

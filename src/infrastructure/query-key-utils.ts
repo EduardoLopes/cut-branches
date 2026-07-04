@@ -1,3 +1,4 @@
+import { hasRepoId } from './query-type-guards';
 import type { CommandName } from './tauri-commands';
 
 /**
@@ -90,6 +91,41 @@ export function getResource(commandName: CommandName): string | string[] {
 
 	// Extract resource (already in kebab-case from extractResource)
 	return extracted;
+}
+
+/**
+ * Decide whether a query should be invalidated when `repositoryId` changed
+ * on disk (external git change picked up by the filesystem watcher).
+ *
+ * Matches that repository's branch list and repository record, plus the
+ * repository list query (whose `branchesCount` feeds the sidebar for every
+ * repo, including ones that aren't currently open).
+ *
+ * @param queryKey - The query key to test (shape: [resource, commandName, input])
+ * @param repositoryId - The repository that changed
+ */
+export function matchesRepositoryChange(
+	queryKey: readonly unknown[],
+	repositoryId: string
+): boolean {
+	const [resource, commandName, input] = queryKey;
+
+	if (resource === 'branch' && commandName === 'getBranchList') {
+		return hasRepoId(input) && input.repoId === repositoryId;
+	}
+	if (resource === 'repository' && commandName === 'getRepository') {
+		return (
+			input !== null &&
+			typeof input === 'object' &&
+			'id' in input &&
+			(input as { id: unknown }).id === repositoryId
+		);
+	}
+	// The repository list carries branchesCount for the sidebar — always refresh.
+	if (resource === 'repository' && commandName === 'getRepositoryList') {
+		return true;
+	}
+	return false;
 }
 
 /**

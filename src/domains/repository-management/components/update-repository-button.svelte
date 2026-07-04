@@ -11,9 +11,15 @@
 
 	interface Props {
 		repositoryId: string;
+		/**
+		 * Re-attaches the filesystem watch and forces a refresh. Provided by the
+		 * watch composable; when present it supersedes the local invalidation
+		 * (which remains as a standalone fallback).
+		 */
+		onRefresh?: () => Promise<void>;
 	}
 
-	const { repositoryId }: Props = $props();
+	const { repositoryId, onRefresh }: Props = $props();
 
 	const queryClient = useQueryClient();
 	const getRepositoryListQuery = createGetRepositoryListQuery();
@@ -28,26 +34,31 @@
 		isRefreshing = true;
 
 		try {
-			// Invalidate all branch queries for this repository
-			await queryClient.invalidateQueries({
-				predicate: (query) => {
-					const [resource, commandName, input] = query.queryKey;
-					return (
-						resource === 'branch' &&
-						commandName === 'getBranchList' &&
-						hasRepoId(input) &&
-						input.repoId === repositoryId
-					);
-				}
-			});
+			if (onRefresh) {
+				// Re-attach the watch and refresh in one step.
+				await onRefresh();
+			} else {
+				// Invalidate all branch queries for this repository
+				await queryClient.invalidateQueries({
+					predicate: (query) => {
+						const [resource, commandName, input] = query.queryKey;
+						return (
+							resource === 'branch' &&
+							commandName === 'getBranchList' &&
+							hasRepoId(input) &&
+							input.repoId === repositoryId
+						);
+					}
+				});
 
-			// Invalidate repository query for this specific repository
-			await queryClient.invalidateQueries({
-				predicate: (query) => {
-					const [resource, commandName, input] = query.queryKey;
-					return resource === 'repository' && commandName === 'getRepository' && hasPath(input);
-				}
-			});
+				// Invalidate repository query for this specific repository
+				await queryClient.invalidateQueries({
+					predicate: (query) => {
+						const [resource, commandName, input] = query.queryKey;
+						return resource === 'repository' && commandName === 'getRepository' && hasPath(input);
+					}
+				});
+			}
 
 			const repoName = repository?.name ?? 'Repository';
 			notifications.push({

@@ -8,6 +8,7 @@ use crate::domains::repository_management::core::ports::RepositoryServices;
 use crate::domains::repository_management::error::RepositoryError;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::{models::NewRepository, DatabaseState};
+use crate::shared::infrastructure::watcher::WatcherState;
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -42,6 +43,7 @@ pub struct CreateRepositoryOutput {
 pub async fn create_repository(
     db: State<'_, DatabaseState>,
     services: State<'_, RepositoryServices>,
+    watcher: State<'_, WatcherState>,
     input: CreateRepositoryInput,
 ) -> Result<CreateRepositoryOutput, AppError> {
     println!("create_repository called for path: {}", input.path);
@@ -152,6 +154,9 @@ pub async fn create_repository(
                 Some(e.to_string()),
             )
         })?;
+
+    // Start watching the new repository's git ref surface for external changes.
+    super::watch::watch_repository(&watcher, &root_path);
 
     println!("Repository created successfully: {}", repo_name);
 
