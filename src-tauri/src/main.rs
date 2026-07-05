@@ -28,8 +28,9 @@ use domains::branch_management::events::{
 };
 use domains::path_operations::commands::get_repository_root;
 use domains::repository_management::commands::{
-    build_watch_callback, create_repository, delete_repository, get_repository,
-    get_repository_list, get_repository_sync_status, register_all_repositories, WATCH_DEBOUNCE,
+    build_watch_callback, create_repository, delete_repository, discover_repositories,
+    get_repository, get_repository_list, get_repository_sync_status, register_all_repositories,
+    WATCH_DEBOUNCE,
 };
 use domains::repository_management::events::{
     NotificationEvent, RepositoryChangedEvent, RepositoryLoadedEvent,
@@ -78,6 +79,7 @@ fn main() {
             get_repository_root,
             // Repository management
             create_repository,
+            discover_repositories,
             get_repository,
             get_repository_list,
             delete_repository,

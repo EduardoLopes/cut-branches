@@ -46,6 +46,31 @@ async createRepository(input: CreateRepositoryInput) : Promise<Result<CreateRepo
 }
 },
 /**
+ * Scans the filesystem for git repositories so the user can add many at once
+ * instead of picking each folder by hand.
+ *
+ * With no `roots`, the user's home directory is scanned. Scanning runs on the
+ * blocking thread pool since large trees can take a moment to walk.
+ * 
+ * # Arguments
+ * 
+ * * `app` - App handle used to resolve the home directory
+ * * `input` - Optional scan roots and depth
+ * 
+ * # Returns
+ * 
+ * * `Result<DiscoverRepositoriesOutput, AppError>` - Discovered repositories
+ * and the roots that were scanned, or an error
+ */
+async discoverRepositories(input: DiscoverRepositoriesInput) : Promise<Result<DiscoverRepositoriesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("discover_repositories", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Gets information about a git repository.
  * 
  * # Arguments
@@ -510,6 +535,34 @@ export type DeletionStatusFilter =
  * Both active and deleted branches
  */
 "all"
+export type DiscoverRepositoriesInput = { 
+/**
+ * Directories to scan. When empty, the user's home directory is scanned.
+ */
+roots?: string[]; 
+/**
+ * Maximum depth to descend below each root. Defaults to `DEFAULT_MAX_DEPTH`.
+ */
+maxDepth?: number | null }
+export type DiscoverRepositoriesOutput = { 
+/**
+ * Git repositories found under the scanned roots.
+ */
+repositories: DiscoveredRepository[]; 
+/**
+ * The roots that were actually scanned (resolved home directory when the
+ * caller passed no explicit roots).
+ */
+scannedRoots: string[] }
+export type DiscoveredRepository = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+path: string; 
+/**
+ * Folder name, used as the default display name.
+ */
+name: string }
 export type GetBranchListInput = { repoId: string; filters?: BranchFilters }
 export type GetBranchListOutput = { branches: Branch[] }
 export type GetBranchMergeStatusInput = { path: string; branchName: string }

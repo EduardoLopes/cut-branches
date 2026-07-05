@@ -3,7 +3,7 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import AddButton from '$domains/repository-management/components/add-repository-button.svelte';
+	import AddRepositoryMenu from '$domains/repository-management/components/add-repository-menu.svelte';
 	import { css } from '@pindoba/styled-system/css';
 </script>
 
@@ -56,7 +56,7 @@
 		</p>
 	</div>
 
-	<AddButton
+	<AddRepositoryMenu
 		size="lg"
 		emphasis="primary"
 		onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}

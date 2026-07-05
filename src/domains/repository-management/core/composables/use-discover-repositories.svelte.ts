@@ -1,0 +1,174 @@
+import { useQueryClient } from '@tanstack/svelte-query';
+import { SvelteSet } from 'svelte/reactivity';
+import { createDiscoverRepositoriesMutation } from '$domains/repository-management/infrastructure/mutations/create-discover-repositories-mutation';
+import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+import { executeCommand } from '$infrastructure/tauri-commands';
+import { notifications } from '$services/notifications/notifications.svelte';
+
+/** A repository found by a scan, annotated with whether it is already tracked. */
+export interface DiscoveredItem {
+	path: string;
+	name: string;
+	/** True when a repository with this path is already in the list. */
+	alreadyAdded: boolean;
+}
+
+interface UseDiscoverRepositoriesOptions {
+	/** Invoked with the number of repositories added after a bulk add. */
+	onAdded?: (count: number) => void;
+}
+
+/**
+ * Application logic backing the "scan for repositories" flow: run a filesystem
+ * scan, let the user pick which results to add, then bulk-add the selection.
+ *
+ * Adds go straight through `executeCommand('createRepository')` in a loop so we
+ * can surface a single summary notification instead of one toast per repo, and
+ * invalidate the repository list only once at the end.
+ */
+export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions = {}) {
+	const queryClient = useQueryClient();
+	const repositoryListQuery = createGetRepositoryListQuery();
+	const discoverMutation = createDiscoverRepositoriesMutation({
+		meta: { showErrorNotification: true }
+	});
+
+	let results = $state<DiscoveredItem[]>([]);
+	// SvelteSet is reactive on mutation, so it is mutated in place rather than
+	// reassigned (no `$state` wrapper needed).
+	const selected = new SvelteSet<string>();
+	let scannedRoots = $state<string[]>([]);
+	let hasScanned = $state(false);
+	let isAdding = $state(false);
+
+	const existingPaths = $derived(
+		new SvelteSet((repositoryListQuery.data ?? []).map((repo) => repo.path))
+	);
+
+	/** Result paths that can still be added (not already tracked). */
+	const addablePaths = $derived(
+		results.filter((item) => !item.alreadyAdded).map((item) => item.path)
+	);
+
+	const selectedCount = $derived(addablePaths.filter((path) => selected.has(path)).length);
+
+	/**
+	 * Scans the given roots (empty = the user's home directory), replacing any
+	 * previous results and pre-selecting every not-yet-added repository.
+	 */
+	async function scan(roots: string[] = []) {
+		const output = await discoverMutation.mutateAsync({ roots, maxDepth: null });
+
+		scannedRoots = output.scannedRoots;
+		results = output.repositories.map((repo) => ({
+			path: repo.path,
+			name: repo.name,
+			alreadyAdded: existingPaths.has(repo.path)
+		}));
+		selected.clear();
+		for (const item of results) {
+			if (!item.alreadyAdded) selected.add(item.path);
+		}
+		hasScanned = true;
+	}
+
+	/** Toggles a single result's selection. No-op for already-added repos. */
+	function toggle(path: string) {
+		if (selected.has(path)) {
+			selected.delete(path);
+		} else {
+			selected.add(path);
+		}
+	}
+
+	/** Selects or clears every addable result. */
+	function setAll(checked: boolean) {
+		selected.clear();
+		if (checked) {
+			for (const path of addablePaths) selected.add(path);
+		}
+	}
+
+	/** Adds every selected, not-yet-added repository. */
+	async function addSelected() {
+		if (isAdding) return;
+
+		const paths = addablePaths.filter((path) => selected.has(path));
+		if (paths.length === 0) return;
+
+		isAdding = true;
+		let added = 0;
+		const failed: string[] = [];
+
+		try {
+			for (const path of paths) {
+				try {
+					await executeCommand('createRepository', { path });
+					added += 1;
+				} catch {
+					failed.push(path);
+				}
+			}
+		} finally {
+			isAdding = false;
+		}
+
+		if (added > 0) {
+			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
+
+			// Mark the freshly added repos so the list reflects reality without a
+			// re-scan, and drop them from the selection.
+			const addedPaths = new SvelteSet(paths.filter((path) => !failed.includes(path)));
+			results = results.map((item) =>
+				addedPaths.has(item.path) ? { ...item, alreadyAdded: true } : item
+			);
+			for (const path of addedPaths) selected.delete(path);
+
+			notifications.push({
+				feedback: 'success',
+				title: added === 1 ? 'Repository added' : 'Repositories added',
+				message:
+					`Added ${added} ${added === 1 ? 'repository' : 'repositories'}` +
+					(failed.length > 0 ? `, ${failed.length} could not be added` : '')
+			});
+			options.onAdded?.(added);
+		} else {
+			notifications.push({
+				feedback: 'danger',
+				title: 'Could not add repositories',
+				message: `None of the ${failed.length} selected repositories could be added`
+			});
+		}
+	}
+
+	return {
+		get results() {
+			return results;
+		},
+		get scannedRoots() {
+			return scannedRoots;
+		},
+		get hasScanned() {
+			return hasScanned;
+		},
+		get isScanning() {
+			return discoverMutation.isPending;
+		},
+		get isAdding() {
+			return isAdding;
+		},
+		get selectedCount() {
+			return selectedCount;
+		},
+		get addableCount() {
+			return addablePaths.length;
+		},
+		isSelected(path: string) {
+			return selected.has(path);
+		},
+		scan,
+		toggle,
+		setAll,
+		addSelected
+	};
+}
