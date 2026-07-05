@@ -261,7 +261,8 @@ export default defineConfig(({ mode }) => {
 					'src/routes/+layout.ts',
 					'src/routes/+page.svelte',
 					'src/routes/repos/**/+layout.ts',
-					'src/routes/repos/**/+page.svelte'
+					'src/routes/repos/**/+page.svelte',
+					'src/routes/settings/+page.svelte'
 				]
 			},
 			alias: {
