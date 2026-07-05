@@ -1,8 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
-	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
@@ -16,11 +14,11 @@
 
 	interface Props {
 		repositoryId: string;
+		/** Bindable visibility, controlled by the repository options menu. */
+		open?: boolean;
 	}
 
-	let open = $state(false);
-
-	let { repositoryId }: Props = $props();
+	let { repositoryId, open = $bindable(false) }: Props = $props();
 
 	const queryClient = useQueryClient();
 	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
@@ -75,10 +73,6 @@
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}
 
-	function handleOpen() {
-		open = true;
-	}
-
 	function handleCancel() {
 		open = false;
 	}
@@ -125,27 +119,3 @@
 		</div>
 	</Dialog>
 </div>
-
-<Button
-	emphasis="ghost"
-	size="md"
-	feedback="danger"
-	onclick={handleOpen}
-	data-testid="open-remove-modal"
-	passThrough={{
-		root: {
-			style: css.raw({
-				gap: 'xs',
-				justifyContent: 'space-between',
-				width: 'full'
-			})
-		}
-	}}
->
-	Remove
-	{#snippet trailing()}
-		<Stamp emphasis="ghost" feedback="danger" border="none" background="transparent">
-			<Icon icon="lucide:circle-x" width="16px" height="16px" />
-		</Stamp>
-	{/snippet}
-</Button>

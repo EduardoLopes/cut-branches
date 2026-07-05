@@ -19,11 +19,11 @@ repository-management/
 ├── components/                         # Delivery
 │   ├── add-repository-button.svelte    # Opens the folder dialog and creates a repository
 │   ├── back-button.svelte              # Generic back-navigation button
-│   ├── repository-header.svelte        # Repo name + Active/Deleted branch tabs + options popover
-│   ├── update-repository-button.svelte # Refetches the repo's branch/repository data
-│   └── remove-repository-modal.svelte  # Confirm + delete a repository
+│   ├── repository-header.svelte        # Repo name + Active/Deleted branch tabs + options menu
+│   └── remove-repository-modal.svelte  # Controlled confirm dialog that deletes a repository
 ├── core/composables/                   # Application — consuming hooks / stateful logic
 │   ├── repository.svelte.ts            # RepositoryStore (per-repo UI state)
+│   ├── use-repository-actions.svelte.ts # Reveal-in-file-manager + manual refresh (options menu)
 │   ├── queries/                        # TanStack Query hooks (wrap $utils/create-tauri-query)
 │   │   ├── create-get-repository-query.ts
 │   │   ├── create-get-repository-list-query.ts

@@ -71,26 +71,25 @@ describe('RemoveRepositoryModal', () => {
 			expect(getByText('Remove repository')).toBeInTheDocument();
 		});
 
-		test('renders repository name in modal content', async () => {
-			const { getByTestId, getByText } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+		test('renders repository name in modal content when open', async () => {
+			const { getByText } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id,
+				open: true
 			});
 
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
-
-			expect(getByText(/Are you sure you want to remove/)).toHaveTextContent(mockRepository.name);
+			// The name is filled in once the getRepository query resolves.
+			await vi.waitFor(() => {
+				expect(getByText(/Are you sure you want to remove/)).toHaveTextContent(mockRepository.name);
+			});
 		});
 	});
 
 	describe('Modal Interaction', () => {
-		test('should open and close the modal', async () => {
+		test('should close the modal on cancel', async () => {
 			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+				repositoryId: mockRepository.id,
+				open: true
 			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
 
 			// Modal is portaled to document.body, so we need to query the document
 			const modal = document.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
@@ -99,17 +98,14 @@ describe('RemoveRepositoryModal', () => {
 			const cancelButton = getByTestId('cancel-remove');
 			await cancelButton.click();
 
-			// Modal should still be in the document but closed
-			expect(modal).toBeInTheDocument();
+			await expect.element(modal).not.toHaveAttribute('open');
 		});
 
 		test('closes modal after repository removal', async () => {
 			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+				repositoryId: mockRepository.id,
+				open: true
 			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();
@@ -123,11 +119,9 @@ describe('RemoveRepositoryModal', () => {
 	describe('Repository Removal', () => {
 		test('should remove the repository from database', async () => {
 			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+				repositoryId: mockRepository.id,
+				open: true
 			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();
@@ -139,11 +133,9 @@ describe('RemoveRepositoryModal', () => {
 
 		test('shows notification after repository removal', async () => {
 			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+				repositoryId: mockRepository.id,
+				open: true
 			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();
@@ -162,11 +154,9 @@ describe('RemoveRepositoryModal', () => {
 			mockRepositories = [mockRepository];
 
 			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+				repositoryId: mockRepository.id,
+				open: true
 			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();
@@ -180,11 +170,9 @@ describe('RemoveRepositoryModal', () => {
 			mockRepositories = [mockRepository];
 
 			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
-				repositoryId: mockRepository.id
+				repositoryId: mockRepository.id,
+				open: true
 			});
-
-			const openButton = getByTestId('open-remove-modal');
-			await openButton.click();
 
 			const removeButton = getByTestId('confirm-remove');
 			await removeButton.click();

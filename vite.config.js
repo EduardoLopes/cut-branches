@@ -118,6 +118,7 @@ const PINDOBA_PACKAGES = {
 	'@pindoba/svelte-input-upload': 'ui/svelte/input-upload',
 	'@pindoba/svelte-listbox': 'ui/svelte/listbox',
 	'@pindoba/svelte-loading': 'ui/svelte/loading',
+	'@pindoba/svelte-menu': 'ui/svelte/menu',
 	'@pindoba/svelte-navigation': 'ui/svelte/navigation',
 	'@pindoba/svelte-panel': 'ui/svelte/panel',
 	'@pindoba/svelte-popover': 'ui/svelte/popover',

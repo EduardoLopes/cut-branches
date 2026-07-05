@@ -1,18 +1,18 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { MenuNode } from '@pindoba/core-menu';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
-	import Popover from '@pindoba/svelte-popover';
+	import Menu from '@pindoba/svelte-menu';
 	import Radio from '@pindoba/svelte-radio';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
+	import { useRepositoryActions } from '../core/composables/use-repository-actions.svelte';
 	import { useRepositoryWatch } from '../core/composables/use-repository-watch.svelte';
 	import { createGetBranchesQuery } from '../infrastructure/queries/create-get-branches-query';
-	import OpenRepositoryButton from './open-repository-button.svelte';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
-	import UpdateRepositoryButton from './update-repository-button.svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -26,9 +26,18 @@
 	const { repositoryId }: Props = $props();
 
 	// Safety net for the active repo: detects (and heals) drift the global
-	// watcher may have missed. Exposes `outOfSync` so the manual Update button
+	// watcher may have missed. Exposes `outOfSync` so the manual Update action
 	// only appears when the projection is actually behind git.
 	const repositoryWatch = useRepositoryWatch(() => repositoryId);
+
+	// Reveal + update actions backing the repository options menu. Update reuses
+	// the watcher's refresh so it re-attaches the filesystem watch.
+	const repositoryActions = useRepositoryActions(() => repositoryId, {
+		onRefresh: () => repositoryWatch.refresh()
+	});
+
+	// The Remove action opens this confirmation dialog, which owns the deletion.
+	let removeModalOpen = $state(false);
 
 	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
 	const getDeletedBranchesQuery = createGetBranchesQuery(() => ({
@@ -191,29 +200,65 @@
 	</div>
 	<div
 		class={css({
-			padding: 'sm'
+			padding: 'sm',
+			// The options trigger sits at the window's right edge; `bottom-end`
+			// aligns the menu to the trigger's right edge, so the menu inherits the
+			// trigger's distance from the edge (nothing overflows — flip/shift are
+			// working). Extra right padding moves the trigger, and with it the
+			// end-aligned menu, inward so it clears the list scrollbar.
+			pr: 'xl'
 		})}
 	>
-		<Popover
-			autoFocus
-			showCloseButton={false}
-			background="surface.deep"
-			passThrough={{
-				root: {
-					style: css.raw({
-						width: '180px',
-						// Concentric with the inner menu items: inner radius (md) + content padding (3xs)
-						borderRadius: 'calc(var(--radii-md) + var(--spacing-3xs))'
-					})
+		{#snippet updateIcon()}
+			<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+				<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
+			</Stamp>
+		{/snippet}
+		{#snippet revealIcon()}
+			<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+				<Icon icon="lucide:folder-open" width="14px" height="14px" />
+			</Stamp>
+		{/snippet}
+		{#snippet removeIcon()}
+			<Stamp size="sm" emphasis="ghost" feedback="danger" border="none" background="transparent">
+				<Icon icon="lucide:circle-x" width="14px" height="14px" />
+			</Stamp>
+		{/snippet}
+
+		<Menu
+			placement="bottom-end"
+			aria-label="Repository options"
+			items={[
+				...(repositoryWatch.outOfSync
+					? [
+							{
+								type: 'action',
+								id: 'update',
+								label: 'Update',
+								leading: updateIcon,
+								disabled: repositoryActions.isRefreshing,
+								onSelect: repositoryActions.update
+							} satisfies MenuNode
+						]
+					: []),
+				{
+					type: 'action',
+					id: 'reveal',
+					label: 'Reveal in Finder',
+					leading: revealIcon,
+					disabled: !repositoryActions.repository,
+					onSelect: repositoryActions.reveal
 				},
-				content: {
-					style: css.raw({
-						p: '3xs',
-						gap: '3xs',
-						flexDirection: 'column'
-					})
+				{ type: 'separator', id: 'sep' },
+				{
+					type: 'action',
+					id: 'remove',
+					label: 'Remove',
+					feedback: 'danger',
+					leading: removeIcon,
+					onSelect: () => (removeModalOpen = true)
 				}
-			}}
+			] satisfies MenuNode[]}
 		>
 			{#snippet trigger(props)}
 				<Tooltip content="Repository options" placement="left">
@@ -221,7 +266,7 @@
 						<Button
 							emphasis="secondary"
 							shape="square"
-							data-testid="update-button"
+							data-testid="repository-options-button"
 							{...props}
 							{...tipProps}
 						>
@@ -232,12 +277,8 @@
 					{/snippet}
 				</Tooltip>
 			{/snippet}
+		</Menu>
 
-			{#if repositoryWatch.outOfSync}
-				<UpdateRepositoryButton {repositoryId} onRefresh={repositoryWatch.refresh} />
-			{/if}
-			<OpenRepositoryButton {repositoryId} />
-			<RemoveRepositoryModal {repositoryId} />
-		</Popover>
+		<RemoveRepositoryModal {repositoryId} bind:open={removeModalOpen} />
 	</div>
 </div>

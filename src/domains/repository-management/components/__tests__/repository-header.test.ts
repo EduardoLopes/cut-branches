@@ -84,7 +84,7 @@ describe('RepositoryHeader', () => {
 		expect(nameElement.element().textContent).toBe('');
 	});
 
-	test('should render action buttons', async () => {
+	test('should render the options menu trigger', async () => {
 		const mockData = {
 			data: {
 				id: 'test-repo-id',
@@ -101,14 +101,14 @@ describe('RepositoryHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { container } = renderWithTestWrapper(RepositoryHeader, {
+		const { getByTestId } = renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 
 		await tick();
 
-		// The component includes RestoreRepositoryButton, UpdateRepositoryButton, and RemoveRepositoryModal
-		// These components are expected to be rendered within the header
-		expect(container).toBeInTheDocument();
+		// The options Menu trigger and the (controlled) RemoveRepositoryModal are
+		// rendered within the header.
+		expect(getByTestId('repository-options-button')).toBeInTheDocument();
 	});
 });
