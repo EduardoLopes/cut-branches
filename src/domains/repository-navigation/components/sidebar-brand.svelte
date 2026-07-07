@@ -45,8 +45,9 @@
 	<div
 		class={css({
 			display: 'flex',
-			flexDirection: 'column',
+			flexDirection: 'row',
 			alignItems: 'center',
+			justifyContent: 'space-between',
 			gap: 'sm',
 			padding: 'md'
 		})}

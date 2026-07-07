@@ -12,13 +12,17 @@
 
 	interface Props {
 		headerAction?: Snippet<[]>;
-		/** When `'icon'`, the list collapses to an icons-only rail with auto tooltips. */
-		compact?: 'none' | 'icon';
+		/**
+		 * Collapses the list to a narrow rail: `'icon'` is icons-only (label as an
+		 * auto tooltip); `'stack'` shows the icon above its label. `'none'` is the
+		 * full-width list.
+		 */
+		compact?: 'none' | 'icon' | 'stack';
 	}
 
 	const { headerAction, compact = 'none' }: Props = $props();
 
-	const isRail = $derived(compact === 'icon');
+	const isRail = $derived(compact !== 'none');
 
 	function makeBadgeSnippet(name: string, id: string, count: number): NavigationItem['trailing'] {
 		return createRawSnippet(() => ({

@@ -1,10 +1,12 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
+	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { type Snippet } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import RepositoryNavList from '$domains/repository-navigation/components/repository-nav-list.svelte';
 	import SidebarBrand from '$domains/repository-navigation/components/sidebar-brand.svelte';
-	import IconButton from '$ui/core/icon-button.svelte';
 	import { getLocalStorage } from '$utils/get-local-storage';
 	import { setLocalStorage } from '$utils/set-local-storage';
 	import { css } from '@pindoba/styled-system/css';
@@ -25,10 +27,29 @@
 		setLocalStorage(STORAGE_KEY, collapsed);
 	}
 
-	function goToSettings() {
-		goto(resolve('/settings'));
-	}
+	// Highlight the Settings entry while on the settings route.
+	const settingsActiveItem = $derived(
+		page.url?.pathname?.startsWith('/settings') ? 'settings' : undefined
+	);
+
+	// App-level navigation (settings and future global entries), reusing the same
+	// Navigation component as the repository list so it gets collapse + tooltips.
+	const appNavItems = $derived<NavigationItem[]>([
+		{
+			id: 'settings',
+			label: 'Settings',
+			href: resolve('/settings'),
+			leading: settingsIcon as NavigationItem['leading'],
+			'data-testid': 'sidebar-settings'
+		}
+	]);
 </script>
+
+{#snippet settingsIcon()}
+	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
+		<Icon icon="lucide:settings" />
+	</Stamp>
+{/snippet}
 
 <section
 	class={css({
@@ -42,28 +63,29 @@
 	})}
 >
 	<SidebarBrand {collapsed} onToggle={toggleSidebar} />
-	<RepositoryNavList headerAction={repositoryListAction} compact={collapsed ? 'icon' : 'none'} />
+	<RepositoryNavList headerAction={repositoryListAction} compact={collapsed ? 'stack' : 'none'} />
 
 	<div
 		class={css({
 			marginTop: 'auto',
-			padding: 'md',
+			display: 'flex',
+			px: 'md',
+			py: 'sm',
+			background: 'neutral.surface.step.1',
 			borderTopWidth: '1px',
 			borderTopStyle: 'solid',
 			borderTopColor: 'neutral.border.muted'
 		})}
-		style:display="flex"
 		style:justify-content={collapsed ? 'center' : 'flex-start'}
 	>
-		<IconButton
-			size="md"
-			shape="square"
-			emphasis="ghost"
-			icon="lucide:settings"
-			label="Settings"
-			visuallyHiddenLabel={collapsed}
-			onclick={goToSettings}
-			data-testid="sidebar-settings"
+		<Navigation
+			items={appNavItems}
+			activeItem={settingsActiveItem}
+			direction="vertical"
+			emphasis="neutral"
+			background="transparent"
+			compact={collapsed ? 'stack' : 'none'}
+			passThrough={{ root: { style: css.raw({ width: collapsed ? 'fit-content' : '100%' }) } }}
 		/>
 	</div>
 </section>
