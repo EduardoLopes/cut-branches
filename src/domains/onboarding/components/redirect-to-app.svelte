@@ -19,9 +19,11 @@
 		const currentPath = page.url.pathname;
 		const isOnReposIndex = currentPath === resolve('/repos');
 		const isOnRootPage = currentPath === resolve('/');
+		// Settings is reachable regardless of whether any repository exists.
+		const isOnSettings = currentPath === resolve('/settings');
 
 		// Land empty users in the app shell (the /repos index) if not already there
-		if (!hasRepositories && !isOnReposIndex) {
+		if (!hasRepositories && !isOnReposIndex && !isOnSettings) {
 			goto(resolve('/repos'));
 		}
 		// Redirect to first repository ONLY if on the /repos index or root page with repositories

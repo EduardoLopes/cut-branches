@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import SettingsView from '../settings-view.svelte';
+import FeatureFlagsPanel from '../feature-flags-panel.svelte';
 import type { FeatureFlagDefinition } from '$lib/feature-flags.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -29,40 +29,22 @@ beforeEach(() => {
 	h.isEnabled.mockImplementation(() => false);
 });
 
-describe('SettingsView', () => {
-	it('renders the page heading and feature-flags section', () => {
-		const screen = renderWithTestWrapper(SettingsView);
-
-		expect(screen.getByText('Settings')).toBeInTheDocument();
-		expect(screen.getByTestId('feature-flags-section')).toBeInTheDocument();
-	});
-
+describe('FeatureFlagsPanel', () => {
 	it('shows an empty state and no reset button when the registry is empty', () => {
-		const screen = renderWithTestWrapper(SettingsView);
+		const screen = renderWithTestWrapper(FeatureFlagsPanel);
 
 		expect(screen.getByTestId('feature-flags-empty')).toBeInTheDocument();
 		expect(screen.getByTestId('feature-flags-reset').elements().length).toBe(0);
 	});
 
-	it('goes back when the back button is clicked', async () => {
-		const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
-		const screen = renderWithTestWrapper(SettingsView);
-
-		await screen.getByTestId('settings-back').click();
-
-		expect(back).toHaveBeenCalled();
-		back.mockRestore();
-	});
-
 	describe('with flags in the registry', () => {
 		beforeEach(() => {
-			h.flags.length = 0;
 			h.flags.push(...FLAGS);
 			h.isEnabled.mockImplementation((key: string) => key === 'beta');
 		});
 
 		it('renders a toggle per flag reflecting its effective value', () => {
-			const screen = renderWithTestWrapper(SettingsView);
+			const screen = renderWithTestWrapper(FeatureFlagsPanel);
 
 			expect(screen.getByTestId('feature-flag-toggle').elements()).toHaveLength(2);
 			expect(screen.getByText('Alpha')).toBeInTheDocument();
@@ -70,7 +52,7 @@ describe('SettingsView', () => {
 		});
 
 		it('sets a flag when its toggle changes', async () => {
-			const screen = renderWithTestWrapper(SettingsView);
+			const screen = renderWithTestWrapper(FeatureFlagsPanel);
 
 			await screen.getByTestId('feature-flag-checkbox-alpha').click();
 
@@ -78,7 +60,7 @@ describe('SettingsView', () => {
 		});
 
 		it('resets all flags from the reset button', async () => {
-			const screen = renderWithTestWrapper(SettingsView);
+			const screen = renderWithTestWrapper(FeatureFlagsPanel);
 
 			await screen.getByTestId('feature-flags-reset').click();
 

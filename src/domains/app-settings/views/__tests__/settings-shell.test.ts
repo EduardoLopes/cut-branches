@@ -1,0 +1,89 @@
+import { createRawSnippet } from 'svelte';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import SettingsShell from '../settings-shell.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
+
+const h = vi.hoisted(() => ({ pathname: '/settings/feature-flags' }));
+
+vi.mock('$app/state', () => ({
+	page: {
+		get url() {
+			return { pathname: h.pathname };
+		}
+	}
+}));
+
+const children = createRawSnippet(() => ({
+	render: () => '<div data-testid="section-content">section content</div>'
+}));
+
+beforeEach(() => {
+	h.pathname = '/settings/feature-flags';
+});
+
+describe('SettingsShell', () => {
+	it('renders the settings title and the section menu links', () => {
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByText('Settings')).toBeInTheDocument();
+		expect(screen.getByRole('menuitem', { name: 'Feature flags' })).toBeInTheDocument();
+		expect(screen.getByRole('menuitem', { name: 'About' })).toBeInTheDocument();
+	});
+
+	it('renders the active section route content in the content area', () => {
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByTestId('section-content')).toBeInTheDocument();
+	});
+
+	it('points each menu item at its own route', () => {
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).element()).toHaveAttribute(
+			'href',
+			'/settings/feature-flags'
+		);
+		expect(screen.getByRole('menuitem', { name: 'About' }).element()).toHaveAttribute(
+			'href',
+			'/settings/about'
+		);
+	});
+
+	it('marks the section matching the current route as active', () => {
+		h.pathname = '/settings/about';
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByRole('menuitem', { name: 'About' }).element()).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).element()).not.toHaveAttribute(
+			'aria-current'
+		);
+	});
+
+	it('falls back to the first section when the route matches none', () => {
+		h.pathname = '/settings';
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).element()).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+	});
+
+	it('renders without a children snippet', () => {
+		const screen = renderWithTestWrapper(SettingsShell);
+
+		expect(screen.getByText('Settings')).toBeInTheDocument();
+		expect(screen.getByTestId('section-content').elements().length).toBe(0);
+	});
+
+	it('filters the section menu with the search input', async () => {
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		await screen.getByPlaceholder('Search settings').fill('zzz');
+
+		await vi.waitFor(() => expect(screen.getByTestId('settings-search-empty')).toBeInTheDocument());
+	});
+});
