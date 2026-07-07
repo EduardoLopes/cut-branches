@@ -148,7 +148,10 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 		}
 
 		if (added > 0) {
-			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
+			// Repository queries are keyed by resource (`['repository', ...]`), so
+			// invalidate that prefix — a plain `['getRepositoryList']` key never
+			// matches and the sidebar list wouldn't refresh.
+			queryClient.invalidateQueries({ queryKey: ['repository'] });
 
 			// Mark the freshly added repos so the list reflects reality without a
 			// re-scan, and drop them from the selection.

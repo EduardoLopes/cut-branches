@@ -179,7 +179,7 @@ describe('useDiscoverRepositories', () => {
 			expect(h.exec).toHaveBeenCalledTimes(2);
 			expect(h.exec).toHaveBeenCalledWith('createRepository', { path: '/a' });
 			expect(h.exec).toHaveBeenCalledWith('createRepository', { path: '/b' });
-			expect(h.invalidate).toHaveBeenCalledWith({ queryKey: ['getRepositoryList'] });
+			expect(h.invalidate).toHaveBeenCalledWith({ queryKey: ['repository'] });
 			expect(h.push).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Repositories added',
