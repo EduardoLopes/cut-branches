@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import path from 'path';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { playwright } from '@vitest/browser-playwright';
@@ -5,6 +6,19 @@ import { defineConfig, loadEnv } from 'vite';
 // https://vitejs.dev/config/
 
 const host = process.env.TAURI_DEV_HOST;
+
+// Build-time metadata surfaced on the About page. Resolved once at config load;
+// falls back gracefully when git is unavailable (e.g. a source tarball).
+const gitCommit = (() => {
+	try {
+		return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+			.toString()
+			.trim();
+	} catch {
+		return 'unknown';
+	}
+})();
+const buildDate = new Date().toISOString();
 
 // Maps each Pindoba package name to its source path inside a sibling Pindoba
 // monorepo checkout (../pindoba/packages/<path>). Only used when
@@ -193,7 +207,9 @@ export default defineConfig(({ mode }) => {
 			sourcemap: !!process.env.TAURI_DEBUG
 		},
 		define: {
-			__APP_VERSION__: JSON.stringify(process.env.npm_package_version)
+			__APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+			__APP_COMMIT__: JSON.stringify(gitCommit),
+			__BUILD_DATE__: JSON.stringify(buildDate)
 		},
 		// Pre-bundle the Tauri deps so the browser-mode test server optimizes them
 		// up front. Otherwise `vitest related <subset>` discovers them mid-run

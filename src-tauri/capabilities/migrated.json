@@ -7,6 +7,7 @@
   ],
   "permissions": [
     "core:default",
+    "core:path:allow-resolve-directory",
     "dialog:allow-open",
     "dialog:allow-save",
     "dialog:allow-message",
@@ -15,6 +16,10 @@
     "dialog:default",
     "shell:default",
     "opener:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "$APPLOG" }, { "path": "$APPLOG/**" }]
+    },
     "log:default"
   ]
 }
