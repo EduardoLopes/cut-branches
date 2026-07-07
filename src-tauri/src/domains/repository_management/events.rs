@@ -27,6 +27,21 @@ impl Event for RepositoryChangedEvent {
     const NAME: &'static str = "repository-changed";
 }
 
+/// Emitted periodically while `discover_repositories` walks the filesystem so
+/// the UI can show live scan progress (folders visited, repositories found so
+/// far). Throttled by the command to avoid flooding the event channel.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct RepositoryScanProgressEvent {
+    pub scanned_dirs: u32,
+    pub found_count: u32,
+    pub current_path: Option<String>,
+}
+
+impl Event for RepositoryScanProgressEvent {
+    const NAME: &'static str = "repository-scan-progress";
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
 pub struct NotificationEvent {

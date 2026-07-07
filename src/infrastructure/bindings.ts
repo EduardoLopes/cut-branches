@@ -48,7 +48,7 @@ async createRepository(input: CreateRepositoryInput) : Promise<Result<CreateRepo
 /**
  * Scans the filesystem for git repositories so the user can add many at once
  * instead of picking each folder by hand.
- *
+ * 
  * With no `roots`, the user's home directory is scanned. Scanning runs on the
  * blocking thread pool since large trees can take a moment to walk.
  * 
@@ -453,14 +453,16 @@ branchRestored: BranchRestoredEvent,
 branchSwitched: BranchSwitchedEvent,
 notification: NotificationEvent,
 repositoryChanged: RepositoryChangedEvent,
-repositoryLoaded: RepositoryLoadedEvent
+repositoryLoaded: RepositoryLoadedEvent,
+repositoryScanProgress: RepositoryScanProgressEvent
 }>({
 branchDeleted: "branch-deleted",
 branchRestored: "branch-restored",
 branchSwitched: "branch-switched",
 notification: "notification",
 repositoryChanged: "repository-changed",
-repositoryLoaded: "repository-loaded"
+repositoryLoaded: "repository-loaded",
+repositoryScanProgress: "repository-scan-progress"
 })
 
 /** user-defined constants **/
@@ -553,7 +555,13 @@ repositories: DiscoveredRepository[];
  * The roots that were actually scanned (resolved home directory when the
  * caller passed no explicit roots).
  */
-scannedRoots: string[] }
+scannedRoots: string[]; 
+/**
+ * Total number of directories visited during the walk. Reported so the UI
+ * can show a truthful final count even when the scan was too fast for the
+ * throttled progress events to keep up.
+ */
+scannedDirs: number }
 export type DiscoveredRepository = { 
 /**
  * Absolute path to the repository's working directory.
@@ -629,6 +637,12 @@ export type Repository = { id: string; name: string; path: string; currentBranch
  */
 export type RepositoryChangedEvent = { repositoryId: string }
 export type RepositoryLoadedEvent = { repositoryPath: string; repositoryName: string; branchesCount: number }
+/**
+ * Emitted periodically while `discover_repositories` walks the filesystem so
+ * the UI can show live scan progress (folders visited, repositories found so
+ * far). Throttled by the command to avoid flooding the event channel.
+ */
+export type RepositoryScanProgressEvent = { scannedDirs: number; foundCount: number; currentPath: string | null }
 export type RestoreBranchResult = { success: boolean; branchName: string; message: string; requiresUserAction: boolean; conflictDetails: ConflictDetails | null; skipped: boolean; branch: Branch | null }
 /**
  * Filter for branch selection status

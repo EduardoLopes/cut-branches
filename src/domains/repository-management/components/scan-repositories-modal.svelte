@@ -1,9 +1,12 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { MenuNode } from '@pindoba/core-menu';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
-	import Loading from '@pindoba/svelte-loading';
+	import Group from '@pindoba/svelte-group';
+	import Menu from '@pindoba/svelte-menu';
+	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { open as openFolderDialog } from '@tauri-apps/plugin-dialog';
 	import { useDiscoverRepositories } from '../core/composables/use-discover-repositories.svelte';
@@ -28,6 +31,24 @@
 	let customRoots = $state<string[] | null>(null);
 	// Guards the open-effect so the initial scan runs once per opening.
 	let started = $state(false);
+	// Local scanning flag with a floor duration so a fast scan doesn't flash the
+	// spinner and snap the modal's shape (see `runScan`).
+	let scanning = $state(false);
+	const MIN_SCAN_MS = 300;
+	// Elapsed time shown while scanning; ticks on a light interval.
+	let elapsedMs = $state(0);
+
+	$effect(() => {
+		if (!scanning) {
+			elapsedMs = 0;
+			return;
+		}
+		const start = Date.now();
+		const id = setInterval(() => {
+			elapsedMs = Date.now() - start;
+		}, 100);
+		return () => clearInterval(id);
+	});
 
 	const discover = useDiscoverRepositories({
 		onAdded: () => {
@@ -46,12 +67,27 @@
 	const allSelected = $derived(
 		discover.addableCount > 0 && discover.selectedCount === discover.addableCount
 	);
+	// Some, but not all, addable repositories selected → the select-all control
+	// shows the indeterminate ("mixed") state.
+	const someSelected = $derived(
+		discover.selectedCount > 0 && discover.selectedCount < discover.addableCount
+	);
 
 	async function runScan() {
+		scanning = true;
+		const startedAt = Date.now();
 		try {
 			await discover.scan(customRoots ?? []);
 		} catch {
 			// The mutation already surfaces an error notification via its meta.
+		} finally {
+			// Keep the spinner up for a minimum time so a sub-100ms scan doesn't
+			// flicker the loading state and resize the modal in a jarring flash.
+			const elapsed = Date.now() - startedAt;
+			if (elapsed < MIN_SCAN_MS) {
+				await new Promise((resolve) => setTimeout(resolve, MIN_SCAN_MS - elapsed));
+			}
+			scanning = false;
 		}
 	}
 
@@ -111,7 +147,15 @@
 			}
 		}}
 	>
-		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'lg', minHeight: '320px' })}>
+		<div
+			class={css({
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 'lg',
+				width: 'full',
+				minHeight: '320px'
+			})}
+		>
 			<p class={css({ margin: '0', color: 'neutral.text.muted', fontSize: 'sm' })}>
 				Scan a location on this computer for git repositories, then choose which ones to add.
 			</p>
@@ -125,6 +169,9 @@
 					gap: 'md',
 					padding: 'md',
 					borderRadius: 'lg',
+					borderWidth: '1px',
+					borderStyle: 'solid',
+					borderColor: 'neutral.border.muted',
 					background: 'neutral.surface.soft'
 				})}
 			>
@@ -145,45 +192,112 @@
 						{scanLabel}
 					</span>
 				</div>
-				<div class={css({ display: 'flex', gap: 'sm', flexShrink: '0' })}>
-					<Button
-						emphasis="ghost"
-						size="sm"
-						onclick={scanHome}
-						disabled={discover.isScanning}
-						data-testid="scan-home-button"
-					>
-						Home folder
-					</Button>
-					<Button
-						emphasis="secondary"
-						size="sm"
-						onclick={chooseFolder}
-						disabled={discover.isScanning}
-						data-testid="choose-folder-button"
-					>
-						Choose folder…
-					</Button>
+				<div class={css({ flexShrink: '0' })}>
+					{#snippet homeIcon()}
+						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+							<Icon icon="lucide:house" width="14px" height="14px" />
+						</Stamp>
+					{/snippet}
+
+					<Group orientation="horizontal">
+						<Button
+							emphasis="secondary"
+							size="sm"
+							onclick={chooseFolder}
+							disabled={scanning}
+							data-testid="choose-folder-button"
+						>
+							Choose folder…
+						</Button>
+						<Menu
+							placement="bottom-end"
+							aria-label="Scan location options"
+							items={[
+								{
+									type: 'action',
+									id: 'home',
+									label: 'Home folder',
+									leading: homeIcon,
+									disabled: scanning,
+									onSelect: scanHome
+								} satisfies MenuNode
+							]}
+						>
+							{#snippet trigger(triggerProps)}
+								<Button
+									emphasis="secondary"
+									size="sm"
+									shape="square"
+									aria-label="More scan locations"
+									disabled={scanning}
+									data-testid="scan-location-menu-trigger"
+									{...triggerProps}
+								>
+									<Stamp emphasis="ghost" border="none" background="transparent">
+										<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+									</Stamp>
+								</Button>
+							{/snippet}
+						</Menu>
+					</Group>
 				</div>
 			</div>
 
-			<!-- Results -->
-			<div class={css({ position: 'relative', flex: '1', minHeight: '160px' })}>
-				{#if discover.isScanning}
+			<!-- Results panel (fixed height so the modal doesn't resize between states) -->
+			<div
+				class={css({
+					display: 'flex',
+					flexDirection: 'column',
+					height: '320px',
+					borderRadius: 'lg',
+					borderWidth: '1px',
+					borderStyle: 'solid',
+					borderColor: 'neutral.border.muted',
+					background: 'neutral.surface.soft',
+					overflow: 'hidden'
+				})}
+			>
+				{#if scanning}
 					<div
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
 							alignItems: 'center',
 							justifyContent: 'center',
-							gap: 'sm',
-							height: 'full',
+							gap: 'md',
+							flex: '1',
+							paddingX: '2xl',
 							color: 'neutral.text.muted'
 						})}
 						data-testid="scan-loading"
 					>
-						<Loading loading />
-						<span class={css({ fontSize: 'sm' })}>Scanning for repositories…</span>
+						<span class={css({ fontSize: 'sm', fontWeight: 'medium', color: 'neutral.text' })}>
+							Scanning for repositories…
+						</span>
+						<div class={css({ width: 'full', maxWidth: '320px' })}>
+							<Progress indeterminate size="sm" />
+						</div>
+						<div
+							class={css({
+								display: 'flex',
+								flexDirection: 'column',
+								alignItems: 'center',
+								gap: '2xs'
+							})}
+						>
+							<span
+								class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}
+								data-testid="scan-progress-counts"
+							>
+								{(discover.progress?.scannedDirs ?? 0).toLocaleString()}
+								{(discover.progress?.scannedDirs ?? 0) === 1 ? 'folder' : 'folders'} scanned ·
+								{(discover.progress?.foundCount ?? 0).toLocaleString()}
+								{(discover.progress?.foundCount ?? 0) === 1 ? 'repository' : 'repositories'} found
+							</span>
+							<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
+								Elapsed {(elapsedMs / 1000).toFixed(1)}s
+							</span>
+						</div>
 					</div>
 				{:else if discover.hasScanned && discover.results.length === 0}
 					<div
@@ -193,7 +307,7 @@
 							alignItems: 'center',
 							justifyContent: 'center',
 							gap: 'sm',
-							height: 'full',
+							flex: '1',
 							textAlign: 'center',
 							color: 'neutral.text.muted'
 						})}
@@ -203,22 +317,46 @@
 							<Icon icon="lucide:search-x" width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No git repositories found in this location.</span>
+						<span class={css({ fontSize: 'xs' })} data-testid="scan-summary">
+							Scanned {(discover.progress?.scannedDirs ?? 0).toLocaleString()}
+							{(discover.progress?.scannedDirs ?? 0) === 1 ? 'folder' : 'folders'}
+						</span>
 					</div>
 				{:else if discover.results.length > 0}
-					<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
+					<!-- List header (anchored one step deeper than the rows well) -->
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '2xs',
+							paddingX: 'sm',
+							paddingY: 'xs',
+							borderBottomWidth: '1px',
+							borderBottomStyle: 'solid',
+							borderBottomColor: 'neutral.border.muted',
+							background: 'neutral.surface.step.1'
+						})}
+					>
+						<span
+							class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}
+							data-testid="scan-summary"
+						>
+							Found {discover.results.length.toLocaleString()}
+							{discover.results.length === 1 ? 'repository' : 'repositories'} ·
+							{(discover.progress?.scannedDirs ?? 0).toLocaleString()}
+							{(discover.progress?.scannedDirs ?? 0) === 1 ? 'folder' : 'folders'} scanned
+						</span>
 						<div
 							class={css({
 								display: 'flex',
 								alignItems: 'center',
-								justifyContent: 'space-between',
-								paddingBottom: 'xs',
-								borderBottom: '1px solid',
-								borderColor: 'neutral.border.muted'
+								justifyContent: 'space-between'
 							})}
 						>
 							<Checkbox
 								id="scan-select-all"
 								checked={allSelected}
+								indeterminate={someSelected}
 								disabled={discover.addableCount === 0}
 								onchange={() => discover.setAll(!allSelected)}
 								data-testid="scan-select-all"
@@ -229,58 +367,102 @@
 								{discover.selectedCount} of {discover.addableCount} selected
 							</span>
 						</div>
+					</div>
 
-						<div
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								gap: '2xs',
-								maxHeight: '260px',
-								overflowY: 'auto',
-								paddingTop: 'xs'
-							})}
-						>
-							{#each discover.results as item (item.path)}
-								<Checkbox
-									id={`scan-item-${item.path}`}
-									checked={item.alreadyAdded || discover.isSelected(item.path)}
-									disabled={item.alreadyAdded}
-									onchange={() => discover.toggle(item.path)}
-									data-testid="scan-item"
+					<!-- Rows -->
+					<div
+						class={css({
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '3xs',
+							flex: '1',
+							overflowY: 'auto',
+							padding: '2xs'
+						})}
+					>
+						{#each discover.results as item (item.path)}
+							{@const selected = discover.isSelected(item.path)}
+							<Checkbox
+								fullWidth
+								checked={item.alreadyAdded || selected}
+								disabled={item.alreadyAdded}
+								onchange={() => discover.toggle(item.path)}
+								aria-label={item.name}
+								data-testid="scan-item"
+								class={css({
+									borderRadius: 'md',
+									paddingX: 'sm',
+									paddingY: 'xs',
+									opacity: item.alreadyAdded ? 0.6 : 1,
+									background:
+										selected && !item.alreadyAdded ? 'neutral.surface.step.2' : 'transparent',
+									_hover: {
+										background: item.alreadyAdded
+											? undefined
+											: selected
+												? 'neutral.surface.step.3'
+												: 'neutral.surface.step.1'
+									}
+								})}
+							>
+								<span
+									class={css({
+										display: 'flex',
+										flexDirection: 'column',
+										gap: '2xs',
+										minWidth: '0'
+									})}
 								>
-									<span class={css({ display: 'flex', flexDirection: 'column' })}>
-										<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}>{item.name}</span>
+									<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}>{item.name}</span>
+									<span
+										class={css({
+											fontSize: 'xs',
+											color: 'neutral.text.muted',
+											overflow: 'hidden',
+											textOverflow: 'ellipsis',
+											whiteSpace: 'nowrap'
+										})}
+									>
+										{item.path}
+									</span>
+								</span>
+								{#snippet trailing()}
+									{#if item.alreadyAdded}
 										<span
 											class={css({
 												fontSize: 'xs',
+												fontWeight: 'medium',
 												color: 'neutral.text.muted',
-												overflow: 'hidden',
-												textOverflow: 'ellipsis',
-												whiteSpace: 'nowrap'
+												background: 'neutral.surface.step.2',
+												paddingX: 'xs',
+												paddingY: '4xs',
+												borderRadius: 'full',
+												flexShrink: '0'
 											})}
+											data-testid="scan-item-added"
 										>
-											{item.path}
+											Added
 										</span>
-									</span>
-									{#snippet trailing()}
-										{#if item.alreadyAdded}
-											<span
-												class={css({ fontSize: 'xs', color: 'primary.text' })}
-												data-testid="scan-item-added"
-											>
-												Added
-											</span>
-										{/if}
-									{/snippet}
-								</Checkbox>
-							{/each}
-						</div>
+									{/if}
+								{/snippet}
+							</Checkbox>
+						{/each}
 					</div>
 				{/if}
 			</div>
 
 			<!-- Footer -->
-			<div class={css({ display: 'flex', justifyContent: 'flex-end', gap: 'sm' })}>
+			<div
+				class={css({
+					display: 'flex',
+					justifyContent: 'flex-end',
+					gap: 'sm',
+					paddingTop: 'md',
+					borderTopWidth: '1px',
+					borderTopStyle: 'solid',
+					borderTopColor: 'neutral.border.muted'
+				})}
+			>
 				<Button emphasis="ghost" onclick={() => (open = false)} data-testid="scan-cancel">
 					Close
 				</Button>

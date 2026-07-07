@@ -37,22 +37,39 @@ const MAX_RESULTS: usize = 1000;
 /// directories, known build/cache/system directories, and symlinks are pruned.
 ///
 /// Results are de-duplicated by canonical path and capped at [`MAX_RESULTS`].
-pub fn find_git_repositories(roots: &[PathBuf], max_depth: usize) -> Vec<PathBuf> {
-    find_git_repositories_with(roots, max_depth, |path| {
-        matches!(is_git_repository(path), Ok(true))
-    })
+/// Recursively scans `roots` for git repositories, invoking
+/// `on_progress(scanned_dirs, found_count, current_dir)` as the walk proceeds so
+/// callers can surface live progress. It is called roughly once per directory
+/// visited — throttle inside the callback if emissions are expensive.
+pub fn find_git_repositories_reporting<F>(
+    roots: &[PathBuf],
+    max_depth: usize,
+    on_progress: F,
+) -> Vec<PathBuf>
+where
+    F: FnMut(u32, u32, Option<&Path>),
+{
+    walk(
+        roots,
+        max_depth,
+        |path| matches!(is_git_repository(path), Ok(true)),
+        on_progress,
+    )
 }
 
-/// Core traversal, generic over the "is this a repository?" predicate so the
-/// pruning/depth/dedup logic can be tested without creating real git repos.
-fn find_git_repositories_with<F>(roots: &[PathBuf], max_depth: usize, is_repo: F) -> Vec<PathBuf>
+/// Core traversal, generic over the "is this a repository?" predicate (so the
+/// pruning/depth/dedup logic can be tested without creating real git repos) and
+/// a progress callback.
+fn walk<R, F>(roots: &[PathBuf], max_depth: usize, is_repo: R, mut on_progress: F) -> Vec<PathBuf>
 where
-    F: Fn(&Path) -> bool,
+    R: Fn(&Path) -> bool,
+    F: FnMut(u32, u32, Option<&Path>),
 {
     let mut found: Vec<PathBuf> = Vec::new();
     let mut seen: HashSet<PathBuf> = HashSet::new();
     // Explicit DFS stack of (directory, depth-below-its-root).
     let mut stack: Vec<(PathBuf, usize)> = Vec::new();
+    let mut scanned_dirs: u32 = 0;
 
     for root in roots {
         if root.is_dir() {
@@ -64,6 +81,9 @@ where
         if found.len() >= MAX_RESULTS {
             break;
         }
+
+        scanned_dirs = scanned_dirs.saturating_add(1);
+        on_progress(scanned_dirs, found.len() as u32, Some(&dir));
 
         // A directory that is itself a repository is recorded and not descended
         // into: nested repositories and submodules are deliberately skipped.
@@ -109,6 +129,17 @@ where
 /// directories (leading `.`) and the well-known heavy/system directories.
 fn is_pruned_dir(name: &str) -> bool {
     name.starts_with('.') || PRUNED_DIR_NAMES.contains(&name)
+}
+
+/// Test helper: walk with the given repository predicate and no progress
+/// reporting.
+#[cfg(test)]
+fn find_git_repositories_with<F: Fn(&Path) -> bool>(
+    roots: &[PathBuf],
+    max_depth: usize,
+    is_repo: F,
+) -> Vec<PathBuf> {
+    walk(roots, max_depth, is_repo, |_, _, _| {})
 }
 
 #[cfg(test)]
@@ -224,7 +255,7 @@ mod tests {
         let repo = tmp.path().join("repo");
         mark_repo(&repo);
 
-        let found = find_git_repositories_with(&[repo.clone()], 10, has_git_marker);
+        let found = find_git_repositories_with(std::slice::from_ref(&repo), 10, has_git_marker);
         assert_eq!(found, vec![repo]);
     }
 
@@ -234,7 +265,7 @@ mod tests {
         let root = tmp.path();
 
         // A directory with a bare `.git` marker but no real git metadata must
-        // NOT be reported by the production `find_git_repositories`.
+        // NOT be reported by the production (real-git) predicate.
         mark_repo(&root.join("fake"));
 
         // A real, committed repository must be reported.
@@ -242,7 +273,7 @@ mod tests {
         fs::create_dir_all(&real).unwrap();
         init_repo_with_commit(&real);
 
-        let found = find_git_repositories(&[root.to_path_buf()], 10);
+        let found = find_git_repositories_reporting(&[root.to_path_buf()], 10, |_, _, _| {});
         assert_eq!(found, vec![real]);
     }
 

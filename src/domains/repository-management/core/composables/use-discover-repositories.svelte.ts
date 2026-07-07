@@ -1,6 +1,8 @@
 import { useQueryClient } from '@tanstack/svelte-query';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { SvelteSet } from 'svelte/reactivity';
 import { createDiscoverRepositoriesMutation } from '$domains/repository-management/infrastructure/mutations/create-discover-repositories-mutation';
+import type { RepositoryScanProgressEvent } from '$infrastructure/bindings';
 import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 import { executeCommand } from '$infrastructure/tauri-commands';
 import { notifications } from '$services/notifications/notifications.svelte';
@@ -11,6 +13,12 @@ export interface DiscoveredItem {
 	name: string;
 	/** True when a repository with this path is already in the list. */
 	alreadyAdded: boolean;
+}
+
+/** Live progress of an in-flight scan, streamed from the backend. */
+export interface ScanProgress {
+	scannedDirs: number;
+	foundCount: number;
 }
 
 interface UseDiscoverRepositoriesOptions {
@@ -40,6 +48,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 	let scannedRoots = $state<string[]>([]);
 	let hasScanned = $state(false);
 	let isAdding = $state(false);
+	let progress = $state<ScanProgress | null>(null);
 
 	const existingPaths = $derived(
 		new SvelteSet((repositoryListQuery.data ?? []).map((repo) => repo.path))
@@ -57,19 +66,44 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 	 * previous results and pre-selecting every not-yet-added repository.
 	 */
 	async function scan(roots: string[] = []) {
-		const output = await discoverMutation.mutateAsync({ roots, maxDepth: null });
+		progress = { scannedDirs: 0, foundCount: 0 };
 
-		scannedRoots = output.scannedRoots;
-		results = output.repositories.map((repo) => ({
-			path: repo.path,
-			name: repo.name,
-			alreadyAdded: existingPaths.has(repo.path)
-		}));
-		selected.clear();
-		for (const item of results) {
-			if (!item.alreadyAdded) selected.add(item.path);
+		// Stream live progress from the backend while the walk runs. `listen`
+		// rejects outside a Tauri runtime (e.g. tests) — degrade gracefully.
+		let unlisten: UnlistenFn | null = null;
+		try {
+			unlisten = await listen<RepositoryScanProgressEvent>('repository-scan-progress', (event) => {
+				progress = {
+					scannedDirs: event.payload.scannedDirs,
+					foundCount: event.payload.foundCount
+				};
+			});
+		} catch {
+			unlisten = null;
 		}
-		hasScanned = true;
+
+		try {
+			const output = await discoverMutation.mutateAsync({ roots, maxDepth: null });
+
+			scannedRoots = output.scannedRoots;
+			results = output.repositories.map((repo) => ({
+				path: repo.path,
+				name: repo.name,
+				alreadyAdded: existingPaths.has(repo.path)
+			}));
+			selected.clear();
+			for (const item of results) {
+				if (!item.alreadyAdded) selected.add(item.path);
+			}
+			hasScanned = true;
+			// Set the final counts from the command result so they're truthful even
+			// when the scan finished too fast for the throttled events to catch up.
+			progress = { scannedDirs: output.scannedDirs, foundCount: results.length };
+		} finally {
+			// Stop listening; keep the last counts so they stay visible during the
+			// modal's brief minimum-loading window.
+			unlisten?.();
+		}
 	}
 
 	/** Toggles a single result's selection. No-op for already-added repos. */
@@ -153,6 +187,9 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 		},
 		get isScanning() {
 			return discoverMutation.isPending;
+		},
+		get progress() {
+			return progress;
 		},
 		get isAdding() {
 			return isAdding;

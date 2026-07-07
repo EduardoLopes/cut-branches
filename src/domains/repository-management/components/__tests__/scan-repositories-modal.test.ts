@@ -34,6 +34,7 @@ function makeStub(overrides: Record<string, any> = {}) {
 		scannedRoots: [],
 		hasScanned: false,
 		isScanning: false,
+		progress: null,
 		isAdding: false,
 		selectedCount: 0,
 		addableCount: 0,
@@ -112,9 +113,9 @@ describe('ScanRepositoriesModal', () => {
 		it('shows an empty state when a scan finds nothing', async () => {
 			h.stub = makeStub({ hasScanned: true, results: [] });
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
-			await tick();
 
-			expect(screen.getByTestId('scan-empty')).toBeInTheDocument();
+			// The spinner holds for a minimum duration; wait for it to settle.
+			await vi.waitFor(() => expect(screen.getByTestId('scan-empty')).toBeInTheDocument());
 		});
 
 		it('lists results with a select-all control and an added marker', async () => {
@@ -128,9 +129,8 @@ describe('ScanRepositoriesModal', () => {
 				isSelected: vi.fn((p: string) => p === '/a')
 			});
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
-			await tick();
 
-			expect(screen.getByTestId('scan-select-all')).toBeInTheDocument();
+			await vi.waitFor(() => expect(screen.getByTestId('scan-select-all')).toBeInTheDocument());
 			expect(screen.getByTestId('scan-item').elements()).toHaveLength(2);
 			expect(screen.getByTestId('scan-item-added')).toBeInTheDocument();
 			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Add 1 repository');
@@ -159,13 +159,20 @@ describe('ScanRepositoriesModal', () => {
 			});
 		});
 
-		it('re-scans the home folder from the Home folder button', async () => {
+		it('re-scans the home folder from the Home folder menu option', async () => {
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
-			await tick();
+			// Let the initial auto-scan settle so the split-button menu is enabled.
+			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements().length).toBe(1));
 			h.stub.scan.mockClear();
 
-			await screen.getByTestId('scan-home-button').click();
-			expect(h.stub.scan).toHaveBeenCalledWith([]);
+			await screen.getByTestId('scan-location-menu-trigger').click();
+			await tick();
+			await screen
+				.getByRole('menuitem', { name: /home folder/i })
+				.first()
+				.click();
+
+			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith([]));
 		});
 
 		it('scans a chosen folder from the Choose folder button', async () => {

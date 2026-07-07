@@ -33,7 +33,7 @@ use domains::repository_management::commands::{
     WATCH_DEBOUNCE,
 };
 use domains::repository_management::events::{
-    NotificationEvent, RepositoryChangedEvent, RepositoryLoadedEvent,
+    NotificationEvent, RepositoryChangedEvent, RepositoryLoadedEvent, RepositoryScanProgressEvent,
 };
 use shared::infrastructure::watcher::WatcherState;
 
@@ -109,6 +109,7 @@ fn main() {
             BranchSwitchedEvent,
             RepositoryLoadedEvent,
             RepositoryChangedEvent,
+            RepositoryScanProgressEvent,
             NotificationEvent
         ]);
 

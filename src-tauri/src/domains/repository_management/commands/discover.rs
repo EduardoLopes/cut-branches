@@ -1,10 +1,17 @@
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
+use tauri_specta::Event;
 
+use crate::domains::repository_management::events::RepositoryScanProgressEvent;
 use crate::domains::repository_management::infrastructure::scanner;
 use crate::shared::error::AppError;
+
+/// Minimum gap between scan-progress events, so a fast walk doesn't flood the
+/// event channel.
+const PROGRESS_THROTTLE: Duration = Duration::from_millis(80);
 
 /// Default maximum depth to descend below each scan root. Deep enough to reach
 /// repositories nested a few folders down (e.g. `~/dev/org/project`) without
@@ -39,6 +46,10 @@ pub struct DiscoverRepositoriesOutput {
     /// The roots that were actually scanned (resolved home directory when the
     /// caller passed no explicit roots).
     pub scanned_roots: Vec<String>,
+    /// Total number of directories visited during the walk. Reported so the UI
+    /// can show a truthful final count even when the scan was too fast for the
+    /// throttled progress events to keep up.
+    pub scanned_dirs: u32,
 }
 
 /// Scans the filesystem for git repositories so the user can add many at once
@@ -89,9 +100,33 @@ pub async fn discover_repositories(
     );
 
     // Filesystem walking can take a moment on large trees; run it on the
-    // blocking pool so we don't stall the async runtime.
-    let found = tokio::task::spawn_blocking(move || {
-        scanner::find_git_repositories(&roots, max_depth)
+    // blocking pool so we don't stall the async runtime. Progress is streamed to
+    // the frontend via throttled `RepositoryScanProgressEvent`s.
+    let app_for_scan = app.clone();
+    let (found, scanned_dirs) = tokio::task::spawn_blocking(move || {
+        let mut last_emit: Option<Instant> = None;
+        let mut total_dirs: u32 = 0;
+        let repos = scanner::find_git_repositories_reporting(
+            &roots,
+            max_depth,
+            |scanned_dirs, found_count, current| {
+                total_dirs = scanned_dirs;
+                let due = match last_emit {
+                    Some(at) => at.elapsed() >= PROGRESS_THROTTLE,
+                    None => true,
+                };
+                if due {
+                    last_emit = Some(Instant::now());
+                    let _ = RepositoryScanProgressEvent {
+                        scanned_dirs,
+                        found_count,
+                        current_path: current.map(|p| p.to_string_lossy().into_owned()),
+                    }
+                    .emit(&app_for_scan);
+                }
+            },
+        );
+        (repos, total_dirs)
     })
     .await
     .map_err(|e| {
@@ -119,5 +154,6 @@ pub async fn discover_repositories(
     Ok(DiscoverRepositoriesOutput {
         repositories,
         scanned_roots,
+        scanned_dirs,
     })
 }

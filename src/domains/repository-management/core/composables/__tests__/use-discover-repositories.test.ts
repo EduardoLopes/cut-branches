@@ -46,7 +46,7 @@ function mount(options?: { onAdded?: (count: number) => void }) {
 }
 
 function scanOutput(repositories: Array<{ path: string; name: string }>, scanned: string[] = []) {
-	return { repositories, scannedRoots: scanned };
+	return { repositories, scannedRoots: scanned, scannedDirs: repositories.length };
 }
 
 beforeEach(() => {
