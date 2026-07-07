@@ -32,7 +32,7 @@
 		<SidebarView>
 			{#snippet repositoryListAction()}
 				<AddRepositoryMenu
-					size="md"
+					size="sm"
 					emphasis="secondary"
 					icon="material-symbols:add-rounded"
 					visuallyHiddenLabel

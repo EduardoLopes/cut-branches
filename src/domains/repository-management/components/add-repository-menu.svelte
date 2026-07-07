@@ -9,6 +9,7 @@
 	import { useAddRepository } from '../core/composables/use-add-repository.svelte';
 	import ScanRepositoriesModal from './scan-repositories-modal.svelte';
 	import type { CreateRepositoryOutput } from '$infrastructure/bindings';
+	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props extends ButtonProps {
@@ -49,10 +50,13 @@
 	</Stamp>
 {/snippet}
 
-<Loading loading={addRepo.isPending}>
+<Loading
+	loading={addRepo.isPending}
+	passThrough={{ root: { style: css.raw({ width: 'fit-content' }) } }}
+>
 	<Group orientation="horizontal">
 		{#if visuallyHiddenLabel}
-			<Button onclick={addRepo.addFromDialog} {size} {emphasis} {...props}>
+			<Button onclick={addRepo.addFromDialog} shape="square" {size} {emphasis} {...props}>
 				<Stamp emphasis="ghost" border="none" background="transparent">
 					<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
 				</Stamp>

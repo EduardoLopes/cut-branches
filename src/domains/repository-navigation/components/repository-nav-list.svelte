@@ -104,6 +104,7 @@
 			class={css({
 				display: 'flex',
 				alignItems: 'center',
+				width: 'full',
 				minHeight: '2rem'
 			})}
 			style:justify-content={isRail ? 'center' : 'space-between'}

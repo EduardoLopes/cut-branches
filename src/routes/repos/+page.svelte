@@ -57,7 +57,7 @@
 	</div>
 
 	<AddRepositoryMenu
-		size="lg"
+		size="sm"
 		emphasis="primary"
 		onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}
 	/>
