@@ -19,20 +19,31 @@ impl r2d2::CustomizeConnection<SqliteConnection, diesel::r2d2::Error>
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), diesel::r2d2::Error> {
         use diesel::RunQueryDsl;
 
-        // Enable WAL mode for better concurrent access
-        diesel::sql_query("PRAGMA journal_mode = WAL;")
-            .execute(conn)
-            .map_err(diesel::r2d2::Error::QueryError)?;
-
-        // Set busy timeout to 5 seconds
+        // Set the busy timeout FIRST. It is a per-connection setting, and every
+        // subsequent pragma/query on this connection must be able to wait for a
+        // lock instead of failing immediately with SQLITE_BUSY ("database is
+        // locked"). Setting it before anything that can contend for a lock is
+        // what prevents those errors.
         diesel::sql_query("PRAGMA busy_timeout = 5000;")
             .execute(conn)
             .map_err(diesel::r2d2::Error::QueryError)?;
 
-        // Enable foreign keys
+        // Recommended companion to WAL: NORMAL is safe under WAL and avoids an
+        // fsync on every commit, reducing how long write locks are held.
+        diesel::sql_query("PRAGMA synchronous = NORMAL;")
+            .execute(conn)
+            .map_err(diesel::r2d2::Error::QueryError)?;
+
+        // Enable foreign keys (per-connection setting).
         diesel::sql_query("PRAGMA foreign_keys = ON;")
             .execute(conn)
             .map_err(diesel::r2d2::Error::QueryError)?;
+
+        // NOTE: `journal_mode = WAL` is intentionally NOT set here. It is a
+        // persistent, database-level setting applied once at pool init (see
+        // `initialize_pool`). Re-applying it on every checkout re-acquires a
+        // write lock each time, which was the source of the recurring
+        // "database is locked" errors.
 
         Ok(())
     }
@@ -70,8 +81,13 @@ pub fn initialize_pool(app_handle: &AppHandle) -> Result<DbPool, Box<dyn std::er
         .build(manager)
         .expect("Failed to create pool");
 
-    // Run migrations
+    // Enable WAL mode once. It is a persistent, database-level setting stored in
+    // the DB file, so it survives across connections and does not need to be
+    // re-applied on every checkout.
     let mut conn = pool.get()?;
+    diesel::sql_query("PRAGMA journal_mode = WAL;").execute(&mut conn)?;
+
+    // Run migrations
     conn.run_pending_migrations(MIGRATIONS)
         .expect("Failed to run migrations");
 
