@@ -7,6 +7,7 @@
 	import Menu from '@pindoba/svelte-menu';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useAddRepository } from '../core/composables/use-add-repository.svelte';
+	import ManageRepositoriesModal from './manage-repositories-modal.svelte';
 	import ScanRepositoriesModal from './scan-repositories-modal.svelte';
 	import type { CreateRepositoryOutput } from '$infrastructure/bindings';
 	import {
@@ -27,6 +28,11 @@
 		 * list is visible.
 		 */
 		withRepositorySort?: boolean;
+		/**
+		 * Adds a "Manage repositories…" action that opens the bulk-remove modal.
+		 * Only meaningful where the sidebar list is visible.
+		 */
+		withManageRepositories?: boolean;
 		onSuccess?: (data: CreateRepositoryOutput) => void;
 	}
 
@@ -36,14 +42,15 @@
 		icon = 'material-symbols:add-circle-outline-rounded',
 		visuallyHiddenLabel = false,
 		withRepositorySort = false,
+		withManageRepositories = false,
 		onSuccess,
 		...props
 	}: Props = $props();
 
-	// The base add/scan actions, optionally followed by a divider and the shared
-	// repository-sort radio group (§1.5 cross-domain seam via `$lib`).
+	// Add/scan actions, an optional "Manage repositories…" action, then an
+	// optional divider + shared repository-sort radio group (§1.5 seam via `$lib`).
 	const menuItems = $derived.by<MenuNode[]>(() => {
-		const base: MenuNode[] = [
+		const items: MenuNode[] = [
 			{
 				type: 'action',
 				id: 'scan-home',
@@ -60,33 +67,43 @@
 			}
 		];
 
-		if (!withRepositorySort) {
-			return base;
+		if (withManageRepositories) {
+			items.push({
+				type: 'action',
+				id: 'manage-repositories',
+				label: 'Manage repositories…',
+				leading: manageIcon,
+				onSelect: () => (manageOpen = true)
+			});
 		}
 
-		return [
-			...base,
-			{ type: 'separator', id: 'repository-sort-separator' },
-			{
-				type: 'radiogroup',
-				id: 'repository-sort',
-				label: 'Sort repositories',
-				value: repositorySort.mode,
-				items: REPOSITORY_SORT_OPTIONS.map((option) => ({
-					type: 'radio',
-					id: `repository-sort-${option.id}`,
-					label: option.label,
-					value: option.id
-				})),
-				onValueChange: (value: string) => repositorySort.setMode(value as RepositorySortMode)
-			}
-		];
+		if (withRepositorySort) {
+			items.push(
+				{ type: 'separator', id: 'repository-sort-separator' },
+				{
+					type: 'radiogroup',
+					id: 'repository-sort',
+					label: 'Sort repositories',
+					value: repositorySort.mode,
+					items: REPOSITORY_SORT_OPTIONS.map((option) => ({
+						type: 'radio',
+						id: `repository-sort-${option.id}`,
+						label: option.label,
+						value: option.id
+					})),
+					onValueChange: (value: string) => repositorySort.setMode(value as RepositorySortMode)
+				}
+			);
+		}
+
+		return items;
 	});
 
 	const addRepo = useAddRepository({ onSuccess });
 
 	let scanOpen = $state(false);
 	let scanScope = $state<'home' | 'folder'>('home');
+	let manageOpen = $state(false);
 
 	function openScan(scope: 'home' | 'folder') {
 		scanScope = scope;
@@ -102,6 +119,11 @@
 {#snippet folderIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
 		<Icon icon="lucide:folder-search" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+{#snippet manageIcon()}
+	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:list-checks" width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 
@@ -148,3 +170,4 @@
 </Loading>
 
 <ScanRepositoriesModal bind:open={scanOpen} scope={scanScope} />
+<ManageRepositoriesModal bind:open={manageOpen} />

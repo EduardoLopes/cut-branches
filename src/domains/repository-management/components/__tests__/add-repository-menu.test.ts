@@ -138,4 +138,28 @@ describe('AddRepositoryMenu', () => {
 			expect(localStorage.getItem('repository-nav-sort')).toBe(JSON.stringify('branches-desc'));
 		});
 	});
+
+	describe('manage repositories action', () => {
+		it('omits the manage action by default', async () => {
+			const screen = renderWithTestWrapper(AddRepositoryMenu);
+
+			await screen.getByTestId('add-repository-menu-trigger').click();
+			await tick();
+
+			await expect
+				.element(screen.getByRole('menuitem', { name: /manage repositories/i }).first())
+				.not.toBeInTheDocument();
+		});
+
+		it('offers a manage action when enabled', async () => {
+			const screen = renderWithTestWrapper(AddRepositoryMenu, { withManageRepositories: true });
+
+			await screen.getByTestId('add-repository-menu-trigger').click();
+			await tick();
+
+			await expect
+				.element(screen.getByRole('menuitem', { name: /manage repositories/i }).first())
+				.toBeInTheDocument();
+		});
+	});
 });
