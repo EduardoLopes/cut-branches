@@ -14,6 +14,8 @@ export interface FeatureFlagDefinition {
 	description: string;
 	/** Effective value when the user hasn't overridden the flag. */
 	defaultEnabled: boolean;
+	/** Optional Iconify icon name shown as a Stamp beside the flag in Settings. */
+	icon?: string;
 }
 
 /**
@@ -34,7 +36,14 @@ export interface FeatureFlagDefinition {
  *   }
  */
 export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
-	// Registry entries go here (see the JSDoc example above).
+	{
+		key: 'repository-cleanup',
+		label: 'Repository cleanup',
+		description:
+			'Reclaim disk space by deleting stale dependency/build folders (node_modules, target, …). Adds a per-repository cleanup action and a bulk cleanup page.',
+		defaultEnabled: false,
+		icon: 'lucide:brush-cleaning'
+	}
 ];
 
 /** A feature flag key. */

@@ -441,6 +441,45 @@ async deleteAllLockedBranches(input: DeleteAllLockedBranchesInput) : Promise<Res
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Scans a single repository for cleanable folders and measures each one.
+ * Sizing large trees can take a moment, so it runs on the blocking pool and
+ * streams throttled `CleanupScanProgressEvent`s.
+ */
+async scanCleanupTargets(input: ScanCleanupTargetsInput) : Promise<Result<ScanCleanupTargetsOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("scan_cleanup_targets", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Lists stale registered repositories with their reclaimable allowlisted
+ * folders. The DB read is quick and done up front; the per-repo filesystem
+ * walk runs on the blocking pool with throttled progress events.
+ */
+async listStaleRepositories(input: ListStaleRepositoriesInput) : Promise<Result<ListStaleRepositoriesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_stale_repositories", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Deletes the requested folders after re-validating each against the
+ * repository root and the effective allowlist. A failure on one target is
+ * reported per-target and does not abort the rest.
+ */
+async cleanRepository(input: CleanRepositoryInput) : Promise<Result<CleanRepositoryOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("clean_repository", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -451,18 +490,22 @@ export const events = __makeEvents__<{
 branchDeleted: BranchDeletedEvent,
 branchRestored: BranchRestoredEvent,
 branchSwitched: BranchSwitchedEvent,
+cleanupScanProgress: CleanupScanProgressEvent,
 notification: NotificationEvent,
 repositoryChanged: RepositoryChangedEvent,
 repositoryLoaded: RepositoryLoadedEvent,
-repositoryScanProgress: RepositoryScanProgressEvent
+repositoryScanProgress: RepositoryScanProgressEvent,
+staleScanProgress: StaleScanProgressEvent
 }>({
 branchDeleted: "branch-deleted",
 branchRestored: "branch-restored",
 branchSwitched: "branch-switched",
+cleanupScanProgress: "cleanup-scan-progress",
 notification: "notification",
 repositoryChanged: "repository-changed",
 repositoryLoaded: "repository-loaded",
-repositoryScanProgress: "repository-scan-progress"
+repositoryScanProgress: "repository-scan-progress",
+staleScanProgress: "stale-scan-progress"
 })
 
 /** user-defined constants **/
@@ -508,6 +551,66 @@ lockStatus?: LockStatusFilter;
 includeCurrent?: boolean }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
+export type CleanRepositoryInput = { 
+/**
+ * Repository id (used for the audit log).
+ */
+repositoryId: string; 
+/**
+ * Absolute path to the repository's working directory.
+ */
+repositoryPath: string; 
+/**
+ * Absolute paths of the folders to delete.
+ */
+targets: string[]; 
+/**
+ * Trash (recoverable) or permanent deletion.
+ */
+mode: DeletionMode; 
+/**
+ * Extra folder names the user explicitly approved from `.gitignore` assist,
+ * on top of the built-in safety allowlist.
+ */
+approvedExtra?: string[] }
+export type CleanRepositoryOutput = { 
+/**
+ * Total bytes freed across the successful targets.
+ */
+freedBytes: number; results: TargetResult[] }
+/**
+ * Emitted while `scan_cleanup_targets` measures a repository's cleanable
+ * folders (one repo, per-target sizing).
+ */
+export type CleanupScanProgressEvent = { 
+/**
+ * Number of targets measured so far.
+ */
+measured: number; 
+/**
+ * Path currently being measured.
+ */
+currentPath: string | null }
+/**
+ * A single cleanable directory and its measured size.
+ */
+export type CleanupTarget = { 
+/**
+ * Absolute path to the directory.
+ */
+path: string; 
+/**
+ * The directory's own name (last path component), e.g. `node_modules`.
+ */
+folderName: string; 
+/**
+ * Total size on disk in bytes.
+ */
+sizeBytes: number; 
+/**
+ * Why this folder was flagged.
+ */
+source: TargetSource }
 export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
 export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"
@@ -521,6 +624,18 @@ export type DeleteRepositoryInput = { id: string }
 export type DeleteRepositoryOutput = { success: boolean }
 export type DeletedBranch = { originalName: string; targetName: string; commitSha: string; conflictResolution: ConflictResolution | null }
 export type DeletedBranchInfo = { branch: Branch; rawOutput: string }
+/**
+ * Deletion strategy chosen per cleanup action.
+ */
+export type DeletionMode = 
+/**
+ * Move to the OS recycle bin — recoverable by the user (default).
+ */
+"trash" | 
+/**
+ * Permanent `remove_dir_all` — irreversible, space reclaimed immediately.
+ */
+"permanent"
 /**
  * Filter for branch deletion status
  */
@@ -595,6 +710,16 @@ export type ListDeletedBranchSelectionInput = { repoId: string }
 export type ListDeletedBranchSelectionOutput = { branches: string[] }
 export type ListLockedBranchesInput = { repoId: string }
 export type ListLockedBranchesOutput = { branches: string[] }
+export type ListStaleRepositoriesInput = { 
+/**
+ * A repository is stale when its most recent activity is older than this.
+ */
+thresholdDays?: number | null }
+export type ListStaleRepositoriesOutput = { repositories: StaleRepository[]; 
+/**
+ * Total reclaimable bytes across all stale repositories.
+ */
+totalReclaimableBytes: number }
 /**
  * Filter for branch lock status
  */
@@ -644,6 +769,16 @@ export type RepositoryLoadedEvent = { repositoryPath: string; repositoryName: st
  */
 export type RepositoryScanProgressEvent = { scannedDirs: number; foundCount: number; currentPath: string | null }
 export type RestoreBranchResult = { success: boolean; branchName: string; message: string; requiresUserAction: boolean; conflictDetails: ConflictDetails | null; skipped: boolean; branch: Branch | null }
+export type ScanCleanupTargetsInput = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+repositoryPath: string }
+export type ScanCleanupTargetsOutput = { targets: CleanupTarget[]; 
+/**
+ * Sum of all target sizes in bytes.
+ */
+totalBytes: number }
 /**
  * Filter for branch selection status
  */
@@ -662,6 +797,44 @@ export type SelectionStatusFilter =
 "all"
 export type SetBranchSelectionAllInput = { repoId: string; isSelected: boolean; deletionStatus: DeletionStatusFilter; excludeLocked?: boolean; excludeCurrent?: boolean }
 export type SetBranchSelectionAllOutput = Record<string, never>
+export type StaleRepository = { id: string; name: string; path: string; 
+/**
+ * Unix seconds of the repository's most recent activity.
+ */
+staleSince: number; reclaimableBytes: number; targets: CleanupTarget[] }
+/**
+ * Emitted while `list_stale_repositories` walks the registered repositories.
+ */
+export type StaleScanProgressEvent = { 
+/**
+ * Repositories examined so far.
+ */
+scanned: number; 
+/**
+ * Total repositories to examine.
+ */
+total: number; 
+/**
+ * Stale repositories with reclaimable space found so far.
+ */
+found: number; 
+/**
+ * Name of the repository currently being examined.
+ */
+currentName: string | null }
+export type TargetResult = { path: string; ok: boolean; bytesFreed: number; error: string | null }
+/**
+ * Why a folder was proposed for cleanup.
+ */
+export type TargetSource = 
+/**
+ * Folder name is on the configured allowlist (e.g. `node_modules`).
+ */
+"allowlist" | 
+/**
+ * Folder is ignored by the repository's `.gitignore` (assist mode).
+ */
+"gitignore"
 export type UpdateBranchSelectionBatchInput = { repoId: string; branchNames: string[]; isSelected: boolean }
 export type UpdateBranchSelectionBatchOutput = Record<string, never>
 export type UpdateCurrentBranchInput = { path: string; branch: string }

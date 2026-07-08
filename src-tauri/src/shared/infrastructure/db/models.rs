@@ -34,6 +34,31 @@ pub struct NewRepository {
     pub last_synced_at: Option<NaiveDateTime>,
 }
 
+// Cleanup history models (repository_cleanup domain)
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize, Type)]
+#[diesel(table_name = cleanup_history)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupHistoryRecord {
+    pub id: Option<i32>,
+    pub repository_id: String,
+    pub target_path: String,
+    pub folder_name: String,
+    pub bytes_freed: i64,
+    pub deletion_mode: String,
+    pub cleaned_at: NaiveDateTime,
+}
+
+#[derive(Debug, Clone, Insertable)]
+#[diesel(table_name = cleanup_history)]
+pub struct NewCleanupHistory {
+    pub repository_id: String,
+    pub target_path: String,
+    pub folder_name: String,
+    pub bytes_freed: i64,
+    pub deletion_mode: String,
+}
+
 // Branch models
 #[derive(
     Debug, Clone, Queryable, Selectable, Identifiable, Associations, Serialize, Deserialize, Type,

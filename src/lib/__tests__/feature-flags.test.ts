@@ -40,8 +40,10 @@ describe('feature flag store API', () => {
 		resetFeatureFlags();
 	});
 
-	it('ships with an empty registry', () => {
-		expect(FEATURE_FLAGS).toEqual([]);
+	it('registers the repository-cleanup flag (disabled by default)', () => {
+		const cleanup = FEATURE_FLAGS.find((f) => f.key === 'repository-cleanup');
+		expect(cleanup).toBeDefined();
+		expect(cleanup?.defaultEnabled).toBe(false);
 	});
 
 	it('defaults an unknown/undefined flag to disabled', () => {

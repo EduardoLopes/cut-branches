@@ -21,9 +21,15 @@
 
 	interface Props {
 		repositoryId: string;
+		/**
+		 * Extra options-menu actions injected by the composition root (the route),
+		 * so features owned by other domains (e.g. repository cleanup) can appear
+		 * here without this domain importing them — see §1.3.
+		 */
+		extraMenuItems?: MenuNode[];
 	}
 
-	const { repositoryId }: Props = $props();
+	const { repositoryId, extraMenuItems = [] }: Props = $props();
 
 	// Safety net for the active repo: detects (and heals) drift the global
 	// watcher may have missed. Exposes `outOfSync` so the manual Update action
@@ -249,6 +255,7 @@
 					disabled: !repositoryActions.repository,
 					onSelect: repositoryActions.reveal
 				},
+				...extraMenuItems,
 				{ type: 'separator', id: 'sep' },
 				{
 					type: 'action',

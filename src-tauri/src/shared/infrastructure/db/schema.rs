@@ -23,6 +23,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    cleanup_history (id) {
+        id -> Nullable<Integer>,
+        repository_id -> Text,
+        target_path -> Text,
+        folder_name -> Text,
+        bytes_freed -> BigInt,
+        deletion_mode -> Text,
+        cleaned_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     repositories (id) {
         id -> Text,
         name -> Text,

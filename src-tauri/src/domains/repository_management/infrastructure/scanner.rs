@@ -168,8 +168,7 @@ mod tests {
         mark_repo(&root.join("top-level"));
         mark_repo(&root.join("nested/inner/project"));
 
-        let found =
-            find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
+        let found = find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
 
         assert_eq!(found.len(), 2);
         assert!(found.contains(&root.join("top-level")));
@@ -185,8 +184,7 @@ mod tests {
         // A nested repo (e.g. a submodule) inside the found repo must be skipped.
         mark_repo(&root.join("outer/submodule"));
 
-        let found =
-            find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
+        let found = find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
 
         assert_eq!(found, vec![root.join("outer")]);
     }
@@ -199,8 +197,7 @@ mod tests {
         // Repo lives 3 levels below the root; a max_depth of 1 can't reach it.
         mark_repo(&root.join("a/b/c/repo"));
 
-        let shallow =
-            find_git_repositories_with(&[root.to_path_buf()], 1, has_git_marker);
+        let shallow = find_git_repositories_with(&[root.to_path_buf()], 1, has_git_marker);
         assert!(shallow.is_empty());
 
         let deep = find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
@@ -216,8 +213,7 @@ mod tests {
         mark_repo(&root.join("node_modules/pkg/repo"));
         mark_repo(&root.join("keep/repo"));
 
-        let found =
-            find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
+        let found = find_git_repositories_with(&[root.to_path_buf()], 10, has_git_marker);
 
         assert_eq!(found, vec![root.join("keep/repo")]);
     }

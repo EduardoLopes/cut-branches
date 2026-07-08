@@ -90,9 +90,14 @@
 
 <div
 	class={css({
-		px: 'md'
+		px: 'md',
+		flex: 1,
+		minHeight: 0,
+		display: 'flex',
+		flexDirection: 'column',
+		marginBottom: 'md'
 	})}
-	style:min-width={isRail ? 'auto' : '260px'}
+	style:width={isRail ? 'auto' : '260px'}
 >
 	<div
 		class={css({
@@ -100,8 +105,15 @@
 			flexDirection: 'column',
 			gap: 'xs',
 			borderRadius: 'lg',
+			// No right padding so the scroll box (and its scrollbar) can sit flush
+			// against the card's right edge.
 			padding: 'xs',
-			background: 'neutral.surface.deep'
+			paddingBottom: 'xs',
+			paddingLeft: 'xs',
+			paddingRight: 0,
+			background: 'neutral.surface.deep',
+			flex: 1,
+			minHeight: 0
 		})}
 	>
 		<div
@@ -127,45 +139,59 @@
 					Repositories
 				</h2>
 			{/if}
-
-			{#if headerAction}
-				{@render headerAction()}
-			{/if}
+			<div
+				class={css({
+					mr: 'xs'
+				})}
+			>
+				{#if headerAction}
+					{@render headerAction()}
+				{/if}
+			</div>
 		</div>
-		<Loading
-			loading={repositoriesQuery.isLoading}
-			passThrough={{
-				root: {
-					style: css.raw({
-						width: 'full',
-						maxHeight: 'calc(100vh - 146px)',
-						overflowY: 'auto',
-						backdropFilter: 'none'
-					})
-				}
-			}}
+		<!--
+			The scroll lives on this wrapper, NOT on <Loading>: Pindoba's Loading
+			root is `display: contents`, so it generates no box and can't scroll or
+			flex. This real div owns the bounded height + overflow instead.
+		-->
+		<div
+			class={css({
+				flex: 1,
+				minHeight: 0,
+				overflowY: 'auto',
+				width: 'full',
+				// The card no longer pads its right side, so the scroll box already
+				// reaches the card edge and the scrollbar sits flush against it. Keep a
+				// small right padding so the nav items don't tuck under the scrollbar.
+				paddingRight: 'xs'
+			})}
 		>
-			{#if items.length > 0}
-				<Navigation
-					{items}
-					activeItem={page.params.id}
-					direction="vertical"
-					emphasis="neutral"
-					background="transparent"
-					{compact}
-				/>
-			{:else}
-				<p
-					class={css({
-						textAlign: 'center',
-						padding: 'md',
-						color: 'neutral.text.muted',
-						opacity: 0.7
-					})}
-				>
-					No repositories
-				</p>
-			{/if}
-		</Loading>
+			<Loading
+				loading={repositoriesQuery.isLoading}
+				passThrough={{ root: { style: css.raw({ width: 'full', backdropFilter: 'none' }) } }}
+			>
+				{#if items.length > 0}
+					<Navigation
+						{items}
+						activeItem={page.params.id}
+						direction="vertical"
+						emphasis="neutral"
+						background="transparent"
+						{compact}
+					/>
+				{:else}
+					<p
+						class={css({
+							textAlign: 'center',
+							padding: 'md',
+							color: 'neutral.text.muted',
+							opacity: 0.7
+						})}
+					>
+						No repositories
+					</p>
+				{/if}
+			</Loading>
+		</div>
 	</div>
 </div>

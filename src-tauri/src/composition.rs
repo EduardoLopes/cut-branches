@@ -6,6 +6,8 @@
 
 use std::path::Path;
 
+use crate::domains::repository_cleanup::core::models::registered_repo::RegisteredRepo;
+use crate::domains::repository_cleanup::core::ports::RepositoryCatalog;
 use crate::domains::repository_management::core::ports::{BranchGateway, PathGateway};
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DbConnection;
@@ -44,5 +46,27 @@ pub struct PathOperationsGateway;
 impl PathGateway for PathOperationsGateway {
     fn resolve_root_path(&self, path: &Path) -> Result<String, AppError> {
         Ok(crate::domains::path_operations::infrastructure::git::resolve_workdir(path)?)
+    }
+}
+
+/// Fulfils `repository_cleanup`'s `RepositoryCatalog` port by reading the
+/// registered repositories owned by `repository_management` and projecting them
+/// into that domain's minimal `RegisteredRepo` shape (an ACL, §1.4).
+pub struct RepositoryCatalogGateway;
+
+impl RepositoryCatalog for RepositoryCatalogGateway {
+    fn list_registered(&self, conn: &mut DbConnection) -> Result<Vec<RegisteredRepo>, AppError> {
+        let repos =
+            crate::domains::repository_management::infrastructure::repositories::get_repository_list(
+                conn,
+            )?;
+        Ok(repos
+            .into_iter()
+            .map(|r| RegisteredRepo {
+                id: r.id,
+                name: r.name,
+                path: r.path,
+            })
+            .collect())
     }
 }

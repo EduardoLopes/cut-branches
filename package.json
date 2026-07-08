@@ -86,6 +86,7 @@
 		"@pindoba/panda": "alpha",
 		"@pindoba/panda-buildinfo": "alpha",
 		"@pindoba/panda-preset": "alpha",
+		"@pindoba/svelte-accordion": "alpha",
 		"@pindoba/svelte-alert": "alpha",
 		"@pindoba/svelte-attachment": "alpha",
 		"@pindoba/svelte-badge": "alpha",

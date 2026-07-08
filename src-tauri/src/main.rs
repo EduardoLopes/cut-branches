@@ -14,6 +14,7 @@ use std::sync::Arc;
 use shared::infrastructure::db;
 use tauri::Manager;
 
+use domains::repository_cleanup::core::ports::CleanupServices;
 use domains::repository_management::core::ports::RepositoryServices;
 
 use domains::branch_management::commands::{
@@ -27,6 +28,10 @@ use domains::branch_management::events::{
     BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
 };
 use domains::path_operations::commands::get_repository_root;
+use domains::repository_cleanup::commands::{
+    clean_repository, list_stale_repositories, scan_cleanup_targets,
+};
+use domains::repository_cleanup::events::{CleanupScanProgressEvent, StaleScanProgressEvent};
 use domains::repository_management::commands::{
     build_watch_callback, create_repository, delete_repository, discover_repositories,
     get_repository, get_repository_list, get_repository_sync_status, register_all_repositories,
@@ -102,6 +107,10 @@ fn main() {
             batch_create_locked_branches,
             batch_delete_locked_branches,
             delete_all_locked_branches,
+            // Repository cleanup
+            scan_cleanup_targets,
+            list_stale_repositories,
+            clean_repository,
         ])
         .events(tauri_specta::collect_events![
             BranchDeletedEvent,
@@ -110,13 +119,19 @@ fn main() {
             RepositoryLoadedEvent,
             RepositoryChangedEvent,
             RepositoryScanProgressEvent,
-            NotificationEvent
+            NotificationEvent,
+            CleanupScanProgressEvent,
+            StaleScanProgressEvent
         ]);
 
     #[cfg(debug_assertions)]
     builder
         .export(
-            specta_typescript::Typescript::default(),
+            // Byte counts and Unix timestamps in the cleanup domain use 64-bit
+            // integers; emit them as `number` (disk sizes never approach 2^53)
+            // instead of the default `Fail` behavior, which would abort export.
+            specta_typescript::Typescript::default()
+                .bigint(specta_typescript::BigIntExportBehavior::Number),
             "../src/infrastructure/bindings.ts",
         )
         .expect("Failed to export typescript bindings");
@@ -160,6 +175,9 @@ fn main() {
         .manage(RepositoryServices {
             branch: Arc::new(composition::BranchManagementGateway),
             path: Arc::new(composition::PathOperationsGateway),
+        })
+        .manage(CleanupServices {
+            catalog: Arc::new(composition::RepositoryCatalogGateway),
         })
         .invoke_handler(builder.invoke_handler())
         .setup(move |app| {
@@ -244,6 +262,7 @@ mod tests {
         // that all the handlers we reference in main() are valid
         use crate::domains::branch_management::commands;
         use crate::domains::path_operations::commands as path_commands;
+        use crate::domains::repository_cleanup::commands as cleanup_commands;
         use crate::domains::repository_management::commands as repo_commands;
 
         // Test that we can access the command functions
@@ -255,5 +274,8 @@ mod tests {
         let _ = commands::create_branch_restoration;
         let _ = commands::batch_create_branch_restorations;
         let _ = path_commands::get_repository_root;
+        let _ = cleanup_commands::scan_cleanup_targets;
+        let _ = cleanup_commands::list_stale_repositories;
+        let _ = cleanup_commands::clean_repository;
     }
 }

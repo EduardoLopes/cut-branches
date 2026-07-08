@@ -25,6 +25,9 @@ importers:
       '@pindoba/panda-preset':
         specifier: alpha
         version: 0.0.0-alpha-20260617191010
+      '@pindoba/svelte-accordion':
+        specifier: alpha
+        version: 0.0.0-alpha-20260619021129(svelte@5.43.3)(typescript@5.9.3)
       '@pindoba/svelte-alert':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.43.3)(typescript@5.9.3)
@@ -960,6 +963,9 @@ packages:
   '@pandacss/types@1.5.1':
     resolution: {integrity: sha512-fUDPtP3+yW8q5gPC2UfDcrdd/QW3H24kNt5vD30f5dt0CGDGkSoRUP4iJVNViEfQS2MzfDCnYI+PFOCw3eeQFw==}
 
+  '@pindoba/core-accordion@0.0.0-alpha-20260619021129':
+    resolution: {integrity: sha512-kzlF2va9VAJKeHoAJ8+dkOv4j5L4lg20/HfCWxSHXMMSqlXBIzULbj2Hw/75MNJa73vQiiCHejmk2c+HkIlC0A==}
+
   '@pindoba/core-affix@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-fgDATDi5nFjJTtaplHqoI1gckT1kdPQanI/8R0shpcvmkTQAjtAVdg0Eriw4O/rqPWRj/M1jdzn0GtvQ/AQJ8A==}
 
@@ -1190,6 +1196,11 @@ packages:
 
   '@pindoba/styles-tree-view@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-vMAgFAsQe1cWWKF92E0ihnxdizzEhGQwGyPSgizZIoaUmcZ0sE3jBywIekZYNu0dBsCFchmEey9x/5taJOUPPw==}
+
+  '@pindoba/svelte-accordion@0.0.0-alpha-20260619021129':
+    resolution: {integrity: sha512-iD1PpVW0ZoAhJ7Sv44eV0k/HNqRV8inFHG7RICYkNVVljY7KZlqtj2Nr+hGjlSnXeQk7S3w4D8lqlnZEU3lOFw==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   '@pindoba/svelte-affix@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-a8FJgeY3z4IoTxamCY+d/hjFBX76XEfujuBPzuhkV3a4YffU265Dl1nDrqJorh0uFWTT4zHm1ZgmXLVc2Oh8dw==}
@@ -5915,6 +5926,19 @@ snapshots:
 
   '@pandacss/types@1.5.1': {}
 
+  '@pindoba/core-accordion@0.0.0-alpha-20260619021129(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
+      '@pindoba/styles-accordion': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      nanostores: 1.4.0
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
   '@pindoba/core-affix@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/normalize-props': 0.0.0-alpha-20260617191010
@@ -6761,6 +6785,23 @@ snapshots:
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/svelte-accordion@0.0.0-alpha-20260619021129(svelte@5.43.3)(typescript@5.9.3)':
+    dependencies:
+      '@lucide/svelte': 1.23.0(svelte@5.43.3)
+      '@pindoba/core-accordion': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
+      '@pindoba/styles-accordion': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/svelte-banner': 0.0.0-alpha-20260619021129(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260619021129(svelte@5.43.3)(typescript@5.9.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260619021129(svelte@5.43.3)(typescript@5.9.3)
+      nanostores: 1.4.0
+      svelte: 5.43.3
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - jsdom

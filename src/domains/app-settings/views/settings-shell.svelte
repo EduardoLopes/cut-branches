@@ -7,6 +7,7 @@
 	import { type Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -15,17 +16,28 @@
 
 	let { children }: Props = $props();
 
-	type SectionId = 'feature-flags' | 'about';
+	type SectionId = 'feature-flags' | 'cleanup' | 'about';
 
-	const sections: { id: SectionId; label: string; icon: string; href: string }[] = [
+	// The cleanup section only appears when its feature flag is enabled.
+	const sections = $derived<{ id: SectionId; label: string; icon: string; href: string }[]>([
 		{
 			id: 'feature-flags',
 			label: 'Feature flags',
 			icon: 'lucide:flag',
 			href: resolve('/settings/feature-flags')
 		},
+		...(isFeatureEnabled('repository-cleanup')
+			? [
+					{
+						id: 'cleanup' as const,
+						label: 'Cleanup',
+						icon: 'lucide:brush-cleaning',
+						href: resolve('/settings/cleanup')
+					}
+				]
+			: []),
 		{ id: 'about', label: 'About', icon: 'lucide:info', href: resolve('/settings/about') }
-	];
+	]);
 
 	let searchQuery = $state('');
 
@@ -41,12 +53,18 @@
 	);
 	const activeSection = $derived(matchedSection ? matchedSection.id : 'feature-flags');
 
+	function iconFor(id: SectionId): NavigationItem['leading'] {
+		if (id === 'feature-flags') return flagIcon as NavigationItem['leading'];
+		if (id === 'cleanup') return cleanupIcon as NavigationItem['leading'];
+		return infoIcon as NavigationItem['leading'];
+	}
+
 	const menuItems = $derived<NavigationItem[]>(
 		filteredSections.map((section) => ({
 			id: section.id,
 			label: section.label,
 			href: section.href,
-			leading: (section.id === 'feature-flags' ? flagIcon : infoIcon) as NavigationItem['leading']
+			leading: iconFor(section.id)
 		}))
 	);
 </script>
@@ -59,6 +77,11 @@
 {#snippet flagIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
 		<Icon icon="lucide:flag" />
+	</Stamp>
+{/snippet}
+{#snippet cleanupIcon()}
+	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
+		<Icon icon="lucide:brush-cleaning" />
 	</Stamp>
 {/snippet}
 {#snippet infoIcon()}

@@ -1,0 +1,249 @@
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+import { SvelteSet } from 'svelte/reactivity';
+import { getCleanupConfig } from './use-cleanup-config.svelte';
+import { isKept, keepAll, keepNone, toggleKept } from './use-cleanup-keeplist.svelte';
+import { createListStaleRepositoriesQuery } from '$domains/repository-cleanup/infrastructure/queries/create-list-stale-repositories-query';
+import type {
+	DeletionMode,
+	StaleRepository,
+	StaleScanProgressEvent
+} from '$infrastructure/bindings';
+import { executeCommand } from '$infrastructure/tauri-commands';
+import { cleanupSummary } from '$lib/cleanup-summary.svelte';
+import { notifications } from '$services/notifications/notifications.svelte';
+import { formatBytes } from '$utils/format-bytes';
+
+/** Live progress of an in-flight stale scan, streamed from the backend. */
+export interface StaleScanProgress {
+	scanned: number;
+	total: number;
+	found: number;
+}
+
+/**
+ * Application logic for the bulk cleanup page. The scan is a cached query, so
+ * the last result is shown instantly on revisit and only re-scanned in the
+ * background when stale — the full "scanning" state appears only on the very
+ * first load. Selection is opt-out per path (a folder is cleaned unless kept,
+ * persisted per-repo in the keep-list). Cleans run sequentially, then the query
+ * refetches so the list reflects what was deleted.
+ */
+export function useStaleRepositories() {
+	const query = createListStaleRepositoriesQuery(() => ({
+		thresholdDays: getCleanupConfig().thresholdDays
+	}));
+
+	let isCleaning = $state(false);
+	let progress = $state<StaleScanProgress | null>(null);
+
+	const repositories = $derived<StaleRepository[]>(query.data?.repositories ?? []);
+	const totalReclaimableBytes = $derived(query.data?.totalReclaimableBytes ?? 0);
+
+	// Stream scan progress from the backend while a scan is in flight.
+	$effect(() => {
+		let unlisten: UnlistenFn | null = null;
+		let cancelled = false;
+		listen<StaleScanProgressEvent>('stale-scan-progress', (event) => {
+			progress = {
+				scanned: event.payload.scanned,
+				total: event.payload.total,
+				found: event.payload.found
+			};
+		})
+			.then((fn) => {
+				if (cancelled) fn();
+				else unlisten = fn;
+			})
+			.catch(() => {});
+		return () => {
+			cancelled = true;
+			unlisten?.();
+		};
+	});
+
+	// Keep the shared summary (sidebar badge) in sync with the latest scan.
+	$effect(() => {
+		if (query.data) cleanupSummary.set(query.data.totalReclaimableBytes);
+	});
+
+	/** The targets of a repo that will be cleaned (i.e. not kept). */
+	function cleanableTargets(repo: StaleRepository) {
+		return repo.targets.filter((t) => !isKept(repo.id, t.path));
+	}
+
+	const selectedBytes = $derived(
+		repositories.reduce(
+			(sum, r) => sum + cleanableTargets(r).reduce((s, t) => s + t.sizeBytes, 0),
+			0
+		)
+	);
+	/** Repositories with at least one path still selected for cleaning. */
+	const selectedRepos = $derived(repositories.filter((r) => cleanableTargets(r).length > 0));
+	const selectedCount = $derived(selectedRepos.length);
+
+	// Aggregate selection across every repository, for the "select all" control.
+	const totalTargetCount = $derived(repositories.reduce((s, r) => s + r.targets.length, 0));
+	const selectedTargetCount = $derived(
+		repositories.reduce((s, r) => s + cleanableTargets(r).length, 0)
+	);
+	const allSelected = $derived(totalTargetCount > 0 && selectedTargetCount === totalTargetCount);
+	const someSelected = $derived(selectedTargetCount > 0 && selectedTargetCount < totalTargetCount);
+
+	/** Whether a single path is selected for cleaning. */
+	function isTargetSelected(repoId: string, path: string) {
+		return !isKept(repoId, path);
+	}
+
+	/** Toggle a single path in/out of the clean selection. */
+	function toggleTarget(repoId: string, path: string) {
+		toggleKept(repoId, path);
+	}
+
+	/** How many of a repo's paths are selected for cleaning. */
+	function repoSelectedCount(repoId: string) {
+		const repo = repositories.find((r) => r.id === repoId);
+		return repo ? cleanableTargets(repo).length : 0;
+	}
+
+	/** Whether every path in a repo is selected for cleaning. */
+	function isRepoAllSelected(repoId: string) {
+		const repo = repositories.find((r) => r.id === repoId);
+		return !!repo && repo.targets.length > 0 && repoSelectedCount(repoId) === repo.targets.length;
+	}
+
+	/** Whether only some of a repo's paths are selected (indeterminate checkbox). */
+	function isRepoIndeterminate(repoId: string) {
+		const count = repoSelectedCount(repoId);
+		return count > 0 && !isRepoAllSelected(repoId);
+	}
+
+	/** Select or deselect every path across every repository for cleaning. */
+	function setAll(checked: boolean) {
+		for (const repo of repositories) {
+			if (checked) {
+				keepNone(repo.id);
+			} else {
+				keepAll(
+					repo.id,
+					repo.targets.map((t) => t.path)
+				);
+			}
+		}
+	}
+
+	/** Select or deselect every path of a repository for cleaning. */
+	function toggleRepo(repoId: string, checked: boolean) {
+		const repo = repositories.find((r) => r.id === repoId);
+		if (!repo) return;
+		if (checked) {
+			keepNone(repoId);
+		} else {
+			keepAll(
+				repoId,
+				repo.targets.map((t) => t.path)
+			);
+		}
+	}
+
+	/** Cleans every repository's selected paths sequentially in the given mode. */
+	async function cleanSelected(mode: DeletionMode) {
+		if (isCleaning || selectedRepos.length === 0) return;
+
+		isCleaning = true;
+		let freedBytes = 0;
+		let cleanedRepos = 0;
+		let failedTargets = 0;
+
+		try {
+			for (const repo of selectedRepos) {
+				const paths = cleanableTargets(repo);
+				if (paths.length === 0) continue;
+				// Folder names approved from `.gitignore` (not on the built-in allowlist).
+				const approvedExtra = [
+					...new SvelteSet(paths.filter((t) => t.source === 'gitignore').map((t) => t.folderName))
+				];
+				try {
+					const output = await executeCommand('cleanRepository', {
+						repositoryId: repo.id,
+						repositoryPath: repo.path,
+						targets: paths.map((t) => t.path),
+						mode,
+						approvedExtra
+					});
+					freedBytes += output.freedBytes;
+					failedTargets += output.results.filter((r) => !r.ok).length;
+					cleanedRepos += 1;
+				} catch {
+					// executeCommand throws on a whole-command failure; count the repo's
+					// selected targets as failed and continue with the rest.
+					failedTargets += paths.length;
+				}
+			}
+		} finally {
+			isCleaning = false;
+		}
+
+		// Re-scan so the list (and the summary, via the effect above) reflects the
+		// deletions. Runs in the background; the current data stays visible.
+		await query.refetch();
+
+		notifications.push({
+			feedback: failedTargets > 0 ? 'warning' : 'success',
+			title: `Cleaned ${cleanedRepos} ${cleanedRepos === 1 ? 'repository' : 'repositories'}`,
+			message:
+				`Reclaimed ${formatBytes(freedBytes)}` +
+				(failedTargets > 0 ? ` · ${failedTargets} folder(s) could not be deleted` : '') +
+				(mode === 'trash' ? '\n\nEmpty your Trash to actually free the space.' : '')
+		});
+	}
+
+	return {
+		get repositories() {
+			return repositories;
+		},
+		get hasScanned() {
+			return query.isSuccess;
+		},
+		/** True only on the first load (no cached data yet). */
+		get isScanning() {
+			return query.isLoading;
+		},
+		/** True when re-scanning in the background with data already shown. */
+		get isRefreshing() {
+			return query.isFetching && !query.isLoading;
+		},
+		get isCleaning() {
+			return isCleaning;
+		},
+		get progress() {
+			return progress;
+		},
+		get selectedCount() {
+			return selectedCount;
+		},
+		get selectedBytes() {
+			return selectedBytes;
+		},
+		get repositoryCount() {
+			return repositories.length;
+		},
+		get totalReclaimableBytes() {
+			return totalReclaimableBytes;
+		},
+		get allSelected() {
+			return allSelected;
+		},
+		get someSelected() {
+			return someSelected;
+		},
+		setAll,
+		isTargetSelected,
+		toggleTarget,
+		repoSelectedCount,
+		isRepoAllSelected,
+		isRepoIndeterminate,
+		toggleRepo,
+		rescan: () => query.refetch(),
+		cleanSelected
+	};
+}
