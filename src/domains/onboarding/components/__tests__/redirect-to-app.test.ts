@@ -94,6 +94,24 @@ describe('RedirectToApp', () => {
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/abc'));
 	});
 
+	it('does not redirect empty users on the settings root', async () => {
+		mockData = [];
+		mockPathname = '/settings';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
+	it('does not redirect empty users on a settings subroute', async () => {
+		mockData = [];
+		mockPathname = '/settings/feature-flags';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		expect(goto).not.toHaveBeenCalled();
+	});
+
 	it('does not redirect when repositories exist and the user is on a repository page', async () => {
 		mockData = [{ id: 'abc' }];
 		mockPathname = '/repos/abc';

@@ -19,8 +19,10 @@
 		const currentPath = page.url.pathname;
 		const isOnReposIndex = currentPath === resolve('/repos');
 		const isOnRootPage = currentPath === resolve('/');
-		// Settings is reachable regardless of whether any repository exists.
-		const isOnSettings = currentPath === resolve('/settings');
+		// Settings (and its subroutes, e.g. /settings/feature-flags) is reachable
+		// regardless of whether any repository exists.
+		const settingsRoot = resolve('/settings');
+		const isOnSettings = currentPath === settingsRoot || currentPath.startsWith(`${settingsRoot}/`);
 
 		// Land empty users in the app shell (the /repos index) if not already there
 		if (!hasRepositories && !isOnReposIndex && !isOnSettings) {
