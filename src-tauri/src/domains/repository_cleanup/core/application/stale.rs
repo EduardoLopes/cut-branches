@@ -4,7 +4,6 @@
 //! threshold. Taking the newer of the two is the conservative choice: it avoids
 //! calling an actively-edited repo stale just because git has been quiet.
 
-use std::collections::HashSet;
 use std::path::Path;
 
 use crate::domains::repository_cleanup::core::models::cleanup_target::CleanupTarget;
@@ -42,15 +41,13 @@ pub fn is_stale(activity_secs: i64, now_secs: i64, threshold_days: u32) -> bool 
 }
 
 /// Scan `repos` for stale repositories that have reclaimable cleanable folders.
-/// Discovery combines the built-in safety `allowlist` with each repo's
-/// `.gitignore` (allowlist matches win classification); this matches the
+/// Discovery is driven by each repo's `.gitignore` stack, matching the
 /// per-repository `scan_cleanup_targets` flow.
 /// `on_progress(scanned, total, found, current_name)` streams progress, where
 /// `found` is the number of stale repositories with reclaimable space so far.
 pub fn list_stale_repositories<F>(
     repos: &[RegisteredRepo],
     threshold_days: u32,
-    allowlist: &HashSet<String>,
     now_secs: i64,
     mut on_progress: F,
 ) -> Vec<StaleRepositoryData>
@@ -75,20 +72,17 @@ where
                 return None;
             }
 
-            let gitignore = scanner::build_gitignore(path);
-            let targets: Vec<CleanupTarget> =
-                scanner::find_cleanup_targets(path, allowlist, gitignore.as_ref())
-                    .into_iter()
-                    .map(|item| {
-                        let size_bytes = sizing::dir_size_bytes(&item.path);
-                        CleanupTarget {
-                            path: item.path.to_string_lossy().into_owned(),
-                            folder_name: item.folder_name,
-                            size_bytes,
-                            source: item.source,
-                        }
-                    })
-                    .collect();
+            let targets: Vec<CleanupTarget> = scanner::find_cleanup_targets(path)
+                .into_iter()
+                .map(|item| {
+                    let size_bytes = sizing::dir_size_bytes(&item.path);
+                    CleanupTarget {
+                        path: item.path.to_string_lossy().into_owned(),
+                        folder_name: item.folder_name,
+                        size_bytes,
+                    }
+                })
+                .collect();
 
             if targets.is_empty() {
                 return None;
@@ -150,7 +144,6 @@ mod tests {
 
     #[test]
     fn surfaces_gitignored_folders_in_bulk_scan() {
-        use std::collections::HashSet;
         use std::fs;
         use tempfile::TempDir;
 
@@ -165,18 +158,12 @@ mod tests {
             name: "repo".to_string(),
             path: root.to_string_lossy().into_owned(),
         };
-        // Empty allowlist so only `.gitignore` can surface targets; far-future
-        // `now` guarantees staleness regardless of the temp dir's mtime.
-        let out =
-            list_stale_repositories(&[repo], 0, &HashSet::new(), i64::MAX / 2, |_, _, _, _| {});
+        // Far-future `now` guarantees staleness regardless of the temp dir's mtime.
+        let out = list_stale_repositories(&[repo], 0, i64::MAX / 2, |_, _, _, _| {});
 
         assert_eq!(out.len(), 1);
         let targets = &out[0].targets;
         assert_eq!(targets.len(), 1);
         assert_eq!(targets[0].folder_name, "coverage");
-        assert_eq!(
-            targets[0].source,
-            crate::domains::repository_cleanup::core::models::cleanup_target::TargetSource::Gitignore
-        );
     }
 }

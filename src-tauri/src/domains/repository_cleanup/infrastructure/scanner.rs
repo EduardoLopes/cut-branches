@@ -1,52 +1,93 @@
 //! Finds cleanable folders inside a single repository (§1.1 infrastructure).
 //!
-//! A DFS walk that, for each directory, stops and records it as a target when
-//! its name is on the allowlist, or (in assist mode) when the repo's
-//! `.gitignore` ignores it. Matched targets are not descended into. `.git` is
-//! never touched; symlinks are never followed (avoids cycles and escaping the
-//! tree). Mirrors the pruning/DFS shape of `repository_management`'s scanner,
-//! inverted from "skip these" to "collect these".
+//! Discovery is driven entirely by the repository's own `.gitignore` stack:
+//! the root `.gitignore`, every nested `.gitignore`, and `.git/info/exclude`.
+//! A directory is a cleanup target when that stack ignores it. Matched targets
+//! are recorded and not descended into; `.git` is never touched; symlinks are
+//! never followed (avoids cycles and escaping the tree).
+//!
+//! The same ignore rule guards discovery here AND the deletion boundary in the
+//! validator — both go through [`evaluate_ignored`]. Keeping a single evaluator
+//! is deliberate: a destructive command must never accept something discovery
+//! wouldn't have shown. The user's *global* gitignore (`core.excludesFile`) is
+//! intentionally NOT consulted, so the boundary depends only on the repo's own
+//! contents and is deterministic across machines. Any parse/build failure
+//! fails closed (contributes nothing / not deletable).
 
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use ignore::gitignore::{Gitignore, GitignoreBuilder};
-
-use crate::domains::repository_cleanup::core::models::cleanup_target::TargetSource;
+use ignore::Match;
 
 /// A cleanable directory found by the walk, before its size is measured.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FoundTarget {
     pub path: PathBuf,
     pub folder_name: String,
-    pub source: TargetSource,
 }
 
-/// Builds the compiled `.gitignore` matcher for a repository root, or `None`
-/// when there is no `.gitignore` (or it fails to parse — assist mode then
-/// simply contributes nothing).
-pub fn build_gitignore(repo_root: &Path) -> Option<Gitignore> {
-    let gitignore_path = repo_root.join(".gitignore");
-    if !gitignore_path.is_file() {
+/// Builds a `.gitignore` matcher rooted at `dir` from that directory's
+/// `.gitignore` (and, at the repo root, `.git/info/exclude`). Returns `None`
+/// when there is nothing to load or it fails to parse (fail-closed).
+fn load_dir_ignore(dir: &Path, include_git_exclude: bool) -> Option<Gitignore> {
+    let mut builder = GitignoreBuilder::new(dir);
+    let mut any = false;
+
+    let gitignore_path = dir.join(".gitignore");
+    if gitignore_path.is_file() {
+        builder.add(&gitignore_path);
+        any = true;
+    }
+
+    if include_git_exclude {
+        let exclude_path = dir.join(".git").join("info").join("exclude");
+        if exclude_path.is_file() {
+            builder.add(&exclude_path);
+            any = true;
+        }
+    }
+
+    if !any {
         return None;
     }
-    let mut builder = GitignoreBuilder::new(repo_root);
-    builder.add(&gitignore_path);
     builder.build().ok()
 }
 
-/// Walks `repo_root` and returns every cleanable directory. When `gitignore` is
-/// `Some`, directories it ignores are also proposed (marked `Gitignore`), but
-/// allowlist matches always win the classification.
-pub fn find_cleanup_targets(
-    repo_root: &Path,
-    allowlist: &HashSet<String>,
-    gitignore: Option<&Gitignore>,
-) -> Vec<FoundTarget> {
-    let mut found: Vec<FoundTarget> = Vec::new();
-    let mut stack: Vec<PathBuf> = vec![repo_root.to_path_buf()];
+/// Decide whether `path` is ignored by the gitignore `chain`, evaluated from
+/// innermost (deepest directory, first in the slice) to outermost. The first
+/// explicit match wins — a deeper `.gitignore` overrides a shallower one, and a
+/// whitelist (`!pattern`) un-ignores. No match anywhere → not ignored.
+///
+/// This is the single source of truth for "is this ignored?", shared by
+/// discovery and the deletion boundary.
+fn evaluate_ignored(chain: &[Rc<Gitignore>], path: &Path, is_dir: bool) -> bool {
+    for gi in chain {
+        match gi.matched(path, is_dir) {
+            Match::Ignore(_) => return true,
+            Match::Whitelist(_) => return false,
+            Match::None => continue,
+        }
+    }
+    false
+}
 
-    while let Some(dir) = stack.pop() {
+/// Walks `repo_root` and returns every directory ignored by the repo's
+/// `.gitignore` stack. Ignored directories are recorded and not descended into;
+/// ignored files are skipped; `.git` and symlinks are never touched.
+pub fn find_cleanup_targets(repo_root: &Path) -> Vec<FoundTarget> {
+    let mut found: Vec<FoundTarget> = Vec::new();
+
+    // The chain applicable to a directory's direct children, innermost first.
+    // The root frame carries the root `.gitignore` + `.git/info/exclude`.
+    let root_chain: Vec<Rc<Gitignore>> = load_dir_ignore(repo_root, true)
+        .map(|gi| vec![Rc::new(gi)])
+        .unwrap_or_default();
+
+    let mut stack: Vec<(PathBuf, Vec<Rc<Gitignore>>)> =
+        vec![(repo_root.to_path_buf(), root_chain)];
+
+    while let Some((dir, chain)) = stack.pop() {
         let entries = match std::fs::read_dir(&dir) {
             Ok(entries) => entries,
             Err(_) => continue,
@@ -69,32 +110,59 @@ pub fn find_cleanup_targets(
             }
             let path = entry.path();
 
-            if allowlist.contains(&name) {
+            if evaluate_ignored(&chain, &path, true) {
                 found.push(FoundTarget {
                     path,
                     folder_name: name,
-                    source: TargetSource::Allowlist,
                 });
                 continue; // do not descend into a matched target
             }
 
-            let ignored = gitignore
-                .map(|gi| gi.matched(&path, true).is_ignore())
-                .unwrap_or(false);
-            if ignored {
-                found.push(FoundTarget {
-                    path,
-                    folder_name: name,
-                    source: TargetSource::Gitignore,
-                });
-                continue;
+            // Descend: extend the chain with this directory's own `.gitignore`
+            // as the new innermost entry.
+            let mut child_chain = chain.clone();
+            if let Some(gi) = load_dir_ignore(&path, false) {
+                child_chain.insert(0, Rc::new(gi));
             }
-
-            stack.push(path);
+            stack.push((path, child_chain));
         }
     }
 
     found
+}
+
+/// Whether `target` (a directory) is ignored by `repo_root`'s gitignore stack.
+/// Rebuilds the chain from `repo_root` down to the target's parent and applies
+/// the same [`evaluate_ignored`] rule used by discovery — so the deletion
+/// boundary is server-derived and can never diverge from what was proposed.
+/// Both paths should be canonical. Fails closed (returns `false`) on any error.
+pub fn is_ignored_dir(repo_root: &Path, target: &Path) -> bool {
+    let parent = match target.parent() {
+        Some(p) => p,
+        None => return false,
+    };
+
+    // Collect the gitignore of every directory from the target's parent up to
+    // (and including) the repo root — parent first, so innermost is first.
+    let mut chain: Vec<Rc<Gitignore>> = Vec::new();
+    let mut dir = parent;
+    loop {
+        let is_root = dir == repo_root;
+        if let Some(gi) = load_dir_ignore(dir, is_root) {
+            chain.push(Rc::new(gi));
+        }
+        if is_root {
+            break;
+        }
+        match dir.parent() {
+            Some(p) => dir = p,
+            // Walked above the repo root without reaching it (target outside the
+            // repo). from_facts rejects that case separately; nothing ignores it.
+            None => break,
+        }
+    }
+
+    evaluate_ignored(&chain, target, true)
 }
 
 #[cfg(test)]
@@ -103,80 +171,118 @@ mod tests {
     use std::fs;
     use tempfile::TempDir;
 
-    fn allow(names: &[&str]) -> HashSet<String> {
-        names.iter().map(|s| s.to_string()).collect()
+    fn names(found: &[FoundTarget]) -> Vec<&str> {
+        found.iter().map(|f| f.folder_name.as_str()).collect()
     }
 
     #[test]
-    fn finds_allowlisted_folders_and_does_not_descend() {
+    fn finds_gitignored_directories_and_does_not_descend() {
         let tmp = TempDir::new().unwrap();
         let root = tmp.path();
+        fs::write(root.join(".gitignore"), "node_modules/\n").unwrap();
         fs::create_dir_all(root.join("node_modules/pkg/node_modules")).unwrap();
         fs::create_dir_all(root.join("src")).unwrap();
 
-        let found = find_cleanup_targets(root, &allow(&["node_modules"]), None);
-
-        // Only the top-level node_modules — the nested one is inside it and not descended into.
+        let found = find_cleanup_targets(root);
         assert_eq!(found.len(), 1);
         assert_eq!(found[0].folder_name, "node_modules");
-        assert_eq!(found[0].source, TargetSource::Allowlist);
         assert_eq!(found[0].path, root.join("node_modules"));
+    }
+
+    #[test]
+    fn no_gitignore_yields_nothing() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        fs::create_dir_all(root.join("node_modules")).unwrap();
+        fs::create_dir_all(root.join("src")).unwrap();
+
+        let found = find_cleanup_targets(root);
+        assert!(found.is_empty());
     }
 
     #[test]
     fn skips_git_directory() {
         let tmp = TempDir::new().unwrap();
         let root = tmp.path();
+        fs::write(root.join(".gitignore"), "dist/\n").unwrap();
         fs::create_dir_all(root.join(".git/objects")).unwrap();
         fs::create_dir_all(root.join("dist")).unwrap();
 
-        let found = find_cleanup_targets(root, &allow(&["dist", ".git", "objects"]), None);
-        let names: Vec<_> = found.iter().map(|f| f.folder_name.as_str()).collect();
-        assert_eq!(names, vec!["dist"]);
+        assert_eq!(names(&find_cleanup_targets(root)), vec!["dist"]);
     }
 
     #[test]
-    fn finds_hidden_allowlisted_folder() {
+    fn honors_nested_gitignore() {
         let tmp = TempDir::new().unwrap();
         let root = tmp.path();
-        fs::create_dir_all(root.join(".venv/lib")).unwrap();
+        // Root ignores nothing relevant; a nested package ignores its own build.
+        fs::write(root.join(".gitignore"), "\n").unwrap();
+        fs::create_dir_all(root.join("packages/x")).unwrap();
+        fs::write(root.join("packages/x/.gitignore"), "build/\n").unwrap();
+        fs::create_dir_all(root.join("packages/x/build/artifacts")).unwrap();
+        fs::create_dir_all(root.join("packages/x/src")).unwrap();
 
-        let found = find_cleanup_targets(root, &allow(&[".venv"]), None);
+        let found = find_cleanup_targets(root);
         assert_eq!(found.len(), 1);
-        assert_eq!(found[0].folder_name, ".venv");
+        assert_eq!(found[0].folder_name, "build");
+        assert_eq!(found[0].path, root.join("packages/x/build"));
     }
 
     #[test]
-    fn gitignore_assist_flags_ignored_directories() {
+    fn whitelist_reinclude_keeps_directory() {
         let tmp = TempDir::new().unwrap();
         let root = tmp.path();
-        fs::write(root.join(".gitignore"), "coverage/\n").unwrap();
+        // Ignore all top-level "build" but re-include "keep".
+        fs::write(root.join(".gitignore"), "build/\n!keep/\n").unwrap();
+        fs::create_dir_all(root.join("build")).unwrap();
+        fs::create_dir_all(root.join("keep")).unwrap();
+
+        let found = find_cleanup_targets(root);
+        assert_eq!(names(&find_cleanup_targets(root)), vec!["build"]);
+        assert!(!found.iter().any(|f| f.folder_name == "keep"));
+    }
+
+    #[test]
+    fn honors_git_info_exclude() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+        fs::create_dir_all(root.join(".git/info")).unwrap();
+        fs::write(root.join(".git/info/exclude"), "coverage/\n").unwrap();
         fs::create_dir_all(root.join("coverage/tmp")).unwrap();
+
+        assert_eq!(names(&find_cleanup_targets(root)), vec!["coverage"]);
+    }
+
+    #[test]
+    fn is_ignored_dir_agrees_with_discovery() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        fs::write(root.join(".gitignore"), "build/\n!keep/\n").unwrap();
+        fs::create_dir_all(root.join("build")).unwrap();
+        fs::create_dir_all(root.join("keep")).unwrap();
         fs::create_dir_all(root.join("src")).unwrap();
 
-        let gi = build_gitignore(root).unwrap();
-        let found = find_cleanup_targets(root, &allow(&[]), Some(&gi));
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].folder_name, "coverage");
-        assert_eq!(found[0].source, TargetSource::Gitignore);
+        assert!(is_ignored_dir(&root, &root.join("build")));
+        assert!(!is_ignored_dir(&root, &root.join("keep")));
+        assert!(!is_ignored_dir(&root, &root.join("src")));
     }
 
     #[test]
-    fn allowlist_wins_classification_over_gitignore() {
+    fn is_ignored_dir_honors_nested_gitignore() {
         let tmp = TempDir::new().unwrap();
-        let root = tmp.path();
-        fs::write(root.join(".gitignore"), "node_modules/\n").unwrap();
+        let root = tmp.path().canonicalize().unwrap();
+        fs::create_dir_all(root.join("packages/x")).unwrap();
+        fs::write(root.join("packages/x/.gitignore"), "build/\n").unwrap();
+        fs::create_dir_all(root.join("packages/x/build")).unwrap();
+
+        assert!(is_ignored_dir(&root, &root.join("packages/x/build")));
+    }
+
+    #[test]
+    fn is_ignored_dir_false_without_gitignore() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path().canonicalize().unwrap();
         fs::create_dir_all(root.join("node_modules")).unwrap();
-
-        let gi = build_gitignore(root).unwrap();
-        let found = find_cleanup_targets(root, &allow(&["node_modules"]), Some(&gi));
-        assert_eq!(found.len(), 1);
-        assert_eq!(found[0].source, TargetSource::Allowlist);
-    }
-
-    #[test]
-    fn no_gitignore_returns_none_builder() {
-        let tmp = TempDir::new().unwrap();
-        assert!(build_gitignore(tmp.path()).is_none());
+        assert!(!is_ignored_dir(&root, &root.join("node_modules")));
     }
 }

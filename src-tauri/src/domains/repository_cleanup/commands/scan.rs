@@ -10,7 +10,6 @@ use tauri::AppHandle;
 use tauri_specta::Event;
 
 use crate::domains::repository_cleanup::core::application::scan;
-use crate::domains::repository_cleanup::core::models::allowlist::default_allowlist;
 use crate::domains::repository_cleanup::core::models::cleanup_target::CleanupTarget;
 use crate::domains::repository_cleanup::events::CleanupScanProgressEvent;
 use crate::shared::error::AppError;
@@ -42,11 +41,10 @@ pub async fn scan_cleanup_targets(
     input: ScanCleanupTargetsInput,
 ) -> Result<ScanCleanupTargetsOutput, AppError> {
     let repo_root = PathBuf::from(&input.repository_path);
-    let allowlist = default_allowlist();
 
     let targets = tokio::task::spawn_blocking(move || {
         let mut last_emit: Option<Instant> = None;
-        scan::scan_cleanup_targets(&repo_root, &allowlist, |measured, path| {
+        scan::scan_cleanup_targets(&repo_root, |measured, path| {
             let due = match last_emit {
                 Some(at) => at.elapsed() >= PROGRESS_THROTTLE,
                 None => true,

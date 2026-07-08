@@ -456,7 +456,7 @@ async scanCleanupTargets(input: ScanCleanupTargetsInput) : Promise<Result<ScanCl
 }
 },
 /**
- * Lists stale registered repositories with their reclaimable allowlisted
+ * Lists stale registered repositories with their reclaimable `.gitignore`d
  * folders. The DB read is quick and done up front; the per-repo filesystem
  * walk runs on the blocking pool with throttled progress events.
  */
@@ -470,7 +470,7 @@ async listStaleRepositories(input: ListStaleRepositoriesInput) : Promise<Result<
 },
 /**
  * Deletes the requested folders after re-validating each against the
- * repository root and the effective allowlist. A failure on one target is
+ * repository root and its `.gitignore` stack. A failure on one target is
  * reported per-target and does not abort the rest.
  */
 async cleanRepository(input: CleanRepositoryInput) : Promise<Result<CleanRepositoryOutput, AppError>> {
@@ -567,12 +567,7 @@ targets: string[];
 /**
  * Trash (recoverable) or permanent deletion.
  */
-mode: DeletionMode; 
-/**
- * Extra folder names the user explicitly approved from `.gitignore` assist,
- * on top of the built-in safety allowlist.
- */
-approvedExtra?: string[] }
+mode: DeletionMode }
 export type CleanRepositoryOutput = { 
 /**
  * Total bytes freed across the successful targets.
@@ -592,7 +587,8 @@ measured: number;
  */
 currentPath: string | null }
 /**
- * A single cleanable directory and its measured size.
+ * A single cleanable directory and its measured size. Every target is
+ * discovered from the repository's `.gitignore` stack.
  */
 export type CleanupTarget = { 
 /**
@@ -606,11 +602,7 @@ folderName: string;
 /**
  * Total size on disk in bytes.
  */
-sizeBytes: number; 
-/**
- * Why this folder was flagged.
- */
-source: TargetSource }
+sizeBytes: number }
 export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
 export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"
@@ -823,18 +815,6 @@ found: number;
  */
 currentName: string | null }
 export type TargetResult = { path: string; ok: boolean; bytesFreed: number; error: string | null }
-/**
- * Why a folder was proposed for cleanup.
- */
-export type TargetSource = 
-/**
- * Folder name is on the configured allowlist (e.g. `node_modules`).
- */
-"allowlist" | 
-/**
- * Folder is ignored by the repository's `.gitignore` (assist mode).
- */
-"gitignore"
 export type UpdateBranchSelectionBatchInput = { repoId: string; branchNames: string[]; isSelected: boolean }
 export type UpdateBranchSelectionBatchOutput = Record<string, never>
 export type UpdateCurrentBranchInput = { path: string; branch: string }

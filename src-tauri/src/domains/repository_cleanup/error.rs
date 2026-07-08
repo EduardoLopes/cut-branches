@@ -27,8 +27,8 @@ pub enum CleanupError {
     #[error("Refused to delete the repository root or its .git directory")]
     RefusedRepoRoot { path: PathBuf },
 
-    #[error("Folder '{name}' is not in the cleanup allowlist")]
-    NotAllowlisted { name: String },
+    #[error("Folder '{name}' is not ignored by the repository's .gitignore")]
+    NotIgnored { name: String },
 
     #[error("Failed to delete '{path}'")]
     DeletionFailed { path: PathBuf, detail: String },
@@ -42,15 +42,14 @@ impl From<CleanupError> for AppError {
             CleanupError::NotADirectory { .. } => "cleanup_not_a_directory",
             CleanupError::RefusedSymlink { .. } => "cleanup_refused_symlink",
             CleanupError::RefusedRepoRoot { .. } => "cleanup_refused_repo_root",
-            CleanupError::NotAllowlisted { .. } => "cleanup_not_allowlisted",
+            CleanupError::NotIgnored { .. } => "cleanup_not_ignored",
             CleanupError::DeletionFailed { .. } => "cleanup_deletion_failed",
         };
 
         let description = match &err {
             CleanupError::DeletionFailed { detail, .. } => Some(detail.clone()),
-            CleanupError::NotAllowlisted { .. } => Some(
-                "For safety, only folders on the configured allowlist (or ones you explicitly \
-                 approved from .gitignore) can be deleted."
+            CleanupError::NotIgnored { .. } => Some(
+                "For safety, only directories your repository's .gitignore ignores can be deleted."
                     .to_string(),
             ),
             _ => None,
@@ -86,9 +85,9 @@ mod tests {
     }
 
     #[test]
-    fn not_allowlisted_has_guidance() {
-        let app: AppError = CleanupError::NotAllowlisted { name: "src".into() }.into();
-        assert_eq!(app.kind, "cleanup_not_allowlisted");
+    fn not_ignored_has_guidance() {
+        let app: AppError = CleanupError::NotIgnored { name: "src".into() }.into();
+        assert_eq!(app.kind, "cleanup_not_ignored");
         assert!(app.description.is_some());
     }
 }

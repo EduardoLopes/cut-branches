@@ -4,7 +4,6 @@
 //! security boundary. A failure on one target is reported per-target and does
 //! not abort the rest.
 
-use std::collections::HashSet;
 use std::path::Path;
 
 use crate::domains::repository_cleanup::core::models::deletion_mode::DeletionMode;
@@ -27,14 +26,12 @@ pub struct CleanSummary {
     pub results: Vec<TargetOutcome>,
 }
 
-/// Validate and delete each of `targets` under `repo_root`. `allowed` is the set
-/// of folder names permitted for this repo (the configured allowlist unioned
-/// with any `.gitignore` picks the user explicitly approved). Successful
-/// deletions are recorded in the audit log (best-effort).
+/// Validate and delete each of `targets` under `repo_root`. Each target is
+/// re-validated against the repo's `.gitignore` stack server-side (the security
+/// boundary). Successful deletions are recorded in the audit log (best-effort).
 pub fn clean_repository(
     repo_root: &Path,
     targets: &[String],
-    allowed: &HashSet<String>,
     mode: DeletionMode,
     repo_id: &str,
     conn: &mut DbConnection,
@@ -44,7 +41,7 @@ pub fn clean_repository(
 
     for target_str in targets {
         let target = Path::new(target_str);
-        let outcome = match validator::resolve_clean_target(repo_root, target, allowed) {
+        let outcome = match validator::resolve_clean_target(repo_root, target) {
             Ok(clean_target) => {
                 // Measure before deleting so we can report freed space.
                 let size = sizing::dir_size_bytes(clean_target.path());

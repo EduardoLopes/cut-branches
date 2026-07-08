@@ -89,19 +89,11 @@ export function useCleanupTargets(options: UseCleanupTargetsOptions = {}) {
 	async function clean(repositoryId: string, repositoryPath: string, mode: DeletionMode) {
 		if (selectedTargets.length === 0) return;
 
-		// Folder names the user approved from `.gitignore` (not on the built-in allowlist).
-		const approvedExtra = [
-			...new SvelteSet(
-				selectedTargets.filter((t) => t.source === 'gitignore').map((t) => t.folderName)
-			)
-		];
-
 		const output = await cleanMutation.mutateAsync({
 			repositoryId,
 			repositoryPath,
 			targets: selectedTargets.map((t) => t.path),
-			mode,
-			approvedExtra
+			mode
 		});
 
 		const succeeded = output.results.filter((r) => r.ok);

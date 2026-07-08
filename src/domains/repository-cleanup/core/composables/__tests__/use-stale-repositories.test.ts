@@ -26,8 +26,8 @@ vi.mock(
 vi.mock('$infrastructure/tauri-commands', () => ({ executeCommand }));
 vi.mock('$services/notifications/notifications.svelte', () => ({ notifications: { push } }));
 
-function target(path: string, sizeBytes: number, source: CleanupTarget['source'] = 'allowlist') {
-	return { path, folderName: path.split('/').pop() ?? path, sizeBytes, source };
+function target(path: string, sizeBytes: number) {
+	return { path, folderName: path.split('/').pop() ?? path, sizeBytes };
 }
 
 function repo(id: string, targets: CleanupTarget[]): StaleRepository {
@@ -150,7 +150,7 @@ describe('useStaleRepositories', () => {
 	it('cleans selected paths then refetches, and warns on failures', async () => {
 		const { stale, cleanup } = setup([
 			repo('r1', [target('/r1/node_modules', 100)]),
-			repo('r2', [target('/r2/coverage', 10, 'gitignore')])
+			repo('r2', [target('/r2/coverage', 10)])
 		]);
 
 		// After cleaning, the refetch resolves with an empty scan.
@@ -166,10 +166,9 @@ describe('useStaleRepositories', () => {
 		flushSync();
 
 		expect(executeCommand).toHaveBeenCalledTimes(2);
-		// gitignore-sourced folder names are forwarded as approvedExtra.
 		expect(executeCommand).toHaveBeenCalledWith(
 			'cleanRepository',
-			expect.objectContaining({ repositoryId: 'r2', approvedExtra: ['coverage'] })
+			expect.objectContaining({ repositoryId: 'r2', targets: ['/r2/coverage'], mode: 'permanent' })
 		);
 		expect(stale.repositoryCount).toBe(0);
 		expect(cleanupSummary.reclaimableBytes).toBe(0);

@@ -4,7 +4,6 @@
 //! caller (infrastructure) gathers the filesystem facts, this decides. That
 //! keeps the security-critical rule unit-testable without touching disk.
 
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 use crate::domains::repository_cleanup::error::CleanupError;
@@ -31,8 +30,10 @@ pub struct CleanTarget(PathBuf);
 impl CleanTarget {
     /// Decide whether `facts` describe a safe-to-delete target. Fails closed:
     /// anything ambiguous is refused. Order matters — existence and symlink
-    /// checks come first so we never resolve or delete through a link.
-    pub fn from_facts(facts: TargetFacts, allowed: &HashSet<String>) -> Result<Self, CleanupError> {
+    /// checks come first so we never resolve or delete through a link. The final
+    /// gate is `is_ignored`: the directory must be one the repo's `.gitignore`
+    /// stack ignores (computed server-side by the validator).
+    pub fn from_facts(facts: TargetFacts, is_ignored: bool) -> Result<Self, CleanupError> {
         let original = || facts.target_original.to_path_buf();
 
         if !facts.exists {
@@ -56,7 +57,7 @@ impl CleanTarget {
             return Err(CleanupError::PathOutsideRepository { path: original() });
         }
 
-        // Never touch git metadata, whatever the allowlist says.
+        // Never touch git metadata, whatever .gitignore says.
         let name = facts.folder_name.unwrap_or_default();
         if name == ".git"
             || facts
@@ -67,9 +68,9 @@ impl CleanTarget {
             return Err(CleanupError::RefusedRepoRoot { path: original() });
         }
 
-        // Final gate: the folder name must be explicitly approved.
-        if !allowed.contains(&name) {
-            return Err(CleanupError::NotAllowlisted { name });
+        // Final gate: only directories the repo's .gitignore stack ignores.
+        if !is_ignored {
+            return Err(CleanupError::NotIgnored { name });
         }
 
         Ok(CleanTarget(facts.target_canonical.to_path_buf()))
@@ -84,10 +85,6 @@ impl CleanTarget {
 mod tests {
     use super::*;
 
-    fn allowed(names: &[&str]) -> HashSet<String> {
-        names.iter().map(|s| s.to_string()).collect()
-    }
-
     fn facts<'a>(root: &'a Path, target: &'a Path, name: &str) -> TargetFacts<'a> {
         TargetFacts {
             repo_root_canonical: root,
@@ -101,14 +98,10 @@ mod tests {
     }
 
     #[test]
-    fn accepts_allowlisted_dir_inside_repo() {
+    fn accepts_ignored_dir_inside_repo() {
         let root = Path::new("/repo");
         let target = Path::new("/repo/node_modules");
-        let t = CleanTarget::from_facts(
-            facts(root, target, "node_modules"),
-            &allowed(&["node_modules"]),
-        )
-        .unwrap();
+        let t = CleanTarget::from_facts(facts(root, target, "node_modules"), true).unwrap();
         assert_eq!(t.path(), target);
     }
 
@@ -119,7 +112,7 @@ mod tests {
         let mut f = facts(root, target, "node_modules");
         f.exists = false;
         assert!(matches!(
-            CleanTarget::from_facts(f, &allowed(&["node_modules"])),
+            CleanTarget::from_facts(f, true),
             Err(CleanupError::TargetNotFound { .. })
         ));
     }
@@ -131,7 +124,7 @@ mod tests {
         let mut f = facts(root, target, "node_modules");
         f.is_symlink = true;
         assert!(matches!(
-            CleanTarget::from_facts(f, &allowed(&["node_modules"])),
+            CleanTarget::from_facts(f, true),
             Err(CleanupError::RefusedSymlink { .. })
         ));
     }
@@ -143,7 +136,7 @@ mod tests {
         let mut f = facts(root, target, "file.txt");
         f.is_dir = false;
         assert!(matches!(
-            CleanTarget::from_facts(f, &allowed(&["file.txt"])),
+            CleanTarget::from_facts(f, true),
             Err(CleanupError::NotADirectory { .. })
         ));
     }
@@ -153,7 +146,7 @@ mod tests {
         let root = Path::new("/repo");
         let target = Path::new("/repo");
         assert!(matches!(
-            CleanTarget::from_facts(facts(root, target, "repo"), &allowed(&["repo"])),
+            CleanTarget::from_facts(facts(root, target, "repo"), true),
             Err(CleanupError::RefusedRepoRoot { .. })
         ));
     }
@@ -163,31 +156,28 @@ mod tests {
         let root = Path::new("/repo");
         let target = Path::new("/other/node_modules");
         assert!(matches!(
-            CleanTarget::from_facts(
-                facts(root, target, "node_modules"),
-                &allowed(&["node_modules"])
-            ),
+            CleanTarget::from_facts(facts(root, target, "node_modules"), true),
             Err(CleanupError::PathOutsideRepository { .. })
         ));
     }
 
     #[test]
-    fn rejects_git_directory_even_if_allowlisted() {
+    fn rejects_git_directory_even_if_ignored() {
         let root = Path::new("/repo");
         let target = Path::new("/repo/.git");
         assert!(matches!(
-            CleanTarget::from_facts(facts(root, target, ".git"), &allowed(&[".git"])),
+            CleanTarget::from_facts(facts(root, target, ".git"), true),
             Err(CleanupError::RefusedRepoRoot { .. })
         ));
     }
 
     #[test]
-    fn rejects_non_allowlisted_name() {
+    fn rejects_non_ignored_name() {
         let root = Path::new("/repo");
         let target = Path::new("/repo/src");
         assert!(matches!(
-            CleanTarget::from_facts(facts(root, target, "src"), &allowed(&["node_modules"])),
-            Err(CleanupError::NotAllowlisted { .. })
+            CleanTarget::from_facts(facts(root, target, "src"), false),
+            Err(CleanupError::NotIgnored { .. })
         ));
     }
 }

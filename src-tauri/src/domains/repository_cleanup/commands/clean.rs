@@ -2,14 +2,12 @@
 //! The destructive entry point. It re-validates every target server-side (§3);
 //! the frontend confirmation is UX, this is the security boundary.
 
-use std::collections::HashSet;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use crate::domains::repository_cleanup::core::application::clean;
-use crate::domains::repository_cleanup::core::models::allowlist::default_allowlist;
 use crate::domains::repository_cleanup::core::models::deletion_mode::DeletionMode;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DatabaseState;
@@ -25,10 +23,6 @@ pub struct CleanRepositoryInput {
     pub targets: Vec<String>,
     /// Trash (recoverable) or permanent deletion.
     pub mode: DeletionMode,
-    /// Extra folder names the user explicitly approved from `.gitignore` assist,
-    /// on top of the built-in safety allowlist.
-    #[serde(default)]
-    pub approved_extra: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -49,7 +43,7 @@ pub struct CleanRepositoryOutput {
 }
 
 /// Deletes the requested folders after re-validating each against the
-/// repository root and the effective allowlist. A failure on one target is
+/// repository root and its `.gitignore` stack. A failure on one target is
 /// reported per-target and does not abort the rest.
 #[tauri::command(async)]
 #[specta::specta]
@@ -64,12 +58,8 @@ pub async fn clean_repository(
     let targets = input.targets;
     let mode = input.mode;
 
-    // Effective permitted names: built-in safety allowlist ∪ explicitly-approved extras.
-    let mut allowed: HashSet<String> = default_allowlist();
-    allowed.extend(input.approved_extra);
-
     let summary = tokio::task::spawn_blocking(move || {
-        clean::clean_repository(&repo_root, &targets, &allowed, mode, &repo_id, &mut conn)
+        clean::clean_repository(&repo_root, &targets, mode, &repo_id, &mut conn)
     })
     .await
     .map_err(|e| {

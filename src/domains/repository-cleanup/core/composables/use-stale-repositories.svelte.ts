@@ -1,5 +1,4 @@
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-import { SvelteSet } from 'svelte/reactivity';
 import { getCleanupConfig } from './use-cleanup-config.svelte';
 import { isKept, keepAll, keepNone, toggleKept } from './use-cleanup-keeplist.svelte';
 import { createListStaleRepositoriesQuery } from '$domains/repository-cleanup/infrastructure/queries/create-list-stale-repositories-query';
@@ -158,17 +157,12 @@ export function useStaleRepositories() {
 			for (const repo of selectedRepos) {
 				const paths = cleanableTargets(repo);
 				if (paths.length === 0) continue;
-				// Folder names approved from `.gitignore` (not on the built-in allowlist).
-				const approvedExtra = [
-					...new SvelteSet(paths.filter((t) => t.source === 'gitignore').map((t) => t.folderName))
-				];
 				try {
 					const output = await executeCommand('cleanRepository', {
 						repositoryId: repo.id,
 						repositoryPath: repo.path,
 						targets: paths.map((t) => t.path),
-						mode,
-						approvedExtra
+						mode
 					});
 					freedBytes += output.freedBytes;
 					failedTargets += output.results.filter((r) => !r.ok).length;

@@ -8,7 +8,6 @@ use tauri::{AppHandle, State};
 use tauri_specta::Event;
 
 use crate::domains::repository_cleanup::core::application::stale;
-use crate::domains::repository_cleanup::core::models::allowlist::default_allowlist;
 use crate::domains::repository_cleanup::core::models::cleanup_target::CleanupTarget;
 use crate::domains::repository_cleanup::core::ports::CleanupServices;
 use crate::domains::repository_cleanup::events::StaleScanProgressEvent;
@@ -48,7 +47,7 @@ pub struct ListStaleRepositoriesOutput {
     pub total_reclaimable_bytes: u64,
 }
 
-/// Lists stale registered repositories with their reclaimable allowlisted
+/// Lists stale registered repositories with their reclaimable `.gitignore`d
 /// folders. The DB read is quick and done up front; the per-repo filesystem
 /// walk runs on the blocking pool with throttled progress events.
 #[tauri::command(async)]
@@ -65,7 +64,6 @@ pub async fn list_stale_repositories(
     };
 
     let threshold_days = input.threshold_days.unwrap_or(DEFAULT_THRESHOLD_DAYS);
-    let allowlist = default_allowlist();
     let now_secs = chrono::Utc::now().timestamp();
 
     let stale_repos = tokio::task::spawn_blocking(move || {
@@ -73,7 +71,6 @@ pub async fn list_stale_repositories(
         stale::list_stale_repositories(
             &repos,
             threshold_days,
-            &allowlist,
             now_secs,
             |scanned, total, found, name| {
                 let due = match last_emit {
