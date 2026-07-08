@@ -145,6 +145,14 @@ vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 // Variable to track selected branches for mocking
 let mockSelectedBranches: string[] = ['feature-1'];
 
+// The validation hint renders inside a native <dialog> that is always present;
+// its visibility is the dialog's own open state. Find the open one.
+function openHint(): HTMLDialogElement | undefined {
+	return [...document.querySelectorAll('dialog[data-popover]')].find(
+		(el) => (el as HTMLDialogElement).open
+	) as HTMLDialogElement | undefined;
+}
+
 // Mock get branches query with dynamic filtering based on filters
 vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: vi.fn((filtersFactory) => {
@@ -192,7 +200,7 @@ describe('DeleteBranchModal Component', () => {
 			expect(screen.getByText('Delete branches')).toBeInTheDocument();
 		});
 
-		test('renders delete button in disabled state when no branches selected', () => {
+		test('keeps the trigger enabled and shows a validation hint when no branches selected', async () => {
 			// Set no selected branches
 			mockSelectedBranches = [];
 
@@ -201,7 +209,14 @@ describe('DeleteBranchModal Component', () => {
 			});
 
 			const button = screen.getByTestId('open-dialog-button');
-			expect(button).toBeDisabled();
+			// The button is never disabled — validation is communicated on click.
+			expect(button).not.toBeDisabled();
+
+			await button.click();
+			await tick();
+
+			await vi.waitFor(() => expect(openHint()).toBeTruthy());
+			expect(openHint()?.textContent).toContain('Select at least one branch to delete.');
 		});
 
 		test('renders delete button in enabled state when branches are selected', () => {

@@ -11,6 +11,7 @@
 	import RestoreProgressBar from './restore-progress-bar.svelte';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -33,6 +34,16 @@
 
 	let open = $state(false);
 	let prefsInitialized = $state(false);
+	let hintOpen = $state(false);
+
+	const noBranchesToRestore = $derived(selectedQuery.data?.branches.length === 0);
+
+	// Clear the validation hint once there is something to restore.
+	$effect(() => {
+		if (hintOpen && !noBranchesToRestore) {
+			hintOpen = false;
+		}
+	});
 
 	const flow = useRestoreFlow({
 		getRepository: () => {
@@ -194,7 +205,11 @@
 				Cancel
 			</Button>
 			{#if !flow.currentConflictBranch}
-				<Loading loading={flow.isProcessing && !flow.isRestorationComplete}>
+				<Loading
+					loading={flow.isProcessing && !flow.isRestorationComplete}
+					variant="busy"
+					indicator
+				>
 					<Button
 						emphasis="primary"
 						autofocus
@@ -209,23 +224,35 @@
 	</div>
 </Dialog>
 
-<Button
-	emphasis="primary"
-	size="sm"
-	disabled={selectedQuery.data?.branches.length === 0}
-	class={css({ whiteSpace: 'nowrap' })}
-	onclick={() => {
-		open = true;
-	}}
-	data-testid="open-restore-dialog-button"
+<ValidationHint
+	bind:open={hintOpen}
+	message="There are no deleted branches to restore."
+	data-testid="open-restore-validation"
 >
-	Restore
-	{#snippet leading()}
-		<Stamp emphasis="ghost" border="none" background="transparent">
-			<Icon icon="lucide:undo" width="16px" height="16px" />
-		</Stamp>
+	{#snippet trigger(triggerProps)}
+		<Button
+			{...triggerProps}
+			emphasis="primary"
+			size="sm"
+			class={css({ whiteSpace: 'nowrap' })}
+			onclick={() => {
+				if (noBranchesToRestore) {
+					hintOpen = true;
+					return;
+				}
+				open = true;
+			}}
+			data-testid="open-restore-dialog-button"
+		>
+			Restore
+			{#snippet leading()}
+				<Stamp emphasis="ghost" border="none" background="transparent">
+					<Icon icon="lucide:undo" width="16px" height="16px" />
+				</Stamp>
+			{/snippet}
+			{#snippet trailing()}
+				<Badge size="sm" emphasis="adaptive">{selectedQuery.data?.branches.length ?? 0}</Badge>
+			{/snippet}
+		</Button>
 	{/snippet}
-	{#snippet trailing()}
-		<Badge size="sm" emphasis="adaptive">{selectedQuery.data?.branches.length ?? 0}</Badge>
-	{/snippet}
-</Button>
+</ValidationHint>

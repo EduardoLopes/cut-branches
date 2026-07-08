@@ -13,6 +13,7 @@
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
+	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -21,6 +22,7 @@
 	}
 
 	let open = $state(false);
+	let hintOpen = $state(false);
 
 	let { id }: Props = $props();
 
@@ -33,6 +35,13 @@
 	}));
 
 	const selectedCount = $derived(getBranchesQuery.data?.branches.length);
+
+	// Clear the validation hint as soon as the user selects something.
+	$effect(() => {
+		if (hintOpen && selectedCount !== 0) {
+			hintOpen = false;
+		}
+	});
 
 	const deleteMutation = createDeleteBranchesMutation({
 		// Await repository query invalidation to ensure UI is updated before closing modal
@@ -164,7 +173,7 @@
 			data-testid="cancel-button"
 			disabled={deleteMutation.isPending}>Cancel</Button
 		>
-		<Loading loading={deleteMutation.isPending}
+		<Loading loading={deleteMutation.isPending} variant="busy" indicator
 			><Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
 				>Delete</Button
 			></Loading
@@ -172,25 +181,37 @@
 	</div>
 </Modal>
 
-<Button
-	feedback="danger"
-	size="sm"
-	disabled={selectedCount === 0}
-	class={css({
-		whiteSpace: 'nowrap'
-	})}
-	onclick={() => {
-		open = true;
-	}}
-	data-testid="open-dialog-button"
+<ValidationHint
+	bind:open={hintOpen}
+	message="Select at least one branch to delete."
+	data-testid="open-dialog-validation"
 >
-	Delete
-	{#snippet leading()}
-		<Stamp emphasis="ghost" border="none" background="transparent">
-			<Icon icon="ion:trash-outline" width="16px" height="16px" />
-		</Stamp>
+	{#snippet trigger(triggerProps)}
+		<Button
+			{...triggerProps}
+			feedback="danger"
+			size="sm"
+			class={css({
+				whiteSpace: 'nowrap'
+			})}
+			onclick={() => {
+				if (selectedCount === 0) {
+					hintOpen = true;
+					return;
+				}
+				open = true;
+			}}
+			data-testid="open-dialog-button"
+		>
+			Delete
+			{#snippet leading()}
+				<Stamp emphasis="ghost" border="none" background="transparent">
+					<Icon icon="ion:trash-outline" width="16px" height="16px" />
+				</Stamp>
+			{/snippet}
+			{#snippet trailing()}
+				<Badge size="sm" emphasis="adaptive">{selectedCount}</Badge>
+			{/snippet}
+		</Button>
 	{/snippet}
-	{#snippet trailing()}
-		<Badge size="sm" emphasis="adaptive">{selectedCount}</Badge>
-	{/snippet}
-</Button>
+</ValidationHint>

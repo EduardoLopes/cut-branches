@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { Branch } from '../../core/models/branch';
 import RestoreDeletedBranchModal from '../restore-deleted-branch-modal.svelte';
@@ -77,6 +78,14 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: { push: vi.fn() }
 }));
 
+// The validation hint renders inside a native <dialog> that is always present;
+// its visibility is the dialog's own open state. Find the open one.
+function openHint(): HTMLDialogElement | undefined {
+	return [...document.querySelectorAll('dialog[data-popover]')].find(
+		(el) => (el as HTMLDialogElement).open
+	) as HTMLDialogElement | undefined;
+}
+
 beforeEach(() => {
 	selectedBranches = [Branch.fromData(makeBranchData('feat-a'))];
 });
@@ -90,10 +99,17 @@ describe('RestoreDeletedBranchModal', () => {
 		expect(button).toHaveTextContent('1');
 	});
 
-	test('disables the trigger when no branches are selected', () => {
+	test('keeps the trigger enabled and shows a validation hint when nothing to restore', async () => {
 		selectedBranches = [];
 		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
-		expect(screen.getByTestId('open-restore-dialog-button')).toBeDisabled();
+		const button = screen.getByTestId('open-restore-dialog-button');
+		expect(button).not.toBeDisabled();
+
+		await button.click();
+		await tick();
+
+		await vi.waitFor(() => expect(openHint()).toBeTruthy());
+		expect(openHint()?.textContent).toContain('There are no deleted branches to restore.');
 	});
 
 	test('enables the trigger when at least one branch is selected', () => {
