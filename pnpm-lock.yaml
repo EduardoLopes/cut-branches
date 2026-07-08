@@ -13,9 +13,6 @@ importers:
 
   .:
     dependencies:
-      '@fontsource/fira-mono':
-        specifier: ^5.2.7
-        version: 5.2.7
       '@pindoba/panda':
         specifier: alpha
         version: 0.0.0-alpha-20250910225440
@@ -70,16 +67,10 @@ importers:
       '@pindoba/svelte-panel':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-popover':
-        specifier: alpha
-        version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-progress':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-radio':
-        specifier: alpha
-        version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-select':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-stamp':
@@ -94,9 +85,6 @@ importers:
       '@pindoba/svelte-tooltip':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@radix-ui/colors':
-        specifier: ^3.0.0
-        version: 3.0.0
       '@tanstack/svelte-query':
         specifier: ^6.1.36
         version: 6.1.36(svelte@5.56.4(@typescript-eslint/types@8.63.0))
@@ -115,12 +103,6 @@ importers:
       '@tauri-apps/plugin-os':
         specifier: ^2.3.2
         version: 2.3.2
-      '@tauri-apps/plugin-shell':
-        specifier: ~2.3.5
-        version: 2.3.5
-      '@types/lodash':
-        specifier: ^4.17.24
-        version: 4.17.24
       '@vitest/browser-playwright':
         specifier: ^4.1.10
         version: 4.1.10(playwright@1.56.1)(vite@8.1.3(@types/node@24.10.1)(jiti@2.6.1))(vitest@4.1.10)
@@ -130,15 +112,9 @@ importers:
       date-fns-tz:
         specifier: ^3.2.0
         version: 3.2.0(date-fns@4.4.0)
-      hash-it:
-        specifier: ^7.0.2
-        version: 7.0.2
       just-debounce-it:
         specifier: ^3.2.0
         version: 3.2.0
-      lodash:
-        specifier: ^4.18.1
-        version: 4.18.1
       ramda:
         specifier: ^0.32.0
         version: 0.32.0
@@ -206,15 +182,9 @@ importers:
       '@vitest/ui':
         specifier: ^4.1.10
         version: 4.1.10(vitest@4.1.10)
-      csstype:
-        specifier: ^3.2.3
-        version: 3.2.3
       dependency-cruiser:
         specifier: ^18.0.0
         version: 18.0.0
-      dotenv-cli:
-        specifier: ^11.0.0
-        version: 11.0.0
       eslint:
         specifier: ^10.6.0
         version: 10.6.0(jiti@2.6.1)
@@ -236,9 +206,6 @@ importers:
       globals:
         specifier: ^17.7.0
         version: 17.7.0
-      i:
-        specifier: ^0.3.7
-        version: 0.3.7
       lefthook:
         specifier: ^2.1.10
         version: 2.1.10
@@ -254,12 +221,6 @@ importers:
       svelte-check:
         specifier: ^4.7.2
         version: 4.7.2(picomatch@4.0.5)(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      svelte-preprocess:
-        specifier: ^6.0.5
-        version: 6.0.5(@babel/core@7.29.7)(postcss-load-config@3.1.4(postcss@8.5.16))(postcss@8.5.16)(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      tslib:
-        specifier: ^2.8.1
-        version: 2.8.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -739,9 +700,6 @@ packages:
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
-  '@fontsource/fira-mono@5.2.7':
-    resolution: {integrity: sha512-wYrAn6i3nH6luqQBZxtWUpl4UTUvs9AEbEeZxksPMwIqyjRRaxHTNW3c2VfM50gabS2IS7pT8lVWS2USB4ukYA==}
-
   '@hono/node-server@1.19.14':
     resolution: {integrity: sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw==}
     engines: {node: '>=18.14.1'}
@@ -967,9 +925,6 @@ packages:
   '@pindoba/core-input@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-CMSZU5XbHzn3c0D2l1vN3oItwq/Ep7yllFj81yrQUNHRAXT+vbPXxsl846EjDvPrpNCjWsl7OauFpe4mLOl7NQ==}
 
-  '@pindoba/core-listbox@0.0.0-alpha-20260619021129':
-    resolution: {integrity: sha512-qiGPCel7yWssfc2RNyTUzRpbMNe35aYRbxTyk6fpNcI0jVWjLo5BgXR37BpuQzuBY5Yk4HQnBlQVfsnH8IjNsg==}
-
   '@pindoba/core-loading@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-p/ShSD6ltOdc0DoT15N7l+0WnAnQwpPSIwBPevq7uVWoMoixCYxUekfGL0FP0xMQVJttGrcLvrfCNoHJ9eP6SA==}
 
@@ -993,9 +948,6 @@ packages:
 
   '@pindoba/core-select-native@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-c65O1qVu0OePqtEnOqJGoLV7O1bVe9+LIDnpPCsNKGlpO5emoIRnBs0spAJD3YCt+PrXjJPBQrML89iMvvMpeg==}
-
-  '@pindoba/core-select@0.0.0-alpha-20260619021129':
-    resolution: {integrity: sha512-fomGbWRwSWemqG6DD7hP20/rTkd3sJXXDxhLRULrR60Bb2g5N3TM1Y3FeYLSDQFsRgI0M15VyPPxC2SDf35rWg==}
 
   '@pindoba/core-stamp@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-qLmPJBjkv0BhrFJ5WYyEHw3yMqJexr0jJCmRZTHMIuFgKEPdYt+5ArWVz43p3df9F7KhqpeyWERaOM9fm20O0A==}
@@ -1227,11 +1179,6 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
-  '@pindoba/svelte-listbox@0.0.0-alpha-20260619021129':
-    resolution: {integrity: sha512-llt4lFkyeVEj5UtC9BH0pYLHMtyZLEQOcA8BoyX53GRxdnbWeg9rVrp8Ih6ayBDbE9sk6dKzotsdOEaJosHUKg==}
-    peerDependencies:
-      svelte: ^5.0.0
-
   '@pindoba/svelte-loading@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-JydMemiK5Kw5BxKcdzkR8AnyTv48zSJ72/HknKLctPHuUylLm9h2YIPZQ9p1bcudc3iNEZHzeCVAgI+m2UeoEg==}
     peerDependencies:
@@ -1269,11 +1216,6 @@ packages:
 
   '@pindoba/svelte-select-native@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-DMpiKzuBLWECX13YcZHDIOuRxxLLSLvHlcJb9HeJ57+5XV3YfaogK6nU6Py81iQGssg2k9Vb3mjmJn8EGHIitw==}
-    peerDependencies:
-      svelte: ^5.0.0
-
-  '@pindoba/svelte-select@0.0.0-alpha-20260619021129':
-    resolution: {integrity: sha512-RyphNoNG+VAABSnL/ydFWZ2Jrl9jS/ZdEa4UssOYatBGxmG7LBT03Nn1Sjac/8L4KgwCrNxxX6pAA9IaNy9LNg==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1557,9 +1499,6 @@ packages:
   '@tauri-apps/plugin-os@2.3.2':
     resolution: {integrity: sha512-n+nXWeuSeF9wcEsSPmRnBEGrRgOy6jjkSU+UVCOV8YUGKb2erhDOxis7IqRXiRVHhY8XMKks00BJ0OAdkpf6+A==}
 
-  '@tauri-apps/plugin-shell@2.3.5':
-    resolution: {integrity: sha512-jewtULhiQ7lI7+owCKAjc8tYLJr92U16bPOeAa472LHJdgaibLP83NcfAF2e+wkEcA53FxKQAZ7byDzs2eeizg==}
-
   '@testing-library/svelte-core@1.1.3':
     resolution: {integrity: sha512-KkMAvXeWorxN2Yn0kdC1lfoAItxpoj4uOWzxK5leDrNxonLvS5nwBFvztrroyTszQ0Wf/EU6iLT8JhY5qcn22g==}
     engines: {node: '>=16'}
@@ -1598,9 +1537,6 @@ packages:
 
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
-
-  '@types/lodash@4.17.24':
-    resolution: {integrity: sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==}
 
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
@@ -2197,9 +2133,6 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
-  csstype@3.2.3:
-    resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
-
   culori@4.0.2:
     resolution: {integrity: sha512-1+BhOB8ahCn4O0cep0Sh2l9KCOfOdY+BXJnKMHFFzDEouSr/el18QwXEMRlOj9UY5nCeA8UN3a/82rUWRBeyBw==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
@@ -2312,22 +2245,6 @@ packages:
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
-
-  dotenv-cli@11.0.0:
-    resolution: {integrity: sha512-r5pA8idbk7GFWuHEU7trSTflWcdBpQEK+Aw17UrSHjS6CReuhrrPcyC3zcQBPQvhArRHnBo/h6eLH1fkCvNlww==}
-    hasBin: true
-
-  dotenv-expand@12.0.3:
-    resolution: {integrity: sha512-uc47g4b+4k/M/SeaW1y4OApx+mtLWl92l5LMPP0GNXctZqELk+YGgOPIIC5elYmUH4OuoK3JLhuRUYegeySiFA==}
-    engines: {node: '>=12'}
-
-  dotenv@16.6.1:
-    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
-    engines: {node: '>=12'}
-
-  dotenv@17.2.3:
-    resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
-    engines: {node: '>=12'}
 
   dotenv@8.6.0:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
@@ -2817,9 +2734,6 @@ packages:
     resolution: {integrity: sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==}
     engines: {node: '>= 0.4'}
 
-  hash-it@7.0.2:
-    resolution: {integrity: sha512-LmxjXNePQBK8mFwDcWO9/lhTugWlE6OZRlC4zEwvoy0Ek8vFY09xNBVMGdKJyRQhUsIFRuUbk5izMzC5d3M7xA==}
-
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
@@ -2845,10 +2759,6 @@ packages:
   human-id@4.2.0:
     resolution: {integrity: sha512-K3GbkIWqyvvlpfhBPlbEvD97TtqBpAYA4kt+cn2lD2x2HuohzZCibcA2nOlnJT6exqvJLggoB5nv2dNf192nEA==}
     hasBin: true
-
-  i@0.3.7:
-    resolution: {integrity: sha512-FYz4wlXgkQwIPqhzC5TdNMLSE5+GS1IIDJZY/1ZiEPCT2S3COUVZeT5OW4BmW4r5LHLQuOosSwsvnroG9GR59Q==}
-    engines: {node: '>=0.4'}
 
   iconv-lite@0.7.3:
     resolution: {integrity: sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==}
@@ -3365,9 +3275,6 @@ packages:
 
   lodash.truncate@4.4.2:
     resolution: {integrity: sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==}
-
-  lodash@4.18.1:
-    resolution: {integrity: sha512-dMInicTPVE8d1e5otfwmmjlxkZoUpiVLwyeTdUsi/Caj/gfzzblBcCE5sRHV/AsjuCmxWrte2TNGSYuCeCq+0Q==}
 
   longest-streak@3.1.0:
     resolution: {integrity: sha512-9Ri+o0JYgehTaVBBDoMqIl8GXtbWg711O3srftcHhZ0dqnETqLaoIK0x17fUw9rFSlK/0NlsKe0Ahhyl5pXE2g==}
@@ -4198,43 +4105,6 @@ packages:
     resolution: {integrity: sha512-/GhWbh0TBd7OPsL6IhQZm4BVuglP5MP4lVwBDnIF8IYfmHfwfY0z/nu78L8FDwJM2pP+DW8045g+jUhM357U1w==}
     peerDependencies:
       svelte: ^5.1.3
-
-  svelte-preprocess@6.0.5:
-    resolution: {integrity: sha512-sgwew5yV/2eMeQobIWgAxCNarKwiTUDIc3siAUbq3sp0G6ONtzk0W+wJihMdqjbYb3iGU3ubpGv0usnnuXT3qg==}
-    engines: {node: '>= 18.0.0'}
-    peerDependencies:
-      '@babel/core': ^7.10.2
-      coffeescript: ^2.5.1
-      less: ^3.11.3 || ^4.0.0
-      postcss: ^7 || ^8
-      postcss-load-config: '>=3'
-      pug: ^3.0.0
-      sass: ^1.26.8
-      stylus: '>=0.55'
-      sugarss: ^2.0.0 || ^3.0.0 || ^4.0.0
-      svelte: ^4.0.0 || ^5.0.0-next.100 || ^5.0.0
-      typescript: ^5.0.0 || ^6.0.0
-    peerDependenciesMeta:
-      '@babel/core':
-        optional: true
-      coffeescript:
-        optional: true
-      less:
-        optional: true
-      postcss:
-        optional: true
-      postcss-load-config:
-        optional: true
-      pug:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      typescript:
-        optional: true
 
   svelte@5.56.4:
     resolution: {integrity: sha512-/d0QHehmRuJW8gVz395MTkPcPozxzdjBMBE8oEYGz8O3b9KTMzzQ9ZHJQLuFKOHOPQbU6kx/X4iid/EBBzH7iw==}
@@ -5200,8 +5070,6 @@ snapshots:
 
   '@floating-ui/utils@0.2.11': {}
 
-  '@fontsource/fira-mono@5.2.7': {}
-
   '@hono/node-server@1.19.14(hono@4.12.28)':
     dependencies:
       hono: 4.12.28
@@ -5695,18 +5563,6 @@ snapshots:
       - supports-color
       - typescript
 
-  '@pindoba/core-listbox@0.0.0-alpha-20260619021129(typescript@5.9.3)':
-    dependencies:
-      '@pindoba/normalize-props': 0.0.0-alpha-20260617191010
-      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
-      '@pindoba/styles-listbox': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/utils': 0.0.0-alpha-20260619021129
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - jsdom
-      - supports-color
-      - typescript
-
   '@pindoba/core-loading@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
@@ -5792,21 +5648,6 @@ snapshots:
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
       '@pindoba/styles-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
       '@pindoba/styles-select-native': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - jsdom
-      - supports-color
-      - typescript
-
-  '@pindoba/core-select@0.0.0-alpha-20260619021129(typescript@5.9.3)':
-    dependencies:
-      '@pindoba/core-listbox': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/core-popover': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/normalize-props': 0.0.0-alpha-20260617191010
-      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
-      '@pindoba/styles-listbox': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/styles-select': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/utils': 0.0.0-alpha-20260619021129
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - jsdom
@@ -6573,21 +6414,6 @@ snapshots:
       - supports-color
       - typescript
 
-  '@pindoba/svelte-listbox@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
-    dependencies:
-      '@pindoba/core-listbox': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
-      '@pindoba/styles-listbox': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/svelte-badge': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-banner': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-stamp': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - jsdom
-      - supports-color
-      - typescript
-
   '@pindoba/svelte-loading@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-loading': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -6692,23 +6518,6 @@ snapshots:
       '@pindoba/core-select-native': 0.0.0-alpha-20260619021129(typescript@5.9.3)
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
       '@pindoba/utils': 0.0.0-alpha-20260619021129
-      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
-    transitivePeerDependencies:
-      - '@cfworker/json-schema'
-      - jsdom
-      - supports-color
-      - typescript
-
-  '@pindoba/svelte-select@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
-    dependencies:
-      '@pindoba/core-select': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
-      '@pindoba/styles-select': 0.0.0-alpha-20260619021129(typescript@5.9.3)
-      '@pindoba/svelte-badge': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-button': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-group': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-listbox': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
-      '@pindoba/svelte-popover': 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -6983,10 +6792,6 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.11.1
 
-  '@tauri-apps/plugin-shell@2.3.5':
-    dependencies:
-      '@tauri-apps/api': 2.11.1
-
   '@testing-library/svelte-core@1.1.3(svelte@5.56.4(@typescript-eslint/types@8.63.0))':
     dependencies:
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
@@ -7026,8 +6831,6 @@ snapshots:
   '@types/json-schema@7.0.15': {}
 
   '@types/json5@0.0.29': {}
-
-  '@types/lodash@4.17.24': {}
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -7670,8 +7473,6 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  csstype@3.2.3: {}
-
   culori@4.0.2: {}
 
   data-view-buffer@1.0.2:
@@ -7790,21 +7591,6 @@ snapshots:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
       domhandler: 5.0.3
-
-  dotenv-cli@11.0.0:
-    dependencies:
-      cross-spawn: 7.0.6
-      dotenv: 17.2.3
-      dotenv-expand: 12.0.3
-      minimist: 1.2.8
-
-  dotenv-expand@12.0.3:
-    dependencies:
-      dotenv: 16.6.1
-
-  dotenv@16.6.1: {}
-
-  dotenv@17.2.3: {}
 
   dotenv@8.6.0: {}
 
@@ -8413,8 +8199,6 @@ snapshots:
     dependencies:
       has-symbols: 1.1.0
 
-  hash-it@7.0.2: {}
-
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
@@ -8443,8 +8227,6 @@ snapshots:
       toidentifier: 1.0.1
 
   human-id@4.2.0: {}
-
-  i@0.3.7: {}
 
   iconv-lite@0.7.3:
     dependencies:
@@ -8869,8 +8651,6 @@ snapshots:
   lodash.startcase@4.4.0: {}
 
   lodash.truncate@4.4.2: {}
-
-  lodash@4.18.1: {}
 
   longest-streak@3.1.0: {}
 
@@ -9923,15 +9703,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  svelte-preprocess@6.0.5(@babel/core@7.29.7)(postcss-load-config@3.1.4(postcss@8.5.16))(postcss@8.5.16)(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3):
-    dependencies:
-      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
-    optionalDependencies:
-      '@babel/core': 7.29.7
-      postcss: 8.5.16
-      postcss-load-config: 3.1.4(postcss@8.5.16)
-      typescript: 5.9.3
-
   svelte@5.56.4(@typescript-eslint/types@8.63.0):
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -10032,7 +9803,8 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tslib@2.8.1: {}
+  tslib@2.8.1:
+    optional: true
 
   type-check@0.4.0:
     dependencies:
