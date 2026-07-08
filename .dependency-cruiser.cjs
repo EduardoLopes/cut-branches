@@ -16,7 +16,7 @@ module.exports = {
 		{
 			name: 'no-domain-internals-from-outside',
 			comment:
-				'Routes and composition-root code may import only from a domain\'s public surface ' +
+				"Routes and composition-root code may import only from a domain's public surface " +
 				'(core/composables, core/models, views, types, components). ' +
 				'store/, utils/, infrastructure/, and __tests__/ are strictly internal.',
 			severity: 'error',
@@ -37,8 +37,7 @@ module.exports = {
 		{
 			name: 'no-orphans',
 			severity: 'warn',
-			comment:
-				'Orphan modules are a sign of dead code. Either consume them or delete them.',
+			comment: 'Orphan modules are a sign of dead code. Either consume them or delete them.',
 			from: {
 				orphan: true,
 				pathNot: [
