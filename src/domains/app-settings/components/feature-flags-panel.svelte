@@ -53,7 +53,7 @@
 			borderWidth: '1px',
 			borderStyle: 'solid',
 			borderColor: 'neutral.border.muted',
-			background: 'neutral.surface.step.2',
+			background: 'neutral.surface.deep',
 			overflow: 'hidden'
 		})}
 	>
@@ -92,11 +92,7 @@
 					minHeight: '0',
 					overflowY: 'auto',
 					padding: 'md',
-					'& > [data-testid="feature-flag-toggle"] + [data-testid="feature-flag-toggle"]': {
-						borderTopWidth: '1px',
-						borderTopStyle: 'solid',
-						borderTopColor: 'neutral.border.muted'
-					}
+					gap: 'sm'
 				})}
 			>
 				{#each FEATURE_FLAGS as flag (flag.key)}
