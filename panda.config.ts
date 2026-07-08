@@ -72,6 +72,38 @@ export default defineConfig({
 			_dark: {
 				filter: 'saturate(85%)'
 			}
+		},
+		// Polished, thin scrollbar applied globally. The Pindoba preset ships its
+		// own `::-webkit-scrollbar` rules in @layer base at the same specificity;
+		// prefixing with `html`/`html *` raises specificity so these win the
+		// cascade (and covers both the root element and every descendant). We
+		// deliberately do NOT set `scrollbar-width`, because in WebKit/Blink that
+		// disables the ::-webkit-scrollbar pseudo styling below. Each property the
+		// preset sets is overridden here so nothing bleeds through.
+		'html::-webkit-scrollbar, html *::-webkit-scrollbar': {
+			width: '8px',
+			height: '8px'
+		},
+		'html::-webkit-scrollbar-track, html *::-webkit-scrollbar-track': {
+			background: 'transparent',
+			border: 'none'
+		},
+		'html::-webkit-scrollbar-thumb, html *::-webkit-scrollbar-thumb': {
+			backgroundColor: '{colors.neutral.border.bold}',
+			borderRadius: '9999px',
+			border: '2px solid transparent',
+			minHeight: 'auto',
+			minWidth: 'auto',
+			backgroundClip: 'padding-box'
+		},
+		'html::-webkit-scrollbar-thumb:hover, html *::-webkit-scrollbar-thumb:hover': {
+			backgroundColor: '{colors.neutral.border.accent}'
+		},
+		'html::-webkit-scrollbar-thumb:active, html *::-webkit-scrollbar-thumb:active': {
+			backgroundColor: '{colors.primary.text}'
+		},
+		'html::-webkit-scrollbar-corner, html *::-webkit-scrollbar-corner': {
+			background: 'transparent'
 		}
 	},
 
