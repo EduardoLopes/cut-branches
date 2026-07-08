@@ -8,6 +8,7 @@
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -61,8 +62,10 @@
 			return [];
 		}
 
-		const repositories = repositoriesQuery.data;
-		const mappedItems = repositories.map(
+		// Ordering is a shared, persisted preference driven from the add-repository
+		// menu (§1.5 cross-domain seam via `$lib`).
+		const repositories = sortRepositories(repositoriesQuery.data, repositorySort.mode);
+		return repositories.map(
 			(repo): NavigationItem => ({
 				id: repo.id,
 				label: repo.name,
@@ -76,9 +79,6 @@
 				onmouseenter: () => prefetchRepositoryData(repo.id)
 			})
 		) satisfies NavigationItem[];
-
-		// Sort by name
-		return [...mappedItems].sort((a, b) => a.label.toString().localeCompare(b.label.toString()));
 	});
 </script>
 

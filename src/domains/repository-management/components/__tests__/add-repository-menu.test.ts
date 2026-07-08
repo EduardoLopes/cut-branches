@@ -1,7 +1,8 @@
 import { open as openFolderDialog } from '@tauri-apps/plugin-dialog';
 import { tick } from 'svelte';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import AddRepositoryMenu from '../add-repository-menu.svelte';
+import { repositorySort } from '$lib/repository-sort.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 vi.mock('@tauri-apps/plugin-dialog', () => ({ open: vi.fn() }));
@@ -36,6 +37,15 @@ vi.mock('../../core/composables/use-discover-repositories.svelte', () => ({
 beforeEach(() => {
 	vi.clearAllMocks();
 	vi.mocked(openFolderDialog).mockResolvedValue(null);
+	localStorage.clear();
+	repositorySort.setMode('name-asc');
+});
+
+// The Pindoba menu portals its panel into a `<dialog>` on `document.body` that
+// outlives the component unmount; clear any leftovers so a prior test's open
+// menu can't intercept pointer events in the next one.
+afterEach(() => {
+	document.querySelectorAll('dialog[data-popover]').forEach((dialog) => dialog.remove());
 });
 
 describe('AddRepositoryMenu', () => {
@@ -87,5 +97,45 @@ describe('AddRepositoryMenu', () => {
 		await expect
 			.element(screen.getByRole('menuitem', { name: /scan a specific folder/i }).first())
 			.toBeInTheDocument();
+	});
+
+	describe('repository sort section', () => {
+		it('omits the sort options by default', async () => {
+			const screen = renderWithTestWrapper(AddRepositoryMenu);
+
+			await screen.getByTestId('add-repository-menu-trigger').click();
+			await tick();
+
+			await expect
+				.element(screen.getByRole('menuitemradio', { name: /most branches/i }).first())
+				.not.toBeInTheDocument();
+		});
+
+		it('exposes the sort radio group when enabled', async () => {
+			const screen = renderWithTestWrapper(AddRepositoryMenu, { withRepositorySort: true });
+
+			await screen.getByTestId('add-repository-menu-trigger').click();
+			await tick();
+
+			await expect
+				.element(screen.getByRole('menuitemradio', { name: /name \(a–z\)/i }).first())
+				.toBeInTheDocument();
+		});
+
+		it('updates the shared sort preference when an option is picked', async () => {
+			const screen = renderWithTestWrapper(AddRepositoryMenu, { withRepositorySort: true });
+
+			await screen.getByTestId('add-repository-menu-trigger').click();
+			await tick();
+
+			await screen
+				.getByRole('menuitemradio', { name: /most branches/i })
+				.first()
+				.click();
+			await tick();
+
+			expect(repositorySort.mode).toBe('branches-desc');
+			expect(localStorage.getItem('repository-nav-sort')).toBe(JSON.stringify('branches-desc'));
+		});
 	});
 });

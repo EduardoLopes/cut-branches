@@ -1,6 +1,7 @@
 import { createRawSnippet } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import RepositoryNavList from '../repository-nav-list.svelte';
+import { repositorySort } from '$lib/repository-sort.svelte';
 import { renderWithTestWrapper, mockDataFactory } from '$utils/test-utils';
 
 const mockRepositories = [
@@ -37,9 +38,18 @@ const headerAction = createRawSnippet(() => ({
 	render: () => '<button type="button">Add a git repository</button>'
 }));
 
+/** Reads the rendered repository order from the nav links' hrefs. */
+function renderedOrder(container: HTMLElement): string[] {
+	return Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href^="/repos/"]')).map(
+		(anchor) => anchor.getAttribute('href')?.replace('/repos/', '') ?? ''
+	);
+}
+
 describe('RepositoryNavList', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		localStorage.clear();
+		repositorySort.setMode('name-asc');
 	});
 
 	describe('Rendering', () => {
@@ -52,12 +62,30 @@ describe('RepositoryNavList', () => {
 			const screen = renderWithTestWrapper(RepositoryNavList);
 			expect(screen.container).toBeInTheDocument();
 		});
+
+		it('renders as a collapsed rail', () => {
+			const screen = renderWithTestWrapper(RepositoryNavList, { compact: 'stack' });
+			expect(screen.container).toBeInTheDocument();
+		});
 	});
 
 	describe('Hover Prefetching', () => {
 		it('creates prefetch function on component mount', () => {
 			const screen = renderWithTestWrapper(RepositoryNavList, { headerAction });
 			expect(screen.container).toBeInTheDocument();
+		});
+	});
+
+	describe('Sorting', () => {
+		it('orders the list by name ascending by default', () => {
+			const screen = renderWithTestWrapper(RepositoryNavList);
+			expect(renderedOrder(screen.container)).toEqual(['1', '2', '3']);
+		});
+
+		it('reflects the shared sort preference', () => {
+			repositorySort.setMode('branches-desc');
+			const screen = renderWithTestWrapper(RepositoryNavList);
+			expect(renderedOrder(screen.container)).toEqual(['3', '1', '2']);
 		});
 	});
 });

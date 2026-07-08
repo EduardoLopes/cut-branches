@@ -57,6 +57,7 @@
 					emphasis="secondary"
 					icon="material-symbols:add-rounded"
 					visuallyHiddenLabel
+					withRepositorySort
 					onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}
 				/>
 			{/snippet}
