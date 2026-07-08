@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
+	import Card, { type PrimitiveCardHeaderProps } from '@pindoba/svelte-card';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -44,6 +45,7 @@
 		trailing={resetButton as BannerProps['trailing']}
 	/>
 
+	<!-- Recessed well so the raised setting cards read with depth. -->
 	<div
 		class={css({
 			display: 'flex',
@@ -51,23 +53,18 @@
 			flex: '1',
 			minHeight: '0',
 			overflowY: 'auto',
-			gap: 'lg',
+			gap: 'sm',
 			borderRadius: 'xl',
 			borderWidth: '1px',
 			borderStyle: 'solid',
 			borderColor: 'neutral.border.muted',
-			background: 'neutral.surface.step.2',
-			padding: 'lg'
+			background: 'neutral.surface.deep',
+			padding: 'md'
 		})}
 	>
 		<!-- Staleness threshold -->
-		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
-			<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}>Staleness threshold (days)</span>
-			<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
-				A repository is "stale" when its most recent commit and file change are both older than
-				this.
-			</span>
-			<div class={css({ maxWidth: '160px' })}>
+		{#snippet thresholdControl()}
+			<div class={css({ width: '120px' })}>
 				<Input
 					type="number"
 					size="md"
@@ -78,11 +75,22 @@
 						updateThreshold((event.currentTarget as HTMLInputElement).value)}
 				/>
 			</div>
-		</div>
+		{/snippet}
+		<Card
+			size="sm"
+			background="surface.step.2"
+			border="default"
+			header={{
+				layout: { root: { align: 'center' } },
+				heading: 'Staleness threshold (days)',
+				subheading:
+					'A repository is “stale” when its most recent commit and file change are both older than this.',
+				trailing: thresholdControl as PrimitiveCardHeaderProps['trailing']
+			}}
+		/>
 
 		<!-- Default deletion mode -->
-		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
-			<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}>Default deletion method</span>
+		{#snippet deletionControl()}
 			<Group orientation="horizontal">
 				<Button
 					size="sm"
@@ -101,16 +109,34 @@
 					Delete permanently
 				</Button>
 			</Group>
-		</div>
+		{/snippet}
+		<Card
+			size="sm"
+			background="surface.step.2"
+			border="default"
+			header={{
+				layout: { root: { align: 'center' } },
+				heading: 'Default deletion method',
+				trailing: deletionControl as PrimitiveCardHeaderProps['trailing']
+			}}
+		/>
 
-		<!-- How folders are discovered -->
-		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
-			<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}>What gets cleaned</span>
-			<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
+		<!-- How folders are discovered (informational) -->
+		{#snippet whatGetsCleaned()}
+			<span>
 				Cleanable folders are discovered from each repository's <code>.gitignore</code>, plus a
 				built-in safety list of well-known regenerable folders (node_modules, target, dist, …). You
 				choose which paths to keep on the cleanup page.
 			</span>
-		</div>
+		{/snippet}
+		<Card
+			size="sm"
+			background="surface.step.2"
+			border="default"
+			header={{
+				heading: 'What gets cleaned',
+				subheading: whatGetsCleaned as PrimitiveCardHeaderProps['subheading']
+			}}
+		/>
 	</div>
 </div>
