@@ -6,6 +6,7 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
+	import Input from '@pindoba/svelte-input';
 	import Menu from '@pindoba/svelte-menu';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -69,6 +70,19 @@
 		customRoots && customRoots.length > 0 ? customRoots.join(', ') : 'Your home folder'
 	);
 
+	// Free-text filter over the scan results (view only — selection and counts
+	// still track the full result set).
+	let searchQuery = $state('');
+	const query = $derived(searchQuery.trim().toLowerCase());
+	const filteredResults = $derived(
+		query
+			? discover.results.filter(
+					(item) =>
+						item.name.toLowerCase().includes(query) || item.path.toLowerCase().includes(query)
+				)
+			: discover.results
+	);
+
 	const allSelected = $derived(
 		discover.addableCount > 0 && discover.selectedCount === discover.addableCount
 	);
@@ -79,6 +93,8 @@
 	);
 
 	async function runScan() {
+		// A fresh scan replaces the results, so a stale filter shouldn't hide them.
+		searchQuery = '';
 		scanning = true;
 		const startedAt = Date.now();
 		try {
@@ -128,6 +144,7 @@
 		}
 		if (!open) {
 			started = false;
+			searchQuery = '';
 		}
 	});
 
@@ -344,6 +361,20 @@
 							background: 'neutral.surface.step.1'
 						})}
 					>
+						<Input
+							type="search"
+							size="sm"
+							placeholder="Filter results"
+							aria-label="Filter results"
+							bind:value={searchQuery}
+							data-testid="scan-search"
+						>
+							{#snippet leading()}
+								<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:search" width="14px" height="14px" />
+								</Stamp>
+							{/snippet}
+						</Input>
 						<span
 							class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}
 							data-testid="scan-summary"
@@ -387,7 +418,7 @@
 							padding: '2xs'
 						})}
 					>
-						{#each discover.results as item (item.path)}
+						{#each filteredResults as item (item.path)}
 							{@const selected = discover.isSelected(item.path)}
 							<Checkbox
 								fullWidth
@@ -446,6 +477,21 @@
 									{/if}
 								{/snippet}
 							</Checkbox>
+						{:else}
+							<div
+								class={css({
+									display: 'flex',
+									flex: '1',
+									alignItems: 'center',
+									justifyContent: 'center',
+									textAlign: 'center',
+									color: 'neutral.text.muted',
+									fontSize: 'sm'
+								})}
+								data-testid="scan-no-matches"
+							>
+								No repositories match your filter.
+							</div>
 						{/each}
 					</div>
 				{/if}

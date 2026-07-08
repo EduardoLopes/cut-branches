@@ -136,6 +136,26 @@ describe('ScanRepositoriesModal', () => {
 			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Add 1 repository');
 		});
 
+		it('filters the results and shows a no-match state', async () => {
+			h.stub = makeStub({
+				results: [
+					{ path: '/alpha', name: 'alpha', alreadyAdded: false },
+					{ path: '/beta', name: 'beta', alreadyAdded: false }
+				],
+				addableCount: 2,
+				selectedCount: 2
+			});
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+
+			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(2));
+
+			await screen.getByPlaceholder('Filter results').fill('alpha');
+			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(1));
+
+			await screen.getByPlaceholder('Filter results').fill('nope');
+			await vi.waitFor(() => expect(screen.getByTestId('scan-no-matches')).toBeInTheDocument());
+		});
+
 		it('pluralizes the add button and shows adding state', async () => {
 			h.stub = makeStub({
 				results: [{ path: '/a', name: 'a', alreadyAdded: false }],
