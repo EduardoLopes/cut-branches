@@ -51,7 +51,7 @@ export function useCleanupTargets(options: UseCleanupTargetsOptions = {}) {
 				progress = { measured: event.payload.measured };
 			});
 		} catch {
-			unlisten = null;
+			// `listen` rejects outside a Tauri runtime (e.g. tests) — degrade gracefully.
 		}
 
 		try {

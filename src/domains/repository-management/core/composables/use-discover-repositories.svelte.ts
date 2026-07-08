@@ -89,7 +89,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 				};
 			});
 		} catch {
-			unlisten = null;
+			// `listen` rejects outside a Tauri runtime (see above) — keep `unlisten` null.
 		}
 
 		try {
