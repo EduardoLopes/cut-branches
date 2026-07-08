@@ -1,9 +1,10 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Card, { type PrimitiveCardHeaderProps } from '@pindoba/svelte-card';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Stamp from '@pindoba/svelte-stamp';
+	import type { Snippet } from 'svelte';
 	import type { FeatureFlagDefinition } from '$lib/feature-flags.svelte';
+	import SettingsField from '$ui/patterns/settings-field.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -31,9 +32,9 @@
 {#snippet toggle()}
 	<!--
 		`as="span"` renders the checkbox as a label-less indicator so it does not
-		nest a second <label> inside the Card's <label> root (nested labels
-		double-fire the toggle). The Card's `as="label"` wraps this input, so a
-		click anywhere on the card activates it.
+		nest a second <label> inside the SettingsField's <label> root (nested labels
+		double-fire the toggle). The field's `as="label"` wraps this input, so a
+		click anywhere on the row activates it.
 	-->
 	<Checkbox
 		as="span"
@@ -44,20 +45,16 @@
 	/>
 {/snippet}
 
-<Card
+<SettingsField
 	as="label"
 	interactive
-	size="sm"
+	align="start"
 	background={enabled ? 'surface.step.3' : 'surface.step.2'}
 	feedback={enabled ? 'primary' : 'neutral'}
-	border="default"
 	class={css({ cursor: 'pointer', width: '100%' })}
-	data-testid="feature-flag-toggle"
-	header={{
-		layout: { root: { align: 'start' } },
-		leading: flag.icon ? (flagIcon as PrimitiveCardHeaderProps['leading']) : undefined,
-		heading: flag.label,
-		subheading: flag.description,
-		trailing: toggle as PrimitiveCardHeaderProps['trailing']
-	}}
+	testId="feature-flag-toggle"
+	heading={flag.label}
+	subheading={flag.description}
+	leading={flag.icon ? (flagIcon as Snippet) : undefined}
+	control={toggle as Snippet}
 />
