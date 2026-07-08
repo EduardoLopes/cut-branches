@@ -7,6 +7,16 @@ import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get
 import { executeCommand } from '$infrastructure/tauri-commands';
 import { notifications } from '$services/notifications/notifications.svelte';
 
+/**
+ * Strips trailing path separators so paths compare equal regardless of a
+ * trailing slash. The backend stores a repository's path from git2's
+ * `repo.workdir()` (which always ends in `/`), while the scanner reports paths
+ * without one — without this, an already-added repository would never match.
+ */
+function normalizePath(path: string): string {
+	return path.replace(/[/\\]+$/, '') || path;
+}
+
 /** A repository found by a scan, annotated with whether it is already tracked. */
 export interface DiscoveredItem {
 	path: string;
@@ -51,7 +61,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 	let progress = $state<ScanProgress | null>(null);
 
 	const existingPaths = $derived(
-		new SvelteSet((repositoryListQuery.data ?? []).map((repo) => repo.path))
+		new SvelteSet((repositoryListQuery.data ?? []).map((repo) => normalizePath(repo.path)))
 	);
 
 	/** Result paths that can still be added (not already tracked). */
@@ -86,11 +96,20 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 			const output = await discoverMutation.mutateAsync({ roots, maxDepth: null });
 
 			scannedRoots = output.scannedRoots;
-			results = output.repositories.map((repo) => ({
-				path: repo.path,
-				name: repo.name,
-				alreadyAdded: existingPaths.has(repo.path)
-			}));
+			results = output.repositories
+				.map((repo) => ({
+					path: repo.path,
+					name: repo.name,
+					alreadyAdded: existingPaths.has(normalizePath(repo.path))
+				}))
+				// Surface the repositories that can still be added first; already-added
+				// ones sink to the bottom. Within each group, sort by name.
+				.sort((a, b) => {
+					if (a.alreadyAdded !== b.alreadyAdded) {
+						return a.alreadyAdded ? 1 : -1;
+					}
+					return a.name.localeCompare(b.name);
+				});
 			selected.clear();
 			for (const item of results) {
 				if (!item.alreadyAdded) selected.add(item.path);

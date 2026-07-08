@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { MenuNode } from '@pindoba/core-menu';
+	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
@@ -52,13 +53,17 @@
 
 	const discover = useDiscoverRepositories({
 		onAdded: () => {
-			// Leave the dialog open so the user can review what remains, but if
-			// nothing is left to add, close it.
-			if (discover.addableCount === 0) {
-				open = false;
-			}
+			// Close the dialog as soon as the add succeeds — the newly added repos
+			// show up in the sidebar list.
+			open = false;
 		}
 	});
+
+	// A directory walk has no known total, so a time-to-finish can't be
+	// predicted; surface the live throughput (folders/s) as the useful signal.
+	const scanRate = $derived(
+		elapsedMs > 250 ? Math.round((discover.progress?.scannedDirs ?? 0) / (elapsedMs / 1000)) : 0
+	);
 
 	const scanLabel = $derived(
 		customRoots && customRoots.length > 0 ? customRoots.join(', ') : 'Your home folder'
@@ -295,7 +300,9 @@
 								{(discover.progress?.foundCount ?? 0) === 1 ? 'repository' : 'repositories'} found
 							</span>
 							<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
-								Elapsed {(elapsedMs / 1000).toFixed(1)}s
+								Elapsed {(elapsedMs / 1000).toFixed(1)}s{scanRate > 0
+									? ` · ${scanRate.toLocaleString()} folders/s`
+									: ''}
 							</span>
 						</div>
 					</div>
@@ -428,21 +435,14 @@
 								</span>
 								{#snippet trailing()}
 									{#if item.alreadyAdded}
-										<span
-											class={css({
-												fontSize: 'xs',
-												fontWeight: 'medium',
-												color: 'neutral.text.muted',
-												background: 'neutral.surface.step.2',
-												paddingX: 'xs',
-												paddingY: '4xs',
-												borderRadius: 'full',
-												flexShrink: '0'
-											})}
+										<Badge
+											size="sm"
+											emphasis="secondary"
+											feedback="success"
 											data-testid="scan-item-added"
 										>
 											Added
-										</span>
+										</Badge>
 									{/if}
 								{/snippet}
 							</Checkbox>
