@@ -27,6 +27,14 @@ vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	}))
 }));
 
+// The validation hint renders inside a native <dialog> that is always in the
+// DOM; its visibility is the dialog's own open state. Find the open one.
+function openHint(): HTMLDialogElement | undefined {
+	return [...document.querySelectorAll('dialog[data-popover]')].find(
+		(el) => (el as HTMLDialogElement).open
+	) as HTMLDialogElement | undefined;
+}
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	h.execute.mockResolvedValue({ success: true });
@@ -42,6 +50,33 @@ describe('ManageRepositoriesModal', () => {
 		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 		expect(screen.getByTestId('manage-item').elements()).toHaveLength(3);
 		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 0 repositories');
+	});
+
+	it('shows a validation hint and does not remove when nothing is selected', async () => {
+		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		const removeButton = screen.getByTestId('manage-remove-selected');
+		expect(removeButton).not.toBeDisabled();
+		expect(openHint()).toBeUndefined();
+
+		await removeButton.click();
+
+		await vi.waitFor(() => expect(openHint()).toBeTruthy());
+		expect(openHint()?.textContent).toContain('Select at least one repository to remove.');
+		expect(h.execute).not.toHaveBeenCalled();
+	});
+
+	it('dismisses the validation hint on an outside click', async () => {
+		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		await screen.getByTestId('manage-remove-selected').click();
+		await vi.waitFor(() => expect(openHint()).toBeTruthy());
+
+		// A pointerdown outside the popover and its trigger dismisses the hint.
+		// Selection is still empty, so only the outside-click path can close it.
+		document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+
+		await vi.waitFor(() => expect(openHint()).toBeUndefined());
 	});
 
 	it('shows an empty state when there are no repositories', () => {

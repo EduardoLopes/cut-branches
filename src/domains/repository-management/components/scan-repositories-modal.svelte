@@ -7,12 +7,14 @@
 	import Dialog from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
+	import Loading from '@pindoba/svelte-loading';
 	import Menu from '@pindoba/svelte-menu';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { open as openFolderDialog } from '@tauri-apps/plugin-dialog';
 	import { useDiscoverRepositories } from '../core/composables/use-discover-repositories.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -59,6 +61,23 @@
 			open = false;
 		}
 	});
+
+	let hintOpen = $state(false);
+
+	// Clear the validation hint once the user selects something to add.
+	$effect(() => {
+		if (hintOpen && discover.selectedCount > 0) {
+			hintOpen = false;
+		}
+	});
+
+	function handleAdd() {
+		if (discover.selectedCount === 0) {
+			hintOpen = true;
+			return;
+		}
+		discover.addSelected();
+	}
 
 	// A directory walk has no known total, so a time-to-finish can't be
 	// predicted; surface the live throughput (folders/s) as the useful signal.
@@ -512,18 +531,25 @@
 				<Button emphasis="ghost" onclick={() => (open = false)} data-testid="scan-cancel">
 					Close
 				</Button>
-				<Button
-					emphasis="primary"
-					onclick={discover.addSelected}
-					disabled={discover.selectedCount === 0 || discover.isAdding}
-					data-testid="scan-add-selected"
+				<ValidationHint
+					bind:open={hintOpen}
+					message="Select at least one repository to add."
+					data-testid="scan-add-validation"
 				>
-					{discover.isAdding
-						? 'Adding…'
-						: `Add ${discover.selectedCount} ${
-								discover.selectedCount === 1 ? 'repository' : 'repositories'
-							}`}
-				</Button>
+					{#snippet trigger(triggerProps)}
+						<Loading loading={discover.isAdding} variant="busy" indicator>
+							<Button
+								{...triggerProps}
+								emphasis="primary"
+								onclick={handleAdd}
+								data-testid="scan-add-selected"
+							>
+								Add {discover.selectedCount}
+								{discover.selectedCount === 1 ? 'repository' : 'repositories'}
+							</Button>
+						</Loading>
+					{/snippet}
+				</ValidationHint>
 			</div>
 		</div>
 	</Dialog>

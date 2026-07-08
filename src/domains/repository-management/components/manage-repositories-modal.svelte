@@ -5,6 +5,7 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Input from '@pindoba/svelte-input';
+	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { useRemoveRepositoryBatch } from '../core/composables/use-remove-repository-batch.svelte';
@@ -12,6 +13,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -41,7 +43,16 @@
 	// The ids the user has ticked for removal.
 	const selected = new SvelteSet<string>();
 
+	let hintOpen = $state(false);
+
 	const selectedCount = $derived(selected.size);
+
+	// Clear the validation hint once the user selects a repository.
+	$effect(() => {
+		if (hintOpen && selectedCount > 0) {
+			hintOpen = false;
+		}
+	});
 	// Select-all reflects the currently visible (filtered) rows.
 	const allSelected = $derived(
 		filteredRepositories.length > 0 &&
@@ -77,6 +88,7 @@
 	function reset() {
 		selected.clear();
 		searchQuery = '';
+		hintOpen = false;
 	}
 
 	function toggle(id: string) {
@@ -101,6 +113,10 @@
 	}
 
 	function handleRemove() {
+		if (selectedCount === 0) {
+			hintOpen = true;
+			return;
+		}
 		removeBatch.removeBatch([...selected]);
 	}
 
@@ -331,16 +347,25 @@
 				})}
 			>
 				<Button emphasis="ghost" onclick={handleCancel} data-testid="manage-cancel">Cancel</Button>
-				<Button
-					feedback="danger"
-					onclick={handleRemove}
-					disabled={selectedCount === 0 || removeBatch.isPending}
-					data-testid="manage-remove-selected"
+				<ValidationHint
+					bind:open={hintOpen}
+					message="Select at least one repository to remove."
+					data-testid="manage-remove-validation"
 				>
-					{removeBatch.isPending
-						? 'Removing…'
-						: `Remove ${selectedCount} ${selectedCount === 1 ? 'repository' : 'repositories'}`}
-				</Button>
+					{#snippet trigger(triggerProps)}
+						<Loading loading={removeBatch.isPending} variant="busy" indicator>
+							<Button
+								{...triggerProps}
+								feedback="danger"
+								onclick={handleRemove}
+								data-testid="manage-remove-selected"
+							>
+								Remove {selectedCount}
+								{selectedCount === 1 ? 'repository' : 'repositories'}
+							</Button>
+						</Loading>
+					{/snippet}
+				</ValidationHint>
 			</div>
 		</div>
 	</Dialog>

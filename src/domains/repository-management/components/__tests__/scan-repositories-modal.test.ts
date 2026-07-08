@@ -47,6 +47,14 @@ function makeStub(overrides: Record<string, any> = {}) {
 	};
 }
 
+// The validation hint renders inside a native <dialog> that is always present;
+// its visibility is the dialog's own open state. Find the open one.
+function openHint(): HTMLDialogElement | undefined {
+	return [...document.querySelectorAll('dialog[data-popover]')].find(
+		(el) => (el as HTMLDialogElement).open
+	) as HTMLDialogElement | undefined;
+}
+
 beforeEach(() => {
 	vi.clearAllMocks();
 	h.stub = makeStub();
@@ -156,7 +164,7 @@ describe('ScanRepositoriesModal', () => {
 			await vi.waitFor(() => expect(screen.getByTestId('scan-no-matches')).toBeInTheDocument());
 		});
 
-		it('pluralizes the add button and shows adding state', async () => {
+		it('pluralizes the add button and reflects the adding state with a busy indicator', async () => {
 			h.stub = makeStub({
 				results: [{ path: '/a', name: 'a', alreadyAdded: false }],
 				addableCount: 2,
@@ -166,7 +174,9 @@ describe('ScanRepositoriesModal', () => {
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
-			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Adding…');
+			// The label keeps the count; the in-flight state is shown by the busy Loading wrapper.
+			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Add 2 repositories');
+			await vi.waitFor(() => expect(document.querySelector('[data-loading="true"]')).toBeTruthy());
 		});
 	});
 
@@ -223,6 +233,24 @@ describe('ScanRepositoriesModal', () => {
 
 			await screen.getByTestId('scan-add-selected').click();
 			expect(h.stub.addSelected).toHaveBeenCalled();
+		});
+
+		it('shows a validation hint and does not add when nothing is selected', async () => {
+			h.stub = makeStub({
+				results: [{ path: '/a', name: 'a', alreadyAdded: false }],
+				addableCount: 1,
+				selectedCount: 0
+			});
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await tick();
+
+			const addButton = screen.getByTestId('scan-add-selected');
+			expect(addButton).not.toBeDisabled();
+			await addButton.click();
+
+			await vi.waitFor(() => expect(openHint()).toBeTruthy());
+			expect(openHint()?.textContent).toContain('Select at least one repository to add.');
+			expect(h.stub.addSelected).not.toHaveBeenCalled();
 		});
 
 		it('closes from the Close button', async () => {
