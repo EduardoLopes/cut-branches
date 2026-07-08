@@ -254,7 +254,7 @@
 								title={repo.name}
 								subtitle={`Last active ${staleDate(repo.staleSince)} · ${repo.path}`}
 								bannerPassThrough={{
-									root: { style: css.raw({ width: '100%' }) },
+									root: { style: css.raw({ flex: '1', minWidth: '0' }) },
 									headingGroup: { style: css.raw({ minWidth: '0' }) },
 									subheadingContainer: {
 										style: css.raw({ minWidth: '0', alignSelf: 'stretch' })
