@@ -1,0 +1,36 @@
+diff --git a/dist/changesets-changelog-github.cjs.js b/dist/changesets-changelog-github.cjs.js
+index f5239af8737fbe106eff59b827823227b8123f3f..fb725bae19280492055576db9017dfcc2eaeaf96 100644
+--- a/dist/changesets-changelog-github.cjs.js
++++ b/dist/changesets-changelog-github.cjs.js
+@@ -146,11 +146,11 @@ const changelogFunctions = {
+       };
+     })();
+     const users = options.disableThanks ? null : usersFromSummary.length ? usersFromSummary.map(userFromSummary => `[@${userFromSummary}](${GITHUB_SERVER_URL}/${userFromSummary})`).join(", ") : links.user;
+-    const prefix = [links.pull === null ? "" : ` ${links.pull}`, links.commit === null ? "" : ` ${links.commit}`, users === null ? "" : ` Thanks ${users}!`].join("");
++    const prefix = [links.pull === null ? "" : ` ${links.pull}`, links.commit === null ? "" : ` ${links.commit}`].join("");
+     return `\n\n-${prefix ? `${prefix} -` : ""} ${linkifyIssueRefs(firstLine, {
+       serverUrl: GITHUB_SERVER_URL,
+       repo: options.repo
+-    })}\n${futureLines.map(l => `  ${linkifyIssueRefs(l, {
++    })} ${users === null ? "" : `(Thanks ${users})`}\n${futureLines.map(l => `  ${linkifyIssueRefs(l, {
+       serverUrl: GITHUB_SERVER_URL,
+       repo: options.repo
+     })}`).join("\n")}`;
+diff --git a/dist/changesets-changelog-github.esm.js b/dist/changesets-changelog-github.esm.js
+index f2c93174a95658f171979285f780350b269228ab..3aca433a35c40bd5311c0badbc3a4e6e25784b86 100644
+--- a/dist/changesets-changelog-github.esm.js
++++ b/dist/changesets-changelog-github.esm.js
+@@ -142,11 +142,11 @@ const changelogFunctions = {
+       };
+     })();
+     const users = options.disableThanks ? null : usersFromSummary.length ? usersFromSummary.map(userFromSummary => `[@${userFromSummary}](${GITHUB_SERVER_URL}/${userFromSummary})`).join(", ") : links.user;
+-    const prefix = [links.pull === null ? "" : ` ${links.pull}`, links.commit === null ? "" : ` ${links.commit}`, users === null ? "" : ` Thanks ${users}!`].join("");
++    const prefix = [links.pull === null ? "" : ` ${links.pull}`, links.commit === null ? "" : ` ${links.commit}`].join("");
+     return `\n\n-${prefix ? `${prefix} -` : ""} ${linkifyIssueRefs(firstLine, {
+       serverUrl: GITHUB_SERVER_URL,
+       repo: options.repo
+-    })}\n${futureLines.map(l => `  ${linkifyIssueRefs(l, {
++    })} ${users === null ? "" : `(Thanks ${users})`}\n${futureLines.map(l => `  ${linkifyIssueRefs(l, {
+       serverUrl: GITHUB_SERVER_URL,
+       repo: options.repo
+     })}`).join("\n")}`;
