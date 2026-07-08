@@ -13,6 +13,7 @@
 	import { useCleanupTargets } from '$domains/repository-cleanup/core/composables/use-cleanup-targets.svelte';
 	import type { DeletionMode } from '$infrastructure/bindings';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { formatBytes } from '$utils/format-bytes';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -50,9 +51,22 @@
 	// Permanent deletion is irreversible — require the user to type "delete".
 	const needsTypedConfirm = $derived(mode === 'permanent');
 	const typedConfirmOk = $derived(confirmText.trim().toLowerCase() === 'delete');
-	const canConfirm = $derived(
-		cleanup.selectedCount > 0 && !cleanup.isCleaning && (!needsTypedConfirm || typedConfirmOk)
-	);
+
+	let hintOpen = $state(false);
+
+	// The reason the confirm action can't run yet, if any. Drives the inline hint.
+	const validationError = $derived.by(() => {
+		if (cleanup.selectedCount === 0) return 'Select at least one folder to clean.';
+		if (needsTypedConfirm && !typedConfirmOk) return 'Type “delete” to confirm permanent deletion.';
+		return null;
+	});
+
+	// Clear the hint as soon as the requirement is met.
+	$effect(() => {
+		if (hintOpen && !validationError) {
+			hintOpen = false;
+		}
+	});
 
 	$effect(() => {
 		// Wait for the repository path to resolve before scanning.
@@ -68,7 +82,11 @@
 	});
 
 	async function handleConfirm() {
-		if (!canConfirm) return;
+		if (cleanup.isCleaning) return;
+		if (validationError) {
+			hintOpen = true;
+			return;
+		}
 		await cleanup.clean(repositoryId, repositoryPath, mode);
 		confirmText = '';
 	}
@@ -259,17 +277,25 @@
 				>
 					Cancel
 				</Button>
-				<Loading loading={cleanup.isCleaning}>
-					<Button
-						feedback="danger"
-						disabled={!canConfirm}
-						onclick={handleConfirm}
-						data-testid="cleanup-confirm"
-					>
-						{mode === 'trash' ? 'Move to Trash' : 'Delete'}
-						{cleanup.selectedCount > 0 ? `(${formatBytes(cleanup.selectedBytes)})` : ''}
-					</Button>
-				</Loading>
+				<ValidationHint
+					bind:open={hintOpen}
+					message={validationError ?? ''}
+					data-testid="cleanup-confirm-validation"
+				>
+					{#snippet trigger(triggerProps)}
+						<Loading loading={cleanup.isCleaning} variant="busy" indicator>
+							<Button
+								{...triggerProps}
+								feedback="danger"
+								onclick={handleConfirm}
+								data-testid="cleanup-confirm"
+							>
+								{mode === 'trash' ? 'Move to Trash' : 'Delete'}
+								{cleanup.selectedCount > 0 ? `(${formatBytes(cleanup.selectedBytes)})` : ''}
+							</Button>
+						</Loading>
+					{/snippet}
+				</ValidationHint>
 			</div>
 		</div>
 	</Modal>

@@ -16,6 +16,7 @@
 	import { getCleanupConfig } from '$domains/repository-cleanup/core/composables/use-cleanup-config.svelte';
 	import { useStaleRepositories } from '$domains/repository-cleanup/core/composables/use-stale-repositories.svelte';
 	import type { DeletionMode } from '$infrastructure/bindings';
+	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { formatBytes } from '$utils/format-bytes';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -27,9 +28,22 @@
 
 	const needsTypedConfirm = $derived(mode === 'permanent');
 	const typedConfirmOk = $derived(confirmText.trim().toLowerCase() === 'delete');
-	const canClean = $derived(
-		stale.selectedCount > 0 && !stale.isCleaning && (!needsTypedConfirm || typedConfirmOk)
-	);
+
+	let hintOpen = $state(false);
+
+	// The reason the clean action can't run yet, if any. Drives the inline hint.
+	const validationError = $derived.by(() => {
+		if (stale.selectedCount === 0) return 'Select at least one repository to clean.';
+		if (needsTypedConfirm && !typedConfirmOk) return 'Type “delete” to confirm permanent deletion.';
+		return null;
+	});
+
+	// Clear the hint as soon as the requirement is met.
+	$effect(() => {
+		if (hintOpen && !validationError) {
+			hintOpen = false;
+		}
+	});
 
 	// Live elapsed time during the first-load scan; ticks on a light interval.
 	let elapsedMs = $state(0);
@@ -58,7 +72,11 @@
 	}
 
 	async function handleClean() {
-		if (!canClean) return;
+		if (stale.isCleaning) return;
+		if (validationError) {
+			hintOpen = true;
+			return;
+		}
 		await stale.cleanSelected(mode);
 		confirmText = '';
 	}
@@ -354,20 +372,28 @@
 							{stale.selectedCount === 1 ? 'repository' : 'repositories'}
 						</span>
 					{/if}
-					<Loading loading={stale.isCleaning} variant="busy" indicator>
-						<Button
-							feedback="danger"
-							disabled={!canClean}
-							onclick={handleClean}
-							data-testid="cleanup-clean-selected"
-						>
-							{#if stale.selectedCount > 0}
-								Clean {formatBytes(stale.selectedBytes)}
-							{:else}
-								Clean
-							{/if}
-						</Button>
-					</Loading>
+					<ValidationHint
+						bind:open={hintOpen}
+						message={validationError ?? ''}
+						data-testid="cleanup-clean-validation"
+					>
+						{#snippet trigger(triggerProps)}
+							<Loading loading={stale.isCleaning} variant="busy" indicator>
+								<Button
+									{...triggerProps}
+									feedback="danger"
+									onclick={handleClean}
+									data-testid="cleanup-clean-selected"
+								>
+									{#if stale.selectedCount > 0}
+										Clean {formatBytes(stale.selectedBytes)}
+									{:else}
+										Clean
+									{/if}
+								</Button>
+							</Loading>
+						{/snippet}
+					</ValidationHint>
 				</div>
 			</div>
 		{/if}
