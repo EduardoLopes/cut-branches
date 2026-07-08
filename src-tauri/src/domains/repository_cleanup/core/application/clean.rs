@@ -29,13 +29,19 @@ pub struct CleanSummary {
 /// Validate and delete each of `targets` under `repo_root`. Each target is
 /// re-validated against the repo's `.gitignore` stack server-side (the security
 /// boundary). Successful deletions are recorded in the audit log (best-effort).
-pub fn clean_repository(
+/// `on_cleaned(path, bytes_freed)` fires after each folder is deleted, so the
+/// delivery layer can stream a per-folder event for optimistic UI updates.
+pub fn clean_repository<F>(
     repo_root: &Path,
     targets: &[String],
     mode: DeletionMode,
     repo_id: &str,
     conn: &mut DbConnection,
-) -> CleanSummary {
+    mut on_cleaned: F,
+) -> CleanSummary
+where
+    F: FnMut(&str, u64),
+{
     let mut results = Vec::with_capacity(targets.len());
     let mut freed_bytes = 0u64;
 
@@ -48,6 +54,7 @@ pub fn clean_repository(
                 match deleter::delete_target(&clean_target, mode) {
                     Ok(()) => {
                         freed_bytes += size;
+                        on_cleaned(target_str, size);
                         let folder_name = clean_target
                             .path()
                             .file_name()

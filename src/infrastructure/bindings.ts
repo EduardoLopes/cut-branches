@@ -491,6 +491,7 @@ branchDeleted: BranchDeletedEvent,
 branchRestored: BranchRestoredEvent,
 branchSwitched: BranchSwitchedEvent,
 cleanupScanProgress: CleanupScanProgressEvent,
+cleanupTargetCleaned: CleanupTargetCleanedEvent,
 notification: NotificationEvent,
 repositoryChanged: RepositoryChangedEvent,
 repositoryLoaded: RepositoryLoadedEvent,
@@ -501,6 +502,7 @@ branchDeleted: "branch-deleted",
 branchRestored: "branch-restored",
 branchSwitched: "branch-switched",
 cleanupScanProgress: "cleanup-scan-progress",
+cleanupTargetCleaned: "cleanup-target-cleaned",
 notification: "notification",
 repositoryChanged: "repository-changed",
 repositoryLoaded: "repository-loaded",
@@ -603,6 +605,24 @@ folderName: string;
  * Total size on disk in bytes.
  */
 sizeBytes: number }
+/**
+ * Emitted once per folder successfully deleted by `clean_repository`, so the
+ * frontend can optimistically drop it from cached scan results without waiting
+ * for a full re-scan.
+ */
+export type CleanupTargetCleanedEvent = { 
+/**
+ * Id of the repository the folder belonged to.
+ */
+repositoryId: string; 
+/**
+ * Absolute path of the deleted folder.
+ */
+path: string; 
+/**
+ * Bytes reclaimed by deleting it.
+ */
+bytesFreed: number }
 export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
 export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"

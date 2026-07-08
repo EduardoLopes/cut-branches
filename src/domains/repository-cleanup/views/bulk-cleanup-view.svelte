@@ -354,16 +354,14 @@
 							{stale.selectedCount === 1 ? 'repository' : 'repositories'}
 						</span>
 					{/if}
-					<Loading loading={stale.isCleaning}>
+					<Loading loading={stale.isCleaning} variant="busy" indicator>
 						<Button
 							feedback="danger"
 							disabled={!canClean}
 							onclick={handleClean}
 							data-testid="cleanup-clean-selected"
 						>
-							{#if stale.isCleaning}
-								Cleaning…
-							{:else if stale.selectedCount > 0}
+							{#if stale.selectedCount > 0}
 								Clean {formatBytes(stale.selectedBytes)}
 							{:else}
 								Clean

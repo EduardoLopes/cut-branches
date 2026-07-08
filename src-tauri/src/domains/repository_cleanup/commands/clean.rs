@@ -5,10 +5,12 @@
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
-use tauri::State;
+use tauri::{AppHandle, State};
+use tauri_specta::Event;
 
 use crate::domains::repository_cleanup::core::application::clean;
 use crate::domains::repository_cleanup::core::models::deletion_mode::DeletionMode;
+use crate::domains::repository_cleanup::events::CleanupTargetCleanedEvent;
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DatabaseState;
 
@@ -48,6 +50,7 @@ pub struct CleanRepositoryOutput {
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn clean_repository(
+    app: AppHandle,
     db: State<'_, DatabaseState>,
     input: CleanRepositoryInput,
 ) -> Result<CleanRepositoryOutput, AppError> {
@@ -59,7 +62,17 @@ pub async fn clean_repository(
     let mode = input.mode;
 
     let summary = tokio::task::spawn_blocking(move || {
-        clean::clean_repository(&repo_root, &targets, mode, &repo_id, &mut conn)
+        // Emit a per-folder event as each deletion succeeds, so the frontend can
+        // drop it from cached scan results without waiting for a re-scan.
+        let emit_id = repo_id.clone();
+        clean::clean_repository(&repo_root, &targets, mode, &repo_id, &mut conn, |path, bytes| {
+            let _ = CleanupTargetCleanedEvent {
+                repository_id: emit_id.clone(),
+                path: path.to_string(),
+                bytes_freed: bytes,
+            }
+            .emit(&app);
+        })
     })
     .await
     .map_err(|e| {

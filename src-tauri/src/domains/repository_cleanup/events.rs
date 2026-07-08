@@ -38,3 +38,21 @@ pub struct StaleScanProgressEvent {
 impl Event for StaleScanProgressEvent {
     const NAME: &'static str = "stale-scan-progress";
 }
+
+/// Emitted once per folder successfully deleted by `clean_repository`, so the
+/// frontend can optimistically drop it from cached scan results without waiting
+/// for a full re-scan.
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct CleanupTargetCleanedEvent {
+    /// Id of the repository the folder belonged to.
+    pub repository_id: String,
+    /// Absolute path of the deleted folder.
+    pub path: String,
+    /// Bytes reclaimed by deleting it.
+    pub bytes_freed: u64,
+}
+
+impl Event for CleanupTargetCleanedEvent {
+    const NAME: &'static str = "cleanup-target-cleaned";
+}

@@ -52,3 +52,40 @@ export function fetchStaleRepositories(
 ): Promise<ListStaleRepositoriesOutput> {
 	return queryClient.fetchQuery(staleRepositoriesQueryOptions(input));
 }
+
+/**
+ * Optimistically remove a just-cleaned folder from every cached stale-scan entry
+ * (any threshold variant), recomputing sizes and dropping repositories left with
+ * no targets. Driven by the backend `cleanup-target-cleaned` event so the list
+ * reflects a deletion immediately, without waiting for a full re-scan.
+ */
+export function removeCleanedTargetFromCache(
+	queryClient: QueryClient,
+	cleaned: { repositoryId: string; path: string }
+) {
+	queryClient.setQueriesData<ListStaleRepositoriesOutput>(
+		{ queryKey: [getResource(COMMAND), COMMAND] },
+		(old) => {
+			if (!old) return old;
+			let changed = false;
+			const repositories = old.repositories
+				.map((repo) => {
+					if (repo.id !== cleaned.repositoryId) return repo;
+					const targets = repo.targets.filter((t) => t.path !== cleaned.path);
+					if (targets.length === repo.targets.length) return repo;
+					changed = true;
+					return {
+						...repo,
+						targets,
+						reclaimableBytes: targets.reduce((sum, t) => sum + t.sizeBytes, 0)
+					};
+				})
+				.filter((repo) => repo.targets.length > 0);
+			if (!changed) return old;
+			return {
+				repositories,
+				totalReclaimableBytes: repositories.reduce((sum, r) => sum + r.reclaimableBytes, 0)
+			};
+		}
+	);
+}

@@ -1,8 +1,13 @@
+import { useQueryClient } from '@tanstack/svelte-query';
 import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { getCleanupConfig } from './use-cleanup-config.svelte';
 import { isKept, keepAll, keepNone, toggleKept } from './use-cleanup-keeplist.svelte';
-import { createListStaleRepositoriesQuery } from '$domains/repository-cleanup/infrastructure/queries/create-list-stale-repositories-query';
+import {
+	createListStaleRepositoriesQuery,
+	removeCleanedTargetFromCache
+} from '$domains/repository-cleanup/infrastructure/queries/create-list-stale-repositories-query';
 import type {
+	CleanupTargetCleanedEvent,
 	DeletionMode,
 	StaleRepository,
 	StaleScanProgressEvent
@@ -24,13 +29,15 @@ export interface StaleScanProgress {
  * the last result is shown instantly on revisit and only re-scanned in the
  * background when stale — the full "scanning" state appears only on the very
  * first load. Selection is opt-out per path (a folder is cleaned unless kept,
- * persisted per-repo in the keep-list). Cleans run sequentially, then the query
- * refetches so the list reflects what was deleted.
+ * persisted per-repo in the keep-list). Cleans run sequentially; each deleted
+ * folder emits a `cleanup-target-cleaned` event that drops it from the cached
+ * scan, so the list updates immediately without a full re-walk.
  */
 export function useStaleRepositories() {
 	const query = createListStaleRepositoriesQuery(() => ({
 		thresholdDays: getCleanupConfig().thresholdDays
 	}));
+	const queryClient = useQueryClient();
 
 	let isCleaning = $state(false);
 	let progress = $state<StaleScanProgress | null>(null);
@@ -48,6 +55,28 @@ export function useStaleRepositories() {
 				total: event.payload.total,
 				found: event.payload.found
 			};
+		})
+			.then((fn) => {
+				if (cancelled) fn();
+				else unlisten = fn;
+			})
+			.catch(() => {});
+		return () => {
+			cancelled = true;
+			unlisten?.();
+		};
+	});
+
+	// Optimistically drop a folder from the cached scan the moment the backend
+	// reports it deleted, so the list reflects a clean without a full re-scan.
+	$effect(() => {
+		let unlisten: UnlistenFn | null = null;
+		let cancelled = false;
+		listen<CleanupTargetCleanedEvent>('cleanup-target-cleaned', (event) => {
+			removeCleanedTargetFromCache(queryClient, {
+				repositoryId: event.payload.repositoryId,
+				path: event.payload.path
+			});
 		})
 			.then((fn) => {
 				if (cancelled) fn();
@@ -177,10 +206,9 @@ export function useStaleRepositories() {
 			isCleaning = false;
 		}
 
-		// Re-scan so the list (and the summary, via the effect above) reflects the
-		// deletions. Runs in the background; the current data stays visible.
-		await query.refetch();
-
+		// No re-scan here: each deleted folder emits `cleanup-target-cleaned`, and
+		// the listener above drops it from the cached scan — so the list updates
+		// immediately without waiting on a full re-walk.
 		notifications.push({
 			feedback: failedTargets > 0 ? 'warning' : 'success',
 			title: `Cleaned ${cleanedRepos} ${cleanedRepos === 1 ? 'repository' : 'repositories'}`,

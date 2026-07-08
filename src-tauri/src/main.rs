@@ -31,7 +31,9 @@ use domains::path_operations::commands::get_repository_root;
 use domains::repository_cleanup::commands::{
     clean_repository, list_stale_repositories, scan_cleanup_targets,
 };
-use domains::repository_cleanup::events::{CleanupScanProgressEvent, StaleScanProgressEvent};
+use domains::repository_cleanup::events::{
+    CleanupScanProgressEvent, CleanupTargetCleanedEvent, StaleScanProgressEvent,
+};
 use domains::repository_management::commands::{
     build_watch_callback, create_repository, delete_repository, discover_repositories,
     get_repository, get_repository_list, get_repository_sync_status, register_all_repositories,
@@ -121,7 +123,8 @@ fn main() {
             RepositoryScanProgressEvent,
             NotificationEvent,
             CleanupScanProgressEvent,
-            StaleScanProgressEvent
+            StaleScanProgressEvent,
+            CleanupTargetCleanedEvent
         ]);
 
     #[cfg(debug_assertions)]

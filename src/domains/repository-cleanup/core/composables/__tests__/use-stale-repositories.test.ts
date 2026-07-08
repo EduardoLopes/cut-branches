@@ -19,9 +19,13 @@ const { holder, executeCommand, push } = vi.hoisted(() => ({
 }));
 
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn().mockResolvedValue(() => {}) }));
+vi.mock('@tanstack/svelte-query', () => ({ useQueryClient: () => ({}) }));
 vi.mock(
 	'$domains/repository-cleanup/infrastructure/queries/create-list-stale-repositories-query',
-	() => ({ createListStaleRepositoriesQuery: () => holder.query })
+	() => ({
+		createListStaleRepositoriesQuery: () => holder.query,
+		removeCleanedTargetFromCache: vi.fn()
+	})
 );
 vi.mock('$infrastructure/tauri-commands', () => ({ executeCommand }));
 vi.mock('$services/notifications/notifications.svelte', () => ({ notifications: { push } }));
@@ -147,16 +151,12 @@ describe('useStaleRepositories', () => {
 		cleanup();
 	});
 
-	it('cleans selected paths then refetches, and warns on failures', async () => {
+	it('cleans each selected repository and reports success', async () => {
 		const { stale, cleanup } = setup([
 			repo('r1', [target('/r1/node_modules', 100)]),
 			repo('r2', [target('/r2/coverage', 10)])
 		]);
 
-		// After cleaning, the refetch resolves with an empty scan.
-		mock.onRefetch(async () => {
-			mock.set(output([]));
-		});
 		executeCommand.mockImplementation(async (_cmd: string, input: { targets: string[] }) => ({
 			freedBytes: input.targets.length * 10,
 			results: input.targets.map((path) => ({ path, ok: true, bytesFreed: 10, error: null }))
@@ -166,19 +166,18 @@ describe('useStaleRepositories', () => {
 		flushSync();
 
 		expect(executeCommand).toHaveBeenCalledTimes(2);
+		// No approvedExtra/allowlist; the backend re-derives the ignore set. The
+		// list itself updates via the `cleanup-target-cleaned` event, not a re-scan.
 		expect(executeCommand).toHaveBeenCalledWith(
 			'cleanRepository',
 			expect.objectContaining({ repositoryId: 'r2', targets: ['/r2/coverage'], mode: 'permanent' })
 		);
-		expect(stale.repositoryCount).toBe(0);
-		expect(cleanupSummary.reclaimableBytes).toBe(0);
 		expect(push).toHaveBeenCalledWith(expect.objectContaining({ feedback: 'success' }));
 		cleanup();
 	});
 
-	it('counts a thrown command as failed and still refetches', async () => {
+	it('counts a thrown command as failed and warns', async () => {
 		const { stale, cleanup } = setup([repo('r1', [target('/r1/dist', 10)])]);
-		mock.onRefetch(async () => {});
 		executeCommand.mockRejectedValue(new Error('crash'));
 
 		await stale.cleanSelected('trash');
