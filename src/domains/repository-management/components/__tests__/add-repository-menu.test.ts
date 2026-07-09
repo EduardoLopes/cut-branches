@@ -83,7 +83,7 @@ describe('AddRepositoryMenu', () => {
 			.click();
 
 		// The modal auto-scans the home folder when opened with the home scope.
-		await vi.waitFor(() => expect(h.scan).toHaveBeenCalledWith([]));
+		await vi.waitFor(() => expect(h.scan).toHaveBeenCalledWith([], false));
 	});
 
 	it('offers a "Scan a specific folder…" option', async () => {

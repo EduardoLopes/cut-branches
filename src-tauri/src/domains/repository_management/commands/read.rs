@@ -21,6 +21,8 @@ pub struct GetRepositoryOutput {
     pub name: String,
     pub id: String,
     pub last_synced_at: Option<chrono::NaiveDateTime>,
+    /// Whether this repository is a linked git worktree (not the main worktree).
+    pub is_worktree: bool,
 }
 
 /// Gets information about a git repository.
@@ -56,6 +58,7 @@ pub async fn get_repository(
         name: response.name,
         id: response.id,
         last_synced_at: response.last_synced_at,
+        is_worktree: response.is_worktree,
     })
 }
 

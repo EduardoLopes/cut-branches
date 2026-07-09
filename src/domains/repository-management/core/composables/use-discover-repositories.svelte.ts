@@ -75,7 +75,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 	 * Scans the given roots (empty = the user's home directory), replacing any
 	 * previous results and pre-selecting every not-yet-added repository.
 	 */
-	async function scan(roots: string[] = []) {
+	async function scan(roots: string[] = [], includeWorktrees = false) {
 		progress = { scannedDirs: 0, foundCount: 0 };
 
 		// Stream live progress from the backend while the walk runs. `listen`
@@ -93,7 +93,11 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 		}
 
 		try {
-			const output = await discoverMutation.mutateAsync({ roots, maxDepth: null });
+			const output = await discoverMutation.mutateAsync({
+				roots,
+				maxDepth: null,
+				includeWorktrees
+			});
 
 			scannedRoots = output.scannedRoots;
 			results = output.repositories

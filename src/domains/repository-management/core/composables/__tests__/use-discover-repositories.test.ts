@@ -84,7 +84,11 @@ describe('useDiscoverRepositories', () => {
 			const discover = mount();
 			await discover.scan([]);
 
-			expect(h.mutateAsync).toHaveBeenCalledWith({ roots: [], maxDepth: null });
+			expect(h.mutateAsync).toHaveBeenCalledWith({
+				roots: [],
+				maxDepth: null,
+				includeWorktrees: false
+			});
 			expect(discover.results).toHaveLength(2);
 			expect(discover.hasScanned).toBe(true);
 			expect(discover.scannedRoots).toEqual(['/home/user']);
@@ -105,7 +109,11 @@ describe('useDiscoverRepositories', () => {
 			const discover = mount();
 			await discover.scan(['/some/root']);
 
-			expect(h.mutateAsync).toHaveBeenCalledWith({ roots: ['/some/root'], maxDepth: null });
+			expect(h.mutateAsync).toHaveBeenCalledWith({
+				roots: ['/some/root'],
+				maxDepth: null,
+				includeWorktrees: false
+			});
 			expect(discover.results.find((r) => r.path === '/a')?.alreadyAdded).toBe(true);
 			expect(discover.addableCount).toBe(1);
 			expect(discover.selectedCount).toBe(1);

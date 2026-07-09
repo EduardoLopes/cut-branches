@@ -27,6 +27,11 @@ pub struct DiscoverRepositoriesInput {
     /// Maximum depth to descend below each root. Defaults to `DEFAULT_MAX_DEPTH`.
     #[serde(default)]
     pub max_depth: Option<u32>,
+    /// Include linked git worktrees in the results. Off by default: a linked
+    /// worktree shares its repository with the main worktree, so it isn't a
+    /// standalone repo. Enable to register worktrees and manage their branches.
+    #[serde(default)]
+    pub include_worktrees: bool,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -87,6 +92,7 @@ pub async fn discover_repositories(
     };
 
     let max_depth = input.max_depth.unwrap_or(DEFAULT_MAX_DEPTH) as usize;
+    let include_worktrees = input.include_worktrees;
 
     let scanned_roots = roots
         .iter()
@@ -109,6 +115,7 @@ pub async fn discover_repositories(
         let repos = scanner::find_git_repositories_reporting(
             &roots,
             max_depth,
+            include_worktrees,
             |scanned_dirs, found_count, current| {
                 total_dirs = scanned_dirs;
                 let due = match last_emit {

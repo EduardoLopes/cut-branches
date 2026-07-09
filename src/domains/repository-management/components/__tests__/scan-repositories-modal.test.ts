@@ -67,14 +67,14 @@ describe('ScanRepositoriesModal', () => {
 			renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'home' });
 			await tick();
 
-			expect(h.stub.scan).toHaveBeenCalledWith([]);
+			expect(h.stub.scan).toHaveBeenCalledWith([], false);
 			expect(openFolderDialog).not.toHaveBeenCalled();
 		});
 
 		it('prompts for a folder when opened with the folder scope', async () => {
 			renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
 
-			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith(['/chosen/folder']));
+			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith(['/chosen/folder'], false));
 			expect(openFolderDialog).toHaveBeenCalledWith({ directory: true, multiple: false });
 		});
 
@@ -202,7 +202,7 @@ describe('ScanRepositoriesModal', () => {
 				.first()
 				.click();
 
-			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith([]));
+			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith([], false));
 		});
 
 		it('scans a chosen folder from the Choose folder button', async () => {
@@ -212,7 +212,7 @@ describe('ScanRepositoriesModal', () => {
 
 			await screen.getByTestId('choose-folder-button').click();
 
-			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith(['/chosen/folder']));
+			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith(['/chosen/folder'], false));
 			expect(openFolderDialog).toHaveBeenCalled();
 		});
 

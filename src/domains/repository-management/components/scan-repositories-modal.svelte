@@ -41,6 +41,9 @@
 	const MIN_SCAN_MS = 300;
 	// Elapsed time shown while scanning; ticks on a light interval.
 	let elapsedMs = $state(0);
+	// Whether to also surface linked git worktrees (off by default — a worktree
+	// shares its repo with the main worktree, so it isn't a standalone repo).
+	let includeWorktrees = $state(false);
 
 	$effect(() => {
 		if (!scanning) {
@@ -117,7 +120,7 @@
 		scanning = true;
 		const startedAt = Date.now();
 		try {
-			await discover.scan(customRoots ?? []);
+			await discover.scan(customRoots ?? [], includeWorktrees);
 		} catch {
 			// The mutation already surfaces an error notification via its meta.
 		} finally {
@@ -282,6 +285,22 @@
 						</Menu>
 					</Group>
 				</div>
+			</div>
+
+			<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs' })}>
+				<Checkbox
+					id="scan-include-worktrees"
+					checked={includeWorktrees}
+					disabled={scanning}
+					onchange={() => {
+						includeWorktrees = !includeWorktrees;
+						// Re-run so the results reflect the new setting immediately.
+						if (discover.hasScanned) runScan();
+					}}
+					data-testid="scan-include-worktrees"
+				>
+					Include linked worktrees
+				</Checkbox>
 			</div>
 
 			<!-- Results panel (fixed height so the modal doesn't resize between states) -->

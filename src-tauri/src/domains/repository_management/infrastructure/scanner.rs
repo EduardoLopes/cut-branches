@@ -8,6 +8,15 @@ use std::path::{Path, PathBuf};
 
 use crate::shared::infrastructure::git::is_git_repository;
 
+/// Whether `path` is a **linked** git worktree (its `.git` is a file pointing
+/// into the main repo's `.git/worktrees/…`) rather than the main worktree.
+/// Used to exclude worktrees from scans by default.
+fn is_linked_worktree(path: &Path) -> bool {
+    git2::Repository::open(path)
+        .map(|r| r.is_worktree())
+        .unwrap_or(false)
+}
+
 /// Directory names never worth descending into during a scan: package caches,
 /// build outputs, and OS/system folders that never hold user git repositories
 /// but are enormous to walk. Names starting with `.` are pruned separately.
@@ -44,6 +53,7 @@ const MAX_RESULTS: usize = 1000;
 pub fn find_git_repositories_reporting<F>(
     roots: &[PathBuf],
     max_depth: usize,
+    include_worktrees: bool,
     on_progress: F,
 ) -> Vec<PathBuf>
 where
@@ -52,7 +62,10 @@ where
     walk(
         roots,
         max_depth,
-        |path| matches!(is_git_repository(path), Ok(true)),
+        |path| {
+            matches!(is_git_repository(path), Ok(true))
+                && (include_worktrees || !is_linked_worktree(path))
+        },
         on_progress,
     )
 }
@@ -269,8 +282,54 @@ mod tests {
         fs::create_dir_all(&real).unwrap();
         init_repo_with_commit(&real);
 
-        let found = find_git_repositories_reporting(&[root.to_path_buf()], 10, |_, _, _| {});
+        let found = find_git_repositories_reporting(&[root.to_path_buf()], 10, false, |_, _, _| {});
         assert_eq!(found, vec![real]);
+    }
+
+    #[test]
+    fn excludes_linked_worktrees_by_default_and_includes_them_when_asked() {
+        let tmp = TempDir::new().unwrap();
+        let root = tmp.path();
+
+        let main = root.join("main");
+        fs::create_dir_all(&main).unwrap();
+        init_repo_with_commit(&main);
+
+        // Create a linked worktree via the git CLI so it has a real `.git` file
+        // pointing into the main repo's `.git/worktrees/…`.
+        //
+        // Clear the git environment variables git sets when running inside a hook
+        // (the pre-commit hook runs the test suite): `GIT_DIR`/`GIT_INDEX_FILE`
+        // et al. would otherwise point this subprocess at the outer repo instead
+        // of `main`, failing with "`.git/index`: Not a directory".
+        let wt = root.join("wt");
+        let mut cmd = std::process::Command::new("git");
+        cmd.args(["worktree", "add", wt.to_str().unwrap(), "-b", "feature"])
+            .current_dir(&main);
+        for var in [
+            "GIT_DIR",
+            "GIT_INDEX_FILE",
+            "GIT_WORK_TREE",
+            "GIT_COMMON_DIR",
+            "GIT_OBJECT_DIRECTORY",
+            "GIT_PREFIX",
+        ] {
+            cmd.env_remove(var);
+        }
+        let status = cmd.status().expect("git worktree add");
+        assert!(status.success());
+
+        // Default: the linked worktree is excluded, only the main repo is found.
+        let default_scan =
+            find_git_repositories_reporting(&[root.to_path_buf()], 10, false, |_, _, _| {});
+        assert_eq!(default_scan, vec![main.clone()]);
+
+        // Opt-in: both the main repo and the linked worktree are found.
+        let with_worktrees =
+            find_git_repositories_reporting(&[root.to_path_buf()], 10, true, |_, _, _| {});
+        assert_eq!(with_worktrees.len(), 2);
+        assert!(with_worktrees.contains(&main));
+        assert!(with_worktrees.contains(&wt));
     }
 
     /// Initializes a git repository with a single empty commit so that

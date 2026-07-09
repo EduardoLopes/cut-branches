@@ -71,6 +71,12 @@ pub async fn get_repository(
     let mut branches = branch.list_branches_fast(raw_root_path)?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
 
+    // Detect whether this working directory is a linked worktree (vs the main
+    // worktree). Derived live from git2 — not persisted.
+    let is_worktree = git2::Repository::open(raw_root_path)
+        .map(|r| r.is_worktree())
+        .unwrap_or(false);
+
     Ok(GitDirResponse {
         path: root_path,
         branches,
@@ -79,6 +85,7 @@ pub async fn get_repository(
         name: updated_repo.name,
         id: updated_repo.id,
         last_synced_at: updated_repo.last_synced_at,
+        is_worktree,
     })
 }
 
