@@ -733,8 +733,6 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        std::env::set_current_dir(path).unwrap();
-
         let output = Command::new("git")
             .args(["branch", "--show-current"])
             .current_dir(path)
