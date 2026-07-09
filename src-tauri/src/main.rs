@@ -42,6 +42,9 @@ use domains::repository_management::commands::{
 use domains::repository_management::events::{
     NotificationEvent, RepositoryChangedEvent, RepositoryLoadedEvent, RepositoryScanProgressEvent,
 };
+use domains::worktree_management::commands::{
+    add_worktree, list_worktrees, lock_worktree, remove_worktree, unlock_worktree,
+};
 use shared::infrastructure::watcher::WatcherState;
 
 /// Default log verbosity when `CUT_BRANCHES_LOG` is unset: quieter in release
@@ -113,6 +116,12 @@ fn main() {
             scan_cleanup_targets,
             list_stale_repositories,
             clean_repository,
+            // Worktree management
+            list_worktrees,
+            add_worktree,
+            remove_worktree,
+            lock_worktree,
+            unlock_worktree,
         ])
         .events(tauri_specta::collect_events![
             BranchDeletedEvent,
@@ -267,6 +276,7 @@ mod tests {
         use crate::domains::path_operations::commands as path_commands;
         use crate::domains::repository_cleanup::commands as cleanup_commands;
         use crate::domains::repository_management::commands as repo_commands;
+        use crate::domains::worktree_management::commands as worktree_commands;
 
         // Test that we can access the command functions
         let _ = repo_commands::get_repository;
@@ -280,5 +290,10 @@ mod tests {
         let _ = cleanup_commands::scan_cleanup_targets;
         let _ = cleanup_commands::list_stale_repositories;
         let _ = cleanup_commands::clean_repository;
+        let _ = worktree_commands::list_worktrees;
+        let _ = worktree_commands::add_worktree;
+        let _ = worktree_commands::remove_worktree;
+        let _ = worktree_commands::lock_worktree;
+        let _ = worktree_commands::unlock_worktree;
     }
 }
