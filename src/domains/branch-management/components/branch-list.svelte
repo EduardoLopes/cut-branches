@@ -155,12 +155,12 @@
 					class={css({
 						position: 'relative',
 						display: 'grid',
-						gridTemplateColumns: 'auto 1fr',
-						gap: 'sm',
+						gap: 'xs',
 						borderRadius: 'sm',
 						borderTopLeftRadius: 0
 					})}
 					class:selected={branch.getIsSelected()}
+					style:grid-template-columns={branch.isCurrent() ? '1fr' : 'auto 1fr'}
 				>
 					{#if !branch.isCurrent()}
 						<div
@@ -215,28 +215,6 @@
 								</Loading>
 							{/if}
 
-							{#if allowLocking}
-								<LockBranchToggle {repositoryID} branch={branch.getName()} />
-							{/if}
-						</div>
-					{/if}
-
-					{#if branch.isCurrent()}
-						<div
-							class={css({
-								display: 'flex',
-								width: '100%',
-								flexDirection: 'column',
-								gap: 'sm'
-							})}
-						>
-							<Tooltip content="Current branch">
-								{#snippet children(triggerProps)}
-									<Stamp feedback="primary" size="sm" shape="circle" {...triggerProps}>
-										<Icon icon="lucide:map-pin" width="10px" height="10px" />
-									</Stamp>
-								{/snippet}
-							</Tooltip>
 							{#if allowLocking}
 								<LockBranchToggle {repositoryID} branch={branch.getName()} />
 							{/if}

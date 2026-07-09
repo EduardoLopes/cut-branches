@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
 	import Card, {
 		type PrimitiveCardFooterProps,
 		type PrimitiveCardHeaderProps
@@ -70,14 +71,27 @@
 </script>
 
 {#snippet heading()}
-	<span
-		class={css({
-			fontWeight: 600,
-			pindobaTransition: 'fast'
-		})}
-		data-testid="branch-name"
-	>
-		{branch.getName()}
+	<span class={css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' })}>
+		<span
+			class={css({
+				fontWeight: 600,
+				pindobaTransition: 'fast',
+				overflow: 'hidden',
+				textOverflow: 'ellipsis',
+				whiteSpace: 'nowrap'
+			})}
+			data-testid="branch-name"
+		>
+			{branch.getName()}
+		</span>
+		{#if branch.isCurrent()}
+			<Badge size="sm" feedback="primary" emphasis="secondary" data-testid="branch-current-badge">
+				<span class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}>
+					<Icon icon="lucide:map-pin" width="12px" height="12px" />
+					current
+				</span>
+			</Badge>
+		{/if}
 	</span>
 {/snippet}
 
