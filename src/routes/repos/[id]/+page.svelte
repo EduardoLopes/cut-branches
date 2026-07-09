@@ -3,6 +3,7 @@
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { page } from '$app/state';
+	import RepositoryContextSwitch from '$components/repository-context-switch.svelte';
 	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';
 	import CleanRepositoryModal from '$domains/repository-cleanup/components/clean-repository-modal.svelte';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
@@ -37,13 +38,17 @@
 	</Stamp>
 {/snippet}
 
+{#snippet contextSwitch()}
+	<RepositoryContextSwitch {id} />
+{/snippet}
+
 <div
 	class={css({
 		width: 'full',
 		height: 'full'
 	})}
 >
-	<Repository repositoryId={id} {extraMenuItems}>
+	<Repository repositoryId={id} {extraMenuItems} {contextSwitch}>
 		<ActiveBranchesView {id} />
 	</Repository>
 

@@ -9,9 +9,11 @@
 		repositoryId: string;
 		/** Extra options-menu actions composed in by the route (§1.3). */
 		extraMenuItems?: MenuNode[];
+		/** Primary context switch rendered in the header, composed by the route (§1.3). */
+		contextSwitch?: Snippet;
 	}
 
-	const { children, repositoryId, extraMenuItems = [] }: Props = $props();
+	const { children, repositoryId, extraMenuItems = [], contextSwitch }: Props = $props();
 </script>
 
 <div
@@ -31,7 +33,7 @@
 			background: 'neutral.surface.step.1'
 		})}
 	>
-		<RepositoryHeader {repositoryId} {extraMenuItems} />
+		<RepositoryHeader {repositoryId} {extraMenuItems} {contextSwitch} />
 		{#if children}
 			{@render children()}
 		{/if}

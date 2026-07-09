@@ -43,6 +43,14 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 			'Reclaim disk space by deleting stale dependency/build folders (node_modules, target, …). Adds a per-repository cleanup action and a bulk cleanup page.',
 		defaultEnabled: false,
 		icon: 'lucide:brush-cleaning'
+	},
+	{
+		key: 'worktree-management',
+		label: 'Worktree management',
+		description:
+			'Manage git worktrees for a repository — list, add, remove, and lock worktrees. Adds a worktrees section to the repository view.',
+		defaultEnabled: false,
+		icon: 'lucide:trees'
 	}
 ];
 

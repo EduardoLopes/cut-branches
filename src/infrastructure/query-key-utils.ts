@@ -56,6 +56,13 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	setBranchSelectionAll: ['getBranchList'],
 	batchCreateLockedBranches: ['listLockedBranches', 'getBranchList'],
 	batchDeleteLockedBranches: ['listLockedBranches', 'getBranchList'],
+	// Worktree mutations use add/remove/lock/unlock prefixes the resource
+	// extractor doesn't recognize, so map them explicitly to the worktree list.
+	// Adding a worktree may also create a branch, so it refreshes the branch list.
+	addWorktree: ['listWorktrees', 'getBranchList'],
+	removeWorktree: ['listWorktrees'],
+	lockWorktree: ['listWorktrees'],
+	unlockWorktree: ['listWorktrees'],
 	deleteRepository: [
 		'getBranchList',
 		'getBranchMergeStatus',

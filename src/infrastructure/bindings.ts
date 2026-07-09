@@ -480,6 +480,63 @@ async cleanRepository(input: CleanRepositoryInput) : Promise<Result<CleanReposit
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Lists every worktree of the repository (the main worktree first, then each
+ * linked worktree with its branch, HEAD, and lock status).
+ */
+async listWorktrees(input: ListWorktreesInput) : Promise<Result<ListWorktreesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_worktrees", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Creates a worktree and returns its resolved metadata.
+ */
+async addWorktree(input: AddWorktreeInput) : Promise<Result<AddWorktreeOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_worktree", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Removes the requested worktree (deleting its working tree and pruning its
+ * admin files). The main worktree cannot be removed.
+ */
+async removeWorktree(input: RemoveWorktreeInput) : Promise<Result<RemoveWorktreeOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("remove_worktree", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Locks a worktree so it can't be pruned.
+ */
+async lockWorktree(input: LockWorktreeInput) : Promise<Result<LockWorktreeOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("lock_worktree", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Unlocks a previously locked worktree.
+ */
+async unlockWorktree(input: UnlockWorktreeInput) : Promise<Result<UnlockWorktreeOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("unlock_worktree", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -516,6 +573,28 @@ staleScanProgress: "stale-scan-progress"
 
 /** user-defined types **/
 
+export type AddWorktreeInput = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+path: string; 
+/**
+ * Administrative name for the new worktree.
+ */
+name: string; 
+/**
+ * Absolute path where the new worktree should be checked out. Must not exist yet.
+ */
+worktreePath: string; 
+/**
+ * Local branch to check out. When omitted, git creates a new branch named `name`.
+ */
+reference: string | null; 
+/**
+ * Lock the worktree immediately after creating it.
+ */
+lock: boolean | null }
+export type AddWorktreeOutput = { worktree: Worktree }
 export type AppError = { message: string; kind: string; description: string | null }
 export type BatchCreateBranchRestorationsInput = { path: string; repoId: string; branchInfos: DeletedBranch[] }
 export type BatchCreateBranchRestorationsOutput = { results: RestoreBranchResult[] }
@@ -672,7 +751,13 @@ roots?: string[];
 /**
  * Maximum depth to descend below each root. Defaults to `DEFAULT_MAX_DEPTH`.
  */
-maxDepth?: number | null }
+maxDepth?: number | null; 
+/**
+ * Include linked git worktrees in the results. Off by default: a linked
+ * worktree shares its repository with the main worktree, so it isn't a
+ * standalone repo. Enable to register worktrees and manage their branches.
+ */
+includeWorktrees?: boolean }
 export type DiscoverRepositoriesOutput = { 
 /**
  * Git repositories found under the scanned roots.
@@ -705,7 +790,11 @@ export type GetBranchMergeStatusOutput = { isMerged: boolean }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
 export type GetRepositoryInput = { id: string }
-export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string; lastSyncedAt: string | null }
+export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string; lastSyncedAt: string | null; 
+/**
+ * Whether this repository is a linked git worktree (not the main worktree).
+ */
+isWorktree: boolean }
 export type GetRepositoryRootInput = { path: string }
 export type GetRepositoryRootOutput = { rootPath: string; id: string | null }
 export type GetRepositorySyncStatusInput = { repositoryId: string }
@@ -732,6 +821,12 @@ export type ListStaleRepositoriesOutput = { repositories: StaleRepository[];
  * Total reclaimable bytes across all stale repositories.
  */
 totalReclaimableBytes: number }
+export type ListWorktreesInput = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+path: string }
+export type ListWorktreesOutput = { worktrees: Worktree[] }
 /**
  * Filter for branch lock status
  */
@@ -748,6 +843,20 @@ export type LockStatusFilter =
  * Both locked and unlocked branches
  */
 "all"
+export type LockWorktreeInput = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+path: string; 
+/**
+ * Administrative name of the worktree to lock.
+ */
+name: string; 
+/**
+ * Optional reason recorded with the lock.
+ */
+reason: string | null }
+export type LockWorktreeOutput = { name: string }
 /**
  * Filter for branch merge status
  */
@@ -766,6 +875,24 @@ export type MergeStatusFilter =
 "all"
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
+export type RemoveWorktreeInput = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+path: string; 
+/**
+ * Administrative name of the worktree to remove.
+ */
+name: string; 
+/**
+ * Remove even if the worktree is locked.
+ */
+force: boolean | null }
+export type RemoveWorktreeOutput = { 
+/**
+ * Name of the worktree that was removed.
+ */
+name: string }
 export type Repository = { id: string; name: string; path: string; currentBranch: string; branchesCount: number; createdAt: string; updatedAt: string; lastSyncTimestamp: number | null; lastSyncedAt: string | null }
 /**
  * Emitted when the filesystem watcher detects an external change to a watched
@@ -835,10 +962,56 @@ found: number;
  */
 currentName: string | null }
 export type TargetResult = { path: string; ok: boolean; bytesFreed: number; error: string | null }
+export type UnlockWorktreeInput = { 
+/**
+ * Absolute path to the repository's working directory.
+ */
+path: string; 
+/**
+ * Administrative name of the worktree to unlock.
+ */
+name: string }
+export type UnlockWorktreeOutput = { name: string }
 export type UpdateBranchSelectionBatchInput = { repoId: string; branchNames: string[]; isSelected: boolean }
 export type UpdateBranchSelectionBatchOutput = Record<string, never>
 export type UpdateCurrentBranchInput = { path: string; branch: string }
 export type UpdateCurrentBranchOutput = { currentBranch: string }
+export type Worktree = { 
+/**
+ * Administrative name (the entry under `.git/worktrees/`). For the main
+ * worktree this is a synthesized name derived from its directory.
+ */
+name: string; 
+/**
+ * Absolute path to the worktree's working directory.
+ */
+path: string; 
+/**
+ * Short name of the checked-out branch, or `None` when detached or missing.
+ */
+branch: string | null; 
+/**
+ * SHA of the worktree's `HEAD`, or `None` when it can't be resolved.
+ */
+headSha: string | null; 
+/**
+ * Whether the worktree is locked (protected from pruning).
+ */
+isLocked: boolean; 
+/**
+ * Optional reason recorded when the worktree was locked.
+ */
+lockReason: string | null; 
+/**
+ * The main worktree (the repository's own working directory). It can't be
+ * removed or locked, so the UI hides those actions for it.
+ */
+isMain: boolean; 
+/**
+ * Whether git considers this worktree prunable (its working directory is
+ * gone or otherwise invalid).
+ */
+isPrunable: boolean }
 
 /** tauri-specta globals **/
 

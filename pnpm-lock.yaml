@@ -46,6 +46,9 @@ importers:
       '@pindoba/svelte-checkbox':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-choice':
+        specifier: alpha
+        version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-dialog':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)

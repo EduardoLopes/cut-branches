@@ -88,6 +88,7 @@
 		"@pindoba/svelte-button": "alpha",
 		"@pindoba/svelte-card": "alpha",
 		"@pindoba/svelte-checkbox": "alpha",
+		"@pindoba/svelte-choice": "alpha",
 		"@pindoba/svelte-dialog": "alpha",
 		"@pindoba/svelte-group": "alpha",
 		"@pindoba/svelte-input": "alpha",

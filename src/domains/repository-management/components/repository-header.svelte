@@ -9,6 +9,7 @@
 	import Radio from '@pindoba/svelte-radio';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
+	import type { Snippet } from 'svelte';
 	import { useRepositoryActions } from '../core/composables/use-repository-actions.svelte';
 	import { useRepositoryWatch } from '../core/composables/use-repository-watch.svelte';
 	import { createGetBranchesQuery } from '../infrastructure/queries/create-get-branches-query';
@@ -27,9 +28,15 @@
 		 * here without this domain importing them — see §1.3.
 		 */
 		extraMenuItems?: MenuNode[];
+		/**
+		 * Primary context switch (e.g. Branches / Worktrees) rendered beside the
+		 * repository name. Provided by the composition root so this domain stays
+		 * unaware of the contexts it toggles between — see §1.3.
+		 */
+		contextSwitch?: Snippet;
 	}
 
-	const { repositoryId, extraMenuItems = [] }: Props = $props();
+	const { repositoryId, extraMenuItems = [], contextSwitch }: Props = $props();
 
 	// Safety net for the active repo: detects (and heals) drift the global
 	// watcher may have missed. Exposes `outOfSync` so the manual Update action
@@ -57,6 +64,8 @@
 
 	const deletedBranchesCount = $derived(getDeletedBranchesQuery.data?.branches.length ?? 0);
 	const activeBranchesCount = $derived(getActiveBranchesQuery.data?.branches.length ?? 0);
+	// Whether this repository is a linked git worktree (not the main worktree).
+	const isWorktree = $derived(getRepositoryQuery.data?.isWorktree ?? false);
 	function goToBranches() {
 		goto(resolve(`/repos/${repositoryId}`));
 	}
@@ -70,15 +79,42 @@
 	const selectedTab = $derived(
 		page.url.pathname.includes('restore') ? 'deleted-branches' : 'active-branches'
 	);
+
+	// The Active/Deleted tabs are branch sub-navigation; hide them in the
+	// worktrees context (its own route).
+	const showBranchTabs = $derived(!page.url.pathname.endsWith('/worktrees'));
 </script>
+
+{#snippet updateIcon()}
+	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+{#snippet revealIcon()}
+	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:folder-open" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+{#snippet removeIcon()}
+	<Stamp size="sm" emphasis="ghost" feedback="danger" border="none" background="transparent">
+		<Icon icon="lucide:circle-x" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
 
 <div
 	class={css({
 		display: 'flex',
-		justifyContent: 'space-between',
+		flexDirection: 'column',
+		gap: 'sm',
 		top: '0',
 		zIndex: '20',
-		flexShrink: '0'
+		flexShrink: '0',
+		px: 'sm',
+		pt: 'sm',
+		// No bottom padding when the branch tabs are shown — they sit flush on top of
+		// the content panel below. Without tabs (worktrees), pad so the name row
+		// isn't cramped against the content.
+		pb: showBranchTabs ? '0' : 'sm'
 	})}
 >
 	{#if getRepositoryQuery.isLoading}
@@ -101,191 +137,187 @@
 		/>
 	{/if}
 
+	<!-- Row 1: repository name with the options menu inline beside it (so it reads
+	     clearly as "actions for this repository", §4), and the primary context
+	     switch kept at the top-right. -->
 	<div
 		class={css({
 			display: 'flex',
-			gap: 'sm',
-			flexDirection: 'column'
+			alignItems: 'center',
+			justifyContent: 'space-between',
+			gap: 'md'
 		})}
 	>
-		{#key getRepositoryQuery.data?.name}
-			<h2
-				class={css({
-					textStyle: '4xl',
-					minHeight: '25px',
-					px: 'sm',
-					pt: 'sm'
-				})}
-				data-testid="repository-name"
-			>
-				<span
+		<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' })}>
+			{#key getRepositoryQuery.data?.name}
+				<h2
 					class={css({
-						textTransform: 'uppercase'
+						textStyle: '2xl',
+						margin: '0',
+						minWidth: '0',
+						overflow: 'hidden',
+						textOverflow: 'ellipsis',
+						whiteSpace: 'nowrap'
 					})}
+					data-testid="repository-name"
 				>
-					{getRepositoryQuery.data?.name}
-				</span>
-			</h2>
-			<div
-				class={css({
-					display: 'flex',
-					alignItems: 'flex-end',
-					marginLeft: 'sm'
-				})}
+					<span
+						class={css({
+							textTransform: 'uppercase'
+						})}
+					>
+						{getRepositoryQuery.data?.name}
+					</span>
+				</h2>
+			{/key}
+			{#if isWorktree}
+				<Badge size="sm" feedback="warning" data-testid="repository-worktree-badge">
+					<span class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}>
+						<Icon icon="lucide:trees" width="12px" height="12px" />
+						worktree
+					</span>
+				</Badge>
+			{/if}
+
+			<Menu
+				placement="bottom-start"
+				aria-label="Repository options"
+				items={[
+					...(repositoryWatch.outOfSync
+						? [
+								{
+									type: 'action',
+									id: 'update',
+									label: 'Update',
+									leading: updateIcon,
+									disabled: repositoryActions.isRefreshing,
+									onSelect: repositoryActions.update
+								} satisfies MenuNode
+							]
+						: []),
+					{
+						type: 'action',
+						id: 'reveal',
+						label: 'Reveal in Finder',
+						leading: revealIcon,
+						disabled: !repositoryActions.repository,
+						onSelect: repositoryActions.reveal
+					},
+					...extraMenuItems,
+					{ type: 'separator', id: 'sep' },
+					{
+						type: 'action',
+						id: 'remove',
+						label: 'Remove',
+						feedback: 'danger',
+						leading: removeIcon,
+						onSelect: () => (removeModalOpen = true)
+					}
+				] satisfies MenuNode[]}
 			>
-				<Group
-					orientation="horizontal"
+				{#snippet trigger(props)}
+					<Tooltip content="Repository options" placement="bottom">
+						{#snippet children(tipProps)}
+							<Button
+								size="sm"
+								emphasis="secondary"
+								shape="square"
+								data-testid="repository-options-button"
+								{...props}
+								{...tipProps}
+							>
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:ellipsis-vertical" width="16px" height="16px" />
+								</Stamp>
+							</Button>
+						{/snippet}
+					</Tooltip>
+				{/snippet}
+			</Menu>
+		</div>
+
+		{#if contextSwitch}
+			<div class={css({ display: 'flex', alignItems: 'center', flexShrink: '0' })}>
+				{@render contextSwitch()}
+			</div>
+		{/if}
+	</div>
+
+	<!-- Row 2 (navigation): branch sub-tabs, only in the branches context. Sized to
+	     the tabs themselves (no reserved height) so they sit flush on top of the
+	     content panel below, with nothing rendered in the worktrees context. -->
+	{#if showBranchTabs}
+		<div class={css({ display: 'flex' })}>
+			<Group
+				orientation="horizontal"
+				passThrough={{
+					root: {
+						style: css.raw({
+							outlineColor: 'neutral.border.muted'
+						})
+					}
+				}}
+			>
+				<Radio
+					id="branches"
+					name="repository-management"
+					value="active-branches"
+					appearance="button"
+					background="surface.deep"
+					checked={selectedTab === 'active-branches'}
+					role="tab"
+					onchange={goToBranches}
 					passThrough={{
 						root: {
 							style: css.raw({
-								outlineColor: 'neutral.border.muted'
+								borderBottomRadius: '0',
+								borderBottomWidth: '0'
 							})
 						}
 					}}
 				>
-					<Radio
-						id="branches"
-						name="repository-management"
-						value="active-branches"
-						appearance="button"
-						background="surface.deep"
-						checked={selectedTab === 'active-branches'}
-						role="tab"
-						onchange={goToBranches}
-						passThrough={{
-							root: {
-								style: css.raw({
-									borderBottomRadius: '0',
-									borderBottomWidth: '0'
-								})
-							}
-						}}
-					>
-						Active
-						{#snippet leading()}
-							<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
-								<Icon icon="lucide:git-branch" width="14px" height="14px" />
-							</Stamp>
-						{/snippet}
-						{#snippet trailing()}
-							<Badge size="sm">{activeBranchesCount}</Badge>
-						{/snippet}
-					</Radio>
-					<Radio
-						id="deleted-branches"
-						name="repository-management"
-						value="restore"
-						appearance="button"
-						feedback="danger"
-						background="surface.deep"
-						checked={selectedTab === 'deleted-branches'}
-						role="tab"
-						onchange={goToDeletedBranches}
-						passThrough={{
-							root: {
-								style: css.raw({
-									borderBottomRadius: '0',
-									borderBottomWidth: '0'
-								})
-							}
-						}}
-					>
-						Deleted
-						{#snippet leading()}
-							<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
-								<Icon icon="lucide:trash-2" width="14px" height="14px" />
-							</Stamp>
-						{/snippet}
-						{#snippet trailing()}
-							<Badge size="sm" feedback="danger">{deletedBranchesCount}</Badge>
-						{/snippet}
-					</Radio>
-				</Group>
-			</div>
-		{/key}
-	</div>
-	<div
-		class={css({
-			padding: 'sm',
-			// The options trigger sits at the window's right edge; `bottom-end`
-			// aligns the menu to the trigger's right edge, so the menu inherits the
-			// trigger's distance from the edge (nothing overflows — flip/shift are
-			// working). Extra right padding moves the trigger, and with it the
-			// end-aligned menu, inward so it clears the list scrollbar.
-			pr: 'xl'
-		})}
-	>
-		{#snippet updateIcon()}
-			<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
-			</Stamp>
-		{/snippet}
-		{#snippet revealIcon()}
-			<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:folder-open" width="14px" height="14px" />
-			</Stamp>
-		{/snippet}
-		{#snippet removeIcon()}
-			<Stamp size="sm" emphasis="ghost" feedback="danger" border="none" background="transparent">
-				<Icon icon="lucide:circle-x" width="14px" height="14px" />
-			</Stamp>
-		{/snippet}
-
-		<Menu
-			placement="bottom-end"
-			aria-label="Repository options"
-			items={[
-				...(repositoryWatch.outOfSync
-					? [
-							{
-								type: 'action',
-								id: 'update',
-								label: 'Update',
-								leading: updateIcon,
-								disabled: repositoryActions.isRefreshing,
-								onSelect: repositoryActions.update
-							} satisfies MenuNode
-						]
-					: []),
-				{
-					type: 'action',
-					id: 'reveal',
-					label: 'Reveal in Finder',
-					leading: revealIcon,
-					disabled: !repositoryActions.repository,
-					onSelect: repositoryActions.reveal
-				},
-				...extraMenuItems,
-				{ type: 'separator', id: 'sep' },
-				{
-					type: 'action',
-					id: 'remove',
-					label: 'Remove',
-					feedback: 'danger',
-					leading: removeIcon,
-					onSelect: () => (removeModalOpen = true)
-				}
-			] satisfies MenuNode[]}
-		>
-			{#snippet trigger(props)}
-				<Tooltip content="Repository options" placement="left">
-					{#snippet children(tipProps)}
-						<Button
-							emphasis="secondary"
-							shape="square"
-							data-testid="repository-options-button"
-							{...props}
-							{...tipProps}
-						>
-							<Stamp emphasis="ghost" border="none" background="transparent">
-								<Icon icon="lucide:ellipsis-vertical" width="20px" height="20px" />
-							</Stamp>
-						</Button>
+					Active
+					{#snippet leading()}
+						<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
+							<Icon icon="lucide:git-branch" width="14px" height="14px" />
+						</Stamp>
 					{/snippet}
-				</Tooltip>
-			{/snippet}
-		</Menu>
+					{#snippet trailing()}
+						<Badge size="sm">{activeBranchesCount}</Badge>
+					{/snippet}
+				</Radio>
+				<Radio
+					id="deleted-branches"
+					name="repository-management"
+					value="restore"
+					appearance="button"
+					feedback="danger"
+					background="surface.deep"
+					checked={selectedTab === 'deleted-branches'}
+					role="tab"
+					onchange={goToDeletedBranches}
+					passThrough={{
+						root: {
+							style: css.raw({
+								borderBottomRadius: '0',
+								borderBottomWidth: '0'
+							})
+						}
+					}}
+				>
+					Deleted
+					{#snippet leading()}
+						<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
+							<Icon icon="lucide:trash-2" width="14px" height="14px" />
+						</Stamp>
+					{/snippet}
+					{#snippet trailing()}
+						<Badge size="sm" feedback="danger">{deletedBranchesCount}</Badge>
+					{/snippet}
+				</Radio>
+			</Group>
+		</div>
+	{/if}
 
-		<RemoveRepositoryModal {repositoryId} bind:open={removeModalOpen} />
-	</div>
+	<RemoveRepositoryModal {repositoryId} bind:open={removeModalOpen} />
 </div>
