@@ -65,14 +65,21 @@ pub async fn clean_repository(
         // Emit a per-folder event as each deletion succeeds, so the frontend can
         // drop it from cached scan results without waiting for a re-scan.
         let emit_id = repo_id.clone();
-        clean::clean_repository(&repo_root, &targets, mode, &repo_id, &mut conn, |path, bytes| {
-            let _ = CleanupTargetCleanedEvent {
-                repository_id: emit_id.clone(),
-                path: path.to_string(),
-                bytes_freed: bytes,
-            }
-            .emit(&app);
-        })
+        clean::clean_repository(
+            &repo_root,
+            &targets,
+            mode,
+            &repo_id,
+            &mut conn,
+            |path, bytes| {
+                let _ = CleanupTargetCleanedEvent {
+                    repository_id: emit_id.clone(),
+                    path: path.to_string(),
+                    bytes_freed: bytes,
+                }
+                .emit(&app);
+            },
+        )
     })
     .await
     .map_err(|e| {

@@ -84,8 +84,7 @@ pub fn find_cleanup_targets(repo_root: &Path) -> Vec<FoundTarget> {
         .map(|gi| vec![Rc::new(gi)])
         .unwrap_or_default();
 
-    let mut stack: Vec<(PathBuf, Vec<Rc<Gitignore>>)> =
-        vec![(repo_root.to_path_buf(), root_chain)];
+    let mut stack: Vec<(PathBuf, Vec<Rc<Gitignore>>)> = vec![(repo_root.to_path_buf(), root_chain)];
 
     while let Some((dir, chain)) = stack.pop() {
         let entries = match std::fs::read_dir(&dir) {
