@@ -40,8 +40,9 @@
 			data-testid="cleanup-target"
 			passThrough={{ text: { style: css.raw({ flex: '1', minWidth: '0' }) } }}
 			class={css({
+				alignItems: 'flex-start',
 				borderRadius: 'md',
-				paddingX: 'sm',
+				paddingX: 'xs',
 				paddingY: 'xs',
 				background: selected ? 'neutral.surface.step.3' : 'neutral.surface.step.2',
 				_hover: { background: 'neutral.surface.step.3' }
