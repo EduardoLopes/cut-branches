@@ -3,7 +3,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SettingsShell from '../settings-shell.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
-const h = vi.hoisted(() => ({ pathname: '/settings/feature-flags' }));
+const h = vi.hoisted(() => ({
+	pathname: '/settings/feature-flags',
+	// The Feature flags section shows by default; tests flip this to exercise the
+	// hidden-when-empty-and-not-dev branch.
+	sectionVisible: true,
+	isEnabled: vi.fn((_key: string) => false)
+}));
 
 vi.mock('$app/state', () => ({
 	page: {
@@ -13,12 +19,19 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
+vi.mock('$lib/feature-flags.svelte', () => ({
+	isFeatureFlagsSectionVisible: () => h.sectionVisible,
+	isFeatureEnabled: (key: string) => h.isEnabled(key)
+}));
+
 const children = createRawSnippet(() => ({
 	render: () => '<div data-testid="section-content">section content</div>'
 }));
 
 beforeEach(() => {
 	h.pathname = '/settings/feature-flags';
+	h.sectionVisible = true;
+	h.isEnabled.mockImplementation(() => false);
 });
 
 describe('SettingsShell', () => {
@@ -67,6 +80,26 @@ describe('SettingsShell', () => {
 		const screen = renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).element()).toHaveAttribute(
+			'aria-current',
+			'page'
+		);
+	});
+
+	it('hides the Feature flags nav item when the section is not surfaced', () => {
+		h.sectionVisible = false;
+		h.pathname = '/settings/about';
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByRole('menuitem', { name: 'About' })).toBeInTheDocument();
+		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).elements().length).toBe(0);
+	});
+
+	it('falls back to the first remaining section when Feature flags is hidden', () => {
+		h.sectionVisible = false;
+		h.pathname = '/settings';
+		const screen = renderWithTestWrapper(SettingsShell, { children });
+
+		expect(screen.getByRole('menuitem', { name: 'About' }).element()).toHaveAttribute(
 			'aria-current',
 			'page'
 		);

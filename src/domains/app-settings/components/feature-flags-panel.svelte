@@ -54,10 +54,24 @@
 			<span class={css({ fontSize: 'sm', fontWeight: 'medium', color: 'neutral.text' })}>
 				No feature flags yet
 			</span>
-			<span class={css({ fontSize: 'xs', maxWidth: '420px' })}>
-				Add one to the registry in <code>src/lib/feature-flags.svelte.ts</code> to gate an in-development
-				feature and toggle it here.
-			</span>
+			<!-- The registry is a compile-time source constant, so an empty list is only
+			     ever a developer/build state — never something a user's actions produce.
+			     The instruction to edit source is therefore dev-only. -->
+			{#if import.meta.env.DEV}
+				<span class={css({ fontSize: 'xs', maxWidth: '420px', lineHeight: '1.7' })}>
+					Add one to the registry in <code
+						class={css({
+							fontFamily: 'mono',
+							fontSize: '0.9em',
+							paddingBlock: '0.1rem',
+							paddingInline: '0.35rem',
+							borderRadius: '2xs',
+							background: 'neutral.surface.step.2',
+							color: 'neutral.text'
+						})}>src/lib/feature-flags.svelte.ts</code
+					> to gate an in-development feature and toggle it here.
+				</span>
+			{/if}
 		</div>
 	{:else}
 		{#each FEATURE_FLAGS as flag (flag.key)}

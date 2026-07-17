@@ -7,7 +7,7 @@
 	import { type Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { isFeatureEnabled, isFeatureFlagsSectionVisible } from '$lib/feature-flags.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -20,12 +20,18 @@
 
 	// The cleanup section only appears when its feature flag is enabled.
 	const sections = $derived<{ id: SectionId; label: string; icon: string; href: string }[]>([
-		{
-			id: 'feature-flags',
-			label: 'Feature flags',
-			icon: 'lucide:flag',
-			href: resolve('/settings/feature-flags')
-		},
+		// Feature flags are surfaced when the registry has entries, or in dev builds
+		// so the empty-registry guidance stays reachable (see feature-flags.svelte).
+		...(isFeatureFlagsSectionVisible()
+			? [
+					{
+						id: 'feature-flags' as const,
+						label: 'Feature flags',
+						icon: 'lucide:flag',
+						href: resolve('/settings/feature-flags')
+					}
+				]
+			: []),
 		...(isFeatureEnabled('repository-cleanup')
 			? [
 					{
@@ -51,7 +57,8 @@
 	const matchedSection = $derived(
 		sections.find((section) => page.url.pathname.startsWith(section.href))
 	);
-	const activeSection = $derived(matchedSection ? matchedSection.id : 'feature-flags');
+	// `sections` always contains at least About, so the first entry is safe.
+	const activeSection = $derived(matchedSection ? matchedSection.id : sections[0].id);
 
 	function iconFor(id: SectionId): NavigationItem['leading'] {
 		if (id === 'feature-flags') return flagIcon as NavigationItem['leading'];
@@ -180,7 +187,8 @@
 				flex: '1',
 				minWidth: '0',
 				overflow: 'hidden',
-				padding: 'lg'
+				padding: 'lg',
+				background: 'neutral.surface.soft'
 			})}
 		>
 			{@render children?.()}

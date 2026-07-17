@@ -2,8 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
 	FEATURE_FLAGS,
 	isFeatureEnabled,
+	isFeatureFlagsSectionVisible,
 	resetFeatureFlags,
 	resolveFeatureFlag,
+	resolveFeatureFlagsSectionVisible,
 	setFeatureFlag,
 	toggleFeatureFlag,
 	type FeatureFlagDefinition
@@ -13,6 +15,25 @@ const DEFINITIONS: FeatureFlagDefinition[] = [
 	{ key: 'on-by-default', label: 'On', description: '', defaultEnabled: true },
 	{ key: 'off-by-default', label: 'Off', description: '', defaultEnabled: false }
 ];
+
+describe('resolveFeatureFlagsSectionVisible', () => {
+	it('is visible whenever the registry has entries, regardless of build', () => {
+		expect(resolveFeatureFlagsSectionVisible(DEFINITIONS, false)).toBe(true);
+		expect(resolveFeatureFlagsSectionVisible(DEFINITIONS, true)).toBe(true);
+	});
+
+	it('is visible for an empty registry only in a dev build', () => {
+		expect(resolveFeatureFlagsSectionVisible([], true)).toBe(true);
+		expect(resolveFeatureFlagsSectionVisible([], false)).toBe(false);
+	});
+});
+
+describe('isFeatureFlagsSectionVisible', () => {
+	it('surfaces the section for the real (non-empty) registry', () => {
+		expect(FEATURE_FLAGS.length).toBeGreaterThan(0);
+		expect(isFeatureFlagsSectionVisible()).toBe(true);
+	});
+});
 
 describe('resolveFeatureFlag', () => {
 	it('returns a stored override when present, even when false', () => {

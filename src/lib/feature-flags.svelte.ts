@@ -89,6 +89,30 @@ export function isFeatureEnabled(key: FeatureFlagKey): boolean {
 	return resolveFeatureFlag(getOverridesStore().get() ?? {}, FEATURE_FLAGS, key);
 }
 
+/**
+ * Pure decision for whether the Feature flags settings section should be
+ * surfaced: shown when the registry has entries, or — for the dev-only empty
+ * state — whenever we're in a development build. Exported for testing so both
+ * branches are covered without emptying the real registry.
+ */
+export function resolveFeatureFlagsSectionVisible(
+	definitions: readonly FeatureFlagDefinition[],
+	isDev: boolean
+): boolean {
+	return definitions.length > 0 || isDev;
+}
+
+/**
+ * Whether to surface the Feature flags settings section (nav item + redirect
+ * target). An empty registry is a dev-only state: the section stays reachable
+ * in development so the "add a flag" guidance is discoverable, but it is hidden
+ * from production builds. Keep in sync with the empty-state message gate in
+ * `feature-flags-panel.svelte`.
+ */
+export function isFeatureFlagsSectionVisible(): boolean {
+	return resolveFeatureFlagsSectionVisible(FEATURE_FLAGS, import.meta.env.DEV);
+}
+
 /** Enable or disable a flag and persist the choice on this device. */
 export function setFeatureFlag(key: FeatureFlagKey, enabled: boolean) {
 	getOverridesStore().update({ [key]: enabled });
