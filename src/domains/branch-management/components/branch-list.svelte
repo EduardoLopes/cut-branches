@@ -6,7 +6,15 @@
 	import Pagination from '@pindoba/svelte-pagination';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
+	import { useQueryClient } from '@tanstack/svelte-query';
+	import debounce from 'just-debounce-it';
 	import { getSearchBranchesStore } from '../core/composables/search-branches.svelte';
+	import CommitGraphPreview from '../features/commit-history/components/commit-graph-preview.svelte';
+	import {
+		fetchCommitHistoryWindow,
+		PREVIEW_WINDOW
+	} from '../features/commit-history/infrastructure/queries/create-get-commit-history-window-query';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
@@ -52,6 +60,32 @@
 			`${repositoryID}-${page.url.pathname.includes('restore') ? 'deleted' : 'active'}`
 		)
 	);
+
+	// Commit-card ↔ history integration: active branches get a deep-link into
+	// the history view plus a hover preview of the graph around their tip.
+	// Deleted branches don't — their commits may no longer be reachable.
+	const queryClient = useQueryClient();
+	const isRestoreView = $derived(page.url.pathname.includes('restore'));
+
+	// Warm the preview's cache entry on hover so the popover usually opens
+	// with data already there. Debounced so quick mouse travel costs nothing.
+	let prefetchSha = '';
+	const prefetchPreview = debounce(() => {
+		if (!repositoryID || !repositoryPath || !prefetchSha) return;
+		fetchCommitHistoryWindow(queryClient, {
+			repoId: repositoryID,
+			path: repositoryPath,
+			targetSha: prefetchSha,
+			...PREVIEW_WINDOW
+		}).catch(() => {
+			// Prefetch only; the preview surfaces errors when actually opened.
+		});
+	}, 200);
+
+	function prefetchPreviewFor(sha: string) {
+		prefetchSha = sha;
+		prefetchPreview();
+	}
 
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repositoryID ?? '',
@@ -221,35 +255,57 @@
 						</div>
 					{/if}
 
-					<BranchCard
-						{branch}
-						selected={branch.getIsSelected()}
-						locked={branch.getIsLocked() && !branch.isCurrent()}
-						colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}
-						id={getBranchElementId(branch.getName(), 'container')}
-						title={branch.isCurrent()
-							? 'Current branch'
-							: formatString('{name}', { name: branch.getName() })}
-						{variant}
-					>
-						{@const mergeStatusQuery = createBranchMergeStatusQuery(
-							{
-								path: repositoryPath ?? '',
-								branchName: branch.getName()
-							},
-							{
-								enabled: !!repositoryPath && !branch.isCurrent()
-							}
-						)}
-						{@const alerts = getBranchAlerts(
-							branch,
-							branch.getIsSelected() ?? false,
-							mergeStatusQuery.data?.isMerged
-						)}
-						{#if showAlerts && shouldShowBranchAlerts(alerts, branch)}
-							<BranchAlerts {alerts} {branch} />
+					{#snippet commitPreview()}
+						{#if repositoryID && repositoryPath}
+							<CommitGraphPreview
+								repoId={repositoryID}
+								path={repositoryPath}
+								sha={branch.getLastCommit().getSha()}
+							/>
 						{/if}
-					</BranchCard>
+					{/snippet}
+					<div
+						role="presentation"
+						onmouseenter={!isRestoreView && repositoryPath
+							? () => prefetchPreviewFor(branch.getLastCommit().getSha())
+							: undefined}
+					>
+						<BranchCard
+							{branch}
+							selected={branch.getIsSelected()}
+							locked={branch.getIsLocked() && !branch.isCurrent()}
+							colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}
+							id={getBranchElementId(branch.getName(), 'container')}
+							title={branch.isCurrent()
+								? 'Current branch'
+								: formatString('{name}', { name: branch.getName() })}
+							{variant}
+							commitHistoryHref={!isRestoreView && repositoryID
+								? `${resolve(`/repos/${repositoryID}/history`)}?commit=${branch.getLastCommit().getSha()}`
+								: undefined}
+							commitHoverPreview={!isRestoreView && repositoryID && repositoryPath
+								? commitPreview
+								: undefined}
+						>
+							{@const mergeStatusQuery = createBranchMergeStatusQuery(
+								{
+									path: repositoryPath ?? '',
+									branchName: branch.getName()
+								},
+								{
+									enabled: !!repositoryPath && !branch.isCurrent()
+								}
+							)}
+							{@const alerts = getBranchAlerts(
+								branch,
+								branch.getIsSelected() ?? false,
+								mergeStatusQuery.data?.isMerged
+							)}
+							{#if showAlerts && shouldShowBranchAlerts(alerts, branch)}
+								<BranchAlerts {alerts} {branch} />
+							{/if}
+						</BranchCard>
+					</div>
 				</div>
 			{/each}
 		{/if}

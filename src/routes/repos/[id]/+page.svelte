@@ -2,6 +2,8 @@
 	import Icon from '@iconify/svelte';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Stamp from '@pindoba/svelte-stamp';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import RepositoryContextSwitch from '$components/repository-context-switch.svelte';
 	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';
@@ -17,24 +19,37 @@
 	// options menu here so neither domain imports the other.
 	let cleanupOpen = $state(false);
 
-	const extraMenuItems = $derived<MenuNode[]>(
-		isFeatureEnabled('repository-cleanup')
+	const extraMenuItems = $derived<MenuNode[]>([
+		{
+			type: 'action',
+			id: 'commit-history',
+			label: 'Commit history…',
+			leading: historyIcon,
+			onSelect: () => goto(resolve(`/repos/${id}/history`))
+		},
+		...(isFeatureEnabled('repository-cleanup')
 			? [
 					{
-						type: 'action',
+						type: 'action' as const,
 						id: 'cleanup',
 						label: 'Clean up…',
 						leading: cleanupIcon,
 						onSelect: () => (cleanupOpen = true)
 					}
 				]
-			: []
-	);
+			: [])
+	]);
 </script>
 
 {#snippet cleanupIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
 		<Icon icon="lucide:brush-cleaning" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+
+{#snippet historyIcon()}
+	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:git-commit-horizontal" width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 
