@@ -1,7 +1,39 @@
+use chrono::{DateTime, FixedOffset, TimeZone};
 use git2::Repository;
 use std::path::Path;
 
 use crate::shared::error::AppError;
+
+/// Formats a git commit time as `"%a %b %e %T %Y %z"` (the app-wide commit
+/// date format), falling back to UTC for invalid offsets and to the epoch
+/// for invalid timestamps.
+pub(crate) fn format_commit_time(time: git2::Time) -> String {
+    let offset_minutes = time.offset_minutes();
+    let offset = match FixedOffset::east_opt(offset_minutes * 60) {
+        Some(tz) => tz,
+        None => FixedOffset::east_opt(0).unwrap(), // Fallback to UTC
+    };
+
+    let dt = match DateTime::from_timestamp(time.seconds(), 0) {
+        Some(dt) => dt.with_timezone(&offset),
+        None => FixedOffset::east_opt(0)
+            .unwrap()
+            .with_ymd_and_hms(1970, 1, 1, 0, 0, 0)
+            .unwrap(), // Fallback to epoch
+    };
+
+    dt.format("%a %b %e %T %Y %z").to_string()
+}
+
+/// Returns the 7-character abbreviated form of a full SHA (or the SHA
+/// unchanged when it is already shorter).
+pub(crate) fn short_sha(sha: &str) -> String {
+    if sha.len() >= 7 {
+        sha[0..7].to_string()
+    } else {
+        sha.to_string()
+    }
+}
 
 pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppError> {
     if commit_sha.is_empty() {
@@ -23,6 +55,32 @@ mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
     use std::process::Command;
+
+    #[test]
+    fn test_format_commit_time() {
+        // 2021-01-01 00:00:00 UTC, +02:00 offset
+        let formatted = format_commit_time(git2::Time::new(1_609_459_200, 120));
+        assert_eq!(formatted, "Fri Jan  1 02:00:00 2021 +0200");
+
+        // Invalid offset (out of chrono's ±24h range) falls back to UTC
+        let formatted = format_commit_time(git2::Time::new(1_609_459_200, 100_000));
+        assert_eq!(formatted, "Fri Jan  1 00:00:00 2021 +0000");
+
+        // Out-of-range timestamp falls back to the epoch
+        let formatted = format_commit_time(git2::Time::new(i64::MAX, 0));
+        assert_eq!(formatted, "Thu Jan  1 00:00:00 1970 +0000");
+    }
+
+    #[test]
+    fn test_short_sha() {
+        assert_eq!(
+            short_sha("0123456789abcdef0123456789abcdef01234567"),
+            "0123456"
+        );
+        assert_eq!(short_sha("0123456"), "0123456");
+        assert_eq!(short_sha("012"), "012");
+        assert_eq!(short_sha(""), "");
+    }
 
     #[test]
     fn test_is_commit_reachable() {

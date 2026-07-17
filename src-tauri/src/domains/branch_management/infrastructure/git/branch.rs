@@ -1,4 +1,3 @@
-use chrono::{DateTime, FixedOffset, TimeZone};
 use git2::{BranchType, Repository};
 use std::path::Path;
 use tauri::Emitter;
@@ -99,30 +98,10 @@ fn get_all_branches_with_last_commit_internal(
 
         let author = commit.author();
 
-        // Format the commit date
-        let time = commit.time();
-        let offset_minutes = time.offset_minutes();
-        let offset = match FixedOffset::east_opt(offset_minutes * 60) {
-            Some(tz) => tz,
-            None => FixedOffset::east_opt(0).unwrap(), // Fallback to UTC
-        };
-
-        let dt = match DateTime::from_timestamp(time.seconds(), 0) {
-            Some(dt) => dt.with_timezone(&offset),
-            None => FixedOffset::east_opt(0)
-                .unwrap()
-                .with_ymd_and_hms(1970, 1, 1, 0, 0, 0)
-                .unwrap(), // Fallback to epoch
-        };
-
-        let date_str = dt.format("%a %b %e %T %Y %z").to_string();
+        let date_str = super::commit::format_commit_time(commit.time());
 
         let sha = commit.id().to_string();
-        let short_sha = if sha.len() >= 7 {
-            sha[0..7].to_string()
-        } else {
-            sha.clone()
-        };
+        let short_sha = super::commit::short_sha(&sha);
 
         let author_name = author.name().unwrap_or("").to_string();
         let author_email = author.email().unwrap_or("").to_string();
@@ -402,30 +381,10 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
 
     let author = commit.author();
 
-    // Format the commit date
-    let time = commit.time();
-    let offset_minutes = time.offset_minutes();
-    let offset = match FixedOffset::east_opt(offset_minutes * 60) {
-        Some(tz) => tz,
-        None => FixedOffset::east_opt(0).unwrap(), // Fallback to UTC
-    };
-
-    let dt = match DateTime::from_timestamp(time.seconds(), 0) {
-        Some(dt) => dt.with_timezone(&offset),
-        None => FixedOffset::east_opt(0)
-            .unwrap()
-            .with_ymd_and_hms(1970, 1, 1, 0, 0, 0)
-            .unwrap(), // Fallback to epoch
-    };
-
-    let date_str = dt.format("%a %b %e %T %Y %z").to_string();
+    let date_str = super::commit::format_commit_time(commit.time());
 
     let sha = commit.id().to_string();
-    let short_sha = if sha.len() >= 7 {
-        sha[0..7].to_string()
-    } else {
-        sha.clone()
-    };
+    let short_sha = super::commit::short_sha(&sha);
 
     // Use summary if available, otherwise get the first line of the message
     let message = commit.message().unwrap_or("");

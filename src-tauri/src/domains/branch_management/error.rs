@@ -132,6 +132,18 @@ pub enum BranchError {
         #[source]
         source: git2::Error,
     },
+
+    #[error("Failed to walk commit history: {source}")]
+    RevwalkFailed {
+        #[source]
+        source: git2::Error,
+    },
+
+    #[error("Commit history is out of date — repository refs changed")]
+    HistoryCursorStale { path: String },
+
+    #[error("Invalid commit history cursor")]
+    InvalidHistoryCursor,
 }
 
 impl From<BranchError> for AppError {
@@ -160,6 +172,9 @@ impl From<BranchError> for AppError {
             BranchError::CommitNotFoundInRepo { .. } => "commit_not_found",
             BranchError::FindCommitFailed { .. } => "commit_not_found",
             BranchError::CreateBranchFailed { .. } => "create_branch_failed",
+            BranchError::RevwalkFailed { .. } => "revwalk_failed",
+            BranchError::HistoryCursorStale { .. } => "history_cursor_stale",
+            BranchError::InvalidHistoryCursor => "invalid_history_cursor",
         };
 
         let description = match &err {
@@ -177,7 +192,8 @@ impl From<BranchError> for AppError {
             | BranchError::CheckoutFailed { source, .. }
             | BranchError::DeleteBranchFailed { source, .. }
             | BranchError::FindCommitFailed { source, .. }
-            | BranchError::CreateBranchFailed { source, .. } => Some(source.to_string()),
+            | BranchError::CreateBranchFailed { source, .. }
+            | BranchError::RevwalkFailed { source } => Some(source.to_string()),
 
             BranchError::UnableToAccessDir { detail, .. }
             | BranchError::CommandExecutionFailed { detail, .. }
@@ -197,6 +213,14 @@ impl From<BranchError> for AppError {
                 "The commit '{}' does not exist in the repository at {}",
                 sha, path
             )),
+
+            BranchError::HistoryCursorStale { path } => Some(format!(
+                "Refs changed in the repository at {} since this page was issued; restart from the first page",
+                path
+            )),
+            BranchError::InvalidHistoryCursor => {
+                Some("The pagination cursor is malformed; restart from the first page".to_string())
+            }
 
             BranchError::InvalidUtf8 | BranchError::NoBranches { .. } => None,
         };
@@ -265,6 +289,45 @@ mod tests {
         assert_eq!(
             app.description.as_deref(),
             Some("Repository is in detached HEAD state")
+        );
+    }
+
+    #[test]
+    fn revwalk_failed_maps_kind_and_source_description() {
+        let app: AppError = BranchError::RevwalkFailed {
+            source: git2::Error::from_str("walk broke"),
+        }
+        .into();
+        assert_eq!(app.kind, "revwalk_failed");
+        assert_eq!(app.message, "Failed to walk commit history: walk broke");
+        assert_eq!(app.description.as_deref(), Some("walk broke"));
+    }
+
+    #[test]
+    fn history_cursor_stale_builds_description() {
+        let app: AppError = BranchError::HistoryCursorStale {
+            path: "/repo".into(),
+        }
+        .into();
+        assert_eq!(app.kind, "history_cursor_stale");
+        assert_eq!(
+            app.message,
+            "Commit history is out of date — repository refs changed"
+        );
+        assert_eq!(
+            app.description.as_deref(),
+            Some("Refs changed in the repository at /repo since this page was issued; restart from the first page")
+        );
+    }
+
+    #[test]
+    fn invalid_history_cursor_has_static_description() {
+        let app: AppError = BranchError::InvalidHistoryCursor.into();
+        assert_eq!(app.kind, "invalid_history_cursor");
+        assert_eq!(app.message, "Invalid commit history cursor");
+        assert_eq!(
+            app.description.as_deref(),
+            Some("The pagination cursor is malformed; restart from the first page")
         );
     }
 

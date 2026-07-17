@@ -27,6 +27,9 @@ use domains::branch_management::commands::{
 use domains::branch_management::events::{
     BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
 };
+use domains::branch_management::features::commit_history::{
+    get_commit_history_window, list_branch_comparison, list_commit_history,
+};
 use domains::path_operations::commands::get_repository_root;
 use domains::repository_cleanup::commands::{
     clean_repository, list_stale_repositories, scan_cleanup_targets,
@@ -102,6 +105,10 @@ fn main() {
             get_branch_merge_status,
             create_branch_restoration,
             batch_create_branch_restorations,
+            // Commit history + branch graph
+            list_commit_history,
+            get_commit_history_window,
+            list_branch_comparison,
             // Selected branches
             list_branch_selection,
             list_deleted_branch_selection,
@@ -184,6 +191,7 @@ fn main() {
         )
         .manage(db::DatabaseState::new())
         .manage(WatcherState::new())
+        .manage(domains::branch_management::features::commit_history::git::HistoryCache::default())
         .manage(RepositoryServices {
             branch: Arc::new(composition::BranchManagementGateway),
             path: Arc::new(composition::PathOperationsGateway),

@@ -177,6 +177,131 @@ fn setup_test_repo_with_git_command(git: &dyn GitCommand) -> tempfile::TempDir {
     dir
 }
 
+/// Runs a git command in `path` with a fixed test identity, asserting
+/// success and returning trimmed stdout.
+#[cfg(test)]
+pub fn run_git(path: &std::path::Path, args: &[&str]) -> String {
+    let output = Command::new("git")
+        .args(args)
+        .env("GIT_AUTHOR_NAME", "Test User")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test User")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .current_dir(path)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git {:?} failed: {}",
+        args,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
+/// Writes `content` to `file`, commits it with a fixed date (so ordering is
+/// deterministic), and returns the new commit's full SHA.
+#[cfg(test)]
+pub fn commit_file(
+    path: &std::path::Path,
+    file: &str,
+    content: &str,
+    message: &str,
+    date: &str,
+) -> String {
+    fs::write(path.join(file), content).unwrap();
+    run_git(path, &["add", file]);
+    let output = Command::new("git")
+        .args(["commit", "-m", message])
+        .env("GIT_AUTHOR_NAME", "Test User")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test User")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .env("GIT_AUTHOR_DATE", date)
+        .env("GIT_COMMITTER_DATE", date)
+        .current_dir(path)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git commit failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    run_git(path, &["rev-parse", "HEAD"])
+}
+
+/// Builds a deterministic multi-branch repository for commit-history tests:
+///
+/// ```text
+/// main:      C1 ── C2 ── C3 ──────── M   (merge of feature/b, tag v1.0 on M)
+///                    \          \   /
+/// feature/a:          A1 ── A2   B1      (feature/b, merged; ahead 0)
+/// ```
+///
+/// * `feature/a` branched at C2 with 2 commits → ahead 2 / behind 3 vs main.
+/// * `feature/b` branched at C3, merged back via merge commit `M` → ahead 0 / behind 1.
+/// * Tag `v1.0` points at `M`; `refs/remotes/origin/main` is faked onto `M`.
+/// * 7 commits total, strictly increasing commit dates.
+#[cfg(test)]
+pub fn setup_history_test_repo() -> tempfile::TempDir {
+    let dir = setup_test_repo(); // C1 "Initial commit" on main
+    let path = dir.path();
+
+    commit_file(path, "a.txt", "2", "main: second", "2024-01-02T10:00:00Z");
+    run_git(path, &["branch", "feature/a"]);
+    commit_file(path, "b.txt", "3", "main: third", "2024-01-03T10:00:00Z");
+
+    run_git(path, &["checkout", "feature/a"]);
+    commit_file(
+        path,
+        "fa1.txt",
+        "1",
+        "feature/a: one",
+        "2024-01-04T10:00:00Z",
+    );
+    commit_file(
+        path,
+        "fa2.txt",
+        "2",
+        "feature/a: two",
+        "2024-01-05T10:00:00Z",
+    );
+
+    run_git(path, &["checkout", "main"]);
+    run_git(path, &["checkout", "-b", "feature/b"]);
+    commit_file(
+        path,
+        "fb1.txt",
+        "1",
+        "feature/b: one",
+        "2024-01-06T10:00:00Z",
+    );
+
+    run_git(path, &["checkout", "main"]);
+    let merge_output = Command::new("git")
+        .args(["merge", "--no-ff", "feature/b", "-m", "Merge feature/b"])
+        .env("GIT_AUTHOR_NAME", "Test User")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test User")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .env("GIT_AUTHOR_DATE", "2024-01-07T10:00:00Z")
+        .env("GIT_COMMITTER_DATE", "2024-01-07T10:00:00Z")
+        .current_dir(path)
+        .output()
+        .unwrap();
+    assert!(
+        merge_output.status.success(),
+        "git merge failed: {}",
+        String::from_utf8_lossy(&merge_output.stderr)
+    );
+
+    run_git(path, &["tag", "v1.0"]);
+    let main_sha = run_git(path, &["rev-parse", "main"]);
+    run_git(path, &["update-ref", "refs/remotes/origin/main", &main_sha]);
+
+    dir
+}
+
 /// Saves the current working directory and returns a struct to manage it.
 ///
 /// This is useful in tests to ensure that changing directories in one test

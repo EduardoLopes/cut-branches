@@ -283,6 +283,42 @@ async batchCreateBranchRestorations(input: BatchCreateBranchRestorationsInput) :
 }
 },
 /**
+ * Walks history across all local branches (+ HEAD) and returns one page of
+ * commits with parent edges and ref decorations.
+ */
+async listCommitHistory(input: ListCommitHistoryInput) : Promise<Result<ListCommitHistoryOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_commit_history", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Locates a commit in the history walk and returns a window around it —
+ * used for deep-linking (`?commit=<sha>`) and the hover graph preview.
+ */
+async getCommitHistoryWindow(input: GetCommitHistoryWindowInput) : Promise<Result<GetCommitHistoryWindowOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_commit_history_window", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Computes ahead/behind vs the base for the requested local branches. A
+ * branch with `ahead == 0` is fully contained in base (safe to delete).
+ */
+async listBranchComparison(input: ListBranchComparisonInput) : Promise<Result<ListBranchComparisonOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_branch_comparison", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Lists all selected branches for a repository (active branches only).
  * 
  * # Arguments
@@ -605,6 +641,19 @@ export type BatchDeleteBranchesOutput = { deletedBranches: DeletedBranchInfo[] }
 export type BatchDeleteLockedBranchesInput = { repoId: string; branchNames: string[] }
 export type BatchDeleteLockedBranchesOutput = Record<string, never>
 export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean; deletedAt: string | null; isReachable: boolean | null; isSelected: boolean; isLocked: boolean }
+/**
+ * How a local branch stands relative to the base — the cleanup signals.
+ * `ahead == 0` means the branch is fully contained in base (safe to delete).
+ */
+export type BranchComparison = { name: string; sha: string; 
+/**
+ * Commits on this branch not in base (unique work — lost if deleted).
+ */
+ahead: number; 
+/**
+ * Commits in base not on this branch.
+ */
+behind: number }
 export type BranchDeletedEvent = { deletedBranches: DeletedBranchInfo[]; repositoryPath: string }
 /**
  * Comprehensive filter configuration for querying branches
@@ -787,6 +836,32 @@ export type GetBranchListInput = { repoId: string; filters?: BranchFilters }
 export type GetBranchListOutput = { branches: Branch[] }
 export type GetBranchMergeStatusInput = { path: string; branchName: string }
 export type GetBranchMergeStatusOutput = { isMerged: boolean }
+export type GetCommitHistoryWindowInput = { path: string; 
+/**
+ * Full or short SHA of the commit to locate.
+ */
+targetSha: string; 
+/**
+ * How many commits of context to include before (newer than) the target.
+ */
+contextBefore?: number; 
+/**
+ * Window size (clamped to 1..=500); always spans through the target.
+ */
+limit: number }
+export type GetCommitHistoryWindowOutput = { commits: HistoryCommit[]; 
+/**
+ * Absolute index (in the full walk) of `commits[0]`.
+ */
+startIndex: number; 
+/**
+ * Absolute index of the target commit.
+ */
+targetIndex: number; 
+/**
+ * Cursor to continue paging after this window; `null` at the end.
+ */
+nextCursor: string | null; totalCount: number }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
 export type GetRepositoryInput = { id: string }
@@ -805,8 +880,54 @@ export type GetRepositorySyncStatusOutput = {
  * may have missed, e.g. while the app was backgrounded).
  */
 drifted: boolean }
+/**
+ * A single commit in the history walk, with the topology the graph needs.
+ */
+export type HistoryCommit = { sha: string; shortSha: string; 
+/**
+ * Parent SHAs, first-parent first. Empty for the root commit; >1 for merges.
+ */
+parents: string[]; 
+/**
+ * Branch/tag/remote names pointing at this commit, local branches first.
+ */
+refs: RefDecoration[]; author: string; email: string; date: string; message: string }
+export type ListBranchComparisonInput = { path: string; 
+/**
+ * Base branch to compare against; defaults to main/master, else HEAD.
+ * An explicit base that doesn't exist is an error.
+ */
+base?: string | null; 
+/**
+ * Local branches to compute; names that no longer exist are skipped
+ * silently (absence in the result is NOT `ahead == 0`).
+ */
+branchNames: string[] }
+export type ListBranchComparisonOutput = { baseName: string; baseSha: string; branches: BranchComparison[] }
 export type ListBranchSelectionInput = { repoId: string }
 export type ListBranchSelectionOutput = { branches: string[] }
+export type ListCommitHistoryInput = { 
+/**
+ * Filesystem path to the repository (frontend resolves this from the repo id).
+ */
+path: string; 
+/**
+ * Opaque cursor from the previous page; omit for the first page.
+ */
+cursor?: string | null; 
+/**
+ * Window size — how many commits to return (clamped to 1..=500).
+ */
+limit: number }
+export type ListCommitHistoryOutput = { commits: HistoryCommit[]; 
+/**
+ * Cursor for the next page; `null` on the last page.
+ */
+nextCursor: string | null; 
+/**
+ * Exact total number of commits in the walk.
+ */
+totalCount: number }
 export type ListDeletedBranchSelectionInput = { repoId: string }
 export type ListDeletedBranchSelectionOutput = { branches: string[] }
 export type ListLockedBranchesInput = { repoId: string }
@@ -875,6 +996,12 @@ export type MergeStatusFilter =
 "all"
 export type NotificationEvent = { title: string; message: string; kind: NotificationKind; duration: number | null }
 export type NotificationKind = "Success" | "Error" | "Warning" | "Info"
+export type RefDecoration = { name: string; kind: RefKind }
+/**
+ * What kind of ref points at a commit — so the UI can emphasise local branch
+ * heads (the comparison unit) over tags and remotes.
+ */
+export type RefKind = "localBranch" | "remoteBranch" | "tag"
 export type RemoveWorktreeInput = { 
 /**
  * Absolute path to the repository's working directory.
