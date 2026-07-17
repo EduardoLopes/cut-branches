@@ -47,4 +47,37 @@ describe('matchesRepositoryChange', () => {
 			false
 		);
 	});
+
+	test('matches commit-history queries keyed with the changed repoId', () => {
+		expect(
+			matchesRepositoryChange(
+				['commit-history', 'listCommitHistory', { repoId: REPO, path: '/p' }],
+				REPO
+			)
+		).toBe(true);
+		expect(
+			matchesRepositoryChange(
+				['commit-history-window', 'getCommitHistoryWindow', { repoId: REPO, path: '/p' }],
+				REPO
+			)
+		).toBe(true);
+		expect(
+			matchesRepositoryChange(
+				['branch-comparison', 'listBranchComparison', { repoId: REPO, path: '/p' }],
+				REPO
+			)
+		).toBe(true);
+	});
+
+	test('does not match commit-history queries for another repo or without repoId', () => {
+		expect(
+			matchesRepositoryChange(
+				['commit-history', 'listCommitHistory', { repoId: 'other', path: '/p' }],
+				REPO
+			)
+		).toBe(false);
+		expect(
+			matchesRepositoryChange(['branch-comparison', 'listBranchComparison', { path: '/p' }], REPO)
+		).toBe(false);
+	});
 });

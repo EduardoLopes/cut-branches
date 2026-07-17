@@ -48,10 +48,36 @@ export function extractResource(commandName: CommandName): string {
  * Values can be a single string or an array of strings for multi-resource invalidation
  */
 const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
-	updateCurrentBranch: ['getRepository', 'getBranchList'],
-	createBranchRestoration: ['getRepository', 'getBranchList'],
-	batchCreateBranchRestorations: ['getRepository', 'getBranchList'],
-	batchDeleteBranches: ['getRepository', 'getBranchList'],
+	// Branch mutations change refs, so the commit-history walk, its windows,
+	// and the ahead/behind comparisons all go stale alongside the branch list.
+	updateCurrentBranch: [
+		'getRepository',
+		'getBranchList',
+		'listCommitHistory',
+		'getCommitHistoryWindow',
+		'listBranchComparison'
+	],
+	createBranchRestoration: [
+		'getRepository',
+		'getBranchList',
+		'listCommitHistory',
+		'getCommitHistoryWindow',
+		'listBranchComparison'
+	],
+	batchCreateBranchRestorations: [
+		'getRepository',
+		'getBranchList',
+		'listCommitHistory',
+		'getCommitHistoryWindow',
+		'listBranchComparison'
+	],
+	batchDeleteBranches: [
+		'getRepository',
+		'getBranchList',
+		'listCommitHistory',
+		'getCommitHistoryWindow',
+		'listBranchComparison'
+	],
 	updateBranchSelectionBatch: ['getBranchList'],
 	setBranchSelectionAll: ['getBranchList'],
 	batchCreateLockedBranches: ['listLockedBranches', 'getBranchList'],
@@ -131,6 +157,16 @@ export function matchesRepositoryChange(
 	// The repository list carries branchesCount for the sidebar — always refresh.
 	if (resource === 'repository' && commandName === 'getRepositoryList') {
 		return true;
+	}
+	// Commit-history queries key their input with the owning repoId (the wire
+	// input only carries a path); an on-disk change to that repo stales the
+	// walk, its deep-link windows, and the ahead/behind comparisons.
+	if (
+		resource === 'commit-history' ||
+		resource === 'commit-history-window' ||
+		resource === 'branch-comparison'
+	) {
+		return hasRepoId(input) && input.repoId === repositoryId;
 	}
 	return false;
 }

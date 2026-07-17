@@ -18,11 +18,10 @@ import { type AppError } from '$infrastructure/bindings';
 
 // Helper to resolve input (static value or function)
 export type InputResolver<TCommand extends CommandName> =
-	| CommandParams<TCommand>
-	| (() => CommandParams<TCommand>);
+	CommandParams<TCommand> | (() => CommandParams<TCommand>);
 
-// Helper to resolve input value at runtime
-function resolveInput<TCommand extends CommandName>(
+// Helper to resolve input value at runtime (shared with the infinite variant)
+export function resolveInput<TCommand extends CommandName>(
 	input: InputResolver<TCommand> | undefined
 ): CommandParams<TCommand> | undefined {
 	return typeof input === 'function' ? input() : input;
@@ -33,8 +32,9 @@ function isQueryKey<TQueryKey extends QueryKey>(value: unknown): value is TQuery
 	return Array.isArray(value) && value.every((v) => v !== undefined && v !== null);
 }
 
-// Helper to create default query key using resource-based naming
-function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey = QueryKey>(
+// Helper to create default query key using resource-based naming (shared with
+// the infinite variant so both key families invalidate identically)
+export function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey = QueryKey>(
 	commandName: TCommand,
 	input: CommandParams<TCommand> | undefined
 ): TQueryKey {
