@@ -2,7 +2,6 @@
 	import Icon from '@iconify/svelte';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
-	import { type PrimitiveCardHeaderProps } from '@pindoba/svelte-card';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -72,16 +71,6 @@
 	</Group>
 {/snippet}
 
-{#snippet whatGetsCleaned()}
-	<span>
-		Cleanable folders are discovered from each repository's <code>.gitignore</code> (including
-		nested
-		<code>.gitignore</code> files). Only directories your repository ignores are ever proposed or
-		deleted — a repository with no <code>.gitignore</code> has nothing to clean. You choose which paths
-		to keep on the cleanup page.
-	</span>
-{/snippet}
-
 <SettingsSection
 	heading="Cleanup"
 	subheading="Configure how repositories are cleaned. Changes are saved on this device."
@@ -89,14 +78,26 @@
 	trailing={resetButton as BannerProps['trailing']}
 	testId="cleanup-settings-section"
 >
+	<p
+		class={css({
+			fontSize: 'sm',
+			lineHeight: '1.7',
+			margin: '0',
+			color: 'neutral.text.muted',
+			textWrap: 'pretty'
+		})}
+	>
+		Cleanable folders are discovered from each repository's <code>.gitignore</code> (including
+		nested
+		<code>.gitignore</code> files). Only directories your repository ignores are ever proposed or
+		deleted — a repository with no <code>.gitignore</code> has nothing to clean. You choose which paths
+		to keep on the cleanup page.
+	</p>
+
 	<SettingsField
 		heading="Staleness threshold (days)"
 		subheading="A repository is “stale” when its most recent commit and file change are both older than this."
 		control={thresholdControl as Snippet}
 	/>
 	<SettingsField heading="Default deletion method" control={deletionControl as Snippet} />
-	<SettingsField
-		heading="What gets cleaned"
-		subheading={whatGetsCleaned as PrimitiveCardHeaderProps['subheading']}
-	/>
 </SettingsSection>
