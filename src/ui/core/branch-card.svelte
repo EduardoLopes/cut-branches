@@ -142,7 +142,7 @@
 				flexDirection: 'column',
 				borderRadius: 'lg',
 				gap: 'xs',
-				background: 'neutral.surface.deep',
+				background: 'colorPalette.surface.step.2',
 				padding: 'xs'
 			})}
 		>
@@ -155,7 +155,7 @@
 					alignItems: 'center',
 					gap: '2xs',
 					pindobaTransition: 'fast',
-					color: 'neutral.text.muted',
+					color: 'colorPalette.text.muted',
 					fontWeight: 'bold'
 				})}
 			>
@@ -163,7 +163,7 @@
 					icon="lucide:git-commit-horizontal"
 					width="16px"
 					height="16px"
-					color={token('colors.neutral.text.muted')}
+					color={token('colors.colorPalette.text.muted')}
 				/> Last commit
 			</div>
 
@@ -180,7 +180,7 @@
 					gap: 'xs'
 				})}
 			>
-				<CommitCard commit={branch.getLastCommit()} />
+				<CommitCard commit={branch.getLastCommit()} {feedback} />
 			</div>
 		</div>
 

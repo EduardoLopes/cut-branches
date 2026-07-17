@@ -1,6 +1,9 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Card, { type PrimitiveCardFooterProps } from '@pindoba/svelte-card';
+	import Card, {
+		type PrimitiveCardFooterProps,
+		type PrimitiveCardProps
+	} from '@pindoba/svelte-card';
 	import Markdown from 'svelte-exmarkdown';
 	import { type Commit } from '$domains/branch-management/core/models/commit';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
@@ -10,9 +13,11 @@
 
 	interface Props {
 		commit: Commit;
+		/** Semantic palette to follow — inherited from the enclosing branch card. */
+		feedback?: PrimitiveCardProps['feedback'];
 	}
 
-	let { commit }: Props = $props();
+	let { commit, feedback = 'neutral' }: Props = $props();
 </script>
 
 {#snippet author()}
@@ -63,6 +68,7 @@
 
 <Card
 	size="sm"
+	{feedback}
 	background="surface.step.1"
 	border="muted"
 	shadow="none"
