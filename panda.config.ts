@@ -135,6 +135,27 @@ export default defineConfig({
 							base: `#fff`,
 							_light: `#000`
 						}
+					},
+					// Commit-graph lane palette (base = dark theme, _light overrides).
+					// Consumed as CSS vars by the history graph rail so SVG strokes
+					// follow the theme without re-rendering.
+					// Softened palette: OKLCH C ≈ 0.11 (the old Tailwind 400s sat at
+					// ~0.15–0.19), with lightness alternating between adjacent lanes
+					// so neighbours stay apart under color-vision deficiency. Both
+					// modes pass the palette validator: lightness band, chroma floor,
+					// CVD ΔE, normal-vision ΔE, and ≥3:1 contrast vs the surface.
+					graph: {
+						lane: {
+							'0': { value: { base: '#6295d4', _light: '#4b7cba' } },
+							'1': { value: { base: '#348757', _light: '#156f41' } },
+							'2': { value: { base: '#af923c', _light: '#a68931' } },
+							'3': { value: { base: '#a85550', _light: '#984742' } },
+							'4': { value: { base: '#9489d4', _light: '#857ac4' } },
+							'5': { value: { base: '#a35475', _light: '#8c4061' } },
+							'6': { value: { base: '#20a89b', _light: '#009589' } },
+							'7': { value: { base: '#a6662b', _light: '#965719' } }
+						},
+						muted: { value: { base: '#6b7280', _light: '#9ca3af' } }
 					}
 					// ...getSemanticTokens('primary', 'grass'),
 					// ...getSemanticTokens('neutral', 'olive')
