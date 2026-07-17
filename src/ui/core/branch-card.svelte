@@ -22,6 +22,10 @@
 		title?: string;
 		children?: Snippet;
 		variant?: 'default' | 'inverted';
+		/** Forwarded to the embedded CommitCard: deep-link into a history view. */
+		commitHistoryHref?: string;
+		/** Forwarded to the embedded CommitCard: hover/focus preview content. */
+		commitHoverPreview?: Snippet;
 	}
 
 	let {
@@ -33,7 +37,9 @@
 		id,
 		title,
 		children,
-		variant = 'default'
+		variant = 'default',
+		commitHistoryHref,
+		commitHoverPreview
 	}: Props = $props();
 
 	// In inverted mode, visual state is opposite of selection state
@@ -180,7 +186,12 @@
 					gap: 'xs'
 				})}
 			>
-				<CommitCard commit={branch.getLastCommit()} {feedback} />
+				<CommitCard
+					commit={branch.getLastCommit()}
+					{feedback}
+					historyHref={commitHistoryHref}
+					hoverPreview={commitHoverPreview}
+				/>
 			</div>
 		</div>
 
