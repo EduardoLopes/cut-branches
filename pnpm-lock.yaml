@@ -70,6 +70,9 @@ importers:
       '@pindoba/svelte-panel':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-popover':
+        specifier: alpha
+        version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-progress':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
@@ -91,6 +94,9 @@ importers:
       '@tanstack/svelte-query':
         specifier: ^6.1.36
         version: 6.1.36(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+      '@tanstack/svelte-virtual':
+        specifier: ^3.13.32
+        version: 3.13.32(svelte@5.56.4(@typescript-eslint/types@8.63.0))
       '@tauri-apps/api':
         specifier: ^2.11.1
         version: 2.11.1
@@ -1415,6 +1421,14 @@ packages:
     resolution: {integrity: sha512-AVyvXPzBh5OQnWFB7rk9gskciPouayAhU9Vm24uMai+Imf+ZfBEbjOAEtdM41oexFK/cdXmpAIySDSVaAzy9zw==}
     peerDependencies:
       svelte: ^5.25.0
+
+  '@tanstack/svelte-virtual@3.13.32':
+    resolution: {integrity: sha512-jA7zRXPAP6Duvdk1mHYAtBNHu5yQo43Wlf8iE3pJ+umj9GdE+dXMzIky3apFBZBP6MOmSr0wT/cHA4f/qHbA3w==}
+    peerDependencies:
+      svelte: ^3.48.0 || ^4.0.0 || ^5.0.0
+
+  '@tanstack/virtual-core@3.17.4':
+    resolution: {integrity: sha512-nGm5KteqxasUdThLc2izl6dHUqLv0LQj7Nuyo5gYalTPf/U8a9ermvsl7reT+6ioBW1l8WfpP/mcU338nLXpqw==}
 
   '@tauri-apps/api@2.11.1':
     resolution: {integrity: sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA==}
@@ -6729,6 +6743,13 @@ snapshots:
     dependencies:
       '@tanstack/query-core': 5.101.2
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+
+  '@tanstack/svelte-virtual@3.13.32(svelte@5.56.4(@typescript-eslint/types@8.63.0))':
+    dependencies:
+      '@tanstack/virtual-core': 3.17.4
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+
+  '@tanstack/virtual-core@3.17.4': {}
 
   '@tauri-apps/api@2.11.1': {}
 
