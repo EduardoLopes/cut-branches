@@ -49,8 +49,9 @@
 	as="label"
 	interactive
 	align="start"
-	background={enabled ? 'surface.step.3' : 'surface.step.2'}
-	feedback={enabled ? 'primary' : 'neutral'}
+	background={enabled ? 'surface.soft' : 'surface.step.2'}
+	feedback="neutral"
+	border={enabled ? 'default' : 'muted'}
 	class={css({ cursor: 'pointer', width: '100%' })}
 	testId="feature-flag-toggle"
 	heading={flag.label}

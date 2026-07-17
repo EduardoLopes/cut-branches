@@ -35,7 +35,7 @@
 		align = 'center',
 		as,
 		interactive,
-		background = 'surface.step.2',
+		background = 'surface.soft',
 		feedback,
 		border = 'default',
 		class: className,
