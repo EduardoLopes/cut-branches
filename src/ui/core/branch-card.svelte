@@ -6,6 +6,7 @@
 		type PrimitiveCardHeaderProps,
 		type PrimitiveCardProps
 	} from '@pindoba/svelte-card';
+	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
 	import CommitCard from './commit-card.svelte';
 	import { type Branch } from '$domains/branch-management/core/models/branch';
@@ -15,13 +16,13 @@
 
 	interface Props {
 		branch: Branch;
-		/** Dense layout: a tighter card with a single-line ellipsized branch name
-		 *  and the last commit rendered as a compact one-line row (no "Last
-		 *  commit" section label). For space-constrained contexts (e.g. modals
-		 *  and status lists) where the full card is too tall. Mirrors the
-		 *  CommitCard `compact` mode. */
+		/** Dense layout: a tighter card reduced to the branch identity — name,
+		 *  state badges, and footer meta — with the last commit omitted
+		 *  entirely. For space-constrained contexts (e.g. modals and status
+		 *  lists) where the full card is too tall. Mirrors the CommitCard
+		 *  `compact` mode. */
 		compact?: boolean;
-		/** Whether to render the upstream badge in the header. On by default —
+		/** Whether to render the upstream badge in the footer. On by default —
 		 *  showing the upstream is the branch card's job (CommitCard's mirror
 		 *  prop defaults to off) — but contexts that already convey the remote
 		 *  ref can opt out. */
@@ -38,6 +39,15 @@
 		commitHistoryHref?: string;
 		/** Forwarded to the embedded CommitCard: hover/focus preview content. */
 		commitHoverPreview?: Snippet;
+		/** Card surface props, forwarded to the underlying pindoba Card so this
+		 *  component can be reused on different backgrounds/contexts (mirrors
+		 *  CommitCard). Defaults match the standalone branch-list look; `size`
+		 *  is overridden to `xs` in compact mode. */
+		size?: PrimitiveCardProps['size'];
+		background?: PrimitiveCardProps['background'];
+		border?: PrimitiveCardProps['border'];
+		shadow?: PrimitiveCardProps['shadow'];
+		radius?: PrimitiveCardProps['radius'];
 	}
 
 	let {
@@ -53,7 +63,12 @@
 		children,
 		variant = 'default',
 		commitHistoryHref,
-		commitHoverPreview
+		commitHoverPreview,
+		size,
+		background = 'surface.step.2',
+		border = 'muted',
+		shadow,
+		radius
 	}: Props = $props();
 
 	// In inverted mode, visual state is opposite of selection state
@@ -83,6 +98,7 @@
 	// Card has no dashed-border or disabled/locked-dimming variants, so express
 	// those through the root passThrough style.
 	const rootStyle = $derived({
+		overflow: 'hidden',
 		...(isVisuallySelected ? { borderStyle: 'dashed' } : {}),
 		...(disabled || locked
 			? { opacity: 0.5, pointerEvents: 'none' as const, filter: 'grayscale(1)' }
@@ -92,9 +108,13 @@
 	// Compact density: a tighter Card size and smaller badge/meta type. Same
 	// content and semantics as the default card — only scaled down, mirroring
 	// CommitCard's compact mode. `xs` is a native, tight padding preset.
-	const cardSize = $derived<PrimitiveCardProps['size']>(compact ? 'xs' : undefined);
+	const cardSize = $derived<PrimitiveCardProps['size']>(compact ? 'xs' : size);
 	const badgeSize = $derived(compact ? 'xs' : 'sm');
 	const metaFont = $derived(compact ? 'xs' : 'sm');
+
+	// The footer hosts the upstream badge (leading) and the deleted-at meta
+	// (trailing); it only renders when at least one of them is present.
+	const upstreamShown = $derived(Boolean(showUpstream && branch.getUpstream()));
 </script>
 
 {#snippet heading()}
@@ -118,25 +138,37 @@
 				emphasis="secondary"
 				data-testid="branch-current-badge"
 			>
-				<span class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}>
-					<Icon icon="lucide:map-pin" width="12px" height="12px" />
-					current
-				</span>
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:map-pin" /></Stamp>
+				{/snippet}
+				current
 			</Badge>
 		{/if}
-		{#if showUpstream && branch.getUpstream()}
-			<!-- The upstream is a branch attribute, so it lives here on the branch
-			     header rather than on the embedded commit card's footer. -->
-			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="branch-upstream">
-				<span
-					class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}
-					title={branch.getUpstream()}
-				>
-					<Icon icon="lucide:git-branch" width="12px" height="12px" />
-					{branch.getUpstream()}
-				</span>
-			</Badge>
-		{/if}
+	</span>
+{/snippet}
+
+<!-- Footer meta: the upstream ref as a badge, mirroring how the commit card
+     surfaces its SHA/upstream in a dedicated footer row. The upstream is a
+     branch attribute, so it lives on the branch card's footer rather than on
+     the embedded commit card's. -->
+{#snippet footerMeta()}
+	<span
+		class={css({
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 'xs',
+			flexWrap: 'wrap'
+		})}
+	>
+		<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="branch-upstream">
+			{#snippet leading()}
+				<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
+			{/snippet}
+			<span title={branch.getUpstream()}>
+				{branch.getUpstream()}
+			</span>
+		</Badge>
 	</span>
 {/snippet}
 
@@ -167,31 +199,13 @@
 {#snippet lastCommitCard()}
 	<CommitCard
 		commit={branch.getLastCommit()}
-		{compact}
 		{feedback}
 		historyHref={commitHistoryHref}
 		hoverPreview={commitHoverPreview}
 	/>
 {/snippet}
 
-<Card
-	{id}
-	{title}
-	{feedback}
-	size={cardSize}
-	border="default"
-	class={rootClass}
-	data-testid="branch-card"
-	data-variant={variant}
-	passThrough={{ root: { style: rootStyle } }}
-	header={{
-		heading: heading as PrimitiveCardHeaderProps['heading'],
-		...(compact ? { headingTextStyle: 'body.sm' } : {})
-	}}
-	footer={branch.getDeletedAt()
-		? { trailing: deletedAtInfo as PrimitiveCardFooterProps['trailing'] }
-		: undefined}
->
+{#snippet cardChildren()}
 	<div
 		class={css({
 			display: 'flex',
@@ -199,19 +213,14 @@
 			gap: compact ? 'xs' : 'md'
 		})}
 	>
-		{#if compact}
-			<!-- Dense mode: the compact commit card is already a one-line row, so
-			     the "Last commit" section chrome (label + step-2 panel) would cost
-			     more height than the content it frames. Render the row bare. -->
-			{@render lastCommitCard()}
-		{:else}
+		{#if !compact}
 			<div
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
 					borderRadius: 'lg',
 					gap: 'xs',
-					background: 'colorPalette.surface.step.2',
+					background: 'colorPalette.surface.deep',
 					padding: 'xs'
 				})}
 			>
@@ -258,4 +267,39 @@
 			{@render children()}
 		{/if}
 	</div>
-</Card>
+{/snippet}
+
+<Card
+	{id}
+	{title}
+	{feedback}
+	size={cardSize}
+	{background}
+	{border}
+	{shadow}
+	{radius}
+	class={rootClass}
+	data-testid="branch-card"
+	data-variant={variant}
+	passThrough={{ root: { style: rootStyle } }}
+	header={{
+		heading: heading as PrimitiveCardHeaderProps['heading'],
+		background: 'surface.soft',
+		...(compact ? { headingTextStyle: 'body.sm' } : {})
+	}}
+	footer={upstreamShown || branch.getDeletedAt()
+		? {
+				...(upstreamShown ? { children: footerMeta, background: 'surface.step.3' } : {}),
+				...(branch.getDeletedAt()
+					? { trailing: deletedAtInfo as PrimitiveCardFooterProps['trailing'] }
+					: {})
+			}
+		: undefined}
+	children={!compact || children ? cardChildren : undefined}
+/>
+<!-- The body is withheld (not just emptied) when there is nothing to show:
+     Card renders its padded content region whenever `children` is truthy, so
+     an empty snippet would still cost a padded block. Consumers must follow
+     the same contract — pass `children` only when it will render something
+     (see branch-list's conditional `children={hasAlerts ? ... : undefined}`),
+     because Svelte cannot detect that a snippet's output is empty. -->

@@ -360,7 +360,7 @@ describe('BranchCard Component', () => {
 		expect(card).toHaveAttribute('data-variant', 'inverted');
 	});
 
-	test('shows the upstream badge on the branch header when the branch has an upstream', () => {
+	test('shows the upstream badge in the card footer when the branch has an upstream', () => {
 		const trackedBranchData: BranchData = {
 			...mockBranchData,
 			upstream: 'origin/feature/new-feature'
@@ -401,15 +401,14 @@ describe('BranchCard Component', () => {
 		expect(getByTestId('branch-upstream')).not.toBeInTheDocument();
 	});
 
-	test('compact mode drops the "Last commit" section label', () => {
+	test('compact mode omits the last commit entirely', () => {
 		const { container, getByTestId } = renderWithTestWrapper(BranchCard, {
 			branch: mockBranch,
 			compact: true
 		});
 
 		expect(container).not.toHaveTextContent('Last commit');
-		// The commit row itself still renders.
-		expect(getByTestId('last-commit-message')).toBeInTheDocument();
+		expect(getByTestId('last-commit-message')).not.toBeInTheDocument();
 		expect(getByTestId('branch-name')).toHaveTextContent('feature/new-feature');
 	});
 

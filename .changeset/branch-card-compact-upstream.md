@@ -2,4 +2,4 @@
 'cut-branches': minor
 ---
 
-Branch cards now show the upstream ref as a badge next to the branch name and support a compact layout for dense contexts.
+Branch cards now show the upstream ref as a footer badge and support a compact layout that reduces the card to the branch identity for dense contexts.

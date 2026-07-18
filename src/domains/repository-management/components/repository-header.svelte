@@ -172,10 +172,10 @@
 			{/key}
 			{#if isWorktree}
 				<Badge size="sm" feedback="warning" data-testid="repository-worktree-badge">
-					<span class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}>
-						<Icon icon="lucide:trees" width="12px" height="12px" />
-						worktree
-					</span>
+					{#snippet leading()}
+						<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+					{/snippet}
+					worktree
 				</Badge>
 			{/if}
 

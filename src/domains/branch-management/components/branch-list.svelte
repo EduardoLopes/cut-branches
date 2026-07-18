@@ -187,6 +187,21 @@
 	>
 		{#if paginatedBranches}
 			{#each paginatedBranches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
+				{@const mergeStatusQuery = createBranchMergeStatusQuery(
+					{
+						path: repositoryPath ?? '',
+						branchName: branch.getName()
+					},
+					{
+						enabled: !!repositoryPath && !branch.isCurrent()
+					}
+				)}
+				{@const alerts = getBranchAlerts(
+					branch,
+					branch.getIsSelected() ?? false,
+					mergeStatusQuery.data?.isMerged
+				)}
+				{@const hasAlerts = showAlerts && shouldShowBranchAlerts(alerts, branch)}
 				<div
 					role="listitem"
 					class={css({
@@ -289,25 +304,11 @@
 							commitHoverPreview={historyEnabled && !isRestoreView && repositoryID && repositoryPath
 								? commitPreview
 								: undefined}
-						>
-							{@const mergeStatusQuery = createBranchMergeStatusQuery(
-								{
-									path: repositoryPath ?? '',
-									branchName: branch.getName()
-								},
-								{
-									enabled: !!repositoryPath && !branch.isCurrent()
-								}
-							)}
-							{@const alerts = getBranchAlerts(
-								branch,
-								branch.getIsSelected() ?? false,
-								mergeStatusQuery.data?.isMerged
-							)}
-							{#if showAlerts && shouldShowBranchAlerts(alerts, branch)}
-								<BranchAlerts {alerts} {branch} />
-							{/if}
-						</BranchCard>
+							children={hasAlerts ? branchAlertsContent : undefined}
+						/>
+						{#snippet branchAlertsContent()}
+							<BranchAlerts {alerts} {branch} />
+						{/snippet}
 					</div>
 				</div>
 			{/each}

@@ -185,20 +185,19 @@
 	<CommitCard {commit} {upstream} compact footerBadges={extraRefs.length ? refBadges : undefined} />
 </div>
 
+{#snippet tagStamp()}
+	<Stamp emphasis="ghost"><Icon icon="lucide:tag" /></Stamp>
+{/snippet}
+
 {#snippet refBadges()}
 	{#each extraRefs as ref (ref.kind + ref.name)}
-		<Badge size="xs" emphasis="secondary" data-testid="commit-ref">
-			<span
-				class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}
-				title={ref.name}
-			>
-				{#if ref.kind === 'tag'}
-					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:tag" width="11px" height="11px" />
-					</Stamp>
-				{/if}
-				{ref.name}
-			</span>
+		<Badge
+			size="xs"
+			emphasis="secondary"
+			leading={ref.kind === 'tag' ? tagStamp : undefined}
+			data-testid="commit-ref"
+		>
+			<span title={ref.name}>{ref.name}</span>
 		</Badge>
 	{/each}
 {/snippet}

@@ -301,26 +301,19 @@
 		})}
 	>
 		<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-sha">
-			<span
-				class={css({
-					display: 'inline-flex',
-					alignItems: 'center',
-					gap: '2xs',
-					fontFamily: 'mono'
-				})}
-				title={commit.getSha()}
-			>
-				<Icon icon="lucide:git-commit-horizontal" width="12px" height="12px" />
+			{#snippet leading()}
+				<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
+			{/snippet}
+			<span class={css({ fontFamily: 'mono' })} title={commit.getSha()}>
 				{commit.getShortSha()}
 			</span>
 		</Badge>
 		{#if showUpstream && upstream}
 			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-upstream">
-				<span
-					class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}
-					title={upstream}
-				>
-					<Icon icon="lucide:git-branch" width="12px" height="12px" />
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
+				{/snippet}
+				<span title={upstream}>
 					{upstream}
 				</span>
 			</Badge>
