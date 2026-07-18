@@ -63,11 +63,12 @@
 			email: row.commit.email
 		})
 	);
-	// Surface a remote tracking ref (if the commit is decorated with one) as the
-	// card's upstream badge.
+	// Remote tracking ref (if the commit is decorated with one), passed as the
+	// card's upstream. The card hides it by default — showing the upstream is
+	// the branch card's job — but it stays available should rows opt in later.
 	const upstream = $derived(row.commit.refs.find((r) => r.kind === 'remoteBranch')?.name ?? null);
 	// Remaining decorations the card doesn't model — tags and any further remote
-	// refs beyond the one shown as upstream. Local branches stay in the gutter.
+	// refs beyond the upstream one. Local branches stay in the gutter.
 	const extraRefs = $derived(
 		row.commit.refs.filter((r) => r.kind !== 'localBranch' && r.name !== upstream)
 	);

@@ -33,6 +33,10 @@
 		 *  shown as a badge in the footer. Branch-level, so passed in by the
 		 *  composing card rather than read from the commit. */
 		upstream?: string | null;
+		/** Whether to render the upstream badge. Off by default: showing the
+		 *  upstream is the branch card's job, so it opts in explicitly while
+		 *  other contexts (e.g. commit-history rows) stay quiet. */
+		showUpstream?: boolean;
 		/** Optional deep-link into a history view for this commit; rendered as a
 		 *  branch icon flanking the commit message. Kept generic: the URL is the
 		 *  cross-domain channel, this component knows nothing about who serves it. */
@@ -58,6 +62,7 @@
 		footerBadges,
 		feedback = 'neutral',
 		upstream,
+		showUpstream = false,
 		historyHref,
 		hoverPreview,
 		size = 'sm',
@@ -309,7 +314,7 @@
 				{commit.getShortSha()}
 			</span>
 		</Badge>
-		{#if upstream}
+		{#if showUpstream && upstream}
 			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-upstream">
 				<span
 					class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}

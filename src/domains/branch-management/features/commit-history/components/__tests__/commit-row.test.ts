@@ -58,8 +58,10 @@ describe('CommitRow', () => {
 			...defaultProps
 		});
 
-		await expect.element(getByText('origin/main')).toBeInTheDocument();
 		await expect.element(getByText('v1.0')).toBeInTheDocument();
+		// The upstream ref is passed to the card but hidden by default — showing
+		// the upstream is the branch card's job, not the history row's.
+		expect(container.querySelector('[data-testid="commit-upstream"]')).toBeNull();
 		// `main` appears as the gutter checkbox, not as a ref badge.
 		await expect.element(getByRole('checkbox', { name: 'main' })).toBeInTheDocument();
 		const badgeTexts = [...container.querySelectorAll('code ~ span')].map((n) => n.textContent);

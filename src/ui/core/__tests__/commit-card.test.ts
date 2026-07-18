@@ -30,10 +30,11 @@ describe('CommitCard Component', () => {
 		expect(titled?.getAttribute('title')).toBe('abc123def456');
 	});
 
-	test('renders the upstream ref badge when an upstream is provided', () => {
+	test('renders the upstream ref badge when an upstream is provided and showUpstream is set', () => {
 		const { getByTestId } = renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
-			upstream: 'origin/main'
+			upstream: 'origin/main',
+			showUpstream: true
 		});
 
 		const upstreamElement = getByTestId('commit-upstream');
@@ -41,9 +42,19 @@ describe('CommitCard Component', () => {
 		expect(upstreamElement.element().textContent).toContain('origin/main');
 	});
 
+	test('hides the upstream badge by default even when an upstream is provided', () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit,
+			upstream: 'origin/main'
+		});
+
+		expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
+	});
+
 	test('does not render an upstream badge when no upstream is provided', () => {
 		const { getByTestId } = renderWithTestWrapper(CommitCard, {
-			commit: mockCommit
+			commit: mockCommit,
+			showUpstream: true
 		});
 
 		expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
