@@ -8,13 +8,25 @@
 	import type { Snippet } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
 	import { type Commit } from '$domains/branch-management/core/models/commit';
-	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
+	import {
+		safeFormatDate,
+		safeFormatRelativeDate,
+		safeFormatRelativeDateShort
+	} from '$utils/date-utils';
 	import { cleanEmailString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { token } from '@pindoba/styled-system/tokens';
 
 	interface Props {
 		commit: Commit;
+		/** Dense layout: a single title line with inline author · date and a tight
+		 *  badge row, at reduced font-size and spacing. For long lists (e.g. the
+		 *  commit-history graph) where the full header/body/footer card is too
+		 *  tall. The body disclosure is omitted in this mode to keep rows uniform. */
+		compact?: boolean;
+		/** Extra badges appended after the SHA/upstream badges (e.g. tag or remote
+		 *  ref decorations the generic card doesn't model). */
+		footerBadges?: Snippet;
 		/** Semantic palette to follow — inherited from the enclosing branch card. */
 		feedback?: PrimitiveCardProps['feedback'];
 		/** Remote tracking ref this commit's branch follows (e.g. `origin/main`);
@@ -42,6 +54,8 @@
 
 	let {
 		commit,
+		compact = false,
+		footerBadges,
 		feedback = 'neutral',
 		upstream,
 		historyHref,
@@ -52,6 +66,15 @@
 		shadow = 'none',
 		radius = 'sm'
 	}: Props = $props();
+
+	// Compact density: a tighter Card size, a lighter heading style, smaller
+	// meta/badge type, and a single-line ellipsized summary. Same content and
+	// structure as the default card — only scaled down. `xs` is a native, tight
+	// padding preset (no passThrough override needed).
+	const cardSize = $derived<PrimitiveCardProps['size']>(compact ? 'xs' : size);
+	const headingStyle = $derived(compact ? 'body.sm' : 'heading.3xs');
+	const metaFont = $derived(compact ? 'xs' : 'sm');
+	const badgeSize = $derived(compact ? 'xs' : 'sm');
 
 	// Anchor for the hover-preview popover: the branch icon link. Anchoring to
 	// the icon (not the whole card) keeps the preview next to what the user is
@@ -126,18 +149,43 @@
 {#snippet messageHeading()}
 	<span
 		class={css({
-			display: 'inline-flex',
+			display: compact ? 'flex' : 'inline-flex',
 			alignItems: 'center',
 			gap: '2xs',
+			minWidth: '0',
+			width: compact ? '100%' : undefined,
 			pindobaTransition: 'fast',
-			wordBreak: 'break-word'
+			wordBreak: compact ? 'normal' : 'break-word'
 		})}
 	>
-		<span data-testid="last-commit-message">
-			<Markdown md={commit.getSummary()} />
-		</span>
+		{#if compact}
+			<!-- Single-line, ellipsized subject: keeps every row the same height.
+			     Plain text (not Markdown) so the truncation is a clean one-liner
+			     rather than a wrapping <p> block. It flexes so it — not the meta —
+			     absorbs the overflow. -->
+			<span
+				data-testid="last-commit-message"
+				title={commit.getSummary()}
+				class={css({
+					flex: '1',
+					minWidth: '0',
+					overflow: 'hidden',
+					textOverflow: 'ellipsis',
+					whiteSpace: 'nowrap',
+					fontWeight: 'medium'
+				})}
+			>
+				{commit.getSummary()}
+			</span>
+		{:else}
+			<span data-testid="last-commit-message">
+				<Markdown md={commit.getSummary()} />
+			</span>
+		{/if}
 		{#if hasBody}
-			{@render bodyToggle()}
+			<span class={css({ flexShrink: '0' })}>
+				{@render bodyToggle()}
+			</span>
 		{/if}
 	</span>
 {/snippet}
@@ -159,24 +207,30 @@
 {#snippet author()}
 	<span
 		class={css({
-			fontSize: 'sm',
+			fontSize: metaFont,
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
 			gap: '2xs',
-			pindobaTransition: 'fast'
+			pindobaTransition: 'fast',
+			// In compact rows the meta must not wrap or steal width from the
+			// summary — it stays one line and the summary truncates instead.
+			whiteSpace: compact ? 'nowrap' : undefined,
+			flexShrink: compact ? 0 : undefined
 		})}
 		title={cleanEmailString(commit.getEmail())}
 		data-testid="author-name"
 	>
-		<Stamp size="xs" border="muted">
-			<Icon
-				icon="lucide:user-round"
-				width="16px"
-				height="16px"
-				color={token('colors.neutral.text.muted')}
-			/>
-		</Stamp>
+		{#if !compact}
+			<Stamp size="xs" border="muted">
+				<Icon
+					icon="lucide:user-round"
+					width="16px"
+					height="16px"
+					color={token('colors.neutral.text.muted')}
+				/>
+			</Stamp>
+		{/if}
 		{commit.getAuthor()}
 	</span>
 {/snippet}
@@ -184,23 +238,29 @@
 {#snippet date()}
 	<span
 		class={css({
-			fontSize: 'sm',
+			fontSize: metaFont,
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
 			gap: '2xs',
 			pindobaTransition: 'fast',
-			color: 'neutral.text.muted'
+			color: 'neutral.text.muted',
+			whiteSpace: compact ? 'nowrap' : undefined,
+			flexShrink: compact ? 0 : undefined
 		})}
 		title={safeFormatDate(commit.getDate())}
 		data-testid="commit-date"
 	>
-		<Stamp size="xs" border="muted">
-			<Icon icon="lucide:clock" width="16px" height="16px" />
-		</Stamp>
-		{safeFormatRelativeDate(commit.getDate(), {
-			unit: 'day'
-		})}
+		{#if !compact}
+			<Stamp size="xs" border="muted">
+				<Icon icon="lucide:clock" width="16px" height="16px" />
+			</Stamp>
+		{/if}
+		{#if compact}
+			{safeFormatRelativeDateShort(commit.getDate())}
+		{:else}
+			{safeFormatRelativeDate(commit.getDate(), { unit: 'day' })}
+		{/if}
 	</span>
 {/snippet}
 
@@ -211,8 +271,10 @@
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
-			gap: 'xs',
-			color: 'neutral.text.muted'
+			gap: compact ? '2xs' : 'xs',
+			color: 'neutral.text.muted',
+			whiteSpace: compact ? 'nowrap' : undefined,
+			flexShrink: compact ? 0 : undefined
 		})}
 	>
 		{@render author()}
@@ -233,7 +295,7 @@
 			flexWrap: 'wrap'
 		})}
 	>
-		<Badge size="sm" emphasis="secondary" {feedback} data-testid="commit-sha">
+		<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-sha">
 			<span
 				class={css({
 					display: 'inline-flex',
@@ -248,7 +310,7 @@
 			</span>
 		</Badge>
 		{#if upstream}
-			<Badge size="sm" emphasis="secondary" {feedback} data-testid="commit-upstream">
+			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-upstream">
 				<span
 					class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}
 					title={upstream}
@@ -258,11 +320,13 @@
 				</span>
 			</Badge>
 		{/if}
+		{@render footerBadges?.()}
 	</span>
 {/snippet}
 
 <Card
-	{size}
+	class={css({ width: '100%', minWidth: '0' })}
+	size={cardSize}
 	{feedback}
 	{background}
 	{border}
@@ -271,12 +335,30 @@
 	header={{
 		leading: historyHref ? branchLink : undefined,
 		heading: { content: messageHeading, trailing: meta },
-		headingTextStyle: 'heading.3xs',
+		headingTextStyle: headingStyle,
 		layout: {
 			leading: {
 				align: 'start'
-			}
+			},
+			// In compact mode the summary is a single ellipsized line, so pin the
+			// author · date meta to the trailing edge.
+			...(compact ? { heading: { trailing: 'apart' } } : {})
 		},
+		// Let the summary shrink so its ellipsis engages. The Banner nests the
+		// heading through several flank/group wrappers; EVERY one needs
+		// `min-width: 0` (a flex item won't shrink below content size otherwise),
+		// the content must `flex: 1`, and the trailing meta must not shrink.
+		passThrough: compact
+			? {
+					root: { style: css.raw({ width: '100%', minWidth: '0' }) },
+					flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
+					flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+					headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+					headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
+					heading: { style: css.raw({ flex: '1', minWidth: '0', overflow: 'hidden' }) },
+					headingTrailing: { style: css.raw({ flexShrink: '0' }) }
+				}
+			: undefined,
 		background: 'surface.soft'
 		// Top-align the branch icon to the message block so it hugs the subject
 		// line rather than floating to the vertical center of a multi-line body.
