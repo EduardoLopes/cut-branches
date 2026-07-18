@@ -10,6 +10,7 @@
 	import { get } from 'svelte/store';
 	import CommitRow from './commit-row.svelte';
 	import CommitRunRow from './commit-run-row.svelte';
+	import { laneColorVar } from './lane-colors';
 	import type { useCommitHistoryView } from '$domains/branch-management/features/commit-history/application/use-commit-history-view.svelte';
 	import { findDisplayIndex } from '$domains/branch-management/features/commit-history/models/commit-graph';
 	import { css } from '@pindoba/styled-system/css';
@@ -130,38 +131,34 @@
 		return () => clearTimeout(timer);
 	});
 
+	// Commit rows are no longer interactible as a whole (the checkbox and the
+	// run strips are the only click targets), so they carry no hover.
 	const rowBaseRaw = css.raw({
 		display: 'flex',
 		alignItems: 'stretch',
 		borderBottom: '1px solid',
-		borderColor: 'neutral.border.muted',
-		_hover: { background: 'neutral.surface.step.2' }
+		borderColor: 'neutral.border.muted'
 	});
 	const rowBase = css(rowBaseRaw);
-	// Collapsed/header rows are clickable as a whole. The floating pill's own
-	// hairline is the divider, so the row skips its bottom border.
-	const rowRun = css(rowBaseRaw, { cursor: 'pointer', borderBottom: 'none' });
+	// Collapsed/header rows are clickable as a whole, so they keep a hover. The
+	// floating pill's own hairline is the divider, so the row skips its bottom
+	// border.
+	const rowRun = css(rowBaseRaw, {
+		cursor: 'pointer',
+		borderBottom: 'none',
+		_hover: { background: 'neutral.surface.step.2' }
+	});
 	// Local-branch head rows — the deletion candidates — get a raised surface
 	// and an accent spine so the eye can compare tips at a glance.
-	const rowHeadRaw = css.raw({
+	const rowHead = css({
 		background: 'neutral.surface.step.2',
 		boxShadow: 'inset 3px 0 0 0 token(colors.accent.border.muted)'
 	});
-	const rowHead = css(rowHeadRaw);
-	// Deep-link target: a brief accent outline that fades via transition.
-	const rowHighlight = css({
-		boxShadow: 'inset 0 0 0 2px token(colors.accent.border.default)',
-		transition: 'box-shadow 0.4s ease'
-	});
-	// Head rows already use box-shadow for their accent spine, and two atomic
-	// classes fighting over one property is a stylesheet-order coin toss — so a
-	// highlighted head row merges spine + outline into ONE class (css() merges
-	// the raw objects before atomizing, keeping box-shadow deterministic).
-	const rowHeadHighlight = css(rowHeadRaw, {
-		boxShadow:
-			'inset 3px 0 0 0 token(colors.accent.border.muted), inset 0 0 0 2px token(colors.accent.border.default)',
-		transition: 'box-shadow 0.4s ease'
-	});
+	// Deep-link target: a brief highlight in the branch's OWN lane color (spine +
+	// outline + soft wash) so the user recognizes which branch they landed on.
+	// The color is per-row and dynamic, so it's applied inline (see the loop);
+	// this transition just makes it fade in/out like the old accent outline.
+	const highlightTransition = 'box-shadow 0.4s ease, background 0.4s ease';
 	const scrollHost = css({ flex: '1', overflow: 'auto', position: 'relative' });
 	const railScrollbar = css({
 		position: 'sticky',
@@ -193,14 +190,12 @@
 			{@const rowStyle = `position:absolute;top:0;left:0;width:100%;height:${virtualRow.size}px;transform:translateY(${virtualRow.start}px);`}
 			{#if item?.t === 'commit'}
 				{@const highlighted = !!view.highlightSha && item.row.commit.sha === view.highlightSha}
-				{@const headClass = highlighted
-					? item.row.isBranchHead
-						? rowHeadHighlight
-						: rowHighlight
-					: item.row.isBranchHead
-						? rowHead
-						: ''}
-				<div style={rowStyle} class={`${rowBase} ${headClass}`}>
+				{@const headClass = item.row.isBranchHead ? rowHead : ''}
+				{@const laneColor = laneColorVar(item.row.nodeColorLane)}
+				{@const highlightStyle = highlighted
+					? `box-shadow:inset 3px 0 0 0 ${laneColor},inset 0 0 0 2px ${laneColor};background:color-mix(in srgb, ${laneColor} 12%, transparent);transition:${highlightTransition};`
+					: ''}
+				<div style={`${rowStyle}${highlightStyle}`} class={`${rowBase} ${headClass}`}>
 					<CommitRow
 						row={item.row}
 						laneCount={view.laneCount}
