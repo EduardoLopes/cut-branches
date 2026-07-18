@@ -41,7 +41,7 @@
 
 		<WelcomeModal>
 			{#snippet actionButton()}
-				<AddRepositoryMenu size="sm" emphasis="primary" />
+				<AddRepositoryMenu size="md" emphasis="primary" />
 			{/snippet}
 		</WelcomeModal>
 

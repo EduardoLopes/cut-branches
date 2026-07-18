@@ -183,7 +183,12 @@
 						paddingTop: 'sm'
 					})}
 				>
-					{@render actionButton()}
+					<!-- Full-width flex row so the action control (whose own width can
+					     vary) is reliably pushed to the right; a flex-column's
+					     `alignItems` doesn't right-align a child that stretches. -->
+					<div class={css({ display: 'flex', justifyContent: 'flex-end', width: '100%' })}>
+						{@render actionButton()}
+					</div>
 					<Button
 						emphasis="ghost"
 						size="md"
