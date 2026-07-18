@@ -52,7 +52,7 @@
 <div class={runStrip}>
 	<span class={dividerLine}></span>
 	<span class={pill}>
-		<Stamp emphasis="ghost" border="none" background="transparent">
+		<Stamp size="2xs" emphasis="ghost" border="none" background="transparent">
 			<Icon
 				icon={mode === 'collapsed' ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
 				width="14px"

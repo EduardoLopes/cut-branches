@@ -5,6 +5,7 @@
 	// remotes) are threaded in through the card's footer-badges slot.
 	import Icon from '@iconify/svelte';
 	import Badge from '@pindoba/svelte-badge';
+	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import BranchGutterCell from './branch-gutter-cell.svelte';
@@ -87,26 +88,32 @@
 		flex: '0 0 auto',
 		width: '28px',
 		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
+		alignItems: 'stretch',
+		justifyContent: 'stretch',
 		borderRight: '1px solid token(colors.neutral.border.muted)'
 	});
-	const toggleBtn = css({
-		display: 'flex',
+	// pindoba's passThrough escape hatch — merged into the button's css() call
+	// AFTER the recipe, so these keys win. Makes the ghost button fill the
+	// 28px toggle column exactly (flush against the cell dividers) and drops
+	// the border entirely: the recipe reserves a 1px border whose color
+	// appears on hover for ghost buttons; zero width removes it at rest AND
+	// on hover.
+	const toggleBtnStyle = css.raw({
+		width: 'full',
+		height: 'full',
+		minWidth: '0',
 		flexDirection: 'column',
-		alignItems: 'center',
 		gap: '2xs',
-		px: '2xs',
+		px: '0',
 		py: '2xs',
-		borderRadius: 'sm',
-		cursor: 'pointer',
-		color: 'neutral.text.muted',
+		borderWidth: '0',
+		borderRadius: '0',
 		fontSize: 'xs',
 		lineHeight: '1',
-		_hover: {
-			color: 'neutral.text',
-			background: 'neutral.surface.step.3'
-		}
+		// Ghost buttons surface a border color on hover/active — pin the
+		// panel's border var transparent in both states as well.
+		_hover: { '--panel-self-border-color': 'transparent' },
+		_active: { '--panel-self-border-color': 'transparent' }
 	});
 	const gutterInner = css({
 		flex: '1',
@@ -138,9 +145,12 @@
 				: `Hide ${runBelow.count} commits`}
 			<Tooltip content={label}>
 				{#snippet children(triggerProps)}
-					<button
+					<Button
 						type="button"
-						class={toggleBtn}
+						emphasis="ghost"
+						size="xs"
+						border="none"
+						passThrough={{ root: { style: toggleBtnStyle } }}
 						aria-label={label}
 						aria-expanded={!runBelow.collapsed}
 						onclick={() => onToggleRun(runBelow.groupId)}
@@ -156,7 +166,7 @@
 						{#if runBelow.collapsed}
 							<span>{runBelow.count}</span>
 						{/if}
-					</button>
+					</Button>
 				{/snippet}
 			</Tooltip>
 		{/if}
