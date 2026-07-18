@@ -12,19 +12,29 @@ use crate::shared::error::AppError;
 // mapping below stays here in branch infrastructure.
 pub use crate::shared::kernel::branch::{Branch, Commit};
 
-impl From<crate::shared::infrastructure::db::models::BranchRecord> for Branch {
-    fn from(record: crate::shared::infrastructure::db::models::BranchRecord) -> Self {
+impl
+    From<(
+        crate::shared::infrastructure::db::models::BranchRecord,
+        crate::shared::infrastructure::db::models::CommitRecord,
+    )> for Branch
+{
+    fn from(
+        (record, commit): (
+            crate::shared::infrastructure::db::models::BranchRecord,
+            crate::shared::infrastructure::db::models::CommitRecord,
+        ),
+    ) -> Self {
         Branch {
             name: record.name,
             fully_merged: record.fully_merged,
             last_commit: Commit {
-                sha: record.last_commit_sha,
-                short_sha: record.last_commit_short_sha,
-                date: record.last_commit_date,
-                message: record.last_commit_message,
-                summary: record.last_commit_summary,
-                author: record.last_commit_author,
-                email: record.last_commit_email,
+                sha: commit.sha,
+                short_sha: commit.short_sha,
+                date: commit.date,
+                message: commit.message,
+                summary: commit.summary,
+                author: commit.author,
+                email: commit.email,
             },
             current: record.current,
             upstream: record.upstream,

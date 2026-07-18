@@ -10,10 +10,12 @@ pub fn get_branches_for_repository(
     conn: &mut SqliteConnection,
     repo_id: &str,
     filters: &crate::domains::branch_management::filters::BranchFilters,
-) -> Result<Vec<BranchRecord>, DieselError> {
+) -> Result<Vec<(BranchRecord, CommitRecord)>, DieselError> {
     use crate::domains::branch_management::filters::*;
 
     let mut query = branches::table
+        .inner_join(commits::table)
+        .select((BranchRecord::as_select(), CommitRecord::as_select()))
         .filter(branches::repository_id.eq(repo_id))
         .into_boxed();
 
@@ -103,13 +105,7 @@ pub fn upsert_branches_batch(
             .set((
                 branches::current.eq(&branch.current),
                 branches::fully_merged.eq(&branch.fully_merged),
-                branches::last_commit_sha.eq(&branch.last_commit_sha),
-                branches::last_commit_short_sha.eq(&branch.last_commit_short_sha),
-                branches::last_commit_date.eq(&branch.last_commit_date),
-                branches::last_commit_message.eq(&branch.last_commit_message),
-                branches::last_commit_summary.eq(&branch.last_commit_summary),
-                branches::last_commit_author.eq(&branch.last_commit_author),
-                branches::last_commit_email.eq(&branch.last_commit_email),
+                branches::head_commit_sha.eq(&branch.head_commit_sha),
                 branches::upstream.eq(&branch.upstream),
                 branches::is_reachable.eq(&branch.is_reachable),
                 // Note: is_selected, is_locked, and deleted_at are intentionally excluded
@@ -120,6 +116,41 @@ pub fn upsert_branches_batch(
     }
 
     Ok(total_inserted)
+}
+
+/// Insert tip-commit rows, ignoring SHAs already stored (commit content is
+/// immutable, so an existing row never needs updating).
+pub fn upsert_commits_batch(
+    conn: &mut SqliteConnection,
+    records: &[NewCommitRecord],
+) -> Result<usize, DieselError> {
+    if records.is_empty() {
+        return Ok(0);
+    }
+
+    // SQLite can't batch multi-row VALUES with ON CONFLICT through Diesel;
+    // insert row by row like `upsert_branches_batch` does.
+    let mut total_inserted = 0;
+    for record in records {
+        total_inserted += diesel::insert_into(commits::table)
+            .values(record)
+            .on_conflict(commits::sha)
+            .do_nothing()
+            .execute(conn)?;
+    }
+
+    Ok(total_inserted)
+}
+
+/// Delete commit rows no longer referenced by any branch (active or
+/// soft-deleted, across all repositories). Rows referenced by soft-deleted
+/// branches survive, which is the point of storing commits at all.
+pub fn delete_orphan_commits(conn: &mut SqliteConnection) -> Result<usize, DieselError> {
+    diesel::delete(
+        commits::table
+            .filter(commits::sha.ne_all(branches::table.select(branches::head_commit_sha))),
+    )
+    .execute(conn)
 }
 
 pub fn mark_branches_deleted(
@@ -379,4 +410,116 @@ pub fn clear_locked_branches(
     )
     .set(branches::is_locked.eq(false))
     .execute(conn)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domains::branch_management::filters::BranchFilters;
+    use crate::shared::infrastructure::db::MIGRATIONS;
+    use diesel_migrations::MigrationHarness;
+
+    /// In-memory DB with all embedded migrations applied — this also proves
+    /// the commit-normalization migration itself is valid SQL.
+    fn test_conn() -> SqliteConnection {
+        let mut conn = SqliteConnection::establish(":memory:").unwrap();
+        diesel::sql_query("PRAGMA foreign_keys = ON;")
+            .execute(&mut conn)
+            .unwrap();
+        conn.run_pending_migrations(MIGRATIONS).unwrap();
+        conn
+    }
+
+    fn insert_repository(conn: &mut SqliteConnection, repo_id: &str) {
+        diesel::insert_into(repositories::table)
+            .values((
+                repositories::id.eq(repo_id),
+                repositories::name.eq("repo"),
+                repositories::path.eq("/tmp/repo"),
+                repositories::current_branch.eq("main"),
+                repositories::branches_count.eq(0),
+            ))
+            .execute(conn)
+            .unwrap();
+    }
+
+    fn commit_record(sha: &str) -> NewCommitRecord {
+        NewCommitRecord {
+            sha: sha.to_string(),
+            short_sha: sha[..7].to_string(),
+            date: "2026-07-18T00:00:00Z".to_string(),
+            message: "feat: subject\n\nbody".to_string(),
+            summary: "feat: subject".to_string(),
+            author: "Author".to_string(),
+            email: "author@example.com".to_string(),
+        }
+    }
+
+    fn branch_record(repo_id: &str, name: &str, sha: &str) -> NewBranchRecord {
+        NewBranchRecord {
+            repository_id: repo_id.to_string(),
+            name: name.to_string(),
+            current: false,
+            fully_merged: false,
+            head_commit_sha: sha.to_string(),
+            upstream: None,
+            deleted_at: None,
+            is_reachable: None,
+            is_selected: false,
+            is_locked: false,
+        }
+    }
+
+    const SHA_A: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const SHA_B: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+
+    #[test]
+    fn upsert_commits_batch_is_idempotent_and_skips_duplicates() {
+        let mut conn = test_conn();
+
+        let inserted =
+            upsert_commits_batch(&mut conn, &[commit_record(SHA_A), commit_record(SHA_B)]).unwrap();
+        assert_eq!(inserted, 2);
+
+        // Re-inserting the same SHAs is a no-op, not an error.
+        let inserted = upsert_commits_batch(&mut conn, &[commit_record(SHA_A)]).unwrap();
+        assert_eq!(inserted, 0);
+
+        let empty: Vec<NewCommitRecord> = vec![];
+        assert_eq!(upsert_commits_batch(&mut conn, &empty).unwrap(), 0);
+    }
+
+    #[test]
+    fn get_branches_joins_head_commit() {
+        let mut conn = test_conn();
+        insert_repository(&mut conn, "repo-1");
+        upsert_commits_batch(&mut conn, &[commit_record(SHA_A)]).unwrap();
+        upsert_branches_batch(&mut conn, &[branch_record("repo-1", "main", SHA_A)]).unwrap();
+
+        let rows =
+            get_branches_for_repository(&mut conn, "repo-1", &BranchFilters::default()).unwrap();
+        assert_eq!(rows.len(), 1);
+        let (branch, commit) = &rows[0];
+        assert_eq!(branch.name, "main");
+        assert_eq!(branch.head_commit_sha, SHA_A);
+        assert_eq!(commit.sha, SHA_A);
+        assert_eq!(commit.summary, "feat: subject");
+    }
+
+    #[test]
+    fn delete_orphan_commits_keeps_soft_deleted_branch_commits() {
+        let mut conn = test_conn();
+        insert_repository(&mut conn, "repo-1");
+        upsert_commits_batch(&mut conn, &[commit_record(SHA_A), commit_record(SHA_B)]).unwrap();
+        upsert_branches_batch(&mut conn, &[branch_record("repo-1", "feature", SHA_A)]).unwrap();
+        mark_branches_deleted(&mut conn, "repo-1", &["feature".to_string()]).unwrap();
+
+        // SHA_A is referenced by a soft-deleted branch and must survive;
+        // SHA_B is referenced by nothing and must go.
+        let pruned = delete_orphan_commits(&mut conn).unwrap();
+        assert_eq!(pruned, 1);
+
+        let remaining: Vec<String> = commits::table.select(commits::sha).load(&mut conn).unwrap();
+        assert_eq!(remaining, vec![SHA_A.to_string()]);
+    }
 }

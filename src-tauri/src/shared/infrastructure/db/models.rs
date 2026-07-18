@@ -59,6 +59,37 @@ pub struct NewCleanupHistory {
     pub deletion_mode: String,
 }
 
+// Commit models (branch_management domain): one row per tip commit referenced
+// by a branch. Kept even for soft-deleted branches so the UI can render their
+// tip commit after git GC prunes it; orphan rows are swept during branch sync.
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, Serialize, Deserialize, Type)]
+#[diesel(table_name = commits)]
+#[diesel(primary_key(sha))]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+#[serde(rename_all = "camelCase")]
+pub struct CommitRecord {
+    pub sha: String,
+    pub short_sha: String,
+    pub date: String,
+    pub message: String,
+    pub summary: String,
+    pub author: String,
+    pub email: String,
+}
+
+#[derive(Debug, Clone, Insertable, Serialize, Deserialize, Type)]
+#[diesel(table_name = commits)]
+#[serde(rename_all = "camelCase")]
+pub struct NewCommitRecord {
+    pub sha: String,
+    pub short_sha: String,
+    pub date: String,
+    pub message: String,
+    pub summary: String,
+    pub author: String,
+    pub email: String,
+}
+
 // Branch models
 #[derive(
     Debug, Clone, Queryable, Selectable, Identifiable, Associations, Serialize, Deserialize, Type,
@@ -73,13 +104,7 @@ pub struct BranchRecord {
     pub name: String,
     pub current: bool,
     pub fully_merged: bool,
-    pub last_commit_sha: String,
-    pub last_commit_short_sha: String,
-    pub last_commit_date: String,
-    pub last_commit_message: String,
-    pub last_commit_summary: String,
-    pub last_commit_author: String,
-    pub last_commit_email: String,
+    pub head_commit_sha: String,
     pub upstream: Option<String>,
     pub deleted_at: Option<String>,
     pub is_reachable: Option<bool>,
@@ -97,13 +122,7 @@ pub struct NewBranchRecord {
     pub name: String,
     pub current: bool,
     pub fully_merged: bool,
-    pub last_commit_sha: String,
-    pub last_commit_short_sha: String,
-    pub last_commit_date: String,
-    pub last_commit_message: String,
-    pub last_commit_summary: String,
-    pub last_commit_author: String,
-    pub last_commit_email: String,
+    pub head_commit_sha: String,
     pub upstream: Option<String>,
     pub deleted_at: Option<String>,
     pub is_reachable: Option<bool>,

@@ -1,5 +1,8 @@
 use crate::shared::error::AppError;
-use crate::shared::infrastructure::db::{models::NewBranchRecord, DbConnection};
+use crate::shared::infrastructure::db::{
+    models::{NewBranchRecord, NewCommitRecord},
+    DbConnection,
+};
 use std::collections::HashSet;
 use std::path::Path;
 
@@ -87,9 +90,22 @@ fn sync_branches_to_db_internal(
         .map(|git_branch| branch_to_new_branch(repo_id, git_branch))
         .collect();
 
-    // Use batch upsert for better performance with many branches
+    // Tip commits, deduplicated by SHA (several branches can share a tip)
+    let mut seen_shas = HashSet::new();
+    let new_commits: Vec<_> = git_branches
+        .iter()
+        .filter(|b| seen_shas.insert(b.last_commit.sha.clone()))
+        .map(branch_to_new_commit)
+        .collect();
+
+    // Use batch upsert for better performance with many branches.
+    // Commits go first: branch rows reference them by FK.
     use diesel::Connection;
     conn.transaction::<_, diesel::result::Error, _>(|conn| {
+        crate::domains::branch_management::infrastructure::repositories::upsert_commits_batch(
+            conn,
+            &new_commits,
+        )?;
         crate::domains::branch_management::infrastructure::repositories::upsert_branches_batch(
             conn,
             &new_branches,
@@ -107,10 +123,10 @@ fn sync_branches_to_db_internal(
     // Mark branches as deleted that exist in DB but not in Git (excluding already deleted ones)
     let branches_to_mark_deleted: Vec<String> = db_branches
         .iter()
-        .filter(|db_branch| {
+        .filter(|(db_branch, _)| {
             db_branch.deleted_at.is_none() && !git_branch_names.contains(&db_branch.name)
         })
-        .map(|b| b.name.clone())
+        .map(|(b, _)| b.name.clone())
         .collect();
 
     if !branches_to_mark_deleted.is_empty() {
@@ -127,6 +143,17 @@ fn sync_branches_to_db_internal(
             )
         })?;
     }
+
+    // Sweep commit rows that no branch (active or soft-deleted) references
+    // anymore — e.g. after branch rows were hard-deleted with their repository.
+    crate::domains::branch_management::infrastructure::repositories::delete_orphan_commits(conn)
+        .map_err(|e| {
+            AppError::new(
+                "Failed to prune orphaned commits".to_string(),
+                "db_delete_failed",
+                Some(e.to_string()),
+            )
+        })?;
 
     // Note: the repository's `last_synced_at` is owned by repository_management,
     // which sets it when creating/updating the repo record — branch sync no longer
@@ -152,17 +179,24 @@ fn branch_to_new_branch(repo_id: &str, branch: &Branch) -> NewBranchRecord {
         name: branch.name.clone(),
         current: branch.current,
         fully_merged: branch.fully_merged,
-        last_commit_sha: branch.last_commit.sha.clone(),
-        last_commit_short_sha: branch.last_commit.short_sha.clone(),
-        last_commit_date: branch.last_commit.date.clone(),
-        last_commit_message: branch.last_commit.message.clone(),
-        last_commit_summary: branch.last_commit.summary.clone(),
-        last_commit_author: branch.last_commit.author.clone(),
-        last_commit_email: branch.last_commit.email.clone(),
+        head_commit_sha: branch.last_commit.sha.clone(),
         upstream: branch.upstream.clone(),
         deleted_at: None,
         is_reachable: None,
         is_selected: false,
         is_locked: false,
+    }
+}
+
+/// Converts a Git branch's tip commit to a NewCommitRecord for database insertion
+fn branch_to_new_commit(branch: &Branch) -> NewCommitRecord {
+    NewCommitRecord {
+        sha: branch.last_commit.sha.clone(),
+        short_sha: branch.last_commit.short_sha.clone(),
+        date: branch.last_commit.date.clone(),
+        message: branch.last_commit.message.clone(),
+        summary: branch.last_commit.summary.clone(),
+        author: branch.last_commit.author.clone(),
+        email: branch.last_commit.email.clone(),
     }
 }

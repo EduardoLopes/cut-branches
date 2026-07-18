@@ -7,13 +7,7 @@ diesel::table! {
         name -> Text,
         current -> Bool,
         fully_merged -> Bool,
-        last_commit_sha -> Text,
-        last_commit_short_sha -> Text,
-        last_commit_date -> Text,
-        last_commit_message -> Text,
-        last_commit_summary -> Text,
-        last_commit_author -> Text,
-        last_commit_email -> Text,
+        head_commit_sha -> Text,
         upstream -> Nullable<Text>,
         deleted_at -> Nullable<Text>,
         is_reachable -> Nullable<Bool>,
@@ -37,6 +31,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    commits (sha) {
+        sha -> Text,
+        short_sha -> Text,
+        date -> Text,
+        message -> Text,
+        summary -> Text,
+        author -> Text,
+        email -> Text,
+    }
+}
+
+diesel::table! {
     repositories (id) {
         id -> Text,
         name -> Text,
@@ -51,5 +57,6 @@ diesel::table! {
 }
 
 diesel::joinable!(branches -> repositories (repository_id));
+diesel::joinable!(branches -> commits (head_commit_sha));
 
-diesel::allow_tables_to_appear_in_same_query!(branches, repositories,);
+diesel::allow_tables_to_appear_in_same_query!(branches, commits, repositories,);
