@@ -360,6 +360,76 @@ describe('BranchCard Component', () => {
 		expect(card).toHaveAttribute('data-variant', 'inverted');
 	});
 
+	test('shows the upstream badge on the branch header when the branch has an upstream', () => {
+		const trackedBranchData: BranchData = {
+			...mockBranchData,
+			upstream: 'origin/feature/new-feature'
+		};
+		const trackedBranch = Branch.fromData(trackedBranchData);
+
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: trackedBranch
+		});
+
+		const upstreamBadge = getByTestId('branch-upstream');
+		expect(upstreamBadge).toBeInTheDocument();
+		expect(upstreamBadge).toHaveTextContent('origin/feature/new-feature');
+		// The embedded commit card does not duplicate it in its footer.
+		expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
+	});
+
+	test('hides the upstream badge when showUpstream is false', () => {
+		const trackedBranchData: BranchData = {
+			...mockBranchData,
+			upstream: 'origin/feature/new-feature'
+		};
+		const trackedBranch = Branch.fromData(trackedBranchData);
+
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: trackedBranch,
+			showUpstream: false
+		});
+
+		expect(getByTestId('branch-upstream')).not.toBeInTheDocument();
+	});
+
+	test('does not show an upstream badge when the branch has no upstream', () => {
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
+		});
+
+		expect(getByTestId('branch-upstream')).not.toBeInTheDocument();
+	});
+
+	test('compact mode drops the "Last commit" section label', () => {
+		const { container, getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			compact: true
+		});
+
+		expect(container).not.toHaveTextContent('Last commit');
+		// The commit row itself still renders.
+		expect(getByTestId('last-commit-message')).toBeInTheDocument();
+		expect(getByTestId('branch-name')).toHaveTextContent('feature/new-feature');
+	});
+
+	test('compact mode still shows the current badge and deleted-at info', () => {
+		const compactBranchData: BranchData = {
+			...mockBranchData,
+			current: true,
+			deletedAt: '2024-01-20T15:45:00Z'
+		};
+		const compactBranch = Branch.fromData(compactBranchData);
+
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: compactBranch,
+			compact: true
+		});
+
+		expect(getByTestId('branch-current-badge')).toBeInTheDocument();
+		expect(getByTestId('deleted-at-info')).toBeInTheDocument();
+	});
+
 	test('variant defaults to default when not provided', () => {
 		const { getByTestId } = renderWithTestWrapper(BranchCard, {
 			branch: mockBranch
