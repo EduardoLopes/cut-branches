@@ -10,6 +10,7 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import BranchGutterCell from './branch-gutter-cell.svelte';
 	import GraphRailCell from './graph-rail-cell.svelte';
+	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import { Commit } from '$domains/branch-management/core/models/commit';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
 	import type {
@@ -26,6 +27,9 @@
 		/** Clipped rail viewport width (shared with the run rows + scrollbar). */
 		railW?: number;
 		signals: (name: string) => BranchSignals | undefined;
+		/** Branch domain model from the shared branches cache; undefined while
+		 *  the cache loads or when the ref is unknown to it. */
+		getBranch: (name: string) => Branch | undefined;
 		isSelected: (name: string) => boolean;
 		isSelectable: (name: string) => boolean;
 		onToggle: (name: string) => void;
@@ -41,6 +45,7 @@
 		size = 48,
 		railW = 260,
 		signals,
+		getBranch,
 		isSelected,
 		isSelectable,
 		onToggle,
@@ -74,10 +79,12 @@
 	);
 
 	// Left gutter: run-toggle column + the branch decision surface (pinned
-	// local branches + signals).
+	// local branches + signals). Wide enough for the compact branch card with
+	// its upstream + signal footer; the commit info column (flex) gives up the
+	// space. Must match the rail scrollbar's margin in commit-history-list.
 	const gutterCol = css({
 		flex: '0 0 auto',
-		width: '240px',
+		width: '320px',
 		display: 'flex',
 		alignItems: 'stretch',
 		overflow: 'hidden',
@@ -174,7 +181,7 @@
 	</div>
 	<div class={gutterInner}>
 		{#if row.isBranchHead}
-			<BranchGutterCell {row} {signals} {isSelected} {isSelectable} {onToggle} />
+			<BranchGutterCell {row} {getBranch} {signals} {isSelected} {isSelectable} {onToggle} />
 		{/if}
 	</div>
 </div>

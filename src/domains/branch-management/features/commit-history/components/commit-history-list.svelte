@@ -167,7 +167,8 @@
 		position: 'sticky',
 		bottom: '0',
 		left: '0',
-		ml: '240px',
+		// Matches the gutter column width in commit-row.
+		ml: '320px',
 		zIndex: '1',
 		height: '14px',
 		overflowX: 'auto',
@@ -205,6 +206,7 @@
 						size={virtualRow.size}
 						railW={RAIL_W}
 						signals={(name) => view.comparisons.get(name)}
+						getBranch={view.getBranch}
 						isSelected={view.isSelected}
 						isSelectable={view.isSelectable}
 						onToggle={view.toggleBranchSelection}

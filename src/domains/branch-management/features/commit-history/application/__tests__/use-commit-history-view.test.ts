@@ -332,6 +332,8 @@ describe('useCommitHistoryView selection bridge', () => {
 		expect(view.isSelectable('gone')).toBe(false);
 		expect(view.isSelectable('feature/a')).toBe(true);
 		expect(view.isSelected('gone')).toBe(false);
+		expect(view.getBranch('feature/a')?.getName()).toBe('feature/a');
+		expect(view.getBranch('gone')).toBeUndefined();
 		expect(view.selectedCount).toBe(1);
 
 		view.toggleBranchSelection('main');

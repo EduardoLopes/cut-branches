@@ -1,27 +1,36 @@
 <script lang="ts">
 	// The left gutter cell for a branch-head row — the DECISION surface of the
-	// history view. Shows the branch name with its cleanup signals
-	// (ahead/behind/merged vs the base) and a checkbox that writes into the
-	// shared cache-backed selection the DeleteBranchModal consumes.
+	// history view. Reuses the shared BranchCard in its compact density for the
+	// branch identity (name, current badge, selected/locked visuals — the same
+	// card the branches screen and delete modal render), pairs it with a
+	// checkbox that writes into the shared cache-backed selection the
+	// DeleteBranchModal consumes, and threads the history-specific cleanup
+	// signals (ahead/behind/merged vs the base) into the card's footer badge
+	// row, next to where the branches screen shows its diff badges.
 	//
 	// When several local branches point at the same commit, the first is shown
 	// with a "+N more" pill that opens a popover listing every branch.
-	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
+	import Badge from '@pindoba/svelte-badge';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Popover from '@pindoba/svelte-popover';
+	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
 	import type { GraphRow } from '$domains/branch-management/features/commit-history/models/commit-graph';
+	import BranchCard from '$ui/core/branch-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		row: GraphRow;
+		/** Branch domain model from the shared branches cache; undefined while
+		 *  the cache loads or when the ref is unknown to it. */
+		getBranch: (name: string) => Branch | undefined;
 		signals: (name: string) => BranchSignals | undefined;
 		isSelected: (name: string) => boolean;
 		isSelectable: (name: string) => boolean;
 		onToggle: (name: string) => void;
 	}
 
-	let { row, signals, isSelected, isSelectable, onToggle }: Props = $props();
+	let { row, getBranch, signals, isSelected, isSelectable, onToggle }: Props = $props();
 
 	// Anchor for the overflow popover. Bound explicitly so positioning never
 	// depends on attachment-spread mechanics on a plain button.
@@ -32,30 +41,27 @@
 	);
 	const extra = $derived(names.length - 1);
 
-	// Branch row = Checkbox(fullWidth) wrapping a [name | badges] flex row.
-	const gutterBranch = css({
-		alignItems: 'center',
-		borderRadius: 'sm',
-		px: '2xs',
-		py: '2xs',
-		cursor: 'pointer',
-		_hover: { background: 'neutral.surface.step.3' }
-	});
-	// Truncate the branch name (Banner heading) in the gutter; popover has room.
-	const headingTruncate = css.raw({
+	// Branch row = [checkbox | compact BranchCard] flex row; the checkbox sits
+	// beside the card, mirroring the branches screen's layout. Start-aligned
+	// so the checkbox tracks the card's header (name) line.
+	const branchRow = css({ display: 'flex', alignItems: 'flex-start', gap: 'xs', minWidth: '0' });
+	const cardHost = css({ flex: '1', minWidth: '0' });
+	// Identity fallback while the branches cache hasn't resolved this name —
+	// the checkbox is inert then too (isSelectable is cache-backed).
+	const nameFallback = css({
 		display: 'block',
-		minWidth: '0',
+		fontWeight: 600,
+		fontSize: 'sm',
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
-		whiteSpace: 'nowrap',
-		width: '18ch'
+		whiteSpace: 'nowrap'
 	});
-	// Badges live in the subheading, laid out as a left-aligned row.
-	const subheadingRow = css.raw({
+	// Signal badges + overflow pill, laid out as a wrapping left-aligned row.
+	const badgeRow = css({
 		display: 'flex',
 		alignItems: 'center',
 		gap: '2xs',
-		justifyContent: 'flex-start'
+		flexWrap: 'wrap'
 	});
 	// Extra, symmetric breathing room for branch rows inside the popover.
 	const popoverItemPad = css({ p: 'sm' });
@@ -63,36 +69,9 @@
 		display: 'flex',
 		flexDirection: 'column',
 		gap: '2xs',
-		minWidth: '220px',
+		minWidth: '280px',
 		maxHeight: '320px',
 		overflowY: 'auto'
-	});
-	// Semantic signal badges: ahead = added (success), behind = missing (danger).
-	const sigBadge = css({
-		fontSize: 'xs',
-		lineHeight: '1.3',
-		px: '2xs',
-		borderRadius: 'sm',
-		border: '1px solid',
-		flex: '0 0 auto',
-		whiteSpace: 'nowrap'
-	});
-	// Secondary emphasis: soft surface + muted border, not a loud solid fill.
-	const sigAheadCls = css({
-		background: 'success.surface.soft',
-		color: 'success.text',
-		borderColor: 'success.border.muted'
-	});
-	const sigBehindCls = css({
-		background: 'danger.surface.soft',
-		color: 'danger.text',
-		borderColor: 'danger.border.muted'
-	});
-	const sigMergedCls = css({
-		background: 'neutral.surface.step.2',
-		color: 'neutral.text.muted',
-		borderColor: 'neutral.border.muted',
-		fontStyle: 'italic'
 	});
 	// "+N" pill that opens the overflow-branches popover.
 	const morePill = css({
@@ -108,74 +87,86 @@
 	});
 </script>
 
+<!-- Semantic signal badges: ahead = added (success), behind = missing (danger),
+     merged = neutral — secondary emphasis, matching the card's own badges. -->
 {#snippet signalBadges(cmp: BranchSignals)}
 	{#if cmp.ahead === 0}
-		<span class={`${sigBadge} ${sigMergedCls}`}>merged</span>
+		<Badge size="xs" emphasis="secondary" feedback="neutral" data-testid="signal-merged">
+			merged
+		</Badge>
 	{:else}
-		<span class={`${sigBadge} ${sigAheadCls}`}>{cmp.ahead}↑</span>
+		<Badge size="xs" emphasis="secondary" feedback="success" data-testid="signal-ahead">
+			{cmp.ahead}↑
+		</Badge>
 	{/if}
-	{#if cmp.behind > 0}<span class={`${sigBadge} ${sigBehindCls}`}>{cmp.behind}↓</span>{/if}
+	{#if cmp.behind > 0}
+		<Badge size="xs" emphasis="secondary" feedback="danger" data-testid="signal-behind">
+			{cmp.behind}↓
+		</Badge>
+	{/if}
 {/snippet}
 
-{#snippet branchRow(name: string, padded: boolean, withOverflow: boolean)}
+{#snippet branchGutterRow(name: string, padded: boolean, withOverflow: boolean)}
+	{@const branch = getBranch(name)}
 	{@const cmp = signals(name)}
 	{@const showMore = withOverflow && extra > 0}
-	{@const hasSub = !!cmp || showMore}
-	{#snippet subheading()}
-		{#if cmp}{@render signalBadges(cmp)}{/if}
-		{#if showMore}
-			<button
-				bind:this={morePillEl}
-				type="button"
-				class={morePill}
-				data-popover-trigger
-				onclick={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-				}}
-			>
-				+{extra} more
-			</button>
-			<Popover
-				triggerElement={morePillEl}
-				placement="bottom-start"
-				triggerStrategy="click"
-				autoFocus={false}
-			>
-				<div class={popoverList}>
-					{#each names as overflowName (overflowName)}
-						{@render branchRow(overflowName, true, false)}
-					{/each}
-				</div>
-			</Popover>
-		{/if}
+	{@const hasBody = !!cmp || showMore}
+	{#snippet signalsRow()}
+		<span class={badgeRow}>
+			{#if cmp}{@render signalBadges(cmp)}{/if}
+			{#if showMore}
+				<button bind:this={morePillEl} type="button" class={morePill} data-popover-trigger>
+					+{extra} more
+				</button>
+				<Popover
+					triggerElement={morePillEl}
+					placement="bottom-start"
+					triggerStrategy="click"
+					autoFocus={false}
+				>
+					<div class={popoverList}>
+						{#each names as overflowName (overflowName)}
+							{@render branchGutterRow(overflowName, true, false)}
+						{/each}
+					</div>
+				</Popover>
+			{/if}
+		</span>
 	{/snippet}
-	<Checkbox
-		fullWidth
-		size="md"
-		checked={isSelected(name)}
-		disabled={!isSelectable(name)}
-		onchange={() => onToggle(name)}
-		aria-label={name}
-		title={name}
-		class={`${gutterBranch} ${padded ? popoverItemPad : ''}`}
-		passThrough={{ text: { style: css.raw({ flex: '1', minWidth: '0' }) } }}
-	>
-		<Banner
-			size="xs"
-			heading={name}
-			headingTextStyle="body.sm"
-			subheadingTextStyle="body.sm"
-			subheading={hasSub ? (subheading as BannerProps['subheading']) : undefined}
-			passThrough={{
-				root: { style: css.raw({ width: '100%' }) },
-				heading: padded ? undefined : { style: headingTruncate },
-				subheading: { style: subheadingRow }
-			}}
-		/>
-	</Checkbox>
+	{@const isCurrent = branch?.isCurrent() ?? false}
+	<div class={`${branchRow} ${padded ? popoverItemPad : ''}`}>
+		{#if !isCurrent}
+			<Checkbox
+				size="md"
+				checked={isSelected(name)}
+				disabled={!isSelectable(name)}
+				onchange={() => onToggle(name)}
+				aria-label={name}
+				title={name}
+			/>
+		{/if}
+		<!-- The current branch can never be deleted, so it gets no checkbox and
+		     its card fills the whole row instead. -->
+		<div class={cardHost}>
+			{#if branch}
+				<!-- Snippet only when it renders something — an empty snippet
+				     would still force the footer's badge row. -->
+				<BranchCard
+					{branch}
+					compact
+					selected={isSelected(name)}
+					locked={branch.getIsLocked() && !branch.isCurrent()}
+					title={name}
+					footerBadges={hasBody ? signalsRow : undefined}
+				/>
+			{:else}
+				<span class={nameFallback} title={name}>{name}</span>
+				{#if hasBody}{@render signalsRow()}{/if}
+			{/if}
+		</div>
+	</div>
 {/snippet}
 
 {#if row.isBranchHead && names.length > 0}
-	{@render branchRow(names[0], false, true)}
+	{@render branchGutterRow(names[0], false, true)}
 {/if}

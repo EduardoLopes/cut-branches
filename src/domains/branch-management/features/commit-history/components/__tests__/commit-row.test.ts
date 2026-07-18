@@ -35,6 +35,7 @@ const graph = computeGraph([
 const defaultProps = {
 	laneCount: graph.laneCount,
 	signals: (() => undefined) as (name: string) => BranchSignals | undefined,
+	getBranch: () => undefined,
 	isSelected: () => false,
 	isSelectable: () => true,
 	onToggle: () => {}

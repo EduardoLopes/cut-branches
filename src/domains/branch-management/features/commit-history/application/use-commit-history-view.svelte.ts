@@ -15,6 +15,7 @@
 import { useQueryClient } from '@tanstack/svelte-query';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import { useBranchComparisons } from './use-branch-comparisons.svelte';
+import type { Branch } from '$domains/branch-management/core/models/branch';
 import { fetchCommitLocation } from '$domains/branch-management/features/commit-history/infrastructure/queries/create-get-commit-history-window-query';
 import { createListCommitHistoryInfiniteQuery } from '$domains/branch-management/features/commit-history/infrastructure/queries/create-list-commit-history-infinite-query';
 import {
@@ -142,6 +143,13 @@ export function useCommitHistoryView({ getId, getTargetCommit }: UseCommitHistor
 	const selectedCount = $derived(
 		(branchesQuery.data?.branches ?? []).filter((branch) => branch.getIsSelected()).length
 	);
+
+	/** Branch domain model from the shared branches cache — lets the gutter
+	 *  render the SAME compact BranchCard the rest of the app uses. Undefined
+	 *  while the cache loads or when the ref is unknown to it. */
+	function getBranch(name: string): Branch | undefined {
+		return branchByName.get(name);
+	}
 
 	function isSelected(name: string): boolean {
 		return branchByName.get(name)?.getIsSelected() ?? false;
@@ -284,6 +292,7 @@ export function useCommitHistoryView({ getId, getTargetCommit }: UseCommitHistor
 		get selectedCount() {
 			return selectedCount;
 		},
+		getBranch,
 		isSelected,
 		isSelectable,
 		toggleBranchSelection,
