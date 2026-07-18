@@ -124,7 +124,9 @@
 		display: 'flex',
 		alignItems: 'center',
 		px: 'sm',
-		overflow: 'hidden'
+		overflow: 'hidden',
+		// Divider on the right edge of the graph rail, matching the gutter columns.
+		borderLeft: '1px solid token(colors.neutral.border.muted)'
 	});
 </script>
 
