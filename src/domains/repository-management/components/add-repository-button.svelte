@@ -35,12 +35,12 @@
 		</Button>
 	{:else}
 		<Button onclick={addRepo.addFromDialog} {size} {emphasis} {...props}>
-			Add a git repository
-			{#snippet trailing()}
+			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
 					<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
 				</Stamp>
 			{/snippet}
+			Add a git repository
 		</Button>
 	{/if}
 </Loading>
