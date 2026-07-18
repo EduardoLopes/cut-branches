@@ -21,7 +21,10 @@
 
 	let { view }: Props = $props();
 
-	const ROW_H = 48;
+	// Tall enough to seat the compact commit card (header + footer, body
+	// collapsed) without clipping. The graph rail scales its dot/segment geometry
+	// off this height, so lanes stay aligned as it changes.
+	const ROW_H = 84;
 	// Run rows (Show/Hide N commits) are compact divider strips, not full rows.
 	const RUN_H = 32;
 	// Lane spacing. Wider now that horizontal scroll absorbs the extra width.
