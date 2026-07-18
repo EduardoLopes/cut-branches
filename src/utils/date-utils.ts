@@ -43,6 +43,39 @@ export function safeFormatRelativeDate(
 }
 
 /**
+ * Safely formats a date as a terse, single-token relative distance — e.g.
+ * "now", "5m", "3h", "8d", "2mo", "1y". `Intl` won't abbreviate day-level
+ * distances in English (narrow style still yields "8 days ago"), so this
+ * computes the largest fitting unit by hand for compact contexts (dense lists,
+ * badges). Pair it with a full date in a `title` for hover disclosure.
+ * @param dateInput - The date string, timestamp or Date object to format
+ * @returns A terse relative string, or 'Unknown' if invalid
+ */
+export function safeFormatRelativeDateShort(dateInput: string | number | Date): string {
+	try {
+		const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+		if (isNaN(date.getTime())) {
+			throw new Error('Invalid date');
+		}
+		const diffSeconds = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000));
+		const diffMinutes = Math.floor(diffSeconds / 60);
+		const diffHours = Math.floor(diffMinutes / 60);
+		const diffDays = Math.floor(diffHours / 24);
+		const diffMonths = Math.floor(diffDays / 30);
+		const diffYears = Math.floor(diffDays / 365);
+
+		if (diffSeconds < 60) return 'now';
+		if (diffMinutes < 60) return `${diffMinutes}m`;
+		if (diffHours < 24) return `${diffHours}h`;
+		if (diffDays < 30) return `${diffDays}d`;
+		if (diffMonths < 12) return `${diffMonths}mo`;
+		return `${diffYears}y`;
+	} catch {
+		return 'Unknown';
+	}
+}
+
+/**
  * Formats a date in the user's timezone with fallback
  * @param date - The date to format
  * @param format - The format string to use
