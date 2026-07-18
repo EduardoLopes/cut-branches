@@ -303,6 +303,7 @@
 						<BranchCard
 							{branch}
 							diffStats={diffStatsQuery.data}
+							diffStatsLoading={diffStatsQuery.isLoading}
 							selected={branch.getIsSelected()}
 							locked={branch.getIsLocked() && !branch.isCurrent()}
 							colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}

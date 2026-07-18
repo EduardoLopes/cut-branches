@@ -25,15 +25,21 @@
 		/** Whether to render the upstream badge in the footer. On by default —
 		 *  showing the upstream is the branch card's job (CommitCard's mirror
 		 *  prop defaults to off) — but contexts that already convey the remote
-		 *  ref can opt out. */
+		 *  ref can opt out. Branches without an upstream get an explicit
+		 *  neutral "no upstream" badge instead of nothing. */
 		showUpstream?: boolean;
 		/** Line-level diff of the branch against its merge-base with HEAD,
 		 *  rendered as +added/−removed badges in the footer. Fetched by the
 		 *  consumer (it's live git data, not a branch attribute) and omitted
-		 *  while loading, on error, or for branches where it's meaningless
-		 *  (current, deleted). A 0/0 diff renders nothing — "no unique
-		 *  changes" is already conveyed by the merged state. */
+		 *  on error or for branches where it's meaningless (current, deleted).
+		 *  A 0/0 diff renders as a neutral "no diff" badge — zeros aren't
+		 *  good/bad news, and collapsing it after the fetch would shift the
+		 *  layout. */
 		diffStats?: { linesAdded: number; linesRemoved: number };
+		/** True while the consumer is still fetching `diffStats`. Renders
+		 *  placeholder badges that reserve the footer space, so the card
+		 *  doesn't shift when the numbers land. */
+		diffStatsLoading?: boolean;
 		selected?: boolean;
 		locked?: boolean;
 		disabled?: boolean;
@@ -62,6 +68,7 @@
 		compact = false,
 		showUpstream = true,
 		diffStats,
+		diffStatsLoading = false,
 		selected = false,
 		locked = false,
 		disabled = false,
@@ -122,11 +129,13 @@
 
 	// The footer hosts the upstream badge (leading) and the diff-stat badges
 	// plus deleted-at meta (trailing); it only renders when at least one of
-	// them is present.
-	const upstreamShown = $derived(Boolean(showUpstream && branch.getUpstream()));
-	const diffShown = $derived(
-		Boolean(diffStats && (diffStats.linesAdded > 0 || diffStats.linesRemoved > 0))
-	);
+	// them is present. With `showUpstream` on, the leading slot always renders
+	// — either the upstream ref or a neutral "no upstream" badge.
+	const upstreamShown = $derived(showUpstream);
+	// Data present OR still loading — the loading placeholder claims the same
+	// footprint as the resolved badges, so the footer never appears/reflows
+	// when the async diff lands.
+	const diffShown = $derived(Boolean(diffStats) || diffStatsLoading);
 </script>
 
 {#snippet heading()}
@@ -173,14 +182,31 @@
 			flexWrap: 'wrap'
 		})}
 	>
-		<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="branch-upstream">
-			{#snippet leading()}
-				<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
-			{/snippet}
-			<span title={branch.getUpstream()}>
-				{branch.getUpstream()}
-			</span>
-		</Badge>
+		{#if branch.getUpstream()}
+			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="branch-upstream">
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
+				{/snippet}
+				<span title={branch.getUpstream()}>
+					{branch.getUpstream()}
+				</span>
+			</Badge>
+		{:else}
+			<!-- Local-only branch: state it explicitly rather than omitting the
+			     badge — an absent badge reads as "unknown", not "none". -->
+			<Badge
+				size={badgeSize}
+				emphasis="secondary"
+				feedback="neutral"
+				title="No remote tracking branch configured"
+				data-testid="branch-no-upstream"
+			>
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:cloud-off" /></Stamp>
+				{/snippet}
+				no upstream
+			</Badge>
+		{/if}
 	</span>
 {/snippet}
 
@@ -188,9 +214,9 @@
      info share the footer's right edge; the upstream badge keeps the left. -->
 {#snippet footerTrailing()}
 	<span class={css({ display: 'flex', alignItems: 'center', gap: 'xs', flexWrap: 'wrap' })}>
-		{#if diffShown}
-			{@const added = diffStats!.linesAdded}
-			{@const removed = diffStats!.linesRemoved}
+		{#if diffStats && (diffStats.linesAdded > 0 || diffStats.linesRemoved > 0)}
+			{@const added = diffStats.linesAdded}
+			{@const removed = diffStats.linesRemoved}
 			<span
 				class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}
 				title={`${added} line${added === 1 ? '' : 's'} added, ${removed} line${removed === 1 ? '' : 's'} removed vs current branch`}
@@ -212,6 +238,32 @@
 				>
 					−{removed}
 				</Badge>
+			</span>
+		{:else if diffStats}
+			<!-- Empty diff: a single neutral badge instead of green/red zeros —
+			     zeros aren't good or bad news, and the badge keeps the footer
+			     occupied so nothing reflows. -->
+			<Badge
+				size={badgeSize}
+				emphasis="secondary"
+				feedback="neutral"
+				title="No line changes vs current branch"
+				data-testid="branch-diff-none"
+			>
+				no diff
+			</Badge>
+		{:else if diffStatsLoading}
+			<!-- Same badge pair with dash placeholders: identical height and a
+			     close-enough width, so the resolved numbers replace it without
+			     any layout shift. Dimmed to read as pending, not as data. -->
+			<span
+				class={css({ display: 'flex', alignItems: 'center', gap: '2xs', opacity: 0.45 })}
+				title="Computing diff vs current branch…"
+				aria-busy="true"
+				data-testid="branch-diff-stats-loading"
+			>
+				<Badge size={badgeSize} emphasis="secondary" feedback="neutral">+–</Badge>
+				<Badge size={badgeSize} emphasis="secondary" feedback="neutral">−–</Badge>
 			</span>
 		{/if}
 		{#if branch.getDeletedAt()}

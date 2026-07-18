@@ -391,14 +391,25 @@ describe('BranchCard Component', () => {
 		});
 
 		expect(getByTestId('branch-upstream')).not.toBeInTheDocument();
+		expect(getByTestId('branch-no-upstream')).not.toBeInTheDocument();
 	});
 
-	test('does not show an upstream badge when the branch has no upstream', () => {
+	test('shows a neutral "no upstream" badge when the branch has no upstream', () => {
 		const { getByTestId } = renderWithTestWrapper(BranchCard, {
 			branch: mockBranch
 		});
 
 		expect(getByTestId('branch-upstream')).not.toBeInTheDocument();
+		expect(getByTestId('branch-no-upstream')).toHaveTextContent('no upstream');
+	});
+
+	test('hides the "no upstream" badge when showUpstream is false', () => {
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			showUpstream: false
+		});
+
+		expect(getByTestId('branch-no-upstream')).not.toBeInTheDocument();
 	});
 
 	test('shows added/removed line badges in the footer when diffStats is provided', () => {
@@ -437,13 +448,36 @@ describe('BranchCard Component', () => {
 		expect(getByTestId('branch-diff-stats')).not.toBeInTheDocument();
 	});
 
-	test('does not show diff badges when the diff is empty (0/0)', () => {
+	test('shows a neutral "no diff" badge for an empty diff instead of colored zeros', () => {
 		const { getByTestId } = renderWithTestWrapper(BranchCard, {
 			branch: mockBranch,
 			diffStats: { linesAdded: 0, linesRemoved: 0 }
 		});
 
+		expect(getByTestId('branch-diff-none')).toHaveTextContent('no diff');
 		expect(getByTestId('branch-diff-stats')).not.toBeInTheDocument();
+	});
+
+	test('shows placeholder diff badges while diff stats are loading', () => {
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			diffStatsLoading: true
+		});
+
+		expect(getByTestId('branch-diff-stats-loading')).toBeInTheDocument();
+		expect(getByTestId('branch-diff-stats')).not.toBeInTheDocument();
+	});
+
+	test('real badges replace the placeholder once diff stats resolve', () => {
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			diffStats: { linesAdded: 2, linesRemoved: 5 },
+			diffStatsLoading: false
+		});
+
+		expect(getByTestId('branch-diff-stats-loading')).not.toBeInTheDocument();
+		expect(getByTestId('branch-diff-added')).toHaveTextContent('+2');
+		expect(getByTestId('branch-diff-removed')).toHaveTextContent('−5');
 	});
 
 	test('compact mode omits the last commit entirely', () => {
