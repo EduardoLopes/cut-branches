@@ -16,10 +16,12 @@ const BranchSchema = z.object({
 		shortSha: z.string(),
 		date: z.string(),
 		message: z.string(),
+		summary: z.string(),
 		author: z.string(),
 		email: z.string()
 	}),
 	current: z.boolean(),
+	upstream: z.string().nullable(),
 	deletedAt: z.string().nullable(),
 	isReachable: z.boolean().nullable(),
 	isSelected: z.boolean(),

@@ -54,11 +54,13 @@ function makeBranchData(name: string, fullSha?: string): BranchData {
 	return {
 		name,
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha,
 			shortSha: sha.slice(0, 7),
 			date: '2024-01-01',
 			message: 'm',
+			summary: 'm',
 			author: 'a',
 			email: 'a@example.com'
 		},

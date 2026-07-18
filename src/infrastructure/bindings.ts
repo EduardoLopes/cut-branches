@@ -640,7 +640,12 @@ export type BatchDeleteBranchesInput = { path: string; repoId: string; branches:
 export type BatchDeleteBranchesOutput = { deletedBranches: DeletedBranchInfo[] }
 export type BatchDeleteLockedBranchesInput = { repoId: string; branchNames: string[] }
 export type BatchDeleteLockedBranchesOutput = Record<string, never>
-export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean; deletedAt: string | null; isReachable: boolean | null; isSelected: boolean; isLocked: boolean }
+export type Branch = { name: string; fullyMerged: boolean; lastCommit: Commit; current: boolean; 
+/**
+ * Remote tracking ref this branch follows (e.g. `origin/main`); `None`
+ * when the branch has no upstream configured.
+ */
+upstream: string | null; deletedAt: string | null; isReachable: boolean | null; isSelected: boolean; isLocked: boolean }
 /**
  * How a local branch stands relative to the base — the cleanup signals.
  * `ahead == 0` means the branch is fully contained in base (safe to delete).
@@ -751,7 +756,15 @@ path: string;
  * Bytes reclaimed by deleting it.
  */
 bytesFreed: number }
-export type Commit = { sha: string; shortSha: string; date: string; message: string; author: string; email: string }
+export type Commit = { sha: string; shortSha: string; date: string; 
+/**
+ * Full commit message (subject + body).
+ */
+message: string; 
+/**
+ * First line of the message (the subject), for compact display.
+ */
+summary: string; author: string; email: string }
 export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"
 export type CreateBranchRestorationInput = { path: string; repoId: string; branchInfo: DeletedBranch }

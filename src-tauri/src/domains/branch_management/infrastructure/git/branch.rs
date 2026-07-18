@@ -22,10 +22,12 @@ impl From<crate::shared::infrastructure::db::models::BranchRecord> for Branch {
                 short_sha: record.last_commit_short_sha,
                 date: record.last_commit_date,
                 message: record.last_commit_message,
+                summary: record.last_commit_summary,
                 author: record.last_commit_author,
                 email: record.last_commit_email,
             },
             current: record.current,
+            upstream: record.upstream,
             deleted_at: record.deleted_at,
             is_reachable: record.is_reachable,
             is_selected: record.is_selected,
@@ -105,7 +107,18 @@ fn get_all_branches_with_last_commit_internal(
 
         let author_name = author.name().unwrap_or("").to_string();
         let author_email = author.email().unwrap_or("").to_string();
+        // Store the full commit message (subject + body). `trim_end` drops
+        // git's trailing newline so an empty body isn't persisted as whitespace.
+        let message = commit.message().unwrap_or("").trim_end().to_string();
+        // The subject line, kept alongside the full message for compact display.
         let summary = commit.summary().unwrap_or("").to_string();
+
+        // Remote tracking ref (e.g. "origin/main"); `None` when the branch has
+        // no configured upstream.
+        let upstream = branch
+            .upstream()
+            .ok()
+            .and_then(|up| up.name().ok().flatten().map(str::to_string));
 
         // Check if branch is fully merged into HEAD (skip if requested for performance)
         let is_merged = if skip_merge_check {
@@ -118,11 +131,13 @@ fn get_all_branches_with_last_commit_internal(
             name: name.clone(),
             fully_merged: is_merged,
             current: name == current_branch_name,
+            upstream,
             last_commit: Commit {
                 sha,
                 short_sha,
                 date: date_str,
-                message: summary,
+                message,
+                summary,
                 author: author_name,
                 email: author_email,
             },
@@ -386,9 +401,15 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
     let sha = commit.id().to_string();
     let short_sha = super::commit::short_sha(&sha);
 
-    // Use summary if available, otherwise get the first line of the message
-    let message = commit.message().unwrap_or("");
-    let first_line = message.lines().next().unwrap_or("").to_string();
+    // Store the full commit message (subject + body) plus its subject line.
+    let message = commit.message().unwrap_or("").trim_end().to_string();
+    let summary = commit.summary().unwrap_or("").to_string();
+
+    // Remote tracking ref (e.g. "origin/main"); `None` when unset.
+    let upstream = branch
+        .upstream()
+        .ok()
+        .and_then(|up| up.name().ok().flatten().map(str::to_string));
 
     let author_name = author.name().unwrap_or("").to_string();
     let author_email = author.email().unwrap_or("").to_string();
@@ -411,11 +432,13 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
         name: branch_name.to_string(),
         fully_merged: is_merged,
         current,
+        upstream,
         last_commit: Commit {
             sha,
             short_sha,
             date: date_str,
-            message: first_line,
+            message,
+            summary,
             author: author_name,
             email: author_email,
         },
@@ -683,6 +706,73 @@ mod tests {
         assert!(
             !current_branch_obj.last_commit.message.is_empty(),
             "Commit message is empty"
+        );
+        assert!(
+            !current_branch_obj.last_commit.summary.is_empty(),
+            "Commit summary is empty"
+        );
+        // A repo with no configured remote has no upstream.
+        assert!(
+            current_branch_obj.upstream.is_none(),
+            "Expected no upstream on a fresh repo without a remote"
+        );
+    }
+
+    #[test]
+    fn test_last_commit_keeps_full_message_and_subject_summary() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        // Commit a multi-line message so summary (subject) and message (subject +
+        // body) diverge.
+        std::fs::write(path.join("body-file.txt"), "content").unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args([
+                "commit",
+                "-m",
+                "feat: subject line",
+                "-m",
+                "Detailed body paragraph.",
+            ])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let output = Command::new("git")
+            .args(["branch", "--show-current"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let current_branch_name = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        let branches = get_all_branches_with_last_commit(path).unwrap();
+        let branch = branches
+            .iter()
+            .find(|b| b.name == current_branch_name)
+            .expect("current branch missing");
+
+        assert_eq!(branch.last_commit.summary, "feat: subject line");
+        assert!(
+            branch.last_commit.message.contains("feat: subject line"),
+            "full message should retain the subject"
+        );
+        assert!(
+            branch
+                .last_commit
+                .message
+                .contains("Detailed body paragraph."),
+            "full message should retain the body"
+        );
+        // `trim_end` drops git's trailing newline.
+        assert!(
+            !branch.last_commit.message.ends_with('\n'),
+            "message should not carry a trailing newline"
         );
     }
 

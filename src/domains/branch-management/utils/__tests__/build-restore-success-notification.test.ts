@@ -7,11 +7,13 @@ function makeResult(name: string, shortSha: string | null = 'abc1234'): RestoreB
 		? {
 				name,
 				current: false,
+				upstream: null,
 				lastCommit: {
 					sha: 'fullsha',
 					shortSha,
 					date: '2024-01-01',
 					message: 'm',
+					summary: 'm',
 					author: 'a',
 					email: 'e@x'
 				},

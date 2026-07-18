@@ -108,11 +108,13 @@ const mockBranchesData: BranchData[] = [
 	{
 		name: 'main',
 		current: true,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc1234567890abcdef1234567890abcdef12340',
 			shortSha: 'abc1234',
 			date: '2023-01-01',
 			message: 'Initial commit',
+			summary: 'Initial commit',
 			author: 'John Doe',
 			email: 'john@example.com'
 		},
@@ -125,11 +127,13 @@ const mockBranchesData: BranchData[] = [
 	{
 		name: 'feature-1',
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'def4567890abcdef1234567890abcdef12345670',
 			shortSha: 'def4567',
 			date: '2023-01-02',
 			message: 'Add feature 1',
+			summary: 'Add feature 1',
 			author: 'Jane Doe',
 			email: 'jane@example.com'
 		},
@@ -142,11 +146,13 @@ const mockBranchesData: BranchData[] = [
 	{
 		name: 'feature-2',
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'fed7890abcdef1234567890abcdef123456789a0',
 			shortSha: 'fed7890',
 			date: '2023-01-03',
 			message: 'Add feature 2',
+			summary: 'Add feature 2',
 			author: 'Jim Doe',
 			email: 'jim@example.com'
 		},

@@ -13,16 +13,25 @@ export class Commit {
 	private readonly sha: CommitSha;
 	private readonly date: Date;
 	private readonly message: string;
+	private readonly summary: string;
 	private readonly author: string;
 	private readonly email: Email;
 
 	/**
 	 * Private constructor - use static factory methods to create instances
 	 */
-	private constructor(sha: CommitSha, date: Date, message: string, author: string, email: Email) {
+	private constructor(
+		sha: CommitSha,
+		date: Date,
+		message: string,
+		summary: string,
+		author: string,
+		email: Email
+	) {
 		this.sha = sha;
 		this.date = date;
 		this.message = message;
+		this.summary = summary;
 		this.author = author;
 		this.email = email;
 	}
@@ -37,6 +46,7 @@ export class Commit {
 			new CommitSha(data.sha),
 			new Date(data.date),
 			data.message,
+			data.summary,
 			data.author,
 			new Email(data.email)
 		);
@@ -52,6 +62,7 @@ export class Commit {
 			shortSha: this.sha.getShortSha(),
 			date: this.date.toISOString(),
 			message: this.message,
+			summary: this.summary,
 			author: this.author,
 			email: this.email.getValue()
 		};
@@ -88,6 +99,15 @@ export class Commit {
 	 */
 	getMessage(): string {
 		return this.message;
+	}
+
+	/**
+	 * Gets the commit summary — the first line (subject) of the message, as
+	 * provided by the backend.
+	 * @returns The commit subject line
+	 */
+	getSummary(): string {
+		return this.summary;
 	}
 
 	/**

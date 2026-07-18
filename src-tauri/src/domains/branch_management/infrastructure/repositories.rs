@@ -107,8 +107,10 @@ pub fn upsert_branches_batch(
                 branches::last_commit_short_sha.eq(&branch.last_commit_short_sha),
                 branches::last_commit_date.eq(&branch.last_commit_date),
                 branches::last_commit_message.eq(&branch.last_commit_message),
+                branches::last_commit_summary.eq(&branch.last_commit_summary),
                 branches::last_commit_author.eq(&branch.last_commit_author),
                 branches::last_commit_email.eq(&branch.last_commit_email),
+                branches::upstream.eq(&branch.upstream),
                 branches::is_reachable.eq(&branch.is_reachable),
                 // Note: is_selected, is_locked, and deleted_at are intentionally excluded
                 // to preserve user-managed state during sync operations

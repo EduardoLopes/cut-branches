@@ -47,11 +47,13 @@ export const mockDataFactory = {
 	branch: (overrides: Partial<Branch> = {}): Branch => ({
 		name: 'test-branch',
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc1234567890def1234567890abcdef12345678',
 			shortSha: 'abc1234',
 			date: '2023-01-01T00:00:00Z',
 			message: 'Test commit',
+			summary: 'Test commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},

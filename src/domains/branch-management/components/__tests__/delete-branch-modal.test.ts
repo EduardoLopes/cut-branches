@@ -72,11 +72,13 @@ const mockBranchesData: BranchData[] = [
 	{
 		name: 'feature-1',
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc1234567890abcdef1234567890abcdef12340',
 			shortSha: 'abc1234',
 			date: '2023-01-01',
 			message: 'Test commit',
+			summary: 'Test commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
@@ -89,11 +91,13 @@ const mockBranchesData: BranchData[] = [
 	{
 		name: 'feature-2',
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'def4567890abcdef1234567890abcdef12345670',
 			shortSha: 'def4567',
 			date: '2023-01-02',
 			message: 'Another commit',
+			summary: 'Another commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
@@ -106,11 +110,13 @@ const mockBranchesData: BranchData[] = [
 	{
 		name: 'main',
 		current: true,
+		upstream: null,
 		lastCommit: {
 			sha: 'fed7890abcdef1234567890abcdef123456789a0',
 			shortSha: 'fed7890',
 			date: '2023-01-03',
 			message: 'Current branch commit',
+			summary: 'Current branch commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
@@ -425,6 +431,7 @@ describe('DeleteBranchModal Component', () => {
 						{
 							branch: {
 								name: 'feature-1',
+								upstream: null,
 								lastCommit: {
 									shortSha: 'abc123'
 								}
@@ -474,6 +481,7 @@ describe('DeleteBranchModal Component', () => {
 						{
 							branch: {
 								name: 'feature-1',
+								upstream: null,
 								lastCommit: {
 									shortSha: 'abc123'
 								}
@@ -482,6 +490,7 @@ describe('DeleteBranchModal Component', () => {
 						{
 							branch: {
 								name: 'feature-2',
+								upstream: null,
 								lastCommit: {
 									shortSha: 'def456'
 								}
@@ -545,11 +554,13 @@ describe('DeleteBranchModal Component', () => {
 						branch: {
 							name: 'feature-1',
 							current: false,
+							upstream: null,
 							lastCommit: {
 								sha: 'abc123',
 								shortSha: 'abc123',
 								date: '2023-01-01',
 								message: 'Test commit',
+								summary: 'Test commit',
 								author: 'Test User',
 								email: 'test@example.com'
 							},

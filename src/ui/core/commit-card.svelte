@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
+	import Button from '@pindoba/svelte-button';
 	import Card, { type PrimitiveCardProps } from '@pindoba/svelte-card';
 	import Popover from '@pindoba/svelte-popover';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -15,6 +17,10 @@
 		commit: Commit;
 		/** Semantic palette to follow — inherited from the enclosing branch card. */
 		feedback?: PrimitiveCardProps['feedback'];
+		/** Remote tracking ref this commit's branch follows (e.g. `origin/main`);
+		 *  shown as a badge in the footer. Branch-level, so passed in by the
+		 *  composing card rather than read from the commit. */
+		upstream?: string | null;
 		/** Optional deep-link into a history view for this commit; rendered as a
 		 *  branch icon flanking the commit message. Kept generic: the URL is the
 		 *  cross-domain channel, this component knows nothing about who serves it. */
@@ -24,15 +30,40 @@
 		 *  Only rendered when `historyHref` is also provided (the icon is the
 		 *  trigger). */
 		hoverPreview?: Snippet;
+		/** Card surface props, forwarded to the underlying pindoba Card so this
+		 *  component can be reused on different backgrounds/contexts. Defaults
+		 *  match the embedded "last commit" look inside a branch card. */
+		size?: PrimitiveCardProps['size'];
+		background?: PrimitiveCardProps['background'];
+		border?: PrimitiveCardProps['border'];
+		shadow?: PrimitiveCardProps['shadow'];
+		radius?: PrimitiveCardProps['radius'];
 	}
 
-	let { commit, feedback = 'neutral', historyHref, hoverPreview }: Props = $props();
+	let {
+		commit,
+		feedback = 'neutral',
+		upstream,
+		historyHref,
+		hoverPreview,
+		size = 'sm',
+		background = 'surface.step.1',
+		border = 'muted',
+		shadow = 'none',
+		radius = 'sm'
+	}: Props = $props();
 
 	// Anchor for the hover-preview popover: the branch icon link. Anchoring to
 	// the icon (not the whole card) keeps the preview next to what the user is
 	// hovering — the card spans the page, so a card-anchored popover would land
 	// at the far edge, away from the icon.
 	let previewTriggerEl = $state<HTMLElement | null>(null);
+
+	// Whether this commit carries a description body worth disclosing.
+	const hasBody = $derived(commit.getMessageBody().length > 0);
+	// Per-card disclosure state for the body. Collapsed by default so lists stay
+	// compact; the toggle in the header meta row reveals it.
+	let bodyExpanded = $state(false);
 </script>
 
 <!-- Branch icon flanking the message on the left (the header Banner's `leading`
@@ -64,17 +95,63 @@
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
 {/snippet}
 
+<!-- Disclosure toggle for the description body, sitting beside the commit
+     summary. Lives in the always-visible heading (not inside the collapsible
+     body) and only renders when the commit actually has a body. -->
+{#snippet bodyToggle()}
+	<Button
+		emphasis="ghost"
+		size="xs"
+		shape="square"
+		onclick={() => (bodyExpanded = !bodyExpanded)}
+		aria-expanded={bodyExpanded}
+		aria-label={bodyExpanded ? 'Hide commit description' : 'Show commit description'}
+		title={bodyExpanded ? 'Hide description' : 'Show description'}
+		data-testid="toggle-commit-description"
+	>
+		<span
+			class={css({
+				display: 'inline-flex',
+				pindobaTransition: 'fast',
+				transform: bodyExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+			})}
+		>
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+			</Stamp>
+		</span>
+	</Button>
+{/snippet}
+
 {#snippet messageHeading()}
 	<span
-		class={css({ pindobaTransition: 'fast', wordBreak: 'break-word' })}
-		data-testid="last-commit-message"
+		class={css({
+			display: 'inline-flex',
+			alignItems: 'center',
+			gap: '2xs',
+			pindobaTransition: 'fast',
+			wordBreak: 'break-word'
+		})}
 	>
-		<Markdown md={commit.getMessageFirstLine()} />
+		<span data-testid="last-commit-message">
+			<Markdown md={commit.getSummary()} />
+		</span>
+		{#if hasBody}
+			{@render bodyToggle()}
+		{/if}
 	</span>
 {/snippet}
 
 {#snippet messageBody()}
-	<div class={css({ color: 'neutral.text.muted' })} data-testid="commit-description">
+	<div
+		class={css({
+			color: 'neutral.text.muted',
+			maxWidth: '90ch',
+			textWrap: 'pretty',
+			fontSize: 'sm'
+		})}
+		data-testid="commit-description"
+	>
 		<Markdown md={commit.getMessageBody()} />
 	</div>
 {/snippet}
@@ -127,7 +204,7 @@
 	</span>
 {/snippet}
 
-<!-- Footer meta line: author · relative date, sharing the trailing slot. -->
+<!-- Header meta line: author · relative date, sharing the trailing slot. -->
 {#snippet meta()}
 	<span
 		class={css({
@@ -144,22 +221,68 @@
 	</span>
 {/snippet}
 
+<!-- Dedicated footer row: short SHA (always) and the upstream ref (when set),
+     as badges. Both carry the full value in `title` for hover disclosure. -->
+{#snippet footerMeta()}
+	<span
+		class={css({
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: 'xs',
+			flexWrap: 'wrap'
+		})}
+	>
+		<Badge size="sm" emphasis="secondary" {feedback} data-testid="commit-sha">
+			<span
+				class={css({
+					display: 'inline-flex',
+					alignItems: 'center',
+					gap: '2xs',
+					fontFamily: 'mono'
+				})}
+				title={commit.getSha()}
+			>
+				<Icon icon="lucide:git-commit-horizontal" width="12px" height="12px" />
+				{commit.getShortSha()}
+			</span>
+		</Badge>
+		{#if upstream}
+			<Badge size="sm" emphasis="secondary" {feedback} data-testid="commit-upstream">
+				<span
+					class={css({ display: 'inline-flex', alignItems: 'center', gap: '2xs' })}
+					title={upstream}
+				>
+					<Icon icon="lucide:git-branch" width="12px" height="12px" />
+					{upstream}
+				</span>
+			</Badge>
+		{/if}
+	</span>
+{/snippet}
+
 <Card
-	size="sm"
+	{size}
 	{feedback}
-	background="surface.step.1"
-	border="muted"
-	shadow="none"
-	radius="sm"
+	{background}
+	{border}
+	{shadow}
+	{radius}
 	header={{
 		leading: historyHref ? branchLink : undefined,
 		heading: { content: messageHeading, trailing: meta },
 		headingTextStyle: 'heading.3xs',
-		subheading: commit.getMessageBody() ? messageBody : undefined,
-		subheadingTextStyle: 'caption'
+		layout: {
+			leading: {
+				align: 'start'
+			}
+		},
+		background: 'surface.soft'
 		// Top-align the branch icon to the message block so it hugs the subject
 		// line rather than floating to the vertical center of a multi-line body.
 	}}
+	children={hasBody && bodyExpanded ? messageBody : undefined}
+	footer={{ children: footerMeta, background: 'surface.step.2' }}
 />
 
 {#if hoverPreview && historyHref}

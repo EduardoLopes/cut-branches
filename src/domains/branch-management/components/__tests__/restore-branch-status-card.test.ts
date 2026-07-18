@@ -10,11 +10,13 @@ function makeBranch(name: string): Branch {
 	const data: BranchData = {
 		name,
 		current: false,
+		upstream: null,
 		lastCommit: {
 			sha: validSha,
 			shortSha: validSha.slice(0, 7),
 			date: '2024-01-01',
 			message: 'm',
+			summary: 'm',
 			author: 'a',
 			email: 'a@example.com'
 		},

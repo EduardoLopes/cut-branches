@@ -25,11 +25,13 @@ describe('DeletedBranchesStore', () => {
 		name: 'feature-branch',
 		current: false,
 		fullyMerged: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc123',
 			shortSha: 'abc123',
 			date: '2023-01-01T00:00:00Z',
 			message: 'Test commit',
+			summary: 'Test commit',
 			author: 'Test Author',
 			email: 'test@example.com'
 		},

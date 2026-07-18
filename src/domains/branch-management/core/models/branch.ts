@@ -24,6 +24,7 @@ export class Branch {
 	private readonly fullyMerged: boolean;
 	private readonly lastCommit: Commit;
 	private readonly current: boolean;
+	private readonly upstream: string | null;
 	private readonly deletedAt: Date | null;
 	private readonly isReachable: boolean | null;
 	private readonly isSelected: boolean;
@@ -37,6 +38,7 @@ export class Branch {
 		fullyMerged: boolean,
 		lastCommit: Commit,
 		current: boolean,
+		upstream: string | null,
 		deletedAt: Date | null,
 		isReachable: boolean | null,
 		isSelected: boolean,
@@ -46,6 +48,7 @@ export class Branch {
 		this.fullyMerged = fullyMerged;
 		this.lastCommit = lastCommit;
 		this.current = current;
+		this.upstream = upstream;
 		this.deletedAt = deletedAt;
 		this.isReachable = isReachable;
 		this.isSelected = isSelected;
@@ -63,6 +66,7 @@ export class Branch {
 			data.fullyMerged,
 			Commit.fromData(data.lastCommit),
 			data.current,
+			data.upstream,
 			data.deletedAt ? new Date(data.deletedAt) : null,
 			data.isReachable,
 			data.isSelected,
@@ -80,6 +84,7 @@ export class Branch {
 			fullyMerged: this.fullyMerged,
 			lastCommit: this.lastCommit.toData(),
 			current: this.current,
+			upstream: this.upstream,
 			deletedAt: this.deletedAt ? this.deletedAt.toISOString() : null,
 			isReachable: this.isReachable,
 			isSelected: this.isSelected,
@@ -117,6 +122,14 @@ export class Branch {
 	 */
 	isCurrent(): boolean {
 		return this.current;
+	}
+
+	/**
+	 * Gets the remote tracking ref this branch follows (e.g. `origin/main`)
+	 * @returns The upstream ref, or null when the branch has no upstream
+	 */
+	getUpstream(): string | null {
+		return this.upstream;
 	}
 
 	/**
@@ -266,6 +279,7 @@ export class Branch {
 			this.fullyMerged,
 			this.lastCommit,
 			this.current,
+			this.upstream,
 			this.deletedAt,
 			this.isReachable,
 			selected,
@@ -284,6 +298,7 @@ export class Branch {
 			this.fullyMerged,
 			this.lastCommit,
 			this.current,
+			this.upstream,
 			this.deletedAt,
 			this.isReachable,
 			this.isSelected,

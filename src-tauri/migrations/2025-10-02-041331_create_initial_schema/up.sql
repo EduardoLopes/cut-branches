@@ -24,8 +24,12 @@ CREATE TABLE branches (
     last_commit_short_sha TEXT NOT NULL,
     last_commit_date TEXT NOT NULL,
     last_commit_message TEXT NOT NULL,
+    last_commit_summary TEXT NOT NULL,
     last_commit_author TEXT NOT NULL,
     last_commit_email TEXT NOT NULL,
+    -- Remote tracking ref this branch follows (e.g. "origin/main"); NULL when
+    -- the branch has no upstream configured.
+    upstream TEXT,
     deleted_at TEXT,
     is_reachable BOOLEAN,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

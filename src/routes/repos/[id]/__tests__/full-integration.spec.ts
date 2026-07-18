@@ -15,11 +15,13 @@ const mockBranchesData: BranchData[] = [
 		current: true,
 		isLocked: false,
 		isSelected: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc1234567890abcdef1234567890abcdef12340',
 			shortSha: 'abc1234',
 			date: new Date().toISOString(),
 			message: 'Initial commit',
+			summary: 'Initial commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
@@ -32,11 +34,13 @@ const mockBranchesData: BranchData[] = [
 		current: false,
 		isLocked: false,
 		isSelected: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'def4567890abcdef1234567890abcdef12345670',
 			shortSha: 'def4567',
 			date: new Date().toISOString(),
 			message: 'Add feature',
+			summary: 'Add feature',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
@@ -49,11 +53,13 @@ const mockBranchesData: BranchData[] = [
 		current: false,
 		isLocked: false,
 		isSelected: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'fed7890abcdef1234567890abcdef123456789a0',
 			shortSha: 'fed7890',
 			date: new Date().toISOString(),
 			message: 'Fix bug',
+			summary: 'Fix bug',
 			author: 'Test User',
 			email: 'test@example.com'
 		},

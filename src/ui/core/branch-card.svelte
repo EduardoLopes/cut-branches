@@ -189,6 +189,7 @@
 				<CommitCard
 					commit={branch.getLastCommit()}
 					{feedback}
+					upstream={branch.getUpstream()}
 					historyHref={commitHistoryHref}
 					hoverPreview={commitHoverPreview}
 				/>

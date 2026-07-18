@@ -15,7 +15,10 @@ pub struct Commit {
     pub sha: String,
     pub short_sha: String,
     pub date: String,
+    /// Full commit message (subject + body).
     pub message: String,
+    /// First line of the message (the subject), for compact display.
+    pub summary: String,
     pub author: String,
     pub email: String,
 }
@@ -27,6 +30,9 @@ pub struct Branch {
     pub fully_merged: bool,
     pub last_commit: Commit,
     pub current: bool,
+    /// Remote tracking ref this branch follows (e.g. `origin/main`); `None`
+    /// when the branch has no upstream configured.
+    pub upstream: Option<String>,
     pub deleted_at: Option<String>,
     pub is_reachable: Option<bool>,
     pub is_selected: bool,

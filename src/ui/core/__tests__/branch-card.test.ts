@@ -9,11 +9,13 @@ describe('BranchCard Component', () => {
 		name: 'feature/new-feature',
 		current: false,
 		fullyMerged: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc123def456',
 			shortSha: 'abc123d',
 			date: '2024-01-15T10:30:00Z',
 			message: 'feat: add new feature',
+			summary: 'feat: add new feature',
 			author: 'John Doe',
 			email: 'john.doe@example.com'
 		},

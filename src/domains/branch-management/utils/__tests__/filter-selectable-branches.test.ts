@@ -8,11 +8,13 @@ const createBranch = (name: string, isLocked = false): Branch => {
 		name,
 		current: false,
 		fullyMerged: false,
+		upstream: null,
 		lastCommit: {
 			sha: 'abc123def456',
 			shortSha: 'abc123d',
 			date: '2024-01-15T10:30:00Z',
 			message: 'Test commit',
+			summary: 'Test commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},

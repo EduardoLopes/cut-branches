@@ -12,11 +12,13 @@ describe('Converters', () => {
 			mockBranchData = {
 				name: 'feature-branch',
 				fullyMerged: false,
+				upstream: null,
 				lastCommit: {
 					sha: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0',
 					shortSha: 'a1b2c3d',
 					date: '2024-01-15T10:30:00.000Z',
 					message: 'feat: add feature',
+					summary: 'feat: add feature',
 					author: 'John Doe',
 					email: 'john.doe@example.com'
 				},
@@ -131,6 +133,7 @@ describe('Converters', () => {
 				shortSha: 'a1b2c3d',
 				date: '2024-01-15T10:30:00.000Z',
 				message: 'feat: add feature',
+				summary: 'feat: add feature',
 				author: 'John Doe',
 				email: 'john.doe@example.com'
 			};

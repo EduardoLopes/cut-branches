@@ -12,6 +12,7 @@ describe('Commit', () => {
 			shortSha: 'a1b2c3d',
 			date: '2024-01-15T10:30:00.000Z',
 			message: 'feat: add new feature',
+			summary: 'feat: add new feature',
 			author: 'John Doe',
 			email: 'john.doe@example.com'
 		};
@@ -445,6 +446,7 @@ describe('Commit', () => {
 			const data2 = {
 				...mockCommitData,
 				message: 'Different message',
+				summary: 'Different message',
 				author: 'Different Author'
 			};
 			const commit2 = Commit.fromData(data2);
