@@ -5,6 +5,7 @@
 	// underneath — so the rail keeps most of the horizontal space.
 	import Icon from '@iconify/svelte';
 	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
+	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import BranchGutterCell from './branch-gutter-cell.svelte';
 	import GraphRailCell from './graph-rail-cell.svelte';
@@ -190,7 +191,9 @@
 	{#each row.commit.refs.filter((r) => r.kind !== 'localBranch') as ref (ref.kind + ref.name)}
 		<span class={badgeBase}>
 			{#if ref.kind === 'tag'}
-				<Icon icon="lucide:tag" width="11px" height="11px" />
+				<Stamp emphasis="ghost" border="none" background="transparent">
+					<Icon icon="lucide:tag" width="11px" height="11px" />
+				</Stamp>
 			{/if}
 			{ref.name}
 		</span>
@@ -223,11 +226,13 @@
 						onclick={() => onToggleRun(runBelow.groupId)}
 						{...triggerProps}
 					>
-						<Icon
-							icon={runBelow.collapsed ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
-							width="14px"
-							height="14px"
-						/>
+						<Stamp emphasis="ghost" border="none" background="transparent">
+							<Icon
+								icon={runBelow.collapsed ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
+								width="14px"
+								height="14px"
+							/>
+						</Stamp>
 						{#if runBelow.collapsed}
 							<span>{runBelow.count}</span>
 						{/if}

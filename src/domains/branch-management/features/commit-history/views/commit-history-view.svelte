@@ -7,8 +7,10 @@
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useCommitHistoryView } from '../application/use-commit-history-view.svelte';
 	import CommitHistoryList from '../components/commit-history-list.svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DeleteBranchModal from '$domains/branch-management/components/delete-branch-modal.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -43,14 +45,6 @@
 		borderColor: 'neutral.border.muted',
 		background: 'neutral.surface.step.1'
 	});
-	const backLink = css({
-		display: 'flex',
-		alignItems: 'center',
-		gap: '2xs',
-		fontSize: 'sm',
-		color: 'neutral.text.muted',
-		_hover: { color: 'neutral.text' }
-	});
 	const title = css({ fontSize: 'md', fontWeight: 'bold' });
 	const headerMeta = css({ fontSize: 'xs', color: 'neutral.text.muted' });
 	const headerCount = css({ fontSize: 'xs', color: 'neutral.text.muted', ml: 'auto' });
@@ -64,9 +58,19 @@
 
 <div class={host}>
 	<header class={header}>
-		<a href={resolve(`/repos/${id}`)} class={backLink}>
-			<Icon icon="lucide:arrow-left" width="16px" height="16px" /> Branches
-		</a>
+		<Button
+			emphasis="ghost"
+			size="sm"
+			onclick={() => goto(resolve(`/repos/${id}`))}
+			data-testid="history-back-button"
+		>
+			{#snippet leading()}
+				<Stamp emphasis="ghost" border="muted" background="transparent">
+					<Icon icon="lucide:arrow-left" width="16px" height="16px" />
+				</Stamp>
+			{/snippet}
+			Branches
+		</Button>
 		<h1 class={title}>Commit history</h1>
 		{#if view.comparisons.baseName}
 			<span class={headerMeta}>vs {view.comparisons.baseName}</span>

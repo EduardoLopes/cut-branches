@@ -6,6 +6,7 @@
 	// wrapper owns the click/keyboard handling; this component is purely
 	// visual.
 	import Icon from '@iconify/svelte';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -51,11 +52,13 @@
 <div class={runStrip}>
 	<span class={dividerLine}></span>
 	<span class={pill}>
-		<Icon
-			icon={mode === 'collapsed' ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
-			width="14px"
-			height="14px"
-		/>
+		<Stamp emphasis="ghost" border="none" background="transparent">
+			<Icon
+				icon={mode === 'collapsed' ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
+				width="14px"
+				height="14px"
+			/>
+		</Stamp>
 		{mode === 'collapsed' ? `Show ${count} commits` : `Hide ${count} commits`}
 	</span>
 	<span class={dividerLine}></span>
