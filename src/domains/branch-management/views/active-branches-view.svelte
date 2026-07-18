@@ -45,19 +45,24 @@
 			message={viewState.error.message}
 			description={viewState.error.description ? viewState.error.description : undefined}
 		/>
+	{:else}
+		<!-- Only one of these states can show at a time: the error above is
+		     mutually exclusive with the empty/no-results states below. The
+		     "no branches to delete" note is an info banner for a populated list
+		     where nothing is deletable, so it's gated on there being branches —
+		     it must not double up with the empty "no branches!" state. -->
+		<BranchListEmptyState
+			emptyStateMessage="This repository has no branches!"
+			infoMessage={viewState.hasNoBranchesToDelete && viewState.branches.length > 0
+				? 'This repository has no branches to delete.'
+				: undefined}
+			searchNoResultsFound={viewState.searchNoResultsFound}
+			searchTerm={viewState.search?.state}
+			isLoading={viewState.isLoading}
+			branchesLength={viewState.branches.length}
+			repositoryId={id}
+		/>
 	{/if}
-
-	<BranchListEmptyState
-		emptyStateMessage="This repository has no branches!"
-		infoMessage={viewState.hasNoBranchesToDelete
-			? 'This repository has no branches to delete.'
-			: undefined}
-		searchNoResultsFound={viewState.searchNoResultsFound}
-		searchTerm={viewState.search?.state}
-		isLoading={viewState.isLoading}
-		branchesLength={viewState.branches.length}
-		repositoryId={id}
-	/>
 
 	{#key `${id}-current`}
 		{#if !viewState.isError && !viewState.searchNoResultsFound && viewState.branches.length > 0}
