@@ -51,6 +51,14 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 			'Manage git worktrees for a repository — list, add, remove, and lock worktrees. Adds a worktrees section to the repository view.',
 		defaultEnabled: false,
 		icon: 'lucide:trees'
+	},
+	{
+		key: 'commit-history',
+		label: 'Commit history',
+		description:
+			"Browse a repository's commit history and branch graph. Adds a per-branch history deep-link, a hover graph preview, and a dedicated history view.",
+		defaultEnabled: false,
+		icon: 'lucide:git-graph'
 	}
 ];
 

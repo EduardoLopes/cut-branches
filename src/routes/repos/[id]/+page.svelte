@@ -20,13 +20,17 @@
 	let cleanupOpen = $state(false);
 
 	const extraMenuItems = $derived<MenuNode[]>([
-		{
-			type: 'action',
-			id: 'commit-history',
-			label: 'Commit history…',
-			leading: historyIcon,
-			onSelect: () => goto(resolve(`/repos/${id}/history`))
-		},
+		...(isFeatureEnabled('commit-history')
+			? [
+					{
+						type: 'action' as const,
+						id: 'commit-history',
+						label: 'Commit history…',
+						leading: historyIcon,
+						onSelect: () => goto(resolve(`/repos/${id}/history`))
+					}
+				]
+			: []),
 		...(isFeatureEnabled('repository-cleanup')
 			? [
 					{

@@ -29,6 +29,7 @@
 		getBranchElementId,
 		shouldShowBranchAlerts
 	} from '$domains/branch-management/utils/branch-utils';
+	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
@@ -66,6 +67,8 @@
 	// Deleted branches don't — their commits may no longer be reachable.
 	const queryClient = useQueryClient();
 	const isRestoreView = $derived(page.url.pathname.includes('restore'));
+	// Commit history (view, deep-link, hover preview) is gated behind a flag.
+	const historyEnabled = $derived(isFeatureEnabled('commit-history'));
 
 	// Warm the preview's cache entry on hover so the popover usually opens
 	// with data already there. Debounced so quick mouse travel costs nothing.
@@ -266,7 +269,7 @@
 					{/snippet}
 					<div
 						role="presentation"
-						onmouseenter={!isRestoreView && repositoryPath
+						onmouseenter={historyEnabled && !isRestoreView && repositoryPath
 							? () => prefetchPreviewFor(branch.getLastCommit().getSha())
 							: undefined}
 					>
@@ -280,10 +283,10 @@
 								? 'Current branch'
 								: formatString('{name}', { name: branch.getName() })}
 							{variant}
-							commitHistoryHref={!isRestoreView && repositoryID
+							commitHistoryHref={historyEnabled && !isRestoreView && repositoryID
 								? `${resolve(`/repos/${repositoryID}/history`)}?commit=${branch.getLastCommit().getSha()}`
 								: undefined}
-							commitHoverPreview={!isRestoreView && repositoryID && repositoryPath
+							commitHoverPreview={historyEnabled && !isRestoreView && repositoryID && repositoryPath
 								? commitPreview
 								: undefined}
 						>
