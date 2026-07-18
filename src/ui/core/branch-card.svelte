@@ -40,6 +40,11 @@
 		 *  placeholder badges that reserve the footer space, so the card
 		 *  doesn't shift when the numbers land. */
 		diffStatsLoading?: boolean;
+		/** Extra badges appended to the footer's trailing row, after the diff
+		 *  badges (e.g. the history view's ahead/behind cleanup signals).
+		 *  Mirrors CommitCard's `footerBadges`. Forces the footer to render
+		 *  even when nothing else occupies it. */
+		footerBadges?: Snippet;
 		selected?: boolean;
 		locked?: boolean;
 		disabled?: boolean;
@@ -69,6 +74,7 @@
 		showUpstream = true,
 		diffStats,
 		diffStatsLoading = false,
+		footerBadges,
 		selected = false,
 		locked = false,
 		disabled = false,
@@ -136,6 +142,23 @@
 	// footprint as the resolved badges, so the footer never appears/reflows
 	// when the async diff lands.
 	const diffShown = $derived(Boolean(diffStats) || diffStatsLoading);
+
+	// Truncation kit for the footer's upstream badges: the badge shrinks with
+	// the footer instead of overflowing it, and its label ellipsizes.
+	const truncatingBadgePassThrough = {
+		root: { style: css.raw({ maxWidth: '100%', minWidth: '0' }) },
+		content: { style: css.raw({ minWidth: '0', overflow: 'hidden' }) }
+	};
+	const badgeLabelTruncate = css({
+		display: 'block',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+		whiteSpace: 'nowrap',
+		// The badge content slot zeroes line-height; text normally overflows
+		// that zero-height line box visibly, but with overflow hidden it would
+		// be clipped away — restore a real one.
+		lineHeight: '1.2'
+	});
 </script>
 
 {#snippet heading()}
@@ -144,26 +167,32 @@
 			class={css({
 				fontWeight: 600,
 				pindobaTransition: 'fast',
+				minWidth: '0',
 				overflow: 'hidden',
 				textOverflow: 'ellipsis',
 				whiteSpace: 'nowrap'
 			})}
+			title={branch.getName()}
 			data-testid="branch-name"
 		>
 			{branch.getName()}
 		</span>
 		{#if branch.isCurrent()}
-			<Badge
-				size={badgeSize}
-				feedback="primary"
-				emphasis="secondary"
-				data-testid="branch-current-badge"
-			>
-				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:map-pin" /></Stamp>
-				{/snippet}
-				current
-			</Badge>
+			<!-- The badge never shrinks — in tight contexts the name ellipsizes
+			     instead, so the branch identity always stays visible. -->
+			<span class={css({ flexShrink: '0', display: 'inline-flex' })}>
+				<Badge
+					size={badgeSize}
+					feedback="primary"
+					emphasis="secondary"
+					data-testid="branch-current-badge"
+				>
+					{#snippet leading()}
+						<Stamp emphasis="ghost"><Icon icon="lucide:map-pin" /></Stamp>
+					{/snippet}
+					current
+				</Badge>
+			</span>
 		{/if}
 	</span>
 {/snippet}
@@ -173,21 +202,33 @@
      branch attribute, so it lives on the branch card's footer rather than on
      the embedded commit card's. -->
 {#snippet footerMeta()}
+	<!-- Both badges are capped to the footer width and their labels ellipsize
+	     (never overlapping the trailing badges); the full value stays available
+	     via the title. `overflow: hidden` on the container guarantees nothing
+	     ever paints over the trailing side, whatever the squeeze. -->
 	<span
 		class={css({
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
 			gap: 'xs',
-			flexWrap: 'wrap'
+			minWidth: '0',
+			maxWidth: '100%',
+			overflow: 'hidden'
 		})}
 	>
 		{#if branch.getUpstream()}
-			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="branch-upstream">
+			<Badge
+				size={badgeSize}
+				emphasis="secondary"
+				{feedback}
+				data-testid="branch-upstream"
+				passThrough={truncatingBadgePassThrough}
+			>
 				{#snippet leading()}
 					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
 				{/snippet}
-				<span title={branch.getUpstream()}>
+				<span class={badgeLabelTruncate} title={branch.getUpstream()}>
 					{branch.getUpstream()}
 				</span>
 			</Badge>
@@ -200,11 +241,12 @@
 				feedback="neutral"
 				title="No remote tracking branch configured"
 				data-testid="branch-no-upstream"
+				passThrough={truncatingBadgePassThrough}
 			>
 				{#snippet leading()}
 					<Stamp emphasis="ghost"><Icon icon="lucide:cloud-off" /></Stamp>
 				{/snippet}
-				no upstream
+				<span class={badgeLabelTruncate}>no upstream</span>
 			</Badge>
 		{/if}
 	</span>
@@ -269,6 +311,7 @@
 		{#if branch.getDeletedAt()}
 			{@render deletedAtInfo()}
 		{/if}
+		{@render footerBadges?.()}
 	</span>
 {/snippet}
 
@@ -385,15 +428,33 @@
 	header={{
 		heading: heading as PrimitiveCardHeaderProps['heading'],
 		background: 'surface.soft',
-		...(compact ? { headingTextStyle: 'body.sm' } : {})
+		...(compact ? { headingTextStyle: 'body.sm' } : {}),
+		// Let the branch name shrink so its ellipsis engages in narrow hosts
+		// (e.g. the history gutter). The Banner nests the heading through
+		// several flank/group wrappers; every one needs `min-width: 0` — a
+		// flex item won't shrink below content size otherwise.
+		passThrough: {
+			root: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			heading: { style: css.raw({ minWidth: '0', overflow: 'hidden' }) }
+		}
 	}}
-	footer={upstreamShown || diffShown || branch.getDeletedAt()
+	footer={upstreamShown || diffShown || branch.getDeletedAt() || footerBadges
 		? {
-				...(diffShown || upstreamShown ? { background: 'surface.step.3' } : {}),
+				...(diffShown || upstreamShown || footerBadges ? { background: 'surface.step.3' } : {}),
 				...(upstreamShown ? { children: footerMeta } : {}),
-				...(diffShown || branch.getDeletedAt()
+				...(diffShown || branch.getDeletedAt() || footerBadges
 					? { trailing: footerTrailing as PrimitiveCardFooterProps['trailing'] }
-					: {})
+					: {}),
+				// The upstream (leading) side absorbs the squeeze and ellipsizes;
+				// the trailing badges keep their intrinsic size.
+				passThrough: {
+					footer: { style: css.raw({ minWidth: '0' }) },
+					trailing: { style: css.raw({ flexShrink: '0' }) }
+				}
 			}
 		: undefined}
 	children={!compact || children ? cardChildren : undefined}

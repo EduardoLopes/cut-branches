@@ -1,3 +1,4 @@
+import { createRawSnippet } from 'svelte';
 import { describe, expect, test } from 'vitest';
 import BranchCard from '../branch-card.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
@@ -409,6 +410,34 @@ describe('BranchCard Component', () => {
 			showUpstream: false
 		});
 
+		expect(getByTestId('branch-no-upstream')).not.toBeInTheDocument();
+	});
+
+	test('appends consumer footerBadges to the footer trailing row', () => {
+		const footerBadges = createRawSnippet(() => ({
+			render: () => '<span data-testid="extra-footer-badge">3↑</span>'
+		}));
+
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			footerBadges
+		});
+
+		expect(getByTestId('extra-footer-badge')).toHaveTextContent('3↑');
+	});
+
+	test('footerBadges alone force the footer even with the upstream hidden', () => {
+		const footerBadges = createRawSnippet(() => ({
+			render: () => '<span data-testid="extra-footer-badge">merged</span>'
+		}));
+
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			showUpstream: false,
+			footerBadges
+		});
+
+		expect(getByTestId('extra-footer-badge')).toBeInTheDocument();
 		expect(getByTestId('branch-no-upstream')).not.toBeInTheDocument();
 	});
 
