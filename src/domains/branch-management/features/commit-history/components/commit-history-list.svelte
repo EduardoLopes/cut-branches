@@ -140,7 +140,7 @@
 		display: 'flex',
 		alignItems: 'stretch',
 		borderBottom: '1px solid',
-		borderColor: 'neutral.border.muted'
+		borderColor: 'neutral.border.muted/25'
 	});
 	const rowBase = css(rowBaseRaw);
 	// Collapsed/header rows are clickable as a whole, so they keep a hover. The
