@@ -92,6 +92,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	deleteRepository: [
 		'getBranchList',
 		'getBranchMergeStatus',
+		'getBranchDiffStats',
 		'getCommitReachability',
 		'listBranchSelection',
 		'listDeletedBranchSelection',

@@ -133,6 +133,13 @@ pub enum BranchError {
         source: git2::Error,
     },
 
+    #[error("Failed to compute diff stats for branch '{name}': {source}")]
+    DiffStatsFailed {
+        name: String,
+        #[source]
+        source: git2::Error,
+    },
+
     #[error("Failed to walk commit history: {source}")]
     RevwalkFailed {
         #[source]
@@ -172,6 +179,7 @@ impl From<BranchError> for AppError {
             BranchError::CommitNotFoundInRepo { .. } => "commit_not_found",
             BranchError::FindCommitFailed { .. } => "commit_not_found",
             BranchError::CreateBranchFailed { .. } => "create_branch_failed",
+            BranchError::DiffStatsFailed { .. } => "diff_stats_failed",
             BranchError::RevwalkFailed { .. } => "revwalk_failed",
             BranchError::HistoryCursorStale { .. } => "history_cursor_stale",
             BranchError::InvalidHistoryCursor => "invalid_history_cursor",
@@ -193,6 +201,7 @@ impl From<BranchError> for AppError {
             | BranchError::DeleteBranchFailed { source, .. }
             | BranchError::FindCommitFailed { source, .. }
             | BranchError::CreateBranchFailed { source, .. }
+            | BranchError::DiffStatsFailed { source, .. }
             | BranchError::RevwalkFailed { source } => Some(source.to_string()),
 
             BranchError::UnableToAccessDir { detail, .. }
@@ -290,6 +299,21 @@ mod tests {
             app.description.as_deref(),
             Some("Repository is in detached HEAD state")
         );
+    }
+
+    #[test]
+    fn diff_stats_failed_maps_kind_and_source_description() {
+        let app: AppError = BranchError::DiffStatsFailed {
+            name: "feature/x".into(),
+            source: git2::Error::from_str("no merge base"),
+        }
+        .into();
+        assert_eq!(app.kind, "diff_stats_failed");
+        assert_eq!(
+            app.message,
+            "Failed to compute diff stats for branch 'feature/x': no merge base"
+        );
+        assert_eq!(app.description.as_deref(), Some("no merge base"));
     }
 
     #[test]

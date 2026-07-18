@@ -47,6 +47,20 @@ pub struct GetBranchMergeStatusOutput {
     pub is_merged: bool,
 }
 
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBranchDiffStatsInput {
+    pub path: String,
+    pub branch_name: String,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct GetBranchDiffStatsOutput {
+    pub lines_added: u32,
+    pub lines_removed: u32,
+}
+
 /// Gets the reachability status of a commit SHA in a git repository.
 ///
 /// # Arguments
@@ -146,4 +160,36 @@ pub async fn get_branch_merge_status(
         )?;
 
     Ok(GetBranchMergeStatusOutput { is_merged })
+}
+
+/// Gets the line-level diff stats of a branch in a git repository: lines
+/// added/removed relative to the branch's merge-base with HEAD.
+///
+/// # Arguments
+///
+/// * `input` - Input parameters containing path and branch name
+///
+/// # Returns
+///
+/// * `Result<GetBranchDiffStatsOutput, AppError>` - The diff stats or an error
+#[tauri::command(async)]
+#[specta::specta]
+pub async fn get_branch_diff_stats(
+    input: GetBranchDiffStatsInput,
+) -> Result<GetBranchDiffStatsOutput, AppError> {
+    // Validate the branch name at the boundary (§1.2).
+    let branch_name = BranchName::new(input.branch_name)?;
+    let raw_path = Path::new(&input.path);
+    let (lines_added, lines_removed) =
+        crate::domains::branch_management::infrastructure::git::branch::get_branch_diff_stats(
+            raw_path,
+            branch_name.as_str(),
+        )?;
+
+    Ok(GetBranchDiffStatsOutput {
+        // Line counts never approach 2^32; saturate rather than wrap on the
+        // pathological case so the contract can stay a plain `number`.
+        lines_added: u32::try_from(lines_added).unwrap_or(u32::MAX),
+        lines_removed: u32::try_from(lines_removed).unwrap_or(u32::MAX),
+    })
 }

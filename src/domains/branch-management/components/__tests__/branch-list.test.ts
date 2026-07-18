@@ -142,6 +142,17 @@ vi.mock(
 	})
 );
 
+vi.mock('$domains/branch-management/infrastructure/queries/create-branch-diff-stats-query', () => ({
+	// Mirrors the real adapter's gating: a disabled query never has data, so
+	// current/deleted branches render without diff badges in these tests.
+	createBranchDiffStatsQuery: (_input: unknown, options?: { enabled?: boolean }) => ({
+		data: options?.enabled === false ? undefined : { linesAdded: 3, linesRemoved: 1 },
+		isLoading: false,
+		isError: false,
+		error: null
+	})
+}));
+
 describe('BranchList Component', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -170,6 +181,23 @@ describe('BranchList Component', () => {
 		// Check for switch buttons (non-current branches should have switch buttons)
 		const switchButtons = screen.container.querySelectorAll('[data-testid="switch-button"]');
 		expect(switchButtons.length).toBe(3); // 3 non-current branches
+	});
+
+	test('passes diff stats to branch cards for non-current branches only', async () => {
+		const screen = renderWithTestWrapper(BranchList, {
+			repositoryID: 'repo1',
+			repositoryPath: '/test/repo/path'
+		});
+
+		await tick();
+
+		// The mocked diff-stats query returns +3/−1 for enabled (non-current)
+		// branches and undefined for the current branch (query disabled).
+		const diffBadges = screen.container.querySelectorAll('[data-testid="branch-diff-stats"]');
+		expect(diffBadges.length).toBe(3); // 3 non-current branches
+
+		const currentCard = screen.container.querySelector('#branch-current-branch-container');
+		expect(currentCard?.querySelector('[data-testid="branch-diff-stats"]')).toBeNull();
 	});
 
 	test('pagination controls are rendered correctly with many branches', async () => {

@@ -21,6 +21,7 @@
 	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import { createSwitchBranchMutation } from '$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation';
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
+	import { createBranchDiffStatsQuery } from '$domains/branch-management/infrastructure/queries/create-branch-diff-stats-query';
 	import { createBranchMergeStatusQuery } from '$domains/branch-management/infrastructure/queries/create-branch-merge-status-query';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import {
@@ -196,6 +197,17 @@
 						enabled: !!repositoryPath && !branch.isCurrent()
 					}
 				)}
+				{@const diffStatsQuery = createBranchDiffStatsQuery(
+					{
+						path: repositoryPath ?? '',
+						branchName: branch.getName()
+					},
+					{
+						// Deleted branches can't be diffed (their ref is gone) and the
+						// current branch diffs against itself — skip both.
+						enabled: !!repositoryPath && !branch.isCurrent() && !isRestoreView
+					}
+				)}
 				{@const alerts = getBranchAlerts(
 					branch,
 					branch.getIsSelected() ?? false,
@@ -290,6 +302,7 @@
 					>
 						<BranchCard
 							{branch}
+							diffStats={diffStatsQuery.data}
 							selected={branch.getIsSelected()}
 							locked={branch.getIsLocked() && !branch.isCurrent()}
 							colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}

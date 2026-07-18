@@ -241,6 +241,26 @@ async getBranchMergeStatus(input: GetBranchMergeStatusInput) : Promise<Result<Ge
 }
 },
 /**
+ * Gets the line-level diff stats of a branch in a git repository: lines
+ * added/removed relative to the branch's merge-base with HEAD.
+ * 
+ * # Arguments
+ * 
+ * * `input` - Input parameters containing path and branch name
+ * 
+ * # Returns
+ * 
+ * * `Result<GetBranchDiffStatsOutput, AppError>` - The diff stats or an error
+ */
+async getBranchDiffStats(input: GetBranchDiffStatsInput) : Promise<Result<GetBranchDiffStatsOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_branch_diff_stats", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Creates a restoration of a deleted branch in a git repository.
  * 
  * # Arguments
@@ -845,6 +865,8 @@ path: string;
  * Folder name, used as the default display name.
  */
 name: string }
+export type GetBranchDiffStatsInput = { path: string; branchName: string }
+export type GetBranchDiffStatsOutput = { linesAdded: number; linesRemoved: number }
 export type GetBranchListInput = { repoId: string; filters?: BranchFilters }
 export type GetBranchListOutput = { branches: Branch[] }
 export type GetBranchMergeStatusInput = { path: string; branchName: string }

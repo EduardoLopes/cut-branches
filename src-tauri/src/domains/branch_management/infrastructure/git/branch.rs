@@ -223,6 +223,58 @@ pub fn check_branch_merge_status(path: &Path, branch_name: &str) -> Result<bool,
     is_branch_merged(&repo, branch_name)
 }
 
+/// Line-level diff stats of a branch relative to its merge-base with HEAD:
+/// how many lines the branch adds and removes on top of the current branch.
+/// Returns `(lines_added, lines_removed)`. A branch pointing at HEAD (or an
+/// ancestor of it) yields `(0, 0)`.
+pub fn get_branch_diff_stats(path: &Path, branch_name: &str) -> Result<(usize, usize), AppError> {
+    let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
+        path: path.display().to_string(),
+        source: e,
+    })?;
+
+    let head_commit = repo
+        .head()
+        .map_err(|e| BranchError::HeadNotFound { source: e })?
+        .peel_to_commit()
+        .map_err(|e| BranchError::HeadCommitFailed { source: e })?;
+
+    let branch = repo
+        .find_branch(branch_name, BranchType::Local)
+        .map_err(|e| BranchError::FindBranchFailed {
+            name: branch_name.to_string(),
+            source: e,
+        })?;
+
+    let branch_commit = branch
+        .get()
+        .peel_to_commit()
+        .map_err(|e| BranchError::BranchCommitFailed { source: e })?;
+
+    let diff_err = |source| BranchError::DiffStatsFailed {
+        name: branch_name.to_string(),
+        source,
+    };
+
+    // Diff from the merge-base so only the branch's own work counts — commits
+    // HEAD gained since the branch diverged don't show up as removals.
+    let base_oid = repo
+        .merge_base(head_commit.id(), branch_commit.id())
+        .map_err(diff_err)?;
+    let base_tree = repo
+        .find_commit(base_oid)
+        .and_then(|c| c.tree())
+        .map_err(diff_err)?;
+    let branch_tree = branch_commit.tree().map_err(diff_err)?;
+
+    let diff = repo
+        .diff_tree_to_tree(Some(&base_tree), Some(&branch_tree), None)
+        .map_err(diff_err)?;
+    let stats = diff.stats().map_err(diff_err)?;
+
+    Ok((stats.insertions(), stats.deletions()))
+}
+
 pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
     let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
         path: path.display().to_string(),
@@ -1496,6 +1548,96 @@ mod tests {
                 "Unexpected error message: {}",
                 e.message
             );
+            assert_eq!(e.kind, "repository_open_failed");
+        }
+    }
+
+    #[test]
+    fn test_get_branch_diff_stats() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        let output = Command::new("git")
+            .args(["branch", "--show-current"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let current_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        // A branch pointing at HEAD has no unique changes.
+        Command::new("git")
+            .args(["branch", "diff-noop-branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let stats = get_branch_diff_stats(path, "diff-noop-branch").unwrap();
+        assert_eq!(stats, (0, 0), "Branch at HEAD should diff to (0, 0)");
+
+        // The current branch diffs against itself.
+        let stats = get_branch_diff_stats(path, &current_branch).unwrap();
+        assert_eq!(stats, (0, 0), "Current branch should diff to (0, 0)");
+
+        // A branch with its own commit: rewrite test.txt (1 line removed,
+        // 3 added) and add extra.txt (2 added) → (5, 1).
+        Command::new("git")
+            .args(["checkout", "-b", "diff-stats-branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        std::fs::write(path.join("test.txt"), "line one\nline two\nline three\n").unwrap();
+        std::fs::write(path.join("extra.txt"), "alpha\nbeta\n").unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "Diff stats commit"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["checkout", &current_branch])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let stats = get_branch_diff_stats(path, "diff-stats-branch").unwrap();
+        assert_eq!(stats, (5, 1), "Expected (+5, -1) for the feature branch");
+
+        // Commits HEAD gains after divergence must not count as removals: the
+        // diff is taken from the merge-base, not from HEAD's tip.
+        std::fs::write(path.join("head-only.txt"), "head only\n").unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "HEAD moves on"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let stats = get_branch_diff_stats(path, "diff-stats-branch").unwrap();
+        assert_eq!(
+            stats,
+            (5, 1),
+            "HEAD-side commits should not affect the branch's diff stats"
+        );
+
+        // Non-existent branch surfaces the domain error.
+        let result = get_branch_diff_stats(path, "non-existent-branch");
+        assert!(result.is_err(), "Expected error for non-existent branch");
+        if let Err(e) = result {
+            assert_eq!(e.kind, "branch_not_found");
+        }
+
+        // Invalid path surfaces the repository-open error.
+        let result = get_branch_diff_stats(Path::new("/non/existent/path"), &current_branch);
+        assert!(result.is_err(), "Expected error for invalid path");
+        if let Err(e) = result {
             assert_eq!(e.kind, "repository_open_failed");
         }
     }

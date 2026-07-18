@@ -27,6 +27,13 @@
 		 *  prop defaults to off) — but contexts that already convey the remote
 		 *  ref can opt out. */
 		showUpstream?: boolean;
+		/** Line-level diff of the branch against its merge-base with HEAD,
+		 *  rendered as +added/−removed badges in the footer. Fetched by the
+		 *  consumer (it's live git data, not a branch attribute) and omitted
+		 *  while loading, on error, or for branches where it's meaningless
+		 *  (current, deleted). A 0/0 diff renders nothing — "no unique
+		 *  changes" is already conveyed by the merged state. */
+		diffStats?: { linesAdded: number; linesRemoved: number };
 		selected?: boolean;
 		locked?: boolean;
 		disabled?: boolean;
@@ -54,6 +61,7 @@
 		branch,
 		compact = false,
 		showUpstream = true,
+		diffStats,
 		selected = false,
 		locked = false,
 		disabled = false,
@@ -112,9 +120,13 @@
 	const badgeSize = $derived(compact ? 'xs' : 'sm');
 	const metaFont = $derived(compact ? 'xs' : 'sm');
 
-	// The footer hosts the upstream badge (leading) and the deleted-at meta
-	// (trailing); it only renders when at least one of them is present.
+	// The footer hosts the upstream badge (leading) and the diff-stat badges
+	// plus deleted-at meta (trailing); it only renders when at least one of
+	// them is present.
 	const upstreamShown = $derived(Boolean(showUpstream && branch.getUpstream()));
+	const diffShown = $derived(
+		Boolean(diffStats && (diffStats.linesAdded > 0 || diffStats.linesRemoved > 0))
+	);
 </script>
 
 {#snippet heading()}
@@ -169,6 +181,42 @@
 				{branch.getUpstream()}
 			</span>
 		</Badge>
+	</span>
+{/snippet}
+
+<!-- Trailing footer meta: the diff badges and (when applicable) the deleted-at
+     info share the footer's right edge; the upstream badge keeps the left. -->
+{#snippet footerTrailing()}
+	<span class={css({ display: 'flex', alignItems: 'center', gap: 'xs', flexWrap: 'wrap' })}>
+		{#if diffShown}
+			{@const added = diffStats!.linesAdded}
+			{@const removed = diffStats!.linesRemoved}
+			<span
+				class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}
+				title={`${added} line${added === 1 ? '' : 's'} added, ${removed} line${removed === 1 ? '' : 's'} removed vs current branch`}
+				data-testid="branch-diff-stats"
+			>
+				<Badge
+					size={badgeSize}
+					emphasis="secondary"
+					feedback="success"
+					data-testid="branch-diff-added"
+				>
+					+{added}
+				</Badge>
+				<Badge
+					size={badgeSize}
+					emphasis="secondary"
+					feedback="danger"
+					data-testid="branch-diff-removed"
+				>
+					−{removed}
+				</Badge>
+			</span>
+		{/if}
+		{#if branch.getDeletedAt()}
+			{@render deletedAtInfo()}
+		{/if}
 	</span>
 {/snippet}
 
@@ -287,11 +335,12 @@
 		background: 'surface.soft',
 		...(compact ? { headingTextStyle: 'body.sm' } : {})
 	}}
-	footer={upstreamShown || branch.getDeletedAt()
+	footer={upstreamShown || diffShown || branch.getDeletedAt()
 		? {
-				...(upstreamShown ? { children: footerMeta, background: 'surface.step.3' } : {}),
-				...(branch.getDeletedAt()
-					? { trailing: deletedAtInfo as PrimitiveCardFooterProps['trailing'] }
+				...(diffShown || upstreamShown ? { background: 'surface.step.3' } : {}),
+				...(upstreamShown ? { children: footerMeta } : {}),
+				...(diffShown || branch.getDeletedAt()
+					? { trailing: footerTrailing as PrimitiveCardFooterProps['trailing'] }
 					: {})
 			}
 		: undefined}
