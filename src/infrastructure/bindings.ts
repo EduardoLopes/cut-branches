@@ -339,6 +339,42 @@ async listBranchComparison(input: ListBranchComparisonInput) : Promise<Result<Li
 }
 },
 /**
+ * Lists every file changed by a branch (vs merge-base with HEAD) or a
+ * commit (vs its first parent), with per-file line stats.
+ */
+async listChangedFiles(input: ListChangedFilesInput) : Promise<Result<ListChangedFilesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_changed_files", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The full textual diff (hunks with old/new line numbers) of one file
+ * changed by the target.
+ */
+async getFileDiff(input: GetFileDiffInput) : Promise<Result<GetFileDiffOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_diff", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Reads a line range of a file as it exists on the diff's target side —
+ * used by the diff view to expand the hidden context between hunks.
+ */
+async getFileLines(input: GetFileLinesInput) : Promise<Result<GetFileLinesOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_file_lines", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Lists all selected branches for a repository (active branches only).
  * 
  * # Arguments
@@ -706,6 +742,18 @@ lockStatus?: LockStatusFilter;
 includeCurrent?: boolean }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
+/**
+ * One entry in the changed-files list.
+ */
+export type ChangedFile = { 
+/**
+ * Path in the target tree (old path for deleted files).
+ */
+path: string; 
+/**
+ * Previous path, present only for renames.
+ */
+oldPath: string | null; status: FileChangeStatus; linesAdded: number; linesRemoved: number; isBinary: boolean }
 export type CleanRepositoryInput = { 
 /**
  * Repository id (used for the audit log).
@@ -825,6 +873,31 @@ export type DeletionStatusFilter =
  * Both active and deleted branches
  */
 "all"
+/**
+ * A contiguous region of change with surrounding context lines.
+ */
+export type DiffHunk = { 
+/**
+ * The `@@ -a,b +c,d @@ …` header as git prints it.
+ */
+header: string; oldStart: number; oldLines: number; newStart: number; newLines: number; lines: DiffLine[] }
+/**
+ * One line inside a hunk. Content excludes the trailing newline and the
+ * leading origin marker.
+ */
+export type DiffLine = { kind: DiffLineKind; content: string; 
+/**
+ * Line number in the base tree; `None` for added lines.
+ */
+oldLineNo: number | null; 
+/**
+ * Line number in the target tree; `None` for removed lines.
+ */
+newLineNo: number | null }
+/**
+ * The role of a single diff line.
+ */
+export type DiffLineKind = "context" | "added" | "removed"
 export type DiscoverRepositoriesInput = { 
 /**
  * Directories to scan. When empty, the user's home directory is scanned.
@@ -865,6 +938,10 @@ path: string;
  * Folder name, used as the default display name.
  */
 name: string }
+/**
+ * What happened to a file between the two trees.
+ */
+export type FileChangeStatus = "added" | "deleted" | "modified" | "renamed"
 export type GetBranchDiffStatsInput = { path: string; branchName: string }
 export type GetBranchDiffStatsOutput = { linesAdded: number; linesRemoved: number }
 export type GetBranchListInput = { repoId: string; filters?: BranchFilters }
@@ -899,6 +976,64 @@ targetIndex: number;
 nextCursor: string | null; totalCount: number }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
+export type GetFileDiffInput = { path: string; 
+/**
+ * See [`ListChangedFilesInput::branch_name`].
+ */
+branchName?: string | null; 
+/**
+ * See [`ListChangedFilesInput::commit_sha`].
+ */
+commitSha?: string | null; 
+/**
+ * Path of the file in the target tree (as returned by `list_changed_files`).
+ */
+filePath: string; 
+/**
+ * Rename source path — pass `ChangedFile.old_path` through so rename
+ * detection can pair both sides.
+ */
+oldPath?: string | null }
+export type GetFileDiffOutput = { path: string; oldPath: string | null; status: FileChangeStatus; 
+/**
+ * Binary files carry no hunks.
+ */
+isBinary: boolean; 
+/**
+ * True when the diff exceeded the per-file line cap and was cut short.
+ */
+truncated: boolean; hunks: DiffHunk[] }
+export type GetFileLinesInput = { path: string; 
+/**
+ * See [`ListChangedFilesInput::branch_name`].
+ */
+branchName?: string | null; 
+/**
+ * See [`ListChangedFilesInput::commit_sha`].
+ */
+commitSha?: string | null; 
+/**
+ * Path of the file on the diff's target side.
+ */
+filePath: string; 
+/**
+ * First line of the range, 1-based inclusive.
+ */
+startLine: number; 
+/**
+ * Last line of the range, inclusive. `0` means "through end of file".
+ */
+endLine: number }
+export type GetFileLinesOutput = { 
+/**
+ * The requested lines (trailing newlines stripped). Empty for binary
+ * files or ranges past the end of the file.
+ */
+lines: string[]; 
+/**
+ * Total number of lines in the file on the target side.
+ */
+totalLines: number }
 export type GetRepositoryInput = { id: string }
 export type GetRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string; lastSyncedAt: string | null; 
 /**
@@ -941,6 +1076,30 @@ branchNames: string[] }
 export type ListBranchComparisonOutput = { baseName: string; baseSha: string; branches: BranchComparison[] }
 export type ListBranchSelectionInput = { repoId: string }
 export type ListBranchSelectionOutput = { branches: string[] }
+export type ListChangedFilesInput = { 
+/**
+ * Filesystem path to the repository (frontend resolves this from the repo id).
+ */
+path: string; 
+/**
+ * Diff a branch against its merge-base with HEAD. Mutually exclusive
+ * with `commit_sha`.
+ */
+branchName?: string | null; 
+/**
+ * Diff a commit against its first parent. Mutually exclusive with
+ * `branch_name`.
+ */
+commitSha?: string | null }
+export type ListChangedFilesOutput = { files: ChangedFile[]; 
+/**
+ * Sum of per-file added lines.
+ */
+linesAdded: number; 
+/**
+ * Sum of per-file removed lines.
+ */
+linesRemoved: number }
 export type ListCommitHistoryInput = { 
 /**
  * Filesystem path to the repository (frontend resolves this from the repo id).

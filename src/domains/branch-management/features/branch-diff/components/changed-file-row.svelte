@@ -1,0 +1,206 @@
+<script lang="ts">
+	// One changed file in the diff view: a card header carrying the file's
+	// identity (status badge, path, rename source) and its +/− line stats,
+	// with a disclosure toggle that expands the actual diff inline. The diff
+	// itself is fetched lazily by the panel — collapsed rows cost nothing.
+	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
+	import Button from '@pindoba/svelte-button';
+	import Card from '@pindoba/svelte-card';
+	import Stamp from '@pindoba/svelte-stamp';
+	import FileDiffPanel from './file-diff-panel.svelte';
+	import type { ChangedFile, FileChangeStatus } from '$infrastructure/bindings';
+	import { buildMarkedRuns } from '$ui/patterns/diff-viewer/line-marks';
+	import { css } from '@pindoba/styled-system/css';
+
+	interface Props {
+		/** Filesystem path of the repository. */
+		repositoryPath: string;
+		/** Diff target — exactly one of the two is set. */
+		branchName?: string | null;
+		commitSha?: string | null;
+		file: ChangedFile;
+		/** Start expanded (e.g. single-file diffs). */
+		defaultExpanded?: boolean;
+		/** Active search term — matching parts of the file name (and, in the
+		 *  panel, of the code) render with a mark wash. */
+		searchTerm?: string;
+		/** True when the search term was found inside this file's DIFF content
+		 *  — the row opens itself so the match is visible. */
+		searchMatched?: boolean;
+	}
+
+	let {
+		repositoryPath,
+		branchName = null,
+		commitSha = null,
+		file,
+		defaultExpanded = false,
+		searchTerm = '',
+		searchMatched = false
+	}: Props = $props();
+
+	let expanded = $state(defaultExpanded);
+
+	// A content match opens the row so the hit is visible; the user can still
+	// collapse it manually afterwards (the effect only reacts to changes of
+	// the match signal, not to the collapse).
+	$effect(() => {
+		if (searchMatched) {
+			expanded = true;
+		}
+	});
+
+	const pathRuns = $derived(buildMarkedRuns(file.path, null, searchTerm));
+
+	const STATUS_FEEDBACK: Record<FileChangeStatus, 'success' | 'danger' | 'primary' | 'warning'> = {
+		added: 'success',
+		deleted: 'danger',
+		modified: 'primary',
+		renamed: 'warning'
+	};
+	const STATUS_ICON: Record<FileChangeStatus, string> = {
+		added: 'lucide:file-plus',
+		deleted: 'lucide:file-minus',
+		modified: 'lucide:file-pen',
+		renamed: 'lucide:file-symlink'
+	};
+
+	const pathText = css({
+		fontFamily: 'mono',
+		fontSize: 'sm',
+		minWidth: '0',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+		whiteSpace: 'nowrap',
+		direction: 'rtl',
+		textAlign: 'left'
+	});
+	const oldPathText = css({
+		fontFamily: 'mono',
+		fontSize: 'xs',
+		color: 'neutral.text.muted',
+		minWidth: '0',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+		whiteSpace: 'nowrap'
+	});
+	const markedText = css({
+		background: 'warning.text.accent/30',
+		borderRadius: '2px'
+	});
+</script>
+
+{#snippet heading()}
+	<span
+		class={css({
+			display: 'flex',
+			alignItems: 'center',
+			gap: 'xs',
+			minWidth: '0',
+			width: '100%'
+		})}
+	>
+		<span class={css({ flexShrink: '0', display: 'inline-flex' })}>
+			<Badge
+				size="xs"
+				emphasis="secondary"
+				feedback={STATUS_FEEDBACK[file.status]}
+				data-testid="changed-file-status"
+			>
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon={STATUS_ICON[file.status]} /></Stamp>
+				{/snippet}
+				{file.status}
+			</Badge>
+		</span>
+		<!-- RTL trick: long paths ellipsize at the START so the file name (the
+		     part that identifies the change) stays visible. The full path stays
+		     available via the title. -->
+		<span class={pathText} title={file.path} data-testid="changed-file-path">
+			&lrm;{#each pathRuns as run, runIndex (runIndex)}<span
+					class={run.marked ? markedText : undefined}
+					data-marked={run.marked ? 'true' : undefined}>{run.content}</span
+				>{/each}
+		</span>
+		{#if file.oldPath}
+			<span class={oldPathText} title={`Renamed from ${file.oldPath}`}>
+				← {file.oldPath}
+			</span>
+		{/if}
+	</span>
+{/snippet}
+
+{#snippet headingTrailing()}
+	<span class={css({ display: 'flex', alignItems: 'center', gap: 'xs', flexShrink: '0' })}>
+		{#if file.isBinary}
+			<Badge size="xs" emphasis="secondary" feedback="neutral" data-testid="changed-file-binary">
+				binary
+			</Badge>
+		{:else}
+			<Badge size="xs" emphasis="secondary" feedback="success" data-testid="changed-file-added">
+				+{file.linesAdded}
+			</Badge>
+			<Badge size="xs" emphasis="secondary" feedback="danger" data-testid="changed-file-removed">
+				−{file.linesRemoved}
+			</Badge>
+		{/if}
+		<Button
+			emphasis="ghost"
+			size="xs"
+			shape="square"
+			onclick={() => (expanded = !expanded)}
+			aria-expanded={expanded}
+			aria-label={expanded ? `Hide diff of ${file.path}` : `Show diff of ${file.path}`}
+			title={expanded ? 'Hide diff' : 'Show diff'}
+			data-testid="toggle-file-diff"
+		>
+			<span
+				class={css({
+					display: 'inline-flex',
+					pindobaTransition: 'fast',
+					transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)'
+				})}
+			>
+				<Stamp emphasis="ghost" border="none" background="transparent">
+					<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+				</Stamp>
+			</span>
+		</Button>
+	</span>
+{/snippet}
+
+{#snippet diffBody()}
+	<!-- Constrain the panel to the card's content width so its hunks scroll
+	     horizontally in place instead of widening the card/page. -->
+	<div class={css({ minWidth: '0', maxWidth: '100%', overflow: 'hidden' })}>
+		<FileDiffPanel {repositoryPath} {branchName} {commitSha} {file} {searchTerm} />
+	</div>
+{/snippet}
+
+<Card
+	size="xs"
+	background="surface.step.2"
+	border="muted"
+	shadow="none"
+	radius="sm"
+	data-testid="changed-file-row"
+	header={{
+		heading: { content: heading, trailing: headingTrailing },
+		headingTextStyle: 'body.sm',
+		layout: { heading: { trailing: 'apart' } },
+		background: 'surface.soft',
+		// Let the path shrink/ellipsize instead of overflowing: every Banner
+		// wrapper needs min-width: 0, and the trailing badges keep their size.
+		passThrough: {
+			root: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			heading: { style: css.raw({ flex: '1', minWidth: '0', overflow: 'hidden' }) },
+			headingTrailing: { style: css.raw({ flexShrink: '0' }) }
+		}
+	}}
+	children={expanded ? diffBody : undefined}
+/>

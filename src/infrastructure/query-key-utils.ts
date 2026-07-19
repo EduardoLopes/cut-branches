@@ -50,33 +50,46 @@ export function extractResource(commandName: CommandName): string {
 const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	// Branch mutations change refs, so the commit-history walk, its windows,
 	// and the ahead/behind comparisons all go stale alongside the branch list.
+	// Diff queries (changed files / file diffs) are keyed to a branch or
+	// commit whose content shifts whenever refs move, so every ref-changing
+	// mutation stales them alongside the history walk. `updateCurrentBranch`
+	// additionally moves HEAD, which is the merge-base baseline for every
+	// branch diff.
 	updateCurrentBranch: [
 		'getRepository',
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
-		'listBranchComparison'
+		'listBranchComparison',
+		'listChangedFiles',
+		'getFileDiff'
 	],
 	createBranchRestoration: [
 		'getRepository',
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
-		'listBranchComparison'
+		'listBranchComparison',
+		'listChangedFiles',
+		'getFileDiff'
 	],
 	batchCreateBranchRestorations: [
 		'getRepository',
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
-		'listBranchComparison'
+		'listBranchComparison',
+		'listChangedFiles',
+		'getFileDiff'
 	],
 	batchDeleteBranches: [
 		'getRepository',
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
-		'listBranchComparison'
+		'listBranchComparison',
+		'listChangedFiles',
+		'getFileDiff'
 	],
 	updateBranchSelectionBatch: ['getBranchList'],
 	setBranchSelectionAll: ['getBranchList'],
@@ -96,7 +109,9 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getCommitReachability',
 		'listBranchSelection',
 		'listDeletedBranchSelection',
-		'listLockedBranches'
+		'listLockedBranches',
+		'listChangedFiles',
+		'getFileDiff'
 	]
 };
 
@@ -168,6 +183,13 @@ export function matchesRepositoryChange(
 		resource === 'branch-comparison'
 	) {
 		return hasRepoId(input) && input.repoId === repositoryId;
+	}
+	// Diff queries key only the wire input (a filesystem path, no repoId), so
+	// they can't be matched to the changed repository. Over-invalidate: an
+	// on-disk change anywhere stales every diff — refetches only run for
+	// queries a mounted diff view is actually observing.
+	if (resource === 'changed-files' || resource === 'file-diff') {
+		return true;
 	}
 	return false;
 }
