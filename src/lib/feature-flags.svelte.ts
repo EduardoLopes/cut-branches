@@ -53,6 +53,14 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		icon: 'lucide:trees'
 	},
 	{
+		key: 'branch-diff',
+		label: 'Branch & commit diffs',
+		description:
+			'Review the changes of a branch or commit — a changed-files list with expandable, syntax-highlighted diffs. Adds diff deep-links to branch cards and history rows.',
+		defaultEnabled: false,
+		icon: 'lucide:file-diff'
+	},
+	{
 		key: 'commit-history',
 		label: 'Commit history',
 		description:

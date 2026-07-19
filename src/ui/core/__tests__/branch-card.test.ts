@@ -313,6 +313,25 @@ describe('BranchCard Component', () => {
 		expect(card).toHaveAttribute('title', customTitle);
 	});
 
+	test('renders the diff deep-link in the footer when a diffHref is provided', () => {
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			diffHref: '/repos/1/diff?branch=feature%2Fnew-feature'
+		});
+
+		const link = getByTestId('branch-diff-link');
+		expect(link).toBeInTheDocument();
+		expect(link.element().getAttribute('href')).toBe('/repos/1/diff?branch=feature%2Fnew-feature');
+	});
+
+	test('does not render the diff deep-link without a diffHref', () => {
+		const { getByTestId } = renderWithTestWrapper(BranchCard, {
+			branch: mockBranch
+		});
+
+		expect(getByTestId('branch-diff-link')).not.toBeInTheDocument();
+	});
+
 	test('renders branch card without children when not provided', () => {
 		const { getByTestId } = renderWithTestWrapper(BranchCard, {
 			branch: mockBranch

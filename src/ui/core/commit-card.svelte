@@ -2,7 +2,10 @@
 	import Icon from '@iconify/svelte';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
-	import Card, { type PrimitiveCardProps } from '@pindoba/svelte-card';
+	import Card, {
+		type PrimitiveCardFooterProps,
+		type PrimitiveCardProps
+	} from '@pindoba/svelte-card';
 	import Popover from '@pindoba/svelte-popover';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
@@ -41,6 +44,11 @@
 		 *  branch icon flanking the commit message. Kept generic: the URL is the
 		 *  cross-domain channel, this component knows nothing about who serves it. */
 		historyHref?: string;
+		/** Optional deep-link into a diff view for this commit; rendered as a
+		 *  file-diff icon pinned to the footer's right edge (the same spot the
+		 *  branch card shows its diff button). Same contract as `historyHref`:
+		 *  pre-resolved URL, no route knowledge. */
+		diffHref?: string;
 		/** Optional hover/focus preview content (e.g. a mini graph around this
 		 *  commit), shown in a non-modal popover anchored to the branch icon.
 		 *  Only rendered when `historyHref` is also provided (the icon is the
@@ -64,6 +72,7 @@
 		upstream,
 		showUpstream = false,
 		historyHref,
+		diffHref,
 		hoverPreview,
 		size = 'sm',
 		background = 'surface.step.1',
@@ -86,6 +95,11 @@
 	// hovering — the card spans the page, so a card-anchored popover would land
 	// at the far edge, away from the icon.
 	let previewTriggerEl = $state<HTMLElement | null>(null);
+
+	// The flanking icon links (history, diff) follow the card's density so
+	// compact rows get compact controls.
+	const linkStampSize = $derived(compact ? 'xs' : 'sm');
+	const linkIconSize = $derived(compact ? '14px' : '18px');
 
 	// Whether this commit carries a description body worth disclosing.
 	const hasBody = $derived(commit.getMessageBody().length > 0);
@@ -116,8 +130,34 @@
 		title="View in commit history"
 		data-testid="commit-history-link"
 	>
-		<Stamp emphasis="ghost" border="muted" size="sm" background="transparent">
-			<Icon icon="lucide:git-branch" width="18px" height="18px" />
+		<Stamp emphasis="ghost" border="muted" size={linkStampSize} background="transparent">
+			<Icon icon="lucide:git-branch" width={linkIconSize} height={linkIconSize} />
+		</Stamp>
+	</a>
+	<!-- eslint-enable svelte/no-navigation-without-resolve -->
+{/snippet}
+
+<!-- File-diff icon pinned to the footer's right edge — the same spot the
+     branch card puts its diff button, so the control is always in the same
+     place. Deep-links into a diff view of this commit; same pre-resolved-URL
+     contract as the history link. -->
+{#snippet diffLink()}
+	<!-- eslint-disable svelte/no-navigation-without-resolve -->
+	<a
+		href={diffHref}
+		class={css({
+			display: 'flex',
+			alignItems: 'center',
+			color: 'neutral.text.muted',
+			pindobaTransition: 'fast',
+			_hover: { color: 'accent.text' }
+		})}
+		aria-label="View commit diff"
+		title="View commit diff"
+		data-testid="commit-diff-link"
+	>
+		<Stamp emphasis="ghost" border="muted" size={linkStampSize} background="transparent">
+			<Icon icon="lucide:file-diff" width={linkIconSize} height={linkIconSize} />
 		</Stamp>
 	</a>
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -362,7 +402,16 @@
 		// line rather than floating to the vertical center of a multi-line body.
 	}}
 	children={hasBody && bodyExpanded ? messageBody : undefined}
-	footer={{ children: footerMeta, background: 'surface.step.2' }}
+	footer={{
+		children: footerMeta,
+		// The diff button lives in the footer's trailing slot so it hugs the
+		// right edge — same position as on the branch card.
+		...(diffHref ? { trailing: diffLink as PrimitiveCardFooterProps['trailing'] } : {}),
+		background: 'surface.step.2',
+		passThrough: {
+			trailing: { style: css.raw({ flexShrink: '0' }) }
+		}
+	}}
 />
 
 {#if hoverPreview && historyHref}

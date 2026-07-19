@@ -41,7 +41,12 @@
 	<div
 		class={css({
 			display: 'grid',
-			gridTemplateColumns: 'max-content auto',
+			// The main column is minmax(0,1fr), not `auto`: an auto track's minimum
+			// is its content's max-content size, so one wide unwrappable line (e.g.
+			// a diff hunk) would blow the column past the viewport and defeat every
+			// inner horizontal scrollbar. minmax(0,1fr) fills the remaining space
+			// but lets content overflow-scroll inside it.
+			gridTemplateColumns: 'max-content minmax(0, 1fr)',
 			// Bound the single row to the container height (minmax(0,1fr) instead of
 			// the default `auto`, which would grow to fit content) so the sidebar and
 			// main column can scroll internally rather than stretching the page.

@@ -70,6 +70,8 @@
 	const isRestoreView = $derived(page.url.pathname.includes('restore'));
 	// Commit history (view, deep-link, hover preview) is gated behind a flag.
 	const historyEnabled = $derived(isFeatureEnabled('commit-history'));
+	// Diff review view (per-branch changed-files deep-link) has its own flag.
+	const diffEnabled = $derived(isFeatureEnabled('branch-diff'));
 
 	// Warm the preview's cache entry on hover so the popover usually opens
 	// with data already there. Debounced so quick mouse travel costs nothing.
@@ -314,6 +316,12 @@
 							{variant}
 							commitHistoryHref={historyEnabled && !isRestoreView && repositoryID
 								? `${resolve(`/repos/${repositoryID}/history`)}?commit=${branch.getLastCommit().getSha()}`
+								: undefined}
+							diffHref={diffEnabled && !isRestoreView && !branch.isCurrent() && repositoryID
+								? `${resolve(`/repos/${repositoryID}/diff`)}?branch=${encodeURIComponent(branch.getName())}`
+								: undefined}
+							commitDiffHref={diffEnabled && !isRestoreView && repositoryID
+								? `${resolve(`/repos/${repositoryID}/diff`)}?commit=${branch.getLastCommit().getSha()}`
 								: undefined}
 							commitHoverPreview={historyEnabled && !isRestoreView && repositoryID && repositoryPath
 								? commitPreview

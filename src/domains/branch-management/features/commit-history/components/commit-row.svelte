@@ -10,6 +10,8 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import BranchGutterCell from './branch-gutter-cell.svelte';
 	import GraphRailCell from './graph-rail-cell.svelte';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import { Commit } from '$domains/branch-management/core/models/commit';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
@@ -17,6 +19,7 @@
 		GraphRow,
 		RunBelow
 	} from '$domains/branch-management/features/commit-history/models/commit-graph';
+	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import CommitCard from '$ui/core/commit-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -67,6 +70,14 @@
 			author: row.commit.author,
 			email: row.commit.email
 		})
+	);
+	// Per-commit deep-link into the diff review view (commit vs its parent),
+	// gated by its own flag. The owning repo id comes from the route — this
+	// component only renders inside `/repos/[id]/history`.
+	const diffHref = $derived(
+		isFeatureEnabled('branch-diff') && page.params.id
+			? `${resolve(`/repos/${page.params.id}/diff`)}?commit=${row.commit.sha}`
+			: undefined
 	);
 	// Remote tracking ref (if the commit is decorated with one), passed as the
 	// card's upstream. The card hides it by default — showing the upstream is
@@ -189,7 +200,13 @@
 <GraphRailCell {row} {laneCount} {size} {railW} {onCenterLane} />
 
 <div class={infoCol}>
-	<CommitCard {commit} {upstream} compact footerBadges={extraRefs.length ? refBadges : undefined} />
+	<CommitCard
+		{commit}
+		{upstream}
+		{diffHref}
+		compact
+		footerBadges={extraRefs.length ? refBadges : undefined}
+	/>
 </div>
 
 {#snippet tagStamp()}

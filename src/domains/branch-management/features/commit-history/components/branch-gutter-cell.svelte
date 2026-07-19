@@ -13,9 +13,12 @@
 	import Badge from '@pindoba/svelte-badge';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Popover from '@pindoba/svelte-popover';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
 	import type { GraphRow } from '$domains/branch-management/features/commit-history/models/commit-graph';
+	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -40,6 +43,17 @@
 		row.commit.refs.filter((r) => r.kind === 'localBranch').map((r) => r.name)
 	);
 	const extra = $derived(names.length - 1);
+
+	// Per-branch deep-link into the diff review view (branch vs merge-base
+	// with HEAD), gated by its own flag. The owning repo id comes from the
+	// route — this component only renders inside `/repos/[id]/history`. The
+	// current branch diffs against itself, so it gets no link.
+	function diffHrefFor(branch: Branch | undefined, name: string): string | undefined {
+		if (!isFeatureEnabled('branch-diff') || !page.params.id || branch?.isCurrent()) {
+			return undefined;
+		}
+		return `${resolve(`/repos/${page.params.id}/diff`)}?branch=${encodeURIComponent(name)}`;
+	}
 
 	// Branch row = [checkbox | compact BranchCard] flex row; the checkbox sits
 	// beside the card, mirroring the branches screen's layout. Start-aligned
@@ -157,6 +171,7 @@
 					selected={isSelected(name)}
 					locked={branch.getIsLocked() && !branch.isCurrent()}
 					title={name}
+					diffHref={diffHrefFor(branch, name)}
 					footerBadges={hasBody ? signalsRow : undefined}
 				/>
 			{:else}

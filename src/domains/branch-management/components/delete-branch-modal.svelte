@@ -7,10 +7,12 @@
 	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { type Branch } from '../core/models/branch';
+	import { resolve } from '$app/paths';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
@@ -156,7 +158,15 @@
 		})}
 	>
 		{#each branches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
-			<BranchCard {branch} selected={true} />
+			<!-- The diff link lets the user review exactly what a branch adds
+			     right before confirming its deletion. -->
+			<BranchCard
+				{branch}
+				selected={true}
+				diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
+					? `${resolve(`/repos/${id}/diff`)}?branch=${encodeURIComponent(branch.getName())}`
+					: undefined}
+			/>
 		{/each}
 	</Panel>
 

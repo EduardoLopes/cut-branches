@@ -55,6 +55,14 @@
 		variant?: 'default' | 'inverted';
 		/** Forwarded to the embedded CommitCard: deep-link into a history view. */
 		commitHistoryHref?: string;
+		/** Forwarded to the embedded CommitCard: deep-link into a diff view of
+		 *  the last commit (vs its parent). */
+		commitDiffHref?: string;
+		/** Deep-link into a diff view of this branch (its changes vs the current
+		 *  branch); rendered as a file-diff icon link in the footer, beside the
+		 *  diff-stat badges. Pre-resolved by the consumer — this generic card
+		 *  knows nothing about the app's route table. */
+		diffHref?: string;
 		/** Forwarded to the embedded CommitCard: hover/focus preview content. */
 		commitHoverPreview?: Snippet;
 		/** Card surface props, forwarded to the underlying pindoba Card so this
@@ -84,6 +92,8 @@
 		children,
 		variant = 'default',
 		commitHistoryHref,
+		commitDiffHref,
+		diffHref,
 		commitHoverPreview,
 		size,
 		background = 'surface.step.2',
@@ -140,8 +150,8 @@
 	const upstreamShown = $derived(showUpstream);
 	// Data present OR still loading — the loading placeholder claims the same
 	// footprint as the resolved badges, so the footer never appears/reflows
-	// when the async diff lands.
-	const diffShown = $derived(Boolean(diffStats) || diffStatsLoading);
+	// when the async diff lands. The diff deep-link shares the trailing row.
+	const diffShown = $derived(Boolean(diffStats) || diffStatsLoading || Boolean(diffHref));
 
 	// Truncation kit for the footer's upstream badges: the badge shrinks with
 	// the footer instead of overflowing it, and its label ellipsizes.
@@ -312,6 +322,40 @@
 			{@render deletedAtInfo()}
 		{/if}
 		{@render footerBadges?.()}
+		{#if diffHref}
+			<!-- LAST in the trailing row so the diff button always hugs the
+			     card's right edge — same spot on every card, whatever badges
+			     precede it. The href arrives pre-resolved from the composing
+			     domain (this generic card must not know the app's route table). -->
+			<!-- eslint-disable svelte/no-navigation-without-resolve -->
+			<a
+				href={diffHref}
+				class={css({
+					display: 'flex',
+					alignItems: 'center',
+					color: 'neutral.text.muted',
+					pindobaTransition: 'fast',
+					_hover: { color: 'accent.text' }
+				})}
+				aria-label="View branch diff"
+				title="View branch diff"
+				data-testid="branch-diff-link"
+			>
+				<Stamp
+					emphasis="ghost"
+					border="muted"
+					size={compact ? 'xs' : 'sm'}
+					background="transparent"
+				>
+					<Icon
+						icon="lucide:file-diff"
+						width={compact ? '14px' : '16px'}
+						height={compact ? '14px' : '16px'}
+					/>
+				</Stamp>
+			</a>
+			<!-- eslint-enable svelte/no-navigation-without-resolve -->
+		{/if}
 	</span>
 {/snippet}
 
@@ -344,6 +388,7 @@
 		commit={branch.getLastCommit()}
 		{feedback}
 		historyHref={commitHistoryHref}
+		diffHref={commitDiffHref}
 		hoverPreview={commitHoverPreview}
 	/>
 {/snippet}

@@ -79,6 +79,38 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-history-link')).not.toBeInTheDocument();
 	});
 
+	test('renders the diff deep-link when a diffHref is provided', () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit,
+			diffHref: '/repos/1/diff?commit=abc123def456'
+		});
+
+		const link = getByTestId('commit-diff-link');
+		expect(link).toBeInTheDocument();
+		expect(link.element().getAttribute('href')).toBe('/repos/1/diff?commit=abc123def456');
+		// The history link stays absent — the two flanking links are independent.
+		expect(getByTestId('commit-history-link')).not.toBeInTheDocument();
+	});
+
+	test('renders both flanking links when historyHref and diffHref are provided', () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit,
+			historyHref: '/repos/1/history?commit=abc123def456',
+			diffHref: '/repos/1/diff?commit=abc123def456'
+		});
+
+		expect(getByTestId('commit-history-link')).toBeInTheDocument();
+		expect(getByTestId('commit-diff-link')).toBeInTheDocument();
+	});
+
+	test('does not render the diff deep-link without a diffHref', () => {
+		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			commit: mockCommit
+		});
+
+		expect(getByTestId('commit-diff-link')).not.toBeInTheDocument();
+	});
+
 	test('mounts the hover-preview popover when both hoverPreview and historyHref are provided', () => {
 		const hoverPreview = createRawSnippet(() => ({
 			render: () => '<div data-testid="hover-preview">preview</div>'
