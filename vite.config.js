@@ -27,6 +27,7 @@ const buildDate = new Date().toISOString();
 // those tiers must be aliased too — otherwise a locally-aliased component
 // would pull a stale core/styles package from node_modules.
 const PINDOBA_PACKAGES = {
+	'@pindoba/devtools': 'devtools',
 	'@pindoba/core-accordion': 'core/accordion',
 	'@pindoba/core-alert': 'core/alert',
 	'@pindoba/core-attachment': 'core/attachment',

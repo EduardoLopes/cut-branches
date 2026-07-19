@@ -77,6 +77,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@pindoba/devtools": "alpha",
 		"@pindoba/panda": "alpha",
 		"@pindoba/panda-buildinfo": "alpha",
 		"@pindoba/panda-preset": "alpha",

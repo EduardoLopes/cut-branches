@@ -33,6 +33,8 @@
 			"$contracts/*": ["tests/contracts/*"],
 			"@pindoba/styled-system": ["styled-system"],
 			"@pindoba/styled-system/*": ["styled-system/*"],
+			"@pindoba/devtools": ["../pindoba/packages/devtools/dist/index.d.ts"],
+			"@pindoba/devtools/*": ["../pindoba/packages/devtools/dist/*"],
 			"@pindoba/svelte-accordion": ["../pindoba/packages/ui/svelte/accordion/dist/index.d.ts"],
 			"@pindoba/svelte-accordion/*": ["../pindoba/packages/ui/svelte/accordion/dist/*"],
 			"@pindoba/svelte-alert": ["../pindoba/packages/ui/svelte/alert/dist/index.d.ts"],

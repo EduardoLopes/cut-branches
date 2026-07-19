@@ -56,7 +56,18 @@ export default defineConfig({
 		'./src/**/*.{ts,tsx,svelte}',
 		// Only reference the sibling checkout's buildinfo in local mode; in CI /
 		// release the `../pindoba` sibling does not exist.
-		...(useLocalPindoba ? ['../pindoba/packages/panda-buildinfo/dist/panda.buildinfo.json'] : []),
+		...(useLocalPindoba
+			? [
+					'../pindoba/packages/panda-buildinfo/dist/panda.buildinfo.json',
+					// The @pindoba/devtools panel ships its styles as a buildinfo (its
+					// css() classes aren't in our src glob). Panda treats a buildinfo in
+					// `include` as a style source, so listing it emits the panel's CSS in
+					// our single Panda run — otherwise the token editor renders unstyled.
+					// TODO: reference the published `@pindoba/devtools` buildinfo for npm
+					// mode once it ships in the package tarball.
+					'../pindoba/packages/devtools/devtools.buildinfo.json'
+				]
+			: []),
 		pandaBuildInfoPath
 	],
 	exclude: [''],

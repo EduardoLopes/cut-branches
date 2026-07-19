@@ -17,9 +17,11 @@
 
 	interface Props {
 		repositoryListAction?: Snippet<[]>;
+		/** Opens the Pindoba design-token editor mounted in the app shell. */
+		onOpenDevtools?: () => void;
 	}
 
-	const { repositoryListAction }: Props = $props();
+	const { repositoryListAction, onOpenDevtools }: Props = $props();
 
 	const STORAGE_KEY = 'sidebar-collapsed';
 
@@ -68,13 +70,29 @@
 			href: resolve('/settings'),
 			leading: settingsIcon as NavigationItem['leading'],
 			'data-testid': 'sidebar-settings'
-		}
+		},
+		...(onOpenDevtools
+			? [
+					{
+						id: 'theme-editor',
+						label: 'Theme editor',
+						leading: themeEditorIcon as NavigationItem['leading'],
+						onclick: () => onOpenDevtools(),
+						'data-testid': 'sidebar-theme-editor'
+					}
+				]
+			: [])
 	]);
 </script>
 
 {#snippet settingsIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
 		<Icon icon="lucide:settings" />
+	</Stamp>
+{/snippet}
+{#snippet themeEditorIcon()}
+	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
+		<Icon icon="lucide:palette" />
 	</Stamp>
 {/snippet}
 {#snippet cleanupIcon()}

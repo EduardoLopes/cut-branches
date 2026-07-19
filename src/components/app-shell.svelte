@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Devtools } from '@pindoba/devtools';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -10,6 +11,15 @@
 	import { css } from '@pindoba/styled-system/css';
 
 	const queryClient = useQueryClient();
+
+	// Pindoba live design-token editor. Dev-only, like the TanStack Query
+	// devtools in the footer: the `import.meta.env.DEV` guards below become
+	// `false` in production, so the `{#if}` block is dead-code eliminated and the
+	// `@pindoba/devtools` import tree-shakes out of the release bundle. Mounted
+	// once at the shell so it persists across routes while tokens are tweaked;
+	// the built-in floating trigger is suppressed and it's opened from the
+	// sidebar footer (Ctrl/Cmd+K also works).
+	let devtoolsOpen = $state(false);
 
 	interface Props {
 		/** Main content rendered next to the sidebar. */
@@ -55,7 +65,7 @@
 			minHeight: 0
 		})}
 	>
-		<SidebarView>
+		<SidebarView onOpenDevtools={import.meta.env.DEV ? () => (devtoolsOpen = true) : undefined}>
 			{#snippet repositoryListAction()}
 				<AddRepositoryMenu
 					size="sm"
@@ -71,3 +81,7 @@
 		{@render children?.()}
 	</div>
 </div>
+
+{#if import.meta.env.DEV}
+	<Devtools bind:open={devtoolsOpen} hideTrigger />
+{/if}
