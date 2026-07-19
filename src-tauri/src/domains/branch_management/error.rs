@@ -140,6 +140,16 @@ pub enum BranchError {
         source: git2::Error,
     },
 
+    #[error("Failed to compute diff for '{target}': {source}")]
+    DiffFailed {
+        target: String,
+        #[source]
+        source: git2::Error,
+    },
+
+    #[error("File **{path}** is not part of this diff")]
+    DiffFileNotFound { path: String },
+
     #[error("Failed to walk commit history: {source}")]
     RevwalkFailed {
         #[source]
@@ -180,6 +190,8 @@ impl From<BranchError> for AppError {
             BranchError::FindCommitFailed { .. } => "commit_not_found",
             BranchError::CreateBranchFailed { .. } => "create_branch_failed",
             BranchError::DiffStatsFailed { .. } => "diff_stats_failed",
+            BranchError::DiffFailed { .. } => "diff_failed",
+            BranchError::DiffFileNotFound { .. } => "diff_file_not_found",
             BranchError::RevwalkFailed { .. } => "revwalk_failed",
             BranchError::HistoryCursorStale { .. } => "history_cursor_stale",
             BranchError::InvalidHistoryCursor => "invalid_history_cursor",
@@ -202,6 +214,7 @@ impl From<BranchError> for AppError {
             | BranchError::FindCommitFailed { source, .. }
             | BranchError::CreateBranchFailed { source, .. }
             | BranchError::DiffStatsFailed { source, .. }
+            | BranchError::DiffFailed { source, .. }
             | BranchError::RevwalkFailed { source } => Some(source.to_string()),
 
             BranchError::UnableToAccessDir { detail, .. }
@@ -230,6 +243,11 @@ impl From<BranchError> for AppError {
             BranchError::InvalidHistoryCursor => {
                 Some("The pagination cursor is malformed; restart from the first page".to_string())
             }
+
+            BranchError::DiffFileNotFound { path } => Some(format!(
+                "The file '{}' has no changes in the requested diff",
+                path
+            )),
 
             BranchError::InvalidUtf8 | BranchError::NoBranches { .. } => None,
         };
