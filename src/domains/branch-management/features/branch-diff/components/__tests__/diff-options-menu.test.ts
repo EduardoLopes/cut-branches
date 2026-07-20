@@ -86,6 +86,24 @@ describe('DiffOptionsMenu', () => {
 		expect(screen.getByRole('menuitemradio', { name: 'Single column' }).elements()).toHaveLength(0);
 	});
 
+	it('locks wrapping on in split layout, where the viewer enforces it', async () => {
+		const onChange = vi.fn();
+		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+			options: { ...DEFAULT_DIFF_VIEW_OPTIONS, layout: 'split' as const },
+			onChange
+		});
+
+		await openMenu(screen);
+		const wrapItem = screen.getByRole('menuitemcheckbox', { name: 'Wrap lines' });
+		await expect.element(wrapItem).toHaveAttribute('aria-checked', 'true');
+		await expect.element(wrapItem).toHaveAttribute('aria-disabled', 'true');
+
+		// Playwright won't click a disabled row without force — exactly the
+		// point; forcing it verifies the activation guard as well.
+		await wrapItem.click({ force: true });
+		expect(onChange).not.toHaveBeenCalled();
+	});
+
 	it('toggles line wrapping on', async () => {
 		const onChange = vi.fn();
 		const screen = renderWithTestWrapper(DiffOptionsMenu, {

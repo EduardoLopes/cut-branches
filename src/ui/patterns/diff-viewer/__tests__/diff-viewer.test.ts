@@ -110,6 +110,17 @@ describe('DiffViewer', () => {
 		expect(container.querySelector('[data-wrap="true"]')).not.toBeNull();
 	});
 
+	it('always wraps in split layout, even with wrapping off', async () => {
+		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+			hunks: [hunk()],
+			layout: 'split' as const,
+			wrap: false
+		});
+
+		await expect.element(getByText('new line')).toBeInTheDocument();
+		expect(container.querySelector('[data-wrap="true"]')).not.toBeNull();
+	});
+
 	it('pairs removed and added lines side by side in split layout', async () => {
 		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],

@@ -72,13 +72,17 @@
 			);
 		}
 
+		// Split layout always wraps (the viewer enforces it), so the checkbox
+		// shows that state and locks — the stored preference still applies
+		// when the user switches back to unified.
 		items.push(
 			{ type: 'separator', id: 'diff-wrap-separator' },
 			{
 				type: 'checkbox',
 				id: 'diff-wrap',
 				label: 'Wrap lines',
-				checked: options.wrap,
+				checked: options.layout === 'split' || options.wrap,
+				disabled: options.layout === 'split',
 				onCheckedChange: (checked: boolean) => onChange({ wrap: checked })
 			}
 		);

@@ -55,7 +55,9 @@
 		/** One number column or the classic old/new pair (unified layout only —
 		 *  split always shows one number per side). */
 		gutter?: DiffViewerGutter;
-		/** Wrap long lines instead of scrolling horizontally. */
+		/** Wrap long lines instead of scrolling horizontally. Split layout
+		 *  always wraps — half-width columns of code make horizontal
+		 *  scrolling unusable, so the option only applies to unified. */
 		wrap?: boolean;
 		/** Active search term — occurrences inside the code render marked. */
 		searchTerm?: string;
@@ -104,6 +106,10 @@
 	// Big files degrade in steps instead of freezing the UI: past the highlight
 	// budget lines render as plain text synchronously (no tokenize pass, no
 	// plain-then-colored double mount).
+
+	// Split layout enforces wrapping regardless of the `wrap` prop (see the
+	// prop's doc comment).
+	const effectiveWrap = $derived(layout === 'split' || wrap);
 
 	const totalLines = $derived(countDiffLines(hunks, expandedGaps));
 	const highlightEnabled = $derived(language !== null && totalLines <= DIFF_HIGHLIGHT_MAX_LINES);
@@ -337,7 +343,7 @@
 			data-layout={layout}
 			data-variant={variant}
 			data-gutter={gutter}
-			data-wrap={wrap}
+			data-wrap={effectiveWrap}
 		>
 			{#if progressive}
 				<!-- Large diff: render the flat plan, mounting only the first
