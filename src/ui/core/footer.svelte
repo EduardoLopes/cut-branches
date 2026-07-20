@@ -52,6 +52,9 @@
 	});
 </script>
 
+<!-- One continuous bar: the sidebar can collapse, so nothing in the footer
+     aligns to it anymore — the version sits plainly on the left and all the
+     controls (theme mode included) group on the right. -->
 <Panel
 	background="surface.deep"
 	radius="none"
@@ -60,61 +63,27 @@
 		borderTop: '1px solid token(colors.neutral.border.muted)',
 		display: 'flex',
 		flexDirection: 'row',
-		p: 'none',
+		py: 'none',
+		px: '2xs',
+		minHeight: 'calc((token(spacing.sm)) * 2.5)',
 		justifyContent: 'flex-end',
 		alignItems: 'center',
 		gap: 'md'
 	})}
 	data-testid="footer"
 >
-	<Panel
-		background="surface.soft"
-		radius="none"
-		padding="none"
+	<div
 		class={css({
+			fontSize: 'sm',
+			color: 'neutral.text.muted',
 			display: 'flex',
-			flexDirection: 'row',
-			justifyContent: 'center',
-			alignItems: 'center',
-			height: 'calc((token(spacing.sm)) * 2.5)',
-			width: '261px',
-			alignSelf: 'stretch',
-			borderRight: '1px solid token(colors.neutral.border.muted)',
-			p: 'token(spacing.2xs)'
+			flexShrink: '0'
 		})}
-		data-testid="version-container"
+		data-testid="app-version"
 	>
-		<div
-			class={css({
-				fontSize: 'sm',
-				color: 'neutral.text.muted',
-				display: 'flex',
-				width: 'full'
-			})}
-			data-testid="app-version"
-		>
-			<!-- eslint-disable-next-line -->
-			v{__APP_VERSION__}
-		</div>
-		<div class={spacer()}></div>
-		<ThemeModeSelect
-			popoverProps={{ placement: 'top' }}
-			buttonProps={{
-				size: 'xs',
-				passThrough: {
-					root: {
-						style: css.raw({
-							color: 'neutral.text.muted',
-							'& svg': {
-								width: '14px',
-								height: '14px'
-							}
-						})
-					}
-				}
-			}}
-		/>
-	</Panel>
+		<!-- eslint-disable-next-line -->
+		v{__APP_VERSION__}
+	</div>
 	<div class={spacer()}></div>
 	<Panel
 		background="transparent"
@@ -155,6 +124,23 @@
 				{/key}
 			</time>
 		{/if}
+		<ThemeModeSelect
+			popoverProps={{ placement: 'top' }}
+			buttonProps={{
+				size: 'xs',
+				passThrough: {
+					root: {
+						style: css.raw({
+							color: 'neutral.text.muted',
+							'& svg': {
+								width: '14px',
+								height: '14px'
+							}
+						})
+					}
+				}
+			}}
+		/>
 		<Tooltip content="Notifications">
 			{#snippet children(triggerProps)}
 				<Attachment placement="top-end" anchor="corner" shape="rect">
