@@ -11,7 +11,9 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useDiffSearch } from '../application/use-diff-search.svelte';
+	import { useDiffViewOptions } from '../application/use-diff-view-options.svelte';
 	import ChangedFileRow from '../components/changed-file-row.svelte';
+	import DiffOptionsMenu from '../components/diff-options-menu.svelte';
 	import { createListChangedFilesQuery } from '../infrastructure/queries/create-list-changed-files-query';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -44,6 +46,9 @@
 	const shortSha = $derived(commitSha ? commitSha.slice(0, 7) : null);
 	// Expand single-file diffs by default — the list adds nothing there.
 	const autoExpand = $derived(changedFilesQuery.data?.files.length === 1);
+
+	// How diffs are drawn (layout/style/gutter/wrap), persisted across sessions.
+	const viewOptions = useDiffViewOptions();
 
 	// Search filters by file path immediately and by diff content (the code
 	// in the hunks) once the per-file diffs load through the shared cache.
@@ -157,6 +162,9 @@
 				<Badge size="sm" emphasis="secondary" feedback="success">+{summary.linesAdded}</Badge>
 				<Badge size="sm" emphasis="secondary" feedback="danger">−{summary.linesRemoved}</Badge>
 			</span>
+			{#if summary.files.length > 0}
+				<DiffOptionsMenu options={viewOptions.options} onChange={viewOptions.update} />
+			{/if}
 		{/if}
 	</header>
 
@@ -205,6 +213,10 @@
 							defaultExpanded={autoExpand}
 							searchTerm={searchTerm.trim()}
 							searchMatched={search.isContentMatch(file)}
+							layout={viewOptions.options.layout}
+							variant={viewOptions.options.variant}
+							gutter={viewOptions.options.gutter}
+							wrap={viewOptions.options.wrap}
 						/>
 					</div>
 				{/each}

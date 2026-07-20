@@ -50,6 +50,18 @@ describe('ChangedFileRow', () => {
 		expect(container.querySelector('[data-testid="file-diff-panel"]')).toBeNull();
 	});
 
+	it('marks the parts of the path that match the search term', async () => {
+		const { container, getByText } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			searchTerm: 'app'
+		});
+
+		await expect.element(getByText('modified')).toBeInTheDocument();
+		const marked = [...container.querySelectorAll('[data-marked="true"]')];
+		expect(marked).toHaveLength(1);
+		expect(marked[0].textContent).toBe('app');
+	});
+
 	it('shows the rename source for renamed files', async () => {
 		const { getByText } = renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,

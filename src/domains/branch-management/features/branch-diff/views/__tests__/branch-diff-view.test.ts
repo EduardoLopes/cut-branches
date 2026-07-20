@@ -1,3 +1,4 @@
+import { tick } from 'svelte';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import BranchDiffView from '../branch-diff-view.svelte';
 import type { ListChangedFilesOutput } from '$infrastructure/bindings';
@@ -91,6 +92,7 @@ function setQueries({
 
 beforeEach(() => {
 	h.goto.mockClear();
+	localStorage.clear();
 	setQueries();
 });
 
@@ -202,6 +204,49 @@ describe('BranchDiffView', () => {
 			expect(container.querySelectorAll('[data-testid="changed-file-row"]')).toHaveLength(0);
 		});
 		await expect.element(getByText(/No files or code match/)).toBeInTheDocument();
+	});
+
+	it('shows the view options menu when there are changed files', async () => {
+		const { getByTestId } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await expect.element(getByTestId('diff-options-trigger')).toBeInTheDocument();
+	});
+
+	it('hides the view options menu when the diff has no files', async () => {
+		setQueries({
+			changedFiles: {
+				isLoading: false,
+				isError: false,
+				error: null,
+				data: output({ files: [], linesAdded: 0, linesRemoved: 0 })
+			}
+		});
+		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await expect.element(getByText(/No changes to show/)).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="diff-options-trigger"]')).toBeNull();
+	});
+
+	it('persists menu changes into the shared view options', async () => {
+		const screen = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await screen.getByTestId('diff-options-trigger').click();
+		await tick();
+		await screen.getByRole('menuitemradio', { name: 'Split' }).click();
+
+		await vi.waitFor(() => {
+			const stored = JSON.parse(localStorage.getItem('diff-view-options') ?? '{}');
+			expect(stored.layout).toBe('split');
+		});
 	});
 
 	it('auto-expands the diff when there is exactly one changed file', async () => {

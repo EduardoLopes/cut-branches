@@ -11,6 +11,11 @@
 	import FileDiffPanel from './file-diff-panel.svelte';
 	import type { ChangedFile, FileChangeStatus } from '$infrastructure/bindings';
 	import { buildMarkedRuns } from '$ui/patterns/diff-viewer/line-marks';
+	import type {
+		DiffViewerGutter,
+		DiffViewerLayout,
+		DiffViewerVariant
+	} from '$ui/patterns/diff-viewer/types';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -28,6 +33,11 @@
 		/** True when the search term was found inside this file's DIFF content
 		 *  — the row opens itself so the match is visible. */
 		searchMatched?: boolean;
+		/** Diff presentation options, passed through to the panel. */
+		layout?: DiffViewerLayout;
+		variant?: DiffViewerVariant;
+		gutter?: DiffViewerGutter;
+		wrap?: boolean;
 	}
 
 	let {
@@ -37,7 +47,11 @@
 		file,
 		defaultExpanded = false,
 		searchTerm = '',
-		searchMatched = false
+		searchMatched = false,
+		layout = 'unified',
+		variant = 'background',
+		gutter = 'single',
+		wrap = false
 	}: Props = $props();
 
 	let expanded = $state(defaultExpanded);
@@ -173,8 +187,20 @@
 {#snippet diffBody()}
 	<!-- Constrain the panel to the card's content width so its hunks scroll
 	     horizontally in place instead of widening the card/page. -->
-	<div class={css({ minWidth: '0', maxWidth: '100%', overflow: 'hidden' })}>
-		<FileDiffPanel {repositoryPath} {branchName} {commitSha} {file} {searchTerm} />
+	<!-- `clip`, not `hidden`: clipping without becoming a scroll container
+	     WebKit could latch wheel gestures onto (see route-vertical-wheel.ts). -->
+	<div class={css({ minWidth: '0', maxWidth: '100%', overflow: 'clip' })}>
+		<FileDiffPanel
+			{repositoryPath}
+			{branchName}
+			{commitSha}
+			{file}
+			{searchTerm}
+			{layout}
+			{variant}
+			{gutter}
+			{wrap}
+		/>
 	</div>
 {/snippet}
 
