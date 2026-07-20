@@ -48,6 +48,19 @@ describe('DiffViewer', () => {
 		expect(firstCell(lines[2])).toBe('2');
 	});
 
+	it('scrolls horizontally only, letting vertical wheel chain to the page', async () => {
+		const { container } = renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
+
+		const block = container.querySelector('[data-testid="diff-viewer"]') as HTMLElement;
+		const scroll = block.firstElementChild as HTMLElement;
+		const cs = getComputedStyle(scroll);
+		// overflow-y must NOT resolve to a scrolling value: left implicit it would
+		// compute to `auto` (one-axis-scrolls rule) and trap the page's vertical
+		// wheel whenever the pointer is over the diff.
+		expect(cs.overflowX).toBe('auto');
+		expect(cs.overflowY).toBe('hidden');
+	});
+
 	it('renders old/new number pairs in double-gutter mode', async () => {
 		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
@@ -413,6 +426,45 @@ describe('DiffViewer', () => {
 		await getByText('old line').hover();
 
 		await expect.element(getByText('old line')).toBeInTheDocument();
+	});
+
+	it('skips highlighting past the budget and renders plain rows', async () => {
+		const lines: DiffViewerLine[] = Array.from({ length: 1001 }, (_, i) => ({
+			kind: 'context',
+			content: `line ${i}`,
+			oldLineNo: i + 1,
+			newLineNo: i + 1
+		}));
+		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+			hunks: [hunk({ oldLines: 1001, newLines: 1001, lines })],
+			language: 'typescript'
+		});
+
+		await expect.element(getByText('line 0', { exact: true })).toBeInTheDocument();
+		// Over budget: no tokenize pass at all…
+		expect(h.highlightDiffCode).not.toHaveBeenCalled();
+		// …and no per-run spans (bare text nodes keep the mount cheap).
+		expect(container.querySelector('[data-testid="diff-line"] span[role="presentation"]')).toBe(
+			null
+		);
+	});
+
+	it('renders split rows synchronously past the highlight budget', async () => {
+		const lines: DiffViewerLine[] = Array.from({ length: 1001 }, (_, i) => ({
+			kind: 'added',
+			content: `added ${i}`,
+			oldLineNo: null,
+			newLineNo: i + 1
+		}));
+		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+			hunks: [hunk({ oldLines: 0, newLines: 1001, lines })],
+			layout: 'split' as const,
+			language: 'typescript'
+		});
+
+		await expect.element(getByText('added 0', { exact: true })).toBeInTheDocument();
+		expect(h.highlightDiffCode).not.toHaveBeenCalled();
+		expect(container.querySelectorAll('[data-testid="diff-line"]')).toHaveLength(1001);
 	});
 
 	it('fires onTokenHover when the pointer enters a token run', async () => {
