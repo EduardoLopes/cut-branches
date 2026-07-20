@@ -4,6 +4,7 @@
 	// that talks to the backend — the diff query and the hidden-context
 	// expansion (getFileLines) — while the viewer owns all rendering.
 	import Alert from '@pindoba/svelte-alert';
+	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { createGetFileDiffQuery } from '../infrastructure/queries/create-get-file-diff-query';
@@ -12,6 +13,11 @@
 	import { executeCommand } from '$infrastructure/tauri-commands';
 	import type { DiffGap } from '$ui/patterns/diff-viewer/diff-gaps';
 	import DiffViewer from '$ui/patterns/diff-viewer/diff-viewer.svelte';
+	import {
+		countDiffLines,
+		DIFF_HIGHLIGHT_MAX_LINES,
+		DIFF_RENDER_GATE_LINES
+	} from '$ui/patterns/diff-viewer/render-budget';
 	import type {
 		DiffViewerGutter,
 		DiffViewerLayout,
@@ -95,6 +101,14 @@
 		}
 	}
 
+	// --- Large-diff gate -------------------------------------------------------
+	// Huge diffs (see the diff-viewer render budgets) are not mounted unasked:
+	// past the gate the panel shows a message with an explicit "Show diff"
+	// affordance instead. Past the (smaller) highlight budget the viewer
+	// renders plain text, and the panel says so.
+
+	let renderLargeDiff = $state(false);
+
 	const host = css({
 		display: 'flex',
 		flexDirection: 'column',
@@ -129,24 +143,51 @@
 				No content changes{diff.status === 'renamed' ? ' — file was renamed' : ''}.
 			</p>
 		{:else}
-			<DiffViewer
-				hunks={diff.hunks}
-				status={diff.status}
-				{language}
-				{layout}
-				{variant}
-				{gutter}
-				{wrap}
-				{searchTerm}
-				onExpandGap={expandGap}
-				{expandedGaps}
-				{loadingGaps}
-				{gapErrors}
-			/>
-			{#if diff.truncated}
-				<p class={noticeText} data-testid="file-diff-truncated">
-					This diff is very large and was truncated.
-				</p>
+			<!-- The gate counts the diff's own lines only: expanded hidden-context
+			     lines the user asked for must never push an already-rendered diff
+			     back behind the gate. The highlight notice, by contrast, mirrors
+			     the viewer's budget, which does count expanded lines. -->
+			{@const gateLines = countDiffLines(diff.hunks)}
+			{@const totalDiffLines = countDiffLines(diff.hunks, expandedGaps)}
+			{#if gateLines > DIFF_RENDER_GATE_LINES && !renderLargeDiff}
+				<Alert feedback="warning" emphasis="secondary" data-testid="file-diff-large">
+					<span>
+						This file's diff is very large ({gateLines} lines) — rendering it may take a moment.
+					</span>
+					<Button
+						emphasis="secondary"
+						size="xs"
+						onclick={() => (renderLargeDiff = true)}
+						data-testid="file-diff-render-anyway"
+					>
+						Show diff
+					</Button>
+				</Alert>
+			{:else}
+				<DiffViewer
+					hunks={diff.hunks}
+					status={diff.status}
+					{language}
+					{layout}
+					{variant}
+					{gutter}
+					{wrap}
+					{searchTerm}
+					onExpandGap={expandGap}
+					{expandedGaps}
+					{loadingGaps}
+					{gapErrors}
+				/>
+				{#if language !== null && totalDiffLines > DIFF_HIGHLIGHT_MAX_LINES}
+					<p class={noticeText} data-testid="file-diff-plain-text">
+						Syntax highlighting is off for this large diff.
+					</p>
+				{/if}
+				{#if diff.truncated}
+					<p class={noticeText} data-testid="file-diff-truncated">
+						This diff is very large and was truncated.
+					</p>
+				{/if}
 			{/if}
 		{/if}
 	{/if}

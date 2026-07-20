@@ -20,6 +20,13 @@ vi.mock(
 vi.mock('$ui/patterns/diff-viewer/highlighter', () => ({
 	highlightDiffCode: h.highlightDiffCode
 }));
+// Shrink the large-diff budgets so the gate/plain-text tiers are testable
+// with small fixtures (the real thresholds are thousands of lines).
+vi.mock('$ui/patterns/diff-viewer/render-budget', async (importOriginal) => ({
+	...(await importOriginal<typeof import('$ui/patterns/diff-viewer/render-budget')>()),
+	DIFF_HIGHLIGHT_MAX_LINES: 10,
+	DIFF_RENDER_GATE_LINES: 20
+}));
 vi.mock('$infrastructure/tauri-commands', () => ({ executeCommand: h.executeCommand }));
 
 const file = (overrides: Partial<ChangedFile> = {}): ChangedFile => ({
@@ -297,5 +304,84 @@ describe('FileDiffPanel', () => {
 		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText(/truncated/)).toBeInTheDocument();
+	});
+
+	// --- Large-diff tiers (budgets shrunk by the render-budget mock above) ----
+
+	const manyLines = (count: number) =>
+		diff({
+			hunks: [
+				{
+					header: `@@ -1,${count} +1,${count} @@`,
+					oldStart: 1,
+					oldLines: count,
+					newStart: 1,
+					newLines: count,
+					lines: Array.from({ length: count }, (_, i) => ({
+						kind: 'context' as const,
+						content: `line ${i}`,
+						oldLineNo: i + 1,
+						newLineNo: i + 1
+					}))
+				}
+			]
+		});
+
+	it('gates very large diffs behind a message instead of rendering them', async () => {
+		setQuery({ data: manyLines(21) });
+		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+
+		await expect.element(getByText(/very large \(21 lines\)/)).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="diff-viewer"]')).toBeNull();
+	});
+
+	it('never re-gates a rendered diff when expanded context pushes it past the gate', async () => {
+		// 19 hunk lines sit under the (mocked) gate of 20; expanding the tail
+		// adds 2 context lines for a total of 21. The gate counts only the
+		// diff's own lines, so the rendered diff must stay.
+		setQuery({ data: manyLines(19) });
+		const { getByRole, getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+
+		await getByRole('button', { name: 'Expand rest of file' }).click();
+
+		await expect.element(getByText('context a')).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="file-diff-large"]')).toBeNull();
+	});
+
+	it('renders a gated diff on demand, as plain text with a notice', async () => {
+		setQuery({ data: manyLines(21) });
+		const { getByRole, getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+
+		await getByRole('button', { name: 'Show diff' }).click();
+
+		await expect.element(getByText('line 0', { exact: true })).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="file-diff-large"]')).toBeNull();
+		await expect
+			.element(getByText('Syntax highlighting is off for this large diff.'))
+			.toBeInTheDocument();
+		expect(h.highlightDiffCode).not.toHaveBeenCalled();
+	});
+
+	it('skips highlighting (with a notice) for diffs over the highlight budget but under the gate', async () => {
+		setQuery({ data: manyLines(15) });
+		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+
+		await expect.element(getByText('line 0', { exact: true })).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="file-diff-large"]')).toBeNull();
+		await expect
+			.element(getByText('Syntax highlighting is off for this large diff.'))
+			.toBeInTheDocument();
+		expect(h.highlightDiffCode).not.toHaveBeenCalled();
+	});
+
+	it('omits the plain-text notice when the file has no highlight language anyway', async () => {
+		setQuery({ data: manyLines(15) });
+		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, {
+			...defaultProps,
+			file: file({ path: 'LICENSE' })
+		});
+
+		await expect.element(getByText('line 0', { exact: true })).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="file-diff-plain-text"]')).toBeNull();
 	});
 });
