@@ -65,20 +65,18 @@
 		// Ordering is a shared, persisted preference driven from the add-repository
 		// menu (§1.5 cross-domain seam via `$lib`).
 		const repositories = sortRepositories(repositoriesQuery.data, repositorySort.mode);
-		return repositories.map(
-			(repo): NavigationItem => ({
-				id: repo.id,
-				label: repo.name,
-				href: `/repos/${repo.id}`,
-				'data-testid': `repository-${repo.name}-${repo.id}`,
-				leading: repoIcon as NavigationItem['leading'],
-				// In the icon rail the branch-count badge has no room; drop it and let
-				// the Navigation auto-derive a tooltip from `label` instead.
-				trailing: isRail ? undefined : makeBadgeSnippet(repo.name, repo.id, repo.branchesCount),
-				// Prefetch repository data on hover for instant navigation
-				onmouseenter: () => prefetchRepositoryData(repo.id)
-			})
-		) satisfies NavigationItem[];
+		return repositories.map((repo): NavigationItem => ({
+			id: repo.id,
+			label: repo.name,
+			href: `/repos/${repo.id}`,
+			'data-testid': `repository-${repo.name}-${repo.id}`,
+			leading: repoIcon as NavigationItem['leading'],
+			// In the icon rail the branch-count badge has no room; drop it and let
+			// the Navigation auto-derive a tooltip from `label` instead.
+			trailing: isRail ? undefined : makeBadgeSnippet(repo.name, repo.id, repo.branchesCount),
+			// Prefetch repository data on hover for instant navigation
+			onmouseenter: () => prefetchRepositoryData(repo.id)
+		})) satisfies NavigationItem[];
 	});
 </script>
 
@@ -88,13 +86,17 @@
 	</Stamp>
 {/snippet}
 
+<!-- The list sits directly on the sidebar surface — the old surface.deep
+     card wrapper only ate horizontal space, so header and scroll box are
+     direct children here. -->
 <div
 	class={css({
-		px: 'md',
+		px: 'sm',
 		flex: 1,
 		minHeight: 0,
 		display: 'flex',
 		flexDirection: 'column',
+		gap: 'xs',
 		marginBottom: 'md'
 	})}
 	style:width={isRail ? 'auto' : '260px'}
@@ -102,96 +104,77 @@
 	<div
 		class={css({
 			display: 'flex',
-			flexDirection: 'column',
-			gap: 'xs',
-			borderRadius: 'lg',
-			// No right padding so the scroll box (and its scrollbar) can sit flush
-			// against the card's right edge.
-			padding: 'xs',
-			paddingBottom: 'xs',
-			paddingLeft: 'xs',
-			paddingRight: 0,
-			background: 'neutral.surface.deep',
-			flex: 1,
-			minHeight: 0
+			alignItems: 'center',
+			width: 'full',
+			minHeight: '2rem'
 		})}
+		style:justify-content={isRail ? 'center' : 'space-between'}
 	>
-		<div
-			class={css({
-				display: 'flex',
-				alignItems: 'center',
-				width: 'full',
-				minHeight: '2rem'
-			})}
-			style:justify-content={isRail ? 'center' : 'space-between'}
-		>
-			{#if !isRail}
-				<h2
-					class={css({
-						fontSize: 'xs',
-						textTransform: 'uppercase',
-						opacity: 0.6,
-						color: 'neutral.text',
-						margin: '0',
-						alignSelf: 'flex-end'
-					})}
-				>
-					Repositories
-				</h2>
-			{/if}
-			<div
+		{#if !isRail}
+			<h2
 				class={css({
-					mr: 'xs'
+					fontSize: 'xs',
+					textTransform: 'uppercase',
+					opacity: 0.6,
+					color: 'neutral.text',
+					margin: '0',
+					alignSelf: 'flex-end'
 				})}
 			>
-				{#if headerAction}
-					{@render headerAction()}
-				{/if}
-			</div>
-		</div>
-		<!--
-			The scroll lives on this wrapper, NOT on <Loading>: Pindoba's Loading
-			root is `display: contents`, so it generates no box and can't scroll or
-			flex. This real div owns the bounded height + overflow instead.
-		-->
+				Repositories
+			</h2>
+		{/if}
 		<div
 			class={css({
-				flex: 1,
-				minHeight: 0,
-				overflowY: 'auto',
-				width: 'full',
-				// The card no longer pads its right side, so the scroll box already
-				// reaches the card edge and the scrollbar sits flush against it. Keep a
-				// small right padding so the nav items don't tuck under the scrollbar.
-				paddingRight: 'xs'
+				mr: 'xs'
 			})}
 		>
-			<Loading
-				loading={repositoriesQuery.isLoading}
-				passThrough={{ root: { style: css.raw({ width: 'full', backdropFilter: 'none' }) } }}
-			>
-				{#if items.length > 0}
-					<Navigation
-						{items}
-						activeItem={page.params.id}
-						direction="vertical"
-						emphasis="neutral"
-						background="transparent"
-						{compact}
-					/>
-				{:else}
-					<p
-						class={css({
-							textAlign: 'center',
-							padding: 'md',
-							color: 'neutral.text.muted',
-							opacity: 0.7
-						})}
-					>
-						No repositories
-					</p>
-				{/if}
-			</Loading>
+			{#if headerAction}
+				{@render headerAction()}
+			{/if}
 		</div>
+	</div>
+	<!--
+		The scroll lives on this wrapper, NOT on <Loading>: Pindoba's Loading
+		root is `display: contents`, so it generates no box and can't scroll or
+		flex. This real div owns the bounded height + overflow instead.
+	-->
+	<div
+		class={css({
+			flex: 1,
+			minHeight: 0,
+			overflowY: 'auto',
+			width: 'full',
+			// A small right padding keeps the nav items from tucking under the
+			// scrollbar.
+			paddingRight: 'xs'
+		})}
+	>
+		<Loading
+			loading={repositoriesQuery.isLoading}
+			passThrough={{ root: { style: css.raw({ width: 'full', backdropFilter: 'none' }) } }}
+		>
+			{#if items.length > 0}
+				<Navigation
+					{items}
+					activeItem={page.params.id}
+					direction="vertical"
+					emphasis="neutral"
+					background="transparent"
+					{compact}
+				/>
+			{:else}
+				<p
+					class={css({
+						textAlign: 'center',
+						padding: 'md',
+						color: 'neutral.text.muted',
+						opacity: 0.7
+					})}
+				>
+					No repositories
+				</p>
+			{/if}
+		</Loading>
 	</div>
 </div>
