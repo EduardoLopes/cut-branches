@@ -218,8 +218,19 @@
 		background: 'surface.soft',
 		// Let the path shrink/ellipsize instead of overflowing: every Banner
 		// wrapper needs min-width: 0, and the trailing badges keep their size.
+		// The header also sticks to the top of the scrolling file list while
+		// its diff is in view, so long diffs never lose their file identity —
+		// z-index keeps it above the diff's own sticky hunk headers.
 		passThrough: {
-			root: { style: css.raw({ width: '100%', minWidth: '0' }) },
+			root: {
+				style: css.raw({
+					width: '100%',
+					minWidth: '0',
+					position: 'sticky',
+					top: '0',
+					zIndex: '2'
+				})
+			},
 			flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
 			flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
 			headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },

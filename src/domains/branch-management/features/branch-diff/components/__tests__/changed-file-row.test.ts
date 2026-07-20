@@ -121,6 +121,18 @@ describe('ChangedFileRow', () => {
 		});
 	});
 
+	it('keeps the file header sticky so it stays visible while its diff scrolls', async () => {
+		const { getByText, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+
+		await expect.element(getByText('modified')).toBeInTheDocument();
+		const row = container.querySelector('[data-testid="changed-file-row"]') as HTMLElement;
+		const sticky = [...row.querySelectorAll<HTMLElement>('*')].find(
+			(el) => getComputedStyle(el).position === 'sticky'
+		);
+		expect(sticky).toBeDefined();
+		expect(getComputedStyle(sticky as HTMLElement).top).toBe('0px');
+	});
+
 	it('starts expanded when defaultExpanded is set', async () => {
 		const { container } = renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
