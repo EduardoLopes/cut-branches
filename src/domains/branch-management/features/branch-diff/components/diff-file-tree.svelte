@@ -36,9 +36,11 @@
 	const items = $derived(toItems(tree));
 
 	// Directories start expanded — a review tree exists to be scanned, not
-	// discovered branch by branch. Passed as explicit keys because the Svelte
-	// TreeView defaults `expandedKeys` to an empty set, which overrides any
-	// per-node `defaultExpanded` flag (reported to pindoba).
+	// discovered branch by branch. Passed as explicit keys because published
+	// @pindoba/svelte-tree-view builds default `expandedKeys` to an empty set,
+	// overriding per-node `defaultExpanded` flags. Fixed upstream (pindoba
+	// d91e6a55); these explicit keys can move to per-node flags once the next
+	// release ships.
 	function collectDirPaths(nodes: DiffFileTreeNode[], into: string[] = []): string[] {
 		for (const node of nodes) {
 			if (node.children) {
