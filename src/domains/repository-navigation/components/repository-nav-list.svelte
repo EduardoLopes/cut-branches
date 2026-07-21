@@ -124,10 +124,15 @@
 				Repositories
 			</h2>
 		{/if}
+		<!-- The margin clears the scrollbar-width padding of the list below; in
+		     the rail everything is center-aligned, so it would only push the
+		     action off the items' center line. -->
 		<div
 			class={css({
-				mr: 'xs'
+				mr: 'xs',
+				'&[data-rail="true"]': { mr: '0' }
 			})}
+			data-rail={isRail}
 		>
 			{#if headerAction}
 				{@render headerAction()}
@@ -146,9 +151,16 @@
 			overflowY: 'auto',
 			width: 'full',
 			// A small right padding keeps the nav items from tucking under the
-			// scrollbar.
-			paddingRight: 'xs'
+			// scrollbar. The rail centers its items instead: reserving the
+			// scrollbar gutter on BOTH edges keeps them on the header's center
+			// line whether or not the list scrolls.
+			paddingRight: 'xs',
+			'&[data-rail="true"]': {
+				paddingRight: '0',
+				scrollbarGutter: 'stable both-edges'
+			}
 		})}
+		data-rail={isRail}
 	>
 		<Loading
 			loading={repositoriesQuery.isLoading}
