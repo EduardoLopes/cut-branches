@@ -4,6 +4,7 @@ import {
 	COLUMN_GAP,
 	DIFF_AREA_HEIGHT,
 	EXPANDED_NODE_WIDTH,
+	MAX_COLUMN_GAP,
 	NODE_SYMBOL_LIMIT,
 	NODE_WIDTH,
 	nodeHeight,
@@ -12,7 +13,12 @@ import {
 import type { StructureEdge } from '$infrastructure/bindings';
 
 const file = (path: string, symbolCount = 0): CanvasFile => ({ path, symbolCount });
-const edge = (from: string, to: string): StructureEdge => ({ from, to, kind: 'import' });
+const edge = (from: string, to: string): StructureEdge => ({
+	from,
+	to,
+	kind: 'import',
+	symbols: []
+});
 
 function nodeOf(layout: ReturnType<typeof buildCanvasLayout>, path: string) {
 	const node = layout.nodes.find((n) => n.path === path);
@@ -48,6 +54,29 @@ describe('buildCanvasLayout', () => {
 		expect(c.x - b.x).toBe(NODE_WIDTH + COLUMN_GAP);
 		expect(layout.width).toBeGreaterThan(c.x);
 		expect(layout.height).toBeGreaterThan(0);
+	});
+
+	it('widens a channel that carries more than one edge run', () => {
+		// b and c both import a: two runs share the channel left of column 1,
+		// so it grows past the baseline gap.
+		const layout = buildCanvasLayout(
+			[file('a.ts'), file('b.ts'), file('c.ts')],
+			[edge('b.ts', 'a.ts'), edge('c.ts', 'a.ts')]
+		);
+		const a = nodeOf(layout, 'a.ts');
+		const b = nodeOf(layout, 'b.ts');
+		expect(b.x - a.x).toBeGreaterThan(NODE_WIDTH + COLUMN_GAP);
+	});
+
+	it('caps a channel’s width however dense it gets', () => {
+		// Many importers of one file pile into a single channel; its width grows
+		// with the run count but never past the cap.
+		const importers = Array.from({ length: 16 }, (_, i) => `f${i}.ts`);
+		const layout = buildCanvasLayout(
+			[file('a.ts'), ...importers.map((path) => file(path))],
+			importers.map((path) => edge(path, 'a.ts'))
+		);
+		expect(nodeOf(layout, 'f0.ts').x - nodeOf(layout, 'a.ts').x).toBe(NODE_WIDTH + MAX_COLUMN_GAP);
 	});
 
 	it('stacks same-column nodes vertically in path order', () => {

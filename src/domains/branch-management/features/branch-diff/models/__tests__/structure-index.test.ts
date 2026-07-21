@@ -37,9 +37,9 @@ describe('buildStructureIndex', () => {
 		const output: GetDiffStructureOutput = {
 			files: [file('a.ts'), file('b.ts'), file('c.ts')],
 			edges: [
-				{ from: 'a.ts', to: 'b.ts', kind: 'import' },
-				{ from: 'c.ts', to: 'b.ts', kind: 'import' },
-				{ from: 'a.ts', to: 'c.ts', kind: 'import' }
+				{ from: 'a.ts', to: 'b.ts', kind: 'import', symbols: [] },
+				{ from: 'c.ts', to: 'b.ts', kind: 'import', symbols: [] },
+				{ from: 'a.ts', to: 'c.ts', kind: 'import', symbols: [] }
 			]
 		};
 
@@ -52,7 +52,7 @@ describe('buildStructureIndex', () => {
 	it('ignores edges pointing at files missing from the list', () => {
 		const output: GetDiffStructureOutput = {
 			files: [file('a.ts')],
-			edges: [{ from: 'a.ts', to: 'ghost.ts', kind: 'import' }]
+			edges: [{ from: 'a.ts', to: 'ghost.ts', kind: 'import', symbols: [] }]
 		};
 
 		const index = buildStructureIndex(output);
@@ -63,7 +63,7 @@ describe('buildStructureIndex', () => {
 	it('ignores edges whose importer is missing from the list', () => {
 		const output: GetDiffStructureOutput = {
 			files: [file('a.ts')],
-			edges: [{ from: 'ghost.ts', to: 'a.ts', kind: 'import' }]
+			edges: [{ from: 'ghost.ts', to: 'a.ts', kind: 'import', symbols: [] }]
 		};
 
 		const index = buildStructureIndex(output);
@@ -72,9 +72,9 @@ describe('buildStructureIndex', () => {
 	});
 	it('lists a file with its direct import neighborhood', () => {
 		const edges = [
-			{ from: 'a.ts', to: 'b.ts', kind: 'import' as const },
-			{ from: 'c.ts', to: 'a.ts', kind: 'import' as const },
-			{ from: 'c.ts', to: 'd.ts', kind: 'import' as const }
+			{ from: 'a.ts', to: 'b.ts', kind: 'import' as const, symbols: [] },
+			{ from: 'c.ts', to: 'a.ts', kind: 'import' as const, symbols: [] },
+			{ from: 'c.ts', to: 'd.ts', kind: 'import' as const, symbols: [] }
 		];
 
 		// a's neighborhood: itself, what it imports (b), what imports it (c).

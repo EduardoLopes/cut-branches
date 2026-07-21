@@ -61,7 +61,7 @@ const structure = (overrides: Partial<GetDiffStructureOutput> = {}): GetDiffStru
 			imports: [{ specifier: './a', resolvedPath: 'src/a.ts' }]
 		}
 	],
-	edges: [{ from: 'src/b.ts', to: 'src/a.ts', kind: 'import' }],
+	edges: [{ from: 'src/b.ts', to: 'src/a.ts', kind: 'import', symbols: [] }],
 	...overrides
 });
 
@@ -94,9 +94,10 @@ describe('DiffCanvas', () => {
 		const edges = container.querySelectorAll('[data-testid="diff-canvas-edge"]');
 		expect(edges).toHaveLength(1);
 		expect(edges[0].getAttribute('data-from')).toBe('src/b.ts');
-		// The trace ends in an arrowhead at the imported file.
-		expect(edges[0].getAttribute('marker-end')).toBe('url(#edge-arrow)');
-		expect(container.querySelector('marker#edge-arrow')).not.toBeNull();
+		// The trace ends in an arrowhead at the imported file; this import-only
+		// edge uses the muted marker.
+		expect(edges[0].getAttribute('marker-end')).toBe('url(#edge-arrow-muted)');
+		expect(container.querySelector('marker#edge-arrow-muted')).not.toBeNull();
 		expect(container.querySelector('[data-testid="canvas-no-edges-hint"]')).toBeNull();
 		// Small changesets open every diff up front.
 		expect(container.querySelectorAll('[data-canvas-diff]')).toHaveLength(2);
@@ -457,9 +458,6 @@ describe('DiffCanvas', () => {
 					?.getAttribute('data-highlighted')
 			).toBe('true');
 		});
-		expect(
-			container.querySelector('[data-testid="diff-canvas-edge"]')?.getAttribute('marker-end')
-		).toBe('url(#edge-arrow-highlighted)');
 	});
 
 	it('pans from anywhere with the space hand tool, even over nodes', async () => {

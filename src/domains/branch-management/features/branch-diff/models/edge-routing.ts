@@ -30,8 +30,14 @@ import type { StructureEdge } from '$infrastructure/bindings';
 export interface RoutedEdge {
 	from: string;
 	to: string;
+	/** Import (structural) or Call (a used symbol was found). */
+	kind: StructureEdge['kind'];
+	/** For Call edges: the symbol names the source uses from the target. */
+	symbols: string[];
 	/** SVG path data (`M … L …`). */
 	path: string;
+	/** Anchor for a hover label, on the edge's main horizontal run. */
+	labelPoint: Point;
 }
 
 export interface RoutedEdges {
@@ -211,11 +217,14 @@ export function routeEdges(layout: CanvasLayout, edges: StructureEdge[]): Routed
 		width = Math.max(width, entryX + CANVAS_MARGIN);
 
 		let points: Point[];
+		let labelPoint: Point;
 		if (plan.direct) {
 			points =
 				start.y === end.y
 					? [start, end]
 					: [start, { x: entryX, y: start.y }, { x: entryX, y: end.y }, end];
+			// The vertical run in the entry channel is the clearest anchor.
+			labelPoint = { x: entryX, y: (start.y + end.y) / 2 };
 		} else {
 			const exitX = lanePosition.get(`${edgeIndex}:exit`) as number;
 			const lane = corridorY.get(edgeIndex) as number;
@@ -229,9 +238,19 @@ export function routeEdges(layout: CanvasLayout, edges: StructureEdge[]): Routed
 				{ x: exitX, y: end.y },
 				end
 			];
+			// Midpoint of the corridor's horizontal run.
+			labelPoint = { x: (entryX + exitX) / 2, y: lane };
 		}
 
-		return { from: usable[edgeIndex].from, to: usable[edgeIndex].to, path: chamferedPath(points) };
+		const edge = usable[edgeIndex];
+		return {
+			from: edge.from,
+			to: edge.to,
+			kind: edge.kind,
+			symbols: edge.symbols,
+			path: chamferedPath(points),
+			labelPoint
+		};
 	});
 
 	return { edges: routed, width, height };

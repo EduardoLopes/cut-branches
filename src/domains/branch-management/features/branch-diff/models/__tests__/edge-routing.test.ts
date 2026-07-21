@@ -3,7 +3,12 @@ import { buildCanvasLayout, type CanvasLayout } from '../canvas-layout';
 import { chamferedPath, routeEdges } from '../edge-routing';
 import type { StructureEdge } from '$infrastructure/bindings';
 
-const edge = (from: string, to: string): StructureEdge => ({ from, to, kind: 'import' });
+const edge = (
+	from: string,
+	to: string,
+	kind: StructureEdge['kind'] = 'import',
+	symbols: string[] = []
+): StructureEdge => ({ from, to, kind, symbols });
 
 function layoutFor(paths: string[], edges: StructureEdge[]): CanvasLayout {
 	return buildCanvasLayout(
@@ -55,6 +60,17 @@ describe('chamferedPath', () => {
 });
 
 describe('routeEdges', () => {
+	it('carries each edge’s kind, symbols, and a label anchor through', () => {
+		const call = edge('b.ts', 'a.ts', 'call', ['alpha', 'beta']);
+		const layout = layoutFor(['a.ts', 'b.ts'], [call]);
+		const [routed] = routeEdges(layout, [call]).edges;
+
+		expect(routed.kind).toBe('call');
+		expect(routed.symbols).toEqual(['alpha', 'beta']);
+		expect(Number.isFinite(routed.labelPoint.x)).toBe(true);
+		expect(Number.isFinite(routed.labelPoint.y)).toBe(true);
+	});
+
 	it('routes a forward edge right-to-left through the column channel', () => {
 		const layout = layoutFor(['a.ts', 'b.ts'], [edge('b.ts', 'a.ts')]);
 		const [routed] = routeEdges(layout, [edge('b.ts', 'a.ts')]).edges;

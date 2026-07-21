@@ -19,6 +19,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { buildCanvasLayout, type CanvasLayout } from '../models/canvas-layout';
 	import { buildStructureIndex, listRelatedPaths } from '../models/structure-index';
+	import EdgeLabels from './edge-labels.svelte';
 	import EdgeLayer from './edge-layer.svelte';
 	import FileNode from './file-node.svelte';
 	import type { ChangedFile, GetDiffStructureOutput } from '$infrastructure/bindings';
@@ -540,6 +541,9 @@
 						/>
 					{/if}
 				{/each}
+				<!-- Painted after the nodes so the "uses …" chips sit ON TOP of
+				     the panels instead of being covered by them. -->
+				<EdgeLabels {layout} edges={structure?.edges ?? []} {hoveredPath} />
 			</div>
 		</div>
 	</div>

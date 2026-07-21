@@ -1360,12 +1360,25 @@ found: number;
 currentName: string | null }
 /**
  * A directed relation between two changed files (`from` imports `to`).
+ * 
+ * At most one edge exists per `(from, to)` pair: when the source file uses
+ * any of the symbols it imports from the target, the edge is upgraded to
+ * `Call` and `symbols` lists what is used; otherwise it stays `Import`.
  */
-export type StructureEdge = { from: string; to: string; kind: StructureEdgeKind }
+export type StructureEdge = { from: string; to: string; kind: StructureEdgeKind; 
+/**
+ * For `Call` edges: the sorted, deduped symbol names the source file
+ * uses from the target. Empty for plain `Import` edges.
+ */
+symbols: string[] }
 /**
  * The relation an edge represents.
  */
-export type StructureEdgeKind = "import"
+export type StructureEdgeKind = "import" | 
+/**
+ * The source file imports AND uses at least one symbol from the target.
+ */
+"call"
 /**
  * The grammar used to parse a changed file.
  */

@@ -68,8 +68,17 @@ export const NODE_ROW_HEIGHT = 26;
 export const SYMBOL_ROW_HEIGHT = 20;
 /** Symbols shown before the node truncates with "+n more". */
 export const NODE_SYMBOL_LIMIT = 5;
-/** Horizontal space between DAG columns — the edge routing channel. */
-export const COLUMN_GAP = 120;
+/**
+ * Baseline (and minimum) horizontal space between DAG columns — the edge
+ * routing channel. Generous by default so traces and their symbol chips sit
+ * clearly between the node panels; channels carrying more than one edge run
+ * widen further, up to {@link MAX_COLUMN_GAP}.
+ */
+export const COLUMN_GAP = 200;
+/** Extra channel width per additional edge run sharing it. */
+const LANE_PITCH = 18;
+/** Channels never grow past this, however dense. */
+export const MAX_COLUMN_GAP = 460;
 export const CANVAS_MARGIN = 24;
 const ROW_GAP = 24;
 const GRID_GAP = 24;
@@ -158,6 +167,32 @@ export function buildCanvasLayout(files: CanvasFile[], edges: StructureEdge[]): 
 		byColumn.set(column, list);
 	}
 
+	// Channel demand: how many edge runs each inter-column gap must carry. A
+	// channel is the gap to the LEFT of a column — the same indexing the router
+	// uses. Every edge dives in the channel left of its importer and, when it
+	// spans more than one column, rises in the channel right of its target,
+	// mirroring edge-routing so the widths match the lanes actually drawn.
+	const runsPerChannel = new Map<number, number>();
+	const bumpRuns = (channel: number) =>
+		runsPerChannel.set(channel, (runsPerChannel.get(channel) ?? 0) + 1);
+	for (const edge of usable) {
+		const fromColumn = columns.get(edge.from);
+		const toColumn = columns.get(edge.to);
+		if (fromColumn === undefined || toColumn === undefined || fromColumn <= toColumn) {
+			// Same column or a cycle back-edge: routed through the bottom
+			// corridor, not a vertical channel — no channel demand here.
+			continue;
+		}
+		bumpRuns(fromColumn);
+		if (fromColumn - toColumn !== 1) {
+			bumpRuns(toColumn + 1);
+		}
+	}
+	const channelGap = (channel: number): number => {
+		const runs = runsPerChannel.get(channel) ?? 0;
+		return Math.min(MAX_COLUMN_GAP, COLUMN_GAP + Math.max(0, runs - 1) * LANE_PITCH);
+	};
+
 	// Placed nodes' vertical centers — the input to the next column's
 	// barycenter ordering.
 	const centers = new Map<string, number>();
@@ -210,7 +245,8 @@ export function buildCanvasLayout(files: CanvasFile[], edges: StructureEdge[]): 
 		}
 		columnBounds.push({ x, width: columnWidth });
 		width = Math.max(width, x + columnWidth);
-		columnLeft = x + columnWidth + COLUMN_GAP;
+		// The gap after this column IS the channel to the left of the next one.
+		columnLeft = x + columnWidth + channelGap(column + 1);
 	}
 
 	// --- Grid section: isolated files below the DAG ---------------------------
