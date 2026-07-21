@@ -33,6 +33,9 @@
 		/** True when the search term was found inside this file's DIFF content
 		 *  — the row opens itself so the match is visible. */
 		searchMatched?: boolean;
+		/** Monotonic navigation signal: every increment (from the file tree)
+		 *  opens the row, even if the user collapsed it since the last one. */
+		revealSeq?: number;
 		/** Diff presentation options, passed through to the panel. */
 		layout?: DiffViewerLayout;
 		variant?: DiffViewerVariant;
@@ -48,6 +51,7 @@
 		defaultExpanded = false,
 		searchTerm = '',
 		searchMatched = false,
+		revealSeq = 0,
 		layout = 'unified',
 		variant = 'background',
 		gutter = 'single',
@@ -61,6 +65,14 @@
 	// the match signal, not to the collapse).
 	$effect(() => {
 		if (searchMatched) {
+			expanded = true;
+		}
+	});
+
+	// Same one-way contract as the search match: each navigation opens the
+	// row, manual collapse stays possible until the next one.
+	$effect(() => {
+		if (revealSeq > 0) {
 			expanded = true;
 		}
 	});

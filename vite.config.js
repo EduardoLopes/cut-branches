@@ -66,6 +66,7 @@ const PINDOBA_PACKAGES = {
 	'@pindoba/core-timeline': 'core/timeline',
 	'@pindoba/core-toast': 'core/toast',
 	'@pindoba/core-tooltip': 'core/tooltip',
+	'@pindoba/core-tree-view': 'core/tree-view',
 	'@pindoba/normalize-props': 'core/normalize-props',
 	'@pindoba/svelte-use-store': 'core/svelte-use-store',
 	'@pindoba/styles-accordion': 'styles/accordion',
@@ -144,6 +145,7 @@ const PINDOBA_PACKAGES = {
 	'@pindoba/svelte-tab': 'ui/svelte/tab',
 	'@pindoba/svelte-table': 'ui/svelte/table',
 	'@pindoba/svelte-tooltip': 'ui/svelte/tooltip',
+	'@pindoba/svelte-tree-view': 'ui/svelte/tree-view',
 	'@pindoba/svelte-pagination': 'blocks/svelte/pagination',
 	'@pindoba/svelte-theme-mode-select': 'blocks/svelte/theme-mode-select',
 	'@pindoba/svelte-toast': 'blocks/svelte/toast'

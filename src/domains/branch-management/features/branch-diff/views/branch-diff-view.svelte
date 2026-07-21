@@ -13,6 +13,7 @@
 	import { useDiffSearch } from '../application/use-diff-search.svelte';
 	import { useDiffViewOptions } from '../application/use-diff-view-options.svelte';
 	import ChangedFileRow from '../components/changed-file-row.svelte';
+	import DiffFileTree from '../components/diff-file-tree.svelte';
 	import DiffOptionsMenu from '../components/diff-options-menu.svelte';
 	import { createListChangedFilesQuery } from '../infrastructure/queries/create-list-changed-files-query';
 	import { goto } from '$app/navigation';
@@ -64,6 +65,20 @@
 		(changedFilesQuery.data?.files ?? []).filter((file) => search.matches(file))
 	);
 
+	// --- File-tree navigation --------------------------------------------------
+	// Activating a file in the tree scrolls its row into view and opens it.
+	// `reveal` is a monotonic signal so re-activating the same file re-opens a
+	// row the user collapsed in the meantime.
+	let fileListElement = $state<HTMLElement | null>(null);
+	let reveal = $state({ path: '', seq: 0 });
+
+	function revealFile(file: { path: string }) {
+		reveal = { path: file.path, seq: reveal.seq + 1 };
+		fileListElement
+			?.querySelector(`[data-file-path="${CSS.escape(file.path)}"]`)
+			?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
 	const host = css({
 		display: 'flex',
 		flexDirection: 'column',
@@ -88,6 +103,20 @@
 		gap: 'xs',
 		ml: 'auto'
 	});
+	// Tree pane and file list scroll independently, side by side.
+	const diffBody = css({
+		display: 'flex',
+		flex: '1',
+		minHeight: 0
+	});
+	const treePane = css({
+		width: '260px',
+		flexShrink: '0',
+		overflowY: 'auto',
+		p: 'sm',
+		borderRight: '1px solid',
+		borderColor: 'neutral.border.muted'
+	});
 	const fileList = css({
 		display: 'flex',
 		flexDirection: 'column',
@@ -96,7 +125,8 @@
 		overflowY: 'auto',
 		// Wide diffs scroll inside their own hunk containers — never the page.
 		overflowX: 'hidden',
-		flex: '1'
+		flex: '1',
+		minWidth: 0
 	});
 	const fileListItem = css({ minWidth: '0', maxWidth: '100%' });
 	const monoLabel = css({ fontFamily: 'mono' });
@@ -202,24 +232,41 @@
 				testId="diff-search-empty"
 			/>
 		{:else}
-			<div class={fileList} role="list" data-testid="changed-files-list">
-				{#each visibleFiles as file (file.path)}
-					<div role="listitem" class={fileListItem}>
-						<ChangedFileRow
-							repositoryPath={path ?? ''}
-							{branchName}
-							{commitSha}
-							{file}
-							defaultExpanded={autoExpand}
-							searchTerm={searchTerm.trim()}
-							searchMatched={search.isContentMatch(file)}
-							layout={viewOptions.options.layout}
-							variant={viewOptions.options.variant}
-							gutter={viewOptions.options.gutter}
-							wrap={viewOptions.options.wrap}
+			<div class={diffBody}>
+				{#if visibleFiles.length > 1}
+					<aside class={treePane} aria-label="Changed files tree" data-testid="diff-tree-pane">
+						<DiffFileTree
+							files={visibleFiles}
+							selectedPath={reveal.path || null}
+							onSelectFile={revealFile}
 						/>
-					</div>
-				{/each}
+					</aside>
+				{/if}
+				<div
+					class={fileList}
+					role="list"
+					data-testid="changed-files-list"
+					bind:this={fileListElement}
+				>
+					{#each visibleFiles as file (file.path)}
+						<div role="listitem" class={fileListItem} data-file-path={file.path}>
+							<ChangedFileRow
+								repositoryPath={path ?? ''}
+								{branchName}
+								{commitSha}
+								{file}
+								defaultExpanded={autoExpand}
+								searchTerm={searchTerm.trim()}
+								searchMatched={search.isContentMatch(file)}
+								revealSeq={reveal.path === file.path ? reveal.seq : 0}
+								layout={viewOptions.options.layout}
+								variant={viewOptions.options.variant}
+								gutter={viewOptions.options.gutter}
+								wrap={viewOptions.options.wrap}
+							/>
+						</div>
+					{/each}
+				</div>
 			</div>
 		{/if}
 	{/if}

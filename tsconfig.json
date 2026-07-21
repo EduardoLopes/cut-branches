@@ -83,6 +83,10 @@
 			"@pindoba/svelte-stamp/*": ["../pindoba/packages/ui/svelte/stamp/dist/*"],
 			"@pindoba/svelte-tooltip": ["../pindoba/packages/ui/svelte/tooltip/dist/index.d.ts"],
 			"@pindoba/svelte-tooltip/*": ["../pindoba/packages/ui/svelte/tooltip/dist/*"],
+			"@pindoba/svelte-tree-view": ["../pindoba/packages/ui/svelte/tree-view/dist/index.d.ts"],
+			"@pindoba/svelte-tree-view/*": ["../pindoba/packages/ui/svelte/tree-view/dist/*"],
+			"@pindoba/core-tree-view": ["../pindoba/packages/core/tree-view/dist/index.d.ts"],
+			"@pindoba/core-tree-view/*": ["../pindoba/packages/core/tree-view/dist/*"],
 			"@pindoba/svelte-toast": ["../pindoba/packages/blocks/svelte/toast/dist/index.d.ts"],
 			"@pindoba/svelte-toast/*": ["../pindoba/packages/blocks/svelte/toast/dist/*"],
 			"@pindoba/svelte-pagination": [

@@ -249,6 +249,52 @@ describe('BranchDiffView', () => {
 		});
 	});
 
+	it('shows the file tree pane when more than one file changed', async () => {
+		const { getByTestId } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await expect.element(getByTestId('diff-tree-pane')).toBeInTheDocument();
+	});
+
+	it('hides the file tree pane for a single-file diff', async () => {
+		setQueries({
+			changedFiles: {
+				isLoading: false,
+				isError: false,
+				error: null,
+				data: output({ files: [output().files[0]], linesAdded: 20, linesRemoved: 4 })
+			}
+		});
+		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await expect.element(getByText('1 file', { exact: true })).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="diff-tree-pane"]')).toBeNull();
+	});
+
+	it('scrolls to and opens a file row when its tree node is activated', async () => {
+		const scrollIntoView = vi
+			.spyOn(Element.prototype, 'scrollIntoView')
+			.mockImplementation(() => {});
+		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await getByText('new.ts', { exact: true }).click();
+
+		await vi.waitFor(() => {
+			const row = container.querySelector('[data-file-path="src/new.ts"]');
+			expect(row?.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
+		});
+		expect(scrollIntoView).toHaveBeenCalled();
+		scrollIntoView.mockRestore();
+	});
+
 	it('auto-expands the diff when there is exactly one changed file', async () => {
 		setQueries({
 			changedFiles: {

@@ -133,6 +133,17 @@ describe('ChangedFileRow', () => {
 		expect(getComputedStyle(sticky as HTMLElement).top).toBe('0px');
 	});
 
+	it('opens when a reveal navigation targets it', async () => {
+		const { container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			revealSeq: 1
+		});
+
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
+		});
+	});
+
 	it('starts expanded when defaultExpanded is set', async () => {
 		const { container } = renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
