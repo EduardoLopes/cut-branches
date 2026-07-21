@@ -375,6 +375,19 @@ async getFileLines(input: GetFileLinesInput) : Promise<Result<GetFileLinesOutput
 }
 },
 /**
+ * Analyzes the code structure of a diff: which symbols each changed file's
+ * hunks touch, and which changed files import each other — the data behind
+ * the canvas view and the list view's impact badges.
+ */
+async getDiffStructure(input: GetDiffStructureInput) : Promise<Result<GetDiffStructureOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_diff_structure", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Lists all selected branches for a repository (active branches only).
  * 
  * # Arguments
@@ -754,6 +767,18 @@ path: string;
  * Previous path, present only for renames.
  */
 oldPath: string | null; status: FileChangeStatus; linesAdded: number; linesRemoved: number; isBinary: boolean }
+/**
+ * A definition whose line range intersects the file's changed lines.
+ * 
+ * Note on deletions: a pure-deletion hunk is attributed to the new-side line
+ * where the deletion happened, so a deletion exactly at a symbol boundary
+ * may credit the neighboring symbol — acceptable for a review summary.
+ */
+export type ChangedSymbol = { name: string; kind: SymbolKind; 
+/**
+ * 1-based line of the definition on the diff's target side.
+ */
+startLine: number; endLine: number }
 export type CleanRepositoryInput = { 
 /**
  * Repository id (used for the audit log).
@@ -942,6 +967,33 @@ name: string }
  * What happened to a file between the two trees.
  */
 export type FileChangeStatus = "added" | "deleted" | "modified" | "renamed"
+/**
+ * One import found in a changed file.
+ */
+export type FileImport = { 
+/**
+ * The specifier as written: `./foo`, `$ui/x`, `react`.
+ */
+specifier: string; 
+/**
+ * Repo-relative path this import resolves to — set only when the target
+ * is another CHANGED file (v1 scope); packages and unchanged files stay
+ * `None`.
+ */
+resolvedPath: string | null }
+/**
+ * The analyzed structure of one changed file.
+ */
+export type FileStructure = { 
+/**
+ * Path in the target tree (old path for deleted files).
+ */
+path: string; language: StructureLanguage; 
+/**
+ * False for unknown languages, deleted/binary files, oversized blobs,
+ * and parse failures — all non-fatal.
+ */
+parsed: boolean; changedSymbols: ChangedSymbol[]; imports: FileImport[] }
 export type GetBranchDiffStatsInput = { path: string; branchName: string }
 export type GetBranchDiffStatsOutput = { linesAdded: number; linesRemoved: number }
 export type GetBranchListInput = { repoId: string; filters?: BranchFilters }
@@ -976,6 +1028,30 @@ targetIndex: number;
 nextCursor: string | null; totalCount: number }
 export type GetCommitReachabilityInput = { path: string; commitSha: string }
 export type GetCommitReachabilityOutput = { isReachable: boolean }
+export type GetDiffStructureInput = { 
+/**
+ * Filesystem path to the repository.
+ */
+path: string; 
+/**
+ * Analyze a branch (vs merge-base with HEAD). Mutually exclusive with
+ * `commit_sha`.
+ */
+branchName?: string | null; 
+/**
+ * Analyze a commit (vs its first parent). Mutually exclusive with
+ * `branch_name`.
+ */
+commitSha?: string | null }
+export type GetDiffStructureOutput = { 
+/**
+ * One entry per changed file, in diff order.
+ */
+files: FileStructure[]; 
+/**
+ * Import relations between changed files, deduped and sorted.
+ */
+edges: StructureEdge[] }
 export type GetFileDiffInput = { path: string; 
 /**
  * See [`ListChangedFilesInput::branch_name`].
@@ -1282,6 +1358,31 @@ found: number;
  * Name of the repository currently being examined.
  */
 currentName: string | null }
+/**
+ * A directed relation between two changed files (`from` imports `to`).
+ */
+export type StructureEdge = { from: string; to: string; kind: StructureEdgeKind }
+/**
+ * The relation an edge represents.
+ */
+export type StructureEdgeKind = "import"
+/**
+ * The grammar used to parse a changed file.
+ */
+export type StructureLanguage = "typescript" | "javascript" | "svelte" | 
+/**
+ * Anything without a supported grammar — the file still appears as a
+ * node, just with no parsed internals.
+ */
+"unknown"
+/**
+ * What kind of definition a changed symbol is.
+ */
+export type SymbolKind = "function" | "method" | "class" | 
+/**
+ * A Svelte component (synthetic whole-file symbol).
+ */
+"component"
 export type TargetResult = { path: string; ok: boolean; bytesFreed: number; error: string | null }
 export type UnlockWorktreeInput = { 
 /**

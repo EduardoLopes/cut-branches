@@ -209,7 +209,11 @@ pub fn commit_file(
     message: &str,
     date: &str,
 ) -> String {
-    fs::write(path.join(file), content).unwrap();
+    let file_path = path.join(file);
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent).unwrap();
+    }
+    fs::write(file_path, content).unwrap();
     run_git(path, &["add", file]);
     let output = Command::new("git")
         .args(["commit", "-m", message])

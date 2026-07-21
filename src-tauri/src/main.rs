@@ -30,6 +30,7 @@ use domains::branch_management::events::{
 use domains::branch_management::features::branch_diff::{
     get_file_diff, get_file_lines, list_changed_files,
 };
+use domains::branch_management::features::code_structure::get_diff_structure;
 use domains::branch_management::features::commit_history::{
     get_commit_history_window, list_branch_comparison, list_commit_history,
 };
@@ -117,6 +118,8 @@ fn main() {
             list_changed_files,
             get_file_diff,
             get_file_lines,
+            // Diff code structure (canvas view / impact badges)
+            get_diff_structure,
             // Selected branches
             list_branch_selection,
             list_deleted_branch_selection,
@@ -305,6 +308,7 @@ mod tests {
         let _ = crate::domains::branch_management::features::branch_diff::list_changed_files;
         let _ = crate::domains::branch_management::features::branch_diff::get_file_diff;
         let _ = crate::domains::branch_management::features::branch_diff::get_file_lines;
+        let _ = crate::domains::branch_management::features::code_structure::get_diff_structure;
         let _ = commands::batch_create_branch_restorations;
         let _ = path_commands::get_repository_root;
         let _ = cleanup_commands::scan_cleanup_targets;
