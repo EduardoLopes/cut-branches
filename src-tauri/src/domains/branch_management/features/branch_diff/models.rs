@@ -8,15 +8,7 @@
 
 use serde::{Deserialize, Serialize};
 
-/// What happened to a file between the two trees.
-#[derive(Serialize, Deserialize, specta::Type, Clone, Copy, Debug, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub enum FileChangeStatus {
-    Added,
-    Deleted,
-    Modified,
-    Renamed,
-}
+pub use crate::domains::branch_management::core::models::file_change_status::FileChangeStatus;
 
 /// One entry in the changed-files list.
 #[derive(Serialize, Deserialize, specta::Type, Clone, Debug)]
