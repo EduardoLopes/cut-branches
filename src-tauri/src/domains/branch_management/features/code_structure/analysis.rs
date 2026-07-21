@@ -8,10 +8,11 @@
 //! additionally contributes one synthetic whole-file `Component` symbol so a
 //! template-only change still reports "component X changed".
 
+use std::collections::HashSet;
 use std::sync::OnceLock;
 
 use streaming_iterator::StreamingIterator;
-use tree_sitter::{Language, Parser, Query, QueryCursor};
+use tree_sitter::{Language, Node, Parser, Query, QueryCursor};
 
 use super::models::{StructureLanguage, SymbolKind};
 
@@ -24,12 +25,30 @@ pub struct SymbolDef {
     pub end_line: u32,
 }
 
+/// One local name a static `import` statement introduces, tied back to its
+/// specifier. Dynamic `import()`, `require()`, and re-exports introduce no
+/// local names, so they produce no bindings.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportBinding {
+    pub specifier: String,
+    /// Name as usable in the file body (alias when `as` is used).
+    pub local: String,
+    /// Human name of what's used from the target: the original exported name
+    /// for named imports; the local name for default and namespace imports.
+    pub label: String,
+}
+
 /// The raw parse result of one file: definitions plus import specifiers
-/// (as written, unresolved).
+/// (as written, unresolved), the local bindings those imports introduce, and
+/// every identifier referenced outside import statements.
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct ParsedFile {
     pub symbols: Vec<SymbolDef>,
     pub imports: Vec<String>,
+    pub bindings: Vec<ImportBinding>,
+    /// Identifier texts referenced anywhere outside import statements — what
+    /// tells an imported-and-used binding from an imported-but-unused one.
+    pub used_names: HashSet<String>,
 }
 
 /// Maps a repo-relative path to the grammar that parses it.
@@ -77,6 +96,8 @@ fn parse_svelte(path: &str, source: &str) -> ParsedFile {
         ) {
             parsed.symbols.append(&mut inner.symbols);
             parsed.imports.append(&mut inner.imports);
+            parsed.bindings.append(&mut inner.bindings);
+            parsed.used_names.extend(inner.used_names);
         }
     }
 
@@ -317,8 +338,100 @@ fn parse_block(
         }
     }
 
+    collect_bindings_and_usage(tree.root_node(), bytes, &mut parsed);
+
     parsed.symbols.sort_by_key(|s| (s.start_line, s.end_line));
     Some(parsed)
+}
+
+/// One iterative pass over the whole tree (shared node names across the TS,
+/// TSX, and JS grammars): `import_statement` nodes yield bindings and are not
+/// descended into, so the identifiers they declare never count as usage;
+/// every other `(identifier)` records a used name.
+fn collect_bindings_and_usage(root: Node<'_>, bytes: &[u8], parsed: &mut ParsedFile) {
+    let mut stack = vec![root];
+    while let Some(node) = stack.pop() {
+        // Skip error-recovery subtrees: tokens tree-sitter salvaged from
+        // unparseable input aren't reliable usage evidence.
+        if node.is_error() {
+            continue;
+        }
+        if node.kind() == "import_statement" {
+            collect_import_bindings(node, bytes, parsed);
+            continue;
+        }
+        if node.kind() == "identifier" {
+            if let Ok(text) = node.utf8_text(bytes) {
+                parsed.used_names.insert(text.to_string());
+            }
+            continue;
+        }
+        // Reversed push keeps source order, so bindings stay in file order.
+        for i in (0..node.child_count()).rev() {
+            if let Some(child) = node.child(i) {
+                stack.push(child);
+            }
+        }
+    }
+}
+
+/// The bindings of one static `import` statement. Handles default,
+/// namespace, named (with `as` aliases), mixed clauses, and type-only
+/// imports; bare `import './x'` has no clause and yields nothing.
+fn collect_import_bindings(statement: Node<'_>, bytes: &[u8], parsed: &mut ParsedFile) {
+    let text = |node: Node<'_>| node.utf8_text(bytes).ok().map(str::to_string);
+    let Some(specifier) = statement
+        .child_by_field_name("source")
+        .and_then(|source| named_child_of_kind(source, "string_fragment"))
+        .and_then(text)
+    else {
+        return;
+    };
+    let Some(clause) = named_child_of_kind(statement, "import_clause") else {
+        return;
+    };
+
+    let mut push = |local: Option<String>, label: Option<String>| {
+        if let (Some(local), Some(label)) = (local, label) {
+            parsed.bindings.push(ImportBinding {
+                specifier: specifier.clone(),
+                local,
+                label,
+            });
+        }
+    };
+
+    let mut cursor = clause.walk();
+    for part in clause.named_children(&mut cursor) {
+        match part.kind() {
+            // Default import: the local name doubles as the label.
+            "identifier" => push(text(part), text(part)),
+            // `* as ns` — same: the namespace object IS what's used.
+            "namespace_import" => {
+                let ns = named_child_of_kind(part, "identifier").and_then(text);
+                push(ns.clone(), ns);
+            }
+            "named_imports" => {
+                let mut names = part.walk();
+                for spec in part.named_children(&mut names) {
+                    if spec.kind() != "import_specifier" {
+                        continue;
+                    }
+                    let name = spec.child_by_field_name("name").and_then(text);
+                    let alias = spec.child_by_field_name("alias").and_then(text);
+                    push(alias.or_else(|| name.clone()), name);
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+/// The first named child of `node` with the given kind.
+fn named_child_of_kind<'tree>(node: Node<'tree>, kind: &str) -> Option<Node<'tree>> {
+    (0..node.named_child_count())
+        .filter_map(|i| node.named_child(i))
+        .find(|child| child.kind() == kind)
 }
 
 #[cfg(test)]
@@ -456,6 +569,101 @@ const notImport = somethingElse('./nope');
         let parsed = parse_source("x.svelte", StructureLanguage::Svelte, source).unwrap();
         let real = parsed.symbols.iter().find(|s| s.name == "real").unwrap();
         assert_eq!(real.start_line, 3);
+    }
+
+    fn binding(specifier: &str, local: &str, label: &str) -> ImportBinding {
+        ImportBinding {
+            specifier: specifier.to_string(),
+            local: local.to_string(),
+            label: label.to_string(),
+        }
+    }
+
+    #[test]
+    fn extracts_import_bindings_of_every_flavor() {
+        let source = r#"
+import { alpha } from './b';
+import { beta as b } from './b';
+import def, { gamma } from './c';
+import * as ns from './d';
+import type { T } from './t';
+export const run = () => alpha() + b() + def + ns.x + gamma;
+"#;
+        let parsed = parse_source("src/x.ts", StructureLanguage::Typescript, source).unwrap();
+        assert_eq!(
+            parsed.bindings,
+            vec![
+                binding("./b", "alpha", "alpha"),
+                binding("./b", "b", "beta"),
+                binding("./c", "def", "def"),
+                binding("./c", "gamma", "gamma"),
+                binding("./d", "ns", "ns"),
+                binding("./t", "T", "T"),
+            ]
+        );
+        for used in ["alpha", "b", "def", "gamma", "ns", "run"] {
+            assert!(parsed.used_names.contains(used), "{used} should be used");
+        }
+    }
+
+    #[test]
+    fn unused_imports_do_not_appear_in_used_names() {
+        let source = "import { alpha } from './b';\nimport { omega } from './b';\nexport const run = () => alpha();\n";
+        let parsed = parse_source("src/x.ts", StructureLanguage::Typescript, source).unwrap();
+        assert_eq!(
+            parsed.bindings,
+            vec![
+                binding("./b", "alpha", "alpha"),
+                binding("./b", "omega", "omega")
+            ]
+        );
+        assert!(parsed.used_names.contains("alpha"));
+        // Declared only in the import statement — never referenced in the body.
+        assert!(!parsed.used_names.contains("omega"));
+    }
+
+    #[test]
+    fn aliased_imports_bind_the_alias_but_keep_the_original_label() {
+        let source = "import { alpha as a } from './b';\nexport const run = () => a();\n";
+        let parsed = parse_source("src/x.ts", StructureLanguage::Typescript, source).unwrap();
+        assert_eq!(parsed.bindings, vec![binding("./b", "a", "alpha")]);
+        assert!(parsed.used_names.contains("a"));
+        assert!(!parsed.used_names.contains("alpha"));
+    }
+
+    #[test]
+    fn dynamic_imports_and_reexports_produce_no_bindings() {
+        let source = "export { c } from '../c';\nconst lazy = await import('./lazy');\nconst legacy = require('./legacy');\n";
+        let parsed = parse_source("src/x.ts", StructureLanguage::Typescript, source).unwrap();
+        // The specifiers still count as imports…
+        assert_eq!(parsed.imports, vec!["../c", "./lazy", "./legacy"]);
+        // …but none of them introduces a local binding.
+        assert_eq!(parsed.bindings, Vec::<ImportBinding>::new());
+    }
+
+    #[test]
+    fn javascript_files_extract_bindings_too() {
+        let source =
+            "import def from './a';\nimport { x as y } from './b';\nconsole.log(def, y);\n";
+        let parsed = parse_source("src/x.js", StructureLanguage::Javascript, source).unwrap();
+        assert_eq!(
+            parsed.bindings,
+            vec![binding("./a", "def", "def"), binding("./b", "y", "x")]
+        );
+        assert!(parsed.used_names.contains("def"));
+        assert!(parsed.used_names.contains("y"));
+    }
+
+    #[test]
+    fn svelte_scripts_contribute_bindings_and_used_names() {
+        let source = "<script lang=\"ts\">\n\timport { x } from './x';\n\timport { dead } from './x';\n\tconst v = x();\n</script>\n\n<div>{v}</div>\n";
+        let parsed = parse_source("src/w.svelte", StructureLanguage::Svelte, source).unwrap();
+        assert_eq!(
+            parsed.bindings,
+            vec![binding("./x", "x", "x"), binding("./x", "dead", "dead")]
+        );
+        assert!(parsed.used_names.contains("x"));
+        assert!(!parsed.used_names.contains("dead"));
     }
 
     #[test]

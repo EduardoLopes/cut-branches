@@ -4,8 +4,8 @@
 //! canvas view consumes `edges` directly, the list view derives per-file
 //! import/imported-by counts from them, and `changed_symbols` powers the
 //! "what functions changed" summaries. The edge `kind` is an enum so a later
-//! phase can add symbol-level relations (`Call`, `TypeRef`) without breaking
-//! the shape.
+//! phase can add further symbol-level relations (e.g. `TypeRef`) without
+//! breaking the shape.
 
 use serde::{Deserialize, Serialize};
 
@@ -64,15 +64,24 @@ pub struct FileImport {
 #[serde(rename_all = "camelCase")]
 pub enum StructureEdgeKind {
     Import,
+    /// The source file imports AND uses at least one symbol from the target.
+    Call,
 }
 
 /// A directed relation between two changed files (`from` imports `to`).
+///
+/// At most one edge exists per `(from, to)` pair: when the source file uses
+/// any of the symbols it imports from the target, the edge is upgraded to
+/// `Call` and `symbols` lists what is used; otherwise it stays `Import`.
 #[derive(Serialize, Deserialize, specta::Type, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct StructureEdge {
     pub from: String,
     pub to: String,
     pub kind: StructureEdgeKind,
+    /// For `Call` edges: the sorted, deduped symbol names the source file
+    /// uses from the target. Empty for plain `Import` edges.
+    pub symbols: Vec<String>,
 }
 
 /// The analyzed structure of one changed file.

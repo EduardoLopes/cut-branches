@@ -8,7 +8,7 @@
 //! failures are fatal.
 
 use std::cell::RefCell;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::Path;
 
 use git2::{Repository, Tree};
@@ -51,7 +51,10 @@ pub fn get_diff_structure(
     let aliases = read_alias_map(&repo, &target_tree);
 
     let mut files = Vec::with_capacity(entries.len());
-    let mut edges = Vec::new();
+    // Per (from, to) pair: the used-symbol labels the source pulls from the
+    // target. An empty set means "imports but provably uses nothing" — the
+    // edge stays a plain Import; anything recorded upgrades it to Call.
+    let mut edge_symbols: BTreeMap<(String, String), BTreeSet<String>> = BTreeMap::new();
 
     for entry in &entries {
         let language = analysis::detect_language(&entry.path);
@@ -74,11 +77,26 @@ pub fn get_diff_structure(
 
                 for import in &imports {
                     if let Some(resolved) = &import.resolved_path {
-                        edges.push(StructureEdge {
-                            from: entry.path.clone(),
-                            to: resolved.clone(),
-                            kind: StructureEdgeKind::Import,
-                        });
+                        edge_symbols
+                            .entry((entry.path.clone(), resolved.clone()))
+                            .or_default();
+                    }
+                }
+
+                // Bindings whose local name the body references mark the
+                // pair as a symbol-level use.
+                for binding in &parsed.bindings {
+                    if !parsed.used_names.contains(&binding.local) {
+                        continue;
+                    }
+                    let resolved =
+                        resolve_import(&entry.path, &binding.specifier, &changed_paths, &aliases)
+                            .filter(|resolved| *resolved != entry.path);
+                    if let Some(resolved) = resolved {
+                        edge_symbols
+                            .entry((entry.path.clone(), resolved))
+                            .or_default()
+                            .insert(binding.label.clone());
                     }
                 }
 
@@ -100,6 +118,20 @@ pub fn get_diff_structure(
         files.push(structure);
     }
 
+    let mut edges: Vec<StructureEdge> = edge_symbols
+        .into_iter()
+        .map(|((from, to), symbols)| StructureEdge {
+            from,
+            to,
+            kind: if symbols.is_empty() {
+                StructureEdgeKind::Import
+            } else {
+                StructureEdgeKind::Call
+            },
+            // BTreeSet iteration: already sorted and deduped.
+            symbols: symbols.into_iter().collect(),
+        })
+        .collect();
     edges.sort_by(|a, b| a.from.cmp(&b.from).then_with(|| a.to.cmp(&b.to)));
     edges.dedup();
 
@@ -368,13 +400,16 @@ mod tests {
         assert!(!css.parsed);
         assert_eq!(css.language, StructureLanguage::Unknown);
 
-        // Duplicate imports collapse into one edge.
+        // Duplicate imports collapse into one edge; `alpha` is called in the
+        // body so the edge upgrades to Call — while the unused `helper`
+        // (the `$src/b` alias import) contributes no symbol.
         assert_eq!(
             edges,
             vec![StructureEdge {
                 from: "src/a.ts".to_string(),
                 to: "src/b.ts".to_string(),
-                kind: StructureEdgeKind::Import,
+                kind: StructureEdgeKind::Call,
+                symbols: vec!["alpha".to_string()],
             }]
         );
     }
@@ -428,9 +463,68 @@ mod tests {
         assert!(!gone.parsed);
         assert!(gone.changed_symbols.is_empty());
 
-        assert_eq!(edges.len(), 1);
-        assert_eq!(edges[0].from, "src/user.ts");
-        assert_eq!(edges[0].to, "src/gone.ts");
+        // `g` is called in user.ts, so even an edge into a deleted (unparsed)
+        // file carries the used symbol.
+        assert_eq!(
+            edges,
+            vec![StructureEdge {
+                from: "src/user.ts".to_string(),
+                to: "src/gone.ts".to_string(),
+                kind: StructureEdgeKind::Call,
+                symbols: vec!["g".to_string()],
+            }]
+        );
+    }
+
+    #[test]
+    fn unused_imports_stay_import_edges_while_used_ones_become_calls() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+        run_git(path, &["checkout", "-b", "feature/usage"]);
+        commit_file(
+            path,
+            "src/used.ts",
+            "export const u = () => 1;\n",
+            "Add used.ts",
+            "2024-01-01T10:00:00",
+        );
+        commit_file(
+            path,
+            "src/dead.ts",
+            "export const n = () => 2;\n",
+            "Add dead.ts",
+            "2024-01-01T10:01:00",
+        );
+        commit_file(
+            path,
+            "src/main.ts",
+            "import { u } from './used';\nimport { n } from './dead';\nexport const go = () => u();\n",
+            "Add main.ts",
+            "2024-01-01T10:02:00",
+        );
+        run_git(path, &["checkout", "main"]);
+
+        let (_, edges) =
+            get_diff_structure(repo.path(), DiffTarget::Branch("feature/usage")).unwrap();
+
+        assert_eq!(
+            edges,
+            vec![
+                StructureEdge {
+                    from: "src/main.ts".to_string(),
+                    to: "src/dead.ts".to_string(),
+                    kind: StructureEdgeKind::Import,
+                    symbols: Vec::new(),
+                },
+                StructureEdge {
+                    from: "src/main.ts".to_string(),
+                    to: "src/used.ts".to_string(),
+                    kind: StructureEdgeKind::Call,
+                    symbols: vec!["u".to_string()],
+                },
+            ]
+        );
     }
 
     #[test]
