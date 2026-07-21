@@ -13,8 +13,14 @@ const diffViewOptionsSchema = z.object({
 	layout: z.enum(['unified', 'split']),
 	variant: z.enum(['background', 'markers', 'bars']),
 	gutter: z.enum(['single', 'double']),
-	wrap: z.boolean()
+	wrap: z.boolean(),
+	// Defaulted (not required) so payloads stored before the canvas mode
+	// existed still validate instead of dropping the user's other prefs.
+	viewMode: z.enum(['list', 'canvas']).default('list')
 });
+
+/** How the changed files are presented. */
+export type DiffViewMode = 'list' | 'canvas';
 
 /** The user's presentation preferences for rendered diffs. */
 export interface DiffViewOptions {
@@ -22,13 +28,15 @@ export interface DiffViewOptions {
 	variant: DiffViewerVariant;
 	gutter: DiffViewerGutter;
 	wrap: boolean;
+	viewMode: DiffViewMode;
 }
 
 export const DEFAULT_DIFF_VIEW_OPTIONS: DiffViewOptions = {
 	layout: 'unified',
 	variant: 'background',
 	gutter: 'single',
-	wrap: false
+	wrap: false,
+	viewMode: 'list'
 };
 
 /**

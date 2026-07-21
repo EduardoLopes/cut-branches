@@ -7,15 +7,20 @@
 	import Alert from '@pindoba/svelte-alert';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
+	import { Choice, ChoiceItem } from '@pindoba/svelte-choice';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
+	import { tick } from 'svelte';
 	import { useDiffSearch } from '../application/use-diff-search.svelte';
 	import { useDiffViewOptions } from '../application/use-diff-view-options.svelte';
 	import ChangedFileRow from '../components/changed-file-row.svelte';
+	import DiffCanvas from '../components/diff-canvas.svelte';
 	import DiffFileTree from '../components/diff-file-tree.svelte';
 	import DiffOptionsMenu from '../components/diff-options-menu.svelte';
+	import { createGetDiffStructureQuery } from '../infrastructure/queries/create-get-diff-structure-query';
 	import { createListChangedFilesQuery } from '../infrastructure/queries/create-list-changed-files-query';
+	import { buildStructureIndex } from '../models/structure-index';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { createGetRepositoryQuery } from '$domains/branch-management/infrastructure/queries/create-get-repository-query';
@@ -43,6 +48,16 @@
 		branchName,
 		commitSha
 	}));
+
+	// Code-structure analysis (changed symbols + import edges), shared by every
+	// row (impact badges) and the canvas mode. Non-blocking: the list renders
+	// without it and enriches when it lands.
+	const structureQuery = createGetDiffStructureQuery(() => ({
+		path: path ?? '',
+		branchName,
+		commitSha
+	}));
+	const structureIndex = $derived(buildStructureIndex(structureQuery.data));
 
 	const shortSha = $derived(commitSha ? commitSha.slice(0, 7) : null);
 	// Expand single-file diffs by default — the list adds nothing there.
@@ -77,6 +92,14 @@
 		fileListElement
 			?.querySelector(`[data-file-path="${CSS.escape(file.path)}"]`)
 			?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+	}
+
+	// Activating a canvas node hands off to the list: switch mode, wait for
+	// the rows to mount, then run the same reveal the file tree uses.
+	async function openFileFromCanvas(path: string) {
+		viewOptions.update({ viewMode: 'list' });
+		await tick();
+		revealFile({ path });
 	}
 
 	const host = css({
@@ -191,6 +214,40 @@
 				<Badge size="sm" emphasis="secondary" feedback="danger">−{summary.linesRemoved}</Badge>
 			</span>
 			{#if summary.files.length > 0}
+				<!-- Keyed on the active mode so the Choice's internal selection can
+				     never drift from the persisted option (same guard as the
+				     repository context switch). -->
+				{#key viewOptions.options.viewMode}
+					<Choice
+						type="radio"
+						appearance="button"
+						size="sm"
+						defaultValue={[viewOptions.options.viewMode]}
+						onValueChange={(value) => {
+							const next = value[0];
+							if (next === 'list' || next === 'canvas') {
+								viewOptions.update({ viewMode: next });
+							}
+						}}
+						aria-label="Diff view mode"
+						data-testid="diff-view-mode-switch"
+					>
+						<ChoiceItem value="list" label="List" data-testid="view-mode-list">
+							{#snippet leading()}
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:list" width="14px" height="14px" />
+								</Stamp>
+							{/snippet}
+						</ChoiceItem>
+						<ChoiceItem value="canvas" label="Canvas" data-testid="view-mode-canvas">
+							{#snippet leading()}
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:workflow" width="14px" height="14px" />
+								</Stamp>
+							{/snippet}
+						</ChoiceItem>
+					</Choice>
+				{/key}
 				<DiffOptionsMenu options={viewOptions.options} onChange={viewOptions.update} />
 			{/if}
 		{/if}
@@ -229,6 +286,36 @@
 				icon="lucide:search-x"
 				testId="diff-search-empty"
 			/>
+		{:else if viewOptions.options.viewMode === 'canvas'}
+			<!-- Canvas mode: the whole board depends on the structure analysis,
+			     so its loading/error states live here. The list mode below never
+			     blocks on that query. -->
+			{#if structureQuery.isLoading}
+				<div class={css({ display: 'flex', justifyContent: 'center', p: 'lg' })}>
+					<Loading loading data-testid="canvas-structure-loading">
+						<span class={css({ color: 'neutral.text.muted' })}>Analyzing code structure…</span>
+					</Loading>
+				</div>
+			{:else if structureQuery.isError}
+				<div class={css({ p: 'md' })}>
+					<Alert feedback="danger" data-testid="canvas-structure-error">
+						{structureQuery.error.description ?? structureQuery.error.message}
+					</Alert>
+				</div>
+			{:else}
+				<DiffCanvas
+					files={visibleFiles}
+					structure={structureQuery.data}
+					repositoryPath={path ?? ''}
+					{branchName}
+					{commitSha}
+					diffLayout={viewOptions.options.layout}
+					diffVariant={viewOptions.options.variant}
+					diffGutter={viewOptions.options.gutter}
+					diffWrap={viewOptions.options.wrap}
+					onOpenFile={openFileFromCanvas}
+				/>
+			{/if}
 		{:else}
 			<div class={diffBody}>
 				{#if visibleFiles.length > 1}
@@ -257,6 +344,7 @@
 								searchTerm={searchTerm.trim()}
 								searchMatched={search.isContentMatch(file)}
 								revealSeq={reveal.path === file.path ? reveal.seq : 0}
+								structure={structureIndex.get(file.path)}
 								layout={viewOptions.options.layout}
 								variant={viewOptions.options.variant}
 								gutter={viewOptions.options.gutter}

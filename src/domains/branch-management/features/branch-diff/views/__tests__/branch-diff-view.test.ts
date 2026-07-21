@@ -9,6 +9,8 @@ const h = vi.hoisted(() => ({
 	repositoryQuery: {} as any,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	changedFilesQuery: {} as any,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	structureQuery: {} as any,
 	goto: vi.fn()
 }));
 
@@ -18,6 +20,10 @@ vi.mock('$domains/branch-management/infrastructure/queries/create-get-repository
 vi.mock(
 	'$domains/branch-management/features/branch-diff/infrastructure/queries/create-list-changed-files-query',
 	() => ({ createListChangedFilesQuery: vi.fn(() => h.changedFilesQuery) })
+);
+vi.mock(
+	'$domains/branch-management/features/branch-diff/infrastructure/queries/create-get-diff-structure-query',
+	() => ({ createGetDiffStructureQuery: vi.fn(() => h.structureQuery) })
 );
 vi.mock(
 	'$domains/branch-management/features/branch-diff/infrastructure/queries/create-get-file-diff-query',
@@ -79,15 +85,19 @@ const output = (overrides: Partial<ListChangedFilesOutput> = {}): ListChangedFil
 
 function setQueries({
 	repository = { isLoading: false, isError: false, error: null, data: { path: '/repo' } },
-	changedFiles = { isLoading: false, isError: false, error: null, data: output() }
+	changedFiles = { isLoading: false, isError: false, error: null, data: output() },
+	structure = { isLoading: false, isError: false, error: null, data: undefined }
 }: {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	repository?: any;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	changedFiles?: any;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	structure?: any;
 } = {}) {
 	h.repositoryQuery = repository;
 	h.changedFilesQuery = changedFiles;
+	h.structureQuery = structure;
 }
 
 beforeEach(() => {
@@ -309,6 +319,134 @@ describe('BranchDiffView', () => {
 			branchName: 'feature/x'
 		});
 
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
+		});
+	});
+	it('threads the structure analysis into the rows as impact badges', async () => {
+		setQueries({
+			structure: {
+				isLoading: false,
+				isError: false,
+				error: null,
+				data: {
+					files: [
+						{
+							path: 'src/app.ts',
+							language: 'typescript',
+							parsed: true,
+							changedSymbols: [{ name: 'boot', kind: 'function', startLine: 1, endLine: 4 }],
+							imports: [{ specifier: './new', resolvedPath: 'src/new.ts' }]
+						},
+						{
+							path: 'src/new.ts',
+							language: 'typescript',
+							parsed: true,
+							changedSymbols: [],
+							imports: []
+						}
+					],
+					edges: [{ from: 'src/app.ts', to: 'src/new.ts', kind: 'import' }]
+				}
+			}
+		});
+		const { container, getByText } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+		await tick();
+
+		await expect.element(getByText('ƒ boot')).toBeInTheDocument();
+		expect(container.querySelector('[data-testid="changed-file-imports"]')?.textContent).toContain(
+			'1'
+		);
+		expect(
+			container.querySelector('[data-testid="changed-file-imported-by"]')?.textContent
+		).toContain('1');
+	});
+	it('switches to the canvas mode and back, persisting the choice', async () => {
+		setQueries({
+			structure: { isLoading: false, isError: false, error: null, data: { files: [], edges: [] } }
+		});
+		const { container, getByText } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+		await tick();
+
+		expect(container.querySelector('[data-testid="diff-canvas"]')).toBeNull();
+		// The Choice's radio input is visually hidden — click its label.
+		await getByText('Canvas').click();
+
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
+		});
+		// The list body is gone while the canvas is active…
+		expect(container.querySelector('[data-testid="changed-files-list"]')).toBeNull();
+		// …and the choice is persisted for the next session.
+		expect(localStorage.getItem('diff-view-options')).toContain('"viewMode":"canvas"');
+	});
+
+	it('shows the analysis loading and error states in canvas mode', async () => {
+		localStorage.setItem(
+			'diff-view-options',
+			JSON.stringify({
+				layout: 'unified',
+				variant: 'background',
+				gutter: 'single',
+				wrap: false,
+				viewMode: 'canvas'
+			})
+		);
+		setQueries({ structure: { isLoading: true, isError: false, error: null, data: undefined } });
+		const first = renderWithTestWrapper(BranchDiffView, { id: 'repo-1', branchName: 'feature/x' });
+		await expect.element(first.getByText('Analyzing code structure…')).toBeInTheDocument();
+		first.unmount();
+
+		setQueries({
+			structure: {
+				isLoading: false,
+				isError: true,
+				error: { message: 'Failed', description: 'Analysis blew up' },
+				data: undefined
+			}
+		});
+		const second = renderWithTestWrapper(BranchDiffView, { id: 'repo-1', branchName: 'feature/x' });
+		await expect.element(second.getByText('Analysis blew up')).toBeInTheDocument();
+	});
+
+	it('returns to the list and reveals the file when a canvas node is activated', async () => {
+		localStorage.setItem(
+			'diff-view-options',
+			JSON.stringify({
+				layout: 'unified',
+				variant: 'background',
+				gutter: 'single',
+				wrap: false,
+				viewMode: 'canvas'
+			})
+		);
+		setQueries({
+			structure: { isLoading: false, isError: false, error: null, data: { files: [], edges: [] } }
+		});
+		const { container } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
+		});
+
+		(
+			container.querySelector(
+				'[data-canvas-node="src/app.ts"] [data-testid="canvas-node-open-in-list"]'
+			) as HTMLElement
+		).click();
+
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="changed-files-list"]')).not.toBeNull();
+		});
+		// The reveal signal opened the file's diff panel in the list.
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
 		});

@@ -41,4 +41,24 @@ describe('useDiffViewOptions', () => {
 		const view = useDiffViewOptions();
 		expect(view.options).toEqual(DEFAULT_DIFF_VIEW_OPTIONS);
 	});
+	it('persists the view mode alongside the other options', () => {
+		useDiffViewOptions().update({ viewMode: 'canvas' });
+
+		const restored = useDiffViewOptions();
+		expect(restored.options.viewMode).toBe('canvas');
+		expect(restored.options.layout).toBe('unified');
+	});
+
+	it('accepts payloads stored before the view mode existed', () => {
+		// A pre-canvas payload has no viewMode — it must still validate and
+		// keep the user's other preferences.
+		localStorage.setItem(
+			STORAGE_KEY,
+			JSON.stringify({ layout: 'split', variant: 'markers', gutter: 'double', wrap: true })
+		);
+
+		const view = useDiffViewOptions();
+		expect(view.options.layout).toBe('split');
+		expect(view.options.viewMode).toBe('list');
+	});
 });

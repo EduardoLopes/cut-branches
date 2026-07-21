@@ -8,8 +8,9 @@
 	import Button from '@pindoba/svelte-button';
 	import Card from '@pindoba/svelte-card';
 	import Stamp from '@pindoba/svelte-stamp';
+	import type { FileStructureInfo } from '../models/structure-index';
 	import FileDiffPanel from './file-diff-panel.svelte';
-	import type { ChangedFile, FileChangeStatus } from '$infrastructure/bindings';
+	import type { ChangedFile, FileChangeStatus, SymbolKind } from '$infrastructure/bindings';
 	import { buildMarkedRuns } from '$ui/patterns/diff-viewer/line-marks';
 	import type {
 		DiffViewerGutter,
@@ -36,6 +37,10 @@
 		/** Monotonic navigation signal: every increment (from the file tree)
 		 *  opens the row, even if the user collapsed it since the last one. */
 		revealSeq?: number;
+		/** This file's slice of the diff structure analysis (changed symbols +
+		 *  import-impact counts). Undefined while the analysis loads or when it
+		 *  failed — the row then renders exactly as before. */
+		structure?: FileStructureInfo;
 		/** Diff presentation options, passed through to the panel. */
 		layout?: DiffViewerLayout;
 		variant?: DiffViewerVariant;
@@ -52,6 +57,7 @@
 		searchTerm = '',
 		searchMatched = false,
 		revealSeq = 0,
+		structure = undefined,
 		layout = 'unified',
 		variant = 'background',
 		gutter = 'single',
@@ -115,43 +121,90 @@
 		background: 'warning.text.accent/30',
 		borderRadius: '2px'
 	});
+
+	// --- Structure summary ----------------------------------------------------
+	// The analysis names the definitions the hunks touched; the row shows the
+	// first few so a reviewer knows WHAT changed before opening the diff.
+
+	const SYMBOL_SUMMARY_LIMIT = 3;
+	const SYMBOL_GLYPH: Record<SymbolKind, string> = {
+		function: 'ƒ',
+		method: 'ƒ',
+		class: 'C',
+		component: '◇'
+	};
+
+	const symbolSummary = $derived.by(() => {
+		const symbols = structure?.symbols ?? [];
+		if (symbols.length === 0) {
+			return null;
+		}
+		const shown = symbols
+			.slice(0, SYMBOL_SUMMARY_LIMIT)
+			.map((symbol) => `${SYMBOL_GLYPH[symbol.kind]} ${symbol.name}`)
+			.join(', ');
+		const more = symbols.length - SYMBOL_SUMMARY_LIMIT;
+		return more > 0 ? `${shown} +${more} more` : shown;
+	});
+
+	const symbolsText = css({
+		fontFamily: 'mono',
+		fontSize: 'xs',
+		color: 'neutral.text.muted',
+		minWidth: '0',
+		overflow: 'hidden',
+		textOverflow: 'ellipsis',
+		whiteSpace: 'nowrap'
+	});
 </script>
 
 {#snippet heading()}
-	<span
-		class={css({
-			display: 'flex',
-			alignItems: 'center',
-			gap: 'xs',
-			minWidth: '0',
-			width: '100%'
-		})}
-	>
-		<span class={css({ flexShrink: '0', display: 'inline-flex' })}>
-			<Badge
-				size="xs"
-				emphasis="secondary"
-				feedback={STATUS_FEEDBACK[file.status]}
-				data-testid="changed-file-status"
+	<span class={css({ display: 'flex', flexDirection: 'column', minWidth: '0', width: '100%' })}>
+		<span
+			class={css({
+				display: 'flex',
+				alignItems: 'center',
+				gap: 'xs',
+				minWidth: '0',
+				width: '100%'
+			})}
+		>
+			<span class={css({ flexShrink: '0', display: 'inline-flex' })}>
+				<Badge
+					size="xs"
+					emphasis="secondary"
+					feedback={STATUS_FEEDBACK[file.status]}
+					data-testid="changed-file-status"
+				>
+					{#snippet leading()}
+						<Stamp emphasis="ghost"><Icon icon={STATUS_ICON[file.status]} /></Stamp>
+					{/snippet}
+					{file.status}
+				</Badge>
+			</span>
+			<!-- RTL trick: long paths ellipsize at the START so the file name (the
+			     part that identifies the change) stays visible. The full path stays
+			     available via the title. -->
+			<span class={pathText} title={file.path} data-testid="changed-file-path">
+				&lrm;{#each pathRuns as run, runIndex (runIndex)}<span
+						class={run.marked ? markedText : undefined}
+						data-marked={run.marked ? 'true' : undefined}>{run.content}</span
+					>{/each}
+			</span>
+			{#if file.oldPath}
+				<span class={oldPathText} title={`Renamed from ${file.oldPath}`}>
+					← {file.oldPath}
+				</span>
+			{/if}
+		</span>
+		{#if symbolSummary}
+			<!-- Which definitions the hunks touched — the "what changed" line. -->
+			<span
+				class={symbolsText}
+				title={structure?.symbols.map((s) => s.name).join(', ')}
+				data-testid="changed-file-symbols"
 			>
-				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon={STATUS_ICON[file.status]} /></Stamp>
-				{/snippet}
-				{file.status}
-			</Badge>
-		</span>
-		<!-- RTL trick: long paths ellipsize at the START so the file name (the
-		     part that identifies the change) stays visible. The full path stays
-		     available via the title. -->
-		<span class={pathText} title={file.path} data-testid="changed-file-path">
-			&lrm;{#each pathRuns as run, runIndex (runIndex)}<span
-					class={run.marked ? markedText : undefined}
-					data-marked={run.marked ? 'true' : undefined}>{run.content}</span
-				>{/each}
-		</span>
-		{#if file.oldPath}
-			<span class={oldPathText} title={`Renamed from ${file.oldPath}`}>
-				← {file.oldPath}
+				{symbolSummary}
 			</span>
 		{/if}
 	</span>
@@ -159,6 +212,34 @@
 
 {#snippet headingTrailing()}
 	<span class={css({ display: 'flex', alignItems: 'center', gap: 'xs', flexShrink: '0' })}>
+		{#if structure && structure.importsChanged > 0}
+			<Badge
+				size="xs"
+				emphasis="secondary"
+				feedback="primary"
+				title={`Imports ${structure.importsChanged} changed ${structure.importsChanged === 1 ? 'file' : 'files'}`}
+				data-testid="changed-file-imports"
+			>
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:arrow-up-right" /></Stamp>
+				{/snippet}
+				{structure.importsChanged}
+			</Badge>
+		{/if}
+		{#if structure && structure.importedByChanged > 0}
+			<Badge
+				size="xs"
+				emphasis="secondary"
+				feedback="primary"
+				title={`Imported by ${structure.importedByChanged} changed ${structure.importedByChanged === 1 ? 'file' : 'files'}`}
+				data-testid="changed-file-imported-by"
+			>
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:arrow-down-left" /></Stamp>
+				{/snippet}
+				{structure.importedByChanged}
+			</Badge>
+		{/if}
 		{#if file.isBinary}
 			<Badge size="xs" emphasis="secondary" feedback="neutral" data-testid="changed-file-binary">
 				binary
