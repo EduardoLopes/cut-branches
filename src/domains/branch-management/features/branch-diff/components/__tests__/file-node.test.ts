@@ -210,6 +210,49 @@ describe('FileNode', () => {
 		expect(container.querySelector('[data-testid="canvas-node-diff"]')).toBeNull();
 	});
 
+	it('reports reviewed toggle clicks when not yet reviewed', async () => {
+		const onToggleReviewed = vi.fn();
+		const { container } = renderWithTestWrapper(FileNode, {
+			...defaultProps,
+			reviewed: false,
+			onToggleReviewed
+		});
+
+		const button = container.querySelector(
+			'[data-testid="canvas-node-reviewed"]'
+		) as HTMLButtonElement;
+		const panel = container.querySelector('[data-testid="canvas-file-node"]') as HTMLElement;
+		expect(button.getAttribute('aria-pressed')).toBe('false');
+		expect(panel.dataset.reviewed).toBeUndefined();
+
+		button.click();
+		expect(onToggleReviewed).toHaveBeenCalledWith('src/app.ts');
+	});
+
+	it('marks the panel reviewed when the flag is set', async () => {
+		const { container } = renderWithTestWrapper(FileNode, {
+			...defaultProps,
+			reviewed: true,
+			onToggleReviewed: vi.fn()
+		});
+
+		const button = container.querySelector(
+			'[data-testid="canvas-node-reviewed"]'
+		) as HTMLButtonElement;
+		expect(button.getAttribute('aria-pressed')).toBe('true');
+		expect(
+			(container.querySelector('[data-testid="canvas-file-node"]') as HTMLElement).dataset.reviewed
+		).toBe('true');
+	});
+
+	it('does not throw when the reviewed toggle has no handler', async () => {
+		const { container } = renderWithTestWrapper(FileNode, { ...defaultProps, reviewed: false });
+		const button = container.querySelector(
+			'[data-testid="canvas-node-reviewed"]'
+		) as HTMLButtonElement;
+		expect(() => button.click()).not.toThrow();
+	});
+
 	it('threads explicit diff options into the expanded panel', async () => {
 		const { container, getByText } = renderWithTestWrapper(FileNode, {
 			...defaultProps,

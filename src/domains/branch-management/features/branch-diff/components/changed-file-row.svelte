@@ -46,6 +46,10 @@
 		variant?: DiffViewerVariant;
 		gutter?: DiffViewerGutter;
 		wrap?: boolean;
+		/** Whether the reviewer has marked this file reviewed. */
+		reviewed?: boolean;
+		/** Flip this file's reviewed state. */
+		onToggleReviewed?: (path: string) => void;
 	}
 
 	let {
@@ -61,7 +65,9 @@
 		layout = 'unified',
 		variant = 'background',
 		gutter = 'single',
-		wrap = false
+		wrap = false,
+		reviewed = false,
+		onToggleReviewed = undefined
 	}: Props = $props();
 
 	let expanded = $state(defaultExpanded);
@@ -155,6 +161,17 @@
 		overflow: 'hidden',
 		textOverflow: 'ellipsis',
 		whiteSpace: 'nowrap'
+	});
+
+	// Reviewed rows recede so unreviewed ones stand out; hovering one restores
+	// it so its diff stays legible. Wraps the card so the whole row dims, sticky
+	// header included, without disturbing the card's own sticky wiring.
+	const reviewedWrapper = css({
+		minWidth: '0',
+		maxWidth: '100%',
+		pindobaTransition: 'fast',
+		'&[data-reviewed="true"]': { opacity: '0.5' },
+		'&[data-reviewed="true"]:hover': { opacity: '1' }
 	});
 </script>
 
@@ -256,6 +273,25 @@
 			emphasis="ghost"
 			size="xs"
 			shape="square"
+			feedback={reviewed ? 'success' : undefined}
+			onclick={() => onToggleReviewed?.(file.path)}
+			aria-pressed={reviewed}
+			aria-label={reviewed ? `Mark ${file.path} not reviewed` : `Mark ${file.path} reviewed`}
+			title={reviewed ? 'Reviewed — click to unmark' : 'Mark reviewed'}
+			data-testid="toggle-file-reviewed"
+		>
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon
+					icon={reviewed ? 'lucide:circle-check-big' : 'lucide:circle'}
+					width="16px"
+					height="16px"
+				/>
+			</Stamp>
+		</Button>
+		<Button
+			emphasis="ghost"
+			size="xs"
+			shape="square"
 			onclick={() => (expanded = !expanded)}
 			aria-expanded={expanded}
 			aria-label={expanded ? `Hide diff of ${file.path}` : `Show diff of ${file.path}`}
@@ -297,40 +333,42 @@
 	</div>
 {/snippet}
 
-<Card
-	size="xs"
-	background="surface.step.2"
-	border="muted"
-	shadow="none"
-	radius="sm"
-	data-testid="changed-file-row"
-	header={{
-		heading: { content: heading, trailing: headingTrailing },
-		headingTextStyle: 'body.sm',
-		layout: { heading: { trailing: 'apart' } },
-		background: 'surface.soft',
-		// Let the path shrink/ellipsize instead of overflowing: every Banner
-		// wrapper needs min-width: 0, and the trailing badges keep their size.
-		// The header also sticks to the top of the scrolling file list while
-		// its diff is in view, so long diffs never lose their file identity —
-		// z-index keeps it above the diff's own sticky hunk headers.
-		passThrough: {
-			root: {
-				style: css.raw({
-					width: '100%',
-					minWidth: '0',
-					position: 'sticky',
-					top: '0',
-					zIndex: '2'
-				})
-			},
-			flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
-			flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
-			headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
-			headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
-			heading: { style: css.raw({ flex: '1', minWidth: '0', overflow: 'hidden' }) },
-			headingTrailing: { style: css.raw({ flexShrink: '0' }) }
-		}
-	}}
-	children={expanded ? diffBody : undefined}
-/>
+<div class={reviewedWrapper} data-reviewed={reviewed ? 'true' : undefined}>
+	<Card
+		size="xs"
+		background="surface.step.2"
+		border="muted"
+		shadow="none"
+		radius="sm"
+		data-testid="changed-file-row"
+		header={{
+			heading: { content: heading, trailing: headingTrailing },
+			headingTextStyle: 'body.sm',
+			layout: { heading: { trailing: 'apart' } },
+			background: 'surface.soft',
+			// Let the path shrink/ellipsize instead of overflowing: every Banner
+			// wrapper needs min-width: 0, and the trailing badges keep their size.
+			// The header also sticks to the top of the scrolling file list while
+			// its diff is in view, so long diffs never lose their file identity —
+			// z-index keeps it above the diff's own sticky hunk headers.
+			passThrough: {
+				root: {
+					style: css.raw({
+						width: '100%',
+						minWidth: '0',
+						position: 'sticky',
+						top: '0',
+						zIndex: '2'
+					})
+				},
+				flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
+				flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+				headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+				headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
+				heading: { style: css.raw({ flex: '1', minWidth: '0', overflow: 'hidden' }) },
+				headingTrailing: { style: css.raw({ flexShrink: '0' }) }
+			}
+		}}
+		children={expanded ? diffBody : undefined}
+	/>
+</div>

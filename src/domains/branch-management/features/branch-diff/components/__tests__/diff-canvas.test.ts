@@ -530,4 +530,25 @@ describe('DiffCanvas', () => {
 			expect(container.querySelectorAll('[data-testid="canvas-file-node"]')).toHaveLength(2);
 		});
 	});
+
+	it('marks reviewed nodes and relays reviewed toggles', async () => {
+		const onToggleReviewed = vi.fn();
+		const { container } = renderWithTestWrapper(DiffCanvas, {
+			...defaultProps,
+			isReviewed: (path: string) => path === 'src/a.ts',
+			onToggleReviewed
+		});
+
+		await vi.waitFor(() => {
+			expect(container.querySelectorAll('[data-testid="canvas-file-node"]')).toHaveLength(2);
+		});
+
+		const reviewedNode = container.querySelector('[data-canvas-node="src/a.ts"]') as HTMLElement;
+		const plainNode = container.querySelector('[data-canvas-node="src/b.ts"]') as HTMLElement;
+		expect(reviewedNode.dataset.reviewed).toBe('true');
+		expect(plainNode.dataset.reviewed).toBeUndefined();
+
+		(plainNode.querySelector('[data-testid="canvas-node-reviewed"]') as HTMLElement).click();
+		expect(onToggleReviewed).toHaveBeenCalledWith('src/b.ts');
+	});
 });

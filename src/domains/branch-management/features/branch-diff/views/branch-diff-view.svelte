@@ -14,6 +14,7 @@
 	import { tick } from 'svelte';
 	import { useDiffSearch } from '../application/use-diff-search.svelte';
 	import { useDiffViewOptions } from '../application/use-diff-view-options.svelte';
+	import { useReviewedFiles } from '../application/use-reviewed-files.svelte';
 	import ChangedFileRow from '../components/changed-file-row.svelte';
 	import DiffCanvas from '../components/diff-canvas.svelte';
 	import DiffFileTree from '../components/diff-file-tree.svelte';
@@ -65,6 +66,19 @@
 
 	// How diffs are drawn (layout/style/gutter/wrap), persisted across sessions.
 	const viewOptions = useDiffViewOptions();
+
+	// The reviewer's per-file "reviewed" checklist, persisted per repo+target.
+	// Shared by both surfaces: list rows and canvas nodes toggle the same set.
+	const reviewed = useReviewedFiles({
+		getPath: () => path ?? '',
+		getBranchName: () => branchName,
+		getCommitSha: () => commitSha,
+		getFiles: () => changedFilesQuery.data?.files ?? []
+	});
+	// The count is over the full changeset regardless of search filtering, and
+	// already excludes stale/removed marks (the composable only counts files
+	// still present and unchanged).
+	const reviewedCount = $derived(reviewed.count);
 
 	// Search filters by file path immediately and by diff content (the code
 	// in the hunks) once the per-file diffs load through the shared cache.
@@ -214,6 +228,42 @@
 				<Badge size="sm" emphasis="secondary" feedback="danger">−{summary.linesRemoved}</Badge>
 			</span>
 			{#if summary.files.length > 0}
+				<span
+					class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}
+					data-testid="diff-reviewed-progress"
+				>
+					<Badge
+						size="sm"
+						emphasis="secondary"
+						feedback={reviewedCount === summary.files.length ? 'success' : 'neutral'}
+						title="Files marked reviewed"
+					>
+						{#snippet leading()}
+							<Stamp emphasis="ghost">
+								<Icon
+									icon={reviewedCount === summary.files.length
+										? 'lucide:circle-check-big'
+										: 'lucide:list-checks'}
+								/>
+							</Stamp>
+						{/snippet}
+						{reviewedCount}/{summary.files.length} reviewed
+					</Badge>
+					{#if reviewedCount > 0}
+						<Button
+							emphasis="ghost"
+							size="xs"
+							onclick={() => reviewed.clearReviewed()}
+							aria-label="Clear all reviewed marks"
+							title="Clear all reviewed marks"
+							data-testid="diff-clear-reviewed"
+						>
+							Clear
+						</Button>
+					{/if}
+				</span>
+			{/if}
+			{#if summary.files.length > 0}
 				<!-- Keyed on the active mode so the Choice's internal selection can
 				     never drift from the persisted option (same guard as the
 				     repository context switch). -->
@@ -313,6 +363,8 @@
 					diffVariant={viewOptions.options.variant}
 					diffGutter={viewOptions.options.gutter}
 					diffWrap={viewOptions.options.wrap}
+					isReviewed={reviewed.isReviewed}
+					onToggleReviewed={reviewed.toggle}
 					onOpenFile={openFileFromCanvas}
 				/>
 			{/if}
@@ -349,6 +401,8 @@
 								variant={viewOptions.options.variant}
 								gutter={viewOptions.options.gutter}
 								wrap={viewOptions.options.wrap}
+								reviewed={reviewed.isReviewed(file.path)}
+								onToggleReviewed={reviewed.toggle}
 							/>
 						</div>
 					{/each}

@@ -43,6 +43,10 @@
 		diffVariant?: DiffViewerVariant;
 		diffGutter?: DiffViewerGutter;
 		diffWrap?: boolean;
+		/** Whether a file is currently marked reviewed (reactive). */
+		isReviewed?: (path: string) => boolean;
+		/** Flip a file's reviewed state. */
+		onToggleReviewed?: (path: string) => void;
 		/** A node's "open in list" action. */
 		onOpenFile: (path: string) => void;
 	}
@@ -57,6 +61,8 @@
 		diffVariant = 'background',
 		diffGutter = 'single',
 		diffWrap = false,
+		isReviewed = undefined,
+		onToggleReviewed = undefined,
 		onOpenFile
 	}: Props = $props();
 
@@ -525,6 +531,8 @@
 							{diffGutter}
 							{diffWrap}
 							renderDiff={shouldRenderDiff(node)}
+							reviewed={isReviewed?.(node.path) ?? false}
+							{onToggleReviewed}
 							onHover={(path) => (hoveredPath = path)}
 							onToggle={toggleDiff}
 							onFocus={focusFile}

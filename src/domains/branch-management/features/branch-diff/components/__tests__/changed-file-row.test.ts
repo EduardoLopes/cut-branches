@@ -226,4 +226,43 @@ describe('ChangedFileRow', () => {
 		expect(container.querySelector('[data-testid="changed-file-imports"]')).toBeNull();
 		expect(container.querySelector('[data-testid="changed-file-imported-by"]')).toBeNull();
 	});
+
+	it('reports reviewed toggle clicks and reflects the reviewed flag', async () => {
+		const onToggleReviewed = vi.fn();
+		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			reviewed: false,
+			onToggleReviewed
+		});
+
+		const button = getByRole('button', { name: 'Mark src/app.ts reviewed' });
+		await button.click();
+		expect(onToggleReviewed).toHaveBeenCalledWith('src/app.ts');
+		// Not reviewed yet: wrapper carries no dimming flag.
+		expect(container.querySelector('[data-reviewed="true"]')).toBeNull();
+	});
+
+	it('dims the row and flips the label when reviewed', async () => {
+		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			reviewed: true,
+			onToggleReviewed: vi.fn()
+		});
+
+		await expect
+			.element(getByRole('button', { name: 'Mark src/app.ts not reviewed' }))
+			.toBeInTheDocument();
+		expect(container.querySelector('[data-reviewed="true"]')).not.toBeNull();
+	});
+
+	it('does not throw when the reviewed toggle has no handler', async () => {
+		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			reviewed: false
+		});
+		const button = getByRole('button', { name: 'Mark src/app.ts reviewed' });
+		// The optional-chained handler is a no-op — clicking must stay harmless.
+		await button.click();
+		expect(container.querySelector('[data-testid="changed-file-row"]')).not.toBeNull();
+	});
 });

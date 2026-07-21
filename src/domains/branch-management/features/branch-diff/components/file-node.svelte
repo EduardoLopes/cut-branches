@@ -52,8 +52,12 @@
 		diffVariant?: DiffViewerVariant;
 		diffGutter?: DiffViewerGutter;
 		diffWrap?: boolean;
+		/** Whether the reviewer has marked this file reviewed. */
+		reviewed?: boolean;
 		/** Whether the pointer is over this node (drives edge highlighting). */
 		onHover?: (path: string | null) => void;
+		/** Flip this file's reviewed state. */
+		onToggleReviewed?: (path: string) => void;
 		/** Toggle the in-place diff. */
 		onToggle: (path: string) => void;
 		/** Focus this file: the canvas narrows to it and its related files. */
@@ -75,7 +79,9 @@
 		diffVariant = 'background',
 		diffGutter = 'single',
 		diffWrap = false,
+		reviewed = false,
 		onHover = undefined,
+		onToggleReviewed = undefined,
 		onToggle,
 		onFocus,
 		onOpenInList
@@ -114,10 +120,15 @@
 		border: '1px solid token(colors.neutral.border.muted)',
 		borderRadius: 'sm',
 		overflow: 'clip',
+		pindobaTransition: 'fast',
 		'&[data-expanded="true"]': {
 			borderColor: 'primary.border',
 			boxShadow: 'lg'
-		}
+		},
+		// Reviewed nodes recede so the unreviewed ones stand out; hovering one
+		// brings it back to full strength so its diff stays legible.
+		'&[data-reviewed="true"]': { opacity: '0.5' },
+		'&[data-reviewed="true"]:hover': { opacity: '1' }
 	});
 	const headerRow = css({
 		display: 'flex',
@@ -192,6 +203,7 @@
 	style={nodeGeometry}
 	data-canvas-node={file.path}
 	data-expanded={expanded ? 'true' : undefined}
+	data-reviewed={reviewed ? 'true' : undefined}
 	data-testid="canvas-file-node"
 	role="group"
 	aria-label={file.path}
@@ -213,6 +225,25 @@
 			</Badge>
 			<span class={pathText}>&lrm;{file.path}</span>
 		</button>
+		<Button
+			emphasis="ghost"
+			size="xs"
+			shape="square"
+			feedback={reviewed ? 'success' : undefined}
+			onclick={() => onToggleReviewed?.(file.path)}
+			aria-pressed={reviewed}
+			aria-label={reviewed ? `Mark ${file.path} not reviewed` : `Mark ${file.path} reviewed`}
+			title={reviewed ? 'Reviewed — click to unmark' : 'Mark reviewed'}
+			data-testid="canvas-node-reviewed"
+		>
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon
+					icon={reviewed ? 'lucide:circle-check-big' : 'lucide:circle'}
+					width="12px"
+					height="12px"
+				/>
+			</Stamp>
+		</Button>
 		<Button
 			emphasis="ghost"
 			size="xs"

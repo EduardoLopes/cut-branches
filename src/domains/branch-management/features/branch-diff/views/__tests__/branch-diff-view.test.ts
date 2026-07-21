@@ -121,6 +121,47 @@ describe('BranchDiffView', () => {
 		expect(container.querySelectorAll('[data-testid="changed-file-row"]')).toHaveLength(2);
 	});
 
+	it('tracks review progress across list rows and the header, persisting it', async () => {
+		const { getByRole, getByTestId, container } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		const progress = getByTestId('diff-reviewed-progress');
+		await expect.element(progress).toHaveTextContent('0/2 reviewed');
+		// Nothing reviewed yet — no Clear action.
+		expect(container.querySelector('[data-testid="diff-clear-reviewed"]')).toBeNull();
+
+		await getByRole('button', { name: 'Mark src/app.ts reviewed' }).click();
+		await tick();
+		await expect.element(progress).toHaveTextContent('1/2 reviewed');
+		// Stored as path → diff fingerprint (added:removed).
+		expect(
+			JSON.parse(localStorage.getItem('diff-reviewed:/repo:branch:feature/x') ?? '{}')
+		).toEqual({ 'src/app.ts': '20:4' });
+
+		// Clear wipes every mark and hides itself again.
+		await getByRole('button', { name: 'Clear all reviewed marks' }).click();
+		await tick();
+		await expect.element(progress).toHaveTextContent('0/2 reviewed');
+		expect(
+			JSON.parse(localStorage.getItem('diff-reviewed:/repo:branch:feature/x') ?? '{}')
+		).toEqual({});
+	});
+
+	it('restores persisted review progress on mount', async () => {
+		localStorage.setItem(
+			'diff-reviewed:/repo:branch:feature/x',
+			JSON.stringify({ 'src/app.ts': '20:4', 'src/new.ts': '10:0' })
+		);
+		const { getByTestId } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		await expect.element(getByTestId('diff-reviewed-progress')).toHaveTextContent('2/2 reviewed');
+	});
+
 	it('shows the short sha badge for a commit target', async () => {
 		const { getByText } = renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
