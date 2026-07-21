@@ -62,7 +62,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getCommitHistoryWindow',
 		'listBranchComparison',
 		'listChangedFiles',
-		'getFileDiff'
+		'getFileDiff',
+		'getDiffStructure'
 	],
 	createBranchRestoration: [
 		'getRepository',
@@ -71,7 +72,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getCommitHistoryWindow',
 		'listBranchComparison',
 		'listChangedFiles',
-		'getFileDiff'
+		'getFileDiff',
+		'getDiffStructure'
 	],
 	batchCreateBranchRestorations: [
 		'getRepository',
@@ -80,7 +82,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getCommitHistoryWindow',
 		'listBranchComparison',
 		'listChangedFiles',
-		'getFileDiff'
+		'getFileDiff',
+		'getDiffStructure'
 	],
 	batchDeleteBranches: [
 		'getRepository',
@@ -89,7 +92,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getCommitHistoryWindow',
 		'listBranchComparison',
 		'listChangedFiles',
-		'getFileDiff'
+		'getFileDiff',
+		'getDiffStructure'
 	],
 	updateBranchSelectionBatch: ['getBranchList'],
 	setBranchSelectionAll: ['getBranchList'],
@@ -111,7 +115,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'listDeletedBranchSelection',
 		'listLockedBranches',
 		'listChangedFiles',
-		'getFileDiff'
+		'getFileDiff',
+		'getDiffStructure'
 	]
 };
 
@@ -188,7 +193,7 @@ export function matchesRepositoryChange(
 	// they can't be matched to the changed repository. Over-invalidate: an
 	// on-disk change anywhere stales every diff — refetches only run for
 	// queries a mounted diff view is actually observing.
-	if (resource === 'changed-files' || resource === 'file-diff') {
+	if (resource === 'changed-files' || resource === 'file-diff' || resource === 'diff-structure') {
 		return true;
 	}
 	return false;

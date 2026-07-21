@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { matchesRepositoryChange } from '../query-key-utils';
+import { getResource, matchesRepositoryChange } from '../query-key-utils';
 
 const REPO = 'repo-1';
 
@@ -79,5 +79,31 @@ describe('matchesRepositoryChange', () => {
 		expect(
 			matchesRepositoryChange(['branch-comparison', 'listBranchComparison', { path: '/p' }], REPO)
 		).toBe(false);
+	});
+	test('always matches diff queries — they key on path, not repoId', () => {
+		expect(
+			matchesRepositoryChange(['changed-files', 'listChangedFiles', { path: '/p' }], REPO)
+		).toBe(true);
+		expect(matchesRepositoryChange(['file-diff', 'getFileDiff', { path: '/p' }], REPO)).toBe(true);
+		expect(
+			matchesRepositoryChange(['diff-structure', 'getDiffStructure', { path: '/p' }], REPO)
+		).toBe(true);
+	});
+});
+
+describe('getResource', () => {
+	test('ref-changing mutations invalidate the diff structure alongside its siblings', () => {
+		for (const command of [
+			'updateCurrentBranch',
+			'createBranchRestoration',
+			'batchCreateBranchRestorations',
+			'batchDeleteBranches'
+		] as const) {
+			const resources = getResource(command);
+			expect(resources).toContain('changed-files');
+			expect(resources).toContain('file-diff');
+			expect(resources).toContain('diff-structure');
+		}
+		expect(getResource('deleteRepository')).toContain('diff-structure');
 	});
 });
