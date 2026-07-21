@@ -92,8 +92,7 @@
 		gap: 'sm',
 		px: 'md',
 		py: 'sm',
-		borderBottom: '1px solid',
-		borderColor: 'neutral.border.muted',
+		borderBottom: '1px solid token(colors.neutral.border.muted)',
 		background: 'neutral.surface.step.1'
 	});
 	const title = css({ fontSize: 'md', fontWeight: 'bold' });
@@ -114,8 +113,7 @@
 		flexShrink: '0',
 		overflowY: 'auto',
 		p: 'sm',
-		borderRight: '1px solid',
-		borderColor: 'neutral.border.muted'
+		borderRight: '1px solid token(colors.neutral.border.muted)'
 	});
 	const fileList = css({
 		display: 'flex',
