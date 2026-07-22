@@ -34,6 +34,13 @@ use domains::branch_management::features::code_structure::get_diff_structure;
 use domains::branch_management::features::commit_history::{
     get_commit_history_window, list_branch_comparison, list_commit_history,
 };
+use domains::branch_management::features::diff_explanation::events::{
+    ExplanationBatchProgressEvent, ExplanationChunkEvent, ExplanationFileCompletedEvent,
+};
+use domains::branch_management::features::diff_explanation::{
+    cancel_explanation, create_diff_explanation_batch, create_file_explanation,
+    create_hunk_explanation, AgentConfig, ExplanationRegistry,
+};
 use domains::path_operations::commands::get_repository_root;
 use domains::repository_cleanup::commands::{
     clean_repository, list_stale_repositories, scan_cleanup_targets,
@@ -120,6 +127,11 @@ fn main() {
             get_file_lines,
             // Diff code structure (canvas view / impact badges)
             get_diff_structure,
+            // AI diff explanations (local CLI agent)
+            create_file_explanation,
+            create_hunk_explanation,
+            create_diff_explanation_batch,
+            cancel_explanation,
             // Selected branches
             list_branch_selection,
             list_deleted_branch_selection,
@@ -151,7 +163,10 @@ fn main() {
             NotificationEvent,
             CleanupScanProgressEvent,
             StaleScanProgressEvent,
-            CleanupTargetCleanedEvent
+            CleanupTargetCleanedEvent,
+            ExplanationChunkEvent,
+            ExplanationFileCompletedEvent,
+            ExplanationBatchProgressEvent
         ]);
 
     #[cfg(debug_assertions)]
@@ -203,6 +218,8 @@ fn main() {
         .manage(db::DatabaseState::new())
         .manage(WatcherState::new())
         .manage(domains::branch_management::features::commit_history::git::HistoryCache::default())
+        .manage(ExplanationRegistry::default())
+        .manage(AgentConfig::default())
         .manage(RepositoryServices {
             branch: Arc::new(composition::BranchManagementGateway),
             path: Arc::new(composition::PathOperationsGateway),
@@ -309,6 +326,12 @@ mod tests {
         let _ = crate::domains::branch_management::features::branch_diff::get_file_diff;
         let _ = crate::domains::branch_management::features::branch_diff::get_file_lines;
         let _ = crate::domains::branch_management::features::code_structure::get_diff_structure;
+        let _ =
+            crate::domains::branch_management::features::diff_explanation::create_file_explanation;
+        let _ =
+            crate::domains::branch_management::features::diff_explanation::create_hunk_explanation;
+        let _ = crate::domains::branch_management::features::diff_explanation::create_diff_explanation_batch;
+        let _ = crate::domains::branch_management::features::diff_explanation::cancel_explanation;
         let _ = commands::batch_create_branch_restorations;
         let _ = path_commands::get_repository_root;
         let _ = cleanup_commands::scan_cleanup_targets;
