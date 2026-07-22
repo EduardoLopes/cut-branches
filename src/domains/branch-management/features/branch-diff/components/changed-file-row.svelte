@@ -8,9 +8,20 @@
 	import Button from '@pindoba/svelte-button';
 	import Card from '@pindoba/svelte-card';
 	import Stamp from '@pindoba/svelte-stamp';
+	import type { ExplanationDetail } from '../application/use-diff-view-options.svelte';
 	import type { FileStructureInfo } from '../models/structure-index';
 	import FileDiffPanel from './file-diff-panel.svelte';
-	import type { ChangedFile, FileChangeStatus, SymbolKind } from '$infrastructure/bindings';
+	import type { BatchFileState } from '$domains/branch-management/features/diff-explanation/application/use-diff-explanation-batch.svelte';
+	import { useFileExplanation } from '$domains/branch-management/features/diff-explanation/application/use-file-explanation.svelte';
+	import { useHunkExplanation } from '$domains/branch-management/features/diff-explanation/application/use-hunk-explanation.svelte';
+	import ExplanationDetailDropdown from '$domains/branch-management/features/diff-explanation/components/explanation-detail-dropdown.svelte';
+	import ExplanationPanel from '$domains/branch-management/features/diff-explanation/components/explanation-panel.svelte';
+	import type {
+		ChangedFile,
+		ExplanationStyle,
+		FileChangeStatus,
+		SymbolKind
+	} from '$infrastructure/bindings';
 	import { buildMarkedRuns } from '$ui/patterns/diff-viewer/line-marks';
 	import type {
 		DiffViewerGutter,
@@ -50,6 +61,14 @@
 		reviewed?: boolean;
 		/** Flip this file's reviewed state. */
 		onToggleReviewed?: (path: string) => void;
+		/** This file's slice of an in-flight "Explain all" batch. When present,
+		 *  the explanation panel opens and renders the batch's streamed text
+		 *  instead of this row's own on-demand explanation. */
+		batchState?: BatchFileState | null;
+		/** Reviewer-chosen explanation style, applied to on-demand explanations. */
+		explanationStyle?: ExplanationStyle;
+		/** Whole-file summary vs per-change inline explanations (header choice). */
+		explanationDetail?: ExplanationDetail;
 	}
 
 	let {
@@ -67,10 +86,90 @@
 		gutter = 'single',
 		wrap = false,
 		reviewed = false,
-		onToggleReviewed = undefined
+		onToggleReviewed = undefined,
+		batchState = null,
+		explanationStyle = 'succinct',
+		explanationDetail = 'file'
 	}: Props = $props();
 
 	let expanded = $state(defaultExpanded);
+
+	// AI explanation of this file's change, streamed from a local CLI agent. The
+	// reviewer chooses the granularity up front (header "Detail" control), so a
+	// single Explain click runs the intended mode: whole-file (a panel summary)
+	// or per-change-group (inline comments anchored under each hunk in the diff).
+	const explanationOptions = {
+		getPath: () => repositoryPath,
+		getBranchName: () => branchName,
+		getCommitSha: () => commitSha
+	};
+	const fileExplanation = useFileExplanation(explanationOptions);
+	const hunkExplanation = useHunkExplanation(explanationOptions);
+	let explanationOpen = $state(false);
+	// Per-file override of the global "Detail" setting: null = follow global.
+	let granularityOverride = $state<ExplanationDetail | null>(null);
+	const granularity = $derived(granularityOverride ?? explanationDetail);
+
+	function statusOf(exp: {
+		isStreaming: boolean;
+		error: string | null;
+		cancelled: boolean;
+		hasRun: boolean;
+	}) {
+		if (exp.isStreaming) return 'streaming';
+		if (exp.error) return 'error';
+		if (exp.cancelled) return 'cancelled';
+		if (exp.hasRun) return 'done';
+		return 'idle';
+	}
+
+	const activeStatus = $derived(
+		granularity === 'file' ? statusOf(fileExplanation) : statusOf(hunkExplanation)
+	);
+	const activeError = $derived(
+		granularity === 'file' ? fileExplanation.error : hunkExplanation.error
+	);
+	const activeText = $derived(granularity === 'file' ? fileExplanation.text : hunkExplanation.text);
+
+	// A batch ("Explain all") drives the panel (whole-file) when it has state for
+	// this file; otherwise the row's own on-demand explanation does.
+	const panelOpen = $derived(explanationOpen || !!batchState);
+	const panelGranularity = $derived(batchState ? 'file' : granularity);
+	const panelStatus = $derived(batchState ? batchState.status : activeStatus);
+	const panelText = $derived(batchState ? batchState.text : activeText);
+	const panelError = $derived(batchState ? (batchState.error ?? null) : activeError);
+	// Per-change explanations, keyed by hunk number, rendered inline in the diff.
+	const hunkExplanationMap = $derived(
+		granularity === 'hunks'
+			? new Map(hunkExplanation.hunks.map((hunk) => [hunk.index, hunk.text]))
+			: undefined
+	);
+
+	/** Runs (or re-runs) whichever granularity is active. */
+	function runExplanation() {
+		const exp = granularity === 'file' ? fileExplanation : hunkExplanation;
+		exp.explain(file.path, file.oldPath ?? null, explanationStyle);
+	}
+	function cancelExplanation() {
+		(granularity === 'file' ? fileExplanation : hunkExplanation).cancel();
+	}
+	function toggleExplanation() {
+		explanationOpen = !explanationOpen;
+		if (explanationOpen) {
+			// Per-change explanations render inline in the diff — reveal it.
+			if (granularity === 'hunks') expanded = true;
+			const exp = granularity === 'file' ? fileExplanation : hunkExplanation;
+			if (!exp.hasRun) runExplanation();
+		}
+	}
+	/** Per-file granularity choice from the dropdown — opens and runs that mode. */
+	function setFileDetail(next: ExplanationDetail) {
+		granularityOverride = next;
+		explanationOpen = true;
+		if (next === 'hunks') expanded = true;
+		const exp = next === 'file' ? fileExplanation : hunkExplanation;
+		if (!exp.hasRun) exp.explain(file.path, file.oldPath ?? null, explanationStyle);
+	}
 
 	// A content match opens the row so the hit is visible; the user can still
 	// collapse it manually afterwards (the effect only reacts to changes of
@@ -269,6 +368,26 @@
 				−{file.linesRemoved}
 			</Badge>
 		{/if}
+		{#if !file.isBinary}
+			<span class={css({ display: 'inline-flex', alignItems: 'center' })}>
+				<Button
+					emphasis="ghost"
+					size="xs"
+					shape="square"
+					feedback={explanationOpen ? 'primary' : undefined}
+					onclick={toggleExplanation}
+					aria-expanded={explanationOpen}
+					aria-label={explanationOpen ? `Hide explanation of ${file.path}` : `Explain ${file.path}`}
+					title="Explain this change with your local AI agent"
+					data-testid="toggle-file-explanation"
+				>
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:sparkles" width="16px" height="16px" />
+					</Stamp>
+				</Button>
+				<ExplanationDetailDropdown detail={granularity} onChange={setFileDetail} />
+			</span>
+		{/if}
 		<Button
 			emphasis="ghost"
 			size="xs"
@@ -313,24 +432,37 @@
 	</span>
 {/snippet}
 
-{#snippet diffBody()}
-	<!-- Constrain the panel to the card's content width so its hunks scroll
-	     horizontally in place instead of widening the card/page. -->
-	<!-- `clip`, not `hidden`: clipping without becoming a scroll container
-	     WebKit could latch wheel gestures onto (see route-vertical-wheel.ts). -->
-	<div class={css({ minWidth: '0', maxWidth: '100%', overflow: 'clip' })}>
-		<FileDiffPanel
-			{repositoryPath}
-			{branchName}
-			{commitSha}
-			{file}
-			{searchTerm}
-			{layout}
-			{variant}
-			{gutter}
-			{wrap}
+{#snippet cardBody()}
+	{#if panelOpen}
+		<ExplanationPanel
+			status={panelStatus}
+			text={panelText}
+			error={panelError}
+			granularity={panelGranularity}
+			onExplain={runExplanation}
+			onCancel={batchState ? undefined : cancelExplanation}
 		/>
-	</div>
+	{/if}
+	{#if expanded}
+		<!-- Constrain the panel to the card's content width so its hunks scroll
+		     horizontally in place instead of widening the card/page. -->
+		<!-- `clip`, not `hidden`: clipping without becoming a scroll container
+		     WebKit could latch wheel gestures onto (see route-vertical-wheel.ts). -->
+		<div class={css({ minWidth: '0', maxWidth: '100%', overflow: 'clip' })}>
+			<FileDiffPanel
+				{repositoryPath}
+				{branchName}
+				{commitSha}
+				{file}
+				{searchTerm}
+				{layout}
+				{variant}
+				{gutter}
+				{wrap}
+				hunkExplanations={hunkExplanationMap}
+			/>
+		</div>
+	{/if}
 {/snippet}
 
 <div class={reviewedWrapper} data-reviewed={reviewed ? 'true' : undefined}>
@@ -369,6 +501,6 @@
 				headingTrailing: { style: css.raw({ flexShrink: '0' }) }
 			}
 		}}
-		children={expanded ? diffBody : undefined}
+		children={expanded || panelOpen ? cardBody : undefined}
 	/>
 </div>

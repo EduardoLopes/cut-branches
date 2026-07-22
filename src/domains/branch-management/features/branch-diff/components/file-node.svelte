@@ -14,6 +14,7 @@
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
+	import type { ExplanationDetail } from '../application/use-diff-view-options.svelte';
 	import {
 		NODE_PADDING,
 		NODE_ROW_HEIGHT,
@@ -23,7 +24,16 @@
 	} from '../models/canvas-layout';
 	import type { FileStructureInfo } from '../models/structure-index';
 	import FileDiffPanel from './file-diff-panel.svelte';
-	import type { ChangedFile, FileChangeStatus, SymbolKind } from '$infrastructure/bindings';
+	import { useFileExplanation } from '$domains/branch-management/features/diff-explanation/application/use-file-explanation.svelte';
+	import { useHunkExplanation } from '$domains/branch-management/features/diff-explanation/application/use-hunk-explanation.svelte';
+	import ExplanationDetailDropdown from '$domains/branch-management/features/diff-explanation/components/explanation-detail-dropdown.svelte';
+	import ExplanationPanel from '$domains/branch-management/features/diff-explanation/components/explanation-panel.svelte';
+	import type {
+		ChangedFile,
+		ExplanationStyle,
+		FileChangeStatus,
+		SymbolKind
+	} from '$infrastructure/bindings';
 	import type {
 		DiffViewerGutter,
 		DiffViewerLayout,
@@ -52,6 +62,10 @@
 		diffVariant?: DiffViewerVariant;
 		diffGutter?: DiffViewerGutter;
 		diffWrap?: boolean;
+		/** Reviewer-chosen explanation style, applied to on-demand explanations. */
+		explanationStyle?: ExplanationStyle;
+		/** Whole-file summary vs per-change inline explanations (header choice). */
+		explanationDetail?: ExplanationDetail;
 		/** Whether the reviewer has marked this file reviewed. */
 		reviewed?: boolean;
 		/** Whether the pointer is over this node (drives edge highlighting). */
@@ -79,6 +93,8 @@
 		diffVariant = 'background',
 		diffGutter = 'single',
 		diffWrap = false,
+		explanationStyle = 'succinct',
+		explanationDetail = 'file',
 		reviewed = false,
 		onHover = undefined,
 		onToggleReviewed = undefined,
@@ -99,6 +115,77 @@
 		class: 'C',
 		component: '◇'
 	};
+
+	// AI explanation of this file's change, streamed from a local CLI agent. The
+	// granularity is chosen up front (header "Detail" control): whole-file shows
+	// a summary in the panel, per-change renders inline comments under each hunk
+	// in the node's embedded diff. Shown in the node's scrollable diff area so
+	// the pixel-pinned layout height is unaffected; opening it expands the node.
+	const explanationOptions = {
+		getPath: () => repositoryPath,
+		getBranchName: () => branchName,
+		getCommitSha: () => commitSha
+	};
+	const fileExplanation = useFileExplanation(explanationOptions);
+	const hunkExplanation = useHunkExplanation(explanationOptions);
+	let explanationOpen = $state(false);
+	// Per-file override of the global "Detail" setting: null = follow global.
+	let granularityOverride = $state<ExplanationDetail | null>(null);
+	const granularity = $derived(granularityOverride ?? explanationDetail);
+
+	function statusOf(exp: {
+		isStreaming: boolean;
+		error: string | null;
+		cancelled: boolean;
+		hasRun: boolean;
+	}) {
+		if (exp.isStreaming) return 'streaming';
+		if (exp.error) return 'error';
+		if (exp.cancelled) return 'cancelled';
+		if (exp.hasRun) return 'done';
+		return 'idle';
+	}
+
+	const explanationStatus = $derived(
+		granularity === 'file' ? statusOf(fileExplanation) : statusOf(hunkExplanation)
+	);
+	const explanationText = $derived(
+		granularity === 'file' ? fileExplanation.text : hunkExplanation.text
+	);
+	const explanationError = $derived(
+		granularity === 'file' ? fileExplanation.error : hunkExplanation.error
+	);
+	const hunkExplanationMap = $derived(
+		granularity === 'hunks'
+			? new Map(hunkExplanation.hunks.map((hunk) => [hunk.index, hunk.text]))
+			: undefined
+	);
+
+	function runExplanation() {
+		const exp = granularity === 'file' ? fileExplanation : hunkExplanation;
+		exp.explain(file.path, file.oldPath ?? null, explanationStyle);
+	}
+	function cancelExplanation() {
+		(granularity === 'file' ? fileExplanation : hunkExplanation).cancel();
+	}
+	function toggleExplanation() {
+		explanationOpen = !explanationOpen;
+		if (explanationOpen) {
+			// The panel + inline comments live in the diff area, which mounts only
+			// when the node is expanded.
+			if (!expanded) onToggle(file.path);
+			const exp = granularity === 'file' ? fileExplanation : hunkExplanation;
+			if (!exp.hasRun) runExplanation();
+		}
+	}
+	/** Per-file granularity choice from the dropdown — opens and runs that mode. */
+	function setFileDetail(next: ExplanationDetail) {
+		granularityOverride = next;
+		explanationOpen = true;
+		if (!expanded) onToggle(file.path);
+		const exp = next === 'file' ? fileExplanation : hunkExplanation;
+		if (!exp.hasRun) exp.explain(file.path, file.oldPath ?? null, explanationStyle);
+	}
 
 	const symbols = $derived(structure?.symbols ?? []);
 	const shownSymbols = $derived(symbols.slice(0, NODE_SYMBOL_LIMIT));
@@ -198,6 +285,17 @@
 	});
 </script>
 
+{#snippet explanationPanel()}
+	<ExplanationPanel
+		status={explanationStatus}
+		text={explanationText}
+		error={explanationError}
+		{granularity}
+		onExplain={runExplanation}
+		onCancel={cancelExplanation}
+	/>
+{/snippet}
+
 <div
 	class={nodePanel}
 	style={nodeGeometry}
@@ -244,6 +342,24 @@
 				/>
 			</Stamp>
 		</Button>
+		{#if !file.isBinary}
+			<Button
+				emphasis="ghost"
+				size="xs"
+				shape="square"
+				feedback={explanationOpen ? 'primary' : undefined}
+				onclick={toggleExplanation}
+				aria-expanded={explanationOpen}
+				aria-label={explanationOpen ? `Hide explanation of ${file.path}` : `Explain ${file.path}`}
+				title="Explain this change with your local AI agent"
+				data-testid="canvas-node-explain"
+			>
+				<Stamp emphasis="ghost" border="none" background="transparent">
+					<Icon icon="lucide:sparkles" width="12px" height="12px" />
+				</Stamp>
+			</Button>
+			<ExplanationDetailDropdown detail={granularity} onChange={setFileDetail} />
+		{/if}
 		<Button
 			emphasis="ghost"
 			size="xs"
@@ -310,6 +426,9 @@
 	{/if}
 	{#if expanded && renderDiff}
 		<div class={diffArea} data-canvas-diff data-testid="canvas-node-diff">
+			{#if explanationOpen}
+				{@render explanationPanel()}
+			{/if}
 			<FileDiffPanel
 				{repositoryPath}
 				{branchName}
@@ -319,10 +438,16 @@
 				variant={diffVariant}
 				gutter={diffGutter}
 				wrap={diffWrap}
+				hunkExplanations={hunkExplanationMap}
 			/>
 		</div>
 	{:else if expanded}
-		<!-- Slot reserved by the layout; the panel mounts when panned near. -->
-		<div class={diffArea} data-testid="canvas-node-diff-placeholder"></div>
+		<!-- Slot reserved by the layout; the diff mounts when panned near. The
+		     explanation panel, being lightweight, shows immediately. -->
+		<div class={diffArea} data-testid="canvas-node-diff-placeholder">
+			{#if explanationOpen}
+				{@render explanationPanel()}
+			{/if}
+		</div>
 	{/if}
 </div>

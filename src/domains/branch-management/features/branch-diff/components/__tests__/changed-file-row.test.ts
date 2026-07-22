@@ -265,4 +265,67 @@ describe('ChangedFileRow', () => {
 		await button.click();
 		expect(container.querySelector('[data-testid="changed-file-row"]')).not.toBeNull();
 	});
+
+	it('opens the explanation panel when the Explain button is clicked', async () => {
+		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+		expect(container.querySelector('[data-testid="explanation-panel"]')).toBeNull();
+		await getByTestId('toggle-file-explanation').click();
+		await expect.element(getByTestId('explanation-panel')).toBeInTheDocument();
+	});
+
+	it('hides the Explain affordance for binary files', async () => {
+		const { container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			file: file({ isBinary: true })
+		});
+		expect(container.querySelector('[data-testid="toggle-file-explanation"]')).toBeNull();
+	});
+
+	it('renders a batch explanation panel from batchState', async () => {
+		const { getByTestId } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			batchState: { text: 'Renames a helper for clarity.', status: 'done' }
+		});
+		await expect
+			.element(getByTestId('explanation-text'))
+			.toHaveTextContent('Renames a helper for clarity.');
+	});
+
+	it('surfaces a batch failure in the panel', async () => {
+		const { getByTestId } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			batchState: { text: '', status: 'error', error: 'agent boom' }
+		});
+		await expect.element(getByTestId('explanation-error')).toHaveTextContent('agent boom');
+	});
+
+	it('reveals the diff and opens the panel in per-change mode', async () => {
+		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			explanationDetail: 'hunks'
+		});
+		// Per-change opens the panel AND expands the diff, where the per-hunk
+		// comments render inline.
+		await getByTestId('toggle-file-explanation').click();
+		await expect.element(getByTestId('explanation-panel')).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
+		});
+	});
+
+	it('lets one file override the global detail via its own dropdown', async () => {
+		// Global default is whole-file; this file is switched to per-change.
+		const { getByTestId, getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			explanationDetail: 'file'
+		});
+		await getByTestId('explanation-detail-trigger').click();
+		await tick();
+		await getByRole('menuitemradio', { name: 'Per change' }).click();
+
+		await expect.element(getByTestId('explanation-panel')).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
+		});
+	});
 });

@@ -49,9 +49,18 @@ describe('useDiffViewOptions', () => {
 		expect(restored.options.layout).toBe('unified');
 	});
 
-	it('accepts payloads stored before the view mode existed', () => {
-		// A pre-canvas payload has no viewMode — it must still validate and
-		// keep the user's other preferences.
+	it('persists the explanation style and detail alongside the other options', () => {
+		useDiffViewOptions().update({ explanationStyle: 'reviewFocused', explanationDetail: 'hunks' });
+
+		const restored = useDiffViewOptions();
+		expect(restored.options.explanationStyle).toBe('reviewFocused');
+		expect(restored.options.explanationDetail).toBe('hunks');
+		expect(restored.options.layout).toBe('unified');
+	});
+
+	it('accepts payloads stored before the view mode / explanation options existed', () => {
+		// A pre-canvas payload has none of viewMode / explanationStyle /
+		// explanationDetail — it must still validate and keep the other prefs.
 		localStorage.setItem(
 			STORAGE_KEY,
 			JSON.stringify({ layout: 'split', variant: 'markers', gutter: 'double', wrap: true })
@@ -60,5 +69,7 @@ describe('useDiffViewOptions', () => {
 		const view = useDiffViewOptions();
 		expect(view.options.layout).toBe('split');
 		expect(view.options.viewMode).toBe('list');
+		expect(view.options.explanationStyle).toBe('succinct');
+		expect(view.options.explanationDetail).toBe('file');
 	});
 });

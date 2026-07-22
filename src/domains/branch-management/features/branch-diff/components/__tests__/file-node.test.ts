@@ -270,4 +270,43 @@ describe('FileNode', () => {
 		await expect.element(getByText('const x = 1')).toBeInTheDocument();
 		expect(container.querySelector('[data-canvas-diff]')).not.toBeNull();
 	});
+
+	it('expands a collapsed node when Explain is clicked', async () => {
+		const onToggle = vi.fn();
+		const { getByTestId } = renderWithTestWrapper(FileNode, { ...defaultProps, onToggle });
+		await getByTestId('canvas-node-explain').click();
+		expect(onToggle).toHaveBeenCalledWith('src/app.ts');
+	});
+
+	it('shows the explanation panel inside the diff area when opened', async () => {
+		const { getByTestId, container } = renderWithTestWrapper(FileNode, {
+			...defaultProps,
+			node: { ...node, width: 640, height: 490 },
+			expanded: true,
+			renderDiff: true
+		});
+		expect(container.querySelector('[data-testid="explanation-panel"]')).toBeNull();
+		await getByTestId('canvas-node-explain').click();
+		await expect.element(getByTestId('explanation-panel')).toBeInTheDocument();
+	});
+
+	it('hides the Explain affordance for binary files', async () => {
+		const { container } = renderWithTestWrapper(FileNode, {
+			...defaultProps,
+			file: file({ isBinary: true })
+		});
+		expect(container.querySelector('[data-testid="canvas-node-explain"]')).toBeNull();
+	});
+
+	it('opens the explanation panel in per-change mode', async () => {
+		const { getByTestId } = renderWithTestWrapper(FileNode, {
+			...defaultProps,
+			node: { ...node, width: 640, height: 490 },
+			expanded: true,
+			renderDiff: true,
+			explanationDetail: 'hunks'
+		});
+		await getByTestId('canvas-node-explain').click();
+		await expect.element(getByTestId('explanation-panel')).toBeInTheDocument();
+	});
 });

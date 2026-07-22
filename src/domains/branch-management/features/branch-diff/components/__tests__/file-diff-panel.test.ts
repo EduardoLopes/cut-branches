@@ -384,4 +384,26 @@ describe('FileDiffPanel', () => {
 		await expect.element(getByText('line 0', { exact: true })).toBeInTheDocument();
 		expect(container.querySelector('[data-testid="file-diff-plain-text"]')).toBeNull();
 	});
+
+	it('renders a per-hunk explanation inline under the hunk, only on its anchor', async () => {
+		setQuery({ data: diff() });
+		const { getByTestId, container } = renderWithTestWrapper(FileDiffPanel, {
+			...defaultProps,
+			hunkExplanations: new Map([[1, 'Swaps the old line for the new one.']])
+		});
+
+		await expect
+			.element(getByTestId('hunk-explanation'))
+			.toHaveTextContent('Swaps the old line for the new one.');
+		// Anchored to a single line — not repeated under every row.
+		expect(container.querySelectorAll('[data-testid="hunk-explanation"]')).toHaveLength(1);
+	});
+
+	it('renders no inline annotation when no explanations are given', async () => {
+		setQuery({ data: diff() });
+		const { container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		expect(container.querySelector('[data-testid="hunk-explanation"]')).toBeNull();
+		// And no empty annotation wrappers leak under the ordinary lines.
+		expect(container.querySelector('[data-testid="diff-line-annotation"]')).toBeNull();
+	});
 });

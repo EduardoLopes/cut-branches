@@ -388,6 +388,58 @@ async getDiffStructure(input: GetDiffStructureInput) : Promise<Result<GetDiffStr
 }
 },
 /**
+ * Explains a single changed file: builds its unified diff, runs the agent,
+ * streams `ExplanationChunkEvent`s, and returns the full text.
+ */
+async createFileExplanation(input: CreateFileExplanationInput) : Promise<Result<CreateFileExplanationOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_file_explanation", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Explains a changed file one hunk at a time: the agent echoes a `@@HUNK n@@`
+ * marker before each explanation, so the streamed text splits back into
+ * per-hunk sections. Files with no textual hunks (binary, pure rename) return
+ * immediately without running the agent.
+ */
+async createHunkExplanation(input: CreateHunkExplanationInput) : Promise<Result<CreateHunkExplanationOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_hunk_explanation", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Explains every changed file (or a named subset) one at a time — agents are
+ * effectively single-session, so files run sequentially rather than in
+ * parallel. Per file it streams chunks under the `batchId`, emits a
+ * completion event, and bumps batch progress. A single file's failure does
+ * not abort the batch (its completion event carries `error`).
+ */
+async createDiffExplanationBatch(input: CreateDiffExplanationBatchInput) : Promise<Result<CreateDiffExplanationBatchOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_diff_explanation_batch", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Cancels an in-flight single or batch explanation by its id.
+ */
+async cancelExplanation(input: CancelExplanationInput) : Promise<Result<CancelExplanationOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("cancel_explanation", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Lists all selected branches for a repository (active branches only).
  * 
  * # Arguments
@@ -654,6 +706,9 @@ branchRestored: BranchRestoredEvent,
 branchSwitched: BranchSwitchedEvent,
 cleanupScanProgress: CleanupScanProgressEvent,
 cleanupTargetCleaned: CleanupTargetCleanedEvent,
+explanationBatchProgress: ExplanationBatchProgressEvent,
+explanationChunk: ExplanationChunkEvent,
+explanationFileCompleted: ExplanationFileCompletedEvent,
 notification: NotificationEvent,
 repositoryChanged: RepositoryChangedEvent,
 repositoryLoaded: RepositoryLoadedEvent,
@@ -665,6 +720,9 @@ branchRestored: "branch-restored",
 branchSwitched: "branch-switched",
 cleanupScanProgress: "cleanup-scan-progress",
 cleanupTargetCleaned: "cleanup-target-cleaned",
+explanationBatchProgress: "explanation-batch-progress",
+explanationChunk: "explanation-chunk",
+explanationFileCompleted: "explanation-file-completed",
 notification: "notification",
 repositoryChanged: "repository-changed",
 repositoryLoaded: "repository-loaded",
@@ -755,6 +813,16 @@ lockStatus?: LockStatusFilter;
 includeCurrent?: boolean }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
+export type CancelExplanationInput = { 
+/**
+ * The `requestId` or `batchId` to cancel.
+ */
+id: string }
+export type CancelExplanationOutput = { 
+/**
+ * Whether a matching in-flight explanation was found and signalled.
+ */
+cancelled: boolean }
 /**
  * One entry in the changed-files list.
  */
@@ -862,6 +930,64 @@ export type ConflictDetails = { originalName: string; conflictingName: string }
 export type ConflictResolution = "Overwrite" | "Rename" | "Skip"
 export type CreateBranchRestorationInput = { path: string; repoId: string; branchInfo: DeletedBranch }
 export type CreateBranchRestorationOutput = { result: RestoreBranchResult }
+export type CreateDiffExplanationBatchInput = { 
+/**
+ * Caller-chosen id used to correlate every file's stream and to cancel.
+ */
+batchId: string; path: string; branchName?: string | null; commitSha?: string | null; 
+/**
+ * Files to explain; when omitted the full changed set is derived.
+ */
+filePaths?: string[] | null; 
+/**
+ * Reviewer-chosen explanation shape; defaults to succinct.
+ */
+style?: ExplanationStyle }
+export type CreateDiffExplanationBatchOutput = { batchId: string; 
+/**
+ * Number of files processed (completed or failed).
+ */
+total: number }
+export type CreateFileExplanationInput = { 
+/**
+ * Caller-chosen id used to correlate streamed chunks and to cancel.
+ */
+requestId: string; 
+/**
+ * Filesystem path to the repository.
+ */
+path: string; branchName?: string | null; commitSha?: string | null; 
+/**
+ * Path of the file to explain (as returned by `list_changed_files`).
+ */
+filePath: string; 
+/**
+ * Rename source path — pass `ChangedFile.old_path` through for renames.
+ */
+oldPath?: string | null; 
+/**
+ * Reviewer-chosen explanation shape; defaults to succinct.
+ */
+style?: ExplanationStyle }
+export type CreateFileExplanationOutput = { requestId: string; filePath: string; 
+/**
+ * The full accumulated explanation text.
+ */
+text: string }
+export type CreateHunkExplanationInput = { 
+/**
+ * Caller-chosen id used to correlate streamed chunks and to cancel.
+ */
+requestId: string; path: string; branchName?: string | null; commitSha?: string | null; filePath: string; oldPath?: string | null; style?: ExplanationStyle }
+export type CreateHunkExplanationOutput = { requestId: string; filePath: string; 
+/**
+ * The full marker-delimited text (`@@HUNK n@@` + explanation per hunk).
+ */
+text: string; 
+/**
+ * The git header of each hunk, in order — labels the parsed sections.
+ */
+hunkHeaders: string[] }
 export type CreateRepositoryInput = { path: string }
 export type CreateRepositoryOutput = { path: string; branches: Branch[]; currentBranch: string; branchesCount: number; name: string; id: string }
 export type DeleteAllLockedBranchesInput = { repoId: string }
@@ -963,6 +1089,76 @@ path: string;
  * Folder name, used as the default display name.
  */
 name: string }
+/**
+ * Emitted after each file in a batch is processed, so the UI can show
+ * `done / total` progress.
+ */
+export type ExplanationBatchProgressEvent = { batchId: string; 
+/**
+ * Files processed so far (completed or failed).
+ */
+done: number; 
+/**
+ * Total files in the batch.
+ */
+total: number }
+/**
+ * One incremental slice of an explanation's text. Deltas are coalesced on a
+ * light timer before emission, so this fires a handful of times per file
+ * rather than once per token.
+ */
+export type ExplanationChunkEvent = { 
+/**
+ * Correlation id (single: `requestId`; batch: `batchId`).
+ */
+requestId: string; 
+/**
+ * Path of the file this delta explains.
+ */
+filePath: string; 
+/**
+ * Text produced since the previous chunk.
+ */
+delta: string }
+/**
+ * Emitted once a file's explanation finishes (success or per-file failure) —
+ * only used by the batch flow, where the command return value can't carry
+ * per-file results. `error` is set instead of `text` when that file failed.
+ */
+export type ExplanationFileCompletedEvent = { 
+/**
+ * Correlation id (the `batchId`).
+ */
+requestId: string; filePath: string; 
+/**
+ * Full accumulated explanation; empty when `error` is set.
+ */
+text: string; 
+/**
+ * Present when this file's explanation failed; the batch continues.
+ */
+error: string | null }
+/**
+ * The reviewer-chosen shape of an explanation. Chosen per request (a header
+ * selector in the UI); the default keeps explanations short.
+ */
+export type ExplanationStyle = 
+/**
+ * One or two sentences: what changed and why it matters.
+ */
+"succinct" | 
+/**
+ * A fuller walkthrough of the change and its notable specifics.
+ */
+"detailed" | 
+/**
+ * Reviewer lens: risks, likely bugs, and edge cases to double-check.
+ */
+"reviewFocused" | 
+/**
+ * Non-technical summary for PMs/QAs — no jargon.
+ */
+"plainLanguage"
 /**
  * What happened to a file between the two trees.
  */

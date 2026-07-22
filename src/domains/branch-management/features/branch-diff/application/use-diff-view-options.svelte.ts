@@ -1,4 +1,5 @@
 import { z } from 'zod/v4';
+import type { ExplanationStyle } from '$infrastructure/bindings';
 import type {
 	DiffViewerGutter,
 	DiffViewerLayout,
@@ -16,8 +17,20 @@ const diffViewOptionsSchema = z.object({
 	wrap: z.boolean(),
 	// Defaulted (not required) so payloads stored before the canvas mode
 	// existed still validate instead of dropping the user's other prefs.
-	viewMode: z.enum(['list', 'canvas']).default('list')
+	viewMode: z.enum(['list', 'canvas']).default('list'),
+	// Same forward-compatible default: payloads stored before AI explanations
+	// existed still validate, falling back to the succinct style.
+	explanationStyle: z
+		.enum(['succinct', 'detailed', 'reviewFocused', 'plainLanguage'])
+		.default('succinct'),
+	// Whether an explanation covers the whole file (one summary) or each change
+	// group (inline per-hunk). Chosen up front so the first Explain click runs
+	// the intended mode.
+	explanationDetail: z.enum(['file', 'hunks']).default('file')
 });
+
+/** Whole-file summary vs per-change-group (inline) explanations. */
+export type ExplanationDetail = 'file' | 'hunks';
 
 /** How the changed files are presented. */
 export type DiffViewMode = 'list' | 'canvas';
@@ -29,6 +42,8 @@ export interface DiffViewOptions {
 	gutter: DiffViewerGutter;
 	wrap: boolean;
 	viewMode: DiffViewMode;
+	explanationStyle: ExplanationStyle;
+	explanationDetail: ExplanationDetail;
 }
 
 export const DEFAULT_DIFF_VIEW_OPTIONS: DiffViewOptions = {
@@ -36,7 +51,9 @@ export const DEFAULT_DIFF_VIEW_OPTIONS: DiffViewOptions = {
 	variant: 'background',
 	gutter: 'single',
 	wrap: false,
-	viewMode: 'list'
+	viewMode: 'list',
+	explanationStyle: 'succinct',
+	explanationDetail: 'file'
 };
 
 /**

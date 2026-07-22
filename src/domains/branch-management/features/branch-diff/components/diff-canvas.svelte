@@ -17,12 +17,17 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import { tick } from 'svelte';
 	import { SvelteMap } from 'svelte/reactivity';
+	import type { ExplanationDetail } from '../application/use-diff-view-options.svelte';
 	import { buildCanvasLayout, type CanvasLayout } from '../models/canvas-layout';
 	import { buildStructureIndex, listRelatedPaths } from '../models/structure-index';
 	import EdgeLabels from './edge-labels.svelte';
 	import EdgeLayer from './edge-layer.svelte';
 	import FileNode from './file-node.svelte';
-	import type { ChangedFile, GetDiffStructureOutput } from '$infrastructure/bindings';
+	import type {
+		ChangedFile,
+		ExplanationStyle,
+		GetDiffStructureOutput
+	} from '$infrastructure/bindings';
 	import type {
 		DiffViewerGutter,
 		DiffViewerLayout,
@@ -44,6 +49,10 @@
 		diffVariant?: DiffViewerVariant;
 		diffGutter?: DiffViewerGutter;
 		diffWrap?: boolean;
+		/** Reviewer-chosen explanation style, threaded into nodes. */
+		explanationStyle?: ExplanationStyle;
+		/** Whole-file vs per-change inline explanations, threaded into nodes. */
+		explanationDetail?: ExplanationDetail;
 		/** Whether a file is currently marked reviewed (reactive). */
 		isReviewed?: (path: string) => boolean;
 		/** Flip a file's reviewed state. */
@@ -62,6 +71,8 @@
 		diffVariant = 'background',
 		diffGutter = 'single',
 		diffWrap = false,
+		explanationStyle = 'succinct',
+		explanationDetail = 'file',
 		isReviewed = undefined,
 		onToggleReviewed = undefined,
 		onOpenFile
@@ -531,6 +542,8 @@
 							{diffVariant}
 							{diffGutter}
 							{diffWrap}
+							{explanationStyle}
+							{explanationDetail}
 							renderDiff={shouldRenderDiff(node)}
 							reviewed={isReviewed?.(node.path) ?? false}
 							{onToggleReviewed}

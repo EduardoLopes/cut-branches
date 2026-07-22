@@ -75,6 +75,11 @@
 		 *  annotations/comments. In split layout it is called once per row,
 		 *  with the new-side line when both sides are present. */
 		lineAnnotation?: Snippet<[DiffViewerLine]>;
+		/** Predicate deciding which lines get an annotation row. Without it every
+		 *  line gets one (legacy behavior); with it the wrapper row is only
+		 *  emitted for lines it returns true for — so anchoring an annotation to
+		 *  a single line doesn't add empty rows under all the others. */
+		annotatedLine?: (line: DiffViewerLine) => boolean;
 		/** Fired when the pointer enters a token run of a line. */
 		onTokenHover?: (hover: DiffViewerTokenHover) => void;
 	}
@@ -93,6 +98,7 @@
 		loadingGaps,
 		gapErrors,
 		lineAnnotation,
+		annotatedLine,
 		onTokenHover
 	}: Props = $props();
 
@@ -534,7 +540,7 @@
 {/snippet}
 
 {#snippet annotationFor(line: DiffViewerLine)}
-	{#if lineAnnotation}
+	{#if lineAnnotation && (annotatedLine?.(line) ?? true)}
 		<div class={annotationRow} data-testid="diff-line-annotation">
 			{@render lineAnnotation(line)}
 		</div>

@@ -24,6 +24,8 @@
 	import { buildStructureIndex } from '../models/structure-index';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { useDiffExplanationBatch } from '$domains/branch-management/features/diff-explanation/application/use-diff-explanation-batch.svelte';
+	import ExplanationMenu from '$domains/branch-management/features/diff-explanation/components/explanation-menu.svelte';
 	import { createGetRepositoryQuery } from '$domains/branch-management/infrastructure/queries/create-get-repository-query';
 	import EmptyState from '$ui/core/empty-state.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -93,6 +95,21 @@
 	const visibleFiles = $derived(
 		(changedFilesQuery.data?.files ?? []).filter((file) => search.matches(file))
 	);
+
+	// "Explain all": one batch run over the currently-visible files, streamed by
+	// a local CLI agent. Each row/node reads its own slice from the batch and
+	// fills in as its file completes. Progress + cancel live in the header.
+	const explanationBatch = useDiffExplanationBatch({
+		getPath: () => path ?? '',
+		getBranchName: () => branchName,
+		getCommitSha: () => commitSha
+	});
+	function generateExplanations() {
+		explanationBatch.generate(
+			visibleFiles.map((file) => file.path),
+			viewOptions.options.explanationStyle
+		);
+	}
 
 	// --- File-tree navigation --------------------------------------------------
 	// Activating a file in the tree scrolls its row into view and opens it.
@@ -299,6 +316,46 @@
 					</Choice>
 				{/key}
 				<DiffOptionsMenu options={viewOptions.options} onChange={viewOptions.update} />
+				<span
+					class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}
+					data-testid="explain-all-controls"
+				>
+					<ExplanationMenu
+						style={viewOptions.options.explanationStyle}
+						detail={viewOptions.options.explanationDetail}
+						onStyleChange={(explanationStyle) => viewOptions.update({ explanationStyle })}
+						onDetailChange={(explanationDetail) => viewOptions.update({ explanationDetail })}
+					/>
+					<Button
+						emphasis="secondary"
+						size="sm"
+						onclick={generateExplanations}
+						disabled={explanationBatch.isRunning}
+						title="Explain every visible change with your local AI agent (uses its quota)"
+						data-testid="explain-all"
+					>
+						{#snippet leading()}
+							<Stamp emphasis="ghost" border="none" background="transparent">
+								<Icon icon="lucide:sparkles" width="14px" height="14px" />
+							</Stamp>
+						{/snippet}
+						{#if explanationBatch.isRunning}
+							Explaining {explanationBatch.done}/{explanationBatch.total}…
+						{:else}
+							Explain all
+						{/if}
+					</Button>
+					{#if explanationBatch.isRunning}
+						<Button
+							emphasis="ghost"
+							size="sm"
+							onclick={explanationBatch.cancel}
+							data-testid="explain-all-cancel"
+						>
+							Cancel
+						</Button>
+					{/if}
+				</span>
 			{/if}
 		{/if}
 	</header>
@@ -363,6 +420,8 @@
 					diffVariant={viewOptions.options.variant}
 					diffGutter={viewOptions.options.gutter}
 					diffWrap={viewOptions.options.wrap}
+					explanationStyle={viewOptions.options.explanationStyle}
+					explanationDetail={viewOptions.options.explanationDetail}
 					isReviewed={reviewed.isReviewed}
 					onToggleReviewed={reviewed.toggle}
 					onOpenFile={openFileFromCanvas}
@@ -403,6 +462,9 @@
 								wrap={viewOptions.options.wrap}
 								reviewed={reviewed.isReviewed(file.path)}
 								onToggleReviewed={reviewed.toggle}
+								batchState={explanationBatch.get(file.path) ?? null}
+								explanationStyle={viewOptions.options.explanationStyle}
+								explanationDetail={viewOptions.options.explanationDetail}
 							/>
 						</div>
 					{/each}

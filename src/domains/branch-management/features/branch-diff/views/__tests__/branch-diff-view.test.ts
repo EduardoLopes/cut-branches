@@ -492,4 +492,19 @@ describe('BranchDiffView', () => {
 			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
 		});
 	});
+
+	it('offers an Explain all action that runs without throwing', async () => {
+		const { getByTestId, container } = renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
+
+		const explainAll = getByTestId('explain-all');
+		await expect.element(explainAll).toHaveTextContent('Explain all');
+		await explainAll.click();
+		// Kicking off the batch must not tear down the view.
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="changed-files-list"]')).not.toBeNull();
+		});
+	});
 });
