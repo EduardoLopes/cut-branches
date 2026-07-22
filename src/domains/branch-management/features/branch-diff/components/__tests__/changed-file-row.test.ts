@@ -299,6 +299,22 @@ describe('ChangedFileRow', () => {
 		await expect.element(getByTestId('explanation-error')).toHaveTextContent('agent boom');
 	});
 
+	it('renders a per-change batch inline and reveals the diff', async () => {
+		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, {
+			...defaultProps,
+			batchState: {
+				text: '@@HUNK 1@@\nDoes a thing.',
+				status: 'done',
+				hunks: new Map([[1, 'Does a thing.']])
+			}
+		});
+		// Per-change batch → panel shows the inline hint and the diff is revealed.
+		await expect.element(getByTestId('explanation-inline-hint')).toBeInTheDocument();
+		await vi.waitFor(() => {
+			expect(container.querySelector('[data-testid="file-diff-panel"]')).not.toBeNull();
+		});
+	});
+
 	it('reveals the diff and opens the panel in per-change mode', async () => {
 		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,

@@ -70,7 +70,8 @@ describe('useDiffExplanationBatch', () => {
 			branchName: null,
 			commitSha: 'abcdef1',
 			filePaths: ['a.ts', 'b.ts'],
-			style: 'succinct'
+			style: 'succinct',
+			detail: 'file'
 		});
 		expect(value.total).toBe(2);
 
@@ -123,6 +124,36 @@ describe('useDiffExplanationBatch', () => {
 		const { value, cleanup } = withEffectRoot(() => useDiffExplanationBatch(options));
 		await value.generate(['a.ts'], 'plainLanguage');
 		expect(batchMutate.mock.calls[0][0].style).toBe('plainLanguage');
+		cleanup();
+	});
+
+	test('parses per-file hunks when the batch runs per-change', async () => {
+		let resolve!: (v: unknown) => void;
+		batchMutate.mockImplementation(() => new Promise((r) => (resolve = r)));
+
+		const { value, cleanup } = withEffectRoot(() => useDiffExplanationBatch(options));
+		const done = value.generate(['a.ts'], 'succinct', 'hunks');
+		await vi.waitFor(() => expect(batchMutate).toHaveBeenCalled());
+		expect(batchMutate.mock.calls[0][0].detail).toBe('hunks');
+
+		const batchId = batchMutate.mock.calls[0][0].batchId;
+		handlers['explanation-chunk']({
+			payload: {
+				requestId: batchId,
+				filePath: 'a.ts',
+				delta: '@@HUNK 1@@\nFirst.\n@@HUNK 2@@\nSecond.'
+			}
+		});
+
+		const state = value.get('a.ts');
+		expect(state?.status).toBe('streaming');
+		expect(state?.hunks && [...state.hunks.entries()]).toEqual([
+			[1, 'First.'],
+			[2, 'Second.']
+		]);
+
+		resolve({ batchId, total: 1 });
+		await done;
 		cleanup();
 	});
 

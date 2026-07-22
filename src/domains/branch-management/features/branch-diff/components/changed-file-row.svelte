@@ -131,19 +131,29 @@
 	);
 	const activeText = $derived(granularity === 'file' ? fileExplanation.text : hunkExplanation.text);
 
-	// A batch ("Explain all") drives the panel (whole-file) when it has state for
-	// this file; otherwise the row's own on-demand explanation does.
+	// A batch ("Explain all") drives the panel when it has state for this file;
+	// otherwise the row's own on-demand explanation does. A per-change batch
+	// carries `hunks` for inline rendering; a whole-file batch carries `text`.
+	const batchHunks = $derived(batchState?.hunks ?? null);
 	const panelOpen = $derived(explanationOpen || !!batchState);
-	const panelGranularity = $derived(batchState ? 'file' : granularity);
+	const panelGranularity = $derived(batchState ? (batchHunks ? 'hunks' : 'file') : granularity);
 	const panelStatus = $derived(batchState ? batchState.status : activeStatus);
 	const panelText = $derived(batchState ? batchState.text : activeText);
 	const panelError = $derived(batchState ? (batchState.error ?? null) : activeError);
-	// Per-change explanations, keyed by hunk number, rendered inline in the diff.
-	const hunkExplanationMap = $derived(
+	// Per-change explanations, keyed by hunk number, rendered inline in the diff
+	// — from the batch when it drives this file, else this row's own run.
+	const ownHunkMap = $derived(
 		granularity === 'hunks'
 			? new Map(hunkExplanation.hunks.map((hunk) => [hunk.index, hunk.text]))
 			: undefined
 	);
+	const hunkExplanationMap = $derived(batchHunks ?? ownHunkMap);
+
+	// A per-change batch reveals each file's diff as its comments arrive, so the
+	// inline annotations are visible without a manual expand (the chosen UX).
+	$effect(() => {
+		if (batchHunks) expanded = true;
+	});
 
 	/** Runs (or re-runs) whichever granularity is active. */
 	function runExplanation() {

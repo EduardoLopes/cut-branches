@@ -2,10 +2,12 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { SvelteMap } from 'svelte/reactivity';
 import { createCancelExplanationMutation } from '../infrastructure/mutations/create-cancel-explanation-mutation';
 import { createDiffExplanationBatchMutation } from '../infrastructure/mutations/create-diff-explanation-batch-mutation';
+import { parseHunkExplanations } from '../models/parse-hunk-explanations';
 import type {
 	AppError,
 	ExplanationBatchProgressEvent,
 	ExplanationChunkEvent,
+	ExplanationDetail,
 	ExplanationFileCompletedEvent,
 	ExplanationStyle
 } from '$infrastructure/bindings';
@@ -15,6 +17,9 @@ export interface BatchFileState {
 	text: string;
 	status: 'streaming' | 'done' | 'error';
 	error?: string;
+	/** Present in per-change batches: this file's per-hunk explanations, keyed
+	 *  by 1-based hunk number, for inline rendering in the diff. */
+	hunks?: ReadonlyMap<number, string>;
 }
 
 /** Target + repository context for the batch. */
@@ -47,6 +52,9 @@ export function useDiffExplanationBatch(options: UseDiffExplanationBatchOptions)
 	let total = $state(0);
 	let error = $state<string | null>(null);
 	let cancelled = $state(false);
+	// The granularity the current run was launched with — decides whether to
+	// parse each file's text into per-hunk sections for inline rendering.
+	let detailChoice = $state<ExplanationDetail>('file');
 
 	function ensure(filePath: string): BatchFileState {
 		let state = files.get(filePath);
@@ -57,13 +65,29 @@ export function useDiffExplanationBatch(options: UseDiffExplanationBatchOptions)
 		return state;
 	}
 
+	/** Adds the parsed per-hunk map when the run is per-change. */
+	function withHunks(state: BatchFileState): BatchFileState {
+		if (detailChoice !== 'hunks') {
+			return state;
+		}
+		return {
+			...state,
+			hunks: new SvelteMap(parseHunkExplanations(state.text).map((hunk) => [hunk.index, hunk.text]))
+		};
+	}
+
 	/** Runs the batch over `filePaths`, or the whole changeset when omitted. */
-	async function generate(filePaths?: string[], style: ExplanationStyle = 'succinct') {
+	async function generate(
+		filePaths?: string[],
+		style: ExplanationStyle = 'succinct',
+		detail: ExplanationDetail = 'file'
+	) {
 		files.clear();
 		done = 0;
 		total = filePaths?.length ?? 0;
 		error = null;
 		cancelled = false;
+		detailChoice = detail;
 
 		const unlisteners: UnlistenFn[] = [];
 		try {
@@ -71,21 +95,27 @@ export function useDiffExplanationBatch(options: UseDiffExplanationBatchOptions)
 				await listen<ExplanationChunkEvent>('explanation-chunk', (event) => {
 					if (event.payload.requestId !== batchId) return;
 					const state = ensure(event.payload.filePath);
-					files.set(event.payload.filePath, {
-						...state,
-						text: state.text + event.payload.delta,
-						status: 'streaming'
-					});
+					files.set(
+						event.payload.filePath,
+						withHunks({
+							...state,
+							text: state.text + event.payload.delta,
+							status: 'streaming'
+						})
+					);
 				})
 			);
 			unlisteners.push(
 				await listen<ExplanationFileCompletedEvent>('explanation-file-completed', (event) => {
 					if (event.payload.requestId !== batchId) return;
-					files.set(event.payload.filePath, {
-						text: event.payload.text,
-						status: event.payload.error ? 'error' : 'done',
-						error: event.payload.error ?? undefined
-					});
+					files.set(
+						event.payload.filePath,
+						withHunks({
+							text: event.payload.text,
+							status: event.payload.error ? 'error' : 'done',
+							error: event.payload.error ?? undefined
+						})
+					);
 				})
 			);
 			unlisteners.push(
@@ -106,7 +136,8 @@ export function useDiffExplanationBatch(options: UseDiffExplanationBatchOptions)
 				branchName: options.getBranchName(),
 				commitSha: options.getCommitSha(),
 				filePaths: filePaths ?? null,
-				style
+				style,
+				detail
 			});
 			total = output.total;
 		} catch (e) {

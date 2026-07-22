@@ -107,7 +107,8 @@
 	function generateExplanations() {
 		explanationBatch.generate(
 			visibleFiles.map((file) => file.path),
-			viewOptions.options.explanationStyle
+			viewOptions.options.explanationStyle,
+			viewOptions.options.explanationDetail
 		);
 	}
 
