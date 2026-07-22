@@ -22,7 +22,7 @@ use super::application;
 use super::events::{
     ExplanationBatchProgressEvent, ExplanationChunkEvent, ExplanationFileCompletedEvent,
 };
-use super::models::{AgentConfig, ExplanationStyle};
+use super::models::{AgentConfig, ExplanationDetail, ExplanationStyle};
 use crate::domains::branch_management::core::models::branch_name::BranchName;
 use crate::domains::branch_management::core::models::commit_sha::CommitSha;
 use crate::domains::branch_management::features::branch_diff::git::DiffTarget;
@@ -340,6 +340,9 @@ pub struct CreateDiffExplanationBatchInput {
     /// Reviewer-chosen explanation shape; defaults to succinct.
     #[serde(default)]
     pub style: ExplanationStyle,
+    /// Whole-file summary vs per-change (inline) explanations; defaults to file.
+    #[serde(default)]
+    pub detail: ExplanationDetail,
 }
 
 #[derive(Serialize, Deserialize, specta::Type, Debug)]
@@ -387,6 +390,7 @@ pub async fn create_diff_explanation_batch(
         app: &app,
         config: &config,
         style: input.style,
+        detail: input.detail,
         repo_path: &input.path,
         target: &target,
         batch_id: &input.batch_id,
@@ -410,6 +414,7 @@ struct BatchParams<'a> {
     app: &'a AppHandle,
     config: &'a AgentConfig,
     style: ExplanationStyle,
+    detail: ExplanationDetail,
     repo_path: &'a str,
     target: &'a OwnedTarget,
     batch_id: &'a str,
@@ -419,27 +424,53 @@ struct BatchParams<'a> {
 /// The batch loop, factored out so the cancel signal can race the whole run.
 async fn run_batch(params: &BatchParams<'_>, files: &[String]) -> Result<(), AppError> {
     for (index, file_path) in files.iter().enumerate() {
-        let diff_text = {
+        // Build the prompt off-thread. `None` means "nothing to explain" — a
+        // hunkless file in per-change mode (binary / pure rename) — so the agent
+        // is skipped entirely.
+        let prompt = {
             let target = params.target.clone();
             let repo_path = params.repo_path.to_string();
             let file_path = file_path.clone();
-            tokio::task::spawn_blocking(move || {
-                application::build_file_diff_text(
-                    Path::new(&repo_path),
-                    target.as_diff_target(),
-                    &file_path,
-                    None,
-                )
+            let config = params.config.clone();
+            let style = params.style;
+            let detail = params.detail;
+            tokio::task::spawn_blocking(move || -> Result<Option<String>, AppError> {
+                let target = target.as_diff_target();
+                match detail {
+                    ExplanationDetail::File => {
+                        let diff_text = application::build_file_diff_text(
+                            Path::new(&repo_path),
+                            target,
+                            &file_path,
+                            None,
+                        )?;
+                        Ok(Some(config.render_prompt(style, &file_path, &diff_text)))
+                    }
+                    ExplanationDetail::Hunks => {
+                        let (prompt, headers) = application::build_hunk_explanation_request(
+                            Path::new(&repo_path),
+                            target,
+                            &file_path,
+                            None,
+                            style,
+                        )?;
+                        Ok(if headers.is_empty() {
+                            None
+                        } else {
+                            Some(prompt)
+                        })
+                    }
+                }
             })
             .await
             .map_err(join_error)?
         };
 
-        let completed = match diff_text {
-            Ok(diff_text) => {
-                let prompt = params
-                    .config
-                    .render_prompt(params.style, file_path, &diff_text);
+        let completed = match prompt {
+            // Nothing to explain (hunkless file in per-change mode): report an
+            // empty result without spending agent quota.
+            Ok(None) => Ok(String::new()),
+            Ok(Some(prompt)) => {
                 let explainer = CliExplainer {
                     config: params.config.clone(),
                     cwd: PathBuf::from(params.repo_path),

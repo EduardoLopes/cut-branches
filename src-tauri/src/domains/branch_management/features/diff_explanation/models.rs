@@ -34,6 +34,19 @@ pub enum ExplanationStyle {
     PlainLanguage,
 }
 
+/// Whether an explanation covers the whole file (one summary) or each change
+/// group (inline per-hunk). Mirrors the frontend's up-front "Detail" choice;
+/// carried by the batch command so "Explain all" runs the intended mode.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub enum ExplanationDetail {
+    /// One explanation for the whole file.
+    #[default]
+    File,
+    /// One explanation per change group (hunk).
+    Hunks,
+}
+
 impl ExplanationStyle {
     /// The instruction spliced into the prompt's `{style}` placeholder.
     pub fn instruction(self) -> &'static str {
@@ -196,6 +209,11 @@ mod tests {
     #[test]
     fn default_style_is_succinct() {
         assert_eq!(ExplanationStyle::default(), ExplanationStyle::Succinct);
+    }
+
+    #[test]
+    fn default_detail_is_whole_file() {
+        assert_eq!(ExplanationDetail::default(), ExplanationDetail::File);
     }
 
     #[test]

@@ -942,7 +942,11 @@ filePaths?: string[] | null;
 /**
  * Reviewer-chosen explanation shape; defaults to succinct.
  */
-style?: ExplanationStyle }
+style?: ExplanationStyle; 
+/**
+ * Whole-file summary vs per-change (inline) explanations; defaults to file.
+ */
+detail?: ExplanationDetail }
 export type CreateDiffExplanationBatchOutput = { batchId: string; 
 /**
  * Number of files processed (completed or failed).
@@ -1120,6 +1124,20 @@ filePath: string;
  * Text produced since the previous chunk.
  */
 delta: string }
+/**
+ * Whether an explanation covers the whole file (one summary) or each change
+ * group (inline per-hunk). Mirrors the frontend's up-front "Detail" choice;
+ * carried by the batch command so "Explain all" runs the intended mode.
+ */
+export type ExplanationDetail = 
+/**
+ * One explanation for the whole file.
+ */
+"file" | 
+/**
+ * One explanation per change group (hunk).
+ */
+"hunks"
 /**
  * Emitted once a file's explanation finishes (success or per-file failure) —
  * only used by the batch flow, where the command return value can't carry
