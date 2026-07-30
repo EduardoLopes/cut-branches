@@ -252,9 +252,7 @@
 				orientation="horizontal"
 				passThrough={{
 					root: {
-						style: css.raw({
-							outlineColor: 'neutral.border.muted'
-						})
+						style: css.raw({ marginBottom: '-1px' })
 					}
 				}}
 			>
@@ -262,19 +260,11 @@
 					id="branches"
 					name="repository-management"
 					value="active-branches"
-					appearance="button"
 					background="surface.deep"
+					appearance="tab"
 					checked={selectedTab === 'active-branches'}
 					role="tab"
 					onchange={goToBranches}
-					passThrough={{
-						root: {
-							style: css.raw({
-								borderBottomRadius: '0',
-								borderBottomWidth: '0'
-							})
-						}
-					}}
 				>
 					Active
 					{#snippet leading()}
@@ -290,20 +280,12 @@
 					id="deleted-branches"
 					name="repository-management"
 					value="restore"
-					appearance="button"
-					feedback="danger"
 					background="surface.deep"
+					appearance="tab"
+					feedback="danger"
 					checked={selectedTab === 'deleted-branches'}
 					role="tab"
 					onchange={goToDeletedBranches}
-					passThrough={{
-						root: {
-							style: css.raw({
-								borderBottomRadius: '0',
-								borderBottomWidth: '0'
-							})
-						}
-					}}
 				>
 					Deleted
 					{#snippet leading()}
