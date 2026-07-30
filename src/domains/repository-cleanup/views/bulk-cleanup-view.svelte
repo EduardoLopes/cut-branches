@@ -86,7 +86,7 @@
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
-		height: 'calc(100vh - 30px)',
+		height: '100%',
 		overflow: 'hidden',
 		background: 'neutral.surface.deep'
 	})}

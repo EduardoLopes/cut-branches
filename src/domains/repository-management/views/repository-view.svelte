@@ -20,7 +20,7 @@
 	class={css({
 		overflow: 'hidden',
 		position: 'relative',
-		height: 'calc(100vh - 30px)'
+		height: '100%'
 	})}
 >
 	<main

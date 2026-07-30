@@ -31,7 +31,7 @@
 	const host = css({
 		display: 'flex',
 		flexDirection: 'column',
-		height: 'calc(100vh - 30px)',
+		height: '100%',
 		background: 'neutral.surface.step.1',
 		color: 'neutral.text'
 	});
