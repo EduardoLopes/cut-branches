@@ -126,9 +126,10 @@ describe('SidebarView Component', () => {
 		await screen.getByRole('button', { name: /collapse sidebar/i }).click();
 		await tick();
 
-		// Collapsed: title and heading are hidden, the expand toggle appears
-		expect(screen.getByText('Cut Branches')).not.toBeInTheDocument();
-		expect(screen.getByText('Repositories')).not.toBeInTheDocument();
+		// Collapsed: title and heading fold away (polled — they linger in the
+		// DOM for the out-transition), the expand toggle appears
+		await expect.element(screen.getByText('Cut Branches')).not.toBeInTheDocument();
+		await expect.element(screen.getByText('Repositories')).not.toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument();
 
 		// Repository labels are kept in the DOM for screen readers in the rail
