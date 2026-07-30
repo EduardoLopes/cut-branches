@@ -164,7 +164,7 @@
 							items={menuItems}
 							activeItem={activeSection}
 							direction="vertical"
-							emphasis="neutral"
+							emphasis="tertiary"
 							background="transparent"
 						/>
 					{:else}
