@@ -18,6 +18,13 @@
 		swapIcon?: string;
 		/** Shows `swapIcon` instead of `icon`. Only meaningful with `swapIcon`. */
 		swapped?: boolean;
+		/**
+		 * Glyph size. The 20px default suits `md` and up; smaller controls need it
+		 * lowered explicitly, because a glyph wider than the control's inner box
+		 * silently pushes the button past its nominal height (`xs` is a 2rem
+		 * control, so a 2rem glyph plus affix padding cannot fit).
+		 */
+		iconSize?: string;
 	}
 
 	const {
@@ -26,6 +33,7 @@
 		visuallyHiddenLabel = false,
 		swapIcon = undefined,
 		swapped = false,
+		iconSize = '20px',
 		size = 'lg',
 		emphasis = 'primary',
 		...props
@@ -64,8 +72,8 @@
 		<span class={css({ position: 'relative', display: 'inline-flex' })} data-swapped={swapped}>
 			<Icon
 				{icon}
-				width="20px"
-				height="20px"
+				width={iconSize}
+				height={iconSize}
 				class={baseIconClass}
 				data-testid="icon-button-icon"
 			/>
@@ -80,15 +88,15 @@
 			>
 				<Icon
 					icon={swapIcon}
-					width="20px"
-					height="20px"
+					width={iconSize}
+					height={iconSize}
 					class={swapIconClass}
 					data-testid="icon-button-swap-icon"
 				/>
 			</span>
 		</span>
 	{:else}
-		<Icon {icon} width="20px" height="20px" data-testid="icon-button-icon" />
+		<Icon {icon} width={iconSize} height={iconSize} data-testid="icon-button-icon" />
 	{/if}
 {/snippet}
 
