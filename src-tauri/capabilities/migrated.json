@@ -8,6 +8,7 @@
   "permissions": [
     "core:default",
     "core:path:allow-resolve-directory",
+    "core:window:allow-start-dragging",
     "dialog:allow-open",
     "dialog:allow-save",
     "dialog:allow-message",

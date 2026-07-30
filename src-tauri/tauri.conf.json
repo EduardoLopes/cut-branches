@@ -52,7 +52,9 @@
         "height": 740,
         "resizable": true,
         "title": "Cut branches",
-        "width": 960
+        "width": 960,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true
       }
     ],
     "security": {
