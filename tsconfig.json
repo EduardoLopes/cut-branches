@@ -11,6 +11,13 @@
 		"types": ["vitest/globals", "@testing-library/jest-dom"],
 		"baseUrl": ".",
 		"paths": {
+			// Pin `svelte` to this project's copy. In local-Pindoba mode the sibling
+			// `dist/*.d.ts` files resolve `svelte` from `../pindoba/node_modules`, which
+			// gives `Snippet` a second, unrelated `unique symbol` — every snippet prop
+			// then fails to typecheck with "two different types with this name exist".
+			// Harmless when local Pindoba is absent: it still points at our own install.
+			"svelte": ["node_modules/svelte"],
+			"svelte/*": ["node_modules/svelte/*"],
 			"$lib": ["src/lib"],
 			"$lib/*": ["src/lib/*"],
 			"$core": ["src/core"],
