@@ -126,7 +126,9 @@
 		{/if}
 		<ThemeModeSelect
 			popoverProps={{ placement: 'top' }}
-			buttonProps={{
+			triggerProps={{
+				emphasis: 'ghost',
+				border: 'none',
 				size: 'xs',
 				passThrough: {
 					root: {
