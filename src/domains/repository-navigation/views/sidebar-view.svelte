@@ -8,12 +8,12 @@
 	import { page } from '$app/state';
 	import RepositoryNavList from '$domains/repository-navigation/components/repository-nav-list.svelte';
 	import SidebarBrand from '$domains/repository-navigation/components/sidebar-brand.svelte';
+	import SidebarCollapseToggle from '$domains/repository-navigation/components/sidebar-collapse-toggle.svelte';
 	import { cleanupSummary } from '$lib/cleanup-summary.svelte';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
-	import IconButton from '$ui/core/icon-button.svelte';
+	import { sidebarCollapsed } from '$lib/sidebar-collapsed.svelte';
 	import { formatBytes } from '$utils/format-bytes';
-	import { getLocalStorage } from '$utils/get-local-storage';
-	import { setLocalStorage } from '$utils/set-local-storage';
+	import { isMacOS } from '$utils/is-macos';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -24,15 +24,14 @@
 
 	const { repositoryListAction, onOpenDevtools }: Props = $props();
 
-	const STORAGE_KEY = 'sidebar-collapsed';
+	// Collapsed rail is delivery-layer UI state, persisted across sessions and
+	// shared with the macOS titlebar toggle in the app shell.
+	const collapsed = $derived(sidebarCollapsed.current);
 
-	// Collapsed rail is delivery-layer UI state, persisted across sessions.
-	let collapsed = $state<boolean>(getLocalStorage<boolean>(STORAGE_KEY, false) === true);
-
-	function toggleSidebar() {
-		collapsed = !collapsed;
-		setLocalStorage(STORAGE_KEY, collapsed);
-	}
+	// On macOS the toggle lives in the window's overlay titlebar, beside the
+	// traffic lights, so the sidebar drops its own toggle row rather than
+	// offering the same control twice.
+	const ownsToggle = !isMacOS();
 
 	// Highlight the active app-nav entry based on the current route.
 	const appActiveItem = $derived(
@@ -162,44 +161,36 @@
 			items={appNavItems}
 			activeItem={appActiveItem}
 			direction="vertical"
-			emphasis="neutral"
+			emphasis="tertiary"
 			background="transparent"
 			compact={collapsed ? 'stack' : 'none'}
 			passThrough={{ root: { style: css.raw({ width: '100%' }) } }}
 		/>
 	</div>
 
-	<!-- Bottom-most section, home of the collapse toggle alone. -->
-	<div
-		class={css({
-			display: 'flex',
-			justifyContent: 'flex-end',
-			px: 'xs',
-			py: '2xs',
-			borderTopWidth: '1px',
-			borderTopStyle: 'solid',
-			borderTopColor: 'neutral.border.muted',
-			// End-aligned in both states, so during collapse the toggle rides the
-			// sidebar's shrinking right edge; the rail's inline padding then
-			// animates it the last stretch to dead centre — (6.8 − 2.4) / 2 around
-			// the 2.4rem button — on the same curve as the width.
-			transition: 'padding 350ms cubic-bezier(0.32, 0.72, 0, 1)',
-			_motionReduce: { transition: 'none' },
-			'&[data-rail="true"]': { px: '2.2rem' }
-		})}
-		data-rail={collapsed}
-	>
-		<IconButton
-			size="sm"
-			shape="square"
-			emphasis="ghost"
-			icon="lucide:panel-left-close"
-			swapIcon="lucide:panel-left-open"
-			swapped={collapsed}
-			label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-			visuallyHiddenLabel
-			aria-expanded={!collapsed}
-			onclick={toggleSidebar}
-		/>
-	</div>
+	{#if ownsToggle}
+		<!-- Bottom-most section, home of the collapse toggle alone. Windows and
+		     Linux only: macOS puts it in the titlebar beside the traffic lights. -->
+		<div
+			class={css({
+				display: 'flex',
+				justifyContent: 'flex-end',
+				px: 'xs',
+				py: '2xs',
+				borderTopWidth: '1px',
+				borderTopStyle: 'solid',
+				borderTopColor: 'neutral.border.muted',
+				// End-aligned in both states, so during collapse the toggle rides the
+				// sidebar's shrinking right edge; the rail's inline padding then
+				// animates it the last stretch to dead centre — (6.8 − 2.4) / 2 around
+				// the 2.4rem button — on the same curve as the width.
+				transition: 'padding 350ms cubic-bezier(0.32, 0.72, 0, 1)',
+				_motionReduce: { transition: 'none' },
+				'&[data-rail="true"]': { px: '2.2rem' }
+			})}
+			data-rail={collapsed}
+		>
+			<SidebarCollapseToggle />
+		</div>
+	{/if}
 </section>

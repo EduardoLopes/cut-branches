@@ -1,6 +1,7 @@
 import { createRawSnippet, tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SidebarView from '../sidebar-view.svelte';
+import { sidebarCollapsed } from '$lib/sidebar-collapsed.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 const repositoryListAction = createRawSnippet(() => ({
@@ -54,8 +55,18 @@ vi.mock('$app/state', () => ({
 	}
 }));
 
+// Force the non-macOS chrome: these tests drive the sidebar's own toggle row,
+// which macOS hands over to the window titlebar in the app shell instead.
+vi.mock('$utils/is-macos', () => ({
+	isMacOS: () => false
+}));
+
 describe('SidebarView Component', () => {
 	beforeEach(() => {
+		localStorage.clear();
+		// The collapsed flag is a module-level store now, so it outlives an
+		// unmount — reset it explicitly rather than relying on a fresh mount.
+		sidebarCollapsed.set(false);
 		localStorage.clear();
 	});
 
@@ -153,8 +164,10 @@ describe('SidebarView Component', () => {
 		expect(localStorage.getItem('sidebar-collapsed')).toBe('true');
 	});
 
-	it('restores the collapsed state from localStorage on mount', async () => {
-		localStorage.setItem('sidebar-collapsed', 'true');
+	it('renders the rail when it mounts already collapsed', async () => {
+		// The persisted value is read once when the store module loads, so set the
+		// state itself rather than seeding localStorage before mounting.
+		sidebarCollapsed.set(true);
 
 		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
 
