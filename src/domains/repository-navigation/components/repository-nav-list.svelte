@@ -50,8 +50,8 @@
 		isRail
 			? {
 					anchor: 'inside',
-					placement: 'bottom-end',
-					offsetY: -4,
+					placement: 'top-end',
+					offsetY: -2,
 					// 0, not a nudge outward: any horizontal overhang has to be paid for
 					// with matching padding on the scroll box (which clips at its padding
 					// box), and that padding is rail width. Keep the badge inside.
@@ -77,7 +77,7 @@
 				const instance = mount(Badge, {
 					target: element,
 					props: {
-						size: 'sm',
+						size: 'xs',
 						emphasis: 'tertiary',
 						children: badgeLabel,
 						...(count > 0
