@@ -9,6 +9,7 @@
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import Menu from '@pindoba/svelte-menu';
+	import Panel from '@pindoba/svelte-panel';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { open as openFolderDialog } from '@tauri-apps/plugin-dialog';
@@ -304,16 +305,15 @@
 			</div>
 
 			<!-- Results panel (fixed height so the modal doesn't resize between states) -->
-			<div
+			<Panel
+				background="surface.soft"
+				border="muted"
+				radius="lg"
+				padding="none"
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
 					height: '320px',
-					borderRadius: 'lg',
-					borderWidth: '1px',
-					borderStyle: 'solid',
-					borderColor: 'neutral.border.muted',
-					background: 'neutral.surface.soft',
 					overflow: 'hidden'
 				})}
 			>
@@ -445,15 +445,20 @@
 						</div>
 					</div>
 
-					<!-- Rows -->
-					<div
+					<!-- Rows. A transparent Panel rather than a plain div so this
+					     scroller's inset counts as a nesting level and the rows can ask
+					     for `radius="inner"` instead of pinning a tier. -->
+					<Panel
+						background="transparent"
+						border="none"
+						radius="inner"
+						padding="2xs"
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
 							gap: '3xs',
 							flex: '1',
-							overflowY: 'auto',
-							padding: '2xs'
+							overflowY: 'auto'
 						})}
 					>
 						{#each filteredResults as item (item.path)}
@@ -465,8 +470,8 @@
 								onchange={() => discover.toggle(item.path)}
 								aria-label={item.name}
 								data-testid="scan-item"
+								radius="inner"
 								class={css({
-									borderRadius: 'md',
 									paddingX: 'sm',
 									paddingY: 'xs',
 									opacity: item.alreadyAdded ? 0.6 : 1,
@@ -531,9 +536,9 @@
 								No repositories match your filter.
 							</div>
 						{/each}
-					</div>
+					</Panel>
 				{/if}
-			</div>
+			</Panel>
 
 			<!-- Footer -->
 			<div

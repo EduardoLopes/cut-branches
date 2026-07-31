@@ -6,6 +6,7 @@
 	import Dialog from '@pindoba/svelte-dialog';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
+	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { useRemoveRepositoryBatch } from '../core/composables/use-remove-repository-batch.svelte';
@@ -179,16 +180,15 @@
 				</Input>
 			{/if}
 
-			<div
+			<Panel
+				background="surface.soft"
+				border="muted"
+				radius="lg"
+				padding="none"
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
 					height: '320px',
-					borderRadius: 'lg',
-					borderWidth: '1px',
-					borderStyle: 'solid',
-					borderColor: 'neutral.border.muted',
-					background: 'neutral.surface.soft',
 					overflow: 'hidden'
 				})}
 			>
@@ -262,8 +262,14 @@
 						</span>
 					</div>
 
-					<!-- Rows -->
-					<div
+					<!-- Rows. A transparent Panel rather than a plain div so this
+					     scroller's inset counts as a nesting level and the rows can ask
+					     for `radius="inner"` instead of pinning a tier. -->
+					<Panel
+						background="transparent"
+						border="none"
+						radius="inner"
+						padding="2xs"
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
@@ -272,8 +278,7 @@
 							overflowY: 'auto',
 							// Only the list scrolls vertically; long repo paths ellipsize
 							// rather than pushing the row wide and adding a horizontal bar.
-							overflowX: 'hidden',
-							padding: '2xs'
+							overflowX: 'hidden'
 						})}
 					>
 						{#each filteredRepositories as repository (repository.id)}
@@ -284,8 +289,8 @@
 								onchange={() => toggle(repository.id)}
 								aria-label={repository.name}
 								data-testid="manage-item"
+								radius="inner"
 								class={css({
-									borderRadius: 'md',
 									paddingX: 'sm',
 									paddingY: 'xs',
 									// Let the row shrink to the well's width so its content can
@@ -330,9 +335,9 @@
 								{/snippet}
 							</Checkbox>
 						{/each}
-					</div>
+					</Panel>
 				{/if}
-			</div>
+			</Panel>
 
 			<!-- Footer -->
 			<div
