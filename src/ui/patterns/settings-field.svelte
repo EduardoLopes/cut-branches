@@ -22,6 +22,10 @@
 		background?: CardProps['background'];
 		feedback?: CardProps['feedback'];
 		border?: CardProps['border'];
+		/** Corner radius. Defaults to `"inner"` so a field nested in a
+		 *  `SettingsSection` well stays concentric with it; pass a fixed tier when
+		 *  the field renders standalone. */
+		radius?: CardProps['radius'];
 		class?: string;
 		testId?: string;
 	}
@@ -38,6 +42,7 @@
 		background = 'surface.soft',
 		feedback,
 		border = 'default',
+		radius = 'inner',
 		class: className,
 		testId
 	}: Props = $props();
@@ -64,6 +69,7 @@
 	{background}
 	{feedback}
 	{border}
+	{radius}
 	class={className}
 	data-testid={testId}
 	header={{

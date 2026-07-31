@@ -6,6 +6,7 @@
 		type PrimitiveCardHeaderProps,
 		type PrimitiveCardProps
 	} from '@pindoba/svelte-card';
+	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
 	import CommitCard from './commit-card.svelte';
@@ -387,6 +388,7 @@
 	<CommitCard
 		commit={branch.getLastCommit()}
 		{feedback}
+		radius="inner"
 		historyHref={commitHistoryHref}
 		diffHref={commitDiffHref}
 		hoverPreview={commitHoverPreview}
@@ -402,14 +404,18 @@
 		})}
 	>
 		{#if !compact}
-			<div
+			<!-- `radius="inner"` derives this well's corner from the Card's own
+			     radius minus its content inset, so the well stays concentric with
+			     whatever `radius`/`size` the consumer gave the card. -->
+			<Panel
+				{feedback}
+				background="surface.deep"
+				radius="inner"
+				padding="xs"
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
-					borderRadius: 'lg',
-					gap: 'xs',
-					background: 'colorPalette.surface.deep',
-					padding: 'xs'
+					gap: 'xs'
 				})}
 			>
 				<div
@@ -448,7 +454,7 @@
 				>
 					{@render lastCommitCard()}
 				</div>
-			</div>
+			</Panel>
 		{/if}
 
 		{#if children}

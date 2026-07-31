@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
+	import Panel from '@pindoba/svelte-panel';
 	import type { Snippet } from 'svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -27,23 +28,23 @@
 >
 	<Banner {leading} {heading} {subheading} {trailing} />
 
-	<!-- Recessed well so the raised setting cards read with depth. -->
-	<div
+	<!-- Recessed well so the raised setting cards read with depth. A real Panel
+	     (not a styled div) so it publishes its radius/padding and the cards
+	     inside can ask for `radius="inner"` and stay concentric. -->
+	<Panel
+		background="surface.deep"
+		border="muted"
+		radius="xl"
+		padding="md"
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
 			flex: '1',
 			minHeight: '0',
 			overflowY: 'auto',
-			gap: 'sm',
-			borderRadius: 'xl',
-			borderWidth: '1px',
-			borderStyle: 'solid',
-			borderColor: 'neutral.border.muted',
-			background: 'neutral.surface.deep',
-			padding: 'md'
+			gap: 'sm'
 		})}
 	>
 		{@render children()}
-	</div>
+	</Panel>
 </div>
