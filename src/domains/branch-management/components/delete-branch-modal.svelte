@@ -162,6 +162,7 @@
 			     right before confirming its deletion. -->
 			<BranchCard
 				{branch}
+				radius="inner"
 				selected={true}
 				diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
 					? `${resolve(`/repos/${id}/diff`)}?branch=${encodeURIComponent(branch.getName())}`

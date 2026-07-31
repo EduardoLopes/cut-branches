@@ -3,6 +3,7 @@
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
+	import Panel from '@pindoba/svelte-panel';
 	import Markdown from 'svelte-exmarkdown';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import type { ConflictResolution, RestoreBranchResult } from '$infrastructure/bindings';
@@ -51,15 +52,15 @@
 <div class={css({ position: 'relative' })}>
 	<div class={css({ '& > div': { marginBottom: '0' } })}>
 		<Loading loading={showLoading} passThrough={{ root: { style: css.raw({ width: '100%' }) } }}>
-			<div
+			<Panel
+				background="surface.deep"
+				radius="lg"
+				padding="sm"
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
 					gap: 'sm',
-					width: 'full',
-					background: 'neutral.surface.deep',
-					p: 'sm',
-					borderRadius: 'lg'
+					width: 'full'
 				})}
 			>
 				{#if result}
@@ -83,7 +84,7 @@
 						<Icon icon={status.icon} width="20px" height="20px" />
 					</div>
 				{/if}
-				<BranchCard {branch} />
+				<BranchCard {branch} radius="inner" />
 				{#if !isProcessing && existsAlready}
 					<div
 						class={css({
@@ -92,7 +93,9 @@
 							gap: 'md',
 							padding: 'xs',
 							backgroundColor: 'warning.50',
-							borderRadius: 'md'
+							// Raw element, so it can't ride the Panel cascade — the token
+							// spells out the enclosing well's radius/padding instead.
+							borderRadius: 'inner.lg.sm'
 						})}
 						data-testid="branch-conflict-warning"
 					>
@@ -126,7 +129,7 @@
 						class={css({
 							padding: 'xs',
 							backgroundColor: 'warning.50',
-							borderRadius: 'md',
+							borderRadius: 'inner.lg.sm',
 							fontSize: 'sm',
 							color: 'warning.800'
 						})}
@@ -139,7 +142,7 @@
 						<Markdown md={result.message} />
 					</Alert>
 				{/if}
-			</div>
+			</Panel>
 		</Loading>
 	</div>
 </div>
