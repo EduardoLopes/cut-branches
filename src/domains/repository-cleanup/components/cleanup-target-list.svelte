@@ -2,6 +2,7 @@
 	import Badge from '@pindoba/svelte-badge';
 	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
 	import Checkbox from '@pindoba/svelte-checkbox';
+	import Panel from '@pindoba/svelte-panel';
 	import type { CleanupTarget } from '$infrastructure/bindings';
 	import { formatBytes } from '$utils/format-bytes';
 	import { css } from '@pindoba/styled-system/css';
@@ -15,13 +16,23 @@
 	let { targets, isSelected, onToggle }: Props = $props();
 </script>
 
-<div
+<!--
+	The scroller is a transparent Panel rather than a plain div so it counts as a
+	nesting level in the concentric-radius cascade: it republishes the enclosing
+	well's radius minus this inset, which is what lets the rows below ask for
+	`radius="inner"` and come out right in every host (the cleanup modal's `lg`
+	well and the bulk view's `xl` well both work with no per-host tuning).
+-->
+<Panel
+	background="transparent"
+	border="none"
+	radius="inner"
+	padding="2xs"
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		gap: '3xs',
-		overflowY: 'auto',
-		padding: '2xs'
+		overflowY: 'auto'
 	})}
 	data-testid="cleanup-target-list"
 >
@@ -38,10 +49,10 @@
 			onchange={() => onToggle(target.path)}
 			aria-label={target.folderName}
 			data-testid="cleanup-target"
+			radius="inner"
 			passThrough={{ text: { style: css.raw({ flex: '1', minWidth: '0' }) } }}
 			class={css({
 				alignItems: 'flex-start',
-				borderRadius: 'md',
 				paddingX: 'xs',
 				paddingY: 'xs',
 				background: selected ? 'neutral.surface.step.3' : 'neutral.surface.step.2',
@@ -74,4 +85,4 @@
 			/>
 		</Checkbox>
 	{/each}
-</div>
+</Panel>

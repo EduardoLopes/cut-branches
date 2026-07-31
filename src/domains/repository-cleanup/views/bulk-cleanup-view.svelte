@@ -8,6 +8,7 @@
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
+	import Panel from '@pindoba/svelte-panel';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { goto } from '$app/navigation';
@@ -140,18 +141,19 @@
 			trailing={headerActions as BannerProps['trailing']}
 		/>
 
-		<!-- Results -->
-		<div
+		<!-- Results. A Panel so everything nested below — the accordion items and,
+		     inside them, the shared target list — can derive concentric corners
+		     from this well's `xl` radius instead of pinning their own tiers. -->
+		<Panel
+			background="surface.step.2"
+			border="muted"
+			radius="xl"
+			padding="none"
 			class={css({
 				display: 'flex',
 				flexDirection: 'column',
 				flex: '1',
 				minHeight: '0',
-				borderRadius: 'xl',
-				borderWidth: '1px',
-				borderStyle: 'solid',
-				borderColor: 'neutral.border.muted',
-				background: 'neutral.surface.step.2',
 				overflow: 'hidden'
 			})}
 		>
@@ -255,20 +257,25 @@
 					</span>
 				</div>
 
-				<!-- Repositories as accordions -->
-				<div
+				<!-- Repositories as accordions. Transparent Panel so this scroller's
+				     inset counts as a cascade level for the items inside it. -->
+				<Panel
+					background="transparent"
+					border="none"
+					radius="inner"
+					padding="xs"
 					class={css({
 						display: 'flex',
 						flexDirection: 'column',
 						flex: '1',
-						overflowY: 'auto',
-						padding: 'xs'
+						overflowY: 'auto'
 					})}
 				>
 					<Accordion type="multiple" collapsible bind:value={expanded}>
 						{#each stale.repositories as repo (repo.id)}
 							<AccordionItem
 								value={repo.id}
+								radius="inner"
 								title={repo.name}
 								subtitle={`Last active ${staleDate(repo.staleSince)} · ${repo.path}`}
 								bannerPassThrough={{
@@ -320,9 +327,9 @@
 							</AccordionItem>
 						{/each}
 					</Accordion>
-				</div>
+				</Panel>
 			{/if}
-		</div>
+		</Panel>
 
 		<!-- Footer actions -->
 		{#if stale.repositoryCount > 0}

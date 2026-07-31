@@ -6,6 +6,7 @@
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
+	import Panel from '@pindoba/svelte-panel';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import CleanupTargetList from './cleanup-target-list.svelte';
@@ -120,17 +121,17 @@
 				below before continuing.
 			</p>
 
-			<!-- Results panel -->
-			<div
+			<!-- Results panel. A Panel (not a styled div) so the target rows inside
+			     can derive their corners from this well's radius. -->
+			<Panel
+				background="surface.soft"
+				border="muted"
+				radius="lg"
+				padding="none"
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
 					height: '300px',
-					borderRadius: 'lg',
-					borderWidth: '1px',
-					borderStyle: 'solid',
-					borderColor: 'neutral.border.muted',
-					background: 'neutral.surface.soft',
 					overflow: 'hidden'
 				})}
 			>
@@ -214,7 +215,7 @@
 						/>
 					</div>
 				{/if}
-			</div>
+			</Panel>
 
 			<!-- Deletion mode -->
 			<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
