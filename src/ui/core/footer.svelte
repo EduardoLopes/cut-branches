@@ -125,7 +125,7 @@
 			</time>
 		{/if}
 		<ThemeModeSelect
-			popoverProps={{ placement: 'top' }}
+			placement="top"
 			triggerProps={{
 				emphasis: 'ghost',
 				border: 'none',
