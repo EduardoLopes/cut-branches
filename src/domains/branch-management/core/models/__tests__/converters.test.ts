@@ -46,6 +46,15 @@ describe('Converters', () => {
 				expect(branch.getIsSelected()).toBe(false);
 				expect(branch.getIsLocked()).toBe(false);
 			});
+
+			it('memoizes by raw-data identity so structural sharing preserves instances', () => {
+				const same = BranchConverters.fromData(mockBranchData);
+				expect(BranchConverters.fromData(mockBranchData)).toBe(same);
+
+				// A different object with equal values is a different cache entry.
+				const clone = { ...mockBranchData };
+				expect(BranchConverters.fromData(clone)).not.toBe(same);
+			});
 		});
 
 		describe('toData', () => {

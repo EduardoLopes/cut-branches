@@ -11,6 +11,15 @@ export interface GetBranchListOutput extends Omit<GetBranchListOutputData, 'bran
 	branches: Branch[];
 }
 
+// Module-scoped so every observer shares one `select` identity: TanStack
+// memoizes the select result per observer on (data, select) — a stable
+// reference means the Branch class instances are rebuilt only when the data
+// actually changes, not on every re-render or options re-evaluation.
+const selectBranches = (data: GetBranchListOutputData): GetBranchListOutput => ({
+	...data,
+	branches: BranchConverters.fromDataArray(data.branches)
+});
+
 export function createGetBranchesQuery(
 	input: () => GetBranchListInput,
 	options?: TauriQueryOptions<'getBranchList', GetBranchListOutput>
@@ -18,10 +27,7 @@ export function createGetBranchesQuery(
 	return createTauriQuery('getBranchList', {
 		input,
 		enabled: () => !!input().repoId,
-		select: (data) => ({
-			...data,
-			branches: BranchConverters.fromDataArray(data.branches)
-		}),
+		select: selectBranches,
 		...options
 	});
 }

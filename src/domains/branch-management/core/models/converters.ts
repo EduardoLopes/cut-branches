@@ -10,6 +10,16 @@ import type { Branch as BranchData, Commit as CommitData } from '$infrastructure
 /**
  * Branch conversion utilities
  */
+/**
+ * Instance cache keyed by the raw data object's identity. TanStack Query's
+ * structural sharing keeps unchanged entries of a refetched list referentially
+ * identical, so memoizing here means a list update only creates new `Branch`
+ * instances for the rows that actually changed — untouched rows keep their
+ * instance and skip re-rendering. Safe because both the raw data (query cache
+ * contract) and `Branch` (all fields readonly) are immutable.
+ */
+const branchInstanceCache = new WeakMap<BranchData, Branch>();
+
 export const BranchConverters = {
 	/**
 	 * Converts a single BranchData to Branch domain model
@@ -17,7 +27,11 @@ export const BranchConverters = {
 	 * @returns Branch domain model
 	 */
 	fromData: (data: BranchData): Branch => {
-		return Branch.fromData(data);
+		const cached = branchInstanceCache.get(data);
+		if (cached) return cached;
+		const branch = Branch.fromData(data);
+		branchInstanceCache.set(data, branch);
+		return branch;
 	},
 
 	/**
@@ -35,7 +49,7 @@ export const BranchConverters = {
 	 * @returns Array of Branch domain models
 	 */
 	fromDataArray: (data: BranchData[]): Branch[] => {
-		return data.map(Branch.fromData);
+		return data.map(BranchConverters.fromData);
 	},
 
 	/**
