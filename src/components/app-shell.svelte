@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Devtools } from '@pindoba/devtools';
+	import Panel from '@pindoba/svelte-panel';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -48,7 +49,28 @@
 		flexDirection: 'column'
 	})}
 >
-	<div
+	<!--
+		The shell grid is a real Panel — transparent and unpainted, so it adds no
+		surface of its own — purely so it publishes the geometry the floating panels
+		inside it derive from: `radius="xl"` as the notional window corner and
+		`padding="xs"` as the inset. Both panels below then take `radius="inner"`,
+		which resolves to `xl − xs`, instead of each hardcoding a number that has to
+		be kept in sync with the inset by hand.
+
+		The inset is this Panel's padding rather than a margin on each child, so the
+		space between the panels (the grid `gap`) stays equal to the space around
+		them instead of doubling. `paddingTop` is overridden to 0 to keep both
+		panels flush against the titlebar — the `padding="xs"` variant still
+		publishes `xs` to the cascade, which is what the left/right/bottom inset
+		actually is.
+	-->
+	<Panel
+		background="transparent"
+		emphasis="secondary"
+		border="none"
+		shadow="none"
+		radius="xl"
+		padding="xs"
 		class={css({
 			display: 'grid',
 			// The main column is minmax(0,1fr), not `auto`: an auto track's minimum
@@ -61,10 +83,8 @@
 			// the default `auto`, which would grow to fit content) so the sidebar and
 			// main column can scroll internally rather than stretching the page.
 			gridTemplateRows: 'minmax(0, 1fr)',
-			// The gutter between the two floating panels. Owning it here rather than
-			// as a margin on each keeps the space between them equal to the space
-			// around them instead of doubling it.
 			gap: 'xs',
+			paddingTop: '0',
 			flex: 1,
 			minHeight: 0
 		})}
@@ -89,32 +109,30 @@
 			`/settings`, whose own two-pane layout sits *inside* this panel instead of
 			needing its own copy of the treatment.
 
-			No `height: 100%`: as a grid item it stretches to the area minus its
-			margins, which is what makes the inset real (see the same note in
+			No `height: 100%`: as a grid item it stretches to its area, which the
+			shell Panel's padding has already inset (see the same note in
 			`sidebar-view.svelte`). The radius clips the page's own square corners, so
 			pages keep painting their background edge to edge.
 		-->
-		<div
+		<Panel
+			background="transparent"
+			emphasis="secondary"
+			border="muted"
+			shadow="sm"
+			radius="inner"
+			padding="none"
 			class={css({
 				display: 'flex',
 				flexDirection: 'column',
 				minWidth: 0,
 				minHeight: 0,
-				overflow: 'hidden',
-				marginTop: 'none',
-				marginRight: 'xs',
-				marginBottom: 'xs',
-				borderRadius: 'xl',
-				borderWidth: '1px',
-				borderStyle: 'solid',
-				borderColor: 'neutral.border.muted',
-				shadow: 'sm'
+				overflow: 'hidden'
 			})}
 			data-testid="app-content-panel"
 		>
 			{@render children?.()}
-		</div>
-	</div>
+		</Panel>
+	</Panel>
 </div>
 
 {#if import.meta.env.DEV}

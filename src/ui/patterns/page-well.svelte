@@ -27,9 +27,12 @@
 </script>
 
 <!--
-	The recessed content well. A real Panel (not a styled div) so it publishes its
-	radius and padding down the nesting cascade and the cards inside stay
-	concentric with `radius="inner"`.
+	The recessed content well. A real Panel (not a styled div) so it takes part in
+	the nesting cascade in both directions: `radius="inner"` derives its own corner
+	from the shell's geometry (see `app-shell.svelte`) instead of pinning a tier
+	that has to be re-tuned whenever the shell's does, and it passes that
+	geometry down so the cards inside stay concentric with their own
+	`radius="inner"`.
 
 	Padding is `none` on the root so the toolbar and footer can span edge to edge;
 	the scroll area re-establishes the inset as its own transparent Panel level,
@@ -38,7 +41,7 @@
 <Panel
 	background="surface.deep"
 	border="muted"
-	radius="xl"
+	radius="inner"
 	padding="none"
 	class={css({
 		display: 'flex',

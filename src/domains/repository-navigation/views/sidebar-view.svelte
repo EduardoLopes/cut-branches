@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import Badge from '@pindoba/svelte-badge';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
+	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { type Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -109,33 +110,34 @@
 	</Badge>
 {/snippet}
 
-<section
+<!--
+	A floating panel rather than a full-bleed column: inset and rounded, so the
+	window's own background reads as a margin around it (macOS-style). The inset
+	is the shell Panel's padding, not a margin here, and `radius="inner"` derives
+	the corner from that same padding — see the geometry note in `app-shell.svelte`.
+
+	`emphasis="secondary"` rather than the panel default `tertiary`: tertiary tints
+	inherited text with the accent shade and repaints the border in the accent
+	colour, both of which would fight the explicit surface and muted border here.
+-->
+<Panel
+	as="section"
+	background="surface.soft"
+	emphasis="secondary"
+	border="muted"
+	shadow="sm"
+	radius="inner"
+	padding="none"
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		// No `height: 100%` on purpose. That resolves against the whole grid area,
-		// so the panel would be exactly as tall as its cell and the bottom margin
-		// would overflow past it (invisibly — the shell clips). Letting the grid
-		// stretch it instead (the default `align-self`) sizes it to the area
-		// *minus* its margins, which is what makes the inset real.
+		// so the panel would be exactly as tall as its cell and would overflow past
+		// the shell's bottom inset (invisibly — the shell clips). Letting the grid
+		// stretch it instead (the default `align-self`) sizes it to the padded
+		// area, which is what makes the inset real.
 		minHeight: 0,
 		overflow: 'hidden',
-		background: 'neutral.surface.soft',
-		// A floating panel rather than a full-bleed column: inset and rounded, so
-		// the window's own background reads as a margin around it (macOS-style).
-		// Flush to the titlebar at the top. No right margin — the shell grid's
-		// `gap` owns the gutter to the content panel, so it stays equal to the
-		// outer inset rather than doubling. The grid track is `max-content`, which
-		// sizes to the outer box, so the left margin widens the column without
-		// touching the internal geometry below.
-		marginTop: 'none',
-		marginLeft: 'xs',
-		marginBottom: 'xs',
-		borderRadius: 'xl',
-		borderWidth: '1px',
-		borderStyle: 'solid',
-		borderColor: 'neutral.border.muted',
-		shadow: 'sm',
 		// Explicit widths so the collapse animates: `max-content` (the grid
 		// column) can't interpolate. Expanded fits the 260px-class list rows;
 		// collapsed is exactly the rail items' square (5.2rem) plus their xs
@@ -209,4 +211,4 @@
 			<SidebarCollapseToggle />
 		</div>
 	{/if}
-</section>
+</Panel>
