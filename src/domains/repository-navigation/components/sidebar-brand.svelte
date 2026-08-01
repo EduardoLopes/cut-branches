@@ -43,7 +43,7 @@
 	>
 		<Stamp
 			size="md"
-			shape="circle"
+			shape="square"
 			emphasis="primary"
 			feedback="primary"
 			shadow="md"
