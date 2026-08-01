@@ -132,26 +132,13 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	}
 }));
 
-vi.mock(
-	'$domains/branch-management/infrastructure/queries/create-branch-merge-status-query',
-	() => ({
-		createBranchMergeStatusQuery: () => ({
-			data: undefined,
-			isLoading: false,
-			isError: false,
-			error: null
-		})
-	})
-);
-
-vi.mock('$domains/branch-management/infrastructure/queries/create-branch-diff-stats-query', () => ({
-	// Mirrors the real adapter's gating: a disabled query never has data, so
-	// current/deleted branches render without diff badges in these tests.
-	createBranchDiffStatsQuery: (_input: unknown, options?: { enabled?: boolean }) => ({
-		data: options?.enabled === false ? undefined : { linesAdded: 3, linesRemoved: 1 },
-		isLoading: false,
-		isError: false,
-		error: null
+// The list reads merge status + diff stats from the bulk-metrics composable;
+// the component itself skips the lookup for the current branch, so returning
+// metrics unconditionally still leaves the current card badge-free.
+vi.mock('$domains/branch-management/core/composables/use-branch-metrics.svelte', () => ({
+	useBranchMetrics: () => ({
+		getMetrics: () => ({ isMerged: false, linesAdded: 3, linesRemoved: 1 }),
+		isLoading: false
 	})
 }));
 
@@ -311,6 +298,60 @@ describe('BranchList Component', () => {
 			retainedCount
 		);
 		// And a background data change must NOT yank the user back to the top.
+		expect(scroller.scrollTop).toBeGreaterThan(0);
+	});
+
+	test('collapses the retained window on a bulk selection flip, but not on a single toggle', async () => {
+		branchesHolder.value = createManyMockBranches(60);
+
+		const screen = renderWithTestWrapper(BranchList, {
+			repositoryID: 'repo1',
+			repositoryPath: '/test/repo/path'
+		});
+
+		await tick();
+
+		const scroller = screen.container.querySelector(
+			'[data-testid="branch-list-scroller"]'
+		) as HTMLElement;
+		scroller.style.flex = 'none';
+		scroller.style.height = '200px';
+		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+
+		// Scroll to the bottom so the top rows are only alive via retention.
+		scroller.scrollTop = scroller.scrollHeight;
+		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+		await tick();
+		expect(
+			screen.container.querySelector('[role="listitem"][aria-posinset="1"]')
+		).toBeInTheDocument();
+		const retainedCount = screen.container.querySelectorAll('[role="listitem"]').length;
+
+		// A single toggle (same keys, one isSelected flip) keeps the window.
+		branchesHolder.value = branchesHolder.value.map((b, i) =>
+			i === 0 ? Branch.fromData(mockDataFactory.branch({ name: b.getName(), isSelected: true })) : b
+		);
+		await tick();
+		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+		await tick();
+		expect(
+			screen.container.querySelector('[role="listitem"][aria-posinset="1"]')
+		).toBeInTheDocument();
+
+		// Select-all: every branch flips at once — the retained window collapses
+		// back to the viewport band so only ~a screenful of cards re-renders.
+		branchesHolder.value = branchesHolder.value.map((b) =>
+			Branch.fromData(mockDataFactory.branch({ name: b.getName(), isSelected: true }))
+		);
+		await tick();
+		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+		await tick();
+
+		expect(screen.container.querySelector('[role="listitem"][aria-posinset="1"]')).toBeNull();
+		expect(screen.container.querySelectorAll('[role="listitem"]').length).toBeLessThan(
+			retainedCount
+		);
+		// A selection sweep must not yank the user back to the top either.
 		expect(scroller.scrollTop).toBeGreaterThan(0);
 	});
 

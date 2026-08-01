@@ -21,11 +21,10 @@
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
+	import { useBranchMetrics } from '$domains/branch-management/core/composables/use-branch-metrics.svelte';
 	import { type Branch } from '$domains/branch-management/core/models/branch';
 	import { createSwitchBranchMutation } from '$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation';
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
-	import { createBranchDiffStatsQuery } from '$domains/branch-management/infrastructure/queries/create-branch-diff-stats-query';
-	import { createBranchMergeStatusQuery } from '$domains/branch-management/infrastructure/queries/create-branch-merge-status-query';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import {
 		getBranchColorPalette,
@@ -339,6 +338,39 @@
 		});
 	});
 
+	// A bulk selection change (select all / deselect all) flips `isSelected` on
+	// nearly every branch at once. The list identity doesn't change (same
+	// name-sha keys), so the fingerprint above doesn't fire — but every one of
+	// the up-to-MAX_MOUNTED_ROWS retained rows would re-render in one flush:
+	// new palette, checkbox state, and alert badges mounting per row. That
+	// synchronous storm is what froze select-all on large repositories.
+	// Collapsing the retained window back to the viewport turns ~120 full card
+	// re-renders into ~25; rows past the viewport unmount (cheap) and remount
+	// lazily as the user scrolls. Single toggles stay under the threshold and
+	// keep the window intact.
+	const BULK_SELECTION_RESET_THRESHOLD = OVERSCAN_LEAD + OVERSCAN_TRAIL + 8;
+	let lastSelectionFingerprint: string | undefined;
+	$effect.pre(() => {
+		const fingerprint = branches.map((branch) => (branch.getIsSelected() ? '1' : '0')).join('');
+		if (fingerprint === lastSelectionFingerprint) return;
+		const previous = lastSelectionFingerprint;
+		lastSelectionFingerprint = fingerprint;
+		// First run, or the list itself changed shape (covered by the key
+		// fingerprint above) — only compare like-for-like selection flips.
+		if (previous === undefined || previous.length !== fingerprint.length) return;
+		let flipped = 0;
+		for (let i = 0; i < fingerprint.length; i++) {
+			if (fingerprint[i] !== previous[i]) flipped++;
+		}
+		if (flipped <= BULK_SELECTION_RESET_THRESHOLD) return;
+		resetMountedRows();
+		// Fresh extractor identity for the same reason as the reset above.
+		get(virtualizer).setOptions({
+			...virtualizerOptions,
+			rangeExtractor: (range) => rangeExtractor(range)
+		});
+	});
+
 	// Filtering rewrites the list under a scroll offset that no longer means
 	// anything — land the user back at the top of the new result set, and drop
 	// the retained window with it: those indices point at different branches now.
@@ -357,6 +389,25 @@
 
 	const virtualItems = $derived($virtualizer.getVirtualItems());
 	const totalSize = $derived($virtualizer.getTotalSize());
+
+	// ---------------------------------------------------------------------------
+	// Per-card metrics (merge status + diff stats), batched.
+	//
+	// The retained window keeps up to MAX_MOUNTED_ROWS rows mounted, but only the
+	// *visible* range needs metrics fetched — the virtualizer's raw range (before
+	// the growing rangeExtractor widens it) is exactly that. The composable
+	// debounces the range, maps it to position-aligned buckets, and runs one
+	// bulk command per bucket instead of two commands per row.
+	// ---------------------------------------------------------------------------
+	const visibleRange = $derived($virtualizer.range);
+	const branchMetrics = useBranchMetrics({
+		path: () => repositoryPath,
+		branchNames: () => branches.map((branch) => branch.getName()),
+		visibleRange: () => visibleRange,
+		// Deleted branches can't be measured (their ref is gone) — skip the
+		// whole pipeline in the restore view.
+		enabled: () => !isRestoreView
+	});
 
 	/** Registers a row with the virtualizer's ResizeObserver; the row's real
 	 *  height replaces the estimate (and tracks it as cards expand). */
@@ -419,30 +470,13 @@
 		{#each virtualItems as virtualRow (virtualRow.key)}
 			{@const branch = branches[virtualRow.index]}
 			{#if branch}
-				{@const mergeStatusQuery = createBranchMergeStatusQuery(
-					{
-						path: repositoryPath ?? '',
-						branchName: branch.getName()
-					},
-					{
-						enabled: !!repositoryPath && !branch.isCurrent()
-					}
-				)}
-				{@const diffStatsQuery = createBranchDiffStatsQuery(
-					{
-						path: repositoryPath ?? '',
-						branchName: branch.getName()
-					},
-					{
-						// Deleted branches can't be diffed (their ref is gone) and the
-						// current branch diffs against itself — skip both.
-						enabled: !!repositoryPath && !branch.isCurrent() && !isRestoreView
-					}
-				)}
+				{@const metrics = branch.isCurrent()
+					? undefined
+					: branchMetrics.getMetrics(branch.getName())}
 				{@const alerts = getBranchAlerts(
 					branch,
 					branch.getIsSelected() ?? false,
-					mergeStatusQuery.data?.isMerged
+					metrics?.isMerged
 				)}
 				{@const hasAlerts = showAlerts && shouldShowBranchAlerts(alerts, branch)}
 				<!-- The card column is `minmax(0, 1fr)`, not a bare `1fr`: a `1fr`
@@ -548,8 +582,13 @@
 					>
 						<BranchCard
 							{branch}
-							diffStats={diffStatsQuery.data}
-							diffStatsLoading={diffStatsQuery.isLoading}
+							diffStats={metrics
+								? { linesAdded: metrics.linesAdded, linesRemoved: metrics.linesRemoved }
+								: undefined}
+							diffStatsLoading={!metrics &&
+								!branch.isCurrent() &&
+								!isRestoreView &&
+								branchMetrics.isLoading}
 							selected={branch.getIsSelected()}
 							locked={branch.getIsLocked() && !branch.isCurrent()}
 							colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}
