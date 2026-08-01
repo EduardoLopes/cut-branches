@@ -21,7 +21,11 @@
 	usePruneOrphanedSearchKeys();
 </script>
 
-<PageWell isLoading={viewState.isLoading} testId="active-branches-well">
+<!-- `padded={false}`: the branch list scrolls internally, so the well's inset has
+     to live *inside* that scroll port — otherwise cards clip against a static
+     gutter instead of travelling to the well's edges. BranchList and the empty
+     states each bring their own padding. -->
+<PageWell isLoading={viewState.isLoading} padded={false} testId="active-branches-well">
 	{#snippet toolbar()}
 		<PageToolbar>
 			{#snippet left()}

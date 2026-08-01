@@ -19,7 +19,9 @@
 	const viewState = useDeletedBranchesView({ getId: () => id });
 </script>
 
-<PageWell isLoading={viewState.isLoading} testId="deleted-branches-well">
+<!-- `padded={false}`: see the note in active-branches-view — the inset belongs
+     inside the list's own scroll port. -->
+<PageWell isLoading={viewState.isLoading} padded={false} testId="deleted-branches-well">
 	{#snippet toolbar()}
 		<PageToolbar>
 			{#snippet left()}
