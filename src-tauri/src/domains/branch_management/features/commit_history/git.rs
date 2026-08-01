@@ -80,7 +80,7 @@ pub fn list_commit_history(
     let limit = limit.clamp(1, MAX_PAGE_LIMIT);
     let (oids, decorations, total_count) = with_session(cache, &repo, path, &digest, start, limit)?;
 
-    let commits = build_commits(&repo, &oids, &decorations)?;
+    let commits = build_commits(&repo, &oids, &decorations, MessageScope::Subject)?;
     let next_offset = start.saturating_add(commits.len() as u32);
     let next_cursor = (next_offset < total_count).then(|| encode_cursor(&digest, next_offset));
 
@@ -139,7 +139,7 @@ pub fn get_commit_history_window(
     let decorations = clone_decorations(session, &oids);
     drop(guard);
 
-    let commits = build_commits(&repo, &oids, &decorations)?;
+    let commits = build_commits(&repo, &oids, &decorations, MessageScope::Subject)?;
     let next_cursor = (end < total_count).then(|| encode_cursor(&digest, end));
 
     Ok(HistoryWindow {
@@ -149,6 +149,66 @@ pub fn get_commit_history_window(
         next_cursor,
         total_count,
     })
+}
+
+/// Returns the newest commits reachable from a single local branch tip,
+/// newest first, plus whether more exist beyond the limit.
+///
+/// Unlike [`list_commit_history`], this walk is scoped to one branch's
+/// ancestry — it is what "the recent commits on this branch" actually means.
+/// It deliberately bypasses the session cache: the walk stops after
+/// `limit + 1` commits, so it is already O(limit) and would gain nothing from
+/// the cached full ordering (which it would have to pay to build).
+///
+/// Commits carry their full message (subject + body), not just the subject,
+/// because the caller renders an expandable description.
+pub fn list_branch_commits(
+    path: &Path,
+    branch: &str,
+    limit: u32,
+) -> Result<(Vec<HistoryCommit>, bool), BranchError> {
+    let repo = open_repo(path)?;
+
+    let tip = repo
+        .find_branch(branch, BranchType::Local)
+        .map_err(|_| BranchError::BranchNotFound {
+            name: branch.to_string(),
+            path: path.display().to_string(),
+        })?
+        .get()
+        .peel_to_commit()
+        .map_err(|e| BranchError::CommitPeelFailed {
+            name: branch.to_string(),
+            source: e,
+        })?
+        .id();
+
+    let limit = limit.clamp(1, MAX_PAGE_LIMIT);
+
+    let mut walk = repo
+        .revwalk()
+        .map_err(|e| BranchError::RevwalkFailed { source: e })?;
+    walk.set_sorting(Sort::TOPOLOGICAL | Sort::TIME)
+        .map_err(|e| BranchError::RevwalkFailed { source: e })?;
+    walk.push(tip)
+        .map_err(|e| BranchError::RevwalkFailed { source: e })?;
+
+    // One extra commit answers `has_more` without a second walk; it is
+    // trimmed before the DTOs are built.
+    let mut oids: Vec<Oid> = walk.flatten().take(limit as usize + 1).collect();
+    let has_more = oids.len() > limit as usize;
+    oids.truncate(limit as usize);
+
+    // Decorations are cheap here (one pass over refs) and let the caller show
+    // which other branches/tags point at these commits.
+    let decorations = build_decorations(&repo);
+    let decorations = oids
+        .iter()
+        .filter_map(|oid| decorations.get(oid).map(|d| (*oid, d.clone())))
+        .collect();
+
+    let commits = build_commits(&repo, &oids, &decorations, MessageScope::Full)?;
+    Ok((commits, has_more))
 }
 
 /// Computes ahead/behind vs the base for exactly the requested local
@@ -415,11 +475,22 @@ fn clone_decorations(session: &CachedHistory, oids: &[Oid]) -> HashMap<Oid, Vec<
         .collect()
 }
 
+/// How much of a commit message to materialise.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum MessageScope {
+    /// Subject line only — the graph list renders one line per commit, so the
+    /// body would be paid for (200 commits a page) and never shown.
+    Subject,
+    /// Subject + body, for the callers that disclose a description.
+    Full,
+}
+
 /// Materialises the DTOs for a slice of oids (outside the cache lock).
 fn build_commits(
     repo: &Repository,
     oids: &[Oid],
     decorations: &HashMap<Oid, Vec<RefDecoration>>,
+    message_scope: MessageScope,
 ) -> Result<Vec<HistoryCommit>, BranchError> {
     let mut commits = Vec::with_capacity(oids.len());
     for &oid in oids {
@@ -440,7 +511,12 @@ fn build_commits(
             author: author.name().unwrap_or("").to_string(),
             email: author.email().unwrap_or("").to_string(),
             date: format_commit_time(commit.time()),
-            message: commit.summary().unwrap_or("").to_string(),
+            message: match message_scope {
+                MessageScope::Subject => commit.summary().unwrap_or("").to_string(),
+                // `message()` keeps git's trailing newline; the frontend splits
+                // subject from body, so trim it here rather than everywhere.
+                MessageScope::Full => commit.message().unwrap_or("").trim_end().to_string(),
+            },
             sha,
         });
     }
@@ -858,6 +934,100 @@ mod tests {
         assert_eq!(base_name, "HEAD");
         // trunk IS head, so it is neither ahead nor behind.
         assert_eq!((branches[0].ahead, branches[0].behind), (0, 0));
+    }
+
+    #[test]
+    fn branch_commits_are_scoped_to_one_branch() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_history_test_repo();
+
+        let (commits, has_more) = list_branch_commits(repo.path(), "feature/a", 50).unwrap();
+
+        // feature/a branched off main after "main: second", so it sees neither
+        // "main: third" nor the merge — the whole point of walking one tip.
+        let messages: Vec<&str> = commits.iter().map(|c| c.message.as_str()).collect();
+        assert_eq!(
+            messages,
+            vec![
+                "feature/a: two",
+                "feature/a: one",
+                "main: second",
+                "Initial commit",
+            ]
+        );
+        assert!(!has_more);
+
+        // DTO basics carry over from the shared builder.
+        let tip = &commits[0];
+        assert_eq!(tip.short_sha, tip.sha[..7]);
+        assert_eq!(tip.author, "Test User");
+        assert!(!tip.date.is_empty());
+        assert_eq!(tip.refs.len(), 1);
+        assert_eq!(tip.refs[0].name, "feature/a");
+        assert_eq!(tip.refs[0].kind, RefKind::LocalBranch);
+    }
+
+    #[test]
+    fn branch_commits_report_more_and_clamp_the_limit() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_history_test_repo();
+
+        // feature/a has 4 commits: a limit below that leaves more behind.
+        let (commits, has_more) = list_branch_commits(repo.path(), "feature/a", 2).unwrap();
+        assert_eq!(commits.len(), 2);
+        assert!(has_more);
+
+        // Exactly the branch length: nothing is left over.
+        let (commits, has_more) = list_branch_commits(repo.path(), "feature/a", 4).unwrap();
+        assert_eq!(commits.len(), 4);
+        assert!(!has_more);
+
+        // 0 clamps up to 1 rather than returning an empty list.
+        let (commits, has_more) = list_branch_commits(repo.path(), "feature/a", 0).unwrap();
+        assert_eq!(commits.len(), 1);
+        assert!(has_more);
+    }
+
+    #[test]
+    fn branch_commits_carry_the_full_message_body() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_history_test_repo();
+
+        run_git(repo.path(), &["checkout", "feature/a"]);
+        commit_file(
+            repo.path(),
+            "body.txt",
+            "1",
+            "subject line\n\nbody paragraph",
+            "2024-01-08T10:00:00Z",
+        );
+
+        let (commits, _) = list_branch_commits(repo.path(), "feature/a", 1).unwrap();
+        // Full scope keeps the body but drops git's trailing newline.
+        assert_eq!(commits[0].message, "subject line\n\nbody paragraph");
+
+        // The paged history walk stays subject-only for the same commit.
+        let cache = HistoryCache::default();
+        let page = full_history(&cache, repo.path());
+        let same = page
+            .commits
+            .iter()
+            .find(|c| c.sha == commits[0].sha)
+            .unwrap();
+        assert_eq!(same.message, "subject line");
+    }
+
+    #[test]
+    fn branch_commits_reject_unknown_branch_and_non_repository() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_history_test_repo();
+
+        let err = list_branch_commits(repo.path(), "does/not/exist", 10).unwrap_err();
+        assert!(matches!(err, BranchError::BranchNotFound { .. }));
+
+        let dir = tempfile::tempdir().unwrap();
+        let err = list_branch_commits(dir.path(), "main", 10).unwrap_err();
+        assert!(matches!(err, BranchError::RepositoryOpenFailed { .. }));
     }
 
     /// Manual perf check against a large real repository. Run with:

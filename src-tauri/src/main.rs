@@ -32,7 +32,7 @@ use domains::branch_management::features::branch_diff::{
 };
 use domains::branch_management::features::code_structure::get_diff_structure;
 use domains::branch_management::features::commit_history::{
-    get_commit_history_window, list_branch_comparison, list_commit_history,
+    get_commit_history_window, list_branch_commits, list_branch_comparison, list_commit_history,
 };
 use domains::branch_management::features::diff_explanation::events::{
     ExplanationBatchProgressEvent, ExplanationChunkEvent, ExplanationFileCompletedEvent,
@@ -120,6 +120,7 @@ fn main() {
             // Commit history + branch graph
             list_commit_history,
             get_commit_history_window,
+            list_branch_commits,
             list_branch_comparison,
             // Branch/commit diff (review view)
             list_changed_files,

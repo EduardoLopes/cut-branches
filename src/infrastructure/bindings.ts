@@ -327,6 +327,19 @@ async getCommitHistoryWindow(input: GetCommitHistoryWindowInput) : Promise<Resul
 }
 },
 /**
+ * Returns the newest commits reachable from one branch tip. Scoped to that
+ * branch's ancestry — unlike `list_commit_history`, which walks every local
+ * branch at once.
+ */
+async listBranchCommits(input: ListBranchCommitsInput) : Promise<Result<ListBranchCommitsOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_branch_commits", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Computes ahead/behind vs the base for the requested local branches. A
  * branch with `ahead == 0` is fully contained in base (safe to delete).
  */
@@ -1352,6 +1365,24 @@ parents: string[];
  * Branch/tag/remote names pointing at this commit, local branches first.
  */
 refs: RefDecoration[]; author: string; email: string; date: string; message: string }
+export type ListBranchCommitsInput = { path: string; 
+/**
+ * Local branch whose ancestry to walk.
+ */
+branch: string; 
+/**
+ * How many commits to return, newest first (clamped to 1..=500).
+ */
+limit: number }
+export type ListBranchCommitsOutput = { 
+/**
+ * Newest first, carrying the full message (subject + body).
+ */
+commits: HistoryCommit[]; 
+/**
+ * Whether the branch has commits older than the returned window.
+ */
+hasMore: boolean }
 export type ListBranchComparisonInput = { path: string; 
 /**
  * Base branch to compare against; defaults to main/master, else HEAD.

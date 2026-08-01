@@ -12,4 +12,6 @@ pub mod commands;
 pub mod git;
 pub mod models;
 
-pub use commands::{get_commit_history_window, list_branch_comparison, list_commit_history};
+pub use commands::{
+    get_commit_history_window, list_branch_commits, list_branch_comparison, list_commit_history,
+};

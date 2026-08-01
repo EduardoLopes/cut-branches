@@ -6,7 +6,8 @@
 use std::path::Path;
 
 use super::git::{self as history, HistoryCache};
-use super::models::{BranchComparison, HistoryPage, HistoryWindow};
+use super::models::{BranchComparison, HistoryCommit, HistoryPage, HistoryWindow};
+use crate::domains::branch_management::core::models::branch_name::BranchName;
 use crate::domains::branch_management::core::models::commit_sha::CommitSha;
 use crate::shared::error::AppError;
 
@@ -35,6 +36,15 @@ pub fn get_commit_history_window(
         context_before,
         limit,
     )?)
+}
+
+/// The newest commits on one branch (newest first) plus a "more exist" flag.
+pub fn list_branch_commits(
+    path: &Path,
+    branch: &BranchName,
+    limit: u32,
+) -> Result<(Vec<HistoryCommit>, bool), AppError> {
+    Ok(history::list_branch_commits(path, branch.as_str(), limit)?)
 }
 
 /// Ahead/behind vs the base for exactly the requested local branches.
@@ -69,5 +79,10 @@ mod tests {
             list_branch_comparison(repo.path(), None, &["feature/a".to_string()]).unwrap();
         assert_eq!(base_name, "main");
         assert_eq!(branches.len(), 1);
+
+        let branch = BranchName::new("feature/a".to_string()).unwrap();
+        let (commits, has_more) = list_branch_commits(repo.path(), &branch, 2).unwrap();
+        assert_eq!(commits.len(), 2);
+        assert!(has_more);
     }
 }

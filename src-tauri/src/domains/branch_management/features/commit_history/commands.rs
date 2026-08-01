@@ -136,6 +136,44 @@ pub async fn get_commit_history_window(
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
+pub struct ListBranchCommitsInput {
+    pub path: String,
+    /// Local branch whose ancestry to walk.
+    pub branch: String,
+    /// How many commits to return, newest first (clamped to 1..=500).
+    pub limit: u32,
+}
+
+#[derive(Serialize, Deserialize, specta::Type, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ListBranchCommitsOutput {
+    /// Newest first, carrying the full message (subject + body).
+    pub commits: Vec<HistoryCommit>,
+    /// Whether the branch has commits older than the returned window.
+    pub has_more: bool,
+}
+
+/// Returns the newest commits reachable from one branch tip. Scoped to that
+/// branch's ancestry — unlike `list_commit_history`, which walks every local
+/// branch at once.
+#[tauri::command(async)]
+#[specta::specta]
+pub async fn list_branch_commits(
+    input: ListBranchCommitsInput,
+) -> Result<ListBranchCommitsOutput, AppError> {
+    let branch = BranchName::new(input.branch)?;
+
+    let (commits, has_more) = tokio::task::spawn_blocking(move || {
+        history::list_branch_commits(Path::new(&input.path), &branch, input.limit)
+    })
+    .await
+    .map_err(|e| join_error("branch_commits_failed", e))??;
+
+    Ok(ListBranchCommitsOutput { commits, has_more })
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct ListBranchComparisonInput {
     pub path: String,
     /// Base branch to compare against; defaults to main/master, else HEAD.
@@ -199,6 +237,38 @@ mod tests {
         .await
         .unwrap_err();
         assert_eq!(err.kind, "invalid_branch_name");
+    }
+
+    #[tokio::test]
+    async fn list_branch_commits_rejects_invalid_branch_name() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_history_test_repo();
+
+        let err = list_branch_commits(ListBranchCommitsInput {
+            path: repo.path().display().to_string(),
+            branch: "bad name with spaces".to_string(),
+            limit: 10,
+        })
+        .await
+        .unwrap_err();
+        assert_eq!(err.kind, "invalid_branch_name");
+    }
+
+    #[tokio::test]
+    async fn list_branch_commits_returns_the_branch_window() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_history_test_repo();
+
+        let output = list_branch_commits(ListBranchCommitsInput {
+            path: repo.path().display().to_string(),
+            branch: "feature/a".to_string(),
+            limit: 2,
+        })
+        .await
+        .unwrap();
+        assert_eq!(output.commits.len(), 2);
+        assert_eq!(output.commits[0].message, "feature/a: two");
+        assert!(output.has_more);
     }
 
     #[tokio::test]
