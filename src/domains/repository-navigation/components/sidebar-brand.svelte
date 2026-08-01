@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { foldText } from '../utils/fold-text';
 	import { css } from '@pindoba/styled-system/css';
@@ -12,49 +13,58 @@
 	const { collapsed = false }: Props = $props();
 </script>
 
-<div
+<!--
+	A Panel, not a div, purely to be a nesting level: it publishes its md
+	padding to the concentric cascade so the Stamp's `radius="inner"` has
+	something to subtract. A plain div publishes nothing, and the mark would
+	inherit the sidebar's own corner instead of one inset from it.
+-->
+<Panel
+	as="header"
+	background="transparent"
+	border="muted"
+	radius="inner"
+	padding="md"
+	radiusBottom="none"
 	class={css({
 		display: 'flex',
 		alignItems: 'center',
-		gap: '3xs',
-		// One geometry for both states: paddingLeft 1.7rem puts the logo's left
-		// edge on the icon-glyph column (1.7 + 0.1 cell slack = 1.8rem — same
-		// line as the "Repositories" heading) AND its centre on the rail's
-		// centre line (1.7 + 3.4/2 = 3.4rem). Nothing here changes on collapse,
-		// so the logo holds perfectly still through the animation.
-		paddingBlock: 'sm',
-		paddingRight: 'sm',
-		paddingLeft: '1.7rem',
-		'&[data-rail="true"]': {
-			paddingRight: '1.7rem'
-		}
+		gap: '2xs',
+		transition: 'padding-inline 350ms cubic-bezier(0.32, 0.72, 0, 1)',
+		_motionReduce: { transition: 'none' },
+		// Same hairline the two footer sections open with.
+		borderWidth: '0',
+		borderBottomWidth: '1px'
 	})}
 	data-rail={collapsed}
 >
-	<!-- Fixed-width cell around the 3.2rem stamp, constant in BOTH states so
-	     the logo never jumps (an `auto → fixed` width flip can't
-	     interpolate). -->
-	<span
-		class={css({
-			display: 'flex',
-			justifyContent: 'center',
-			width: '3.4rem'
-		})}
+	<!-- Pinned to 3.2rem: size md derives a fluid 2.9333rem off the type scale. -->
+	<Stamp
+		size="md"
+		shape="square"
+		radius="inner"
+		emphasis="primary"
+		feedback="primary"
+		border="none"
+		aria-hidden="true"
+		passThrough={{
+			root: {
+				style: css.raw({
+					width: '3.2rem',
+					minWidth: '3.2rem',
+					height: '3.2rem',
+					// 50% of the box, down from the recipe's 60%.
+					fontSize: '1.6rem',
+					boxShadow:
+						'inset 0 1px 0 0 color-mix(in srgb, white 30%, transparent), inset 0 0 0 1px color-mix(in srgb, white 12%, transparent)'
+				})
+			}
+		}}
 	>
-		<Stamp
-			size="md"
-			shape="square"
-			emphasis="primary"
-			feedback="primary"
-			shadow="md"
-			aria-hidden="true"
-		>
-			<Icon icon="game-icons:tree-branch" />
-		</Stamp>
-	</span>
+		<Icon icon="game-icons:tree-branch" />
+	</Stamp>
 	{#if !collapsed}
-		<!-- Folds out quickly as the rail closes over it, and unfurls in step
-		     with the sidebar reopening. -->
+		<!-- Folds out as the rail closes, unfurls as it reopens. -->
 		<h2
 			in:foldText={{ duration: 200 }}
 			out:foldText={{ duration: 150 }}
@@ -65,13 +75,16 @@
 				whiteSpace: 'nowrap',
 				textOverflow: 'ellipsis',
 				margin: '0',
+				ml: 'xs',
 				textStyle: 'heading.2xs',
 				letterSpacing: 'tight',
-				color: 'primary.800',
-				_dark: { color: 'primary.950' }
+				// Not accent-coloured — the mark already carries the brand blue.
+				color: 'neutral.text.bold'
 			})}
 		>
-			Cut Branches
+			<span class={css({ fontWeight: 'bold' })}>Cut</span><span
+				class={css({ fontWeight: 'medium', color: 'neutral.text.muted' })}>&nbsp;Branches</span
+			>
 		</h2>
 	{/if}
-</div>
+</Panel>
