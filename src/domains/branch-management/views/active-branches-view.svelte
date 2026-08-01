@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BranchContextFilter from '../components/branch-context-filter.svelte';
 	import DeleteBranchModal from '../components/delete-branch-modal.svelte';
 	import { useActiveBranchesView } from '../core/composables/use-active-branches-view.svelte';
 	import { usePruneOrphanedSearchKeys } from '../core/composables/use-prune-orphaned-search-keys.svelte';
@@ -6,9 +7,9 @@
 	import BranchList from '$domains/branch-management/components/branch-list.svelte';
 	import BranchSearch from '$domains/branch-management/components/branch-search.svelte';
 	import BranchSelection from '$domains/branch-management/components/branch-selection.svelte';
-	import BulkActionsToolbar from '$domains/branch-management/components/bulk-actions-toolbar.svelte';
-	import BranchesLayout from '$domains/branch-management/layouts/branches-layout.svelte';
 	import ErrorMessage from '$ui/core/error-message.svelte';
+	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
+	import PageWell from '$ui/patterns/page-well.svelte';
 
 	interface Props {
 		id: string;
@@ -20,25 +21,30 @@
 	usePruneOrphanedSearchKeys();
 </script>
 
-<BranchesLayout isLoading={viewState.isLoading}>
-	<BulkActionsToolbar>
-		{#snippet left()}
-			<BranchSelection repository={viewState.currentRepoData} branchContext="active" />
-		{/snippet}
-		{#snippet right()}
-			<BranchSearch
-				repository={viewState.currentRepoData}
-				branchContext="active"
-				placeholder="Search branches"
-				data-testid="search-input"
-			/>
-			{#if viewState.currentRepoData}
-				<div data-testid="delete-branch-modal">
-					<DeleteBranchModal id={viewState.currentRepoData.name} />
-				</div>
-			{/if}
-		{/snippet}
-	</BulkActionsToolbar>
+<PageWell isLoading={viewState.isLoading} testId="active-branches-well">
+	{#snippet toolbar()}
+		<PageToolbar>
+			{#snippet left()}
+				<!-- Select-all owns the left edge so it sits on the same column as the
+				     per-card checkboxes in the list below. -->
+				<BranchSelection repository={viewState.currentRepoData} branchContext="active" />
+			{/snippet}
+			{#snippet right()}
+				<BranchContextFilter repositoryId={id} />
+				<BranchSearch
+					repository={viewState.currentRepoData}
+					branchContext="active"
+					placeholder="Search branches"
+					data-testid="search-input"
+				/>
+				{#if viewState.currentRepoData}
+					<div data-testid="delete-branch-modal">
+						<DeleteBranchModal id={viewState.currentRepoData.name} />
+					</div>
+				{/if}
+			{/snippet}
+		</PageToolbar>
+	{/snippet}
 
 	{#if viewState.isError && viewState.error}
 		<ErrorMessage
@@ -76,4 +82,4 @@
 			/>
 		{/if}
 	{/key}
-</BranchesLayout>
+</PageWell>

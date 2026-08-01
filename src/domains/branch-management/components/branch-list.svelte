@@ -4,6 +4,7 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Loading from '@pindoba/svelte-loading';
 	import Pagination from '@pindoba/svelte-pagination';
+	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -35,7 +36,7 @@
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
-	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		repositoryID?: string;
@@ -169,12 +170,14 @@
 	let paginatedBranches = $derived(sortedBranches?.slice(start, end));
 </script>
 
+<!-- Surface and inset come from the enclosing PageWell now, so the list only
+     owns its own rhythm. -->
 <div
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		flex: 1,
-		background: 'neutral.surface.deep'
+		minHeight: '0'
 	})}
 >
 	<div
@@ -183,7 +186,6 @@
 			display: 'flex',
 			flexDirection: 'column',
 			gap: 'md',
-			padding: 'md',
 			zIndex: '0',
 			width: 'full'
 		})}
@@ -337,27 +339,33 @@
 		{/if}
 	</div>
 
+	<!-- A floating translucent pill rather than a full-bleed bar: it sits inside
+	     the well's inset, so a hard edge-to-edge border would cut across the
+	     recessed surface instead of following it.
+
+	     A real Panel with `radius="inner"`, not a styled div with a hardcoded
+	     `inner.xl.md` token: the cascade reads the nearest panel ancestor, which
+	     is the well's *content* level, so the computed corner tracks whatever
+	     radius and padding that level actually has. -->
 	{#if branchesQuery.data?.branches.length && branchesQuery.data?.branches.length > 0}
-		<div
-			class={css(
-				translucent.raw({
-					blur: 'md',
-					background: 'neutral.surface.soft/50 !important'
-				}),
-				css.raw({
-					p: 'md',
-					bottom: '0',
-					position: 'sticky',
-					mt: 'auto',
-					borderTop: '1px solid token(colors.neutral.border.muted)'
-				})
-			)}
+		<Panel
+			radius="inner"
+			border="muted"
+			background="surface.soft"
+			translucent
+			padding="xs"
+			class={css({
+				mt: 'auto',
+				bottom: '0',
+				position: 'sticky',
+				zIndex: '5'
+			})}
 		>
 			<Pagination
 				itemsTotal={branchesQuery.data?.branches.length}
 				bind:itemsPerPage
 				bind:page={currentPage}
 			/>
-		</div>
+		</Panel>
 	{/if}
 </div>

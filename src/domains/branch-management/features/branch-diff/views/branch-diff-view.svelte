@@ -22,12 +22,12 @@
 	import { createGetDiffStructureQuery } from '../infrastructure/queries/create-get-diff-structure-query';
 	import { createListChangedFilesQuery } from '../infrastructure/queries/create-list-changed-files-query';
 	import { buildStructureIndex } from '../models/structure-index';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { useDiffExplanationBatch } from '$domains/branch-management/features/diff-explanation/application/use-diff-explanation-batch.svelte';
 	import ExplanationMenu from '$domains/branch-management/features/diff-explanation/components/explanation-menu.svelte';
 	import { createGetRepositoryQuery } from '$domains/branch-management/infrastructure/queries/create-get-repository-query';
 	import EmptyState from '$ui/core/empty-state.svelte';
+	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
+	import PageWell from '$ui/patterns/page-well.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -134,28 +134,10 @@
 		revealFile({ path });
 	}
 
-	const host = css({
-		display: 'flex',
-		flexDirection: 'column',
-		height: '100%',
-		background: 'neutral.surface.step.1',
-		color: 'neutral.text'
-	});
-	const header = css({
+	const toolbarGroup = css({
 		display: 'flex',
 		alignItems: 'center',
-		gap: 'sm',
-		px: 'md',
-		py: 'sm',
-		borderBottom: '1px solid token(colors.neutral.border.muted)',
-		background: 'neutral.surface.step.1'
-	});
-	const title = css({ fontSize: 'md', fontWeight: 'bold' });
-	const headerTrailing = css({
-		display: 'flex',
-		alignItems: 'center',
-		gap: 'xs',
-		ml: 'auto'
+		gap: 'xs'
 	});
 	// Tree pane and file list scroll independently, side by side.
 	const diffBody = css({
@@ -185,181 +167,175 @@
 	const monoLabel = css({ fontFamily: 'mono' });
 </script>
 
-<div class={host}>
-	<header class={header}>
-		<Button
-			emphasis="ghost"
-			size="sm"
-			onclick={() => goto(resolve(`/repos/${id}`))}
-			data-testid="diff-back-button"
-		>
-			{#snippet leading()}
-				<Stamp emphasis="ghost" border="muted" background="transparent">
-					<Icon icon="lucide:arrow-left" width="16px" height="16px" />
-				</Stamp>
-			{/snippet}
-			Branches
-		</Button>
-		<h1 class={title}>Changes</h1>
-		{#if branchName}
-			<Badge size="sm" emphasis="secondary" feedback="primary" data-testid="diff-target-branch">
-				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
-				{/snippet}
-				<span class={monoLabel} title={branchName}>{branchName}</span>
-			</Badge>
-		{:else if shortSha}
-			<Badge size="sm" emphasis="secondary" feedback="primary" data-testid="diff-target-commit">
-				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
-				{/snippet}
-				<span class={monoLabel} title={commitSha}>{shortSha}</span>
-			</Badge>
-		{/if}
-		{#if changedFilesQuery.data && changedFilesQuery.data.files.length > 0}
-			<div class={css({ width: '260px', flexShrink: '0', ml: 'sm' })}>
-				<Input
-					size="sm"
-					placeholder="Search files and code…"
-					aria-label="Search changed files and diff content"
-					bind:value={searchTerm}
-					data-testid="diff-search-input"
-				/>
-			</div>
-			{#if search.isSearching}
-				<span
-					class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}
-					data-testid="diff-search-busy"
-				>
-					searching code…
-				</span>
-			{/if}
-		{/if}
-		{#if changedFilesQuery.data}
-			{@const summary = changedFilesQuery.data}
-			<span class={headerTrailing} data-testid="diff-totals">
-				<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
-					{summary.files.length}
-					{summary.files.length === 1 ? 'file' : 'files'}
-				</span>
-				<Badge size="sm" emphasis="secondary" feedback="success">+{summary.linesAdded}</Badge>
-				<Badge size="sm" emphasis="secondary" feedback="danger">−{summary.linesRemoved}</Badge>
-			</span>
-			{#if summary.files.length > 0}
-				<span
-					class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}
-					data-testid="diff-reviewed-progress"
-				>
-					<Badge
-						size="sm"
-						emphasis="secondary"
-						feedback={reviewedCount === summary.files.length ? 'success' : 'neutral'}
-						title="Files marked reviewed"
-					>
+<!-- The page title, repository name and back-trail live in the shared PageHeader
+     (composed by the `[id]` layout), so this view owns only the well: a toolbar
+     of diff-scoped controls, then the split body. -->
+<PageWell padded={false} testId="branch-diff-well">
+	{#snippet toolbar()}
+		<PageToolbar data-testid="diff-toolbar">
+			{#snippet left()}
+				{#if branchName}
+					<Badge size="sm" emphasis="secondary" feedback="primary" data-testid="diff-target-branch">
 						{#snippet leading()}
-							<Stamp emphasis="ghost">
-								<Icon
-									icon={reviewedCount === summary.files.length
-										? 'lucide:circle-check-big'
-										: 'lucide:list-checks'}
-								/>
-							</Stamp>
+							<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
 						{/snippet}
-						{reviewedCount}/{summary.files.length} reviewed
+						<span class={monoLabel} title={branchName}>{branchName}</span>
 					</Badge>
-					{#if reviewedCount > 0}
-						<Button
-							emphasis="ghost"
-							size="xs"
-							onclick={() => reviewed.clearReviewed()}
-							aria-label="Clear all reviewed marks"
-							title="Clear all reviewed marks"
-							data-testid="diff-clear-reviewed"
-						>
-							Clear
-						</Button>
-					{/if}
-				</span>
-			{/if}
-			{#if summary.files.length > 0}
-				<!-- Keyed on the active mode so the Choice's internal selection can
-				     never drift from the persisted option (same guard as the
-				     repository context switch). -->
-				{#key viewOptions.options.viewMode}
-					<Choice
-						type="radio"
-						appearance="button"
-						size="sm"
-						defaultValue={[viewOptions.options.viewMode]}
-						onValueChange={(value) => {
-							const next = value[0];
-							if (next === 'list' || next === 'canvas') {
-								viewOptions.update({ viewMode: next });
-							}
-						}}
-						aria-label="Diff view mode"
-						data-testid="diff-view-mode-switch"
-					>
-						<ChoiceItem value="list" label="List" data-testid="view-mode-list">
-							{#snippet leading()}
-								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:list" width="14px" height="14px" />
-								</Stamp>
-							{/snippet}
-						</ChoiceItem>
-						<ChoiceItem value="canvas" label="Canvas" data-testid="view-mode-canvas">
-							{#snippet leading()}
-								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:workflow" width="14px" height="14px" />
-								</Stamp>
-							{/snippet}
-						</ChoiceItem>
-					</Choice>
-				{/key}
-				<DiffOptionsMenu options={viewOptions.options} onChange={viewOptions.update} />
-				<span
-					class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}
-					data-testid="explain-all-controls"
-				>
-					<ExplanationMenu
-						style={viewOptions.options.explanationStyle}
-						detail={viewOptions.options.explanationDetail}
-						onStyleChange={(explanationStyle) => viewOptions.update({ explanationStyle })}
-						onDetailChange={(explanationDetail) => viewOptions.update({ explanationDetail })}
-					/>
-					<Button
-						emphasis="secondary"
-						size="sm"
-						onclick={generateExplanations}
-						disabled={explanationBatch.isRunning}
-						title="Explain every visible change with your local AI agent (uses its quota)"
-						data-testid="explain-all"
-					>
+				{:else if shortSha}
+					<Badge size="sm" emphasis="secondary" feedback="primary" data-testid="diff-target-commit">
 						{#snippet leading()}
-							<Stamp emphasis="ghost" border="none" background="transparent">
-								<Icon icon="lucide:sparkles" width="14px" height="14px" />
-							</Stamp>
+							<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
 						{/snippet}
-						{#if explanationBatch.isRunning}
-							Explaining {explanationBatch.done}/{explanationBatch.total}…
-						{:else}
-							Explain all
-						{/if}
-					</Button>
-					{#if explanationBatch.isRunning}
-						<Button
-							emphasis="ghost"
+						<span class={monoLabel} title={commitSha}>{shortSha}</span>
+					</Badge>
+				{/if}
+
+				{#if changedFilesQuery.data && changedFilesQuery.data.files.length > 0}
+					<div class={css({ width: '260px', flexShrink: '0' })}>
+						<Input
 							size="sm"
-							onclick={explanationBatch.cancel}
-							data-testid="explain-all-cancel"
+							placeholder="Search files and code…"
+							aria-label="Search changed files and diff content"
+							bind:value={searchTerm}
+							data-testid="diff-search-input"
+						/>
+					</div>
+					{#if search.isSearching}
+						<span
+							class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}
+							data-testid="diff-search-busy"
 						>
-							Cancel
-						</Button>
+							searching code…
+						</span>
 					{/if}
-				</span>
-			{/if}
-		{/if}
-	</header>
+				{/if}
+
+				{#if changedFilesQuery.data}
+					{@const summary = changedFilesQuery.data}
+					<span class={toolbarGroup} data-testid="diff-totals">
+						<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
+							{summary.files.length}
+							{summary.files.length === 1 ? 'file' : 'files'}
+						</span>
+						<Badge size="sm" emphasis="secondary" feedback="success">+{summary.linesAdded}</Badge>
+						<Badge size="sm" emphasis="secondary" feedback="danger">−{summary.linesRemoved}</Badge>
+					</span>
+				{/if}
+			{/snippet}
+
+			{#snippet right()}
+				{#if changedFilesQuery.data && changedFilesQuery.data.files.length > 0}
+					{@const summary = changedFilesQuery.data}
+					<span class={toolbarGroup} data-testid="diff-reviewed-progress">
+						<Badge
+							size="sm"
+							emphasis="secondary"
+							feedback={reviewedCount === summary.files.length ? 'success' : 'neutral'}
+							title="Files marked reviewed"
+						>
+							{#snippet leading()}
+								<Stamp emphasis="ghost">
+									<Icon
+										icon={reviewedCount === summary.files.length
+											? 'lucide:circle-check-big'
+											: 'lucide:list-checks'}
+									/>
+								</Stamp>
+							{/snippet}
+							{reviewedCount}/{summary.files.length} reviewed
+						</Badge>
+						{#if reviewedCount > 0}
+							<Button
+								emphasis="ghost"
+								size="xs"
+								onclick={() => reviewed.clearReviewed()}
+								aria-label="Clear all reviewed marks"
+								title="Clear all reviewed marks"
+								data-testid="diff-clear-reviewed"
+							>
+								Clear
+							</Button>
+						{/if}
+					</span>
+
+					<!-- Keyed on the active mode so the Choice's internal selection can
+					     never drift from the persisted option (same guard as the
+					     repository context tabs). -->
+					{#key viewOptions.options.viewMode}
+						<Choice
+							type="radio"
+							appearance="button"
+							size="sm"
+							defaultValue={[viewOptions.options.viewMode]}
+							onValueChange={(value) => {
+								const next = value[0];
+								if (next === 'list' || next === 'canvas') {
+									viewOptions.update({ viewMode: next });
+								}
+							}}
+							aria-label="Diff view mode"
+							data-testid="diff-view-mode-switch"
+						>
+							<ChoiceItem value="list" label="List" data-testid="view-mode-list">
+								{#snippet leading()}
+									<Stamp emphasis="ghost" border="none" background="transparent">
+										<Icon icon="lucide:list" width="14px" height="14px" />
+									</Stamp>
+								{/snippet}
+							</ChoiceItem>
+							<ChoiceItem value="canvas" label="Canvas" data-testid="view-mode-canvas">
+								{#snippet leading()}
+									<Stamp emphasis="ghost" border="none" background="transparent">
+										<Icon icon="lucide:workflow" width="14px" height="14px" />
+									</Stamp>
+								{/snippet}
+							</ChoiceItem>
+						</Choice>
+					{/key}
+
+					<DiffOptionsMenu options={viewOptions.options} onChange={viewOptions.update} />
+
+					<span class={toolbarGroup} data-testid="explain-all-controls">
+						<ExplanationMenu
+							style={viewOptions.options.explanationStyle}
+							detail={viewOptions.options.explanationDetail}
+							onStyleChange={(explanationStyle) => viewOptions.update({ explanationStyle })}
+							onDetailChange={(explanationDetail) => viewOptions.update({ explanationDetail })}
+						/>
+						<Button
+							emphasis="secondary"
+							size="sm"
+							onclick={generateExplanations}
+							disabled={explanationBatch.isRunning}
+							title="Explain every visible change with your local AI agent (uses its quota)"
+							data-testid="explain-all"
+						>
+							{#snippet leading()}
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:sparkles" width="14px" height="14px" />
+								</Stamp>
+							{/snippet}
+							{#if explanationBatch.isRunning}
+								Explaining {explanationBatch.done}/{explanationBatch.total}…
+							{:else}
+								Explain all
+							{/if}
+						</Button>
+						{#if explanationBatch.isRunning}
+							<Button
+								emphasis="ghost"
+								size="sm"
+								onclick={explanationBatch.cancel}
+								data-testid="explain-all-cancel"
+							>
+								Cancel
+							</Button>
+						{/if}
+					</span>
+				{/if}
+			{/snippet}
+		</PageToolbar>
+	{/snippet}
 
 	{#if repositoryQuery.isError}
 		<div class={css({ p: 'md' })}>
@@ -473,4 +449,4 @@
 			</div>
 		{/if}
 	{/if}
-</div>
+</PageWell>

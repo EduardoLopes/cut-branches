@@ -171,16 +171,6 @@ describe('BranchDiffView', () => {
 		await expect.element(getByText('abc1234', { exact: true })).toBeInTheDocument();
 	});
 
-	it('navigates back to the branches view', async () => {
-		const { getByRole } = renderWithTestWrapper(BranchDiffView, {
-			id: 'repo-1',
-			branchName: 'feature/x'
-		});
-
-		await getByRole('button', { name: /Branches/ }).click();
-		expect(h.goto).toHaveBeenCalledWith('/repos/repo-1');
-	});
-
 	it('shows a loading state while the changed files are computed', async () => {
 		setQueries({ changedFiles: { isLoading: true, isError: false, error: null } });
 		const { getByText } = renderWithTestWrapper(BranchDiffView, {

@@ -4,15 +4,14 @@
 	// is the decision surface; the graph rail is context. The header hosts the
 	// SAME DeleteBranchModal the branches screen uses, fed by the shared
 	// cache-backed selection the gutter checkboxes write into.
-	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
-	import Stamp from '@pindoba/svelte-stamp';
 	import { useCommitHistoryView } from '../application/use-commit-history-view.svelte';
 	import CommitHistoryList from '../components/commit-history-list.svelte';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import DeleteBranchModal from '$domains/branch-management/components/delete-branch-modal.svelte';
+	import EmptyState from '$ui/core/empty-state.svelte';
+	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
+	import PageWell from '$ui/patterns/page-well.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -28,61 +27,31 @@
 		getTargetCommit: () => targetCommit
 	});
 
-	const host = css({
-		display: 'flex',
-		flexDirection: 'column',
-		height: '100%',
-		background: 'neutral.surface.step.1',
-		color: 'neutral.text'
-	});
-	const header = css({
-		display: 'flex',
-		alignItems: 'center',
-		gap: 'sm',
-		px: 'md',
-		py: 'sm',
-		borderBottom: '1px solid',
-		borderColor: 'neutral.border.muted',
-		background: 'neutral.surface.step.1'
-	});
-	const title = css({ fontSize: 'md', fontWeight: 'bold' });
-	const headerMeta = css({ fontSize: 'xs', color: 'neutral.text.muted' });
-	const headerCount = css({ fontSize: 'xs', color: 'neutral.text.muted', ml: 'auto' });
-	const bannerHost = css({
-		px: 'md',
-		py: 'xs',
-		borderBottom: '1px solid',
-		borderColor: 'neutral.border.muted'
-	});
+	const meta = css({ fontSize: 'xs', color: 'neutral.text.muted' });
 </script>
 
-<div class={host}>
-	<header class={header}>
-		<Button
-			emphasis="ghost"
-			size="sm"
-			onclick={() => goto(resolve(`/repos/${id}`))}
-			data-testid="history-back-button"
-		>
-			{#snippet leading()}
-				<Stamp emphasis="ghost" border="muted" background="transparent">
-					<Icon icon="lucide:arrow-left" width="16px" height="16px" />
-				</Stamp>
+<!-- The page title, repository name and back-trail live in the shared
+     PageHeader (composed by the `[id]` layout), so this view owns only the
+     well: a toolbar of history-scoped meta and actions, then the graph. -->
+<PageWell isLoading={view.isLoading} testId="commit-history-well">
+	{#snippet toolbar()}
+		<PageToolbar data-testid="history-toolbar">
+			{#snippet left()}
+				{#if view.comparisons.baseName}
+					<span class={meta} data-testid="history-base">vs {view.comparisons.baseName}</span>
+				{/if}
+				<span class={meta} data-testid="history-count">
+					{view.loadedCommitCount} of {view.totalCount} commits
+				</span>
 			{/snippet}
-			Branches
-		</Button>
-		<h1 class={title}>Commit history</h1>
-		{#if view.comparisons.baseName}
-			<span class={headerMeta}>vs {view.comparisons.baseName}</span>
-		{/if}
-		<span class={headerCount}>
-			{view.loadedCommitCount} of {view.totalCount} commits
-		</span>
-		<DeleteBranchModal {id} />
-	</header>
+			{#snippet right()}
+				<DeleteBranchModal {id} />
+			{/snippet}
+		</PageToolbar>
+	{/snippet}
 
 	{#if view.isStale}
-		<div class={bannerHost}>
+		<div class={css({ pb: 'sm' })}>
 			<Alert feedback="warning" emphasis="secondary" data-testid="history-stale-banner">
 				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm' })}>
 					<span>The repository changed while browsing — this history is out of date.</span>
@@ -93,7 +62,7 @@
 	{/if}
 
 	{#if view.deepLinkError}
-		<div class={bannerHost}>
+		<div class={css({ pb: 'sm' })}>
 			<Alert feedback="danger" emphasis="secondary" data-testid="history-deep-link-error">
 				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm' })}>
 					<span>{view.deepLinkError.description ?? view.deepLinkError.message}</span>
@@ -106,12 +75,17 @@
 	{/if}
 
 	{#if view.isError && view.error}
-		<div class={css({ p: 'md' })}>
-			<Alert feedback="danger" data-testid="history-error">
-				{view.error.message}
-			</Alert>
-		</div>
+		<Alert feedback="danger" data-testid="history-error">
+			{view.error.message}
+		</Alert>
+	{:else if !view.isLoading && view.totalCount === 0}
+		<EmptyState
+			icon="lucide:git-commit-horizontal"
+			heading="No commits yet"
+			message="This repository has no commit history to show."
+			testId="history-empty"
+		/>
 	{:else}
 		<CommitHistoryList {view} />
 	{/if}
-</div>
+</PageWell>

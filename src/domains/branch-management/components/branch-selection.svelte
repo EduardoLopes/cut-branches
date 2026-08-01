@@ -1,9 +1,9 @@
 <script lang="ts">
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import { useBranchSelection } from '$domains/branch-management/core/composables/use-branch-selection.svelte';
+	import { pluralize } from '$domains/branch-management/utils/format-branch-selection-text';
 	import type { Repository } from '$types/repository';
 	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		repository: Repository | undefined;
@@ -30,35 +30,41 @@
 
 {#if selection.selectibleCount > 0}
 	{#key selection.selectibleCount}
+		<!-- The count sits beside the control, not inside its label slot: it
+		     describes the list, not the checkbox. The slot is left empty (the
+		     control is named by `aria-label`) so the row carries a single small
+		     gap instead of the control's internal label gap plus its own. -->
 		<div
 			class={css({
 				display: 'flex',
 				flexDirection: 'row',
 				alignItems: 'center',
 				height: '100%',
-				gap: 'sm'
+				gap: '2xs'
 			})}
 			data-testid="select-all-container"
 		>
 			<Checkbox
 				id="select-all"
 				size="lg"
+				aria-label="Select all"
 				bind:indeterminate={isIndeterminate}
 				onclick={selection.handleSelectAll}
 				bind:checked={isAllSelected}
 				data-testid="select-all-checkbox"
-			>
-				<div class={visuallyHidden()}>Select all</div>
-			</Checkbox>
+			/>
 
 			{#if selection.hasSearchQuery}
-				<div class={css({ fontSize: 'md' })} data-testid="search-query-info">
-					<span class={css({ color: 'neutral.950.contrast' })}>
+				<div
+					class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}
+					data-testid="search-query-info"
+				>
+					<span class={css({ color: 'neutral.text.bold' })}>
 						{selection.selectedCount}
 					</span>
 					{selection.searchInfoText?.selectedLabel}
 					{selection.searchInfoText?.selectedVerb} selected /
-					<span class={css({ color: 'neutral.950.contrast' })}>
+					<span class={css({ color: 'neutral.text.bold' })}>
 						{selection.selectibleCount}
 					</span>
 					{selection.searchInfoText?.selectibleLabel}
@@ -68,10 +74,21 @@
 					</strong>
 				</div>
 			{:else}
-				<div data-testid="selectible-count-info">
-					{selection.countInfoText}
+				<div
+					class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}
+					data-testid="selectible-count-info"
+				>
+					<span class={css({ color: 'neutral.text.bold' })}>{selection.selectedCount}</span>
+					/
+					<span class={css({ color: 'neutral.text.bold' })}>{selection.selectibleCount}</span>
+					{pluralize(selection.selectibleCount, 'branch', 'branches')}
 				</div>
 			{/if}
 		</div>
 	{/key}
+{:else}
+	<!-- Keeps the toolbar's left cell occupied so the bar can't change height
+	     between states, and says why the control is missing. Mirrors the
+	     worktrees page, which has always had this fallback. -->
+	<span class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}> No branches to select </span>
 {/if}

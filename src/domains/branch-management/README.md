@@ -37,11 +37,9 @@ branch-management/
 ├── views/                       # Delivery — top-level pages (mounted by routes)
 │   ├── active-branches-view.svelte
 │   └── deleted-branches-view.svelte
-├── layouts/                     # Delivery — page shell used by the views
-│   └── branches-layout.svelte
 ├── components/                  # Delivery — feature UI
 │   ├── branch-list.svelte · branch-alerts.svelte · lock-branch-toggle.svelte
-│   ├── branch-selection.svelte · bulk-actions-toolbar.svelte · branch-search.svelte
+│   ├── branch-selection.svelte · branch-context-filter.svelte · branch-search.svelte
 │   ├── branch-list-empty-state.svelte
 │   ├── delete-branch-modal.svelte
 │   └── restore-deleted-branch-modal.svelte · restore-branch-status-card.svelte
