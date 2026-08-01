@@ -158,7 +158,7 @@ fn get_all_branches_with_last_commit_internal(
         });
     }
 
-    branches.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    branches.sort_by_cached_key(|b| b.name.to_lowercase());
 
     if branches.is_empty() {
         return Err(BranchError::NoBranches {
@@ -233,6 +233,15 @@ pub fn get_branch_diff_stats(path: &Path, branch_name: &str) -> Result<(usize, u
         source: e,
     })?;
 
+    branch_diff_stats_in_repo(&repo, branch_name)
+}
+
+/// Same as [`get_branch_diff_stats`] but against an already-open repository,
+/// so batch callers pay the repo-open cost once.
+pub fn branch_diff_stats_in_repo(
+    repo: &Repository,
+    branch_name: &str,
+) -> Result<(usize, usize), AppError> {
     let head_commit = repo
         .head()
         .map_err(|e| BranchError::HeadNotFound { source: e })?
@@ -273,6 +282,46 @@ pub fn get_branch_diff_stats(path: &Path, branch_name: &str) -> Result<(usize, u
     let stats = diff.stats().map_err(diff_err)?;
 
     Ok((stats.insertions(), stats.deletions()))
+}
+
+/// Merge status + diff stats for one branch, resolved against an open repo.
+pub struct BranchMetricsRecord {
+    pub name: String,
+    pub is_merged: bool,
+    pub lines_added: usize,
+    pub lines_removed: usize,
+}
+
+/// Batch variant of the per-branch metric lookups: opens the repository once
+/// and resolves merge status and diff stats for every requested branch.
+/// Branches that no longer resolve (deleted mid-flight) are skipped rather
+/// than failing the whole batch.
+pub fn bulk_get_branch_metrics(
+    path: &Path,
+    branch_names: &[String],
+) -> Result<Vec<BranchMetricsRecord>, AppError> {
+    let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
+        path: path.display().to_string(),
+        source: e,
+    })?;
+
+    let mut metrics = Vec::with_capacity(branch_names.len());
+    for name in branch_names {
+        let Ok(is_merged) = is_branch_merged(&repo, name) else {
+            continue;
+        };
+        let Ok((lines_added, lines_removed)) = branch_diff_stats_in_repo(&repo, name) else {
+            continue;
+        };
+        metrics.push(BranchMetricsRecord {
+            name: name.clone(),
+            is_merged,
+            lines_added,
+            lines_removed,
+        });
+    }
+
+    Ok(metrics)
 }
 
 pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
@@ -1548,6 +1597,85 @@ mod tests {
                 "Unexpected error message: {}",
                 e.message
             );
+            assert_eq!(e.kind, "repository_open_failed");
+        }
+    }
+
+    #[test]
+    fn test_bulk_get_branch_metrics() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        let output = Command::new("git")
+            .args(["branch", "--show-current"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        let current_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
+
+        // Merged branch: points at HEAD, no own changes.
+        Command::new("git")
+            .args(["branch", "bulk-merged-branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        // Unmerged branch with its own commit (adds 1 line in a new file).
+        Command::new("git")
+            .args(["checkout", "-b", "bulk-unmerged-branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        std::fs::write(path.join("bulk-file.txt"), "one line\n").unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "bulk metrics commit"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["checkout", &current_branch])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let names = vec![
+            "bulk-merged-branch".to_string(),
+            "bulk-unmerged-branch".to_string(),
+            "does-not-exist".to_string(),
+        ];
+        let metrics = bulk_get_branch_metrics(path, &names).unwrap();
+
+        // The missing branch is skipped, not an error.
+        assert_eq!(metrics.len(), 2);
+
+        let merged = metrics
+            .iter()
+            .find(|m| m.name == "bulk-merged-branch")
+            .expect("merged branch missing");
+        assert!(merged.is_merged);
+        assert_eq!((merged.lines_added, merged.lines_removed), (0, 0));
+
+        let unmerged = metrics
+            .iter()
+            .find(|m| m.name == "bulk-unmerged-branch")
+            .expect("unmerged branch missing");
+        assert!(!unmerged.is_merged);
+        assert_eq!((unmerged.lines_added, unmerged.lines_removed), (1, 0));
+
+        // Empty input → empty output.
+        let empty = bulk_get_branch_metrics(path, &[]).unwrap();
+        assert!(empty.is_empty());
+
+        // Invalid path surfaces the repository-open error.
+        let result = bulk_get_branch_metrics(Path::new("/non/existent/path"), &names);
+        assert!(result.is_err());
+        if let Err(e) = result {
             assert_eq!(e.kind, "repository_open_failed");
         }
     }

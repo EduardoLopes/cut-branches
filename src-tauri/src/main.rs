@@ -19,10 +19,11 @@ use domains::repository_management::core::ports::RepositoryServices;
 
 use domains::branch_management::commands::{
     batch_create_branch_restorations, batch_create_locked_branches, batch_delete_branches,
-    batch_delete_locked_branches, create_branch_restoration, delete_all_locked_branches,
-    get_branch_diff_stats, get_branch_list, get_branch_merge_status, get_commit_reachability,
-    list_branch_selection, list_deleted_branch_selection, list_locked_branches,
-    set_branch_selection_all, update_branch_selection_batch, update_current_branch,
+    batch_delete_locked_branches, bulk_get_branch_metrics, create_branch_restoration,
+    delete_all_locked_branches, get_branch_diff_stats, get_branch_list, get_branch_merge_status,
+    get_commit_reachability, list_branch_selection, list_deleted_branch_selection,
+    list_locked_branches, set_branch_selection_all, update_branch_selection_batch,
+    update_current_branch,
 };
 use domains::branch_management::events::{
     BranchDeletedEvent, BranchRestoredEvent, BranchSwitchedEvent,
@@ -115,6 +116,7 @@ fn main() {
             get_commit_reachability,
             get_branch_merge_status,
             get_branch_diff_stats,
+            bulk_get_branch_metrics,
             create_branch_restoration,
             batch_create_branch_restorations,
             // Commit history + branch graph
@@ -322,6 +324,7 @@ mod tests {
         let _ = commands::get_commit_reachability;
         let _ = commands::get_branch_merge_status;
         let _ = commands::get_branch_diff_stats;
+        let _ = commands::bulk_get_branch_metrics;
         let _ = commands::create_branch_restoration;
         let _ = crate::domains::branch_management::features::branch_diff::list_changed_files;
         let _ = crate::domains::branch_management::features::branch_diff::get_file_diff;

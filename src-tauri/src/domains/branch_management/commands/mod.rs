@@ -14,7 +14,8 @@ pub use locked::{
     list_locked_branches,
 };
 pub use queries::{
-    get_branch_diff_stats, get_branch_list, get_branch_merge_status, get_commit_reachability,
+    bulk_get_branch_metrics, get_branch_diff_stats, get_branch_list, get_branch_merge_status,
+    get_commit_reachability,
 };
 pub use selected::{
     list_branch_selection, list_deleted_branch_selection, set_branch_selection_all,

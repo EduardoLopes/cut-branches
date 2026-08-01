@@ -261,6 +261,27 @@ async getBranchDiffStats(input: GetBranchDiffStatsInput) : Promise<Result<GetBra
 }
 },
 /**
+ * Gets merge status and diff stats for a batch of branches in one call,
+ * opening the repository once. Branches that fail to resolve are omitted
+ * from the output rather than failing the batch.
+ * 
+ * # Arguments
+ * 
+ * * `input` - Input parameters containing path and branch names
+ * 
+ * # Returns
+ * 
+ * * `Result<BulkGetBranchMetricsOutput, AppError>` - Metrics per resolved branch or an error
+ */
+async bulkGetBranchMetrics(input: BulkGetBranchMetricsInput) : Promise<Result<BulkGetBranchMetricsOutput, AppError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("bulk_get_branch_metrics", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Creates a restoration of a deleted branch in a git repository.
  * 
  * # Arguments
@@ -824,8 +845,11 @@ lockStatus?: LockStatusFilter;
  * Whether to include the current branch in results (default: true)
  */
 includeCurrent?: boolean }
+export type BranchMetrics = { name: string; isMerged: boolean; linesAdded: number; linesRemoved: number }
 export type BranchRestoredEvent = { restoredBranch: Branch; repositoryPath: string }
 export type BranchSwitchedEvent = { fromBranch: string; toBranch: string; repositoryPath: string }
+export type BulkGetBranchMetricsInput = { path: string; branchNames: string[] }
+export type BulkGetBranchMetricsOutput = { metrics: BranchMetrics[] }
 export type CancelExplanationInput = { 
 /**
  * The `requestId` or `batchId` to cancel.

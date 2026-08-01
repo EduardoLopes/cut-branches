@@ -49,9 +49,9 @@ pub struct SetBranchSelectionAllOutput {}
 /// # Returns
 ///
 /// * `Result<UpdateBranchSelectionBatchOutput, AppError>` - Success or an error
-#[tauri::command]
+#[tauri::command(async)]
 #[specta::specta]
-pub fn update_branch_selection_batch(
+pub async fn update_branch_selection_batch(
     db: State<'_, DatabaseState>,
     input: UpdateBranchSelectionBatchInput,
 ) -> Result<UpdateBranchSelectionBatchOutput, AppError> {
@@ -75,9 +75,9 @@ pub fn update_branch_selection_batch(
 /// # Returns
 ///
 /// * `Result<SetBranchSelectionAllOutput, AppError>` - Success or an error
-#[tauri::command]
+#[tauri::command(async)]
 #[specta::specta]
-pub fn set_branch_selection_all(
+pub async fn set_branch_selection_all(
     db: State<'_, DatabaseState>,
     input: SetBranchSelectionAllInput,
 ) -> Result<SetBranchSelectionAllOutput, AppError> {
@@ -117,9 +117,9 @@ pub struct ListBranchSelectionOutput {
 /// # Returns
 ///
 /// * `Result<ListBranchSelectionOutput, AppError>` - The selected branches or an error
-#[tauri::command]
+#[tauri::command(async)]
 #[specta::specta]
-pub fn list_branch_selection(
+pub async fn list_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListBranchSelectionInput,
 ) -> Result<ListBranchSelectionOutput, AppError> {
@@ -153,9 +153,9 @@ pub struct ListDeletedBranchSelectionOutput {
 /// # Returns
 ///
 /// * `Result<ListDeletedBranchSelectionOutput, AppError>` - The selected deleted branches or an error
-#[tauri::command]
+#[tauri::command(async)]
 #[specta::specta]
-pub fn list_deleted_branch_selection(
+pub async fn list_deleted_branch_selection(
     db: State<'_, DatabaseState>,
     input: ListDeletedBranchSelectionInput,
 ) -> Result<ListDeletedBranchSelectionOutput, AppError> {

@@ -49,6 +49,28 @@ pub struct GetBranchMergeStatusOutput {
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
+pub struct BulkGetBranchMetricsInput {
+    pub path: String,
+    pub branch_names: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BranchMetrics {
+    pub name: String,
+    pub is_merged: bool,
+    pub lines_added: u32,
+    pub lines_removed: u32,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct BulkGetBranchMetricsOutput {
+    pub metrics: Vec<BranchMetrics>,
+}
+
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct GetBranchDiffStatsInput {
     pub path: String,
     pub branch_name: String,
@@ -98,10 +120,10 @@ pub async fn get_commit_reachability(
 /// # Returns
 ///
 /// * `Result<GetBranchListOutput, AppError>` - The list of branches or an error
-#[tauri::command]
+#[tauri::command(async)]
 #[specta::specta]
-pub fn get_branch_list(
-    db: State<DatabaseState>,
+pub async fn get_branch_list(
+    db: State<'_, DatabaseState>,
     input: GetBranchListInput,
 ) -> Result<GetBranchListOutput, AppError> {
     let mut conn = db.get_connection().map_err(|e| {
@@ -191,5 +213,51 @@ pub async fn get_branch_diff_stats(
         // pathological case so the contract can stay a plain `number`.
         lines_added: u32::try_from(lines_added).unwrap_or(u32::MAX),
         lines_removed: u32::try_from(lines_removed).unwrap_or(u32::MAX),
+    })
+}
+
+/// Gets merge status and diff stats for a batch of branches in one call,
+/// opening the repository once. Branches that fail to resolve are omitted
+/// from the output rather than failing the batch.
+///
+/// # Arguments
+///
+/// * `input` - Input parameters containing path and branch names
+///
+/// # Returns
+///
+/// * `Result<BulkGetBranchMetricsOutput, AppError>` - Metrics per resolved branch or an error
+#[tauri::command(async)]
+#[specta::specta]
+pub async fn bulk_get_branch_metrics(
+    input: BulkGetBranchMetricsInput,
+) -> Result<BulkGetBranchMetricsOutput, AppError> {
+    // Validate every branch name at the boundary (§1.2).
+    let branch_names = input
+        .branch_names
+        .into_iter()
+        .map(BranchName::new)
+        .collect::<Result<Vec<_>, _>>()?;
+    let names: Vec<String> = branch_names
+        .into_iter()
+        .map(|b| b.as_str().to_string())
+        .collect();
+
+    let raw_path = Path::new(&input.path);
+    let records =
+        crate::domains::branch_management::infrastructure::git::branch::bulk_get_branch_metrics(
+            raw_path, &names,
+        )?;
+
+    Ok(BulkGetBranchMetricsOutput {
+        metrics: records
+            .into_iter()
+            .map(|r| BranchMetrics {
+                name: r.name,
+                is_merged: r.is_merged,
+                lines_added: u32::try_from(r.lines_added).unwrap_or(u32::MAX),
+                lines_removed: u32::try_from(r.lines_removed).unwrap_or(u32::MAX),
+            })
+            .collect(),
     })
 }
