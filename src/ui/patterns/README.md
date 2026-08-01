@@ -11,18 +11,44 @@ more than one domain — e.g. the settings patterns are used by both
 settings section). Putting them in a domain would force a cross-domain import,
 which the architecture forbids.
 
+## Page convention
+
+Every page — repository, worktrees, commit history, diff, cleanup, settings —
+is built from the same four pieces, so a new page has no layout decisions left
+to make:
+
+```
+PageShell                  full-height host, one background, the minHeight:0 chain
+├── PageHeader             breadcrumb? · leading icon · heading · subheading? · actions
+│   └── nav?               CONTEXT navigation — links to sibling pages
+└── PageWell               recessed Panel (surface.deep, radius xl), publishes its
+    │                      radius so cards inside use radius="inner"
+    ├── PageToolbar?       FILTERS, search and bulk actions (sticky, translucent)
+    ├── content            the scrolling body
+    └── footer?            PageToolbar placement="bottom" (pagination, commit bars)
+```
+
+The rule that keeps the two navigation levels legible:
+**the header's nav answers "which page"; the toolbar answers "which subset of
+this page."** On the repository page that puts Branches/Worktrees in the header
+and Active/Deleted in the toolbar.
+
+`PageToolbar` lives here rather than in `branch-management` precisely so
+`worktree-management` and `repository-cleanup` can use the same bar — it was
+previously copied byte-for-byte between domains to dodge the import rule.
+
 ## Settings convention
 
 Every settings section shares one visual language via two components:
 
 ### `settings-section.svelte`
 
-The section frame: a header Banner + a recessed "well" that holds the rows.
+A settings-flavoured name for the page convention above: it is a thin wrapper
+over `PageHeader` + `PageWell`, so `/settings/*` and every other page share one
+implementation.
 
 - Props: `heading`, `subheading?`, `leading?` (icon Stamp snippet), `trailing?`
   (header action, e.g. a reset button), `testId?`, `children` (the rows).
-- Canonical well: `background: neutral.surface.deep`, `borderRadius: xl`,
-  `1px neutral.border.muted`, `padding: md`, `gap: sm`, scrolls itself.
 
 ### `settings-field.svelte`
 
@@ -39,8 +65,9 @@ Banner).
 
 ## Conventions
 
-- **Header Stamp:** sections pass their own leading Stamp
-  (`shape="square" size="lg" emphasis="secondary" feedback="neutral" shadow="sm"`).
+- **Header Stamp:** pages and sections pass their own leading Stamp, sized
+  `sm` with a 16px glyph so it flanks the title rather than competing with it
+  (`shape="square" size="sm" emphasis="secondary" feedback="neutral" shadow="sm"`).
   The About section is a deliberate **identity exception** — it uses a
   `shape="circle" emphasis="primary" feedback="primary"` stamp to brand the app.
 - **Snippet props** passed to `leading`/`trailing`/`control` may need an

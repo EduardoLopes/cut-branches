@@ -1,11 +1,12 @@
 <script lang="ts">
-	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
-	import Panel from '@pindoba/svelte-panel';
+	import type { BannerProps } from '@pindoba/svelte-banner';
 	import type { Snippet } from 'svelte';
+	import PageHeader from './page-header.svelte';
+	import PageWell from './page-well.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
-		/** Section title, rendered in the header Banner. */
+		/** Section title, rendered in the page header. */
 		heading: string;
 		/** Optional supporting text under the heading. */
 		subheading?: BannerProps['subheading'];
@@ -22,29 +23,18 @@
 	const { heading, subheading, leading, trailing, testId, children }: Props = $props();
 </script>
 
-<div
-	class={css({ display: 'flex', flexDirection: 'column', flex: '1', minHeight: '0', gap: 'md' })}
-	data-testid={testId}
->
-	<Banner {leading} {heading} {subheading} {trailing} />
+<!--
+	A settings section is just the standard page contract (header + recessed
+	well) under a settings-flavoured name, so `/settings/*` and every other page
+	share one implementation.
+-->
+<PageHeader {leading} {heading} {subheading} {trailing} {testId} />
 
-	<!-- Recessed well so the raised setting cards read with depth. A real Panel
-	     (not a styled div) so it publishes its radius/padding and the cards
-	     inside can ask for `radius="inner"` and stay concentric. -->
-	<Panel
-		background="surface.deep"
-		border="muted"
-		radius="xl"
-		padding="md"
-		class={css({
-			display: 'flex',
-			flexDirection: 'column',
-			flex: '1',
-			minHeight: '0',
-			overflowY: 'auto',
-			gap: 'sm'
-		})}
-	>
+<PageWell>
+	<!-- Settings rows are discrete cards, so they need rhythm between them. The
+	     well itself stays gapless — list-style pages (branches, worktrees) set
+	     their own spacing on the list container. -->
+	<div class={css({ display: 'flex', flexDirection: 'column', gap: 'sm' })}>
 		{@render children()}
-	</Panel>
-</div>
+	</div>
+</PageWell>

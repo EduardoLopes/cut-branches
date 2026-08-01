@@ -1,8 +1,8 @@
 import { createRawSnippet } from 'svelte';
-import BulkActionsToolbar from '../bulk-actions-toolbar.svelte';
+import PageToolbar from '../page-toolbar.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
-describe('BulkActionsToolbar Component', () => {
+describe('PageToolbar Component', () => {
 	test('renders container with correct structure', () => {
 		const leftSnippet = createRawSnippet(() => {
 			return {
@@ -15,7 +15,7 @@ describe('BulkActionsToolbar Component', () => {
 			};
 		});
 
-		const screen = renderWithTestWrapper(BulkActionsToolbar, {
+		const screen = renderWithTestWrapper(PageToolbar, {
 			left: leftSnippet,
 			right: rightSnippet
 		});
@@ -25,7 +25,7 @@ describe('BulkActionsToolbar Component', () => {
 	});
 
 	test('renders empty sections when no snippets are provided', () => {
-		const screen = renderWithTestWrapper(BulkActionsToolbar);
+		const screen = renderWithTestWrapper(PageToolbar);
 		const leftSection = screen.getByTestId('bulk-actions-left');
 		const rightSection = screen.getByTestId('bulk-actions-right');
 
@@ -35,8 +35,14 @@ describe('BulkActionsToolbar Component', () => {
 		expect(rightSection).toHaveTextContent('');
 	});
 
+	test('renders the bottom placement', () => {
+		const screen = renderWithTestWrapper(PageToolbar, { placement: 'bottom' });
+
+		expect(screen.getByTestId('bulk-actions-container')).toBeInTheDocument();
+	});
+
 	test('forwards additional HTML attributes to root element', () => {
-		const screen = renderWithTestWrapper(BulkActionsToolbar, {
+		const screen = renderWithTestWrapper(PageToolbar, {
 			'data-custom': 'test-value'
 		});
 		const container = screen.getByTestId('bulk-actions-container');
