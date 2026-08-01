@@ -480,11 +480,16 @@
 {/snippet}
 
 {#snippet cardChildren()}
+	<!-- `minWidth: 0` all the way down to the commit row: the mini row is a
+	     single nowrap line, and a flex item won't shrink below its content
+	     without it — the summary's ellipsis never engages and the line bleeds
+	     out past the card instead. -->
 	<div
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
-			gap: compact ? 'xs' : 'md'
+			gap: compact ? 'xs' : 'md',
+			minWidth: '0'
 		})}
 	>
 		{#if !compact}
@@ -499,7 +504,8 @@
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
-					gap: 'xs'
+					gap: 'xs',
+					minWidth: '0'
 				})}
 			>
 				<div
@@ -586,7 +592,8 @@
 					class={css({
 						display: 'flex',
 						flexDirection: 'column',
-						gap: 'xs'
+						gap: 'xs',
+						minWidth: '0'
 					})}
 				>
 					{@render lastCommitCard()}

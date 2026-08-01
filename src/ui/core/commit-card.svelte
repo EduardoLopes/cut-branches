@@ -151,6 +151,9 @@
 		class={css({
 			display: 'flex',
 			alignItems: 'center',
+			// An icon has nothing to give: in the mini row it shares one flex line
+			// with the summary, and the summary is what should absorb the squeeze.
+			flexShrink: 0,
 			color: 'neutral.text.muted',
 			pindobaTransition: 'fast',
 			_hover: { color: 'accent.text' }
