@@ -7,17 +7,37 @@ import { formatDate } from './format-date';
  * @param dateInput - The date string, timestamp or Date object to format
  * @returns A formatted date string or 'Unknown date' if invalid
  */
+// `formatDate` uses date-fns 'PPPPpppp' — the heaviest pattern available —
+// and virtualized lists call this once per row per render with the same
+// commit dates over and over. The result is pure in its input, so memoize it;
+// bounded so a pathological stream of unique dates can't grow it forever.
+const FORMAT_DATE_CACHE_LIMIT = 500;
+const formatDateCache = new Map<string | number, string>();
+
 export function safeFormatDate(dateInput: string | number | Date): string {
+	const cacheKey = dateInput instanceof Date ? dateInput.getTime() : dateInput;
+	const cached = formatDateCache.get(cacheKey);
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	let formatted: string;
 	try {
 		// Check if the date is valid
 		const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
 		if (isNaN(date.getTime())) {
 			throw new Error('Invalid date');
 		}
-		return formatDate(date);
+		formatted = formatDate(date);
 	} catch {
-		return 'Unknown date';
+		formatted = 'Unknown date';
 	}
+
+	if (formatDateCache.size >= FORMAT_DATE_CACHE_LIMIT) {
+		formatDateCache.clear();
+	}
+	formatDateCache.set(cacheKey, formatted);
+	return formatted;
 }
 
 /**

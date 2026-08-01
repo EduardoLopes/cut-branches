@@ -61,6 +61,29 @@ describe('date-utils', () => {
 			expect(formatDate).not.toHaveBeenCalled();
 			expect(result).toBe('Unknown date');
 		});
+
+		it('memoizes repeated inputs so the expensive format runs once', () => {
+			safeFormatDate('2024-01-02T03:04:05Z');
+			safeFormatDate('2024-01-02T03:04:05Z');
+			expect(formatDate).toHaveBeenCalledTimes(1);
+
+			// Date objects key by their timestamp — two instances, one entry.
+			safeFormatDate(new Date('2024-01-02T03:04:05Z'));
+			safeFormatDate(new Date('2024-01-02T03:04:05Z'));
+			expect(formatDate).toHaveBeenCalledTimes(2);
+		});
+
+		it('clears the cache once it reaches its bound instead of growing forever', () => {
+			// Overflow the 500-entry cache with unique timestamps…
+			for (let i = 0; i < 501; i++) {
+				safeFormatDate(1700000000000 + i * 1000);
+			}
+			const callsAfterFill = vi.mocked(formatDate).mock.calls.length;
+			// …then a key from before the clear must be re-formatted, not served
+			// from a stale unbounded map.
+			safeFormatDate(1700000000000);
+			expect(vi.mocked(formatDate).mock.calls.length).toBe(callsAfterFill + 1);
+		});
 	});
 
 	describe('safeFormatRelativeDate', () => {
