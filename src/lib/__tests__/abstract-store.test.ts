@@ -52,8 +52,7 @@ class TestStore<T> extends AbstractStore<T, Set<T>> {
 
 		const schemaArgs = itemSchema ? [itemSchema] : [z.any() as z.ZodType<T>];
 		const keyParts = args.filter((arg) => typeof arg === 'string' || typeof arg === 'number') as (
-			| string
-			| number
+			string | number
 		)[];
 
 		return AbstractStore.getCommonInstance(

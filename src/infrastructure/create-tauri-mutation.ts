@@ -32,14 +32,14 @@ export interface TauriMutationOptions<
 	TError = AppError,
 	TContext = unknown
 > extends Omit<
-		MutationOptions<
-			CommandResult<TCommand>,
-			TError,
-			CommandParams<TCommand> extends [] ? void : CommandParams<TCommand>,
-			TContext
-		>,
-		'mutationKey'
-	> {
+	MutationOptions<
+		CommandResult<TCommand>,
+		TError,
+		CommandParams<TCommand> extends [] ? void : CommandParams<TCommand>,
+		TContext
+	>,
+	'mutationKey'
+> {
 	queryInvalidation?: QueryInvalidationConfig;
 	mutationKey?: MutationKey;
 }
