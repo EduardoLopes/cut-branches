@@ -58,7 +58,9 @@ export type TauriQueryOptions<
 	CreateQueryOptions<CommandResult<TCommand>, TError, TData, TQueryKey>,
 	'queryKey' | 'queryFn'
 > & {
-	queryKey?: TQueryKey;
+	/** Static key, or a thunk when the key depends on reactive state (same
+	 *  contract as the infinite variant). */
+	queryKey?: TQueryKey | (() => TQueryKey);
 	input?: InputResolver<TCommand>;
 	meta?: {
 		[key: string]: unknown;
@@ -97,16 +99,16 @@ export function createTauriQuery<
 
 	const queryClient = useQueryClient();
 
+	const resolveKey = () =>
+		(typeof queryKey === 'function' ? queryKey() : queryKey) ??
+		createQueryKey<TCommand, TQueryKey>(commandName, resolveInput(input));
+
 	function invalidate() {
-		return queryClient.invalidateQueries({
-			queryKey: queryKey ?? createQueryKey(commandName, resolveInput(input))
-		});
+		return queryClient.invalidateQueries({ queryKey: resolveKey() });
 	}
 
 	return createQuery(() => {
-		const resolvedInput = resolveInput(input);
-		const finalQueryKey =
-			queryKey ?? createQueryKey<TCommand, TQueryKey>(commandName, resolvedInput);
+		const finalQueryKey = resolveKey();
 
 		return {
 			queryKey: finalQueryKey,
