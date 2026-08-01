@@ -564,4 +564,176 @@ describe('BranchCard Component', () => {
 		const card = getByTestId('branch-card');
 		expect(card).toHaveAttribute('data-variant', 'default');
 	});
+
+	describe('recent-commits disclosure', () => {
+		const recentCommits = createRawSnippet(() => ({
+			render: () => '<div data-testid="recent-commits-content">earlier commits</div>'
+		}));
+
+		test('renders the last commit as a mini row, without the commit card chrome', () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch
+			});
+
+			expect(getByTestId('commit-mini-row')).toBeInTheDocument();
+			expect(getByTestId('last-commit-message')).toHaveTextContent('feat: add new feature');
+			expect(getByTestId('commit-sha')).not.toBeInTheDocument();
+		});
+
+		test('promotes the last commit to a full card on expand, exposing its body', async () => {
+			const branchWithBody = Branch.fromData({
+				...mockBranchData,
+				lastCommit: {
+					...mockBranchData.lastCommit,
+					message: 'feat: add new feature\n\nDetailed description line'
+				}
+			});
+
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: branchWithBody,
+				recentCommits,
+				commitDiffHref: '/repos/1/diff?commit=abc123def456'
+			});
+
+			// Collapsed: one line, no body disclosure and nowhere to put the diff.
+			expect(getByTestId('commit-mini-row')).toBeInTheDocument();
+			expect(getByTestId('toggle-commit-description')).not.toBeInTheDocument();
+			expect(getByTestId('commit-diff-link')).not.toBeInTheDocument();
+
+			await getByTestId('toggle-recent-commits').click();
+
+			// Expanded: the card chrome is back, so the description can be read.
+			expect(getByTestId('commit-mini-row')).not.toBeInTheDocument();
+			expect(getByTestId('commit-sha')).toBeInTheDocument();
+			expect(getByTestId('commit-diff-link')).toBeInTheDocument();
+
+			await getByTestId('toggle-commit-description').click();
+			expect(getByTestId('commit-description')).toHaveTextContent('Detailed description line');
+		});
+
+		// Both words stay mounted so they can animate past each other, so the
+		// live label is the `data-label` attribute rather than the text content.
+		test('renames the panel header once it holds more than the tip', async () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			const label = getByTestId('commit-panel-label');
+			expect(label).toHaveAttribute('data-label', 'Last commit');
+
+			await getByTestId('toggle-recent-commits').click();
+			expect(label).toHaveAttribute('data-label', 'Recent commits');
+
+			await getByTestId('toggle-recent-commits').click();
+			expect(label).toHaveAttribute('data-label', 'Last commit');
+		});
+
+		test('announces only the label that is showing', async () => {
+			const { getByTestId, getByText } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			expect(getByText('Last commit').element()).not.toHaveAttribute('aria-hidden', 'true');
+			expect(getByText('Recent commits').element()).toHaveAttribute('aria-hidden', 'true');
+
+			await getByTestId('toggle-recent-commits').click();
+
+			expect(getByText('Last commit').element()).toHaveAttribute('aria-hidden', 'true');
+			expect(getByText('Recent commits').element()).not.toHaveAttribute('aria-hidden', 'true');
+		});
+
+		test('keeps the header at "Last commit" when there is no disclosure', () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch
+			});
+
+			expect(getByTestId('commit-panel-label')).toHaveAttribute('data-label', 'Last commit');
+		});
+
+		test('demotes the last commit back to a mini row on collapse', async () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			const toggle = getByTestId('toggle-recent-commits');
+
+			await toggle.click();
+			expect(getByTestId('commit-sha')).toBeInTheDocument();
+
+			await toggle.click();
+			expect(getByTestId('commit-mini-row')).toBeInTheDocument();
+			expect(getByTestId('commit-sha')).not.toBeInTheDocument();
+		});
+
+		test('shows no toggle when the consumer provides no recent-commits snippet', () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch
+			});
+
+			expect(getByTestId('toggle-recent-commits')).not.toBeInTheDocument();
+			expect(getByTestId('recent-commits-region')).not.toBeInTheDocument();
+		});
+
+		test('starts collapsed, keeping the snippet unmounted so it fetches lazily', () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			const toggle = getByTestId('toggle-recent-commits');
+			expect(toggle).toBeInTheDocument();
+			expect(toggle).toHaveTextContent('More');
+			expect(toggle).toHaveAttribute('aria-expanded', 'false');
+			expect(getByTestId('recent-commits-region')).toHaveAttribute('data-expanded', 'false');
+			expect(getByTestId('recent-commits-content')).not.toBeInTheDocument();
+		});
+
+		test('mounts and unmounts the snippet as the toggle is clicked', async () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			const toggle = getByTestId('toggle-recent-commits');
+
+			await toggle.click();
+			expect(getByTestId('recent-commits-content')).toBeInTheDocument();
+			expect(toggle).toHaveTextContent('Less');
+			expect(toggle).toHaveAttribute('aria-expanded', 'true');
+			expect(getByTestId('recent-commits-region')).toHaveAttribute('data-expanded', 'true');
+
+			// Collapsing keeps the content mounted for the length of the height
+			// transition — an empty box has nothing to animate closed.
+			await toggle.click();
+			expect(toggle).toHaveTextContent('More');
+			expect(getByTestId('recent-commits-region')).toHaveAttribute('data-expanded', 'false');
+			expect(getByTestId('recent-commits-content')).toBeInTheDocument();
+			await expect.element(getByTestId('recent-commits-content')).not.toBeInTheDocument();
+		});
+
+		test('points the toggle at the region it controls', async () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			const controls = getByTestId('toggle-recent-commits').element().getAttribute('aria-controls');
+			expect(controls).toBe('recent-commits-feature/new-feature');
+			await expect.element(getByTestId('recent-commits-region')).toHaveAttribute('id', controls!);
+		});
+
+		test('compact mode drops the disclosure along with the whole commit panel', () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				compact: true,
+				recentCommits
+			});
+
+			expect(getByTestId('toggle-recent-commits')).not.toBeInTheDocument();
+			expect(getByTestId('recent-commits-region')).not.toBeInTheDocument();
+		});
+	});
 });

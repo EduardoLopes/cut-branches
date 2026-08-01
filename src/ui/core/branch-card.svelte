@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Badge from '@pindoba/svelte-badge';
+	import Button from '@pindoba/svelte-button';
 	import Card, {
 		type PrimitiveCardFooterProps,
 		type PrimitiveCardHeaderProps,
@@ -57,7 +58,8 @@
 		/** Forwarded to the embedded CommitCard: deep-link into a history view. */
 		commitHistoryHref?: string;
 		/** Forwarded to the embedded CommitCard: deep-link into a diff view of
-		 *  the last commit (vs its parent). */
+		 *  the last commit (vs its parent). Only surfaces once the commit panel
+		 *  is expanded — the collapsed mini row has no footer to host it. */
 		commitDiffHref?: string;
 		/** Deep-link into a diff view of this branch (its changes vs the current
 		 *  branch); rendered as a file-diff icon link in the footer, beside the
@@ -66,6 +68,12 @@
 		diffHref?: string;
 		/** Forwarded to the embedded CommitCard: hover/focus preview content. */
 		commitHoverPreview?: Snippet;
+		/** Deeper detail for the "Last commit" panel, revealed by a "More"
+		 *  toggle: typically the branch's preceding commits. Rendered only while
+		 *  expanded, so a consumer that mounts a query in here fetches lazily —
+		 *  nothing loads until someone asks. This card owns the toggle, the
+		 *  region, and the animation; it knows nothing about what's inside. */
+		recentCommits?: Snippet;
 		/** Card surface props, forwarded to the underlying pindoba Card so this
 		 *  component can be reused on different backgrounds/contexts (mirrors
 		 *  CommitCard). Defaults match the standalone branch-list look; `size`
@@ -96,6 +104,7 @@
 		commitDiffHref,
 		diffHref,
 		commitHoverPreview,
+		recentCommits,
 		size,
 		background = 'surface.step.2',
 		border = 'muted',
@@ -143,6 +152,73 @@
 	const cardSize = $derived<PrimitiveCardProps['size']>(compact ? 'xs' : size);
 	const badgeSize = $derived(compact ? 'xs' : 'sm');
 	const metaFont = $derived(compact ? 'xs' : 'sm');
+
+	// Disclosure state for the recent-commits region. Collapsed on mount: the
+	// panel's job is to stay out of the way until asked.
+	let recentExpanded = $state(false);
+	// Whether the region's content is in the DOM. Tracks `recentExpanded` on the
+	// way in, but lags it on the way out: unmounting the moment the toggle flips
+	// would leave an empty box to collapse, so the content would vanish and only
+	// the (now invisible) height would animate. Holding it through the
+	// transition is what makes the close read as a close.
+	let recentMounted = $state(false);
+	let recentUnmountTimer: ReturnType<typeof setTimeout> | undefined;
+	const RECENT_COLLAPSE_MS = 260;
+
+	function toggleRecentCommits() {
+		clearTimeout(recentUnmountTimer);
+		recentExpanded = !recentExpanded;
+		if (recentExpanded) {
+			recentMounted = true;
+		} else {
+			recentUnmountTimer = setTimeout(() => (recentMounted = false), RECENT_COLLAPSE_MS);
+		}
+	}
+
+	// A card can be destroyed mid-collapse (the branch list refetches, the modal
+	// closes); the pending unmount must not outlive it.
+	$effect(() => () => clearTimeout(recentUnmountTimer));
+
+	// Ties the toggle to the region it controls. Scoped by branch name so two
+	// cards on the same page never collide.
+	const recentRegionId = $derived(`recent-commits-${branch.getName()}`);
+
+	// Both header labels occupy the same grid cell, so the box sizes to the
+	// longer of the two and nothing reflows when they swap.
+	const labelStack = css({
+		display: 'grid',
+		alignItems: 'center',
+		justifyItems: 'start'
+	});
+
+	// One layer per word. `both` variants differ only in which way the word
+	// leaves, which is what turns a crossfade into a roll: `labelUp` exits
+	// upward (expanding), `labelDown` exits downward (collapsing), so the pair
+	// always travels in the same direction as the disclosure. Properties are
+	// enumerated rather than `all` — the blanket form would also animate the
+	// colour the theme toggle changes. The incoming word is delayed slightly so
+	// the two don't overlap into mush at the midpoint.
+	const labelLayer = {
+		gridArea: '1 / 1',
+		whiteSpace: 'nowrap' as const,
+		opacity: 0,
+		filter: 'blur(3px)',
+		transition:
+			'opacity 200ms cubic-bezier(0.2, 0, 0, 1), transform 260ms cubic-bezier(0.2, 0, 0, 1), filter 200ms cubic-bezier(0.2, 0, 0, 1)',
+		'&[data-visible="true"]': {
+			opacity: 1,
+			filter: 'blur(0)',
+			transform: 'translateY(0)',
+			transitionDelay: '70ms'
+		},
+		_motionReduce: {
+			transition: 'none',
+			filter: 'none',
+			transform: 'none'
+		}
+	};
+	const labelUp = css({ ...labelLayer, transform: 'translateY(-0.6em)' });
+	const labelDown = css({ ...labelLayer, transform: 'translateY(0.6em)' });
 
 	// The footer hosts the upstream badge (leading) and the diff-stat badges
 	// plus deleted-at meta (trailing); it only renders when at least one of
@@ -385,9 +461,17 @@
 {/snippet}
 
 {#snippet lastCommitCard()}
+	<!-- Collapsed, the commit is a supporting line: a nested card here reads as
+	     a second object and dominates the branch list, so `mini` strips it to
+	     one row. Expanding promotes it to the same compact card the commits
+	     below use — that is where its description body, SHA and diff link live,
+	     and where the panel becomes a uniform list rather than a line with a
+	     list stapled underneath. Keyed to `recentExpanded` (not the mount flag)
+	     so the promotion runs with the height animation, not after it. -->
 	<CommitCard
 		commit={branch.getLastCommit()}
 		{feedback}
+		density={recentExpanded ? 'compact' : 'mini'}
 		radius="inner"
 		historyHref={commitHistoryHref}
 		diffHref={commitDiffHref}
@@ -436,15 +520,68 @@
 						width="16px"
 						height="16px"
 						color={token('colors.colorPalette.text.muted')}
-					/> Last commit
+					/>
+					<!-- The header follows the disclosure: collapsed the panel really
+					     does hold just the tip, expanded it holds the branch's recent
+					     history. The word swap runs inside the height animation, so it
+					     reads as part of the same motion rather than as a jump.
+					     Both labels stay mounted and stacked in one grid cell: the box
+					     is therefore as wide as the longer word in both states, so the
+					     More button never shifts under the cursor mid-click. -->
+					<span
+						class={labelStack}
+						data-expanded={recentExpanded}
+						data-label={recentExpanded ? 'Recent commits' : 'Last commit'}
+						data-testid="commit-panel-label"
+					>
+						<!-- Odometer, not a crossfade: each word has a fixed exit
+						     direction, so expanding rolls the text upward and collapsing
+						     rolls it back down. The pair reads as one strip moving rather
+						     than as two words dissolving into each other. The hidden layer
+						     is aria-hidden so the label is announced once. -->
+						<span class={labelUp} data-visible={!recentExpanded} aria-hidden={recentExpanded}>
+							Last commit
+						</span>
+						<span class={labelDown} data-visible={recentExpanded} aria-hidden={!recentExpanded}>
+							Recent commits
+						</span>
+					</span>
+
+					{#if recentCommits}
+						<!-- Pushed to the panel's trailing edge so the label reads as a
+						     label and the control as a control. -->
+						<span class={css({ marginLeft: 'auto', textTransform: 'none' })}>
+							<Button
+								emphasis="ghost"
+								size="xs"
+								{feedback}
+								onclick={toggleRecentCommits}
+								aria-expanded={recentExpanded}
+								aria-controls={recentRegionId}
+								title={recentExpanded
+									? 'Hide earlier commits'
+									: 'Show earlier commits on this branch'}
+								data-testid="toggle-recent-commits"
+							>
+								{recentExpanded ? 'Less' : 'More'}
+								{#snippet trailing()}
+									<span
+										class={css({
+											display: 'inline-flex',
+											pindobaTransition: 'fast',
+											transform: recentExpanded ? 'rotate(180deg)' : 'rotate(0deg)'
+										})}
+									>
+										<Stamp emphasis="ghost" border="none" background="transparent">
+											<Icon icon="lucide:chevron-down" width="14px" height="14px" />
+										</Stamp>
+									</span>
+								{/snippet}
+							</Button>
+						</span>
+					{/if}
 				</div>
 
-				<!--
-					Commit list. Currently the backend only exposes the branch's last
-					commit, so this renders a single CommitCard. It is a column so that,
-					once the backend returns more commits, this becomes a `{#each}` over
-					them plus a "show more" control without restructuring the layout.
-				-->
 				<div
 					class={css({
 						display: 'flex',
@@ -454,6 +591,44 @@
 				>
 					{@render lastCommitCard()}
 				</div>
+
+				{#if recentCommits}
+					<!-- Height animation via `grid-template-rows: 0fr → 1fr`: it
+					     interpolates without knowing the content's height, so the
+					     region can hold a list that arrives asynchronously. The inner
+					     element must clip (`overflow: hidden; min-height: 0`) or the
+					     content spills out of the collapsed track. Properties are
+					     enumerated rather than `all` — a blanket transition here would
+					     also animate the colours the theme toggle changes. -->
+					<div
+						id={recentRegionId}
+						class={css({
+							display: 'grid',
+							gridTemplateRows: '0fr',
+							opacity: 0,
+							transition:
+								'grid-template-rows 260ms cubic-bezier(0.2, 0, 0, 1), opacity 180ms cubic-bezier(0.2, 0, 0, 1)',
+							'&[data-expanded="true"]': {
+								gridTemplateRows: '1fr',
+								opacity: 1
+							},
+							_motionReduce: { transition: 'none' }
+						})}
+						data-expanded={recentExpanded}
+						data-testid="recent-commits-region"
+					>
+						<div class={css({ overflow: 'hidden', minHeight: '0' })}>
+							<!-- Not mounted until first expanded: a consumer that runs a
+							     query in here therefore fetches on first open, not on page
+							     load. -->
+							{#if recentMounted}
+								<div class={css({ paddingTop: 'xs' })}>
+									{@render recentCommits()}
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/if}
 			</Panel>
 		{/if}
 

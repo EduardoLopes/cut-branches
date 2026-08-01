@@ -22,11 +22,18 @@
 
 	interface Props {
 		commit: Commit;
-		/** Dense layout: a single title line with inline author · date and a tight
-		 *  badge row, at reduced font-size and spacing. For long lists (e.g. the
-		 *  commit-history graph) where the full header/body/footer card is too
-		 *  tall. The body disclosure is omitted in this mode to keep rows uniform. */
-		compact?: boolean;
+		/** How much of the commit to show.
+		 *
+		 *  - `default` — the full card: header banner, markdown summary, author
+		 *    and date with icons, a disclosable body, and a footer badge row.
+		 *  - `compact` — the same card scaled down: one ellipsized title line
+		 *    with inline author · date and a tight badge row. For long lists
+		 *    (e.g. the commit-history graph) where the full card is too tall.
+		 *  - `mini` — no card chrome at all: a single line of
+		 *    summary · author · date. For places that embed a commit inside
+		 *    another card (e.g. a branch card's last commit), where the header
+		 *    and footer are pure weight. */
+		density?: 'default' | 'compact' | 'mini';
 		/** Extra badges appended after the SHA/upstream badges (e.g. tag or remote
 		 *  ref decorations the generic card doesn't model). */
 		footerBadges?: Snippet;
@@ -66,7 +73,7 @@
 
 	let {
 		commit,
-		compact = false,
+		density = 'default',
 		footerBadges,
 		feedback = 'neutral',
 		upstream,
@@ -81,14 +88,20 @@
 		radius = 'sm'
 	}: Props = $props();
 
+	// `mini` drops the card entirely; `compact` keeps it but scaled down. The
+	// two share the single-line, ellipsized treatment of the summary, so most
+	// of the layout below branches on `dense` rather than on the exact density.
+	const isMini = $derived(density === 'mini');
+	const dense = $derived(density !== 'default');
+
 	// Compact density: a tighter Card size, a lighter heading style, smaller
 	// meta/badge type, and a single-line ellipsized summary. Same content and
 	// structure as the default card — only scaled down. `xs` is a native, tight
 	// padding preset (no passThrough override needed).
-	const cardSize = $derived<PrimitiveCardProps['size']>(compact ? 'xs' : size);
-	const headingStyle = $derived(compact ? 'body.sm' : 'heading.3xs');
-	const metaFont = $derived(compact ? 'xs' : 'sm');
-	const badgeSize = $derived(compact ? 'xs' : 'sm');
+	const cardSize = $derived<PrimitiveCardProps['size']>(dense ? 'xs' : size);
+	const headingStyle = $derived(dense ? 'body.sm' : 'heading.3xs');
+	const metaFont = $derived(dense ? 'xs' : 'sm');
+	const badgeSize = $derived(dense ? 'xs' : 'sm');
 
 	// Anchor for the hover-preview popover: the branch icon link. Anchoring to
 	// the icon (not the whole card) keeps the preview next to what the user is
@@ -98,11 +111,27 @@
 
 	// The flanking icon links (history, diff) follow the card's density so
 	// compact rows get compact controls.
-	const linkStampSize = $derived(compact ? 'xs' : 'sm');
-	const linkIconSize = $derived(compact ? '14px' : '18px');
+	const linkStampSize = $derived(dense ? 'xs' : 'sm');
+	const linkIconSize = $derived(dense ? '14px' : '18px');
 
-	// Whether this commit carries a description body worth disclosing.
-	const hasBody = $derived(commit.getMessageBody().length > 0);
+	// How long the pointer must rest on the branch icon before the graph
+	// preview opens. The mini row is the one place the icon is a standing
+	// control rather than card decoration, so it answers faster — 350 ms there
+	// reads as "nothing happened" and the preview goes unnoticed.
+	const PREVIEW_OPEN_DELAY = $derived(isMini ? 150 : 350);
+
+	// A native `title` rather than a Tooltip component: the same element is the
+	// popover's hover trigger, and two hover-driven overlays on one target
+	// fight each other. When a preview is attached, say so — otherwise the
+	// icon looks like a plain link and nobody hovers long enough to find it.
+	const historyLinkLabel = $derived(
+		hoverPreview ? 'Commit graph — hover to preview, click to open' : 'View in commit history'
+	);
+
+	// Whether this commit carries a description body worth disclosing. The mini
+	// row has nowhere to put it — its body belongs to whatever disclosure the
+	// embedding card provides.
+	const hasBody = $derived(!isMini && commit.getMessageBody().length > 0);
 	// Per-card disclosure state for the body. Collapsed by default so lists stay
 	// compact; the toggle in the header meta row reveals it.
 	let bodyExpanded = $state(false);
@@ -126,8 +155,8 @@
 			pindobaTransition: 'fast',
 			_hover: { color: 'accent.text' }
 		})}
-		aria-label="View in commit history"
-		title="View in commit history"
+		aria-label={historyLinkLabel}
+		title={historyLinkLabel}
 		data-testid="commit-history-link"
 	>
 		<Stamp emphasis="ghost" border="muted" size={linkStampSize} background="transparent">
@@ -194,16 +223,16 @@
 {#snippet messageHeading()}
 	<span
 		class={css({
-			display: compact ? 'flex' : 'inline-flex',
+			display: dense ? 'flex' : 'inline-flex',
 			alignItems: 'center',
 			gap: '2xs',
 			minWidth: '0',
-			width: compact ? '100%' : undefined,
+			width: dense ? '100%' : undefined,
 			pindobaTransition: 'fast',
-			wordBreak: compact ? 'normal' : 'break-word'
+			wordBreak: dense ? 'normal' : 'break-word'
 		})}
 	>
-		{#if compact}
+		{#if dense}
 			<!-- Single-line, ellipsized subject: keeps every row the same height.
 			     Plain text (not Markdown) so the truncation is a clean one-liner
 			     rather than a wrapping <p> block. It flexes so it — not the meta —
@@ -260,13 +289,13 @@
 			pindobaTransition: 'fast',
 			// In compact rows the meta must not wrap or steal width from the
 			// summary — it stays one line and the summary truncates instead.
-			whiteSpace: compact ? 'nowrap' : undefined,
-			flexShrink: compact ? 0 : undefined
+			whiteSpace: dense ? 'nowrap' : undefined,
+			flexShrink: dense ? 0 : undefined
 		})}
 		title={cleanEmailString(commit.getEmail())}
 		data-testid="author-name"
 	>
-		{#if !compact}
+		{#if !dense}
 			<Stamp size="xs" border="muted">
 				<Icon
 					icon="lucide:user-round"
@@ -290,18 +319,18 @@
 			gap: '2xs',
 			pindobaTransition: 'fast',
 			color: 'neutral.text.muted',
-			whiteSpace: compact ? 'nowrap' : undefined,
-			flexShrink: compact ? 0 : undefined
+			whiteSpace: dense ? 'nowrap' : undefined,
+			flexShrink: dense ? 0 : undefined
 		})}
 		title={safeFormatDate(commit.getDate())}
 		data-testid="commit-date"
 	>
-		{#if !compact}
+		{#if !dense}
 			<Stamp size="xs" border="muted">
 				<Icon icon="lucide:clock" width="16px" height="16px" />
 			</Stamp>
 		{/if}
-		{#if compact}
+		{#if dense}
 			{safeFormatRelativeDateShort(commit.getDate())}
 		{:else}
 			{safeFormatRelativeDate(commit.getDate(), { unit: 'day' })}
@@ -316,10 +345,10 @@
 			display: 'flex',
 			flexDirection: 'row',
 			alignItems: 'center',
-			gap: compact ? '2xs' : 'xs',
+			gap: dense ? '2xs' : 'xs',
 			color: 'neutral.text.muted',
-			whiteSpace: compact ? 'nowrap' : undefined,
-			flexShrink: compact ? 0 : undefined
+			whiteSpace: dense ? 'nowrap' : undefined,
+			flexShrink: dense ? 0 : undefined
 		})}
 	>
 		{@render author()}
@@ -362,57 +391,81 @@
 	</span>
 {/snippet}
 
-<Card
-	class={css({ width: '100%', minWidth: '0' })}
-	size={cardSize}
-	{feedback}
-	{background}
-	{border}
-	{shadow}
-	{radius}
-	header={{
-		leading: historyHref ? branchLink : undefined,
-		heading: { content: messageHeading, trailing: meta },
-		headingTextStyle: headingStyle,
-		layout: {
-			leading: {
-				align: 'start'
+{#if isMini}
+	<!-- No Card: the header banner and footer badge row are exactly the weight
+	     this density exists to remove. One line, one height, nothing else. The
+	     history link stays — it is the popover's anchor and the only control
+	     left, so it reads as the row's affordance rather than as decoration. -->
+	<div
+		class={css({
+			display: 'flex',
+			flexDirection: 'row',
+			alignItems: 'center',
+			gap: '2xs',
+			width: '100%',
+			minWidth: '0'
+		})}
+		data-testid="commit-mini-row"
+	>
+		{#if historyHref}
+			{@render branchLink()}
+		{/if}
+		{@render messageHeading()}
+		{@render meta()}
+	</div>
+{:else}
+	<Card
+		class={css({ width: '100%', minWidth: '0' })}
+		size={cardSize}
+		{feedback}
+		{background}
+		{border}
+		{shadow}
+		{radius}
+		header={{
+			leading: historyHref ? branchLink : undefined,
+			heading: { content: messageHeading, trailing: meta },
+			headingTextStyle: headingStyle,
+			layout: {
+				leading: {
+					align: 'start'
+				},
+				// In compact mode the summary is a single ellipsized line, so pin the
+				// author · date meta to the trailing edge.
+				...(dense ? { heading: { trailing: 'apart' } } : {})
 			},
-			// In compact mode the summary is a single ellipsized line, so pin the
-			// author · date meta to the trailing edge.
-			...(compact ? { heading: { trailing: 'apart' } } : {})
-		},
-		// Let the summary shrink so its ellipsis engages. The Banner nests the
-		// heading through several flank/group wrappers; EVERY one needs
-		// `min-width: 0` (a flex item won't shrink below content size otherwise),
-		// the content must `flex: 1`, and the trailing meta must not shrink.
-		passThrough: compact
-			? {
-					root: { style: css.raw({ width: '100%', minWidth: '0' }) },
-					flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
-					flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
-					headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
-					headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
-					heading: { style: css.raw({ flex: '1', minWidth: '0', overflow: 'hidden' }) },
-					headingTrailing: { style: css.raw({ flexShrink: '0' }) }
-				}
-			: undefined,
-		background: 'surface.soft'
-		// Top-align the branch icon to the message block so it hugs the subject
-		// line rather than floating to the vertical center of a multi-line body.
-	}}
-	children={hasBody && bodyExpanded ? messageBody : undefined}
-	footer={{
-		children: footerMeta,
-		// The diff button lives in the footer's trailing slot so it hugs the
-		// right edge — same position as on the branch card.
-		...(diffHref ? { trailing: diffLink as PrimitiveCardFooterProps['trailing'] } : {}),
-		background: 'surface.step.2',
-		passThrough: {
-			trailing: { style: css.raw({ flexShrink: '0' }) }
-		}
-	}}
-/>
+			// Let the summary shrink so its ellipsis engages. The Banner nests the
+			// heading through several flank/group wrappers; EVERY one needs
+			// `min-width: 0` (a flex item won't shrink below content size otherwise),
+			// the content must `flex: 1`, and the trailing meta must not shrink.
+			passThrough: dense
+				? {
+						root: { style: css.raw({ width: '100%', minWidth: '0' }) },
+						flankRow: { style: css.raw({ width: '100%', minWidth: '0' }) },
+						flankGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+						headingGroup: { style: css.raw({ width: '100%', minWidth: '0' }) },
+						headingContainer: { style: css.raw({ width: '100%', minWidth: '0' }) },
+						heading: { style: css.raw({ flex: '1', minWidth: '0', overflow: 'hidden' }) },
+						headingTrailing: { style: css.raw({ flexShrink: '0' }) }
+					}
+				: undefined,
+			background: 'surface.soft'
+			// Top-align the branch icon to the message block so it hugs the subject
+			// line rather than floating to the vertical center of a multi-line body.
+		}}
+		children={hasBody && bodyExpanded ? messageBody : undefined}
+		footer={{
+			children: footerMeta,
+			// The diff button lives in the footer's trailing slot so it hugs the
+			// right edge — same position as on the branch card.
+			...(diffHref ? { trailing: diffLink as PrimitiveCardFooterProps['trailing'] } : {}),
+			background: 'surface.step.2',
+			passThrough: {
+				trailing: { style: css.raw({ flexShrink: '0' }) }
+			}
+		}}
+	/>
+{/if}
 
 {#if hoverPreview && historyHref}
 	<!-- Preview floats in a non-modal popover anchored to the branch icon;
@@ -424,7 +477,7 @@
 		triggerElement={previewTriggerEl}
 		triggerStrategy="hover"
 		placement="left-start"
-		openDelay={350}
+		openDelay={PREVIEW_OPEN_DELAY}
 		isModal={false}
 		lockScroll={false}
 		autoFocus={false}

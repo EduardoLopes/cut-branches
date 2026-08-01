@@ -335,4 +335,102 @@ describe('CommitCard Component', () => {
 		const authorElement = getByTestId('author-name');
 		await expect.element(authorElement).toHaveAttribute('title', 'test+tag@example.co.uk');
 	});
+
+	describe('density', () => {
+		const commitWithBody = Commit.fromData({
+			...mockCommitData,
+			message: 'feat: add new feature\n\nDetailed description line'
+		});
+
+		test('compact keeps the card chrome — footer badges and the body disclosure', () => {
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: commitWithBody,
+				density: 'compact'
+			});
+
+			expect(getByTestId('commit-sha')).toBeInTheDocument();
+			expect(getByTestId('toggle-commit-description')).toBeInTheDocument();
+			expect(getByTestId('commit-mini-row')).not.toBeInTheDocument();
+		});
+
+		test('mini drops the card chrome, keeping only summary, author and date', () => {
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: commitWithBody,
+				density: 'mini'
+			});
+
+			expect(getByTestId('commit-mini-row')).toBeInTheDocument();
+			expect(getByTestId('last-commit-message').element().textContent).toContain(
+				'feat: add new feature'
+			);
+			expect(getByTestId('author-name').element().textContent).toContain('John Doe');
+			expect(getByTestId('commit-date').element().textContent).toBeTruthy();
+
+			// Everything the density exists to remove.
+			expect(getByTestId('commit-sha')).not.toBeInTheDocument();
+			expect(getByTestId('toggle-commit-description')).not.toBeInTheDocument();
+			expect(getByTestId('commit-description')).not.toBeInTheDocument();
+		});
+
+		test('mini renders no upstream badge even when asked for one', () => {
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: mockCommit,
+				density: 'mini',
+				upstream: 'origin/main',
+				showUpstream: true
+			});
+
+			expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
+		});
+
+		test('mini keeps the history link — it is the graph preview trigger', () => {
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: mockCommit,
+				density: 'mini',
+				historyHref: '/repos/1/history?commit=abc123def456'
+			});
+
+			const link = getByTestId('commit-history-link');
+			expect(link).toBeInTheDocument();
+			expect(link.element().getAttribute('href')).toBe('/repos/1/history?commit=abc123def456');
+		});
+
+		test('mini omits the history link when no href is given', () => {
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: mockCommit,
+				density: 'mini'
+			});
+
+			expect(getByTestId('commit-history-link')).not.toBeInTheDocument();
+		});
+
+		test('the history link announces the graph preview when one is attached', async () => {
+			const hoverPreview = createRawSnippet(() => ({
+				render: () => '<div data-testid="hover-preview">preview</div>'
+			}));
+
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: mockCommit,
+				density: 'mini',
+				historyHref: '/repos/1/history?commit=abc123def456',
+				hoverPreview
+			});
+
+			await expect
+				.element(getByTestId('commit-history-link'))
+				.toHaveAttribute('aria-label', 'Commit graph — hover to preview, click to open');
+		});
+
+		test('the history link stays a plain link when no preview is attached', async () => {
+			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+				commit: mockCommit,
+				density: 'mini',
+				historyHref: '/repos/1/history?commit=abc123def456'
+			});
+
+			await expect
+				.element(getByTestId('commit-history-link'))
+				.toHaveAttribute('aria-label', 'View in commit history');
+		});
+	});
 });

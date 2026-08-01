@@ -13,12 +13,12 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
-	import { Commit } from '$domains/branch-management/core/models/commit';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
 	import type {
 		GraphRow,
 		RunBelow
 	} from '$domains/branch-management/features/commit-history/models/commit-graph';
+	import { toCommit } from '$domains/branch-management/features/commit-history/models/to-commit';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import CommitCard from '$ui/core/commit-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -58,19 +58,9 @@
 	}: Props = $props();
 
 	// The history graph carries a plain `HistoryCommit` (raw ISO date, no
-	// dedicated summary field). Lift it into the `Commit` domain model the shared
-	// commit card expects, deriving the subject line from the message.
-	const commit = $derived(
-		Commit.fromData({
-			sha: row.commit.sha,
-			shortSha: row.commit.shortSha,
-			date: row.commit.date,
-			message: row.commit.message,
-			summary: row.commit.message.split('\n', 1)[0],
-			author: row.commit.author,
-			email: row.commit.email
-		})
-	);
+	// dedicated summary field); lift it into the `Commit` domain model the
+	// shared commit card expects.
+	const commit = $derived(toCommit(row.commit));
 	// Per-commit deep-link into the diff review view (commit vs its parent),
 	// gated by its own flag. The owning repo id comes from the route — this
 	// component only renders inside `/repos/[id]/history`.
@@ -204,7 +194,7 @@
 		{commit}
 		{upstream}
 		{diffHref}
-		compact
+		density="compact"
 		footerBadges={extraRefs.length ? refBadges : undefined}
 	/>
 </div>

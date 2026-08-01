@@ -10,6 +10,7 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import debounce from 'just-debounce-it';
 	import { getSearchBranchesStore } from '../core/composables/search-branches.svelte';
+	import BranchRecentCommits from '../features/commit-history/components/branch-recent-commits.svelte';
 	import CommitGraphPreview from '../features/commit-history/components/commit-graph-preview.svelte';
 	import {
 		fetchCommitHistoryWindow,
@@ -298,6 +299,15 @@
 							/>
 						{/if}
 					{/snippet}
+					{#snippet recentCommits()}
+						{#if repositoryID && repositoryPath}
+							<BranchRecentCommits
+								repoId={repositoryID}
+								path={repositoryPath}
+								branch={branch.getName()}
+							/>
+						{/if}
+					{/snippet}
 					<div
 						role="presentation"
 						onmouseenter={historyEnabled && !isRestoreView && repositoryPath
@@ -327,6 +337,9 @@
 								: undefined}
 							commitHoverPreview={historyEnabled && !isRestoreView && repositoryID && repositoryPath
 								? commitPreview
+								: undefined}
+							recentCommits={historyEnabled && !isRestoreView && repositoryID && repositoryPath
+								? recentCommits
 								: undefined}
 							children={hasAlerts ? branchAlertsContent : undefined}
 						/>

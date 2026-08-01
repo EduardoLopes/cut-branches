@@ -60,6 +60,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
+		'listBranchCommits',
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
@@ -70,6 +71,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
+		'listBranchCommits',
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
@@ -80,6 +82,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
+		'listBranchCommits',
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
@@ -90,6 +93,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getBranchList',
 		'listCommitHistory',
 		'getCommitHistoryWindow',
+		'listBranchCommits',
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
@@ -185,6 +189,7 @@ export function matchesRepositoryChange(
 	if (
 		resource === 'commit-history' ||
 		resource === 'commit-history-window' ||
+		resource === 'branch-commits' ||
 		resource === 'branch-comparison'
 	) {
 		return hasRepoId(input) && input.repoId === repositoryId;
