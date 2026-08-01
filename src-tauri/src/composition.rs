@@ -25,6 +25,28 @@ impl BranchGateway for BranchManagementGateway {
         crate::domains::branch_management::infrastructure::git::branch::get_current_branch(path)
     }
 
+    fn list_db_branches(
+        &self,
+        repo_id: &str,
+        conn: &mut DbConnection,
+    ) -> Result<Vec<Branch>, AppError> {
+        let records =
+            crate::domains::branch_management::infrastructure::repositories::get_branches_for_repository(
+                conn,
+                repo_id,
+                &crate::domains::branch_management::filters::BranchFilters::default(),
+            )
+            .map_err(|e| {
+                AppError::new(
+                    "Failed to get branches from database".to_string(),
+                    "db_query_failed",
+                    Some(e.to_string()),
+                )
+            })?;
+
+        Ok(records.into_iter().map(Branch::from).collect())
+    }
+
     fn sync_branches(
         &self,
         branches: &[Branch],

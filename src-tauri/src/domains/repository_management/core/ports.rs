@@ -20,6 +20,14 @@ pub trait BranchGateway: Send + Sync {
     /// Name of the currently checked-out branch.
     fn current_branch(&self, path: &Path) -> Result<String, AppError>;
 
+    /// Active branches for `repo_id` as persisted in the database — used to
+    /// serve reads without touching git when the repo state is unchanged.
+    fn list_db_branches(
+        &self,
+        repo_id: &str,
+        conn: &mut DbConnection,
+    ) -> Result<Vec<Branch>, AppError>;
+
     /// Reconcile the given git branches into the database for `repo_id`.
     fn sync_branches(
         &self,

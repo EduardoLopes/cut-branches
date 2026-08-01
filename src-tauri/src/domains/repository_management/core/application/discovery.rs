@@ -55,8 +55,10 @@ pub async fn get_repository(
         ));
     }
 
-    // Repository exists in DB - sync if needed
-    sync_repository_if_needed(raw_root_path, repo_id, conn, branch).await?;
+    // Repository exists in DB - sync if needed. A sync already walked git for
+    // the branch list, so reuse it; on the unchanged path serve the branches
+    // straight from the database and skip the git walk entirely.
+    let synced_branches = sync_repository_if_needed(raw_root_path, repo_id, conn, branch).await?;
 
     // Get fresh data from DB after sync
     let updated_repo = operations::get_repository(conn, repo_id).map_err(|e| {
@@ -67,8 +69,10 @@ pub async fn get_repository(
         )
     })?;
 
-    // Get branches through the branch gateway (use fast version for performance)
-    let mut branches = branch.list_branches_fast(raw_root_path)?;
+    let mut branches = match synced_branches {
+        Some(branches) => branches,
+        None => branch.list_db_branches(repo_id, conn)?,
+    };
     branches.sort_by(|a, b| b.current.cmp(&a.current));
 
     // Detect whether this working directory is a linked worktree (vs the main
@@ -91,12 +95,14 @@ pub async fn get_repository(
 
 /// Syncs repository data if it has changed.
 /// Uses a fast hash-based detection to avoid expensive git operations when possible.
+/// Returns the freshly listed branches when a sync ran, `None` when the
+/// repository state was unchanged (callers can then read from the DB).
 async fn sync_repository_if_needed(
     raw_root_path: &Path,
     repo_name: &str,
     conn: &mut DbConnection,
     branch: &dyn BranchGateway,
-) -> Result<(), AppError> {
+) -> Result<Option<Vec<crate::shared::kernel::branch::Branch>>, AppError> {
     // Compute current repository state fingerprint (ultra-fast: ~1-2ms)
     let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
@@ -121,9 +127,10 @@ async fn sync_repository_if_needed(
             current_timestamp
         );
 
-        resync_repository(raw_root_path, repo_name, conn, branch)?;
+        let branches = resync_repository(raw_root_path, repo_name, conn, branch)?;
 
         log::info!("Sync completed");
+        Ok(Some(branches))
     } else {
         log::debug!(
             "Repository state unchanged (fingerprint: {}), skipping sync",
@@ -136,9 +143,8 @@ async fn sync_repository_if_needed(
                 Some(e.to_string()),
             )
         })?;
+        Ok(None)
     }
-
-    Ok(())
 }
 
 /// Force a re-sync of a repository's branches from disk into the database.
@@ -163,7 +169,7 @@ pub(crate) fn resync_repository(
     repo_id: &str,
     conn: &mut DbConnection,
     branch: &dyn BranchGateway,
-) -> Result<(), AppError> {
+) -> Result<Vec<crate::shared::kernel::branch::Branch>, AppError> {
     let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
     // Get full branch list (use fast version for better performance)
@@ -203,5 +209,5 @@ pub(crate) fn resync_repository(
             )
         })?;
 
-    Ok(())
+    Ok(branches)
 }
