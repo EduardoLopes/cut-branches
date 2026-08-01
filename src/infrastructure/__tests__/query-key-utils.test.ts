@@ -80,6 +80,14 @@ describe('matchesRepositoryChange', () => {
 			matchesRepositoryChange(['branch-comparison', 'listBranchComparison', { path: '/p' }], REPO)
 		).toBe(false);
 	});
+	test('always matches bulk branch metrics — they key on path, not repoId', () => {
+		expect(
+			matchesRepositoryChange(
+				['bulk-get-branch-metrics', 'bulkGetBranchMetrics', { path: '/p', branchNames: ['a'] }],
+				REPO
+			)
+		).toBe(true);
+	});
 	test('always matches diff queries — they key on path, not repoId', () => {
 		expect(
 			matchesRepositoryChange(['changed-files', 'listChangedFiles', { path: '/p' }], REPO)
@@ -103,7 +111,9 @@ describe('getResource', () => {
 			expect(resources).toContain('changed-files');
 			expect(resources).toContain('file-diff');
 			expect(resources).toContain('diff-structure');
+			expect(resources).toContain('bulk-get-branch-metrics');
 		}
 		expect(getResource('deleteRepository')).toContain('diff-structure');
+		expect(getResource('deleteRepository')).toContain('bulk-get-branch-metrics');
 	});
 });

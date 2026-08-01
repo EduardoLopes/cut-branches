@@ -64,7 +64,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
-		'getDiffStructure'
+		'getDiffStructure',
+		'bulkGetBranchMetrics'
 	],
 	createBranchRestoration: [
 		'getRepository',
@@ -75,7 +76,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
-		'getDiffStructure'
+		'getDiffStructure',
+		'bulkGetBranchMetrics'
 	],
 	batchCreateBranchRestorations: [
 		'getRepository',
@@ -86,7 +88,8 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
-		'getDiffStructure'
+		'getDiffStructure',
+		'bulkGetBranchMetrics'
 	],
 	batchDeleteBranches: [
 		'getRepository',
@@ -97,10 +100,14 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'listBranchComparison',
 		'listChangedFiles',
 		'getFileDiff',
-		'getDiffStructure'
+		'getDiffStructure',
+		'bulkGetBranchMetrics'
 	],
-	updateBranchSelectionBatch: ['getBranchList'],
-	setBranchSelectionAll: ['getBranchList'],
+	// Selection mutations are deliberately absent: their outcome is fully
+	// client-predictable, so their mutation creators patch the cached branch
+	// lists in place (see patch-branch-selection-caches.ts) instead of forcing
+	// every getBranchList observer to refetch the full payload — the resource-
+	// wide invalidation is what froze large repositories on every checkbox.
 	batchCreateLockedBranches: ['listLockedBranches', 'getBranchList'],
 	batchDeleteLockedBranches: ['listLockedBranches', 'getBranchList'],
 	// Worktree mutations use add/remove/lock/unlock prefixes the resource
@@ -114,6 +121,7 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 		'getBranchList',
 		'getBranchMergeStatus',
 		'getBranchDiffStats',
+		'bulkGetBranchMetrics',
 		'getCommitReachability',
 		'listBranchSelection',
 		'listDeletedBranchSelection',
@@ -199,6 +207,12 @@ export function matchesRepositoryChange(
 	// on-disk change anywhere stales every diff — refetches only run for
 	// queries a mounted diff view is actually observing.
 	if (resource === 'changed-files' || resource === 'file-diff' || resource === 'diff-structure') {
+		return true;
+	}
+	// Bulk branch metrics are keyed by path + branch names (no repoId), so —
+	// like the diff queries above — over-invalidate; only buckets a mounted
+	// list is observing actually refetch.
+	if (resource === 'bulk-get-branch-metrics') {
 		return true;
 	}
 	return false;
