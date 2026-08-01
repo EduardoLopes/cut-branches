@@ -10,13 +10,13 @@
 		resetFeatureFlags,
 		setFeatureFlag
 	} from '$lib/feature-flags.svelte';
+	import EmptyState from '$ui/core/empty-state.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
-	import { css } from '@pindoba/styled-system/css';
 </script>
 
 {#snippet flagIcon()}
-	<Stamp shape="square" size="lg" emphasis="secondary" feedback="neutral" shadow="sm">
-		<Icon icon="lucide:flag" width="22px" height="22px" />
+	<Stamp shape="square" size="sm" emphasis="secondary" feedback="neutral" shadow="sm">
+		<Icon icon="lucide:flag" width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 
@@ -34,45 +34,18 @@
 	testId="feature-flags-section"
 >
 	{#if FEATURE_FLAGS.length === 0}
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				alignItems: 'center',
-				justifyContent: 'center',
-				gap: 'sm',
-				flex: '1',
-				textAlign: 'center',
-				color: 'neutral.text.muted',
-				padding: 'lg'
-			})}
-			data-testid="feature-flags-empty"
-		>
-			<Stamp shape="circle" size="lg" emphasis="ghost" feedback="neutral">
-				<Icon icon="lucide:flag" width="20px" height="20px" />
-			</Stamp>
-			<span class={css({ fontSize: 'sm', fontWeight: 'medium', color: 'neutral.text' })}>
-				No feature flags yet
-			</span>
-			<!-- The registry is a compile-time source constant, so an empty list is only
-			     ever a developer/build state — never something a user's actions produce.
-			     The instruction to edit source is therefore dev-only. -->
-			{#if import.meta.env.DEV}
-				<span class={css({ fontSize: 'xs', maxWidth: '420px', lineHeight: '1.7' })}>
-					Add one to the registry in <code
-						class={css({
-							fontFamily: 'mono',
-							fontSize: '0.9em',
-							paddingBlock: '0.1rem',
-							paddingInline: '0.35rem',
-							borderRadius: '2xs',
-							background: 'neutral.surface.step.2',
-							color: 'neutral.text'
-						})}>src/lib/feature-flags.svelte.ts</code
-					> to gate an in-development feature and toggle it here.
-				</span>
-			{/if}
-		</div>
+		<!-- The registry is a compile-time source constant, so an empty list is only
+		     ever a developer/build state — never something a user's actions produce.
+		     The instruction to edit source is therefore dev-only. -->
+		<EmptyState
+			icon="lucide:flag"
+			size="sm"
+			heading="No feature flags yet"
+			message={import.meta.env.DEV
+				? 'Add one to the registry in `src/lib/feature-flags.svelte.ts` to gate an in-development feature and toggle it here.'
+				: undefined}
+			testId="feature-flags-empty"
+		/>
 	{:else}
 		{#each FEATURE_FLAGS as flag (flag.key)}
 			<FeatureFlagToggle

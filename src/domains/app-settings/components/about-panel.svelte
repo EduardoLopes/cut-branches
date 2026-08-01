@@ -23,8 +23,8 @@
 {#snippet logo()}
 	<!-- Identity exception to the settings-section Stamp convention: the About
 	     header brands the app, so it uses the primary circular stamp. -->
-	<Stamp shape="circle" size="lg" emphasis="primary" feedback="primary" shadow="sm">
-		<Icon icon="game-icons:tree-branch" width="22px" height="22px" />
+	<Stamp shape="circle" size="sm" emphasis="primary" feedback="primary" shadow="sm">
+		<Icon icon="game-icons:tree-branch" width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 

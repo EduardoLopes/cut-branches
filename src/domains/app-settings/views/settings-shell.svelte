@@ -8,6 +8,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { isFeatureEnabled, isFeatureFlagsSectionVisible } from '$lib/feature-flags.svelte';
+	import PageShell from '$ui/patterns/page-shell.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -98,7 +99,7 @@
 {/snippet}
 
 <div class={css({ overflow: 'hidden', position: 'relative', height: '100%' })}>
-	<main
+	<div
 		class={css({
 			display: 'flex',
 			height: '100%',
@@ -179,19 +180,12 @@
 			</div>
 		</nav>
 
-		<!-- Content: the active section route renders here -->
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				flex: '1',
-				minWidth: '0',
-				overflow: 'hidden',
-				padding: 'lg',
-				background: 'neutral.surface.soft'
-			})}
-		>
-			{@render children?.()}
+		<!-- Content: the active section route renders here, in the same PageShell
+		     every other page uses so settings isn't a bespoke surface. -->
+		<div class={css({ display: 'flex', flexDirection: 'column', flex: '1', minWidth: '0' })}>
+			<PageShell>
+				{@render children?.()}
+			</PageShell>
 		</div>
-	</main>
+	</div>
 </div>
