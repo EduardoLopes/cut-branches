@@ -167,7 +167,10 @@
 			overflowY: 'auto'
 		})}
 	>
-		{#each sortedBranches as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
+		<!-- Gated on `open`: the dialog's children render even while closed, so
+		     without this every selection change would build a status card per
+		     selected branch into a hidden dialog. -->
+		{#each open ? sortedBranches : [] as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
 			{@const branchName = branch.getName()}
 			<RestoreBranchStatusCard
 				{branch}

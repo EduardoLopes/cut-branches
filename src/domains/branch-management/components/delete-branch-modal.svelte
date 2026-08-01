@@ -6,11 +6,19 @@
 	import Loading from '@pindoba/svelte-loading';
 	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
+	import { createVirtualizer } from '@tanstack/svelte-virtual';
+	import { get } from 'svelte/store';
 	import { type Branch } from '../core/models/branch';
 	import { resolve } from '$app/paths';
+	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
+	import { useBranchMetrics } from '$domains/branch-management/core/composables/use-branch-metrics.svelte';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
+	import {
+		getBranchAlerts,
+		shouldShowBranchAlerts
+	} from '$domains/branch-management/utils/branch-utils';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
@@ -86,6 +94,71 @@
 
 	let branches = $derived([...(getBranchesQuery.data?.branches ?? [])].sort(sort));
 
+	// ---------------------------------------------------------------------------
+	// Virtualized confirmation list. Selecting all in a large repository can put
+	// hundreds of branches here; rendering a card per branch froze the modal on
+	// open. A plain sliding window is enough for a dialog (no retention games —
+	// this list is read once, top to bottom).
+	// ---------------------------------------------------------------------------
+	/** Rough compact-card height; each mounted row reports its real height. */
+	const ESTIMATED_ROW_H = 72;
+	const ROW_GAP = 8;
+
+	let scrollElement = $state<HTMLDivElement | null>(null);
+
+	const virtualizerOptions = {
+		get count() {
+			// Zero while closed: the list is gated on `open` (the dialog element
+			// exists in the DOM even when closed), so the virtualizer must not
+			// hold on to rows nobody renders.
+			return open ? branches.length : 0;
+		},
+		getScrollElement: () => scrollElement,
+		estimateSize: () => ESTIMATED_ROW_H,
+		overscan: 8,
+		gap: ROW_GAP,
+		// The scroll port only exists once the dialog opens; seed a plausible
+		// height so the first open paints a full window instead of one row.
+		initialRect: { width: 0, height: window.innerHeight / 2 },
+		getItemKey: (index: number) => {
+			const branch = branches[index];
+			return branch ? `${branch.getName()}-${branch.getLastCommit().getSha()}` : index;
+		}
+	};
+
+	const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>(virtualizerOptions);
+
+	// Re-apply live options before render whenever the list or the open state
+	// changes (same pattern as branch-list: the adapter re-imposes its seed
+	// options when the store gains its first subscriber).
+	$effect.pre(() => {
+		const count = open ? branches.length : 0;
+		const element = scrollElement;
+		get(virtualizer).setOptions({
+			...virtualizerOptions,
+			count,
+			getScrollElement: () => element
+		});
+	});
+
+	const virtualItems = $derived($virtualizer.getVirtualItems());
+	const totalSize = $derived($virtualizer.getTotalSize());
+
+	function measureRow(node: HTMLDivElement) {
+		get(virtualizer).measureElement(node);
+	}
+
+	// Merge status feeds the per-card alerts ("not fully merged" is the one
+	// warning that matters right before deletion). Batched over the visible
+	// window, same as the main list — no per-row commands.
+	const visibleRange = $derived($virtualizer.range);
+	const branchMetrics = useBranchMetrics({
+		path: () => repository?.path,
+		branchNames: () => branches.map((branch) => branch.getName()),
+		visibleRange: () => visibleRange,
+		enabled: () => open
+	});
+
 	function handleDelete() {
 		if (repository?.path && id) {
 			deleteMutation.mutate(
@@ -151,24 +224,70 @@
 		class={css({
 			display: 'flex',
 			flexDirection: 'column',
-			gap: 'sm',
-			maxHeight: '50vh',
-			overflowY: 'auto',
+			minHeight: '0',
 			py: '1px'
 		})}
 	>
-		{#each branches as branch (`${branch.getName()}-${branch.getLastCommit().getSha()}`)}
-			<!-- The diff link lets the user review exactly what a branch adds
-			     right before confirming its deletion. -->
-			<BranchCard
-				{branch}
-				radius="inner"
-				selected={true}
-				diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
-					? `${resolve(`/repos/${id}/diff`)}?branch=${encodeURIComponent(branch.getName())}`
-					: undefined}
-			/>
-		{/each}
+		<!-- Gated on `open`: the dialog element (and its children) exist in the
+		     DOM even while closed, so without this every selection change would
+		     eagerly render a card per selected branch into a hidden dialog —
+		     select-all on a large repository froze on exactly that. The list is
+		     also virtualized: only the visible window of cards is mounted, so
+		     opening the modal costs a screenful regardless of how many branches
+		     are selected. The scroll port owns the overflow (the Panel root
+		     doesn't scroll its slotted content reliably inside a <dialog>). -->
+		{#if open}
+			<div
+				bind:this={scrollElement}
+				data-testid="delete-branch-list"
+				class={css({
+					maxHeight: '50vh',
+					overflowY: 'auto',
+					overflowX: 'hidden'
+				})}
+			>
+				<div class={css({ position: 'relative', width: 'full' })} style:height={`${totalSize}px`}>
+					{#each virtualItems as virtualRow (virtualRow.key)}
+						{@const branch = branches[virtualRow.index]}
+						{#if branch}
+							{@const metrics = branchMetrics.getMetrics(branch.getName())}
+							{@const alerts = getBranchAlerts(branch, true, metrics?.isMerged)}
+							<div
+								data-index={virtualRow.index}
+								use:measureRow
+								class={css({
+									position: 'absolute',
+									top: '0',
+									left: '0',
+									width: 'full'
+								})}
+								style:transform={`translateY(${virtualRow.start}px)`}
+							>
+								<!-- Compact: the last-commit block is dropped — right before a
+								     deletion the alerts (unmerged work, protected names) matter
+								     more than the commit subject, and the card stays short. The
+								     diff link remains for reviewing what the branch adds. -->
+								<BranchCard
+									{branch}
+									compact
+									radius="inner"
+									selected={true}
+									diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
+										? `${resolve(`/repos/${id}/diff`)}?branch=${encodeURIComponent(branch.getName())}`
+										: undefined}
+									children={shouldShowBranchAlerts(alerts, branch)
+										? branchAlertsContent
+										: undefined}
+								/>
+								{#snippet branchAlertsContent()}
+									<BranchAlerts {alerts} {branch} />
+								{/snippet}
+							</div>
+						{/if}
+					{/each}
+				</div>
+			</div>
+		{/if}
 	</Panel>
 
 	<div
