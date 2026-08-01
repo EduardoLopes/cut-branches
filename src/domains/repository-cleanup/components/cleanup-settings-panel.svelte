@@ -26,8 +26,8 @@
 </script>
 
 {#snippet cleanupIcon()}
-	<Stamp shape="square" size="lg" emphasis="secondary" feedback="neutral" shadow="sm">
-		<Icon icon="lucide:brush-cleaning" width="22px" height="22px" />
+	<Stamp shape="square" size="sm" emphasis="secondary" feedback="neutral" shadow="sm">
+		<Icon icon="lucide:brush-cleaning" width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 
