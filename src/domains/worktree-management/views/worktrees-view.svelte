@@ -14,9 +14,11 @@
 	import { useWorktreesView } from '../core/composables/use-worktrees-view.svelte';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import ErrorMessage from '$ui/core/error-message.svelte';
+	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
+	import PageWell from '$ui/patterns/page-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { css } from '@pindoba/styled-system/css';
-	import { translucent, visuallyHidden } from '@pindoba/styled-system/patterns';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		/** Repository id (resolved to a working-directory path). */
@@ -73,76 +75,42 @@
 	}
 </script>
 
-<!-- Outer layout: soft surface with a flush scroll panel (no padding). -->
-<div
-	class={css({
-		display: 'flex',
-		flexDirection: 'column',
-		flexGrow: '1',
-		minHeight: '0',
-		background: 'neutral.surface.soft'
-	})}
-	data-testid="worktrees-view"
->
-	<div
-		class={css({
-			display: 'flex',
-			flexDirection: 'column',
-			flexGrow: '1',
-			minHeight: '0',
-			overflowY: 'auto',
-			overflowX: 'hidden'
-		})}
-	>
-		<!-- Sticky action bar, mirroring the branches page toolbar. -->
-		<div
-			class={css(
-				translucent.raw({
-					blur: 'md',
-					background: 'neutral.surface.soft/50 !important'
-				}),
-				css.raw({
-					display: 'flex',
-					justifyContent: 'space-between',
-					alignItems: 'center',
-					gap: 'md',
-					padding: 'md',
-					zIndex: '10',
-					flexShrink: '0',
-					position: 'sticky',
-					top: '0',
-					borderTop: '1px solid token(colors.neutral.border.muted)',
-					borderBottom: '1px solid token(colors.neutral.border.muted)'
-				})
-			)}
-			data-testid="worktrees-toolbar"
-		>
-			<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm', minWidth: '0' })}>
+<PageWell testId="worktrees-view">
+	{#snippet toolbar()}
+		<PageToolbar data-testid="worktrees-toolbar">
+			{#snippet left()}
+				<!-- Same shape as the branches toolbar: an `lg` checkbox (matching the
+				     per-row checkbox column) with the count as a small muted sibling,
+				     not as the control's own label. Keeps both pages' bars identical. -->
 				{#if selection.selectableCount > 0}
-					<Checkbox
-						id="worktrees-select-all"
-						size="lg"
-						checked={selection.allSelected}
-						indeterminate={selection.someSelected}
-						onclick={() => selection.setAll(!selection.allSelected)}
-						data-testid="worktrees-select-all"
-					>
-						<span class={css({ fontSize: 'md' })} data-testid="worktrees-selection-count">
-							<span class={css({ color: 'neutral.950.contrast' })}>{selection.selectedCount}</span>
+					<div class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}>
+						<Checkbox
+							id="worktrees-select-all"
+							size="lg"
+							aria-label="Select all worktrees"
+							checked={selection.allSelected}
+							indeterminate={selection.someSelected}
+							onclick={() => selection.setAll(!selection.allSelected)}
+							data-testid="worktrees-select-all"
+						/>
+						<span
+							class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}
+							data-testid="worktrees-selection-count"
+						>
+							<span class={css({ color: 'neutral.text.bold' })}>{selection.selectedCount}</span>
 							of
-							<span class={css({ color: 'neutral.950.contrast' })}>{selection.selectableCount}</span
-							>
+							<span class={css({ color: 'neutral.text.bold' })}>{selection.selectableCount}</span>
 							worktrees selected
 						</span>
-					</Checkbox>
+					</div>
 				{:else}
-					<span class={css({ fontSize: 'md', color: 'neutral.text.muted' })}>
+					<span class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}>
 						No worktrees to manage
 					</span>
 				{/if}
-			</div>
+			{/snippet}
 
-			<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs', flexShrink: '0' })}>
+			{#snippet right()}
 				<Group>
 					<Input
 						class={css({ width: '150px' })}
@@ -194,28 +162,28 @@
 						</Loading>
 					{/snippet}
 				</ValidationHint>
-			</div>
-		</div>
+			{/snippet}
+		</PageToolbar>
+	{/snippet}
 
-		{#if view.isError && view.error}
-			<ErrorMessage
-				message={view.error.message}
-				description={view.error.description ? view.error.description : undefined}
-			/>
-		{:else}
-			<WorktreeList
-				worktrees={filteredWorktrees}
-				isLoading={view.isLoading}
-				busy={actions.isLocking || actions.isUnlocking}
-				allowSelection
-				isSelected={(name) => selection.isSelected(name)}
-				onToggleSelect={(worktree) => selection.toggle(worktree.getName())}
-				onLock={(worktree) => actions.lock(worktree.getName())}
-				onUnlock={(worktree) => actions.unlock(worktree.getName())}
-			/>
-		{/if}
-	</div>
-</div>
+	{#if view.isError && view.error}
+		<ErrorMessage
+			message={view.error.message}
+			description={view.error.description ? view.error.description : undefined}
+		/>
+	{:else}
+		<WorktreeList
+			worktrees={filteredWorktrees}
+			isLoading={view.isLoading}
+			busy={actions.isLocking || actions.isUnlocking}
+			allowSelection
+			isSelected={(name) => selection.isSelected(name)}
+			onToggleSelect={(worktree) => selection.toggle(worktree.getName())}
+			onLock={(worktree) => actions.lock(worktree.getName())}
+			onUnlock={(worktree) => actions.unlock(worktree.getName())}
+		/>
+	{/if}
+</PageWell>
 
 <DeleteWorktreesModal
 	bind:open={deleteOpen}

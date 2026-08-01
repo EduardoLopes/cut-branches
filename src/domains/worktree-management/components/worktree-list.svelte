@@ -7,6 +7,7 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { type Worktree } from '../core/models/worktree';
 	import WorktreeRow from './worktree-row.svelte';
+	import EmptyState from '$ui/core/empty-state.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -34,12 +35,13 @@
 	}: Props = $props();
 </script>
 
+<!-- Surface and inset come from the enclosing PageWell. -->
 <div
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		flex: 1,
-		background: 'neutral.surface.deep'
+		minHeight: '0'
 	})}
 	data-testid="worktree-list"
 >
@@ -59,24 +61,12 @@
 			<span class={css({ fontSize: 'sm' })}>Loading worktrees…</span>
 		</div>
 	{:else if worktrees.length === 0}
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				alignItems: 'center',
-				justifyContent: 'center',
-				gap: 'sm',
-				paddingY: '2xl',
-				textAlign: 'center',
-				color: 'neutral.text.muted'
-			})}
-			data-testid="worktree-list-empty"
-		>
-			<Stamp shape="circle" size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:trees" width="20px" height="20px" />
-			</Stamp>
-			<span class={css({ fontSize: 'sm' })}>No worktrees found.</span>
-		</div>
+		<EmptyState
+			icon="lucide:trees"
+			size="sm"
+			message="No worktrees found."
+			testId="worktree-list-empty"
+		/>
 	{:else}
 		<div
 			role="list"
@@ -84,7 +74,6 @@
 				display: 'flex',
 				flexDirection: 'column',
 				gap: 'md',
-				padding: 'md',
 				width: 'full'
 			})}
 		>

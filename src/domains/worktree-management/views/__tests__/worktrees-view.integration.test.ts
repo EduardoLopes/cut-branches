@@ -55,7 +55,9 @@ describe('WorktreesView (integration)', () => {
 
 		expect(screen.container.querySelector('[data-testid="worktree-list-loading"]')).toBeNull();
 		// 9 linked worktrees are selectable (the main worktree is not).
-		await expect.element(screen.getByTestId('worktrees-select-all')).toHaveTextContent('0 of 9');
+		await expect
+			.element(screen.getByTestId('worktrees-selection-count'))
+			.toHaveTextContent('0 of 9');
 		expect(executeCommand).toHaveBeenCalledWith('listWorktrees', { path: '/repos/main' });
 	});
 });

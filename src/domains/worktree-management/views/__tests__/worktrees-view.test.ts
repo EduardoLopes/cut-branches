@@ -76,7 +76,9 @@ describe('WorktreesView', () => {
 		await tick();
 
 		expect(screen.container.querySelectorAll('[data-testid="worktree-row"]')).toHaveLength(2);
-		await expect.element(screen.getByTestId('worktrees-select-all')).toHaveTextContent('0 of 1');
+		await expect
+			.element(screen.getByTestId('worktrees-selection-count'))
+			.toHaveTextContent('0 of 1');
 	});
 
 	it('filters worktrees by the search term', async () => {
