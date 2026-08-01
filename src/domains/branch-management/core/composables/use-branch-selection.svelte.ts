@@ -24,9 +24,15 @@ interface UseBranchSelectionProps {
 export function useBranchSelection({ repository, branchContext }: UseBranchSelectionProps) {
 	const search = $derived(getSearchBranchesStore(`${repository()?.name}-${branchContext()}`));
 
+	// `includeCurrent: true` is the backend default, so this returns exactly what
+	// omitting it returned — but the query key embeds the input verbatim, and the
+	// views (and the sidebar prefetch) all spell it out. Matching them makes this
+	// the *same* cached query instead of a second identical IPC round-trip and a
+	// second full conversion of the branch list. The current branch is filtered
+	// out below by `filterSelectableBranches` either way.
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',
-		filters: { deletionStatus: branchContext() }
+		filters: { deletionStatus: branchContext(), includeCurrent: true }
 	}));
 	const selectedBranchesQuery = createGetBranchesQuery(() => ({
 		repoId: repository()?.id ?? '',

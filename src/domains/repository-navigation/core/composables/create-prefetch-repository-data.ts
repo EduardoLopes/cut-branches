@@ -22,12 +22,17 @@ export function createPrefetchRepositoryData() {
 	// Create a debounced function that prefetches both queries
 	// Using 200ms debounce to avoid excessive prefetches on quick mouse movements
 	const debouncedPrefetch = debounce((repoId: string) => {
-		// Prefetch branches with active filter (most common use case)
+		// Prefetch branches with the active filter (most common use case).
+		// These filters must match `useActiveBranchesView`/`BranchList` exactly:
+		// the query key embeds the input, so a missing `includeCurrent` produces
+		// a *different* key and the prefetch warms a cache entry the page never
+		// reads — the repository still opens on a cold fetch.
 		prefetchTauriQuery(queryClient, 'getBranchList', {
 			input: {
 				repoId,
 				filters: {
-					deletionStatus: 'active'
+					deletionStatus: 'active',
+					includeCurrent: true
 				}
 			},
 			staleTime: 5 * 60 * 1000 // 5 minutes - avoid re-prefetching fresh data

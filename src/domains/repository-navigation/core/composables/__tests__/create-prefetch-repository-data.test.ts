@@ -63,7 +63,7 @@ describe('createPrefetchRepositoryData', () => {
 		const branchQueryKey = [
 			'branch',
 			'getBranchList',
-			{ repoId: 'test-repo-id', filters: { deletionStatus: 'active' } }
+			{ repoId: 'test-repo-id', filters: { deletionStatus: 'active', includeCurrent: true } }
 		];
 		const repoQueryKey = ['repository', 'getRepository', { id: 'test-repo-id' }];
 
@@ -91,7 +91,8 @@ describe('createPrefetchRepositoryData', () => {
 			{
 				repoId: 'test-repo-id',
 				filters: {
-					deletionStatus: 'active'
+					deletionStatus: 'active',
+					includeCurrent: true
 				}
 			}
 		];
@@ -132,7 +133,7 @@ describe('createPrefetchRepositoryData', () => {
 		const repo3BranchKey = [
 			'branch',
 			'getBranchList',
-			{ repoId: 'repo-3', filters: { deletionStatus: 'active' } }
+			{ repoId: 'repo-3', filters: { deletionStatus: 'active', includeCurrent: true } }
 		];
 		const repo3RepoKey = ['repository', 'getRepository', { id: 'repo-3' }];
 
@@ -148,7 +149,7 @@ describe('createPrefetchRepositoryData', () => {
 		const repo1BranchKey = [
 			'branch',
 			'getBranchList',
-			{ repoId: 'repo-1', filters: { deletionStatus: 'active' } }
+			{ repoId: 'repo-1', filters: { deletionStatus: 'active', includeCurrent: true } }
 		];
 		expect(mockQueryClient.current!.getQueryData(repo1BranchKey)).toBeUndefined();
 	});
@@ -158,7 +159,7 @@ describe('createPrefetchRepositoryData', () => {
 		const branchQueryKey = [
 			'branch',
 			'getBranchList',
-			{ repoId: 'test-repo-id', filters: { deletionStatus: 'active' } }
+			{ repoId: 'test-repo-id', filters: { deletionStatus: 'active', includeCurrent: true } }
 		];
 		const repoQueryKey = ['repository', 'getRepository', { id: 'test-repo-id' }];
 
@@ -196,7 +197,7 @@ describe('createPrefetchRepositoryData', () => {
 		const repo1BranchKey = [
 			'branch',
 			'getBranchList',
-			{ repoId: 'repo-1', filters: { deletionStatus: 'active' } }
+			{ repoId: 'repo-1', filters: { deletionStatus: 'active', includeCurrent: true } }
 		];
 		const repo1RepoKey = ['repository', 'getRepository', { id: 'repo-1' }];
 
@@ -214,7 +215,7 @@ describe('createPrefetchRepositoryData', () => {
 		const repo2BranchKey = [
 			'branch',
 			'getBranchList',
-			{ repoId: 'repo-2', filters: { deletionStatus: 'active' } }
+			{ repoId: 'repo-2', filters: { deletionStatus: 'active', includeCurrent: true } }
 		];
 		const repo2RepoKey = ['repository', 'getRepository', { id: 'repo-2' }];
 
