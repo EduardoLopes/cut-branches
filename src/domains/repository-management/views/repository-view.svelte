@@ -2,40 +2,26 @@
 	import type { MenuNode } from '@pindoba/core-menu';
 	import type { Snippet } from 'svelte';
 	import RepositoryHeader from '../components/repository-header.svelte';
-	import { css } from '@pindoba/styled-system/css';
+	import type { PageBreadcrumbItem } from '$ui/patterns/page-header.svelte';
+	import PageShell from '$ui/patterns/page-shell.svelte';
 
 	interface Props {
 		children?: Snippet;
 		repositoryId: string;
 		/** Extra options-menu actions composed in by the route (§1.3). */
 		extraMenuItems?: MenuNode[];
-		/** Primary context switch rendered in the header, composed by the route (§1.3). */
-		contextSwitch?: Snippet;
+		/** Context navigation rendered in the header, composed by the route (§1.3). */
+		contextNav?: Snippet;
+		/** Ancestor trail for drill-down pages, composed by the route. */
+		breadcrumb?: PageBreadcrumbItem[];
 	}
 
-	const { children, repositoryId, extraMenuItems = [], contextSwitch }: Props = $props();
+	const { children, repositoryId, extraMenuItems = [], contextNav, breadcrumb }: Props = $props();
 </script>
 
-<div
-	class={css({
-		overflow: 'hidden',
-		position: 'relative',
-		height: '100%'
-	})}
->
-	<main
-		class={css({
-			display: 'flex',
-			flexDirection: 'column',
-			overflow: 'hidden',
-			position: 'relative',
-			height: '100%',
-			background: 'neutral.surface.step.1'
-		})}
-	>
-		<RepositoryHeader {repositoryId} {extraMenuItems} {contextSwitch} />
-		{#if children}
-			{@render children()}
-		{/if}
-	</main>
-</div>
+<PageShell testId="repository-view">
+	<RepositoryHeader {repositoryId} {extraMenuItems} {contextNav} {breadcrumb} />
+	{#if children}
+		{@render children()}
+	{/if}
+</PageShell>

@@ -1,13 +1,12 @@
 <script lang="ts">
+	// Thin composition root: the repository header and context tabs come from the
+	// `[id]` layout; this page supplies only the worktrees body.
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import RepositoryContextSwitch from '$components/repository-context-switch.svelte';
-	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import WorktreesView from '$domains/worktree-management/views/worktrees-view.svelte';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
-	import { css } from '@pindoba/styled-system/css';
 
 	const id = $derived(page.params.id ?? '');
 
@@ -26,19 +25,6 @@
 	});
 </script>
 
-{#snippet contextSwitch()}
-	<RepositoryContextSwitch {id} />
-{/snippet}
-
-<div
-	class={css({
-		width: 'full',
-		height: 'full'
-	})}
->
-	<Repository repositoryId={id} {contextSwitch}>
-		{#if enabled}
-			<WorktreesView {id} />
-		{/if}
-	</Repository>
-</div>
+{#if enabled}
+	<WorktreesView {id} />
+{/if}

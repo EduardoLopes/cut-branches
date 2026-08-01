@@ -1,6 +1,6 @@
 import { tick } from 'svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import RepositoryContextSwitch from '../repository-context-switch.svelte';
+import RepositoryContextTabs from '../repository-context-tabs.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 const h = vi.hoisted(() => ({
@@ -43,30 +43,30 @@ beforeEach(() => {
 	h.goto.mockReset();
 });
 
-describe('RepositoryContextSwitch', () => {
+describe('RepositoryContextTabs', () => {
 	it('renders both contexts with the worktree count when enabled', async () => {
-		const screen = renderWithTestWrapper(RepositoryContextSwitch, { id: 'r1' });
+		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		await expect.element(screen.getByTestId('repository-context-switch')).toBeInTheDocument();
 		await expect.element(screen.getByTestId('context-worktrees-count')).toHaveTextContent('3');
 	});
 
-	it('hides the switch when the feature flag is off', async () => {
+	it('hides the tabs when the feature flag is off', async () => {
 		h.enabled = false;
-		const screen = renderWithTestWrapper(RepositoryContextSwitch, { id: 'r1' });
+		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		expect(screen.container.querySelector('[data-testid="repository-context-switch"]')).toBeNull();
 	});
 
-	it('hides the switch when the repository is itself a linked worktree', async () => {
+	it('hides the tabs when the repository is itself a linked worktree', async () => {
 		h.repoData = { path: '/repos/wt', isWorktree: true };
-		const screen = renderWithTestWrapper(RepositoryContextSwitch, { id: 'r1' });
+		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		expect(screen.container.querySelector('[data-testid="repository-context-switch"]')).toBeNull();
 	});
 
 	it('navigates to the worktrees route when selecting Worktrees', async () => {
-		const screen = renderWithTestWrapper(RepositoryContextSwitch, { id: 'r1' });
+		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		await screen.getByTestId('context-worktrees').click();
 		expect(h.goto).toHaveBeenCalledWith('/repos/r1/worktrees');

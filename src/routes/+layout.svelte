@@ -3,6 +3,7 @@
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
 	import Toaster from '@pindoba/svelte-toast';
 	import { type Snippet } from 'svelte';
+	import AppShell from '$components/app-shell.svelte';
 	import Providers from '$components/providers.svelte';
 	import RedirectToApp from '$domains/onboarding/components/redirect-to-app.svelte';
 	import WelcomeModal from '$domains/onboarding/components/welcome-modal.svelte';
@@ -29,12 +30,11 @@
 			position: 'relative',
 			flexDirection: 'column',
 			overflow: 'hidden',
-			_light: {
-				background: 'neutral.200'
-			},
-			_dark: {
-				background: 'neutral.50'
-			}
+			// The backdrop the sidebar panel floats on. A semantic token, not a raw
+			// palette step: `neutral.50`/`200` don't invert, so in dark mode the
+			// strip around the panel came out light — invisible only while the
+			// titlebar was painted over it.
+			background: 'neutral.surface.deep'
 		})}
 	>
 		<!-- macOS only, and above the sidebar rather than inside it: collapsed,
@@ -44,7 +44,11 @@
 			<SidebarCollapseToggle size="xs" />
 		</WindowTitlebar>
 
-		{@render children?.()}
+		<!-- The sidebar + main grid wraps every route, so `/repos`, `/cleanup` and
+		     `/settings` no longer each need their own identical layout file. -->
+		<AppShell>
+			{@render children?.()}
+		</AppShell>
 
 		<RedirectToApp />
 
