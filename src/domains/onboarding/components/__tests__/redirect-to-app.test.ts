@@ -2,13 +2,34 @@ import { tick } from 'svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import RedirectToApp from '../redirect-to-app.svelte';
 import { goto } from '$app/navigation';
+import { DEFAULT_REPOSITORY_SORT, repositorySort } from '$lib/repository-sort.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mutable query + location state driven per test
-let mockData: Array<{ id: string }> | undefined = [];
+interface MockRepository {
+	id: string;
+	name: string;
+	branchesCount: number;
+}
+
+let mockData: MockRepository[] | undefined = [];
 let mockIsPending = false;
 let mockIsLoading = false;
 let mockPathname = '/';
+
+const repository = (id: string, name: string, branchesCount = 1): MockRepository => ({
+	id,
+	name,
+	branchesCount
+});
+
+// Raw order is deliberately not alphabetical: the backend returns insertion order,
+// so these fixtures prove the redirect follows the sidebar's sort instead.
+const unsortedRepositories = [
+	repository('zeta', 'zeta'),
+	repository('alpha', 'alpha'),
+	repository('mid', 'mid')
+];
 
 vi.mock('$app/navigation', () => ({
 	goto: vi.fn()
@@ -19,6 +40,17 @@ vi.mock('$app/state', () => ({
 		get url() {
 			return { pathname: mockPathname };
 		}
+	}
+}));
+
+let mockLastRepository: string | undefined;
+
+vi.mock('$lib/last-repository.svelte', () => ({
+	lastRepository: {
+		get current() {
+			return mockLastRepository;
+		},
+		set: vi.fn()
 	}
 }));
 
@@ -47,6 +79,9 @@ describe('RedirectToApp', () => {
 		mockIsPending = false;
 		mockIsLoading = false;
 		mockPathname = '/';
+		mockLastRepository = undefined;
+		localStorage.clear();
+		repositorySort.setMode(DEFAULT_REPOSITORY_SORT);
 		vi.clearAllMocks();
 	});
 
@@ -77,7 +112,7 @@ describe('RedirectToApp', () => {
 	});
 
 	it('redirects to the first repository from the repos index when repositories exist', async () => {
-		mockData = [{ id: 'abc' }];
+		mockData = [repository('abc', 'abc')];
 		mockPathname = '/repos';
 		renderWithTestWrapper(RedirectToApp);
 		await settle();
@@ -86,12 +121,61 @@ describe('RedirectToApp', () => {
 	});
 
 	it('redirects to the first repository from the root page when repositories exist', async () => {
-		mockData = [{ id: 'abc' }];
+		mockData = [repository('abc', 'abc')];
 		mockPathname = '/';
 		renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/abc'));
+	});
+
+	it('opens the sidebar order first repository, not the raw list order', async () => {
+		mockData = unsortedRepositories;
+		mockPathname = '/';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/alpha'));
+	});
+
+	it('honours the persisted sort mode when picking the first repository', async () => {
+		repositorySort.setMode('name-desc');
+		mockData = unsortedRepositories;
+		mockPathname = '/';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/zeta'));
+	});
+
+	it('reopens the last used repository at launch', async () => {
+		mockLastRepository = 'mid';
+		mockData = unsortedRepositories;
+		mockPathname = '/';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/mid'));
+	});
+
+	it('falls back to the first repository when the remembered one is gone', async () => {
+		mockLastRepository = 'removed';
+		mockData = unsortedRepositories;
+		mockPathname = '/';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/alpha'));
+	});
+
+	it('ignores the remembered repository on the repos index mid-session', async () => {
+		mockLastRepository = 'mid';
+		mockData = unsortedRepositories;
+		mockPathname = '/repos';
+		renderWithTestWrapper(RedirectToApp);
+		await settle();
+
+		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/alpha'));
 	});
 
 	it('does not redirect empty users on the settings root', async () => {
@@ -113,7 +197,7 @@ describe('RedirectToApp', () => {
 	});
 
 	it('does not redirect when repositories exist and the user is on a repository page', async () => {
-		mockData = [{ id: 'abc' }];
+		mockData = [repository('abc', 'abc')];
 		mockPathname = '/repos/abc';
 		renderWithTestWrapper(RedirectToApp);
 		await settle();

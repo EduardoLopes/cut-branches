@@ -11,6 +11,7 @@
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { lastRepository } from '$lib/last-repository.svelte';
 	import type { PageBreadcrumbItem } from '$ui/patterns/page-header.svelte';
 
 	interface Props {
@@ -20,6 +21,13 @@
 	const { children }: Props = $props();
 
 	const id = $derived(page.params.id ?? '');
+
+	// Every page under a repository passes through this layout, so this is the one
+	// place that knows "the user is looking at this repository" — recorded here so
+	// the next launch reopens it (see `$lib/last-repository`).
+	$effect(() => {
+		lastRepository.set(id);
+	});
 
 	// Composition root (§1.3, §4): the per-repository cleanup action lives in the
 	// repository-cleanup domain, but is composed into repository-management's

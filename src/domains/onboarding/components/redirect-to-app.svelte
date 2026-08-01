@@ -4,6 +4,8 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { lastRepository } from '$lib/last-repository.svelte';
+	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
@@ -14,8 +16,8 @@
 			return;
 		}
 
-		const first = repositoriesQuery.data?.[0];
-		const hasRepositories = (repositoriesQuery.data?.length ?? 0) > 0;
+		const repositories = repositoriesQuery.data ?? [];
+		const hasRepositories = repositories.length > 0;
 		const currentPath = page.url.pathname;
 		const isOnReposIndex = currentPath === resolve('/repos');
 		const isOnRootPage = currentPath === resolve('/');
@@ -24,13 +26,27 @@
 		const settingsRoot = resolve('/settings');
 		const isOnSettings = currentPath === settingsRoot || currentPath.startsWith(`${settingsRoot}/`);
 
+		// The sidebar orders the list with the same helper and preference, so the
+		// repository we open is the one sitting at the top of the user's list —
+		// never the raw insertion order the backend happens to return.
+		const sortedFirst = sortRepositories(repositories, repositorySort.mode)[0];
+		// The root page is only ever reached at launch — nothing in the app
+		// navigates back to `/` — so it is the signal to reopen where the user left
+		// off. A `/repos` visit mid-session (after removing a repository, say)
+		// deliberately keeps using the sidebar's first entry instead. A remembered
+		// repository that has since been removed simply isn't found, and falls back.
+		const remembered = isOnRootPage
+			? repositories.find((repository) => repository.id === lastRepository.current)
+			: undefined;
+		const target = remembered ?? sortedFirst;
+
 		// Land empty users in the app shell (the /repos index) if not already there
 		if (!hasRepositories && !isOnReposIndex && !isOnSettings) {
 			goto(resolve('/repos'));
 		}
-		// Redirect to first repository ONLY if on the /repos index or root page with repositories
-		else if (hasRepositories && (isOnReposIndex || isOnRootPage) && first) {
-			goto(resolve(`/repos/${first.id}`));
+		// Redirect to the resolved repository ONLY if on the /repos index or root page
+		else if (hasRepositories && (isOnReposIndex || isOnRootPage) && target) {
+			goto(resolve(`/repos/${target.id}`));
 		}
 		// Do not redirect if on any other page - preserve current location
 	});
