@@ -61,6 +61,10 @@
 			// the default `auto`, which would grow to fit content) so the sidebar and
 			// main column can scroll internally rather than stretching the page.
 			gridTemplateRows: 'minmax(0, 1fr)',
+			// The gutter between the two floating panels. Owning it here rather than
+			// as a margin on each keeps the space between them equal to the space
+			// around them instead of doubling it.
+			gap: 'xs',
 			flex: 1,
 			minHeight: 0
 		})}
@@ -78,7 +82,38 @@
 				/>
 			{/snippet}
 		</SidebarView>
-		{@render children?.()}
+
+		<!--
+			The main column as a floating panel, matching the sidebar. It lives here
+			rather than on `PageShell` so every route gets it from one place — including
+			`/settings`, whose own two-pane layout sits *inside* this panel instead of
+			needing its own copy of the treatment.
+
+			No `height: 100%`: as a grid item it stretches to the area minus its
+			margins, which is what makes the inset real (see the same note in
+			`sidebar-view.svelte`). The radius clips the page's own square corners, so
+			pages keep painting their background edge to edge.
+		-->
+		<div
+			class={css({
+				display: 'flex',
+				flexDirection: 'column',
+				minWidth: 0,
+				minHeight: 0,
+				overflow: 'hidden',
+				marginTop: 'none',
+				marginRight: 'xs',
+				marginBottom: 'xs',
+				borderRadius: 'xl',
+				borderWidth: '1px',
+				borderStyle: 'solid',
+				borderColor: 'neutral.border.muted',
+				shadow: 'sm'
+			})}
+			data-testid="app-content-panel"
+		>
+			{@render children?.()}
+		</div>
 	</div>
 </div>
 

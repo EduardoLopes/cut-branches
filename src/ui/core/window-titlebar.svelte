@@ -39,14 +39,12 @@
 			gap: '3xs',
 			flexShrink: 0,
 			// `titleBarStyle: "Overlay"` makes the native titlebar transparent and
-			// runs the webview underneath it, so this strip's own background IS the
-			// titlebar's colour — a semantic token here means the titlebar follows
-			// light/dark mode with everything else. It matches the sidebar surface so
-			// the two read as one continuous piece of chrome.
-			background: 'neutral.surface.soft',
-			borderBottomWidth: '1px',
-			borderBottomStyle: 'solid',
-			borderBottomColor: 'neutral.border.muted',
+			// runs the webview underneath it, so whatever is behind this strip IS
+			// the titlebar's colour. Left transparent on purpose: the sidebar is a
+			// floating rounded panel, so the app background has to run behind and
+			// above it — a filled band here would butt against the panel's top
+			// corners and flatten the inset.
+			background: 'transparent',
 			// The band's depth, measured in devtools against the real window — the
 			// native titlebar is deeper than the row of traffic lights sitting in it.
 			// Controls centre in that depth (see `alignItems` above) rather than
