@@ -89,10 +89,13 @@ Co-located `__tests__/` for models, composables, utils, and components; 100% bra
 ## Known cleanup opportunities (deferred)
 
 - **§1.6 naming** on the query/mutation wrappers (e.g. `create-get-branches-query` →
-  `list`, `create-branch-merge-status-query` missing a verb, `batch` → `bulk`).
-- **Test-only cruft**: `create-selected-branches-query`, `create-deleted-selected-branches-query`,
-  `locked-branches.svelte.ts`, `selected-branches.svelte.ts` have no production importer
-  (selection moved server-side); removing them means adjusting their tests.
+  `list`, `batch` → `bulk`).
+- **Test-only cruft**: `locked-branches.svelte.ts` and `selected-branches.svelte.ts` have no
+  production importer (selection moved server-side); removing them means rewriting the mocks
+  in the four test files that drive selection state through these stores.
+  `create-selected-branches-query`, `create-deleted-selected-branches-query`,
+  `create-branch-merge-status-query` and `create-branch-diff-stats-query` were in this list
+  and have since been removed.
 - **DTO boundary** is duplicated: `branch.ts`/`commit.ts` embed `fromData`/`toData` while
   `converters.ts` also does — could consolidate to keep entities free of transport types.
 - `utils/branch-utils.ts` imports Panda CSS and re-implements `Branch.getColorPalette()` /

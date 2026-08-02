@@ -18,20 +18,23 @@ removing repositories, plus the header shown at the top of a repository view.
 repository-management/
 ├── components/                         # Delivery
 │   ├── add-repository-button.svelte    # Opens the folder dialog and creates a repository
-│   ├── back-button.svelte              # Generic back-navigation button
+│   ├── add-repository-menu.svelte      # Split add/scan button
+│   ├── manage-repositories-modal.svelte # Bulk repository management
+│   ├── scan-repositories-modal.svelte  # Discover repositories on disk
 │   ├── repository-header.svelte        # Repo name + Active/Deleted branch tabs + options menu
 │   └── remove-repository-modal.svelte  # Controlled confirm dialog that deletes a repository
 ├── core/composables/                   # Application — consuming hooks / stateful logic
 │   ├── repository.svelte.ts            # RepositoryStore (per-repo UI state)
-│   ├── use-repository-actions.svelte.ts # Reveal-in-file-manager + manual refresh (options menu)
-│   ├── queries/                        # TanStack Query hooks (wrap $utils/create-tauri-query)
-│   │   ├── create-get-repository-query.ts
-│   │   ├── create-get-repository-list-query.ts
-│   │   ├── create-get-branches-query.ts
-│   │   └── get-branch-list-query.ts
+│   ├── use-add-repository.svelte.ts    # Folder picker → create mutation → notify
+│   ├── use-discover-repositories.svelte.ts # Disk scan for repositories
+│   ├── use-remove-repository-batch.svelte.ts
+│   ├── use-repository-watch.svelte.ts  # Filesystem watcher wiring
+│   └── use-repository-actions.svelte.ts # Reveal-in-file-manager + manual refresh (options menu)
+├── infrastructure/                     # Adapters
 │   └── mutations/
 │       ├── create-create-repository-mutation.ts
-│       └── create-delete-repository-mutation.ts
+│       ├── create-delete-repository-mutation.ts
+│       └── create-discover-repositories-mutation.ts
 └── views/
     └── repository-view.svelte          # Composes the header + page content (children)
 ```
@@ -63,7 +66,11 @@ TanStack Query cache (invalidation), not direct calls or an event bus.
 
 ## Known cleanup opportunities
 
-The following carry no production importer (only tests/mocks) and are candidates for removal:
-`components/back-button.svelte`, `core/composables/repository.svelte.ts` (`RepositoryStore`,
-which also calls `goto()` inside `set()` — delivery logic leaking into a store), and
-`core/composables/queries/get-branch-list-query.ts` (duplicates `create-get-branches-query.ts`).
+The following carries no production importer (only tests/mocks) and is a candidate for removal:
+`core/composables/repository.svelte.ts` (`RepositoryStore`, which also calls `goto()` inside
+`set()` — delivery logic leaking into a store).
+
+`components/back-button.svelte`, `infrastructure/queries/get-branch-list-query.ts` and this
+domain's duplicate `infrastructure/queries/create-get-branches-query.ts` were also on this
+list and have since been removed; the `infrastructure/queries/` directory is now empty and
+gone — repository queries live in the global `src/infrastructure/queries/`.
