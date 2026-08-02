@@ -56,7 +56,24 @@ export function useBranchSelection({ repository, branchContext }: UseBranchSelec
 	});
 
 	const selectibleCount = $derived(branches.length);
-	const selectedCount = $derived(selectedBranchesQuery.data?.branches.length ?? 0);
+
+	// Counted against `branches`, not against the raw selected-branches query:
+	// that query is repository-wide, while `selectibleCount` has already dropped
+	// the current branch, locked branches and anything the search filtered out.
+	// Comparing the two directly made the pair incoherent whenever a search was
+	// active — "5 branches are selected / 2 branches were found" — and drove
+	// `calculateSelectionState` to report neither indeterminate nor all-selected
+	// (5 < 2 is false), so the header checkbox read as empty with five branches
+	// selected. Both numbers now describe the same set.
+	const selectedCount = $derived.by(() => {
+		// Built fresh inside the derivation and never mutated afterwards — the
+		// reactivity comes from the derivation re-running, not from the Set.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const selectedNames = new Set(
+			(selectedBranchesQuery.data?.branches ?? []).map((branch) => branch.getName())
+		);
+		return branches.filter((branch) => selectedNames.has(branch.getName())).length;
+	});
 
 	const selectionState = $derived(
 		calculateSelectionState({

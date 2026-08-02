@@ -273,6 +273,32 @@ describe('useBranchSelection', () => {
 			expect(selection.selectedCount).toBe(2);
 		});
 
+		test('counts only branches the search still shows', () => {
+			const selectedStore = getSelectedBranchesStore('test-repo');
+			selectedStore?.add(['feature-1', 'feature-2']);
+			const search = getSearchBranchesStore('test-repo-active');
+			search?.set('feature-1');
+
+			try {
+				const selection = useBranchSelection({
+					repository: () => mockRepo,
+					branchContext: () => 'active' as const
+				});
+
+				// Both counts must describe the same set: one branch matches the
+				// search and that one branch is selected. Counting selection
+				// repository-wide instead reported 2 / 1, which reads as
+				// "2 branches are selected / 1 branch was found" and leaves the
+				// header checkbox neither checked nor indeterminate.
+				expect(selection.selectibleCount).toBe(1);
+				expect(selection.selectedCount).toBe(1);
+				expect(selection.isAllSelected).toBe(true);
+				expect(selection.isIndeterminate).toBe(false);
+			} finally {
+				search?.clear();
+			}
+		});
+
 		test('isIndeterminate is true when some but not all branches are selected', () => {
 			const selectedStore = getSelectedBranchesStore('test-repo');
 			selectedStore?.add(['feature-1']);
