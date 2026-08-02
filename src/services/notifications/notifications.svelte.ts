@@ -24,4 +24,4 @@ export const notifications = {
 	}
 };
 
-export { Notification, NotificationValidationError, type NotificationData } from './notification';
+export { type NotificationData } from './notification';
