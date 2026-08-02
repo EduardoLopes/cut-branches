@@ -6,6 +6,14 @@ import {
 import { createQueryKey } from '$infrastructure/create-tauri-query';
 import { executeCommand } from '$infrastructure/tauri-commands';
 
+/*
+ * Global scope, not `branch-management/`: the sidebar's repository prefetch
+ * (repository-navigation) warms the first metrics bucket before navigation, so
+ * two domains need this adapter's *exact* query key. Duplicating the key — or
+ * the bucket size in `$utils/branch-metrics-buckets` — would silently warm a
+ * cache entry the branch list never reads.
+ */
+
 /** Branch metrics only move when refs move, and every ref-changing mutation
  *  (and the filesystem watcher's `repository-changed` event) invalidates this
  *  key family explicitly — so the entries can stay fresh far longer than the

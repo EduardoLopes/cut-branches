@@ -12,8 +12,8 @@
  */
 import { createQueries } from '@tanstack/svelte-query';
 import debounce from 'just-debounce-it';
-import { bulkBranchMetricsQueryOptions } from '../../infrastructure/queries/create-bulk-branch-metrics-query';
-import { getBucketBranchNames, getBucketIndicesForRange } from '../../utils/branch-metrics-buckets';
+import { bulkBranchMetricsQueryOptions } from '$infrastructure/queries/create-bulk-branch-metrics-query';
+import { getBucketBranchNames, getBucketIndicesForRange } from '$utils/branch-metrics-buckets';
 
 export interface BranchMetricsEntry {
 	isMerged: boolean;

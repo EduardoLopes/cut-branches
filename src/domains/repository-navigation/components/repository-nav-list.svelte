@@ -7,7 +7,7 @@
 		type NavigationTrailingAttachment
 	} from '@pindoba/svelte-navigation';
 	import Stamp from '@pindoba/svelte-stamp';
-	import { createRawSnippet, mount, unmount, type Snippet } from 'svelte';
+	import { createRawSnippet, mount, onDestroy, unmount, type Snippet } from 'svelte';
 	import { createPrefetchRepositoryData } from '../core/composables/create-prefetch-repository-data';
 	import { foldText } from '../utils/fold-text';
 	import { scrollShadow } from '../utils/scroll-shadow';
@@ -99,6 +99,10 @@
 	// Prefetch function for repository data on hover
 	const prefetchRepositoryData = createPrefetchRepositoryData();
 
+	// A pending hover prefetch outliving the list would fire against a torn-down
+	// query scope (the sidebar unmounts with the rail on some routes).
+	onDestroy(() => prefetchRepositoryData.cancel());
+
 	// Map repository data to navigation items
 	const items = $derived.by<NavigationItem[]>(() => {
 		if (!repositoriesQuery.data) {
@@ -118,8 +122,14 @@
 			// floats it over the item as an <Attachment> instead (see the rail's
 			// `trailingAttachment` config below).
 			trailing: makeBadgeSnippet(repo.name, repo.id, repo.branchesCount),
-			// Prefetch repository data on hover for instant navigation
-			onmouseenter: () => prefetchRepositoryData(repo.id)
+			// Warm everything `/repos/[id]` mounts, so navigation lands on cache.
+			// `focus` matters as much as `mouseenter`: tabbing through the rail is
+			// a real navigation path and used to prefetch nothing at all.
+			onmouseenter: () => prefetchRepositoryData(repo.id, repo.path),
+			onfocus: () => prefetchRepositoryData(repo.id, repo.path),
+			// Intent is settled here, and `pointerdown` leads `click` by ~100ms —
+			// free lead time, so skip the hover debounce entirely.
+			onpointerdown: () => prefetchRepositoryData.now(repo.id, repo.path)
 		})) satisfies NavigationItem[];
 	});
 </script>

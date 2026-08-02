@@ -20,7 +20,12 @@ vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	}))
 }));
 
-const mockPrefetchRepositoryData = vi.fn();
+// Mirrors the real composable's shape: a debounced call with an immediate
+// `.now` escape hatch (pointerdown) and a `.cancel` for unmount.
+const mockPrefetchRepositoryData = Object.assign(vi.fn(), {
+	now: vi.fn(),
+	cancel: vi.fn()
+});
 
 vi.mock('$domains/repository-navigation/core/composables/create-prefetch-repository-data', () => ({
 	createPrefetchRepositoryData: vi.fn(() => mockPrefetchRepositoryData)

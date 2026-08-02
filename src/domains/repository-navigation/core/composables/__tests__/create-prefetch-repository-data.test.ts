@@ -17,26 +17,63 @@ vi.mock('@tanstack/svelte-query', async () => {
 	};
 });
 
-// Mock the Tauri commands
+const BRANCHES = [
+	{ name: 'feature', current: false },
+	{ name: 'main', current: true }
+];
+
+const commandResults: Record<string, unknown> = {
+	getBranchList: { branches: BRANCHES },
+	getRepository: {
+		id: 'test-repo',
+		name: 'Test Repo',
+		path: '/path/to/repo',
+		branches: [],
+		currentBranch: 'main',
+		branchesCount: 0
+	},
+	listLockedBranches: { branches: [] },
+	listWorktrees: { worktrees: [] },
+	bulkGetBranchMetrics: { metrics: [] }
+};
+
+const executeCommand = vi.fn(async (commandName: string) => commandResults[commandName] ?? {});
+
+// The composable reaches the Tauri layer two ways: `buildCommandExecutor` (via
+// `prefetchTauriQuery`) and `executeCommand` (via the bulk-metrics options).
 vi.mock('$infrastructure/tauri-commands', () => ({
-	buildCommandExecutor: vi.fn((commandName) => {
-		// Return different mock data based on command
-		if (commandName === 'getBranchList') {
-			return vi.fn(async () => ({ branches: [] }));
-		}
-		if (commandName === 'getRepository') {
-			return vi.fn(async () => ({
-				id: 'test-repo',
-				name: 'Test Repo',
-				path: '/path/to/repo',
-				branches: [],
-				currentBranch: 'main',
-				branchesCount: 0
-			}));
-		}
-		return vi.fn(async () => ({}));
-	})
+	buildCommandExecutor: vi.fn((commandName: string) => async () => commandResults[commandName]),
+	executeCommand: (commandName: string) => executeCommand(commandName)
 }));
+
+const REPO_ID = 'test-repo-id';
+const REPO_PATH = '/path/to/repo';
+
+const branchListInput = {
+	repoId: REPO_ID,
+	filters: { deletionStatus: 'active', includeCurrent: true }
+};
+
+const keys = {
+	branchList: ['branch', 'getBranchList', branchListInput],
+	repository: ['repository', 'getRepository', { id: REPO_ID }],
+	lockedBranches: ['locked-branches', 'listLockedBranches', { repoId: REPO_ID }],
+	worktrees: ['worktrees', 'listWorktrees', { path: REPO_PATH }],
+	// Current branch hoisted first, matching the branch list's own ordering.
+	metrics: [
+		'bulk-get-branch-metrics',
+		'bulkGetBranchMetrics',
+		{ path: REPO_PATH, branchNames: ['main', 'feature'] }
+	]
+};
+
+function branchListKeyFor(repoId: string) {
+	return [
+		'branch',
+		'getBranchList',
+		{ repoId, filters: { deletionStatus: 'active', includeCurrent: true } }
+	];
+}
 
 describe('createPrefetchRepositoryData', () => {
 	beforeEach(() => {
@@ -48,8 +85,13 @@ describe('createPrefetchRepositoryData', () => {
 				}
 			}
 		});
+		commandResults.getBranchList = { branches: BRANCHES };
 		vi.clearAllMocks();
 	});
+
+	function cached(key: unknown[]) {
+		return mockQueryClient.current!.getQueryData(key);
+	}
 
 	it('should create a prefetch function', () => {
 		const prefetchRepositoryData = createPrefetchRepositoryData();
@@ -57,67 +99,79 @@ describe('createPrefetchRepositoryData', () => {
 		expect(prefetchRepositoryData).toBeInstanceOf(Function);
 	});
 
-	it('should prefetch both branch list and repository data when called', async () => {
+	it('warms every query the repository page mounts on arrival', async () => {
 		const prefetchRepositoryData = createPrefetchRepositoryData();
 
-		const branchQueryKey = [
-			'branch',
-			'getBranchList',
-			{ repoId: 'test-repo-id', filters: { deletionStatus: 'active', includeCurrent: true } }
-		];
-		const repoQueryKey = ['repository', 'getRepository', { id: 'test-repo-id' }];
+		prefetchRepositoryData(REPO_ID, REPO_PATH);
 
-		prefetchRepositoryData('test-repo-id');
-
-		// Wait for debounce delay and prefetch to complete
 		await vi.waitFor(
 			() => {
-				expect(mockQueryClient.current!.getQueryData(branchQueryKey)).toBeDefined();
-				expect(mockQueryClient.current!.getQueryData(repoQueryKey)).toBeDefined();
+				expect(cached(keys.branchList)).toBeDefined();
+				expect(cached(keys.repository)).toBeDefined();
+				expect(cached(keys.lockedBranches)).toBeDefined();
+				expect(cached(keys.worktrees)).toBeDefined();
+				// Chained behind the branch list — its key needs the branch names.
+				expect(cached(keys.metrics)).toBeDefined();
 			},
-			{ timeout: 400 }
+			{ timeout: 1000 }
 		);
+	});
+
+	it('skips the path-keyed queries when the repository path is unknown', async () => {
+		const prefetchRepositoryData = createPrefetchRepositoryData();
+
+		prefetchRepositoryData(REPO_ID);
+
+		await vi.waitFor(
+			() => {
+				expect(cached(keys.branchList)).toBeDefined();
+			},
+			{ timeout: 1000 }
+		);
+
+		expect(cached(keys.worktrees)).toBeUndefined();
+		expect(cached(keys.metrics)).toBeUndefined();
+	});
+
+	it('skips the metrics bucket when the repository has no branches', async () => {
+		commandResults.getBranchList = { branches: [] };
+
+		const prefetchRepositoryData = createPrefetchRepositoryData();
+		prefetchRepositoryData(REPO_ID, REPO_PATH);
+
+		await vi.waitFor(
+			() => {
+				expect(cached(keys.branchList)).toBeDefined();
+			},
+			{ timeout: 1000 }
+		);
+
+		expect(executeCommand).not.toHaveBeenCalledWith('bulkGetBranchMetrics');
 	});
 
 	it('should prefetch branch list with active deletion status filter', async () => {
 		const prefetchRepositoryData = createPrefetchRepositoryData();
 
-		prefetchRepositoryData('test-repo-id');
-
-		// Wait for debounce delay and prefetch to complete
-		const expectedKey = [
-			'branch',
-			'getBranchList',
-			{
-				repoId: 'test-repo-id',
-				filters: {
-					deletionStatus: 'active',
-					includeCurrent: true
-				}
-			}
-		];
+		prefetchRepositoryData(REPO_ID, REPO_PATH);
 
 		await vi.waitFor(
 			() => {
-				expect(mockQueryClient.current!.getQueryData(expectedKey)).toBeDefined();
+				expect(cached(keys.branchList)).toBeDefined();
 			},
-			{ timeout: 400 }
+			{ timeout: 1000 }
 		);
 	});
 
 	it('should prefetch repository with correct ID', async () => {
 		const prefetchRepositoryData = createPrefetchRepositoryData();
 
-		prefetchRepositoryData('test-repo-id');
-
-		// Wait for debounce delay and prefetch to complete
-		const expectedKey = ['repository', 'getRepository', { id: 'test-repo-id' }];
+		prefetchRepositoryData(REPO_ID, REPO_PATH);
 
 		await vi.waitFor(
 			() => {
-				expect(mockQueryClient.current!.getQueryData(expectedKey)).toBeDefined();
+				expect(cached(keys.repository)).toBeDefined();
 			},
-			{ timeout: 400 }
+			{ timeout: 1000 }
 		);
 	});
 
@@ -125,106 +179,113 @@ describe('createPrefetchRepositoryData', () => {
 		const prefetchRepositoryData = createPrefetchRepositoryData();
 
 		// Call multiple times rapidly
-		prefetchRepositoryData('repo-1');
-		prefetchRepositoryData('repo-2');
-		prefetchRepositoryData('repo-3');
-
-		// Wait for debounce delay and prefetch to complete
-		const repo3BranchKey = [
-			'branch',
-			'getBranchList',
-			{ repoId: 'repo-3', filters: { deletionStatus: 'active', includeCurrent: true } }
-		];
-		const repo3RepoKey = ['repository', 'getRepository', { id: 'repo-3' }];
+		prefetchRepositoryData('repo-1', REPO_PATH);
+		prefetchRepositoryData('repo-2', REPO_PATH);
+		prefetchRepositoryData('repo-3', REPO_PATH);
 
 		await vi.waitFor(
 			() => {
-				expect(mockQueryClient.current!.getQueryData(repo3BranchKey)).toBeDefined();
-				expect(mockQueryClient.current!.getQueryData(repo3RepoKey)).toBeDefined();
+				expect(cached(branchListKeyFor('repo-3'))).toBeDefined();
+				expect(cached(['repository', 'getRepository', { id: 'repo-3' }])).toBeDefined();
 			},
-			{ timeout: 400 }
+			{ timeout: 1000 }
 		);
 
 		// Earlier calls should not be in cache
-		const repo1BranchKey = [
-			'branch',
-			'getBranchList',
-			{ repoId: 'repo-1', filters: { deletionStatus: 'active', includeCurrent: true } }
-		];
-		expect(mockQueryClient.current!.getQueryData(repo1BranchKey)).toBeUndefined();
+		expect(cached(branchListKeyFor('repo-1'))).toBeUndefined();
+	});
+
+	it('runs immediately and drops the pending hover prefetch on .now()', async () => {
+		const prefetchRepositoryData = createPrefetchRepositoryData();
+
+		// A hover over one repository, then a committed click on another: the
+		// click wins the queue and the hover never fires.
+		prefetchRepositoryData('hovered-repo', REPO_PATH);
+		prefetchRepositoryData.now(REPO_ID, REPO_PATH);
+
+		await vi.waitFor(
+			() => {
+				expect(cached(keys.branchList)).toBeDefined();
+			},
+			{ timeout: 1000 }
+		);
+
+		expect(cached(branchListKeyFor('hovered-repo'))).toBeUndefined();
+	});
+
+	it('cancel() drops a pending hover prefetch', async () => {
+		const prefetchRepositoryData = createPrefetchRepositoryData();
+
+		prefetchRepositoryData(REPO_ID, REPO_PATH);
+		prefetchRepositoryData.cancel();
+
+		await new Promise((resolve) => setTimeout(resolve, 300));
+
+		expect(cached(keys.branchList)).toBeUndefined();
 	});
 
 	it('should respect cache and not refetch if data already exists', async () => {
-		// Pre-populate cache for both queries
-		const branchQueryKey = [
-			'branch',
-			'getBranchList',
-			{ repoId: 'test-repo-id', filters: { deletionStatus: 'active', includeCurrent: true } }
-		];
-		const repoQueryKey = ['repository', 'getRepository', { id: 'test-repo-id' }];
-
-		const testBranchData = { branches: [{ name: 'existing-branch' }] };
+		const testBranchData = { branches: [{ name: 'existing-branch', current: false }] };
 		const testRepoData = {
-			id: 'test-repo-id',
+			id: REPO_ID,
 			name: 'Test Repo',
-			path: '/path/to/repo',
+			path: REPO_PATH,
 			branches: [],
 			currentBranch: 'main',
 			branchesCount: 0
 		};
 
-		mockQueryClient.current!.setQueryData(branchQueryKey, testBranchData);
-		mockQueryClient.current!.setQueryData(repoQueryKey, testRepoData);
+		mockQueryClient.current!.setQueryData(keys.branchList, testBranchData);
+		mockQueryClient.current!.setQueryData(keys.repository, testRepoData);
 
 		const prefetchRepositoryData = createPrefetchRepositoryData();
 
-		prefetchRepositoryData('test-repo-id');
+		prefetchRepositoryData(REPO_ID, REPO_PATH);
 
 		// Wait for debounce delay
-		await new Promise((resolve) => setTimeout(resolve, 250));
+		await new Promise((resolve) => setTimeout(resolve, 300));
 
 		// Data should remain the same (not refetched)
-		expect(mockQueryClient.current!.getQueryData(branchQueryKey)).toEqual(testBranchData);
-		expect(mockQueryClient.current!.getQueryData(repoQueryKey)).toEqual(testRepoData);
+		expect(cached(keys.branchList)).toEqual(testBranchData);
+		expect(cached(keys.repository)).toEqual(testRepoData);
+	});
+
+	it('swallows prefetch failures so hovering can never surface an error', async () => {
+		commandResults.getBranchList = undefined;
+
+		const prefetchRepositoryData = createPrefetchRepositoryData();
+		expect(() => prefetchRepositoryData.now(REPO_ID, REPO_PATH)).not.toThrow();
+
+		await new Promise((resolve) => setTimeout(resolve, 100));
+
+		// The chained metrics wave is skipped rather than throwing on a
+		// branch list that never landed.
+		expect(cached(keys.metrics)).toBeUndefined();
 	});
 
 	it('should handle different repository IDs correctly', async () => {
 		const prefetchRepositoryData = createPrefetchRepositoryData();
 
 		// First prefetch
-		prefetchRepositoryData('repo-1');
-
-		const repo1BranchKey = [
-			'branch',
-			'getBranchList',
-			{ repoId: 'repo-1', filters: { deletionStatus: 'active', includeCurrent: true } }
-		];
-		const repo1RepoKey = ['repository', 'getRepository', { id: 'repo-1' }];
+		prefetchRepositoryData('repo-1', REPO_PATH);
 
 		await vi.waitFor(
 			() => {
-				expect(mockQueryClient.current!.getQueryData(repo1BranchKey)).toBeDefined();
-				expect(mockQueryClient.current!.getQueryData(repo1RepoKey)).toBeDefined();
+				expect(cached(branchListKeyFor('repo-1'))).toBeDefined();
+				expect(cached(['repository', 'getRepository', { id: 'repo-1' }])).toBeDefined();
 			},
-			{ timeout: 400 }
+			{ timeout: 1000 }
 		);
 
 		// Second prefetch with different ID
-		prefetchRepositoryData('repo-2');
-
-		const repo2BranchKey = [
-			'branch',
-			'getBranchList',
-			{ repoId: 'repo-2', filters: { deletionStatus: 'active', includeCurrent: true } }
-		];
-		const repo2RepoKey = ['repository', 'getRepository', { id: 'repo-2' }];
+		prefetchRepositoryData('repo-2', REPO_PATH);
 
 		await vi.waitFor(
 			() => {
-				expect(mockQueryClient.current!.getQueryData(repo2BranchKey)).toBeDefined();
-				expect(mockQueryClient.current!.getQueryData(repo2RepoKey)).toBeDefined();
+				expect(cached(branchListKeyFor('repo-2'))).toBeDefined();
+				expect(cached(['repository', 'getRepository', { id: 'repo-2' }])).toBeDefined();
 			},
-			{ timeout: 400 }
+			{ timeout: 1000 }
 		);
 	});
 });
