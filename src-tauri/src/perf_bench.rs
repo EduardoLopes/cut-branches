@@ -48,6 +48,60 @@ fn setup_bench_repo() -> tempfile::TempDir {
     dir
 }
 
+/// Times `bulk_get_branch_metrics` against a real repository on disk — the
+/// synthetic repo above is too small to show the diff/merge-base cost that
+/// dominates on real work repos.
+///
+/// ```sh
+/// BENCH_REPO=/path/to/repo cargo test --release --lib bench_bulk_metrics_real_repo -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore]
+fn bench_bulk_metrics_real_repo() {
+    let Ok(path) = std::env::var("BENCH_REPO") else {
+        eprintln!("BENCH_REPO not set; skipping");
+        return;
+    };
+    let path = std::path::PathBuf::from(path);
+    let repo = git2::Repository::open(&path).unwrap();
+    let names: Vec<String> = repo
+        .branches(Some(git2::BranchType::Local))
+        .unwrap()
+        .filter_map(|b| b.ok())
+        .filter_map(|(b, _)| b.name().ok().flatten().map(str::to_string))
+        .take(20)
+        .collect();
+    drop(repo);
+
+    for bucket in [20usize, 10, 5] {
+        let slice = &names[..bucket.min(names.len())];
+        let t = Instant::now();
+        let metrics =
+            crate::domains::branch_management::infrastructure::git::branch::bulk_get_branch_metrics(
+                &path, slice,
+            )
+            .unwrap();
+        println!(
+            "bulk_get_branch_metrics: {} branches in {:?}",
+            metrics.len(),
+            t.elapsed()
+        );
+    }
+
+    let t = Instant::now();
+    let branches =
+        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
+            &path,
+        )
+        .unwrap();
+    println!("list_branches_fast: {} branches in {:?}", branches.len(), t.elapsed());
+
+    let t = Instant::now();
+    let _ = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(&path)
+        .unwrap();
+    println!("state fingerprint walk: {:?}", t.elapsed());
+}
+
 #[test]
 #[ignore]
 fn bench_branch_loading_hot_paths() {
