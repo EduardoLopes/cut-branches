@@ -91,7 +91,7 @@
 
 				notifications.push({
 					feedback: 'danger',
-					title: notificationInfo?.title ?? e.message ?? e.kind,
+					title: notificationInfo?.title ?? e.message,
 					message: notificationInfo?.message ?? e.description
 				});
 			}
@@ -118,7 +118,7 @@
 
 				notifications.push({
 					feedback: 'danger',
-					title: notificationInfo?.title ?? e.message ?? e.kind,
+					title: notificationInfo?.title ?? e.message,
 					message: notificationInfo?.message ?? e.description
 				});
 			}
