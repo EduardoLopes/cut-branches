@@ -284,6 +284,65 @@ pub fn branch_diff_stats_in_repo(
     Ok((stats.insertions(), stats.deletions()))
 }
 
+/// Merge status + diff stats for one branch from a single merge-base lookup:
+/// a branch is fully merged into HEAD exactly when the merge base *is* the
+/// branch tip, so the ancestry walk `is_branch_merged` does separately comes
+/// for free with the base the diff needs anyway.
+fn branch_metrics_in_repo(
+    repo: &Repository,
+    branch_name: &str,
+) -> Result<BranchMetricsRecord, AppError> {
+    let head_commit = repo
+        .head()
+        .map_err(|e| BranchError::HeadNotFound { source: e })?
+        .peel_to_commit()
+        .map_err(|e| BranchError::HeadCommitFailed { source: e })?;
+
+    let branch_commit = repo
+        .find_branch(branch_name, BranchType::Local)
+        .map_err(|e| BranchError::FindBranchFailed {
+            name: branch_name.to_string(),
+            source: e,
+        })?
+        .get()
+        .peel_to_commit()
+        .map_err(|e| BranchError::BranchCommitFailed { source: e })?;
+
+    let diff_err = |source| BranchError::DiffStatsFailed {
+        name: branch_name.to_string(),
+        source,
+    };
+
+    let base_oid = repo
+        .merge_base(head_commit.id(), branch_commit.id())
+        .map_err(diff_err)?;
+    let is_merged = base_oid == branch_commit.id();
+
+    // A merged branch adds nothing on top of HEAD by definition — skip the
+    // tree diff entirely.
+    let (lines_added, lines_removed) = if is_merged {
+        (0, 0)
+    } else {
+        let base_tree = repo
+            .find_commit(base_oid)
+            .and_then(|c| c.tree())
+            .map_err(diff_err)?;
+        let branch_tree = branch_commit.tree().map_err(diff_err)?;
+        let diff = repo
+            .diff_tree_to_tree(Some(&base_tree), Some(&branch_tree), None)
+            .map_err(diff_err)?;
+        let stats = diff.stats().map_err(diff_err)?;
+        (stats.insertions(), stats.deletions())
+    };
+
+    Ok(BranchMetricsRecord {
+        name: branch_name.to_string(),
+        is_merged,
+        lines_added,
+        lines_removed,
+    })
+}
+
 /// Merge status + diff stats for one branch, resolved against an open repo.
 pub struct BranchMetricsRecord {
     pub name: String,
@@ -300,28 +359,54 @@ pub fn bulk_get_branch_metrics(
     path: &Path,
     branch_names: &[String],
 ) -> Result<Vec<BranchMetricsRecord>, AppError> {
-    let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
+    // Open once up front so an unreadable repository still fails the batch
+    // with the usual error instead of yielding a silently empty result.
+    Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
         path: path.display().to_string(),
         source: e,
     })?;
 
-    let mut metrics = Vec::with_capacity(branch_names.len());
-    for name in branch_names {
-        let Ok(is_merged) = is_branch_merged(&repo, name) else {
-            continue;
-        };
-        let Ok((lines_added, lines_removed)) = branch_diff_stats_in_repo(&repo, name) else {
-            continue;
-        };
-        metrics.push(BranchMetricsRecord {
-            name: name.clone(),
-            is_merged,
-            lines_added,
-            lines_removed,
-        });
-    }
+    // The merge-base + tree-diff pair is CPU-bound and independent per branch,
+    // and on real repositories it costs tens to hundreds of milliseconds per
+    // branch — a sequential 20-branch bucket ran into whole seconds. git2's
+    // `Repository` isn't `Sync`, so each worker opens its own handle (cheap
+    // next to a single diff) and takes branches off a shared cursor.
+    let workers = std::thread::available_parallelism()
+        .map(std::num::NonZeroUsize::get)
+        .unwrap_or(4)
+        .min(branch_names.len())
+        .max(1);
 
-    Ok(metrics)
+    let cursor = std::sync::atomic::AtomicUsize::new(0);
+    let mut slots: Vec<Option<BranchMetricsRecord>> = Vec::new();
+    slots.resize_with(branch_names.len(), || None);
+    let slots_mutex = std::sync::Mutex::new(&mut slots);
+
+    std::thread::scope(|scope| {
+        for _ in 0..workers {
+            scope.spawn(|| {
+                let Ok(repo) = Repository::open(path) else {
+                    return;
+                };
+                loop {
+                    let index = cursor.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    let Some(name) = branch_names.get(index) else {
+                        return;
+                    };
+                    // Branches that no longer resolve (deleted mid-flight) are
+                    // skipped rather than failing the whole batch.
+                    let Ok(record) = branch_metrics_in_repo(&repo, name) else {
+                        continue;
+                    };
+                    if let Ok(mut slots) = slots_mutex.lock() {
+                        slots[index] = Some(record);
+                    }
+                }
+            });
+        }
+    });
+
+    Ok(slots.into_iter().flatten().collect())
 }
 
 pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
