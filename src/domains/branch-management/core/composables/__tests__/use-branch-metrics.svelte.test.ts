@@ -91,18 +91,24 @@ describe('useBranchMetrics', () => {
 		flushSync();
 	}
 
-	test('requests no buckets until the range settles', () => {
-		const harness = setup();
+	test('fires the first range immediately, then debounces later changes', () => {
+		const names = Array.from({ length: 45 }, (_, i) => `branch-${i}`);
+		const harness = setup({ names: () => names });
 		expect(queriesAccessor!().queries).toEqual([]);
 
+		// First range after mount: no debounce — the viewport is already
+		// showing placeholder badges, so waiting only delays the fetch.
 		harness.setRange({ startIndex: 0, endIndex: 5 });
-		// Debounce pending — still nothing.
-		expect(queriesAccessor!().queries).toEqual([]);
-
-		settle();
 		const queries = queriesAccessor!().queries;
 		expect(queries).toHaveLength(1);
 		expect(queries[0].enabled).toBe(true);
+
+		// Subsequent range changes go through the debounce.
+		harness.setRange({ startIndex: 21, endIndex: 25 });
+		expect(queriesAccessor!().queries).toHaveLength(1);
+		settle();
+		expect(queriesAccessor!().queries).toHaveLength(1);
+		expect(queriesAccessor!().queries[0].queryKey).not.toEqual(queries[0].queryKey);
 		harness.cleanup();
 	});
 
@@ -144,18 +150,27 @@ describe('useBranchMetrics', () => {
 		harness.cleanup();
 	});
 
-	test('a rapid range change only settles once', () => {
-		const harness = setup();
+	test('a rapid range change after the first only settles once', () => {
+		const names = Array.from({ length: 80 }, (_, i) => `branch-${i}`);
+		const harness = setup({ names: () => names });
+		// First range fires immediately (bucket 0).
 		harness.setRange({ startIndex: 0, endIndex: 1 });
+		expect(queriesAccessor!().queries).toHaveLength(1);
+
+		// Two rapid changes: the first timer is superseded, so bucket 0 is
+		// still the only settled bucket until the debounce elapses.
+		harness.setRange({ startIndex: 21, endIndex: 24 });
 		vi.advanceTimersByTime(RANGE_DEBOUNCE_MS / 2);
-		harness.setRange({ startIndex: 2, endIndex: 4 });
+		harness.setRange({ startIndex: 41, endIndex: 44 });
 		vi.advanceTimersByTime(RANGE_DEBOUNCE_MS / 2);
-		// First timer was superseded, so nothing has settled yet.
 		flushSync();
-		expect(queriesAccessor!().queries).toEqual([]);
+		expect(queriesAccessor!().queries).toHaveLength(1);
 
 		settle();
 		expect(queriesAccessor!().queries).toHaveLength(1);
+		expect(queriesAccessor!().queries[0].queryKey).toEqual(
+			expect.arrayContaining([expect.anything()])
+		);
 		harness.cleanup();
 	});
 

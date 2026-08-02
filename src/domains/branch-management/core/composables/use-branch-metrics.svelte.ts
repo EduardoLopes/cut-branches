@@ -67,7 +67,16 @@ export function useBranchMetrics(config: UseBranchMetricsConfig) {
 		}
 		const range = config.visibleRange();
 		if (!range) return;
-		applyRange(getBucketIndicesForRange(range.startIndex, range.endIndex));
+		const buckets = getBucketIndicesForRange(range.startIndex, range.endIndex);
+		// First range after mount (or re-enable): fire immediately. The debounce
+		// exists to absorb scrolling, but on arrival there is nothing to absorb —
+		// waiting just adds RANGE_DEBOUNCE_MS on top of the fetch the viewport is
+		// already showing placeholders for.
+		if (settledBuckets.length === 0 && buckets.length > 0) {
+			settledBuckets = buckets;
+			return;
+		}
+		applyRange(buckets);
 		// Teardown also runs on unmount, so a pending debounce never fires
 		// against a torn-down query scope. (Between runs it just restarts the
 		// timer, which is the debounce semantics anyway.)
