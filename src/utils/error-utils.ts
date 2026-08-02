@@ -70,7 +70,12 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 		const baseError: AppError = {
 			message: error.message as string,
 			kind: error.kind as string,
-			description: error.description as string
+			// Rust's AppError.description is an `Option<String>`, so it arrives as
+			// `null` for the errors built without one (invalid_branch_name,
+			// invalid_repository_path, …). AppError declares it a string, and the
+			// cache-level onError handlers feed it straight to the toast body — so
+			// an un-normalized null reached the notification as its message.
+			description: (error.description as string | null) ?? ''
 		};
 		return createErrorObject(baseError, extraProps);
 	}

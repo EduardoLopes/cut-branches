@@ -79,6 +79,25 @@ describe('createError', () => {
 		});
 	});
 
+	describe('when passed a Tauri AppError with no description', () => {
+		it('normalises a null description to an empty string', () => {
+			// Exactly what the Rust side sends for AppError::new(msg, kind, None):
+			// `description` is an Option<String>, so it serialises as null.
+			const tauriError = {
+				message: 'Invalid branch name',
+				kind: 'invalid_branch_name',
+				description: null
+			};
+
+			const result = createError(tauriError);
+
+			// The cache-level onError handlers use this directly as the toast body.
+			expect(result.description).toBe('');
+			expect(result.message).toBe('Invalid branch name');
+			expect(result.kind).toBe('invalid_branch_name');
+		});
+	});
+
 	describe('when passed an Error instance', () => {
 		it('should convert Error to AppError format', () => {
 			const error = new Error('JS error');
