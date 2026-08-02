@@ -187,6 +187,22 @@
 	/** Rows mounted ahead of the viewport, in the direction of travel — the
 	 *  runway a flick lands on before the window has caught up. */
 	const OVERSCAN_LEAD = 16;
+	/** Lead used until the user has actually scrolled.
+	 *
+	 *  The runway above only earns its keep once there is travel to absorb; on
+	 *  arrival it is pure cost, and it is *synchronous* cost — mounting a branch
+	 *  row is a card, a nested panel, badges, icons, a popover anchor and a lock
+	 *  toggle with its own query observer. Measured at ~4ms per row, so the full
+	 *  lead put ~90-145ms of blocking work between the navigation and the first
+	 *  paint of a page whose viewport holds four cards. That is the freeze when
+	 *  you open a repository or come back from worktrees.
+	 *
+	 *  So the list arrives narrow and widens on the first scroll event, before
+	 *  any meaningful travel has happened. Nothing is deferred to a later frame
+	 *  (that would only move the jank) — the extra rows are simply mounted as
+	 *  the user scrolls into them, which is what the growing window already does
+	 *  for new territory. */
+	const OVERSCAN_LEAD_INITIAL = 3;
 	/** Behind the viewport. Smaller, but never zero — a reversal has to land on
 	 *  something too, and it keeps focus and hover popovers alive through a
 	 *  scroll nudge. */
@@ -242,16 +258,20 @@
 		mountedRows = new Set();
 	}
 
+	/** Flipped by the first real scroll (see the scroll handler on the port).
+	 *  Plain `let`: the extractor reads it during the virtualizer's own
+	 *  recompute, so making it reactive would mean writing tracked state from
+	 *  inside a derivation the render pass is reading. */
+	let hasScrolled = false;
+
 	function rangeExtractor(range: { startIndex: number; endIndex: number; count: number }) {
 		const direction = get(virtualizer).scrollDirection;
 		if (direction !== null) scrollingForward = direction === 'forward';
 		const forward = scrollingForward;
 
-		const start = Math.max(0, range.startIndex - (forward ? OVERSCAN_TRAIL : OVERSCAN_LEAD));
-		const end = Math.min(
-			range.count - 1,
-			range.endIndex + (forward ? OVERSCAN_LEAD : OVERSCAN_TRAIL)
-		);
+		const lead = hasScrolled ? OVERSCAN_LEAD : OVERSCAN_LEAD_INITIAL;
+		const start = Math.max(0, range.startIndex - (forward ? OVERSCAN_TRAIL : lead));
+		const end = Math.min(range.count - 1, range.endIndex + (forward ? lead : OVERSCAN_TRAIL));
 
 		for (const index of mountedRows) {
 			// The list can shrink under us (a filter, a refetch); drop anything the
@@ -409,6 +429,14 @@
 		enabled: () => !isRestoreView
 	});
 
+	/** Widen the runway the first time the user scrolls. The virtualizer's own
+	 *  scroll handling already recomputes the range on this event, so the wider
+	 *  lead is picked up on that pass — no extra invalidation needed. */
+	function handleFirstScroll() {
+		if (hasScrolled) return;
+		hasScrolled = true;
+	}
+
 	/** Registers a row with the virtualizer's ResizeObserver; the row's real
 	 *  height replaces the estimate (and tracks it as cards expand). */
 	function measureRow(node: HTMLDivElement) {
@@ -442,6 +470,7 @@
 <div
 	bind:this={scrollElement}
 	data-testid="branch-list-scroller"
+	onscroll={handleFirstScroll}
 	role="region"
 	aria-label="Branch list"
 	tabindex="0"
