@@ -6,8 +6,13 @@
  */
 
 /** Branches per bulk-metrics request. Small enough that one request stays
- *  quick on the Rust side, large enough that a viewport needs at most two. */
-export const BRANCH_METRICS_BUCKET_SIZE = 20;
+ *  quick on the Rust side, large enough that a viewport needs at most two.
+ *
+ *  Sized to one parallel wave: the Rust command fans branches across the
+ *  machine's cores, so a bucket at or under the typical core count resolves
+ *  in a single wave of merge-base + diff work. Measured on a 221-branch repo
+ *  (11 cores): a 20-branch bucket took ~1.0s, a 10-branch bucket ~350ms. */
+export const BRANCH_METRICS_BUCKET_SIZE = 10;
 
 /** Bucket indices covering an inclusive item-index range. Returns an empty
  *  array for an inverted or negative range. */
