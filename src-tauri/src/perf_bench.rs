@@ -94,7 +94,11 @@ fn bench_bulk_metrics_real_repo() {
             &path,
         )
         .unwrap();
-    println!("list_branches_fast: {} branches in {:?}", branches.len(), t.elapsed());
+    println!(
+        "list_branches_fast: {} branches in {:?}",
+        branches.len(),
+        t.elapsed()
+    );
 
     let t = Instant::now();
     let _ = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(&path)
