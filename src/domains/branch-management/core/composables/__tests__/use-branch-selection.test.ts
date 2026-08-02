@@ -60,31 +60,6 @@ vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-q
 	})
 }));
 
-vi.mock('$domains/branch-management/infrastructure/queries/create-selected-branches-query', () => ({
-	createSelectedBranchesQuery: () => ({
-		get data() {
-			const store = getSelectedBranchesStore('test-repo');
-			return { branches: Array.from(store?.state || []) };
-		},
-		isLoading: false,
-		isError: false
-	})
-}));
-
-vi.mock(
-	'$domains/branch-management/infrastructure/queries/create-deleted-selected-branches-query',
-	() => ({
-		createDeletedSelectedBranchesQuery: () => ({
-			get data() {
-				const store = getSelectedBranchesStore('test-repo');
-				return { branches: Array.from(store?.state || []) };
-			},
-			isLoading: false,
-			isError: false
-		})
-	})
-);
-
 // Mock the mutations to actually update the stores
 vi.mock(
 	'$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation',
