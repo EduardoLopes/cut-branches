@@ -23,8 +23,14 @@
 
 	const { repositoryId }: Props = $props();
 
+	// `includeCurrent: true` is the backend default, so this fetches exactly what
+	// omitting it fetched — but the query key embeds the input verbatim, and the
+	// branches view and list both spell it out. Without it this tab strip pulled
+	// a *second* full copy of every active branch over IPC, and ran a second
+	// full conversion pass over it, purely to read `.length`. Matching the key
+	// makes it the same cached query.
 	const activeBranchesQuery = createGetBranchesQuery(
-		() => ({ repoId: repositoryId, filters: { deletionStatus: 'active' } }),
+		() => ({ repoId: repositoryId, filters: { deletionStatus: 'active', includeCurrent: true } }),
 		{ enabled: () => !!repositoryId }
 	);
 	const deletedBranchesQuery = createGetBranchesQuery(
