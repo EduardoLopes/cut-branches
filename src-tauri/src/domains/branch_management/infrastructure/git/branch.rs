@@ -317,6 +317,89 @@ pub fn resolve_branch_tips(
     Ok((head_sha, tips))
 }
 
+/// Whether a `git` binary is on PATH — probed once per process. The CLI fast
+/// path below is an optimization; when git is absent everything routes through
+/// libgit2, so this must never error.
+fn git_cli_available() -> bool {
+    static AVAILABLE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *AVAILABLE.get_or_init(|| {
+        std::process::Command::new("git")
+            .arg("--version")
+            .output()
+            .map(|out| out.status.success())
+            .unwrap_or(false)
+    })
+}
+
+/// Runs one git subcommand in `path` and returns trimmed stdout on success.
+fn git_cli_stdout(path: &Path, args: &[&str]) -> Option<String> {
+    let out = std::process::Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .args(args)
+        .output()
+        .ok()?;
+    if !out.status.success() {
+        return None;
+    }
+    Some(String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+/// Parses `git diff --shortstat` output, e.g.
+/// ` 3 files changed, 10 insertions(+), 2 deletions(-)`. Either count can be
+/// absent; empty output means an empty diff.
+fn parse_shortstat(stat: &str) -> (usize, usize) {
+    let mut added = 0;
+    let mut removed = 0;
+    for part in stat.split(',') {
+        let part = part.trim();
+        let Some((count, _)) = part.split_once(' ') else {
+            continue;
+        };
+        let Ok(count) = count.parse::<usize>() else {
+            continue;
+        };
+        if part.contains("insertion") {
+            added = count;
+        } else if part.contains("deletion") {
+            removed = count;
+        }
+    }
+    (added, removed)
+}
+
+/// Metrics for one branch via the `git` CLI. Measurably faster than the
+/// libgit2 walk on repositories with a commit-graph file (which git maintains
+/// by default on fetch/gc): ~24ms vs ~100-150ms per merge-base on a 50k-commit
+/// repo, because git exploits generation numbers and libgit2 does not.
+///
+/// Returns `None` on *any* failure — missing branch, odd output, git absent —
+/// and the caller falls back to libgit2. The CLI is never the only path.
+fn branch_metrics_via_git_cli(path: &Path, branch_name: &str) -> Option<BranchMetricsRecord> {
+    // Fully-qualified refname so a branch can't collide with a path or tag.
+    let refname = format!("refs/heads/{branch_name}");
+    let tip = git_cli_stdout(path, &["rev-parse", "--verify", &refname])?;
+    let base = git_cli_stdout(path, &["merge-base", "HEAD", &refname])?;
+    let is_merged = base == tip;
+
+    let (lines_added, lines_removed) = if is_merged {
+        // A merged branch adds nothing on top of HEAD by definition.
+        (0, 0)
+    } else {
+        parse_shortstat(&git_cli_stdout(
+            path,
+            &["diff", "--shortstat", &base, &tip],
+        )?)
+    };
+
+    Some(BranchMetricsRecord {
+        name: branch_name.to_string(),
+        is_merged,
+        lines_added,
+        lines_removed,
+    })
+}
+
 /// Merge status + diff stats for one branch from a single merge-base lookup:
 /// a branch is fully merged into HEAD exactly when the merge base *is* the
 /// branch tip, so the ancestry walk `is_branch_merged` does separately comes
@@ -410,6 +493,7 @@ pub fn bulk_get_branch_metrics(
         .min(branch_names.len())
         .max(1);
 
+    let use_cli = git_cli_available();
     let cursor = std::sync::atomic::AtomicUsize::new(0);
     let mut slots: Vec<Option<BranchMetricsRecord>> = Vec::new();
     slots.resize_with(branch_names.len(), || None);
@@ -426,10 +510,21 @@ pub fn bulk_get_branch_metrics(
                     let Some(name) = branch_names.get(index) else {
                         return;
                     };
-                    // Branches that no longer resolve (deleted mid-flight) are
-                    // skipped rather than failing the whole batch.
-                    let Ok(record) = branch_metrics_in_repo(&repo, name) else {
-                        continue;
+                    // CLI fast path first (commit-graph-accelerated), libgit2
+                    // as the always-present fallback. Branches that resolve on
+                    // neither (deleted mid-flight) are skipped rather than
+                    // failing the whole batch.
+                    let cli_record = if use_cli {
+                        branch_metrics_via_git_cli(path, name)
+                    } else {
+                        None
+                    };
+                    let record = match cli_record
+                        .map(Ok)
+                        .unwrap_or_else(|| branch_metrics_in_repo(&repo, name))
+                    {
+                        Ok(record) => record,
+                        Err(_) => continue,
                     };
                     if let Ok(mut slots) = slots_mutex.lock() {
                         slots[index] = Some(record);
@@ -849,6 +944,68 @@ mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
     use std::process::Command;
+
+    #[test]
+    fn test_parse_shortstat() {
+        assert_eq!(
+            parse_shortstat(" 3 files changed, 10 insertions(+), 2 deletions(-)"),
+            (10, 2)
+        );
+        assert_eq!(parse_shortstat(" 1 file changed, 1 insertion(+)"), (1, 0));
+        assert_eq!(parse_shortstat(" 1 file changed, 4 deletions(-)"), (0, 4));
+        assert_eq!(parse_shortstat(""), (0, 0));
+        assert_eq!(parse_shortstat("garbage output"), (0, 0));
+    }
+
+    #[test]
+    fn test_cli_and_libgit2_metrics_agree() {
+        let _guard = DirectoryGuard::new();
+        let repo_dir = setup_test_repo();
+        let path = repo_dir.path();
+
+        // One diverged branch, one merged branch (points at an ancestor).
+        Command::new("git")
+            .args(["branch", "merged-branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["checkout", "-b", "diverged-branch"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        std::fs::write(path.join("diverged.txt"), "one\ntwo\n").unwrap();
+        Command::new("git")
+            .args(["add", "."])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["commit", "-m", "diverge"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["checkout", "main"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        let repo = Repository::open(path).unwrap();
+        for name in ["merged-branch", "diverged-branch"] {
+            let cli = branch_metrics_via_git_cli(path, name).expect("cli path should resolve");
+            let lib = branch_metrics_in_repo(&repo, name).expect("libgit2 path should resolve");
+            assert_eq!(cli.is_merged, lib.is_merged, "{name}: merge status");
+            assert_eq!(cli.lines_added, lib.lines_added, "{name}: lines added");
+            assert_eq!(
+                cli.lines_removed, lib.lines_removed,
+                "{name}: lines removed"
+            );
+        }
+
+        // Unresolvable branch: CLI declines, so the caller can fall back.
+        assert!(branch_metrics_via_git_cli(path, "no-such-branch").is_none());
+    }
 
     #[test]
     fn test_branch_exists() {
