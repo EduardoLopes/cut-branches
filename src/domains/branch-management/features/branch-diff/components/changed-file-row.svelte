@@ -8,7 +8,11 @@
 	import Button from '@pindoba/svelte-button';
 	import Card from '@pindoba/svelte-card';
 	import Stamp from '@pindoba/svelte-stamp';
+	import { useQueryClient } from '@tanstack/svelte-query';
+	import debounce from 'just-debounce-it';
+	import { onDestroy } from 'svelte';
 	import type { ExplanationDetail } from '../application/use-diff-view-options.svelte';
+	import { prefetchFileDiff } from '../infrastructure/queries/create-get-file-diff-query';
 	import type { FileStructureInfo } from '../models/structure-index';
 	import FileDiffPanel from './file-diff-panel.svelte';
 	import type { BatchFileState } from '$domains/branch-management/features/diff-explanation/application/use-diff-explanation-batch.svelte';
@@ -92,7 +96,27 @@
 		explanationDetail = 'file'
 	}: Props = $props();
 
+	const queryClient = useQueryClient();
+
 	let expanded = $state(defaultExpanded);
+
+	// The panel fetches the file's hunks only once it mounts, so a click on a
+	// collapsed row always lands on a spinner. Hovering (or tabbing to) the
+	// header is the intent signal — warm the exact key the panel will observe.
+	// Debounced: scrolling a long file list past dozens of rows costs nothing.
+	const prefetchDiff = debounce(() => {
+		prefetchFileDiff(queryClient, {
+			path: repositoryPath,
+			branchName,
+			commitSha,
+			filePath: file.path,
+			oldPath: file.oldPath
+		})?.catch(() => {
+			// Prefetch only; the panel surfaces errors when actually opened.
+		});
+	}, 200);
+
+	onDestroy(() => prefetchDiff.cancel());
 
 	// AI explanation of this file's change, streamed from a local CLI agent. The
 	// reviewer chooses the granularity up front (header "Detail" control), so a
@@ -475,7 +499,13 @@
 	{/if}
 {/snippet}
 
-<div class={reviewedWrapper} data-reviewed={reviewed ? 'true' : undefined}>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	class={reviewedWrapper}
+	data-reviewed={reviewed ? 'true' : undefined}
+	onmouseenter={expanded ? undefined : prefetchDiff}
+	onfocusin={expanded ? undefined : prefetchDiff}
+>
 	<Card
 		size="xs"
 		background="surface.step.2"

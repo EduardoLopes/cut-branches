@@ -1,12 +1,14 @@
 import { tick } from 'svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ChangedFileRow from '../changed-file-row.svelte';
+import { prefetchFileDiff } from '$domains/branch-management/features/branch-diff/infrastructure/queries/create-get-file-diff-query';
 import type { ChangedFile } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 vi.mock(
 	'$domains/branch-management/features/branch-diff/infrastructure/queries/create-get-file-diff-query',
 	() => ({
+		prefetchFileDiff: vi.fn(),
 		createGetFileDiffQuery: vi.fn(() => ({
 			isLoading: false,
 			isError: false,
@@ -39,6 +41,45 @@ const file = (overrides: Partial<ChangedFile> = {}): ChangedFile => ({
 const defaultProps = { repositoryPath: '/repo', branchName: 'feature/x', file: file() };
 
 describe('ChangedFileRow', () => {
+	beforeEach(() => {
+		vi.mocked(prefetchFileDiff).mockClear();
+	});
+
+	describe('diff prefetch', () => {
+		it('warms the file diff once hovering the row settles', async () => {
+			const { getByTestId } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+
+			await getByTestId('changed-file-row').hover();
+
+			// Debounced: a row the pointer merely crosses costs nothing.
+			expect(prefetchFileDiff).not.toHaveBeenCalled();
+
+			await vi.waitFor(
+				() =>
+					expect(prefetchFileDiff).toHaveBeenCalledWith(expect.anything(), {
+						path: '/repo',
+						branchName: 'feature/x',
+						commitSha: null,
+						filePath: 'src/app.ts',
+						oldPath: null
+					}),
+				{ timeout: 1000 }
+			);
+		});
+
+		it('does not warm a row whose panel is already mounted', async () => {
+			const { getByTestId } = renderWithTestWrapper(ChangedFileRow, {
+				...defaultProps,
+				defaultExpanded: true
+			});
+
+			await getByTestId('changed-file-row').hover();
+			await new Promise((resolve) => setTimeout(resolve, 300));
+
+			expect(prefetchFileDiff).not.toHaveBeenCalled();
+		});
+	});
+
 	it('shows the status badge, path, and line stats', async () => {
 		const { getByText, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
 

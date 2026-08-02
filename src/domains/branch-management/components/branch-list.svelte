@@ -17,6 +17,7 @@
 		fetchCommitHistoryWindow,
 		PREVIEW_WINDOW
 	} from '../features/commit-history/infrastructure/queries/create-get-commit-history-window-query';
+	import { prefetchBranchCommits } from '../features/commit-history/infrastructure/queries/create-list-branch-commits-query';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
@@ -95,9 +96,32 @@
 		prefetchPreview();
 	}
 
+	// Same idea one level out: the "More" disclosure mounts its query only when
+	// it opens, so without a warm-up the panel always opens on "Loading
+	// commits…". Hovering (or focusing) the toggle is the intent signal.
+	let prefetchCommitsBranch = '';
+	const prefetchRecentCommits = debounce(() => {
+		if (!repositoryID || !repositoryPath || !prefetchCommitsBranch) return;
+		prefetchBranchCommits(queryClient, {
+			repoId: repositoryID,
+			path: repositoryPath,
+			branch: prefetchCommitsBranch
+		})?.catch(() => {
+			// Prefetch only; the panel surfaces errors when actually opened.
+		});
+	}, 200);
+
+	function prefetchRecentCommitsFor(branchName: string) {
+		prefetchCommitsBranch = branchName;
+		prefetchRecentCommits();
+	}
+
 	// A pending prefetch outliving the component would fire against a torn-down
 	// query scope; just-debounce-it exposes .cancel for exactly this.
-	onDestroy(() => prefetchPreview.cancel());
+	onDestroy(() => {
+		prefetchPreview.cancel();
+		prefetchRecentCommits.cancel();
+	});
 
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repositoryID ?? '',
@@ -641,6 +665,7 @@
 							recentCommits={historyEnabled && !isRestoreView && repositoryID && repositoryPath
 								? recentCommits
 								: undefined}
+							onRecentCommitsIntent={() => prefetchRecentCommitsFor(branch.getName())}
 							children={hasAlerts ? branchAlertsContent : undefined}
 						/>
 						{#snippet branchAlertsContent()}

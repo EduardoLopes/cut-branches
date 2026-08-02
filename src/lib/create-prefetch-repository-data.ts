@@ -86,8 +86,15 @@ async function prefetchRepository(queryClient: QueryClient, repoId: string, repo
 
 /**
  * Creates a prefetch function for everything the repository page renders on
- * arrival (branches, repository details, locked branches, worktrees, and the
- * first bucket of branch metrics).
+ * arrival.
+ *
+ * Lives in `$lib` (§2, globally-shared stateful framework-dependent logic)
+ * rather than in a domain: the sidebar (repository-navigation) warms a
+ * repository on hover, and the startup redirect (onboarding) warms the
+ * remembered one — two domains, so neither may own it.
+ *
+ * Prefetches the branches, the repository details, the locked branches, the
+ * worktrees, and the first bucket of branch metrics.
  *
  * Two entry points, because they answer different signals:
  * - `prefetch(...)` is debounced — for `mouseenter`/`focus`, where the user is

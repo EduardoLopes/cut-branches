@@ -27,7 +27,7 @@ const mockPrefetchRepositoryData = Object.assign(vi.fn(), {
 	cancel: vi.fn()
 });
 
-vi.mock('$domains/repository-navigation/core/composables/create-prefetch-repository-data', () => ({
+vi.mock('$lib/create-prefetch-repository-data', () => ({
 	createPrefetchRepositoryData: vi.fn(() => mockPrefetchRepositoryData)
 }));
 

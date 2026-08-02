@@ -4,11 +4,27 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { createPrefetchRepositoryData } from '$lib/create-prefetch-repository-data';
 	import { lastRepository } from '$lib/last-repository.svelte';
 	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
 
 	// Query for repositories list from database
 	const repositoriesQuery = createGetRepositoryListQuery();
+
+	const prefetchRepositoryData = createPrefetchRepositoryData();
+
+	// The remembered id comes straight out of localStorage, so it is known
+	// before the list resolves — start the repository's own queries alongside
+	// the list instead of after the redirect. Serial (list → redirect → fetch)
+	// becomes parallel; on the launch path that is the difference between two
+	// round trips of spinner and one.
+	//
+	// A remembered repository that no longer exists just warms a cache entry
+	// nothing reads: the redirect validates against the live list either way.
+	// The path isn't known yet, so the path-keyed queries are left to the page.
+	if (page.url.pathname === resolve('/') && lastRepository.current) {
+		prefetchRepositoryData.now(lastRepository.current);
+	}
 
 	$effect(() => {
 		// Wait for the query to finish loading before making redirect decisions

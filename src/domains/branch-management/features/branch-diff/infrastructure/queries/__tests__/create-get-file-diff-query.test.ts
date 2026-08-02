@@ -1,13 +1,15 @@
+import type { QueryClient } from '@tanstack/svelte-query';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { createGetFileDiffQuery } from '../create-get-file-diff-query';
+import { createGetFileDiffQuery, prefetchFileDiff } from '../create-get-file-diff-query';
 
-const { createTauriQuery } = vi.hoisted(() => ({
-	createTauriQuery: vi.fn((_command: string, _config: unknown) => ({ isLoading: false }))
+const { createTauriQuery, prefetchTauriQuery } = vi.hoisted(() => ({
+	createTauriQuery: vi.fn((_command: string, _config: unknown) => ({ isLoading: false })),
+	prefetchTauriQuery: vi.fn(async () => undefined)
 }));
 
 vi.mock('$infrastructure/create-tauri-query', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('$infrastructure/create-tauri-query')>();
-	return { ...actual, createTauriQuery };
+	return { ...actual, createTauriQuery, prefetchTauriQuery };
 });
 
 type Config = { input: unknown; enabled: () => boolean };
@@ -18,6 +20,7 @@ function lastConfig(): Config {
 
 beforeEach(() => {
 	createTauriQuery.mockClear();
+	prefetchTauriQuery.mockClear();
 });
 
 const baseInput = {
@@ -60,5 +63,25 @@ describe('createGetFileDiffQuery', () => {
 	it('resolves function inputs when computing enabled', () => {
 		createGetFileDiffQuery(() => baseInput);
 		expect(lastConfig().enabled()).toBe(true);
+	});
+});
+
+describe('prefetchFileDiff', () => {
+	const queryClient = {} as QueryClient;
+
+	it('warms the same input the panel will observe', () => {
+		prefetchFileDiff(queryClient, baseInput);
+
+		expect(prefetchTauriQuery).toHaveBeenCalledWith(queryClient, 'getFileDiff', {
+			input: baseInput
+		});
+	});
+
+	it('is a no-op for an input the query itself would refuse to run', () => {
+		prefetchFileDiff(queryClient, { ...baseInput, path: '' });
+		prefetchFileDiff(queryClient, { ...baseInput, filePath: '' });
+		prefetchFileDiff(queryClient, { ...baseInput, branchName: null });
+
+		expect(prefetchTauriQuery).not.toHaveBeenCalled();
 	});
 });

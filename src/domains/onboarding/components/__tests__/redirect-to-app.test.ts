@@ -54,6 +54,13 @@ vi.mock('$lib/last-repository.svelte', () => ({
 	}
 }));
 
+const mockPrefetchNow = vi.fn();
+
+vi.mock('$lib/create-prefetch-repository-data', () => ({
+	createPrefetchRepositoryData: () =>
+		Object.assign(vi.fn(), { now: mockPrefetchNow, cancel: vi.fn() })
+}));
+
 vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: vi.fn(() => ({
 		get data() {
@@ -83,6 +90,41 @@ describe('RedirectToApp', () => {
 		localStorage.clear();
 		repositorySort.setMode(DEFAULT_REPOSITORY_SORT);
 		vi.clearAllMocks();
+	});
+
+	describe('startup warm-up', () => {
+		it('warms the remembered repository alongside the list, not after it', async () => {
+			mockPathname = '/';
+			mockLastRepository = 'alpha';
+			// Still loading: the point is that the prefetch does not wait for the
+			// list to resolve — the id came out of localStorage.
+			mockIsLoading = true;
+			renderWithTestWrapper(RedirectToApp);
+			await settle();
+
+			expect(mockPrefetchNow).toHaveBeenCalledWith('alpha');
+			expect(goto).not.toHaveBeenCalled();
+		});
+
+		it('warms nothing when there is no remembered repository', async () => {
+			mockPathname = '/';
+			mockLastRepository = undefined;
+			renderWithTestWrapper(RedirectToApp);
+			await settle();
+
+			expect(mockPrefetchNow).not.toHaveBeenCalled();
+		});
+
+		it('warms nothing outside the launch path', async () => {
+			// `/repos` mid-session deliberately reopens the sidebar's first entry,
+			// not the remembered one — so warming the remembered id would be wrong.
+			mockPathname = '/repos';
+			mockLastRepository = 'alpha';
+			renderWithTestWrapper(RedirectToApp);
+			await settle();
+
+			expect(mockPrefetchNow).not.toHaveBeenCalled();
+		});
 	});
 
 	it('does not redirect while the query is loading', async () => {

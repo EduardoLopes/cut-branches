@@ -1,5 +1,5 @@
 import { createRawSnippet } from 'svelte';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import BranchCard from '../branch-card.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
 import type { Branch as BranchData } from '$infrastructure/bindings';
@@ -712,6 +712,39 @@ describe('BranchCard Component', () => {
 			expect(getByTestId('recent-commits-region')).toHaveAttribute('data-expanded', 'false');
 			expect(getByTestId('recent-commits-content')).toBeInTheDocument();
 			await expect.element(getByTestId('recent-commits-content')).not.toBeInTheDocument();
+		});
+
+		test('signals expand intent on hover and on focus, before the snippet mounts', async () => {
+			const onRecentCommitsIntent = vi.fn();
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits,
+				onRecentCommitsIntent
+			});
+
+			const toggle = getByTestId('toggle-recent-commits');
+
+			await toggle.hover();
+			expect(onRecentCommitsIntent).toHaveBeenCalled();
+			// Nothing has expanded — the signal is intent, not the action.
+			expect(getByTestId('recent-commits-content')).not.toBeInTheDocument();
+
+			onRecentCommitsIntent.mockClear();
+			toggle.element().dispatchEvent(new FocusEvent('focus'));
+			expect(onRecentCommitsIntent).toHaveBeenCalled();
+		});
+
+		test('works without an intent handler', async () => {
+			const { getByTestId } = renderWithTestWrapper(BranchCard, {
+				branch: mockBranch,
+				recentCommits
+			});
+
+			const toggle = getByTestId('toggle-recent-commits');
+			await toggle.hover();
+			await toggle.click();
+
+			expect(getByTestId('recent-commits-content')).toBeInTheDocument();
 		});
 
 		test('points the toggle at the region it controls', async () => {

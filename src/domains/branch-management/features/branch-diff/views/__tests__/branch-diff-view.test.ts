@@ -28,6 +28,7 @@ vi.mock(
 vi.mock(
 	'$domains/branch-management/features/branch-diff/infrastructure/queries/create-get-file-diff-query',
 	() => ({
+		prefetchFileDiff: vi.fn(),
 		createGetFileDiffQuery: vi.fn(() => ({
 			isLoading: false,
 			isError: false,

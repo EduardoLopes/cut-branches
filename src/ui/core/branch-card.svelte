@@ -74,6 +74,12 @@
 		 *  nothing loads until someone asks. This card owns the toggle, the
 		 *  region, and the animation; it knows nothing about what's inside. */
 		recentCommits?: Snippet;
+		/** Fired when the user hovers or focuses the "More" toggle — i.e. signals
+		 *  intent to expand, before the snippet mounts. A consumer whose
+		 *  `recentCommits` mounts a query uses this to prefetch it, so expanding
+		 *  usually lands on cache instead of a spinner. Purely advisory: the card
+		 *  works identically without it. */
+		onRecentCommitsIntent?: () => void;
 		/** Card surface props, forwarded to the underlying pindoba Card so this
 		 *  component can be reused on different backgrounds/contexts (mirrors
 		 *  CommitCard). Defaults match the standalone branch-list look; `size`
@@ -105,6 +111,7 @@
 		diffHref,
 		commitHoverPreview,
 		recentCommits,
+		onRecentCommitsIntent,
 		size,
 		background = 'surface.step.2',
 		border = 'muted',
@@ -562,6 +569,8 @@
 								size="xs"
 								{feedback}
 								onclick={toggleRecentCommits}
+								onmouseenter={onRecentCommitsIntent}
+								onfocus={onRecentCommitsIntent}
 								aria-expanded={recentExpanded}
 								aria-controls={recentRegionId}
 								title={recentExpanded
