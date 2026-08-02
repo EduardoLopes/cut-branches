@@ -79,7 +79,11 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 	if (error instanceof Error) {
 		const baseError: AppError = {
 			message: error.message,
-			kind: kind || 'runtime',
+			// Not `kind || 'runtime'`: `kind` was already defaulted to 'unknown'
+			// above, so it is never falsy and the 'runtime' fallback could not be
+			// reached. Error instances without an explicit kind get 'unknown' —
+			// keeping the unreachable operand only implied otherwise.
+			kind,
 			description: error.stack || ''
 		};
 		const errorSpecific = {
@@ -118,9 +122,12 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 			return createErrorObject(baseError, { ...originalExtra, ...extraProps });
 		}
 
-		// Extract message from object properties
-		const message =
-			'message' in error && typeof error.message === 'string' ? error.message : defaultMessage;
+		// Always the default here. We only reach this line when the safeParse
+		// above failed, and AppErrorSchema only requires `message: z.string()`
+		// (kind and description both have defaults) — so a failure means
+		// `message` is missing or is not a string. Reading it off the object
+		// was an unreachable branch.
+		const message = defaultMessage;
 
 		// Preserve original properties where they don't conflict with required ones
 		const originalProps = Object.entries(error as Record<string, unknown>)
