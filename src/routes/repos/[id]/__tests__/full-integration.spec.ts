@@ -213,16 +213,6 @@ vi.mock('$domains/branch-management/core/composables/createSelectedBranchesMutat
 	})
 }));
 
-// Mock branch merge status query
-vi.mock('$domains/branch-management/core/composables/createBranchMergeStatusQuery', () => ({
-	createBranchMergeStatusQuery: () => ({
-		data: undefined,
-		isLoading: false,
-		isError: false,
-		error: null
-	})
-}));
-
 vi.mock('$domains/branch-management/core/composables/createSwitchBranchMutation', () => {
 	return {
 		createSwitchBranchMutation: vi.fn(({ onSuccess }) => {
