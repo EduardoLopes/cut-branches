@@ -88,18 +88,6 @@ vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	})
 }));
 
-// Mock the branch list query
-vi.mock('$domains/repository-management/infrastructure/queries/get-branch-list-query', () => ({
-	getBranchListQuery: () => ({
-		data: { branches: mockBranches },
-		isLoading: false,
-		isError: false,
-		error: null,
-		dataUpdatedAt: Date.now(),
-		refetch: vi.fn().mockResolvedValue({ data: { branches: mockBranches } })
-	})
-}));
-
 // Mock the get branches query used by branch-list component
 vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: () => ({
