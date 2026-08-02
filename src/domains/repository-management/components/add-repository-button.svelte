@@ -22,7 +22,10 @@
 		...props
 	}: Props = $props();
 
-	const addRepo = useAddRepository({ onSuccess });
+	// Wrapped rather than passed straight through: `onSuccess` is read inside
+	// the closure, so a parent that swaps the callback after mount is honoured
+	// instead of the composable holding the value it saw on the first render.
+	const addRepo = useAddRepository({ onSuccess: (data) => onSuccess?.(data) });
 </script>
 
 <Loading loading={addRepo.isPending}>
