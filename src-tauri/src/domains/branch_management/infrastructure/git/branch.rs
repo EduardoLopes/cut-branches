@@ -284,6 +284,39 @@ pub fn branch_diff_stats_in_repo(
     Ok((stats.insertions(), stats.deletions()))
 }
 
+/// Resolves the HEAD tip and each named branch's tip to commit SHAs — ref
+/// lookups only, no graph walks. Branches that no longer resolve are omitted
+/// (same tolerance as the bulk metrics compute). Used by the metrics cache:
+/// the (head, tip) pair is the cache key.
+pub fn resolve_branch_tips(
+    path: &Path,
+    branch_names: &[String],
+) -> Result<(String, Vec<(String, String)>), AppError> {
+    let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
+        path: path.display().to_string(),
+        source: e,
+    })?;
+
+    let head_sha = repo
+        .head()
+        .map_err(|e| BranchError::HeadNotFound { source: e })?
+        .peel_to_commit()
+        .map_err(|e| BranchError::HeadCommitFailed { source: e })?
+        .id()
+        .to_string();
+
+    let tips = branch_names
+        .iter()
+        .filter_map(|name| {
+            let branch = repo.find_branch(name, BranchType::Local).ok()?;
+            let commit = branch.get().peel_to_commit().ok()?;
+            Some((name.clone(), commit.id().to_string()))
+        })
+        .collect();
+
+    Ok((head_sha, tips))
+}
+
 /// Merge status + diff stats for one branch from a single merge-base lookup:
 /// a branch is fully merged into HEAD exactly when the merge base *is* the
 /// branch tip, so the ancestry walk `is_branch_merged` does separately comes

@@ -1,3 +1,4 @@
+pub mod branch_metrics;
 pub mod deletion;
 pub mod locked_branches;
 pub mod restoration;

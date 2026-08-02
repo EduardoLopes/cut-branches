@@ -262,7 +262,8 @@ async getBranchDiffStats(input: GetBranchDiffStatsInput) : Promise<Result<GetBra
 },
 /**
  * Gets merge status and diff stats for a batch of branches in one call,
- * opening the repository once. Branches that fail to resolve are omitted
+ * served from the persistent `(HEAD sha, branch sha)` cache with only the
+ * misses computed (in parallel). Branches that fail to resolve are omitted
  * from the output rather than failing the batch.
  * 
  * # Arguments

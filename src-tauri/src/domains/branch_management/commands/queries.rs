@@ -217,7 +217,8 @@ pub async fn get_branch_diff_stats(
 }
 
 /// Gets merge status and diff stats for a batch of branches in one call,
-/// opening the repository once. Branches that fail to resolve are omitted
+/// served from the persistent `(HEAD sha, branch sha)` cache with only the
+/// misses computed (in parallel). Branches that fail to resolve are omitted
 /// from the output rather than failing the batch.
 ///
 /// # Arguments
@@ -230,6 +231,7 @@ pub async fn get_branch_diff_stats(
 #[tauri::command(async)]
 #[specta::specta]
 pub async fn bulk_get_branch_metrics(
+    db: State<'_, crate::shared::infrastructure::db::DatabaseState>,
     input: BulkGetBranchMetricsInput,
 ) -> Result<BulkGetBranchMetricsOutput, AppError> {
     // Validate every branch name at the boundary (§1.2).
@@ -244,9 +246,10 @@ pub async fn bulk_get_branch_metrics(
         .collect();
 
     let raw_path = Path::new(&input.path);
+    let mut conn = db.connection()?;
     let records =
-        crate::domains::branch_management::infrastructure::git::branch::bulk_get_branch_metrics(
-            raw_path, &names,
+        crate::domains::branch_management::core::application::branch_metrics::bulk_get_branch_metrics_cached(
+            raw_path, &names, &mut conn,
         )?;
 
     Ok(BulkGetBranchMetricsOutput {

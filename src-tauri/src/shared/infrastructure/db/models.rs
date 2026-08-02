@@ -90,6 +90,31 @@ pub struct NewCommitRecord {
     pub email: String,
 }
 
+// Branch metrics cache (branch_management domain): one row per
+// (HEAD tip sha, branch tip sha) pair ever measured. Content-addressed and
+// immutable — see the migration comment. Internal only, so no serde/specta.
+// Read model deliberately omits `head_sha` (the caller queried by it) and
+// `computed_at` (pruning bookkeeping only).
+#[derive(Debug, Clone, Queryable, Selectable)]
+#[diesel(table_name = branch_metrics_cache)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct BranchMetricsCacheRecord {
+    pub branch_sha: String,
+    pub is_merged: bool,
+    pub lines_added: i32,
+    pub lines_removed: i32,
+}
+
+#[derive(Debug, Clone, Insertable)]
+#[diesel(table_name = branch_metrics_cache)]
+pub struct NewBranchMetricsCacheRecord {
+    pub head_sha: String,
+    pub branch_sha: String,
+    pub is_merged: bool,
+    pub lines_added: i32,
+    pub lines_removed: i32,
+}
+
 // Branch models
 #[derive(
     Debug, Clone, Queryable, Selectable, Identifiable, Associations, Serialize, Deserialize, Type,

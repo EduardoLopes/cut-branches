@@ -155,6 +155,17 @@ fn sync_branches_to_db_internal(
             )
         })?;
 
+    // Opportunistic hygiene for the branch-metrics cache: sync already runs
+    // whenever refs changed, which is exactly when old (head, tip) pairs stop
+    // being looked up. Failure is non-fatal — pruning is an optimization.
+    if let Err(e) =
+        crate::domains::branch_management::infrastructure::repositories::prune_branch_metrics_cache(
+            conn,
+        )
+    {
+        log::warn!("Failed to prune branch metrics cache: {e}");
+    }
+
     // Note: the repository's `last_synced_at` is owned by repository_management,
     // which sets it when creating/updating the repo record — branch sync no longer
     // writes the repositories table (data ownership, ADR 002).

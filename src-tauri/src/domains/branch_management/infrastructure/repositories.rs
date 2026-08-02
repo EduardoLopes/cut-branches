@@ -399,6 +399,83 @@ pub fn remove_locked_branches(
     .execute(conn)
 }
 
+// Branch metrics cache operations. The cache is keyed by
+// (HEAD tip sha, branch tip sha); within one lookup batch the HEAD sha is a
+// single constant, so the tuple key collapses to an indexed equality filter
+// plus an IN() over the branch tips.
+
+/// Cached metrics rows for a batch of branch tips under one HEAD.
+pub fn get_branch_metrics_cache_batch(
+    conn: &mut SqliteConnection,
+    head: &str,
+    branch_shas: &[String],
+) -> Result<Vec<BranchMetricsCacheRecord>, DieselError> {
+    branch_metrics_cache::table
+        .filter(branch_metrics_cache::head_sha.eq(head))
+        .filter(branch_metrics_cache::branch_sha.eq_any(branch_shas))
+        .select(BranchMetricsCacheRecord::as_select())
+        .load(conn)
+}
+
+/// Upserts freshly computed metrics rows. `INSERT OR REPLACE` semantics: a
+/// recomputed pair simply refreshes `computed_at`.
+pub fn upsert_branch_metrics_cache_batch(
+    conn: &mut SqliteConnection,
+    records: &[NewBranchMetricsCacheRecord],
+) -> Result<usize, DieselError> {
+    if records.is_empty() {
+        return Ok(0);
+    }
+    diesel::replace_into(branch_metrics_cache::table)
+        .values(records)
+        .execute(conn)
+}
+
+/// Retention window for cache rows. A busy repository re-keys the whole cache
+/// on every commit to HEAD, so old rows are dead weight; 30 days comfortably
+/// covers "came back to a branch after a while" without unbounded growth.
+pub const BRANCH_METRICS_CACHE_MAX_AGE_DAYS: i64 = 30;
+/// Hard row cap as a backstop against pathological churn (monorepos with
+/// constant HEAD movement). Oldest rows go first.
+pub const BRANCH_METRICS_CACHE_MAX_ROWS: i64 = 50_000;
+
+/// Prunes the metrics cache by age, then by the row cap. Pruning is purely an
+/// optimization concern — a pruned pair just recomputes on next sight.
+pub fn prune_branch_metrics_cache(conn: &mut SqliteConnection) -> Result<usize, DieselError> {
+    use chrono::{Duration, Utc};
+
+    let cutoff = Utc::now().naive_utc() - Duration::days(BRANCH_METRICS_CACHE_MAX_AGE_DAYS);
+    let mut deleted = diesel::delete(
+        branch_metrics_cache::table.filter(branch_metrics_cache::computed_at.lt(cutoff)),
+    )
+    .execute(conn)?;
+
+    let count: i64 = branch_metrics_cache::table.count().get_result(conn)?;
+    if count > BRANCH_METRICS_CACHE_MAX_ROWS {
+        let excess = count - BRANCH_METRICS_CACHE_MAX_ROWS;
+        // SQLite can't ORDER BY/LIMIT inside DELETE through diesel; select the
+        // oldest keys first, then delete them. Two statements, tiny sets.
+        let oldest: Vec<(String, String)> = branch_metrics_cache::table
+            .order(branch_metrics_cache::computed_at.asc())
+            .limit(excess)
+            .select((
+                branch_metrics_cache::head_sha,
+                branch_metrics_cache::branch_sha,
+            ))
+            .load(conn)?;
+        for (head, branch) in &oldest {
+            deleted += diesel::delete(
+                branch_metrics_cache::table
+                    .filter(branch_metrics_cache::head_sha.eq(head))
+                    .filter(branch_metrics_cache::branch_sha.eq(branch)),
+            )
+            .execute(conn)?;
+        }
+    }
+
+    Ok(deleted)
+}
+
 pub fn clear_locked_branches(
     conn: &mut SqliteConnection,
     repo_id: &str,
@@ -521,5 +598,70 @@ mod tests {
 
         let remaining: Vec<String> = commits::table.select(commits::sha).load(&mut conn).unwrap();
         assert_eq!(remaining, vec![SHA_A.to_string()]);
+    }
+
+    fn metrics_row(head: &str, branch: &str) -> NewBranchMetricsCacheRecord {
+        NewBranchMetricsCacheRecord {
+            head_sha: head.to_string(),
+            branch_sha: branch.to_string(),
+            is_merged: false,
+            lines_added: 3,
+            lines_removed: 1,
+        }
+    }
+
+    #[test]
+    fn branch_metrics_cache_round_trips_per_head() {
+        let mut conn = test_conn();
+        upsert_branch_metrics_cache_batch(
+            &mut conn,
+            &[metrics_row(SHA_A, SHA_B), metrics_row(SHA_B, SHA_A)],
+        )
+        .unwrap();
+
+        // Only the rows under the requested HEAD come back.
+        let rows = get_branch_metrics_cache_batch(&mut conn, SHA_A, &[SHA_B.to_string()]).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].branch_sha, SHA_B);
+        assert_eq!(rows[0].lines_added, 3);
+
+        // Same pair again replaces rather than erroring, and updates values.
+        let mut replacement = metrics_row(SHA_A, SHA_B);
+        replacement.lines_added = 42;
+        upsert_branch_metrics_cache_batch(&mut conn, &[replacement]).unwrap();
+        let rows = get_branch_metrics_cache_batch(&mut conn, SHA_A, &[SHA_B.to_string()]).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].lines_added, 42);
+
+        // Empty input is a no-op.
+        assert_eq!(
+            upsert_branch_metrics_cache_batch(&mut conn, &[]).unwrap(),
+            0
+        );
+    }
+
+    #[test]
+    fn prune_branch_metrics_cache_drops_old_rows() {
+        let mut conn = test_conn();
+        upsert_branch_metrics_cache_batch(
+            &mut conn,
+            &[metrics_row(SHA_A, SHA_B), metrics_row(SHA_B, SHA_A)],
+        )
+        .unwrap();
+
+        // Age one row past the retention window.
+        diesel::update(
+            branch_metrics_cache::table.filter(branch_metrics_cache::branch_sha.eq(SHA_A)),
+        )
+        .set(branch_metrics_cache::computed_at.eq(
+            diesel::dsl::sql::<diesel::sql_types::Timestamp>("datetime('now', '-40 days')"),
+        ))
+        .execute(&mut conn)
+        .unwrap();
+
+        let deleted = prune_branch_metrics_cache(&mut conn).unwrap();
+        assert_eq!(deleted, 1);
+        let rows = get_branch_metrics_cache_batch(&mut conn, SHA_A, &[SHA_B.to_string()]).unwrap();
+        assert_eq!(rows.len(), 1, "fresh row must survive");
     }
 }

@@ -19,6 +19,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    branch_metrics_cache (head_sha, branch_sha) {
+        head_sha -> Text,
+        branch_sha -> Text,
+        is_merged -> Bool,
+        lines_added -> Integer,
+        lines_removed -> Integer,
+        computed_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     cleanup_history (id) {
         id -> Nullable<Integer>,
         repository_id -> Text,
@@ -59,4 +70,9 @@ diesel::table! {
 diesel::joinable!(branches -> repositories (repository_id));
 diesel::joinable!(branches -> commits (head_commit_sha));
 
-diesel::allow_tables_to_appear_in_same_query!(branches, commits, repositories,);
+diesel::allow_tables_to_appear_in_same_query!(
+    branch_metrics_cache,
+    branches,
+    commits,
+    repositories,
+);
