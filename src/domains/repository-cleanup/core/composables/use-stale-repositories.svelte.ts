@@ -194,8 +194,13 @@ export function useStaleRepositories() {
 						mode
 					});
 					freedBytes += output.freedBytes;
-					failedTargets += output.results.filter((r) => !r.ok).length;
-					cleanedRepos += 1;
+					const succeeded = output.results.filter((r) => r.ok).length;
+					failedTargets += output.results.length - succeeded;
+					// The command succeeding only means it ran — every individual
+					// folder can still have failed. Counting the repo regardless
+					// let the summary claim "Cleaned 3 repositories" when nothing
+					// was actually removed from them.
+					if (succeeded > 0) cleanedRepos += 1;
 				} catch {
 					// executeCommand throws on a whole-command failure; count the repo's
 					// selected targets as failed and continue with the rest.

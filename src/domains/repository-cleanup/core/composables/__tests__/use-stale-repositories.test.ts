@@ -176,6 +176,32 @@ describe('useStaleRepositories', () => {
 		cleanup();
 	});
 
+	it('does not count a repository whose every folder failed as cleaned', async () => {
+		const { stale, cleanup } = setup([repo('r1', [target('/r1/dist', 10)])]);
+
+		// The command itself succeeds, but the one folder it touched did not.
+		executeCommand.mockImplementation(async (_cmd: string, input: { targets: string[] }) => ({
+			freedBytes: 0,
+			results: input.targets.map((path) => ({
+				path,
+				ok: false,
+				bytesFreed: 0,
+				error: 'permission denied'
+			}))
+		}));
+
+		await stale.cleanSelected('permanent');
+		flushSync();
+
+		expect(push).toHaveBeenCalledWith(
+			expect.objectContaining({
+				feedback: 'warning',
+				title: 'Cleaned 0 repositories'
+			})
+		);
+		cleanup();
+	});
+
 	it('counts a thrown command as failed and warns', async () => {
 		const { stale, cleanup } = setup([repo('r1', [target('/r1/dist', 10)])]);
 		executeCommand.mockRejectedValue(new Error('crash'));
