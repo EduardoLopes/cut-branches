@@ -44,7 +44,12 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 	if (error instanceof z.ZodError) {
 		const errorMessage = z.prettifyError(error);
 
-		throw createErrorObject(
+		// Returned, not thrown: every other branch returns, and the callers are
+		// TanStack's QueryCache/MutationCache `onError` handlers, which use the
+		// result to build the user-facing notification. Throwing from there
+		// escaped into the cache callback and lost the notification for exactly
+		// the failures the user needs to hear about.
+		return createErrorObject(
 			{
 				message: error.message,
 				kind: error.name,

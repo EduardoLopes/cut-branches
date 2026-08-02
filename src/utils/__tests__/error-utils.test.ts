@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { z } from 'zod/v4';
 import { AppErrorSchema, createError, getErrorMessage, type AppError } from '../error-utils';
 
 describe('AppErrorSchema', () => {
@@ -37,6 +38,30 @@ describe('AppErrorSchema', () => {
 });
 
 describe('createError', () => {
+	describe('when passed a ZodError', () => {
+		it('should return the error instead of throwing', () => {
+			const zodError = (() => {
+				try {
+					z.object({ name: z.string() }).parse({ name: 42 });
+					throw new Error('schema unexpectedly accepted the value');
+				} catch (error) {
+					return error as z.ZodError;
+				}
+			})();
+
+			// The callers are TanStack's cache-level `onError` handlers: a throw
+			// here escapes into the cache callback and the user never sees the
+			// error notification the handler exists to raise.
+			expect(() => createError(zodError, { extra: { code: 422 } })).not.toThrow();
+
+			const result = createError(zodError, { extra: { code: 422 } });
+
+			expect(result.kind).toBe('ZodError');
+			expect(result.description).toContain('name');
+			expect(result.code).toBe(422);
+		});
+	});
+
 	describe('when passed an AppError object', () => {
 		it('should return the object as is with extra properties', () => {
 			const appError: AppError = {
