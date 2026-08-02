@@ -117,14 +117,13 @@ const RESOURCE_MAPPINGS: Partial<Record<CommandName, CommandName[]>> = {
 	removeWorktree: ['listWorktrees'],
 	lockWorktree: ['listWorktrees'],
 	unlockWorktree: ['listWorktrees'],
+	// Only commands the frontend actually observes are listed. getBranchMergeStatus,
+	// getBranchDiffStats, getCommitReachability, listBranchSelection and
+	// listDeletedBranchSelection are still Tauri commands but no query subscribes
+	// to them, so invalidating them was a no-op that implied coverage we don't have.
 	deleteRepository: [
 		'getBranchList',
-		'getBranchMergeStatus',
-		'getBranchDiffStats',
 		'bulkGetBranchMetrics',
-		'getCommitReachability',
-		'listBranchSelection',
-		'listDeletedBranchSelection',
 		'listLockedBranches',
 		'listChangedFiles',
 		'getFileDiff',
