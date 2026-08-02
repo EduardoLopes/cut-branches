@@ -8,7 +8,10 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"types": ["vitest/globals", "@testing-library/jest-dom"],
+		// `@testing-library/jest-dom` is deliberately absent: Vitest 4 ships the DOM
+		// matchers (`toBeInTheDocument` and friends) itself, and the package is not a
+		// dependency — listing it here only made TS fail to resolve the type entry.
+		"types": ["vitest/globals"],
 		"baseUrl": ".",
 		"paths": {
 			// Pin `svelte` to this project's copy. In local-Pindoba mode the sibling
