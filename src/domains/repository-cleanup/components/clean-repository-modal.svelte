@@ -124,7 +124,7 @@
 			<!-- Results panel. A Panel (not a styled div) so the target rows inside
 			     can derive their corners from this well's radius. -->
 			<Panel
-				background="surface.soft"
+				background="surface.peak"
 				border="muted"
 				radius="lg"
 				padding="none"
@@ -189,7 +189,7 @@
 							borderBottomWidth: '1px',
 							borderBottomStyle: 'solid',
 							borderBottomColor: 'neutral.border.muted',
-							background: 'neutral.surface.step.1'
+							background: 'neutral.surface.hill'
 						})}
 					>
 						<Checkbox

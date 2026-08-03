@@ -49,7 +49,7 @@
 	as="label"
 	interactive
 	align="start"
-	background={enabled ? 'surface.soft' : 'surface.step.2'}
+	background={enabled ? 'surface.peak' : 'surface.base'}
 	feedback="neutral"
 	border={enabled ? 'default' : 'muted'}
 	class={css({ cursor: 'pointer', width: '100%' })}

@@ -149,12 +149,12 @@
 	const rowRun = css(rowBaseRaw, {
 		cursor: 'pointer',
 		borderBottom: 'none',
-		_hover: { background: 'neutral.surface.step.2' }
+		_hover: { background: 'neutral.surface.base' }
 	});
 	// Local-branch head rows — the deletion candidates — get a raised surface
 	// and an accent spine so the eye can compare tips at a glance.
 	const rowHead = css({
-		background: 'neutral.surface.step.2',
+		background: 'neutral.surface.base',
 		boxShadow: 'inset 3px 0 0 0 token(colors.accent.border.muted)'
 	});
 	// Deep-link target: a brief highlight in the branch's OWN lane color (spine +
@@ -173,7 +173,7 @@
 		height: '14px',
 		overflowX: 'auto',
 		overflowY: 'hidden',
-		background: 'neutral.surface.step.1',
+		background: 'neutral.surface.hill',
 		borderTop: '1px solid token(colors.neutral.border.muted)'
 	});
 	const loadingFooter = css({
@@ -183,7 +183,7 @@
 		py: 'xs',
 		fontSize: 'xs',
 		color: 'neutral.text.muted',
-		background: 'neutral.surface.step.1'
+		background: 'neutral.surface.hill'
 	});
 </script>
 

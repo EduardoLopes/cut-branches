@@ -246,13 +246,13 @@
 		maxWidth: '100%'
 	});
 	const headerRow = css({
-		background: 'neutral.surface.step.3',
+		background: 'neutral.surface.valley',
 		color: 'neutral.text.muted',
 		whiteSpace: 'pre',
 		'& > span': { px: 'sm', py: '2xs' }
 	});
 	const expanderRow = css({
-		background: 'neutral.surface.step.2',
+		background: 'neutral.surface.base',
 		py: '2xs',
 		'& > span': { px: 'xs' }
 	});
@@ -287,7 +287,7 @@
 		fontVariantNumeric: 'tabular-nums',
 		'&[data-kind="added"]': { background: 'success.text.accent/25', color: 'success.text' },
 		'&[data-kind="removed"]': { background: 'danger.text.accent/25', color: 'danger.text' },
-		'&[data-kind="empty"]': { background: 'neutral.surface.step.2' },
+		'&[data-kind="empty"]': { background: 'neutral.surface.base' },
 		'[data-variant="bars"] &': {
 			'&[data-kind="added"]': {
 				boxShadow: 'inset 3px 0 0 0 token(colors.success.text.accent)'
@@ -322,7 +322,7 @@
 			'&[data-kind="added"]': { background: 'success.text.accent/8' },
 			'&[data-kind="removed"]': { background: 'danger.text.accent/8' }
 		},
-		'&[data-kind="empty"]': { background: 'neutral.surface.step.2' }
+		'&[data-kind="empty"]': { background: 'neutral.surface.base' }
 	});
 	const lineContent = css({
 		whiteSpace: 'pre',

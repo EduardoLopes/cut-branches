@@ -122,7 +122,7 @@
 -->
 <Panel
 	as="section"
-	background="surface.soft"
+	background="surface.peak"
 	emphasis="secondary"
 	border="muted"
 	shadow="sm"
@@ -168,7 +168,7 @@
 			px: 'xs',
 			justifyContent: 'flex-start',
 			py: '2xs',
-			background: 'neutral.surface.soft',
+			background: 'neutral.surface.peak',
 			borderTopWidth: '1px',
 			borderTopStyle: 'solid',
 			borderTopColor: 'neutral.border.muted'

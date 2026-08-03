@@ -508,7 +508,7 @@
 >
 	<Card
 		size="xs"
-		background="surface.step.2"
+		background="surface.base"
 		border="muted"
 		shadow="none"
 		radius="sm"
@@ -517,7 +517,7 @@
 			heading: { content: heading, trailing: headingTrailing },
 			headingTextStyle: 'body.sm',
 			layout: { heading: { trailing: 'apart' } },
-			background: 'surface.soft',
+			background: 'surface.peak',
 			// Let the path shrink/ellipsize instead of overflowing: every Banner
 			// wrapper needs min-width: 0, and the trailing badges keep their size.
 			// The header also sticks to the top of the scrolling file list while

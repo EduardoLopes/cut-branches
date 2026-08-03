@@ -53,7 +53,7 @@
 	<div class={css({ '& > div': { marginBottom: '0' } })}>
 		<Loading loading={showLoading} passThrough={{ root: { style: css.raw({ width: '100%' }) } }}>
 			<Panel
-				background="surface.deep"
+				background="surface.ground"
 				radius="lg"
 				padding="sm"
 				class={css({

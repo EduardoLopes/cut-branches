@@ -113,7 +113,7 @@
 		recentCommits,
 		onRecentCommitsIntent,
 		size,
-		background = 'surface.step.2',
+		background = 'surface.base',
 		border = 'muted',
 		shadow,
 		radius
@@ -505,7 +505,7 @@
 			     whatever `radius`/`size` the consumer gave the card. -->
 			<Panel
 				{feedback}
-				background="surface.deep"
+				background="surface.ground"
 				radius="inner"
 				padding="xs"
 				class={css({
@@ -669,7 +669,7 @@
 	passThrough={{ root: { style: rootStyle } }}
 	header={{
 		heading: heading as PrimitiveCardHeaderProps['heading'],
-		background: 'surface.soft',
+		background: 'surface.peak',
 		...(compact ? { headingTextStyle: 'body.sm' } : {}),
 		// Let the branch name shrink so its ellipsis engages in narrow hosts
 		// (e.g. the history gutter). The Banner nests the heading through
@@ -686,7 +686,7 @@
 	}}
 	footer={upstreamShown || diffShown || branch.getDeletedAt() || footerBadges
 		? {
-				...(diffShown || upstreamShown || footerBadges ? { background: 'surface.step.3' } : {}),
+				...(diffShown || upstreamShown || footerBadges ? { background: 'surface.hill' } : {}),
 				...(upstreamShown ? { children: footerMeta } : {}),
 				...(diffShown || branch.getDeletedAt() || footerBadges
 					? { trailing: footerTrailing as PrimitiveCardFooterProps['trailing'] }

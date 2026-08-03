@@ -104,7 +104,7 @@
 			display: 'flex',
 			height: '100%',
 			overflow: 'hidden',
-			background: 'neutral.surface.deep'
+			background: 'neutral.surface.ground'
 		})}
 		data-testid="settings-view"
 	>
@@ -118,7 +118,7 @@
 				overflow: 'hidden',
 				gap: 'md',
 				p: 'md',
-				background: 'neutral.surface.step.2',
+				background: 'neutral.surface.base',
 				borderRightWidth: '1px',
 				borderRightStyle: 'solid',
 				borderRightColor: 'neutral.border.muted'

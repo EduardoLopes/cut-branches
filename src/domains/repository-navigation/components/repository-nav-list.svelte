@@ -140,7 +140,7 @@
 	</Stamp>
 {/snippet}
 
-<!-- Recessed group panel: the repository list reads as one surface.deep
+<!-- Recessed group panel: the repository list reads as one surface.ground
      region (header + scroll box). Content is inset on the left only; the
      right edge is flush so the scroll box's scrollbar (below) sits against
      the panel edge instead of floating with a gap. -->
@@ -151,7 +151,7 @@
 		display: 'flex',
 		flexDirection: 'column',
 		gap: '2xs',
-		background: 'neutral.surface.soft',
+		background: 'neutral.surface.peak',
 		paddingBlock: '2xs',
 		// Expanded: inset the content on the left, flush right so the scrollbar
 		// hugs the panel edge. Rail: items are centered, so keep the horizontal
@@ -332,7 +332,7 @@
 				zIndex: 1,
 				opacity: 0,
 				transition: 'opacity 120ms ease',
-				background: 'linear-gradient(to bottom, token(colors.neutral.surface.soft), transparent)',
+				background: 'linear-gradient(to bottom, token(colors.neutral.surface.peak), transparent)',
 				'[data-overflow-top] ~ &': { opacity: 1 }
 			})}
 		></div>
@@ -347,7 +347,7 @@
 				zIndex: 1,
 				opacity: 0,
 				transition: 'opacity 120ms ease',
-				background: 'linear-gradient(to top, token(colors.neutral.surface.soft), transparent)',
+				background: 'linear-gradient(to top, token(colors.neutral.surface.peak), transparent)',
 				'[data-overflow-bottom] ~ &': { opacity: 1 }
 			})}
 		></div>

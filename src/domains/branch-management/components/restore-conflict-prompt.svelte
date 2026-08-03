@@ -18,7 +18,7 @@
 		display: 'flex',
 		flexDirection: 'column',
 		gap: 'xs',
-		background: 'neutral.surface.deep',
+		background: 'neutral.surface.ground',
 		p: 'sm',
 		borderRadius: 'lg',
 		border: '1px solid token(colors.neutral.border.muted)'

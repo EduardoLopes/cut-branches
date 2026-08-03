@@ -55,8 +55,8 @@
 				alignItems: 'flex-start',
 				paddingX: 'xs',
 				paddingY: 'xs',
-				background: selected ? 'neutral.surface.step.3' : 'neutral.surface.step.2',
-				_hover: { background: 'neutral.surface.step.3' }
+				background: selected ? 'neutral.surface.valley' : 'neutral.surface.base',
+				_hover: { background: 'neutral.surface.valley' }
 			})}
 		>
 			<Banner

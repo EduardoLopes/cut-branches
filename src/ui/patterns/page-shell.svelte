@@ -26,7 +26,7 @@
 		minHeight: '0',
 		overflow: 'hidden',
 		position: 'relative',
-		background: 'neutral.surface.step.1',
+		background: 'neutral.surface.peak',
 		color: 'neutral.text'
 	})}
 	data-testid={testId}

@@ -56,7 +56,7 @@
      aligns to it anymore — the version sits plainly on the left and all the
      controls (theme mode included) group on the right. -->
 <Panel
-	background="surface.deep"
+	background="surface.ground"
 	radius="none"
 	class={css({
 		marginTop: 'auto',
@@ -184,7 +184,7 @@
 									height: '14px',
 									px: '4xs',
 									borderRadius: 'full',
-									background: 'danger.surface.deep',
+									background: 'danger.surface.ground',
 									color: 'danger.text.contrast',
 									fontSize: '9px',
 									fontWeight: 'bold',

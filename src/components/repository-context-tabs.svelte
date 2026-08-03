@@ -74,7 +74,7 @@
 			id="context-branches"
 			name="repository-context"
 			value="branches"
-			background="surface.deep"
+			background="surface.valley"
 			appearance="tab"
 			checked={currentContext === 'branches'}
 			role="tab"
@@ -96,7 +96,7 @@
 			id="context-worktrees"
 			name="repository-context"
 			value="worktrees"
-			background="surface.deep"
+			background="surface.valley"
 			appearance="tab"
 			checked={currentContext === 'worktrees'}
 			role="tab"

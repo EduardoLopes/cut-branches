@@ -181,7 +181,7 @@
 			{/if}
 
 			<Panel
-				background="surface.soft"
+				background="surface.peak"
 				border="muted"
 				radius="lg"
 				padding="none"
@@ -242,7 +242,7 @@
 							borderBottomWidth: '1px',
 							borderBottomStyle: 'solid',
 							borderBottomColor: 'neutral.border.muted',
-							background: 'neutral.surface.step.1'
+							background: 'neutral.surface.hill'
 						})}
 					>
 						<Checkbox
@@ -297,9 +297,9 @@
 									// ellipsize instead of forcing horizontal overflow.
 									minWidth: '0',
 									maxWidth: 'full',
-									background: isSelected ? 'danger.surface.soft' : 'transparent',
+									background: isSelected ? 'danger.surface.peak' : 'transparent',
 									_hover: {
-										background: isSelected ? 'danger.surface' : 'neutral.surface.step.1'
+										background: isSelected ? 'danger.surface' : 'neutral.surface.hill'
 									}
 								})}
 							>

@@ -47,7 +47,7 @@
 		gap: 'xs',
 		p: 'sm',
 		borderTop: '1px solid token(colors.neutral.border.muted)',
-		background: 'neutral.surface.step.1'
+		background: 'neutral.surface.hill'
 	});
 	const toolbar = css({ display: 'flex', alignItems: 'center', gap: 'xs', flexWrap: 'wrap' });
 	const costNote = css({ fontSize: 'xs', color: 'neutral.text.muted', ml: 'auto' });

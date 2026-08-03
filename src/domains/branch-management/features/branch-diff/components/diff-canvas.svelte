@@ -380,7 +380,7 @@
 		flex: '1',
 		overflow: 'clip',
 		touchAction: 'none',
-		background: 'neutral.surface.step.1',
+		background: 'neutral.surface.hill',
 		// Hand tool: the grab cursor wins over every child (nodes, buttons,
 		// diff text) while space is held — and dragging must pan, not select
 		// the text under the pointer.
@@ -418,7 +418,7 @@
 		gap: 'xs',
 		fontSize: 'xs',
 		color: 'neutral.text',
-		background: 'neutral.surface.step.2',
+		background: 'neutral.surface.base',
 		border: '1px solid token(colors.primary.border)',
 		px: 'sm',
 		py: '2xs',
@@ -431,7 +431,7 @@
 		transform: 'translateX(-50%)',
 		fontSize: 'xs',
 		color: 'neutral.text.muted',
-		background: 'neutral.surface.step.2',
+		background: 'neutral.surface.base',
 		px: 'sm',
 		py: '2xs',
 		borderRadius: 'sm',

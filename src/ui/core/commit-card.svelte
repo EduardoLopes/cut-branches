@@ -82,7 +82,7 @@
 		diffHref,
 		hoverPreview,
 		size = 'sm',
-		background = 'surface.step.1',
+		background = 'surface.hill',
 		border = 'muted',
 		shadow = 'none',
 		radius = 'sm'
@@ -452,7 +452,7 @@
 						headingTrailing: { style: css.raw({ flexShrink: '0' }) }
 					}
 				: undefined,
-			background: 'surface.soft'
+			background: 'surface.peak'
 			// Top-align the branch icon to the message block so it hugs the subject
 			// line rather than floating to the vertical center of a multi-line body.
 		}}
@@ -462,7 +462,7 @@
 			// The diff button lives in the footer's trailing slot so it hugs the
 			// right edge — same position as on the branch card.
 			...(diffHref ? { trailing: diffLink as PrimitiveCardFooterProps['trailing'] } : {}),
-			background: 'surface.step.2',
+			background: 'surface.base',
 			passThrough: {
 				trailing: { style: css.raw({ flexShrink: '0' }) }
 			}

@@ -120,7 +120,7 @@
 					justifyContent: 'space-between',
 					gap: 'xl',
 					padding: '3xl',
-					background: 'neutral.surface.soft'
+					background: 'neutral.surface.peak'
 				})}
 			>
 				<div
@@ -210,14 +210,14 @@
 					padding: '3xl',
 					position: 'relative',
 					overflow: 'hidden',
-					background: 'primary.surface.soft',
+					background: 'primary.surface.peak',
 					color: 'primary.text.bold',
 					'&::before': {
 						content: '""',
 						position: 'absolute',
 						inset: 0,
 						background:
-							'radial-gradient(circle at 78% 18%, token(colors.primary.surface.step.3) 0%, transparent 55%), radial-gradient(circle at 15% 92%, token(colors.primary.surface.step.2) 0%, transparent 55%)',
+							'radial-gradient(circle at 78% 18%, token(colors.primary.surface.valley) 0%, transparent 55%), radial-gradient(circle at 15% 92%, token(colors.primary.surface.base) 0%, transparent 55%)',
 						opacity: 0.85,
 						pointerEvents: 'none'
 					}

@@ -185,7 +185,7 @@
 		p: 'sm',
 		maxWidth: 'min(72ch, calc(100% - token(spacing.md)))',
 		fontFamily: 'body',
-		background: 'neutral.surface.step.3',
+		background: 'neutral.surface.valley',
 		border: '1px solid token(colors.primary.border.muted)',
 		borderRadius: 'md'
 	});

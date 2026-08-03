@@ -60,7 +60,7 @@
 		pointerEvents: 'none'
 	});
 	const chip = css({
-		fill: 'token(colors.neutral.surface.step.2)',
+		fill: 'token(colors.neutral.surface.base)',
 		stroke: 'token(colors.neutral.border)',
 		strokeWidth: '1'
 	});

@@ -90,7 +90,7 @@
 		position: 'relative'
 	});
 	// Node "gap" color, themed — matches the surface so lines don't touch the dot.
-	const nodeRingStroke = css({ stroke: 'neutral.surface.step.1' });
+	const nodeRingStroke = css({ stroke: 'neutral.surface.hill' });
 	const headOverlay = css({
 		position: 'absolute',
 		inset: '0',
@@ -122,7 +122,7 @@
 		width: '13px',
 		height: '13px',
 		borderRadius: 'full',
-		background: 'neutral.surface.step.1',
+		background: 'neutral.surface.hill',
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center'

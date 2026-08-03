@@ -203,7 +203,7 @@
 		flexDirection: 'column',
 		padding: `${NODE_PADDING}px`,
 		textAlign: 'left',
-		background: 'neutral.surface.step.2',
+		background: 'neutral.surface.base',
 		border: '1px solid token(colors.neutral.border.muted)',
 		borderRadius: 'sm',
 		overflow: 'clip',

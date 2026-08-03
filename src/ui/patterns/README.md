@@ -21,7 +21,7 @@ to make:
 PageShell                  full-height host, one background, the minHeight:0 chain
 ├── PageHeader             breadcrumb? · leading icon · heading · subheading? · actions
 │   └── nav?               CONTEXT navigation — links to sibling pages
-└── PageWell               recessed Panel (surface.deep, radius xl), publishes its
+└── PageWell               recessed Panel (surface.ground, radius xl), publishes its
     │                      radius so cards inside use radius="inner"
     ├── PageToolbar?       FILTERS, search and bulk actions (sticky, translucent)
     ├── content            the scrolling body
@@ -60,7 +60,7 @@ Banner).
   snippet) or `value?` (right-aligned read-only mono text), `align?`
   (`'center'` default | `'start'`), plus `as` / `interactive` / `background` /
   `feedback` / `border` / `class` / `testId` for polymorphic, clickable rows.
-- Canonical card: `size: sm`, `background: surface.step.2`, `border: default`
+- Canonical card: `size: sm`, `background: surface.base`, `border: default`
   (raised above the section's `deep` well).
 
 ## Conventions

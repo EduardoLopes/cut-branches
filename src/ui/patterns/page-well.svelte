@@ -39,7 +39,7 @@
 	which is what republishes `--panel-out-padding` for the cards.
 -->
 <Panel
-	background="surface.deep"
+	background="surface.ground"
 	border="muted"
 	radius="inner"
 	padding="none"

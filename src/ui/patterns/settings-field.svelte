@@ -39,7 +39,7 @@
 		align = 'center',
 		as,
 		interactive,
-		background = 'surface.soft',
+		background = 'surface.peak',
 		feedback,
 		border = 'default',
 		radius = 'inner',

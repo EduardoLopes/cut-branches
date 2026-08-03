@@ -43,7 +43,7 @@
 		borderRadius: 'full',
 		border: '1px solid',
 		borderColor: 'neutral.border.muted',
-		background: 'neutral.surface.step.1',
+		background: 'neutral.surface.hill',
 		boxShadow: 'sm',
 		whiteSpace: 'nowrap'
 	});

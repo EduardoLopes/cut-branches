@@ -217,7 +217,7 @@
 					borderWidth: '1px',
 					borderStyle: 'solid',
 					borderColor: 'neutral.border.muted',
-					background: 'neutral.surface.soft'
+					background: 'neutral.surface.peak'
 				})}
 			>
 				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm', minWidth: '0' })}>
@@ -306,7 +306,7 @@
 
 			<!-- Results panel (fixed height so the modal doesn't resize between states) -->
 			<Panel
-				background="surface.soft"
+				background="surface.peak"
 				border="muted"
 				radius="lg"
 				padding="none"
@@ -396,7 +396,7 @@
 							borderBottomWidth: '1px',
 							borderBottomStyle: 'solid',
 							borderBottomColor: 'neutral.border.muted',
-							background: 'neutral.surface.step.1'
+							background: 'neutral.surface.hill'
 						})}
 					>
 						<Input
@@ -476,13 +476,13 @@
 									paddingY: 'xs',
 									opacity: item.alreadyAdded ? 0.6 : 1,
 									background:
-										selected && !item.alreadyAdded ? 'neutral.surface.step.2' : 'transparent',
+										selected && !item.alreadyAdded ? 'neutral.surface.base' : 'transparent',
 									_hover: {
 										background: item.alreadyAdded
 											? undefined
 											: selected
-												? 'neutral.surface.step.3'
-												: 'neutral.surface.step.1'
+												? 'neutral.surface.valley'
+												: 'neutral.surface.hill'
 									}
 								})}
 							>

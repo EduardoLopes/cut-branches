@@ -328,7 +328,7 @@
 								trailing: { style: css.raw({ alignSelf: 'center', flexShrink: '0' }) }
 							}}
 							passThrough={{
-								contentBody: { style: css.raw({ background: 'neutral.surface.step.1' }) },
+								contentBody: { style: css.raw({ background: 'neutral.surface.hill' }) },
 								actionsLeading: {
 									style: css.raw({ alignSelf: 'flex-start', paddingTop: 'xs' })
 								},

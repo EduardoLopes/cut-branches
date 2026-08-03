@@ -93,7 +93,7 @@
 		overflow: 'hidden'
 	});
 	const rowTarget = css({
-		background: 'accent.surface.soft',
+		background: 'accent.surface.peak',
 		borderRadius: 'sm'
 	});
 	const shaCode = css({

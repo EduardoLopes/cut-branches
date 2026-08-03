@@ -34,7 +34,7 @@
 			// palette step: `neutral.50`/`200` don't invert, so in dark mode the
 			// strip around the panel came out light — invisible only while the
 			// titlebar was painted over it.
-			background: 'neutral.surface.deep'
+			background: 'neutral.surface.base'
 		})}
 	>
 		<!-- macOS only, and above the sidebar rather than inside it: collapsed,
