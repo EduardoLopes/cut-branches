@@ -31,7 +31,11 @@
 -->
 <div
 	class={css(
-		css.raw({ background: 'neutral.surface.hill' }),
+		// Fixed row height: the bar is chrome, so it must not resize with whatever
+		// controls a page puts in it — that's what let sibling views (Active vs
+		// Deleted branches) drift a few pixels apart. Everything inside centres
+		// against it.
+		css.raw({ background: 'neutral.surface.hill', minHeight: '53px' }),
 		placement === 'bottom'
 			? css.raw({
 					display: 'flex',
@@ -69,11 +73,9 @@
 	{...rest}
 >
 	<!--
-		Both cells hug their contents — no reserved row height. That keeps the bar
-		as short as its controls allow, and stays consistent across pages only
-		because every page now puts the same shape in here (an `lg` checkbox plus
-		small muted text). A page that renders nothing on the left will produce a
-		shorter bar.
+		Both cells centre their contents inside the bar's fixed height above, so
+		controls of different heights (a segmented filter, an `sm` field, a bulk
+		action) sit on one line no matter which page fills the bar.
 	-->
 	<div
 		class={css({
