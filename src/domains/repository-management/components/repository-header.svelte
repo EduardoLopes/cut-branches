@@ -48,6 +48,17 @@
 	// The Remove action opens this confirmation dialog, which owns the deletion.
 	let removeModalOpen = $state(false);
 
+	// The options menu and its trigger tooltip are mutually exclusive: the menu
+	// already names the action, so a tooltip on top of it is noise. `openWhen`
+	// blocks re-opens while the menu is expanded; the effect dismisses a tooltip
+	// that was already showing when the menu opened.
+	let menuOpen = $state(false);
+	let tooltipOpen = $state(false);
+
+	$effect(() => {
+		if (menuOpen) tooltipOpen = false;
+	});
+
 	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
 
 	const repositoryName = $derived(getRepositoryQuery.data?.name ?? '');
@@ -142,9 +153,19 @@
 <!-- Repository options sit as the page's trailing action, so every page reads
      "title on the left, actions on the right" the same way (§4). -->
 {#snippet trailing()}
-	<Menu placement="bottom-end" aria-label="Repository options" items={menuItems}>
+	<Menu
+		placement="bottom-end"
+		aria-label="Repository options"
+		items={menuItems}
+		bind:open={menuOpen}
+	>
 		{#snippet trigger(props)}
-			<Tooltip content="Repository options" placement="bottom">
+			<Tooltip
+				content="Repository options"
+				placement="bottom"
+				openWhen="[aria-expanded=&quot;false&quot;]"
+				bind:open={tooltipOpen}
+			>
 				{#snippet children(tipProps)}
 					<Button
 						size="sm"
