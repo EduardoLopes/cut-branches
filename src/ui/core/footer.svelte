@@ -60,7 +60,6 @@
 	radius="none"
 	class={css({
 		marginTop: 'auto',
-		borderTop: '1px solid token(colors.neutral.border.muted)',
 		display: 'flex',
 		flexDirection: 'row',
 		py: 'none',
