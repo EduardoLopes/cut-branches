@@ -504,6 +504,7 @@
 			     radius minus its content inset, so the well stays concentric with
 			     whatever `radius`/`size` the consumer gave the card. -->
 			<Panel
+				emphasis="secondary"
 				{feedback}
 				background="surface.ground"
 				radius="inner"
