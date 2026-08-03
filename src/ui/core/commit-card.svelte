@@ -154,7 +154,7 @@
 			// An icon has nothing to give: in the mini row it shares one flex line
 			// with the summary, and the summary is what should absorb the squeeze.
 			flexShrink: 0,
-			color: 'neutral.text.muted',
+			color: 'colorPalette.text.muted',
 			pindobaTransition: 'fast',
 			_hover: { color: 'accent.text' }
 		})}
@@ -180,7 +180,7 @@
 		class={css({
 			display: 'flex',
 			alignItems: 'center',
-			color: 'neutral.text.muted',
+			color: 'colorPalette.text.muted',
 			pindobaTransition: 'fast',
 			_hover: { color: 'accent.text' }
 		})}
@@ -270,7 +270,7 @@
 {#snippet messageBody()}
 	<div
 		class={css({
-			color: 'neutral.text.muted',
+			color: 'colorPalette.text.muted',
 			maxWidth: '90ch',
 			textWrap: 'pretty',
 			fontSize: 'sm'
@@ -304,7 +304,7 @@
 					icon="lucide:user-round"
 					width="16px"
 					height="16px"
-					color={token('colors.neutral.text.muted')}
+					color={token('colors.colorPalette.text.muted')}
 				/>
 			</Stamp>
 		{/if}
@@ -321,7 +321,7 @@
 			alignItems: 'center',
 			gap: '2xs',
 			pindobaTransition: 'fast',
-			color: 'neutral.text.muted',
+			color: 'colorPalette.text.muted',
 			whiteSpace: dense ? 'nowrap' : undefined,
 			flexShrink: dense ? 0 : undefined
 		})}
@@ -349,13 +349,13 @@
 			flexDirection: 'row',
 			alignItems: 'center',
 			gap: dense ? '2xs' : 'xs',
-			color: 'neutral.text.muted',
+			color: 'colorPalette.text.muted',
 			whiteSpace: dense ? 'nowrap' : undefined,
 			flexShrink: dense ? 0 : undefined
 		})}
 	>
 		{@render author()}
-		<span class={css({ color: 'neutral.text.muted' })} aria-hidden="true">·</span>
+		<span class={css({ color: 'colorPalette.text.muted' })} aria-hidden="true">·</span>
 		{@render date()}
 	</span>
 {/snippet}
