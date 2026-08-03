@@ -42,7 +42,11 @@
 	};
 </script>
 
-<Group>
+<!-- `alignSelf: center`: Group's base style pins itself with `alignSelf: start`,
+     which beats the toolbar row's `alignItems: center` and hangs the field from
+     the top of the row whenever a taller control (the Active/Deleted segmented
+     control) sets the row's height. -->
+<Group class={css({ alignSelf: 'center' })}>
 	<Input
 		class={css({
 			width

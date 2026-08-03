@@ -58,15 +58,15 @@
 -->
 {#key current}
 	<!--
-		`padding="none"`: `appearance="button"` gives the Choice root its own inset,
-		which makes the control taller than the `sm` search field and Delete button
-		beside it. Dropping it lets all three sit on one line.
+		`appearance="button"` draws the segmented track behind the items. Padding is
+		left at its `none` default — the toolbar owns the row height and centres this
+		against the search field and bulk action beside it, so the control doesn't
+		need its own inset to line up.
 	-->
 	<Choice
 		type="radio"
 		appearance="button"
 		size="sm"
-		padding="none"
 		defaultValue={[current]}
 		onValueChange={(value) => goToFilter(value[0])}
 		aria-label="Branch state"
