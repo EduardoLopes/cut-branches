@@ -23,7 +23,7 @@ PageShell                  full-height host, one background, the minHeight:0 cha
 │   └── nav?               CONTEXT navigation — links to sibling pages
 └── PageWell               recessed Panel (surface.ground, radius xl), publishes its
     │                      radius so cards inside use radius="inner"
-    ├── PageToolbar?       FILTERS, search and bulk actions (sticky, translucent)
+    ├── PageToolbar?       FILTERS, search and bulk actions (sticky, opaque surface.hill)
     ├── content            the scrolling body
     └── footer?            PageToolbar placement="bottom" (pagination, commit bars)
 ```

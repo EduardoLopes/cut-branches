@@ -2,7 +2,6 @@
 	import { type Snippet } from 'svelte';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import { css } from '@pindoba/styled-system/css';
-	import { translucent } from '@pindoba/styled-system/patterns';
 
 	interface Props extends HTMLAttributes<HTMLDivElement> {
 		/** Filters and scope controls — "which subset of this page". */
@@ -21,16 +20,18 @@
 </script>
 
 <!--
-	The frosted sticky bar every page uses for filters and bulk actions. Lives in
+	The sticky bar every page uses for filters and bulk actions. Lives in
 	`ui/patterns` rather than a domain so worktree-management and
 	branch-management can share one implementation instead of two copies.
+
+	Opaque `surface.hill` — one tier above the well's `surface.ground`, so the bar
+	reads as chrome raised off the well floor, and rows scrolling underneath are
+	hidden outright instead of ghosting through a translucent fill. The edge
+	border is what separates it from the content.
 -->
 <div
 	class={css(
-		translucent.raw({
-			blur: 'md',
-			background: 'neutral.surface.soft/50 !important'
-		}),
+		css.raw({ background: 'neutral.surface.hill' }),
 		placement === 'bottom'
 			? css.raw({
 					display: 'flex',
