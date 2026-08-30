@@ -15,12 +15,8 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: { push: h.push }
 }));
 vi.mock('$app/navigation', () => ({ goto: h.goto }));
-// Mirrors SvelteKit's `resolve`: a bare pathname passes through, a route id has
-// its params substituted (already encoded by the caller).
-vi.mock('$app/paths', () => ({
-	resolve: (path: string, params?: Record<string, string>) =>
-		params ? path.replace(/\[(\w+)\]/g, (_, name) => params[name]) : path
-}));
+// `$app/paths` is deliberately not mocked: the encoding assertions below are
+// only meaningful against SvelteKit's real resolver.
 vi.mock('$app/state', () => ({ page: { params: { id: '1' } } }));
 vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: vi.fn(() => ({
@@ -185,5 +181,46 @@ describe('ManageRepositoriesModal', () => {
 			expect(h.execute).toHaveBeenCalledExactlyOnceWith('deleteRepository', { id: '1' })
 		);
 		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos/2'));
+	});
+	it('keeps the modal open with the failed repositories still selected', async () => {
+		// repo-2 refuses to go; repo-1 (the active one) and repo-3 are removed.
+		h.execute.mockImplementation((_command: string, payload: { id: string }) =>
+			payload.id === '2' ? Promise.reject(new Error('in use')) : Promise.resolve({ success: true })
+		);
+
+		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		await screen.getByTestId('manage-select-all').click();
+		await screen.getByTestId('manage-remove-selected').click();
+
+		await vi.waitFor(() => expect(h.execute).toHaveBeenCalledTimes(3));
+
+		// Only the failure is left ticked, so the user can see what stayed behind.
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('1 of 3 selected')
+		);
+
+		const modal = document.querySelector(
+			'[data-testid="manage-repositories-modal"]'
+		) as HTMLElement | null;
+		expect(modal).toHaveAttribute('open');
+
+		// The active repository did go away, so the dead route is still left behind.
+		expect(h.goto).toHaveBeenCalledWith('/repos/2');
+	});
+
+	it('closes and clears the selection when every removal succeeds', async () => {
+		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		await screen.getByTestId('manage-item').nth(1).click();
+		await screen.getByTestId('manage-remove-selected').click();
+
+		await vi.waitFor(() => expect(h.execute).toHaveBeenCalledTimes(1));
+
+		const modal = document.querySelector(
+			'[data-testid="manage-repositories-modal"]'
+		) as HTMLElement | null;
+		await vi.waitFor(() => expect(modal).not.toHaveAttribute('open'));
+		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('0 of 3 selected');
 	});
 });

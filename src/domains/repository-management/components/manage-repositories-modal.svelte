@@ -65,21 +65,32 @@
 	);
 
 	const removeBatch = useRemoveRepositoryBatch({
-		onComplete: ({ removedIds }) => {
-			if (removedIds.length === 0) {
-				return;
+		onComplete: ({ removedIds, failedIds }) => {
+			// Untick only what actually went away. The repositories that failed stay
+			// in the list, so dropping them from the selection too would hide which
+			// ones the user still has to deal with.
+			for (const id of removedIds) {
+				selected.delete(id);
 			}
 
-			// If the repository currently open was removed, leave its (now dead)
-			// route for a surviving repo, or the repos index when none remain.
-			const activeId = page.params.id;
-			if (activeId && removedIds.includes(activeId)) {
-				const survivor = repositories.find((repository) => !removedIds.includes(repository.id));
-				if (survivor) {
-					goto(resolveRepositoryPath(survivor.id));
-				} else {
-					goto(resolve('/repos'));
+			if (removedIds.length > 0) {
+				// If the repository currently open was removed, leave its (now dead)
+				// route for a surviving repo, or the repos index when none remain.
+				const activeId = page.params.id;
+				if (activeId && removedIds.includes(activeId)) {
+					const survivor = repositories.find((repository) => !removedIds.includes(repository.id));
+					if (survivor) {
+						goto(resolveRepositoryPath(survivor.id));
+					} else {
+						goto(resolve('/repos'));
+					}
 				}
+			}
+
+			// A partial failure is not a finished job: keep the modal open (and the
+			// failed rows ticked) so the user can read the error and retry.
+			if (failedIds.length > 0) {
+				return;
 			}
 
 			reset();
