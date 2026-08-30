@@ -667,24 +667,34 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, AppError>
         })?;
 
     let reference = branch_ref.get();
-    // We don't actually use this commit, but we need to check it exists
-    let _commit = reference
+    let commit = reference
         .peel_to_commit()
         .map_err(|e| BranchError::CommitPeelFailed {
             name: branch_name.to_string(),
             source: e,
         })?;
 
+    // Update the working directory *before* moving HEAD, and do it safely: a
+    // forced checkout would silently discard uncommitted changes, and moving
+    // HEAD first would leave the repository inconsistent if the checkout then
+    // failed. `safe()` mirrors `git switch`, which refuses to overwrite local
+    // modifications.
+    let tree = commit.tree().map_err(|e| BranchError::CommitPeelFailed {
+        name: branch_name.to_string(),
+        source: e,
+    })?;
+    repo.checkout_tree(
+        tree.as_object(),
+        Some(git2::build::CheckoutBuilder::new().safe()),
+    )
+    .map_err(|e| BranchError::CheckoutFailed {
+        name: branch_name.to_string(),
+        source: e,
+    })?;
+
     // Set HEAD to the branch
     repo.set_head(&format!("refs/heads/{}", branch_name))
         .map_err(|e| BranchError::SetHeadFailed {
-            name: branch_name.to_string(),
-            source: e,
-        })?;
-
-    // Checkout the branch (update working directory)
-    repo.checkout_head(Some(git2::build::CheckoutBuilder::new().force()))
-        .map_err(|e| BranchError::CheckoutFailed {
             name: branch_name.to_string(),
             source: e,
         })?;
@@ -1276,6 +1286,65 @@ mod tests {
             result.unwrap(),
             "test-switch-branch",
             "Returned branch name mismatch after switching to test branch"
+        );
+    }
+
+    #[test]
+    fn test_switch_branch_refuses_to_discard_uncommitted_changes() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        let original_branch = {
+            let output = Command::new("git")
+                .args(["branch", "--show-current"])
+                .current_dir(path)
+                .output()
+                .unwrap();
+            String::from_utf8(output.stdout).unwrap().trim().to_string()
+        };
+
+        // A second branch whose tip changes test.txt.
+        let run = |args: &[&str]| {
+            let out = Command::new(args[0])
+                .args(&args[1..])
+                .current_dir(path)
+                .output()
+                .unwrap();
+            assert!(
+                out.status.success(),
+                "{:?}: {}",
+                args,
+                String::from_utf8_lossy(&out.stderr)
+            );
+        };
+        run(&["git", "checkout", "-b", "other"]);
+        std::fs::write(path.join("test.txt"), "committed on other\n").unwrap();
+        run(&["git", "commit", "-am", "change test.txt"]);
+        run(&["git", "checkout", &original_branch]);
+
+        // Uncommitted local edit to the same file.
+        std::fs::write(path.join("test.txt"), "my uncommitted work\n").unwrap();
+
+        let result = switch_branch(path, "other");
+        assert!(
+            result.is_err(),
+            "switch must refuse to overwrite local changes"
+        );
+
+        // Nothing was lost and HEAD did not move.
+        assert_eq!(
+            std::fs::read_to_string(path.join("test.txt")).unwrap(),
+            "my uncommitted work\n"
+        );
+        let head = Command::new("git")
+            .args(["branch", "--show-current"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        assert_eq!(
+            String::from_utf8(head.stdout).unwrap().trim(),
+            original_branch
         );
     }
 

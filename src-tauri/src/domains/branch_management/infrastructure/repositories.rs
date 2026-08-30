@@ -108,7 +108,11 @@ pub fn upsert_branches_batch(
                 branches::head_commit_sha.eq(&branch.head_commit_sha),
                 branches::upstream.eq(&branch.upstream),
                 branches::is_reachable.eq(&branch.is_reachable),
-                // Note: is_selected, is_locked, and deleted_at are intentionally excluded
+                // Every branch in a sync batch exists in git right now, so a row
+                // previously marked deleted (e.g. the branch was deleted here and
+                // re-created in a terminal) must come back to the active list.
+                branches::deleted_at.eq(None::<String>),
+                // Note: is_selected and is_locked are intentionally excluded
                 // to preserve user-managed state during sync operations
             ))
             .execute(conn)?;
@@ -598,6 +602,27 @@ mod tests {
 
         let remaining: Vec<String> = commits::table.select(commits::sha).load(&mut conn).unwrap();
         assert_eq!(remaining, vec![SHA_A.to_string()]);
+    }
+
+    #[test]
+    fn upsert_branches_batch_reactivates_soft_deleted_branch() {
+        let mut conn = test_conn();
+        insert_repository(&mut conn, "repo-1");
+        upsert_commits_batch(&mut conn, &[commit_record(SHA_A)]).unwrap();
+        upsert_branches_batch(&mut conn, &[branch_record("repo-1", "feature", SHA_A)]).unwrap();
+        mark_branches_deleted(&mut conn, "repo-1", &["feature".to_string()]).unwrap();
+
+        // The branch shows up in git again (re-created in a terminal): the next
+        // sync upserts it and it must leave the deleted list.
+        upsert_branches_batch(&mut conn, &[branch_record("repo-1", "feature", SHA_A)]).unwrap();
+
+        let deleted_at: Option<String> = branches::table
+            .filter(branches::repository_id.eq("repo-1"))
+            .filter(branches::name.eq("feature"))
+            .select(branches::deleted_at)
+            .first(&mut conn)
+            .unwrap();
+        assert_eq!(deleted_at, None);
     }
 
     fn metrics_row(head: &str, branch: &str) -> NewBranchMetricsCacheRecord {
