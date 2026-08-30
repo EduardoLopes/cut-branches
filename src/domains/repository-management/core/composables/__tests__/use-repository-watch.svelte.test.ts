@@ -196,4 +196,62 @@ describe('useRepositoryWatch', () => {
 		expect(mockInvalidateQueries).not.toHaveBeenCalled();
 		cleanup();
 	});
+	test('clears outOfSync when the active repository changes', async () => {
+		// Repository A is drifted and stays drifted after the heal: banner up.
+		mockSyncStatus.mockResolvedValue(ok(true));
+		let activeId = $state('repo-a');
+		const { value, cleanup } = mountWatch(() => activeId);
+		flushSync();
+		await flushMicrotasks();
+		expect(value.outOfSync).toBe(true);
+
+		// Switching repositories re-runs the effect. The new repository is in sync
+		// until its own check says otherwise, so A's verdict must not carry over —
+		// and it must be gone before B's check answers, not after.
+		mockSyncStatus.mockResolvedValue(ok(false));
+		activeId = 'repo-b';
+		flushSync();
+		expect(value.outOfSync).toBe(false);
+
+		await flushMicrotasks();
+		expect(mockSyncStatus).toHaveBeenLastCalledWith({ repositoryId: 'repo-b' });
+		expect(value.outOfSync).toBe(false);
+		cleanup();
+	});
+
+	test('clears outOfSync when the repository is deselected', async () => {
+		mockSyncStatus.mockResolvedValue(ok(true));
+		let activeId = $state(REPO_ID);
+		const { value, cleanup } = mountWatch(() => activeId);
+		flushSync();
+		await flushMicrotasks();
+		expect(value.outOfSync).toBe(true);
+
+		// No repository at all: nothing to check, and nothing to warn about.
+		mockSyncStatus.mockClear();
+		activeId = '';
+		flushSync();
+		await flushMicrotasks();
+
+		expect(mockSyncStatus).not.toHaveBeenCalled();
+		expect(value.outOfSync).toBe(false);
+		cleanup();
+	});
+
+	test('a failed check clears a stale drift verdict', async () => {
+		mockSyncStatus.mockResolvedValue(ok(true));
+		const { value, cleanup } = mountWatch(() => REPO_ID);
+		flushSync();
+		await flushMicrotasks();
+		expect(value.outOfSync).toBe(true);
+
+		// The next check errors out: it says nothing about drift, so it cannot
+		// leave the previous "drifted" verdict standing either.
+		mockSyncStatus.mockResolvedValue({ status: 'error', error: { message: 'boom' } });
+		window.dispatchEvent(new Event('focus'));
+		await flushMicrotasks();
+
+		expect(value.outOfSync).toBe(false);
+		cleanup();
+	});
 });

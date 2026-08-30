@@ -42,7 +42,12 @@ export function useRepositoryWatch(getRepositoryId: () => string) {
 		const run = ++generation;
 		try {
 			const status = await commands.getRepositorySyncStatus({ repositoryId });
-			if (status.status !== 'ok') return;
+			// A failed check tells us nothing about drift — it must not leave a
+			// verdict from an earlier repository (or an earlier check) standing.
+			if (status.status !== 'ok') {
+				setOutOfSync(run, false);
+				return;
+			}
 			if (!status.data.drifted) {
 				setOutOfSync(run, false);
 				return;
@@ -68,6 +73,14 @@ export function useRepositoryWatch(getRepositoryId: () => string) {
 
 	$effect(() => {
 		const repositoryId = getRepositoryId();
+
+		// `outOfSync` describes the repository that was checked, so switching
+		// repositories starts clean: the new one is in sync until its own check
+		// says otherwise. Bumping the generation also disowns any check still in
+		// flight for the previous repository.
+		generation++;
+		outOfSync = false;
+
 		if (!repositoryId) return;
 
 		checkSync(repositoryId);
