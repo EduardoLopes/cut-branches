@@ -6,7 +6,8 @@ const h = vi.hoisted(() => ({
 	push: vi.fn(),
 	execute: vi.fn(),
 	invalidateQueries: vi.fn(),
-	removeQueries: vi.fn()
+	removeQueries: vi.fn(),
+	cancelQueries: vi.fn()
 }));
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
@@ -17,7 +18,8 @@ vi.mock('@tanstack/svelte-query', async (importActual) => ({
 	...(await importActual<typeof import('@tanstack/svelte-query')>()),
 	useQueryClient: () => ({
 		invalidateQueries: h.invalidateQueries,
-		removeQueries: h.removeQueries
+		removeQueries: h.removeQueries,
+		cancelQueries: h.cancelQueries
 	})
 }));
 
@@ -165,5 +167,47 @@ describe('useRemoveRepositoryBatch', () => {
 		resolveFirst({ success: true });
 		await first;
 		expect(batch.isPending).toBe(false);
+	});
+	it("cancels the removed repository's in-flight detail query before dropping it", async () => {
+		const batch = useRemoveRepositoryBatch();
+		await batch.removeBatch([target('a')]);
+
+		// Cancel first: a request already in flight would write the repository
+		// straight back into the cache we just emptied.
+		expect(h.cancelQueries).toHaveBeenCalledWith({
+			queryKey: ['repository', 'getRepository', { id: 'a' }]
+		});
+		expect(h.cancelQueries.mock.invocationCallOrder[0]).toBeLessThan(
+			h.removeQueries.mock.invocationCallOrder[0]
+		);
+	});
+
+	it('reports the result before invalidating the removed repositories', async () => {
+		const order: string[] = [];
+		h.invalidateQueries.mockImplementation(() => {
+			order.push('invalidate');
+			return Promise.resolve();
+		});
+		const batch = useRemoveRepositoryBatch({ onComplete: () => order.push('complete') });
+
+		await batch.removeBatch([target('a')]);
+
+		// The caller navigates away in onComplete; invalidating first would refetch
+		// the branch lists and metrics of a repository that is already gone.
+		expect(order[0]).toBe('complete');
+		expect(order).toContain('invalidate');
+	});
+
+	it('does not invalidate when every removal failed', async () => {
+		h.execute.mockRejectedValue(new Error('nope'));
+		const onComplete = vi.fn();
+		const batch = useRemoveRepositoryBatch({ onComplete });
+
+		await batch.removeBatch([target('a')]);
+
+		expect(h.invalidateQueries).not.toHaveBeenCalled();
+		expect(onComplete).toHaveBeenCalledWith(
+			expect.objectContaining({ removedIds: [], failedIds: ['a'] })
+		);
 	});
 });

@@ -76,9 +76,11 @@ export function useRemoveRepositoryBatch(options: UseRemoveRepositoryBatchOption
 					await executeCommand('deleteRepository', { id: target.id });
 					removedIds.push(target.id);
 					// Drop the removed repo's detail cache so nothing refetches a 404.
-					queryClient.removeQueries({
-						queryKey: ['repository', 'getRepository', { id: target.id }]
-					});
+					// Cancel first: a request already in flight would otherwise write
+					// the repository straight back into the cache we just emptied.
+					const detailKey = ['repository', 'getRepository', { id: target.id }];
+					queryClient.cancelQueries({ queryKey: detailKey });
+					queryClient.removeQueries({ queryKey: detailKey });
 				} catch (error) {
 					// Keep the reason: a bare count tells the user nothing about why a
 					// repository stayed in the list.
@@ -87,8 +89,6 @@ export function useRemoveRepositoryBatch(options: UseRemoveRepositoryBatchOption
 			}
 
 			if (removedIds.length > 0) {
-				await invalidateRemovedResources();
-
 				notifications.push({
 					title: 'Repositories removed',
 					message: `${removedIds.length} ${pluralize(removedIds.length)} removed`,
@@ -106,11 +106,18 @@ export function useRemoveRepositoryBatch(options: UseRemoveRepositoryBatchOption
 				});
 			}
 
+			// Report before invalidating: the caller navigates off the removed
+			// repository's route here, and invalidating first would refetch the
+			// branch lists and metrics of repositories that are already gone.
 			options.onComplete?.({
 				removedIds,
 				failedIds: failures.map((failure) => failure.id),
 				failures
 			});
+
+			if (removedIds.length > 0) {
+				await invalidateRemovedResources();
+			}
 		} finally {
 			isPending = false;
 		}
