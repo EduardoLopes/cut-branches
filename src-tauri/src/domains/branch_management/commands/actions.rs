@@ -1,6 +1,7 @@
 use std::path::Path;
 use tauri::State;
 
+use super::super::core::models::commit_sha::CommitSha;
 use super::super::core::models::deletion::{DeletedBranch, RestoreBranchResult};
 use crate::shared::error::AppError;
 use crate::shared::infrastructure::db::DatabaseState;
@@ -47,6 +48,19 @@ pub struct BatchCreateBranchRestorationsOutput {
     pub results: Vec<RestoreBranchResult>,
 }
 
+/// Rejects a restoration request whose commit SHA is not a SHA.
+///
+/// The git layer resolves restore targets strictly by object id, so a value
+/// that is not hexadecimal can only ever fail deeper down with a vaguer
+/// error. Validating here keeps the domain rule in one place and gives the
+/// caller the `invalid_commit_sha` kind.
+fn validate_restoration_shas(branch_infos: &[DeletedBranch]) -> Result<(), AppError> {
+    for branch_info in branch_infos {
+        CommitSha::new(&branch_info.commit_sha)?;
+    }
+    Ok(())
+}
+
 /// Creates a restoration of a deleted branch in a git repository.
 ///
 /// # Arguments
@@ -65,6 +79,8 @@ pub async fn create_branch_restoration(
     db: State<'_, DatabaseState>,
     input: CreateBranchRestorationInput,
 ) -> Result<CreateBranchRestorationOutput, AppError> {
+    validate_restoration_shas(std::slice::from_ref(&input.branch_info))?;
+
     let raw_path = Path::new(&input.path);
     let result = super::super::core::application::restoration::restore_deleted_branch(
         raw_path,
@@ -117,6 +133,8 @@ pub async fn batch_create_branch_restorations(
     db: State<'_, DatabaseState>,
     input: BatchCreateBranchRestorationsInput,
 ) -> Result<BatchCreateBranchRestorationsOutput, AppError> {
+    validate_restoration_shas(&input.branch_infos)?;
+
     let raw_path = Path::new(&input.path);
     let results = super::super::core::application::restoration::restore_deleted_branches(
         raw_path,
@@ -176,4 +194,42 @@ pub async fn update_current_branch(
         super::super::core::application::switching::switch_branch(raw_path, &input.branch)?;
 
     Ok(UpdateCurrentBranchOutput { current_branch })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn deleted_branch(commit_sha: &str) -> DeletedBranch {
+        DeletedBranch {
+            original_name: "feature".to_string(),
+            target_name: "feature".to_string(),
+            commit_sha: commit_sha.to_string(),
+            conflict_resolution: None,
+        }
+    }
+
+    #[test]
+    fn accepts_full_and_short_shas() {
+        assert!(validate_restoration_shas(&[]).is_ok());
+        assert!(validate_restoration_shas(&[deleted_branch(&"a".repeat(40))]).is_ok());
+        assert!(validate_restoration_shas(&[deleted_branch("abc1234")]).is_ok());
+    }
+
+    #[test]
+    fn rejects_anything_that_is_not_a_sha() {
+        for raw in ["", "HEAD", "main", "not-a-sha", "abc", &"a".repeat(41)] {
+            let err = validate_restoration_shas(&[deleted_branch(raw)])
+                .expect_err("'{raw}' must be rejected");
+            assert_eq!(err.kind, "invalid_commit_sha");
+        }
+    }
+
+    #[test]
+    fn rejects_a_batch_when_any_entry_is_invalid() {
+        let err =
+            validate_restoration_shas(&[deleted_branch(&"a".repeat(40)), deleted_branch("HEAD")])
+                .expect_err("one bad entry rejects the batch");
+        assert_eq!(err.kind, "invalid_commit_sha");
+    }
 }

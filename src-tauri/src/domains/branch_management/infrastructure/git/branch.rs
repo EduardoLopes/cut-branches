@@ -1054,20 +1054,14 @@ fn create_branch_at_commit(
         source: e,
     })?;
 
-    // Use revparse_single to handle both full and short SHA hashes
-    let obj = repo
-        .revparse_single(commit_sha)
-        .map_err(|e| BranchError::FindCommitFailed {
+    // Resolve strictly by object id - never through the revspec grammar, so a
+    // value like "HEAD" or a branch name cannot masquerade as a SHA.
+    let commit = super::commit::find_commit_by_sha(&repo, commit_sha).map_err(|e| {
+        BranchError::FindCommitFailed {
             sha: commit_sha.to_string(),
             source: e,
-        })?;
-
-    let commit = obj
-        .peel_to_commit()
-        .map_err(|e| BranchError::FindCommitFailed {
-            sha: commit_sha.to_string(),
-            source: e,
-        })?;
+        }
+    })?;
 
     repo.branch(branch_name, &commit, force)
         .map_err(|e| BranchError::CreateBranchFailed {

@@ -35,6 +35,39 @@ pub(crate) fn short_sha(sha: &str) -> String {
     }
 }
 
+/// Git's full SHA-1 hex length.
+const FULL_SHA_LEN: usize = 40;
+
+/// Resolves a commit *by object id only*.
+///
+/// `revparse_single` accepts the whole revspec grammar - `HEAD`, `main`,
+/// `@{-1}`, `:/message`, `v1.0^{}` - so feeding it a value that is supposed
+/// to be a SHA silently resolves things the caller never meant to name (a
+/// restore of the branch "HEAD" would land on whatever HEAD happens to be).
+/// A full SHA is parsed as an `Oid` and looked up directly; only genuinely
+/// abbreviated input falls back to a prefix lookup, and anything that is not
+/// hexadecimal is rejected outright.
+pub(crate) fn find_commit_by_sha<'repo>(
+    repo: &'repo Repository,
+    commit_sha: &str,
+) -> Result<git2::Commit<'repo>, git2::Error> {
+    let sha = commit_sha.trim();
+
+    if sha.is_empty() || sha.len() > FULL_SHA_LEN || !sha.chars().all(|c| c.is_ascii_hexdigit()) {
+        return Err(git2::Error::from_str(&format!(
+            "'{}' is not a commit SHA",
+            commit_sha
+        )));
+    }
+
+    if sha.len() == FULL_SHA_LEN {
+        let oid = git2::Oid::from_str(sha)?;
+        repo.find_commit(oid)
+    } else {
+        repo.find_commit_by_prefix(sha)
+    }
+}
+
 pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppError> {
     if commit_sha.is_empty() {
         return Ok(false);
@@ -45,9 +78,8 @@ pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppErr
         Err(_) => return Ok(false), // Return false for non-git directories
     };
 
-    // Use revparse_single to handle both full and short SHA hashes
-    let result = repo.revparse_single(commit_sha).is_ok();
-    Ok(result)
+    let reachable = find_commit_by_sha(&repo, commit_sha).is_ok();
+    Ok(reachable)
 }
 
 #[cfg(test)]
@@ -152,5 +184,83 @@ mod tests {
         let result = is_commit_reachable(path, empty_sha);
         assert!(result.is_ok());
         assert!(!result.unwrap(), "Empty SHA should not be reachable");
+    }
+
+    /// Reachability is about object ids, not revspecs: `HEAD`, branch names
+    /// and `@{-1}` must not resolve, or a caller passing a branch name where a
+    /// SHA was expected would silently operate on the wrong commit.
+    #[test]
+    fn test_revspecs_are_not_accepted_as_shas() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        for revspec in [
+            "HEAD",
+            "main",
+            "HEAD~0",
+            "@{-1}",
+            ":/Initial",
+            "HEAD^{tree}",
+        ] {
+            assert!(
+                !is_commit_reachable(path, revspec).unwrap(),
+                "'{revspec}' must not resolve as a commit SHA"
+            );
+        }
+    }
+
+    /// Full SHAs resolve by id; a well-formed SHA that is not a commit (a
+    /// blob) or that names nothing is rejected; short prefixes still work.
+    #[test]
+    fn test_find_commit_by_sha() {
+        let _guard = DirectoryGuard::new();
+        let repo_dir = setup_test_repo();
+        let path = repo_dir.path();
+        let repo = Repository::open(path).unwrap();
+
+        let full = String::from_utf8(
+            Command::new("git")
+                .args(["rev-parse", "HEAD"])
+                .current_dir(path)
+                .output()
+                .unwrap()
+                .stdout,
+        )
+        .unwrap()
+        .trim()
+        .to_string();
+
+        assert_eq!(
+            find_commit_by_sha(&repo, &full).unwrap().id().to_string(),
+            full
+        );
+        // Surrounding whitespace and upper case are tolerated.
+        assert!(find_commit_by_sha(&repo, &format!("  {}  ", full.to_uppercase())).is_ok());
+        assert!(find_commit_by_sha(&repo, &full[..8]).is_ok(), "short SHA");
+
+        let blob = String::from_utf8(
+            Command::new("git")
+                .args(["rev-parse", "HEAD:test.txt"])
+                .current_dir(path)
+                .output()
+                .unwrap()
+                .stdout,
+        )
+        .unwrap()
+        .trim()
+        .to_string();
+        assert!(
+            find_commit_by_sha(&repo, &blob).is_err(),
+            "a blob id is not a commit"
+        );
+
+        assert!(find_commit_by_sha(&repo, &"0".repeat(40)).is_err());
+        assert!(find_commit_by_sha(&repo, "").is_err());
+        assert!(find_commit_by_sha(&repo, "not-a-sha").is_err());
+        assert!(
+            find_commit_by_sha(&repo, &"a".repeat(41)).is_err(),
+            "over-long input is rejected before any lookup"
+        );
     }
 }
