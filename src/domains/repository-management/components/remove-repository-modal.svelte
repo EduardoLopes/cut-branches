@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
-	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
