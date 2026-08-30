@@ -22,6 +22,16 @@ export function useRepositoryWatch(getRepositoryId: () => string) {
 	// where a manual refresh button should surface. Hidden otherwise.
 	let outOfSync = $state(false);
 
+	// Bumped by every check. A check is a two-round-trip conversation, so the
+	// active repository can change mid-flight — only the newest generation may
+	// write `outOfSync`, otherwise repository A's verdict lands on repository B.
+	let generation = 0;
+
+	function setOutOfSync(run: number, value: boolean) {
+		if (run !== generation) return;
+		outOfSync = value;
+	}
+
 	function invalidate(repositoryId: string) {
 		return queryClient.invalidateQueries({
 			predicate: (query) => matchesRepositoryChange(query.queryKey, repositoryId)
@@ -29,19 +39,20 @@ export function useRepositoryWatch(getRepositoryId: () => string) {
 	}
 
 	async function checkSync(repositoryId: string) {
+		const run = ++generation;
 		try {
 			const status = await commands.getRepositorySyncStatus({ repositoryId });
 			if (status.status !== 'ok') return;
 			if (!status.data.drifted) {
-				outOfSync = false;
+				setOutOfSync(run, false);
 				return;
 			}
 			// Drift detected: heal silently, then re-check so the indicator clears
 			// once the projection is back in sync.
-			outOfSync = true;
+			setOutOfSync(run, true);
 			await invalidate(repositoryId);
 			const recheck = await commands.getRepositorySyncStatus({ repositoryId });
-			outOfSync = recheck.status === 'ok' ? recheck.data.drifted : false;
+			setOutOfSync(run, recheck.status === 'ok' ? recheck.data.drifted : false);
 		} catch {
 			// Ignore; the next focus retries.
 		}

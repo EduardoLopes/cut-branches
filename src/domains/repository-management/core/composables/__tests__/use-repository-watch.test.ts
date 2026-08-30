@@ -154,6 +154,37 @@ describe('useRepositoryWatch', () => {
 		cleanup();
 	});
 
+	test('a check for the previous repository cannot flag the new one', async () => {
+		// The first check hangs; by the time it answers "drifted", the user has
+		// already switched to another repository.
+		let answerFirst!: (status: unknown) => void;
+		mockSyncStatus.mockImplementationOnce(
+			() =>
+				new Promise((resolve) => {
+					answerFirst = resolve;
+				})
+		);
+
+		let activeId = 'repo-a';
+		const { value, cleanup } = mountWatch(() => activeId);
+		flushSync();
+		await flushMicrotasks();
+
+		// Repository B becomes active and checks out clean.
+		activeId = 'repo-b';
+		mockSyncStatus.mockResolvedValue(ok(false));
+		await value.refresh();
+		expect(mockSyncStatus).toHaveBeenLastCalledWith({ repositoryId: 'repo-b' });
+		expect(value.outOfSync).toBe(false);
+
+		// Repository A's stale verdict arrives last and must be ignored.
+		answerFirst(ok(true));
+		await flushMicrotasks();
+
+		expect(value.outOfSync).toBe(false);
+		cleanup();
+	});
+
 	test('refresh() is a no-op without a repository id', async () => {
 		const { value, cleanup } = mountWatch(() => '');
 		flushSync();
