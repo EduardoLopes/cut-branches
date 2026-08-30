@@ -1,21 +1,6 @@
-import { flushSync } from 'svelte';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { useRestorationProgress } from '../use-restoration-progress.svelte';
 import { withEffectRoot } from '$lib/with-effect-root.svelte';
-
-const mockUnlisten = vi.fn();
-const mockListen = vi.fn();
-
-vi.mock('@tauri-apps/api/event', () => ({
-	listen: (event: string, handler: (...args: unknown[]) => void) =>
-		mockListen(event, handler).then(() => mockUnlisten)
-}));
-
-beforeEach(() => {
-	mockUnlisten.mockClear();
-	mockListen.mockClear();
-	mockListen.mockResolvedValue(undefined);
-});
 
 describe('useRestorationProgress', () => {
 	test('starts at zero', () => {
@@ -85,10 +70,13 @@ describe('useRestorationProgress', () => {
 		cleanup();
 	});
 
-	test('subscribes to branch-restored event on mount', () => {
-		const { cleanup } = withEffectRoot(() => useRestorationProgress());
-		flushSync();
-		expect(mockListen).toHaveBeenCalledWith('branch-restored', expect.any(Function));
+	test('tick() never exceeds total', () => {
+		const { value: p, cleanup } = withEffectRoot(() => useRestorationProgress());
+		p.start(1);
+		p.tick();
+		p.tick();
+		expect(p.processed).toBe(1);
+		expect(p.percent).toBe(100);
 		cleanup();
 	});
 });

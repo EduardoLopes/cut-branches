@@ -79,9 +79,9 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 			recordResult(branchName, data.result);
 
 			if (data.result.requiresUserAction && data.result.conflictDetails) {
+				// Not terminal yet — the branch is counted once the user resolves it.
 				currentConflictBranch = branchName;
 				queuePending(branchName);
-				progress.tick();
 				return;
 			}
 
@@ -125,11 +125,13 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 				recordResult(result.branchName, result);
 				if (result.requiresUserAction && result.conflictDetails) {
 					queuePending(result.branchName);
-				} else if (result.success && !result.skipped) {
+					continue;
+				}
+				if (result.success && !result.skipped) {
 					restoredAccumulator.push(result);
 				}
+				progress.tick();
 			}
-			progress.tick();
 			advance();
 		},
 		onError(error) {

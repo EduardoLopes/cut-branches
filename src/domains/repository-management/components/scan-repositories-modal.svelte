@@ -138,10 +138,14 @@
 	async function chooseFolder() {
 		try {
 			const dir = await openFolderDialog({ directory: true, multiple: false });
-			if (dir !== null) {
-				customRoots = [dir as string];
-				await runScan();
+			if (dir === null) {
+				// Picker cancelled: there is nothing to show, so don't leave an
+				// empty dialog (or a previous scan's stale results) behind.
+				open = false;
+				return;
 			}
+			customRoots = [dir as string];
+			await runScan();
 		} catch (error) {
 			notifications.push({
 				title: 'Error',

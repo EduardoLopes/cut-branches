@@ -2,12 +2,14 @@
  * Restoration Progress
  *
  * Tracks per-branch progress during a restore flow: count, percentage,
- * and a rolling estimated-time-remaining string. Subscribes to the Tauri
- * `branch-restored` event so the UI updates incrementally while the batch
- * command processes branches server-side.
+ * and a rolling estimated-time-remaining string.
+ *
+ * The restore flow calls `tick()` exactly once per branch that reaches a
+ * terminal state (restored, skipped or failed). It deliberately does NOT
+ * also listen to the Tauri `branch-restored` event: doing both counted a
+ * single branch twice, so the bar hit 100% while conflicts were still
+ * waiting for the user.
  */
-
-import { listen } from '@tauri-apps/api/event';
 
 export function useRestorationProgress() {
 	let total = $state(0);
@@ -15,21 +17,6 @@ export function useRestorationProgress() {
 	let percent = $state(0);
 	let startTime: number | null = null;
 	let estimatedTimeRemaining = $state<string | null>(null);
-
-	let unlisten: (() => void) | null = null;
-
-	$effect(() => {
-		listen('branch-restored', () => {
-			tick();
-		}).then((fn) => {
-			unlisten = fn;
-		});
-
-		return () => {
-			unlisten?.();
-			unlisten = null;
-		};
-	});
 
 	function start(initialTotal: number) {
 		total = initialTotal;
@@ -41,8 +28,7 @@ export function useRestorationProgress() {
 
 	function tick() {
 		if (total === 0) return;
-		if (processed >= total) return; // clamp — Rust emits an event AND we tick from
-		// onSuccess, so a single branch resolution can fire `tick` twice.
+		if (processed >= total) return;
 
 		processed++;
 		percent = (processed / total) * 100;
