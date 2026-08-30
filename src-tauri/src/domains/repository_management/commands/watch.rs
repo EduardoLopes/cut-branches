@@ -147,16 +147,17 @@ pub fn watch_repository(watcher: &WatcherState, repo_root: &str) {
 
 /// Remove a repository's git ref surface from the shared watcher.
 ///
-/// For a linked worktree only the private git dir is unwatched: the shared
-/// directories may still be serving the main repository (or a sibling
-/// worktree), and the watcher has no refcounting. A leftover watch is harmless
-/// — the callback only reacts to paths that map to a *registered* repository.
+/// Releases exactly what [`watch_repository`] took. The watcher refcounts its
+/// paths, so the shared directories a main repository and its linked worktrees
+/// have in common stay watched until the *last* of them is unregistered —
+/// unregistering the main repository no longer deafens its worktrees.
 pub fn unwatch_repository(watcher: &WatcherState, repo_root: &str) {
     let paths = cached_repo_watch_paths(repo_root);
-    if !paths.is_linked_worktree() {
-        watcher.unwatch_path(&paths.common_dir.join("refs").join("heads"));
-    }
     watcher.unwatch_path(&paths.git_dir);
+    if paths.is_linked_worktree() {
+        watcher.unwatch_path(&paths.common_dir);
+    }
+    watcher.unwatch_path(&paths.common_dir.join("refs").join("heads"));
     invalidate_repo_watch_paths(repo_root);
 }
 
@@ -464,6 +465,54 @@ mod tests {
             watch_paths_cache().lock().unwrap().get(root),
             Some(&expected)
         );
+    }
+
+    /// A main repository and its worktree share `refs/heads`. Unregistering the
+    /// main repository must not stop the worktree from hearing ref events.
+    #[test]
+    fn unregistering_a_main_repository_keeps_its_worktrees_watched() {
+        let _guard = DirectoryGuard::new();
+        let main = setup_test_repo();
+        let holder = tempfile::tempdir().unwrap();
+        let worktree = holder.path().join("wt");
+        run_git(
+            main.path(),
+            &[
+                "worktree",
+                "add",
+                worktree.to_str().unwrap(),
+                "-b",
+                "wt-ref",
+            ],
+        );
+
+        let watcher = WatcherState::new();
+        watcher
+            .init(Duration::from_millis(10), Box::new(|_| {}))
+            .unwrap();
+
+        let main_root = main.path().to_str().unwrap();
+        let wt_root = worktree.to_str().unwrap();
+        let main_paths = repo_watch_paths(main_root);
+        let wt_paths = repo_watch_paths(wt_root);
+        let shared_heads = main_paths.common_dir.join("refs").join("heads");
+
+        watch_repository(&watcher, main_root);
+        watch_repository(&watcher, wt_root);
+        assert_eq!(watcher.watch_count(&shared_heads), 2);
+        assert_eq!(watcher.watch_count(&main_paths.common_dir), 2);
+
+        // The main repository lets go; the worktree still holds the shared dirs.
+        unwatch_repository(&watcher, main_root);
+        assert_eq!(watcher.watch_count(&shared_heads), 1);
+        assert_eq!(watcher.watch_count(&main_paths.common_dir), 1);
+        assert_eq!(watcher.watch_count(&wt_paths.git_dir), 1);
+
+        // Once the worktree goes too, nothing is left watched.
+        unwatch_repository(&watcher, wt_root);
+        assert_eq!(watcher.watch_count(&shared_heads), 0);
+        assert_eq!(watcher.watch_count(&main_paths.common_dir), 0);
+        assert_eq!(watcher.watch_count(&wt_paths.git_dir), 0);
     }
 
     #[test]
