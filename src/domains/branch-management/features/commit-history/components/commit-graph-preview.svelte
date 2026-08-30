@@ -35,8 +35,8 @@
 
 	// The path is resolve()d; only the ?commit query is appended, which the
 	// rule's static analysis can't see through.
-	// eslint-disable-next-line svelte/no-navigation-without-resolve
 	const openFullHistory = () =>
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(`${resolveRepositorySubPath(repoId, 'history')}?commit=${sha}`);
 
 	// Preview geometry: small rows, tight lanes.
