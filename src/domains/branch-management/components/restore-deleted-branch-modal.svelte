@@ -36,7 +36,10 @@
 	let prefsInitialized = $state(false);
 	let hintOpen = $state(false);
 
-	const noBranchesToRestore = $derived(selectedQuery.data?.branches.length === 0);
+	// `?? 0` is load-bearing: while the selection query is still loading the data
+	// is `undefined`, so an unguarded `length === 0` check was false and a click
+	// opened an empty dialog. Treat "not loaded yet" as "nothing to restore".
+	const noBranchesToRestore = $derived((selectedQuery.data?.branches.length ?? 0) === 0);
 
 	// Clear the validation hint once there is something to restore.
 	$effect(() => {

@@ -38,6 +38,8 @@ function makeBranchData(name: string): BranchData {
 }
 
 let selectedBranches: Branch[] = [];
+// When true the selection query behaves as still-loading (`data` undefined).
+let selectionLoading = false;
 
 vi.mock(
 	'$domains/branch-management/infrastructure/mutations/create-restore-deleted-branch-mutation',
@@ -66,7 +68,7 @@ vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-q
 		get data() {
 			const filters = input().filters || {};
 			if (filters.selectionStatus === 'selected') {
-				return { branches: selectedBranches };
+				return selectionLoading ? undefined : { branches: selectedBranches };
 			}
 			return { branches: [] };
 		},
@@ -90,6 +92,7 @@ function openHint(): HTMLDialogElement | undefined {
 
 beforeEach(() => {
 	selectedBranches = [Branch.fromData(makeBranchData('feat-a'))];
+	selectionLoading = false;
 });
 
 describe('RestoreDeletedBranchModal', () => {
@@ -108,6 +111,19 @@ describe('RestoreDeletedBranchModal', () => {
 		expect(button).not.toBeDisabled();
 
 		await button.click();
+		await tick();
+
+		await vi.waitFor(() => expect(openHint()).toBeTruthy());
+		expect(openHint()?.textContent).toContain('There are no deleted branches to restore.');
+	});
+
+	test('shows the validation hint while the selection query is still loading', async () => {
+		// `data` is undefined until the query settles — clicking used to open an
+		// empty dialog instead of hinting.
+		selectionLoading = true;
+		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+
+		await screen.getByTestId('open-restore-dialog-button').click();
 		await tick();
 
 		await vi.waitFor(() => expect(openHint()).toBeTruthy());

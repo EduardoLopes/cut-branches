@@ -151,6 +151,9 @@ vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 // Variable to track selected branches for mocking
 let mockSelectedBranches: string[] = ['feature-1'];
 
+// When true the selection query behaves as still-loading (`data` undefined).
+let mockSelectionLoading = false;
+
 // The validation hint renders inside a native <dialog> that is always present;
 // its visibility is the dialog's own open state. Find the open one.
 function openHint(): HTMLDialogElement | undefined {
@@ -168,6 +171,7 @@ vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-q
 		if (filters?.filters?.selectionStatus === 'selected') {
 			return {
 				get data() {
+					if (mockSelectionLoading) return undefined;
 					const selectedBranchesData = mockBranches.filter((b) =>
 						mockSelectedBranches.includes(b.getName())
 					);
@@ -193,6 +197,7 @@ describe('DeleteBranchModal Component', () => {
 	beforeEach(() => {
 		// Reset selected branches to default
 		mockSelectedBranches = ['feature-1'];
+		mockSelectionLoading = false;
 
 		// Reset mocks
 		vi.clearAllMocks();
@@ -218,6 +223,23 @@ describe('DeleteBranchModal Component', () => {
 			// The button is never disabled — validation is communicated on click.
 			expect(button).not.toBeDisabled();
 
+			await button.click();
+			await tick();
+
+			await vi.waitFor(() => expect(openHint()).toBeTruthy());
+			expect(openHint()?.textContent).toContain('Select at least one branch to delete.');
+		});
+
+		test('shows the validation hint while the selection query is still loading', async () => {
+			// `data` is undefined until the query settles — clicking used to open an
+			// empty dialog instead of hinting.
+			mockSelectionLoading = true;
+
+			const screen = renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo'
+			});
+
+			const button = screen.getByTestId('open-dialog-button');
 			await button.click();
 			await tick();
 

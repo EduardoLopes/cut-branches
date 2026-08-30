@@ -44,7 +44,10 @@
 		filters: { deletionStatus: 'active', selectionStatus: 'selected' }
 	}));
 
-	const selectedCount = $derived(getBranchesQuery.data?.branches.length);
+	// `?? 0` is load-bearing: while the selection query is still loading the data
+	// is `undefined`, and an unguarded `selectedCount === 0` check let a click
+	// open an empty dialog. Treat "not loaded yet" as "nothing selected".
+	const selectedCount = $derived(getBranchesQuery.data?.branches.length ?? 0);
 
 	// Clear the validation hint as soon as the user selects something.
 	$effect(() => {
