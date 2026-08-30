@@ -708,6 +708,48 @@ pub fn switch_branch(path: &Path, branch_name: &str) -> Result<String, AppError>
     Ok(branch_name.to_string())
 }
 
+/// Maps every local branch that is checked out in a *linked* worktree to that
+/// worktree's path. Best-effort: a worktree whose administrative files are
+/// unreadable (pruned, on an unmounted volume) is simply skipped, since the
+/// only cost of missing one is that libgit2 refuses the delete later.
+fn branches_checked_out_in_worktrees(
+    repo: &Repository,
+) -> std::collections::HashMap<String, String> {
+    let mut checked_out = std::collections::HashMap::new();
+
+    let Ok(names) = repo.worktrees() else {
+        return checked_out;
+    };
+
+    for name in names.iter().flatten() {
+        let Ok(worktree) = repo.find_worktree(name) else {
+            continue;
+        };
+        let Ok(worktree_repo) = Repository::open_from_worktree(&worktree) else {
+            continue;
+        };
+        let Ok(head) = worktree_repo.head() else {
+            continue;
+        };
+        if !head.is_branch() {
+            continue;
+        }
+        if let Some(branch) = head.shorthand() {
+            checked_out.insert(branch.to_string(), worktree.path().display().to_string());
+        }
+    }
+
+    checked_out
+}
+
+/// Deletes every named branch, or none of them.
+///
+/// Deleting is not transactional in git, so the guard is a full pre-flight:
+/// every name must exist and must not be checked out (here or in a linked
+/// worktree) before the first `delete()` runs. Validating inside the delete
+/// loop — as this used to — meant a failure halfway through left the earlier
+/// branches gone from git while the caller, seeing an `Err`, never recorded
+/// them as deleted in the database.
 pub fn delete_branches(
     path: &Path,
     branches_to_delete: &[String],
@@ -721,7 +763,10 @@ pub fn delete_branches(
     let mut found_branches: Vec<String> = Vec::new();
 
     for branch_name_to_check in branches_to_delete {
-        if branch_exists(path, branch_name_to_check)? {
+        if repo
+            .find_branch(branch_name_to_check, BranchType::Local)
+            .is_ok()
+        {
             found_branches.push(branch_name_to_check.clone());
         } else {
             not_found_branches.push(branch_name_to_check.clone());
@@ -750,6 +795,55 @@ pub fn delete_branches(
 
     if found_branches.is_empty() {
         return Ok(Vec::new()); // No branches to delete that were found
+    }
+
+    // Pre-flight: a branch that is checked out cannot be deleted, so reject the
+    // whole batch before touching anything.
+    let worktree_branches = branches_checked_out_in_worktrees(&repo);
+    let mut blocked: Vec<(String, String)> = Vec::new();
+
+    for branch_name in &found_branches {
+        let branch = repo
+            .find_branch(branch_name, BranchType::Local)
+            .map_err(|e| BranchError::FindBranchFailed {
+                name: branch_name.to_string(),
+                source: e,
+            })?;
+
+        if branch.is_head() {
+            blocked.push((
+                branch_name.clone(),
+                "it is the currently checked-out branch".to_string(),
+            ));
+        } else if let Some(worktree_path) = worktree_branches.get(branch_name) {
+            blocked.push((
+                branch_name.clone(),
+                format!("it is checked out in the worktree at {}", worktree_path),
+            ));
+        }
+    }
+
+    if !blocked.is_empty() {
+        let names: Vec<&str> = blocked.iter().map(|(name, _)| name.as_str()).collect();
+        return Err(BranchError::BranchesInUse {
+            message: format!(
+                "Cannot delete **{}**: the branch(es) are in use. No branches were deleted.",
+                names.join(", ")
+            ),
+            detail: format!(
+                "{}. Path: {}",
+                blocked
+                    .iter()
+                    .map(|(name, reason)| format!(
+                        "'{}' cannot be deleted because {}",
+                        name, reason
+                    ))
+                    .collect::<Vec<_>>()
+                    .join("; "),
+                path.display()
+            ),
+        }
+        .into());
     }
 
     let mut deleted_branches = Vec::new();
@@ -1026,7 +1120,7 @@ pub fn restore_deleted_branches(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
+    use crate::shared::utils::test_utils::{run_git, setup_test_repo, DirectoryGuard};
     use std::process::Command;
 
     #[test]
@@ -1430,6 +1524,165 @@ mod tests {
             !verify_delete_result.unwrap_or(true),
             "Branch should have been deleted"
         );
+    }
+
+    /// The batch is all-or-nothing: naming the checked-out branch alongside a
+    /// deletable one deletes neither.
+    #[test]
+    fn test_delete_branches_rejects_the_head_branch_without_deleting_anything() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        let current = run_git(path, &["branch", "--show-current"]);
+        run_git(path, &["branch", "safe-to-delete"]);
+
+        let err = delete_branches(path, &["safe-to-delete".to_string(), current.clone()])
+            .expect_err("deleting the current branch must be refused");
+
+        assert_eq!(err.kind, "branches_in_use");
+        assert!(err.message.contains(&current), "message names the branch");
+        assert!(
+            branch_exists(path, "safe-to-delete").unwrap(),
+            "no branch is deleted when the batch is rejected"
+        );
+        assert!(branch_exists(path, &current).unwrap());
+    }
+
+    /// A branch checked out in a linked worktree is equally undeletable, and
+    /// the refusal names the worktree so the user knows where it is in use.
+    #[test]
+    fn test_delete_branches_rejects_a_branch_checked_out_in_a_worktree() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        run_git(path, &["branch", "safe-to-delete"]);
+        let worktree_dir = tempfile::tempdir().unwrap();
+        let worktree_path = worktree_dir.path().join("linked");
+        run_git(
+            path,
+            &[
+                "worktree",
+                "add",
+                "-b",
+                "in-worktree",
+                worktree_path.to_str().unwrap(),
+            ],
+        );
+
+        let git_repo = Repository::open(path).unwrap();
+        let checked_out = branches_checked_out_in_worktrees(&git_repo);
+        assert!(
+            checked_out.contains_key("in-worktree"),
+            "worktree checkout is detected: {checked_out:?}"
+        );
+
+        let err = delete_branches(
+            path,
+            &["safe-to-delete".to_string(), "in-worktree".to_string()],
+        )
+        .expect_err("deleting a worktree-checked-out branch must be refused");
+
+        assert_eq!(err.kind, "branches_in_use");
+        assert!(err.message.contains("in-worktree"));
+        assert!(branch_exists(path, "safe-to-delete").unwrap());
+        assert!(branch_exists(path, "in-worktree").unwrap());
+    }
+
+    /// A repository with no worktrees yields an empty map rather than an error.
+    #[test]
+    fn test_branches_checked_out_in_worktrees_without_worktrees() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let git_repo = Repository::open(repo.path()).unwrap();
+        assert!(branches_checked_out_in_worktrees(&git_repo).is_empty());
+    }
+
+    /// A detached worktree contributes no branch name.
+    #[test]
+    fn test_branches_checked_out_in_worktrees_ignores_detached_worktrees() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        let worktree_dir = tempfile::tempdir().unwrap();
+        let worktree_path = worktree_dir.path().join("detached");
+        run_git(
+            path,
+            &[
+                "worktree",
+                "add",
+                "--detach",
+                worktree_path.to_str().unwrap(),
+            ],
+        );
+
+        let git_repo = Repository::open(path).unwrap();
+        assert!(branches_checked_out_in_worktrees(&git_repo).is_empty());
+    }
+
+    /// A worktree whose directory has been removed but not pruned is skipped
+    /// rather than failing the whole pre-flight.
+    #[test]
+    fn test_branches_checked_out_in_worktrees_skips_unreadable_worktrees() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        let worktree_dir = tempfile::tempdir().unwrap();
+        let worktree_path = worktree_dir.path().join("gone");
+        run_git(
+            path,
+            &[
+                "worktree",
+                "add",
+                "-b",
+                "orphaned",
+                worktree_path.to_str().unwrap(),
+            ],
+        );
+        std::fs::remove_dir_all(&worktree_path).unwrap();
+
+        let git_repo = Repository::open(path).unwrap();
+        assert!(branches_checked_out_in_worktrees(&git_repo).is_empty());
+
+        // And the branch it used to hold is deletable again.
+        assert!(delete_branches(path, &["orphaned".to_string()]).is_ok());
+    }
+
+    /// Naming a branch that does not exist rejects the batch before any
+    /// deletion, leaving the existing branches untouched.
+    #[test]
+    fn test_delete_branches_rejects_unknown_names_without_deleting_anything() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        run_git(path, &["branch", "safe-to-delete"]);
+
+        let err = delete_branches(
+            path,
+            &["safe-to-delete".to_string(), "no-such-branch".to_string()],
+        )
+        .expect_err("unknown branch names must be refused");
+
+        assert_eq!(err.kind, "branches_not_found");
+        assert!(branch_exists(path, "safe-to-delete").unwrap());
+
+        // With nothing found at all the message reports that no branches were
+        // deleted.
+        let err = delete_branches(path, &["no-such-branch".to_string()])
+            .expect_err("unknown branch names must be refused");
+        assert!(err.message.contains("No branches were"));
+    }
+
+    /// An empty request is a no-op, not an error.
+    #[test]
+    fn test_delete_branches_with_no_names() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        assert!(delete_branches(repo.path(), &[]).unwrap().is_empty());
     }
 
     #[test]

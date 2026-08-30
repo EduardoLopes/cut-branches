@@ -109,6 +109,9 @@ pub enum BranchError {
     #[error("{message}")]
     BranchesNotFound { message: String, detail: String },
 
+    #[error("{message}")]
+    BranchesInUse { message: String, detail: String },
+
     #[error("Failed to delete branch '{name}': {source}")]
     DeleteBranchFailed {
         name: String,
@@ -185,6 +188,7 @@ impl From<BranchError> for AppError {
             BranchError::SetHeadFailed { .. } => "set_head_failed",
             BranchError::CheckoutFailed { .. } => "checkout_failed",
             BranchError::BranchesNotFound { .. } => "branches_not_found",
+            BranchError::BranchesInUse { .. } => "branches_in_use",
             BranchError::DeleteBranchFailed { .. } => "delete_branch_failed",
             BranchError::CommitNotFoundInRepo { .. } => "commit_not_found",
             BranchError::FindCommitFailed { .. } => "commit_not_found",
@@ -219,7 +223,8 @@ impl From<BranchError> for AppError {
 
             BranchError::UnableToAccessDir { detail, .. }
             | BranchError::CommandExecutionFailed { detail, .. }
-            | BranchError::BranchesNotFound { detail, .. } => Some(detail.clone()),
+            | BranchError::BranchesNotFound { detail, .. }
+            | BranchError::BranchesInUse { detail, .. } => Some(detail.clone()),
 
             BranchError::DetachedHead { .. } => {
                 Some("Repository is in detached HEAD state".to_string())
