@@ -1,5 +1,5 @@
 import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
+import { resolveRepositoryPath } from '$lib/repository-route';
 import { Store } from '$lib/store.svelte';
 import { RepositorySchema, type Repository } from '$types/repository';
 
@@ -19,7 +19,7 @@ export class RepositoryStore extends Store<Repository | undefined> {
 
 		// Navigate to repository page if it's a new repository
 		if (value?.id && value.id !== oldId) {
-			goto(resolve(`/repos/${value.id}`));
+			goto(resolveRepositoryPath(value.id));
 		}
 	}
 

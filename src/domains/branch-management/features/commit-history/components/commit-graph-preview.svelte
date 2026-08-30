@@ -10,7 +10,6 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import GraphRailCell from './graph-rail-cell.svelte';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import {
 		fetchCommitHistoryWindow,
 		PREVIEW_WINDOW
@@ -20,6 +19,7 @@
 		type Graph
 	} from '$domains/branch-management/features/commit-history/models/commit-graph';
 	import type { AppError } from '$infrastructure/bindings';
+	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -36,7 +36,8 @@
 	// The path is resolve()d; only the ?commit query is appended, which the
 	// rule's static analysis can't see through.
 	// eslint-disable-next-line svelte/no-navigation-without-resolve
-	const openFullHistory = () => goto(`${resolve(`/repos/${repoId}/history`)}?commit=${sha}`);
+	const openFullHistory = () =>
+		goto(`${resolveRepositorySubPath(repoId, 'history')}?commit=${sha}`);
 
 	// Preview geometry: small rows, tight lanes.
 	const ROW_H = 22;

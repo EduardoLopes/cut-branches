@@ -9,7 +9,6 @@
 	import { createVirtualizer } from '@tanstack/svelte-virtual';
 	import { get } from 'svelte/store';
 	import { type Branch } from '../core/models/branch';
-	import { resolve } from '$app/paths';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 	import { useBranchMetrics } from '$domains/branch-management/core/composables/use-branch-metrics.svelte';
@@ -21,6 +20,7 @@
 	} from '$domains/branch-management/utils/branch-utils';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
@@ -277,7 +277,7 @@
 									radius="inner"
 									selected={true}
 									diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
-										? `${resolve(`/repos/${id}/diff`)}?branch=${encodeURIComponent(branch.getName())}`
+										? `${resolveRepositorySubPath(id, 'diff')}?branch=${encodeURIComponent(branch.getName())}`
 										: undefined}
 									children={shouldShowBranchAlerts(alerts, branch)
 										? branchAlertsContent

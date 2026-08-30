@@ -13,13 +13,13 @@
 	import Icon from '@iconify/svelte';
 	import Alert from '@pindoba/svelte-alert';
 	import Stamp from '@pindoba/svelte-stamp';
-	import { resolve } from '$app/paths';
 	import {
 		BRANCH_COMMITS_PAGE_SIZE,
 		createListBranchCommitsQuery
 	} from '$domains/branch-management/features/commit-history/infrastructure/queries/create-list-branch-commits-query';
 	import { toCommit } from '$domains/branch-management/features/commit-history/models/to-commit';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import CommitCard from '$ui/core/commit-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -42,14 +42,14 @@
 	// history rows use). Pre-resolved here so the generic card stays route-blind.
 	const diffEnabled = $derived(isFeatureEnabled('branch-diff'));
 	const diffHrefFor = (sha: string) =>
-		diffEnabled ? `${resolve(`/repos/${repoId}/diff`)}?commit=${sha}` : undefined;
+		diffEnabled ? `${resolveRepositorySubPath(repoId, 'diff')}?commit=${sha}` : undefined;
 
 	// The history view deep-links by commit, not by branch, so aim it at this
 	// branch's tip — that lands the scroll on the same row the panel starts at.
 	const historyHref = $derived(
 		commits.length
-			? `${resolve(`/repos/${repoId}/history`)}?commit=${commits[0].getSha()}`
-			: resolve(`/repos/${repoId}/history`)
+			? `${resolveRepositorySubPath(repoId, 'history')}?commit=${commits[0].getSha()}`
+			: resolveRepositorySubPath(repoId, 'history')
 	);
 
 	const list = css({ display: 'flex', flexDirection: 'column', gap: 'xs' });

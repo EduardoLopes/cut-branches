@@ -10,7 +10,6 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import BranchGutterCell from './branch-gutter-cell.svelte';
 	import GraphRailCell from './graph-rail-cell.svelte';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
@@ -20,6 +19,7 @@
 	} from '$domains/branch-management/features/commit-history/models/commit-graph';
 	import { toCommit } from '$domains/branch-management/features/commit-history/models/to-commit';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import CommitCard from '$ui/core/commit-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -66,7 +66,7 @@
 	// component only renders inside `/repos/[id]/history`.
 	const diffHref = $derived(
 		isFeatureEnabled('branch-diff') && page.params.id
-			? `${resolve(`/repos/${page.params.id}/diff`)}?commit=${row.commit.sha}`
+			? `${resolveRepositorySubPath(page.params.id, 'diff')}?commit=${row.commit.sha}`
 			: undefined
 	);
 	// Remote tracking ref (if the commit is decorated with one), passed as the

@@ -5,8 +5,8 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import { createGetBranchesQuery } from '../infrastructure/queries/create-get-branches-query';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
 
 	/**
 	 * Active / Deleted split for the branches page.
@@ -46,8 +46,8 @@
 
 	function goToFilter(next: string | undefined) {
 		if (next === current) return;
-		if (next === 'deleted') goto(resolve(`/repos/${repositoryId}/restore`));
-		if (next === 'active') goto(resolve(`/repos/${repositoryId}`));
+		if (next === 'deleted') goto(resolveRepositorySubPath(repositoryId, 'restore'));
+		if (next === 'active') goto(resolveRepositoryPath(repositoryId));
 	}
 </script>
 

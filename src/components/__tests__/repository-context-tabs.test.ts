@@ -13,7 +13,6 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('$app/navigation', () => ({ goto: (...args: unknown[]) => h.goto(...args) }));
-vi.mock('$app/paths', () => ({ resolve: (p: string) => p }));
 vi.mock('$app/state', () => ({
 	get page() {
 		return { url: { pathname: h.pathname }, params: { id: 'r1' } };

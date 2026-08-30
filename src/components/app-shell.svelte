@@ -4,11 +4,11 @@
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { refreshCleanupSummary } from '$domains/repository-cleanup/core/composables/use-cleanup-summary.svelte';
 	import AddRepositoryMenu from '$domains/repository-management/components/add-repository-menu.svelte';
 	import SidebarView from '$domains/repository-navigation/views/sidebar-view.svelte';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { css } from '@pindoba/styled-system/css';
 
 	const queryClient = useQueryClient();
@@ -98,7 +98,7 @@
 					visuallyHiddenLabel
 					withRepositorySort
 					withManageRepositories
-					onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}
+					onSuccess={(data) => goto(resolveRepositoryPath(data.id))}
 				/>
 			{/snippet}
 		</SidebarView>

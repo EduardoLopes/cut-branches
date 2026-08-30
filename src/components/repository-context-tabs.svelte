@@ -5,11 +5,11 @@
 	import Radio from '@pindoba/svelte-radio';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { useWorktreesView } from '$domains/worktree-management/core/composables/use-worktrees-view.svelte';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
 	import { css } from '@pindoba/styled-system/css';
 
 	/**
@@ -49,11 +49,11 @@
 	const worktreeCount = $derived(worktreesView.linkedCount);
 
 	function goToBranches() {
-		if (currentContext !== 'branches') goto(resolve(`/repos/${id}`));
+		if (currentContext !== 'branches') goto(resolveRepositoryPath(id));
 	}
 
 	function goToWorktrees() {
-		if (currentContext !== 'worktrees') goto(resolve(`/repos/${id}/worktrees`));
+		if (currentContext !== 'worktrees') goto(resolveRepositorySubPath(id, 'worktrees'));
 	}
 </script>
 

@@ -4,7 +4,6 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import RepositoryContextTabs from '$components/repository-context-tabs.svelte';
 	import CleanRepositoryModal from '$domains/repository-cleanup/components/clean-repository-modal.svelte';
@@ -12,6 +11,7 @@
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { lastRepository } from '$lib/last-repository.svelte';
+	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
 	import type { PageBreadcrumbItem } from '$ui/patterns/page-header.svelte';
 
 	interface Props {
@@ -44,7 +44,7 @@
 						id: 'commit-history',
 						label: 'Commit history…',
 						leading: historyIcon,
-						onSelect: () => goto(resolve(`/repos/${id}/history`))
+						onSelect: () => goto(resolveRepositorySubPath(id, 'history'))
 					}
 				]
 			: []),
@@ -82,7 +82,7 @@
 		// page (`current || !href`), so an unlinked crumb produced a second
 		// `aria-current`. The branch is already a badge in the diff toolbar.
 		return [
-			{ label: 'Branches', href: resolve(`/repos/${id}`) },
+			{ label: 'Branches', href: resolveRepositoryPath(id) },
 			{ label: isHistory ? 'Commit history' : 'Changes' }
 		];
 	});

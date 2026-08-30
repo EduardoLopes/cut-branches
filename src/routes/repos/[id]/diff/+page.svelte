@@ -3,10 +3,10 @@
 	// branch-management diff view. The target arrives via search params —
 	// `?branch=<name>` or `?commit=<sha>` (exactly one).
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import BranchDiffView from '$domains/branch-management/features/branch-diff/views/branch-diff-view.svelte';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 
 	const id = $derived(page.params.id ?? '');
 	const branchName = $derived(page.url.searchParams.get('branch'));
@@ -18,7 +18,7 @@
 	// the branches view.
 	$effect(() => {
 		if (!enabled || !hasTarget) {
-			goto(resolve(`/repos/${id}`));
+			goto(resolveRepositoryPath(id));
 		}
 	});
 </script>

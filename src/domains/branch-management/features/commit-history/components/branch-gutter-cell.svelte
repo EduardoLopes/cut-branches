@@ -13,12 +13,12 @@
 	import Badge from '@pindoba/svelte-badge';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Popover from '@pindoba/svelte-popover';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import type { BranchSignals } from '$domains/branch-management/features/commit-history/application/use-branch-comparisons.svelte';
 	import type { GraphRow } from '$domains/branch-management/features/commit-history/models/commit-graph';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -52,7 +52,7 @@
 		if (!isFeatureEnabled('branch-diff') || !page.params.id || branch?.isCurrent()) {
 			return undefined;
 		}
-		return `${resolve(`/repos/${page.params.id}/diff`)}?branch=${encodeURIComponent(name)}`;
+		return `${resolveRepositorySubPath(page.params.id, 'diff')}?branch=${encodeURIComponent(name)}`;
 	}
 
 	// Branch row = [checkbox | compact BranchCard] flex row; the checkbox sits

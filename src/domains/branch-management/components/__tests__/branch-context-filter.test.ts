@@ -20,7 +20,6 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('$app/navigation', () => ({ goto: (...args: unknown[]) => h.goto(...args) }));
-vi.mock('$app/paths', () => ({ resolve: (p: string) => p }));
 // The getters live ON the `page` object, not on the module namespace: vitest
 // snapshots a mock factory's exports, so a namespace-level getter would freeze
 // at its first value and no test could change the route.

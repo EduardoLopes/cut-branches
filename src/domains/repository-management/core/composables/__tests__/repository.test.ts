@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getRepositoryStore, RepositoryStore } from '../repository.svelte';
 import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
+import { resolveRepositoryPath } from '$lib/repository-route';
 import type { Repository } from '$types/repository';
 
 vi.mock('$app/navigation', () => ({
@@ -78,7 +78,10 @@ describe('RepositoryStore', () => {
 
 				// Navigate to repository page if it's a new repository
 				if (value?.id && value.id !== oldId) {
-					goto(resolve(`/repos/${value.id}`));
+					// The helper resolves the route; the rule only recognises a literal
+					// `resolve()` call, so it can't see that from here.
+					// eslint-disable-next-line svelte/no-navigation-without-resolve
+					goto(resolveRepositoryPath(value.id));
 				}
 			}
 		}

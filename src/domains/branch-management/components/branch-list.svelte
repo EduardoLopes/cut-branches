@@ -18,7 +18,6 @@
 		PREVIEW_WINDOW
 	} from '../features/commit-history/infrastructure/queries/create-get-commit-history-window-query';
 	import { prefetchBranchCommits } from '../features/commit-history/infrastructure/queries/create-list-branch-commits-query';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
@@ -35,6 +34,7 @@
 	} from '$domains/branch-management/utils/branch-utils';
 	import { filterBranchesBySearch } from '$domains/branch-management/utils/filter-branches-by-search';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import { formatString } from '$utils/string-utils';
@@ -648,13 +648,13 @@
 								: formatString('{name}', { name: branch.getName() })}
 							{variant}
 							commitHistoryHref={historyEnabled && !isRestoreView && repositoryID
-								? `${resolve(`/repos/${repositoryID}/history`)}?commit=${branch.getLastCommit().getSha()}`
+								? `${resolveRepositorySubPath(repositoryID, 'history')}?commit=${branch.getLastCommit().getSha()}`
 								: undefined}
 							diffHref={diffEnabled && !isRestoreView && !branch.isCurrent() && repositoryID
-								? `${resolve(`/repos/${repositoryID}/diff`)}?branch=${encodeURIComponent(branch.getName())}`
+								? `${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`
 								: undefined}
 							commitDiffHref={diffEnabled && !isRestoreView && repositoryID
-								? `${resolve(`/repos/${repositoryID}/diff`)}?commit=${branch.getLastCommit().getSha()}`
+								? `${resolveRepositorySubPath(repositoryID, 'diff')}?commit=${branch.getLastCommit().getSha()}`
 								: undefined}
 							commitHoverPreview={historyEnabled && !isRestoreView && repositoryID && repositoryPath
 								? commitPreview

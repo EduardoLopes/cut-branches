@@ -2,10 +2,10 @@
 	// Thin composition root: resolves the route params and mounts the
 	// branch-management commit-history view.
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import CommitHistoryView from '$domains/branch-management/features/commit-history/views/commit-history-view.svelte';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 
 	const id = $derived(page.params.id ?? '');
 	const targetCommit = $derived(page.url.searchParams.get('commit'));
@@ -14,7 +14,7 @@
 	// Guard the route: with the flag off, send the user back to branches.
 	$effect(() => {
 		if (!enabled) {
-			goto(resolve(`/repos/${id}`));
+			goto(resolveRepositoryPath(id));
 		}
 	});
 </script>
