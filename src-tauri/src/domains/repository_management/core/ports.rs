@@ -17,7 +17,8 @@ pub trait BranchGateway: Send + Sync {
     /// List branches with last-commit info, skipping the expensive merge check.
     fn list_branches_fast(&self, path: &Path) -> Result<Vec<Branch>, AppError>;
 
-    /// Name of the currently checked-out branch.
+    /// Name of the currently checked-out branch, or an empty string when
+    /// HEAD is detached (a repository with no current branch is still valid).
     fn current_branch(&self, path: &Path) -> Result<String, AppError>;
 
     /// Active branches for `repo_id` as persisted in the database — used to

@@ -105,7 +105,10 @@ fn get_all_branches_with_last_commit_internal(
         );
     }
 
-    let current_branch_name = get_current_branch(path)?;
+    // A detached HEAD is a legitimate repository state: nothing is marked
+    // `current`, the listing still succeeds.
+    let current_branch_name = find_current_branch(path)?;
+    let current_branch_name = current_branch_name.as_deref();
 
     let workers = std::thread::available_parallelism()
         .map(std::num::NonZeroUsize::get)
@@ -129,7 +132,7 @@ fn get_all_branches_with_last_commit_internal(
                     let Some(name) = names.get(index) else {
                         return;
                     };
-                    let result = build_branch(&repo, name, &current_branch_name, skip_merge_check);
+                    let result = build_branch(&repo, name, current_branch_name, skip_merge_check);
                     if let Ok(mut slots) = slots_mutex.lock() {
                         slots[index] = Some(result);
                     }
@@ -173,7 +176,7 @@ fn get_all_branches_with_last_commit_internal(
 fn build_branch(
     repo: &Repository,
     name: &str,
-    current_branch_name: &str,
+    current_branch_name: Option<&str>,
     skip_merge_check: bool,
 ) -> Result<Branch, AppError> {
     let branch =
@@ -220,7 +223,7 @@ fn build_branch(
     Ok(Branch {
         name: name.to_string(),
         fully_merged: is_merged,
-        current: name == current_branch_name,
+        current: current_branch_name == Some(name),
         upstream,
         last_commit: Commit {
             sha,
@@ -605,7 +608,13 @@ pub fn bulk_get_branch_metrics(
     Ok(slots.into_iter().flatten().collect())
 }
 
-pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
+/// Name of the checked-out branch, or `None` when HEAD is detached.
+///
+/// Detached HEAD is a normal state (`git checkout --detach`, a bisect, a tag
+/// checkout), so every read path that merely *describes* the repository uses
+/// this and treats `None` as "no branch is current". Only operations that
+/// genuinely require a branch treat `None` as an error themselves.
+pub fn find_current_branch(path: &Path) -> Result<Option<String>, AppError> {
     let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
         path: path.display().to_string(),
         source: e,
@@ -616,10 +625,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
         .map_err(|e| BranchError::HeadNotFound { source: e })?;
 
     if !head.is_branch() {
-        return Err(BranchError::DetachedHead {
-            path: path.display().to_string(),
-        }
-        .into());
+        return Ok(None);
     }
 
     let branch_name = head
@@ -628,7 +634,7 @@ pub fn get_current_branch(path: &Path) -> Result<String, AppError> {
             path: path.display().to_string(),
         })?;
 
-    Ok(branch_name.to_string())
+    Ok(Some(branch_name.to_string()))
 }
 
 pub fn branch_exists(path: &Path, branch_name: &str) -> Result<bool, AppError> {
@@ -1108,7 +1114,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_current_branch() {
+    fn test_find_current_branch() {
         let _guard = DirectoryGuard::new();
         let repo = setup_test_repo();
         let path = repo.path();
@@ -1120,13 +1126,47 @@ mod tests {
             .unwrap();
         let expected = String::from_utf8(output.stdout).unwrap().trim().to_string();
 
-        let current = get_current_branch(path);
+        let current = find_current_branch(path);
         assert!(
             current.is_ok(),
-            "get_current_branch failed: {:?}",
+            "find_current_branch failed: {:?}",
             current.err()
         );
-        assert_eq!(current.unwrap(), expected);
+        assert_eq!(current.unwrap(), Some(expected));
+    }
+
+    /// A detached HEAD is not an error: the lookup reports "no current
+    /// branch" and the listing still resolves every branch, none of them
+    /// marked `current`.
+    #[test]
+    fn test_detached_head_is_tolerated() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+
+        Command::new("git")
+            .args(["branch", "side"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+        Command::new("git")
+            .args(["checkout", "--detach"])
+            .current_dir(path)
+            .output()
+            .unwrap();
+
+        assert_eq!(find_current_branch(path).unwrap(), None);
+
+        let branches = get_all_branches_with_last_commit(path).expect("listing tolerates detach");
+        assert!(!branches.is_empty());
+        assert!(
+            branches.iter().all(|b| !b.current),
+            "no branch is current while HEAD is detached"
+        );
+        assert!(branches.iter().any(|b| b.name == "side"));
+
+        let fast = get_all_branches_with_last_commit_fast(path).expect("fast listing tolerates");
+        assert!(fast.iter().all(|b| !b.current));
     }
 
     #[test]
@@ -1489,12 +1529,22 @@ mod tests {
     }
 
     #[test]
-    fn test_get_current_branch_errors() {
+    fn test_find_current_branch_errors() {
         let _guard = DirectoryGuard::new();
         let temp_dir = tempfile::tempdir().unwrap();
         let non_git_path = temp_dir.path();
-        let result = get_current_branch(non_git_path);
+        let result = find_current_branch(non_git_path);
         assert!(result.is_err(), "Expected error for non-git directory");
+
+        // An initialised repository with no commits has an unborn HEAD, which
+        // is still an error (there is nothing to describe).
+        let empty = tempfile::tempdir().unwrap();
+        Command::new("git")
+            .args(["init"])
+            .current_dir(empty.path())
+            .output()
+            .unwrap();
+        assert!(find_current_branch(empty.path()).is_err());
     }
 
     #[test]

@@ -22,7 +22,8 @@ impl BranchGateway for BranchManagementGateway {
     }
 
     fn current_branch(&self, path: &Path) -> Result<String, AppError> {
-        crate::domains::branch_management::infrastructure::git::branch::get_current_branch(path)
+        crate::domains::branch_management::infrastructure::git::branch::find_current_branch(path)
+            .map(Option::unwrap_or_default)
     }
 
     fn list_db_branches(
