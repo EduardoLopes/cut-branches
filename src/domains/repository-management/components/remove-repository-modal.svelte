@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import Loading from '@pindoba/svelte-loading';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
@@ -31,21 +32,9 @@
 	const deleteRepositoryMutation = createDeleteRepositoryMutation({
 		onSuccess: async () => {
 			const repoName = ensureString(getRepositoryQuery.data?.name);
-			const deletedId = repositoryId;
 
-			if (deletedId) {
-				queryClient.cancelQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
-				queryClient.removeQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
-			}
-
-			const otherRepository = repositories.find((repository) => repository.id !== deletedId);
-
-			// Navigate away immediately
-			if (otherRepository) {
-				await goto(resolveRepositoryPath(otherRepository.id));
-			} else {
-				await goto(resolve('/repos'));
-			}
+			await leaveRemovedRepository();
+			open = false;
 
 			// Show notification about repository removal
 			notifications.push({
@@ -54,15 +43,49 @@
 				feedback: 'success'
 			});
 		},
+		onError: async (error) => {
+			// `repository_not_found` means the row is already gone — the route we are
+			// sitting on is just as dead as it would be after a success, so leave it
+			// the same way. Any other failure leaves the repository (and its route)
+			// intact; the error notification explains what happened.
+			if (error?.kind === 'repository_not_found') {
+				await leaveRemovedRepository();
+			}
+
+			open = false;
+		},
 		meta: { showErrorNotification: true }
 	});
 
+	/** Drops the removed repository's cache and moves off its now-dead route. */
+	async function leaveRemovedRepository() {
+		const deletedId = repositoryId;
+
+		if (deletedId) {
+			queryClient.cancelQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
+			queryClient.removeQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
+		}
+
+		const otherRepository = repositories.find((repository) => repository.id !== deletedId);
+
+		if (otherRepository) {
+			await goto(resolveRepositoryPath(otherRepository.id));
+		} else {
+			await goto(resolve('/repos'));
+		}
+	}
+
 	function handleRemove() {
-		open = false;
+		// The button is already marked disabled while the mutation runs, but the
+		// underlying control still fires clicks, so guard the second submit here.
+		if (deleteRepositoryMutation.isPending) {
+			return;
+		}
 
 		const repoId = repositoryId;
 
 		if (!repoId) {
+			open = false;
 			notifications.push({
 				title: 'Error',
 				message: 'Repository ID is missing',
@@ -71,6 +94,8 @@
 			return;
 		}
 
+		// The dialog stays up until the mutation settles: closing first would strand
+		// the user on the repository's route with nothing but a toast if it failed.
 		deleteRepositoryMutation.mutate({ id: repoId });
 	}
 
@@ -86,6 +111,7 @@
 		aria-label="Remove repository"
 		aria-describedby="Remove repository"
 		data-testid="remove-modal"
+		showCloseButton={!deleteRepositoryMutation.isPending}
 		passThrough={{
 			content: {
 				style: css.raw({

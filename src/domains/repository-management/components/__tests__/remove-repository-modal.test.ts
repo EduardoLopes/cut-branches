@@ -1,6 +1,7 @@
 import { describe, expect, vi, beforeEach } from 'vitest';
 import RemoveRepositoryModal from '../remove-repository-modal.svelte';
 import { goto } from '$app/navigation';
+import type { AppError, DeleteRepositoryOutput, Result } from '$infrastructure/bindings';
 import type { Repository } from '$types/repository';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -178,6 +179,79 @@ describe('RemoveRepositoryModal', () => {
 			await removeButton.click();
 
 			await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos'));
+		});
+	});
+	describe('Pending and failed removals', () => {
+		test('keeps the dialog open while the removal is in flight', async () => {
+			let settle: (value: Result<DeleteRepositoryOutput, AppError>) => void = () => {};
+			const { commands } = await import('$infrastructure/bindings');
+			vi.mocked(commands.deleteRepository).mockImplementationOnce(
+				() =>
+					new Promise((resolve) => {
+						settle = resolve;
+					})
+			);
+
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id,
+				open: true
+			});
+
+			await getByTestId('confirm-remove').click();
+
+			// Still up, still on the repository's route: the user is not stranded.
+			const modal = document.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			expect(modal).toHaveAttribute('open');
+			expect(goto).not.toHaveBeenCalled();
+
+			// And a second click while it is in flight does not fire a second remove.
+			await getByTestId('confirm-remove').click();
+			expect(commands.deleteRepository).toHaveBeenCalledTimes(1);
+
+			settle({ status: 'ok', data: { success: true } });
+			await expect.element(modal).not.toHaveAttribute('open');
+		});
+
+		test('navigates away when the repository is already gone', async () => {
+			const { commands } = await import('$infrastructure/bindings');
+			vi.mocked(commands.deleteRepository).mockResolvedValueOnce({
+				status: 'error',
+				error: { kind: 'repository_not_found', message: 'gone', description: null }
+			});
+
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id,
+				open: true
+			});
+
+			await getByTestId('confirm-remove').click();
+
+			// The row is gone either way, so the dead route is left exactly as it
+			// would be after a successful removal.
+			await vi.waitFor(() => expect(goto).toHaveBeenCalled());
+
+			const modal = document.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			await expect.element(modal).not.toHaveAttribute('open');
+		});
+
+		test('stays on the route when the removal fails for another reason', async () => {
+			const { commands } = await import('$infrastructure/bindings');
+			vi.mocked(commands.deleteRepository).mockResolvedValueOnce({
+				status: 'error',
+				error: { kind: 'database_error', message: 'locked', description: null }
+			});
+
+			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+				repositoryId: mockRepository.id,
+				open: true
+			});
+
+			await getByTestId('confirm-remove').click();
+
+			const modal = document.querySelector('[data-testid="remove-modal"]') as HTMLElement | null;
+			await expect.element(modal).not.toHaveAttribute('open');
+			// The repository (and its route) is still there — nothing to navigate to.
+			expect(goto).not.toHaveBeenCalled();
 		});
 	});
 });
