@@ -13,6 +13,12 @@ importers:
 
   .:
     dependencies:
+      '@pindoba/core-menu':
+        specifier: alpha
+        version: 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-tree-view':
+        specifier: alpha
+        version: 0.0.0-alpha-20260829223243(typescript@5.9.3)
       '@pindoba/devtools':
         specifier: link:../pindoba/packages/devtools
         version: link:../pindoba/packages/devtools
@@ -40,6 +46,9 @@ importers:
       '@pindoba/svelte-banner':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-breadcrumb':
+        specifier: alpha
+        version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-button':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
@@ -64,6 +73,9 @@ importers:
       '@pindoba/svelte-loading':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-menu':
+        specifier: alpha
+        version: 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@pindoba/svelte-navigation':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
@@ -94,6 +106,9 @@ importers:
       '@pindoba/svelte-tooltip':
         specifier: alpha
         version: 0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-tree-view':
+        specifier: alpha
+        version: 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
       '@tanstack/svelte-query':
         specifier: ^6.1.36
         version: 6.1.36(svelte@5.56.4(@typescript-eslint/types@8.63.0))
@@ -393,8 +408,16 @@ packages:
   '@clack/core@0.5.0':
     resolution: {integrity: sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow==}
 
+  '@clack/core@1.4.2':
+    resolution: {integrity: sha512-0Ty/1Gfm+Kb07sXcuESjyKfwEhSy4Ns1AgeEisHb/bDY5fWme0tTeTkU14T1Gmcs17YIjB/teiDe4uaCghbYqQ==}
+    engines: {node: '>= 20.12.0'}
+
   '@clack/prompts@0.11.0':
     resolution: {integrity: sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw==}
+
+  '@clack/prompts@1.6.0':
+    resolution: {integrity: sha512-EYlRokl8szrP9Z25qT5aepMdBjzBvHF9ZEhzIiUBc9guz/T31EqRgvD0QSgZcpE93xiwrr+OkB4nz0BZyF6fSA==}
+    engines: {node: '>= 20.12.0'}
 
   '@commitlint/cli@21.2.1':
     resolution: {integrity: sha512-blsZGe29hJ72VGEFVl72IVYX+1vsfINpjA9yWQA6i7OKD/McGEOXg08sKIRKjFk4JvzhV/9n0l3i6NooPLTNfg==}
@@ -709,11 +732,20 @@ packages:
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
 
+  '@floating-ui/core@1.8.0':
+    resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
+
   '@floating-ui/dom@1.7.6':
     resolution: {integrity: sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==}
 
+  '@floating-ui/dom@1.8.0':
+    resolution: {integrity: sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==}
+
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@floating-ui/utils@0.2.12':
+    resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
   '@hono/node-server@1.19.14':
     resolution: {integrity: sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw==}
@@ -783,6 +815,11 @@ packages:
     peerDependencies:
       svelte: ^5
 
+  '@lucide/svelte@1.37.0':
+    resolution: {integrity: sha512-AxaiSxeuErlt4fNmmN28oaL5R7yVoQLsfSeiAONxCEK+l0/SrLAjRktQ0DkTQpomv1oRzOA3hohWY0ZHTZCMmw==}
+    peerDependencies:
+      svelte: ^5
+
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
 
@@ -824,8 +861,16 @@ packages:
     resolution: {integrity: sha512-fYdfRtMOtxdtrQQJmgoN6/IxKQOlQEpTGjUXqlHsHZ193JvwvE0FGEVVrGMLEOb/nbPn4vrscfFak+k4G8Qzww==}
     engines: {node: '>=20'}
 
+  '@pandacss/config@1.12.0':
+    resolution: {integrity: sha512-AgjlUdBwhBb2czbGIpZk0xU9ZCi17bquun7QmorWvykPVj5a2nN2bkLgh0D8kFCJkgIbi3Mow5/64r1ehCptUA==}
+    engines: {node: '>=20'}
+
   '@pandacss/core@1.11.4':
     resolution: {integrity: sha512-2C9qwnmdP24oaoTFc+dTMjJHQZ6iV/l4VCLR4hZlGTiQ60k0EFMK4sV998vu0n57fi4p1I1yTDk9Ew4Wu27pGg==}
+    engines: {node: '>=20'}
+
+  '@pandacss/core@1.12.0':
+    resolution: {integrity: sha512-Rxde1t2+fpJSWVGsaYMdwmUyqCHKduVUCEEBNBppBnHjph50N+KscNyE89N74PMNEWauUNdBnal8iJoPArzBkw==}
     engines: {node: '>=20'}
 
   '@pandacss/dev@1.11.4':
@@ -833,20 +878,41 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  '@pandacss/dev@1.12.0':
+    resolution: {integrity: sha512-owEHFNzl7wSEjxeedHnmmMjh7MNYmcmCi0xCzaGGuptHLyZk/fHdiDUmo15RUk8i4R2IJG+cXHR2GP5+WdryZQ==}
+    engines: {node: '>=20.12.0'}
+    hasBin: true
+
   '@pandacss/extractor@1.11.4':
     resolution: {integrity: sha512-4xmyy5pUGZdqmyx+mRcq6xKuBZoLcU9EeNXnmMrrQKw8BhkxGOl3DNst0ZthH7S7JXEx9Aazc2Ac7kMlOh+cNQ==}
+    engines: {node: '>=20'}
+
+  '@pandacss/extractor@1.12.0':
+    resolution: {integrity: sha512-0etVewT7usEUeo6iYPTHd4iPqSk9wvzG4Vu7FHvAJ40AzlGp0bP4iMR9mxDyOjcSDOkZ5B5o1y0d/6YoeNdHFg==}
     engines: {node: '>=20'}
 
   '@pandacss/generator@1.11.4':
     resolution: {integrity: sha512-UDL8J/qdnMXwEEjU7OvQfMTCk+BIntILg/b0fh76xEgex08TrvBLtEM/rZ3rOh95yCVuGwQI9n1Njzz8u3bKxg==}
     engines: {node: '>=20'}
 
+  '@pandacss/generator@1.12.0':
+    resolution: {integrity: sha512-+sskQmIvOWP5Bs6zspWWvcUSbyFui3O1cHOCyxDAS5sfX1bo53qLw0V3r5ipgBPUbGDBBay6MDYA/HubWQUnIg==}
+    engines: {node: '>=20'}
+
   '@pandacss/is-valid-prop@1.11.4':
     resolution: {integrity: sha512-RWxInlS+lGgKiF0fB0HO76vsJFgRvbavm5Z25/GqqN8MPHXYA6n5rZnfdp4itEXy5DJkQ9vt3yrwa2IKiuhtrA==}
     engines: {node: '>=20'}
 
+  '@pandacss/is-valid-prop@1.12.0':
+    resolution: {integrity: sha512-P7tXdSwpJz9sTqQTtuC6V7lyaEGEc1M42JxRbn5MSdpIzjQzIXOS45aVBDYQuX7ADiMjGvkwRP1bJsnJZGPnkQ==}
+    engines: {node: '>=20'}
+
   '@pandacss/logger@1.11.4':
     resolution: {integrity: sha512-NY9aW9tCQR2yJVqdCpoB4LeOIaLk1HxztAc0CrgJgNROteEyj7lV65lr8FyWCi4RH3WBZvIhyPMldd3CSon/OA==}
+    engines: {node: '>=20'}
+
+  '@pandacss/logger@1.12.0':
+    resolution: {integrity: sha512-BPGnww9dxIOumDoytnmcJ4aE4F1ee3HIrF8Ri6tG47dNHeOIPKEEUzYUtUhagkFvBeAA7DcxoSuykquPaDNDpg==}
     engines: {node: '>=20'}
 
   '@pandacss/mcp@1.11.4':
@@ -857,48 +923,96 @@ packages:
     resolution: {integrity: sha512-u1/y1oHVASGwXfoKbADVPcrPi54zJ0R8Qg1EvPpRNjw+ovcqJsFkZHBN03lCwSOFbb2ukvCKf4rfMzzNvABajg==}
     engines: {node: '>=20'}
 
+  '@pandacss/node@1.12.0':
+    resolution: {integrity: sha512-/7DW/0cvTz7EVeNPrcKBeK9k68VIBo9rqC7DzOhIbJRkoco2yP/glls4cyzKviVRvtEcvZZb9L4w5lwFFrqBgQ==}
+    engines: {node: '>=20'}
+
   '@pandacss/parser@1.11.4':
     resolution: {integrity: sha512-GyJ/+O9QVUC8tCxc9FJPrL8Oqltc7OVDIg8uC46FMBFI2IrG8sJI+J1QkLGZ+OL4AYZ897JjYQK+pbYsPesHsA==}
+    engines: {node: '>=20'}
+
+  '@pandacss/parser@1.12.0':
+    resolution: {integrity: sha512-p+v9Wg9tcxnMTUjVJHNSm1dQEmO4JXJ9SItYrA6jCmNTGqfMX/TVOYEfWni8RCSOd0qLW6ncdgHS93FmnimEsw==}
     engines: {node: '>=20'}
 
   '@pandacss/plugin-lightningcss@1.11.4':
     resolution: {integrity: sha512-DGEu7gkDfReBU5rqWfZ0+AAywS5OPfDmBchjuuEUmNUb+Cj3STEsd7jPTo4GZEMBFdd5GIMOIB/GScwZrrKCww==}
     engines: {node: '>=20'}
 
+  '@pandacss/plugin-lightningcss@1.12.0':
+    resolution: {integrity: sha512-rvS8nMsras07OhrkJ9kHXJf+3CEFL2AZUT80kcThLlNRs5Rz6Tat271thH0zQSm6YxeMrUbnCDA4F9NbNuB24Q==}
+    engines: {node: '>=20'}
+
   '@pandacss/plugin-svelte@1.11.4':
     resolution: {integrity: sha512-S9gohIV49MaOozt3+Xc6EiJgXd5Rc12I90XrI1KNfoKjwKjWuz0IZQgJOr67LQZIXn/BlAnO6aNugI5cBaUBRA==}
+    engines: {node: '>=20'}
+
+  '@pandacss/plugin-svelte@1.12.0':
+    resolution: {integrity: sha512-xq+HJZEyLLyud3tLlqZTHFPX6S0uZIsRs50oFzkNqB0yzEDJ4Lnkdw6q+xcl1tarVrpsxo6gRG7uadHUs0KsPw==}
     engines: {node: '>=20'}
 
   '@pandacss/plugin-vue@1.11.4':
     resolution: {integrity: sha512-wP+VnQByq1x6aQMyG2/70CRiLG4UORUC+bL+j86x0kj1UxdOpsPRf8TF1P5EyJPfenrnwUyDChaL4hJWL83JjQ==}
     engines: {node: '>=20'}
 
+  '@pandacss/plugin-vue@1.12.0':
+    resolution: {integrity: sha512-3JVMK/z/9sv/2BykLomwrdXhLz9Uq8CrVdjbSLBgHbTZtEIGMQEZK4KDTVmUSgGlgApTSx+LR9kSC13ZiVf7zg==}
+    engines: {node: '>=20'}
+
   '@pandacss/postcss@1.11.4':
     resolution: {integrity: sha512-FOVKZDqqDrHzNNu0qE4Xi7SN+AheVUj3fFBg5B+Isj+uSh+w2YJNf5lyrJLU95PczMQl8NzrAocI5u6qHLBJVg==}
+    engines: {node: '>=20'}
+
+  '@pandacss/postcss@1.12.0':
+    resolution: {integrity: sha512-spWkYDVQuOwo8+NDjercjizns5W+mi6Ll+K+DXZaRFRKqk5gitrCacGpUpr1O4VyxIPH2TILEYCkoQMc/G7XZQ==}
     engines: {node: '>=20'}
 
   '@pandacss/preset-base@1.11.4':
     resolution: {integrity: sha512-Pf4BX9aaUiwuYg2RBiwYA9wdzifJFNTJRYVNJv7YJHrojZipWY7ELR8PVRA4gdAbIjog7KoWlOmKz6PcUZNfnQ==}
     engines: {node: '>=20'}
 
+  '@pandacss/preset-base@1.12.0':
+    resolution: {integrity: sha512-uWfVz4rANFSGTGdJ/Cp0jZ1WIH6zpmsiROW/j8K4Gtq/lt8+2lDo2NqShsryiqxsEa5YBfhbqqpVdnIhyFhIQQ==}
+    engines: {node: '>=20'}
+
   '@pandacss/preset-panda@1.11.4':
     resolution: {integrity: sha512-Z6yrY7o0Xyqc6JpnAZ954APGs5VhLeZLJqTzAJw9eu6Y0pP5SWaOeztZCdPwWZvK3LbyXliYzc3FY4cxEaVYNg==}
+    engines: {node: '>=20'}
+
+  '@pandacss/preset-panda@1.12.0':
+    resolution: {integrity: sha512-jhzhAmtGY34b1FlMJGEAh/IkfU4WyTNT2mpJfcBUPBi1rZLHSTcs0aqedRmMdwM4tTT43XFOXMiazbztKME60A==}
     engines: {node: '>=20'}
 
   '@pandacss/reporter@1.11.4':
     resolution: {integrity: sha512-6+lCjdOTGwlL+P6RKEDlmExcYwgoedlLhR7JAgw0UF9IvgMxvmH7Xk6RX8drYq6B+a1fGG4RN9V371ySZKLzbg==}
     engines: {node: '>=20'}
 
+  '@pandacss/reporter@1.12.0':
+    resolution: {integrity: sha512-ajegFS9CMOZ/6HpX98Qq7O9J/oz7noVp8PC1//36ZtSONTJiPlQwjc39R2QKGSXYlOnQSv7rV0vcHJv2tR+ZIA==}
+    engines: {node: '>=20'}
+
   '@pandacss/shared@1.11.4':
     resolution: {integrity: sha512-zFPz5yladwlsynFBkFKtzDDqArlVwgy1MzW3Rbz8NqfT72pOvklmuizXoScHsEPv3ox8Y/tdMcJf48rn8R5e+w==}
+    engines: {node: '>=20'}
+
+  '@pandacss/shared@1.12.0':
+    resolution: {integrity: sha512-2KwTjcG/DSZgRT0tIR7tGIGMzf+4tKt6yE1/qSX45QGacmuiZk0NOzQyDOOJ3euPl/5suOOMsN43rgQ21sFdAg==}
     engines: {node: '>=20'}
 
   '@pandacss/token-dictionary@1.11.4':
     resolution: {integrity: sha512-K6agiBFJdu8ncyh3Z4EC43noDVlRNWFIdD6JFnsa2FIhCuhIoJP1hEInicURTfcoq4Z6OakAPonL4IW+54vbXw==}
     engines: {node: '>=20'}
 
+  '@pandacss/token-dictionary@1.12.0':
+    resolution: {integrity: sha512-bBG/4fmDJFBdIwXJaZBOJDghfqjBgFl2IShGoyxPLvhDp6abhPw0LWPtggM8NIEqqSY1t2bJX72TptZqt5VOAQ==}
+    engines: {node: '>=20'}
+
   '@pandacss/types@1.11.4':
     resolution: {integrity: sha512-Bn+ez7ckm2E406QBF0W2ckEeFIBFo91qvOy10/bdxxiAHR76fBmg6tr4YlHbLHdXpcSBjXFWrGWo8nqyKJSx2A==}
+    engines: {node: '>=20'}
+
+  '@pandacss/types@1.12.0':
+    resolution: {integrity: sha512-PtlEIOBEV3RzWffeu1zH+/YFmP+fn24M63STGEbgTwjEBMhyo/FfT2sfZGB8oWAbWUBKBp69OMg25E+/rY3klQ==}
     engines: {node: '>=20'}
 
   '@pindoba/core-accordion@0.0.0-alpha-20260619021129':
@@ -906,6 +1020,9 @@ packages:
 
   '@pindoba/core-affix@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-fgDATDi5nFjJTtaplHqoI1gckT1kdPQanI/8R0shpcvmkTQAjtAVdg0Eriw4O/rqPWRj/M1jdzn0GtvQ/AQJ8A==}
+
+  '@pindoba/core-affix@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-Cxt4etmrac8ewirtGiRrP/nJ74lFYI1rFdQOj/dCWRbSEsQxgw9JoEYiEuqLND1uaUSIQvmBQGrPJLpGFNoq+Q==}
 
   '@pindoba/core-alert@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-tmG15UlNx+fJ3mFoqlhxJCCZ3inviIBK4nP48sb2rWyf0MoHF66ldf8SGKWvixn8OyqrMgYhI4m/v2R968xTZw==}
@@ -916,17 +1033,35 @@ packages:
   '@pindoba/core-badge@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-tJp3brS/1pqPZidwI4hlau5davTaagr4U6jr8bL9QNA1q3UALpcQN1+TkYB5rEy5gnMZLtRCgD2DP1UR0oGyqw==}
 
+  '@pindoba/core-badge@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-16M5S3JaoCOfhvhFVXc0vqdc+pmFqy7ob4EJM8Qym4xm4tqdD6CFK6VswZBa2s1bf0/gn2hRm5I3UX4AAcjV7w==}
+
   '@pindoba/core-banner@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-MgwWhthK8ISi5eiJdkVpPDUbg62OY6VNEpCmFi22notZqUvxODvVa2GjadiPF9MVt7Myh9rCzC2tdFc2yTtclA==}
+
+  '@pindoba/core-banner@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-p86uwgVWCnPIYFVZ7KhulVop9/yVVd6I/JGN3zomqen2BCv6MEmfBtQQwlk25C0bFKofEtYru7LrkYoDo4YzMw==}
+
+  '@pindoba/core-breadcrumb@0.0.0-alpha-20260619021129':
+    resolution: {integrity: sha512-FPcrgpw77Xz6rup31jBppWB8GlqZz5NyLsXIrVwLqpVVlgbXBHpJl7r341ACHTZr6p/Sd5ppn3bqgaMS9gBGTw==}
 
   '@pindoba/core-button@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-mp5cV/KWYBpQUFyj2ANgDS3MSFGwhI5g2FVrAgXUm9sEt4Vlp/gXV/As/kWc68rH9muz8p/MH92tMuENJsy64g==}
 
+  '@pindoba/core-button@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-RCgMrfLv19cuknFIC0Q8mXJ9yl+yyP955ImWl0z5hfkt2TdPtasNxlEooyfMrRgS2dJr/OuzwBBURmk3L1AQbw==}
+
   '@pindoba/core-card@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-/CxCRX6KbTAH+YO+Nt/79nI+hMV6s0EqwPSseKPGgbmvknciq8Nhg7EMkYF389r6OC8qGjIq+9LcBt/uM/2mwg==}
 
+  '@pindoba/core-card@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-ejXVdyp+RF5QpYzxX8swU+GIVJNPUuooZSDEN9S3PfheZjVLTUtN5mo1LvM2L3pBfdxQKaEvj92zyUV2T+8U7g==}
+
   '@pindoba/core-checkbox@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-0o5ZiC3qNKwf3G0awjA5uKCEShNKC1R4KExQVSp9vZ4B/VCtg95QuTQLl0Ld9qmpdYrhbDpJHtYRlOVXON+BWA==}
+
+  '@pindoba/core-checkbox@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-Ww4xd5EbB/Nxmn8Zb1O45cmWkTREMQB10eHzoCYfbkC0N3ZMcU5pliYjEH+G0qqS3zu0aao/B41TK0IrHIRnUg==}
 
   '@pindoba/core-choice@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-oSj8QvOtctnQsyRz7EZMa+HoUZLKHbOb0ReM4lM6HpIS5k/ezi5NOclhfGHTrYSDbDKqwIIQP5HTtTiMGT4tMg==}
@@ -934,14 +1069,29 @@ packages:
   '@pindoba/core-dialog@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-CPnKqc0YFeOn+0fmvoYeCiT/HXzLNdiWQA+BtbuAhU+YR54FvHVWIvb56TREyoIkZsm2qwgxMgxlLkGF4E53mA==}
 
+  '@pindoba/core-dialog@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-eDjBW4WEQcvmtGcWfYMje26sTR+ZzYm2kp5OI0bSgEreSKdJBRWpL2BPVtm2W+DgemVVU0ThkZMat4SrSphPfg==}
+
   '@pindoba/core-group@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-EoZNkSFOZwlDOUuBzKuBQMdBJgmo5JTHjmvSL/zXfPA2p1cjxfbMAnYOpktAd+ing3uA76TCReVLoVG3IO2aCA==}
 
   '@pindoba/core-input@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-CMSZU5XbHzn3c0D2l1vN3oItwq/Ep7yllFj81yrQUNHRAXT+vbPXxsl846EjDvPrpNCjWsl7OauFpe4mLOl7NQ==}
 
+  '@pindoba/core-input@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-ftLC0YZWSEmprE51tMvf1o8P93z+yBKhKFTPGp8BT6JGMtSnfhETHHgqtW7YsHeRdLmFk9FThUSZTU/YD6ECyg==}
+
+  '@pindoba/core-kbd@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-4nv73IyGOOaqjOJLWL0lwFLtQjky/qYhl+7eN4XUEWSx1sjqD76G3Z6IZmg2ZXyPGXBxTbw9IhHzT/iUZ+CZKw==}
+
+  '@pindoba/core-listbox@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-htubfDNTiv1eOxrCtBJQSWKlPpxunoymZW5xHKEtWqDDjQeWl9RKEflW1Ya6SZuh3TZ7RevZJDb/RuFYJpu+cA==}
+
   '@pindoba/core-loading@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-p/ShSD6ltOdc0DoT15N7l+0WnAnQwpPSIwBPevq7uVWoMoixCYxUekfGL0FP0xMQVJttGrcLvrfCNoHJ9eP6SA==}
+
+  '@pindoba/core-menu@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-kkzXgDmiwb6V1FPThDLYeVq+Ri9otPQcGHpD7cF75SqBWdaeOuPu5N8Le7lusj7TFqjB4e06e4sL1U4j5zARkg==}
 
   '@pindoba/core-navigation@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-dfpkx8ziQqsUpTSMSUbNLW9MhmznmYoIB5+1l1IkeFkDZi2Kp/cbC4dRs9HvK2syGjoCXeFe9cco4KwJWW8X8w==}
@@ -952,8 +1102,14 @@ packages:
   '@pindoba/core-panel@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-rC6QFeGKptL1S1YqXxAyhtBLymyby5sdq2kKPheypgMBLvCQ+KPvkptaPyBS0R8JSX0TNJED5dWgKRH9xGZWdA==}
 
+  '@pindoba/core-panel@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-6nBT8C+pcZaWIR0gl4z8rXSclmmRmCMsLV4a/Q61NE47T2gdbvxVEWN+10SV0RWrYT7ZvrJI10Hdk0eJFtvDQw==}
+
   '@pindoba/core-popover@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-4wjNMIxUQvaAUkqj99cKWnqaFOHTZblKykBBYHaBe7DPPLNIPEd3KvqH7433u/vjTU8jeMBsu+hlGiUShKDi4Q==}
+
+  '@pindoba/core-popover@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-UiNFXg0enuV6fYZfVf6iw6psC825t/73N2Lw6GS/vWr9+5BQEZAyIZwJ2dYKSpgU6r2FMalEmiLD3wEAgukLmA==}
 
   '@pindoba/core-progress@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-LgsW3I/S+oiZpCe+E+SsJkuthgYdPL0SuXL0CRP6Uh6y98UfWMHt2wFqeXRCS03ImpCsIjIdtqsVHywNLTeMTQ==}
@@ -967,6 +1123,9 @@ packages:
   '@pindoba/core-stamp@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-qLmPJBjkv0BhrFJ5WYyEHw3yMqJexr0jJCmRZTHMIuFgKEPdYt+5ArWVz43p3df9F7KhqpeyWERaOM9fm20O0A==}
 
+  '@pindoba/core-stamp@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-kJ+K/ohvWwqJnAW/GSrfFAdVKgAWPhFl2ro14cn64xpNYlwXOihSZwB35jZHX9JbTc5B3eNoJN4g+0BAVW5k1w==}
+
   '@pindoba/core-theme-mode-select@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-4Xy4/qGCUI8IQkc29sgvMTVS7BCkD+fDcV10tm3DhzkMPryH7yq6A3/prjkQsMXMv3CUR0HSb/1Xi9bymg8IJQ==}
 
@@ -976,8 +1135,14 @@ packages:
   '@pindoba/core-tooltip@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-eZJwoAqK5BosB3LohbzU1rjXL4Rh9wRPbcXjitaQ6uTRZMxWTFbwdDBp3jUV6Q9qyOJ6DRC5URKfLzsIEWbd8g==}
 
+  '@pindoba/core-tree-view@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-hPv6YNhUsrNfegHsBT+JcHmKWNAC2olo7gEilVCNtLDGh6JNeMVVVoHjVm0d/jch4mXn0RiyEKMtX1Uk9jM77w==}
+
   '@pindoba/normalize-props@0.0.0-alpha-20260617191010':
     resolution: {integrity: sha512-5QerNi/ICPPwD2/9yimAO3P/SeHildXkt/VOm8OJLv2wBQBJAd/3ABe7N6k6KlaQYRzc0MySLd1TjFhMZs6cYA==}
+
+  '@pindoba/normalize-props@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-g5sIi8jbRUyc4cBfgU7cjvsNUiFGbufylzv3GYuMtwQOf/4kX9UXxjWdxpiERi2tUzLg987ZahMJcG3Mn7/nSQ==}
 
   '@pindoba/panda-buildinfo@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-eHlmFi9oDqxguSBOdz/XxxJQn2nqsVJzAJz6i0+956DDOVF6pkfQ5lecH6/BieDA+gbAbJfwODEvWw1YFp6fVA==}
@@ -988,17 +1153,26 @@ packages:
   '@pindoba/panda-preset@0.0.0-alpha-20260617191010':
     resolution: {integrity: sha512-poltBcV8M6bpMxyfeDDiK7cB6AUlb6jw9A5v+W/pKZj1rHc7xLHaYZnu6x6WrE85JjMQ7HMDMxpNLSj/+CY9HQ==}
 
+  '@pindoba/panda-preset@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-66xch5GEZVr2pFXYHh3HflIohhmSnsBqYG9qLUdosk14fIEAPpnkfRL3PmNYzx3V3LfPLJkZJBfrorgPiStHpA==}
+
   '@pindoba/panda@0.0.0-alpha-20250910225440':
     resolution: {integrity: sha512-rQNpj3/2JWDIAAsEyfmLwrsSRa4IGE7lzdYCZ16PyIKNGIaY1ROu56yQay7L6otdhHawTogkJhH92ktR4kdZ4A==}
 
   '@pindoba/styled-system@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-Vu8uiViR8D04ycOQ1Rr7V4ri/JlEol361qr6H0OoaExoW9PGqGeGehFOPjSXMdgp/VB7bWyJQZYCtU8MKZyMMA==}
 
+  '@pindoba/styled-system@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-OxzKK/aAssaTe104KeuCGKtgxfJgxKbVYKfyorF12OAyYuEnZcagLAC8+pUj9EPG/aFx2zSZlxvXu2ZwsMsoxw==}
+
   '@pindoba/styles-accordion@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-71hhOCmIFMpfuluHp4dprVu6fVg9QmiB4Awt9M3uXVsDQGyfowM6xG0KPz1LSjHOQhan4R8B2F3epVVCqCip8A==}
 
   '@pindoba/styles-affix@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-QZ/J4m2NAgGkZ6WOMxkK4OOimdSZVaso4XFYLSSHrMZkyU/onPw/6qef7OKmA0CgT1QfQKzaQFq5SmA+i6KSPA==}
+
+  '@pindoba/styles-affix@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-DLxzyDc9uz5aOU54ONdsC7YwozICESoKyLreYww/kIfzTcLyJbPWliJQ0HvlY62HgCWhLJZhKLaw5isYyA038Q==}
 
   '@pindoba/styles-alert@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-4HQtpzuSmzV1bULTEYLvuNbVMdfyglQ1hFRZTc2r6xDNZ/B7K00hNB+f68f9b1girtEnvUy9qCRhU4YrArSwTA==}
@@ -1012,14 +1186,23 @@ packages:
   '@pindoba/styles-badge@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-a3zr9tiMEWvTWkKEfNJLnM5nA0wkeTWEgj4vs21ey8yj83x1o9UCZZSrk9hWtT1YZiMaJ/sZ3QTiVsGYl+Vuvw==}
 
+  '@pindoba/styles-badge@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-c3gLTwZW4mUldSVl0sR+b2GRcZB1KgUC+UyzBHf5n3H7JXT04ArI6KUTXD7y8mKnGq5WLBYdqN1TIMrUrj22NA==}
+
   '@pindoba/styles-banner@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-KO+XSbWnVqV6Z7An3yLQ72qvw22LdKi+w9TA+V1Uf7BW5r6xgDhVYgBKf6RXZ+NoNjtkDhh4//oh7+/FyFSy5w==}
+
+  '@pindoba/styles-banner@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-MxNiT1UhvTAMSqRtVWBzV2+qWEwLaUX9a6AmJ9C1ZgUA9Txpkz88QwCXJSaBqDHNceEfHIRwKJTSb5G06bSOuA==}
 
   '@pindoba/styles-breadcrumb@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-PA0vaqW9ZfSL40Y7zE8F+v+wgtnkvA6I1Qoh7Vj7N/mBVSP8aVKvVc+DTAtt66AM5P6NSietWlj0qsHAGWkkRA==}
 
   '@pindoba/styles-button@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-zDDCUs0G9ZKmcsp+C4wlUuVTEAS14F55wbqtn/TPXhB0+EbbikjghCwt8htp84xILVlzske0uYh+VZZFbHGlKg==}
+
+  '@pindoba/styles-button@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-xCJy/kPix0BRJU2vy1UXBcbA1uPzYDsV1xqejN5zqwr7abtVbwRJ4QXLiG4QSMZlQnovEVsUy+UfXznyX7ttWQ==}
 
   '@pindoba/styles-calendar@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-2OOPnSAsCr95uuNW3fhv/VAoEIjezpC+4tJAn15PlxlXEhQmWQk+Wt6K6mRZvSxedhs13h8Ia8ANI9j+XyvHng==}
@@ -1030,11 +1213,17 @@ packages:
   '@pindoba/styles-card@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-cTqxHfcr82+C+8Ha73K6/WaSSmZSw3iNUPT/PH6cMWoX5x6sR1O3OuUcOMOHU+awTgJ9eqHJr3fOUu/tWs8M0A==}
 
+  '@pindoba/styles-card@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-/YgwMMDtB1kipck2BweXrgqhQPEh7dWgnDucUmrgsc8SJnIuT8/PKGpKsbDNVYVd7U7R3/ZGMVFKr+5KtkKorA==}
+
   '@pindoba/styles-carousel@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-3Z8IccHys3PZtFPVCl2lBmziHtIDcGcPNoiOAI83b3PblSyz+26VBKsvzY4qo4hjMNooxHg0zbudTwVy6ecfmA==}
 
   '@pindoba/styles-checkbox@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-fflSmEMhn1Xtz0N8zBZqQkh+0UgNCjdL45+0Gay5AKj9iXQUXadaNQsYh79gWz/SnUszGpg8pS3lWdLE07mBww==}
+
+  '@pindoba/styles-checkbox@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-dyLZEkbIkWp3XnOo8RmEo1WSoOa7arBKu19yc/kyExbeTQ91H8xjH+yYesDX3J4Ko355twuu9eMpmHAJzGQx5g==}
 
   '@pindoba/styles-choice@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-NarqvtnJ3kBtz0RCfjF108ZbiYGS0YmBs/JUDjlg+AguNrbhfxQlHBHORhmnDJMJVzxhaMuGlAXR0NGL5l8bCw==}
@@ -1051,6 +1240,9 @@ packages:
   '@pindoba/styles-dialog@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-Y7IFyAl6+CtkyEZYjSZmBwOD5XF1ZJESbNCM/FgCGnoLaIqkTFibFVHUL7VwCzZMT0dGtHZLrBsPA0dA6jMjCQ==}
 
+  '@pindoba/styles-dialog@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-iaeqDDXzV1m24ZwgLj8+ruxAtNc0u1U2Epg7ls7Ox/rwT4AcFaQCF/huq0CN1DN/cHuGV3hhy5qNrq0DPSEy0g==}
+
   '@pindoba/styles-group@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-XGS8S2+7DrKtnlS8bYjLrluxocz3smVqC9WEeiQcMnQ7efzNkknN5pSwBFQZcTyUAbMzWaPZqIglMUeR/Cqyqg==}
 
@@ -1066,14 +1258,26 @@ packages:
   '@pindoba/styles-input@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-ywIoamt/zqlkn7DGqVXdo9Jt7AAEpzb6os4Y0YzkzJQH1faDqF8PFN0QXlURvREAljbLeLu6imS1aF7p8azSDA==}
 
+  '@pindoba/styles-input@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-Uy2jv5XQRWUoeZMd6lnuLJQFYpqZn543oWkgCvBac32Y4ahlzv3hsxS1lCsamRNMRDu2ovteoxEWnNXTrIsJow==}
+
   '@pindoba/styles-kbd@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-UvrJyZ/akVQYD6IHWm8O4VMLEoJJEUQHpcWyPX7ulR62xdVS2Ov+1AZ3aBag56kWQgPWbBIng+r2sQc3QVfOHw==}
+
+  '@pindoba/styles-kbd@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-w4YdpcbNyf8j/WH2HbXETvEz6X4vOg7WR5NOdj9qtzB3ZaKZ3UIFf51BtwXM77HZl0++a+ZTpJ/dqBmjkTqvzg==}
 
   '@pindoba/styles-listbox@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-kxGBbkzcxZBDAAwaTPAiValJjVC3f/ISMMd89RT1RUAcFbtKpwuCZAQmshOcjANUY9FII2JGoUuORTbMMYbHDQ==}
 
+  '@pindoba/styles-listbox@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-ncGli4u1O7kOdHPCwWjcDdEbBZ8X76n/2hJudFFL9r+kbgDZU+CwWEh5HS0a0AS6Ft8eMOTViK8DZEBRTSi5cg==}
+
   '@pindoba/styles-loading@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-GYE4s2z91NPJguqeB8JBvEQ2CW1Lnlxyopv2w4+Sqel5k3tvVncx4RvLSEb3/aPkImefXUgQcdwjuzHgq34gLA==}
+
+  '@pindoba/styles-menu@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-RlS+O4/SA+lC/U8TlJSFOgnVr9fpYfrzRXpbCQOyvfCdnXrFhf0J794kaPG1RTkSQNVjUcn0Ne4qZOvPSIJMLw==}
 
   '@pindoba/styles-navigation@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-ldE9PcRDdBAD23ZoHl3CAczFiZN9Z0eNngvqR3AeoP3309Cu5Wh6wEsuYuYjqCrWFWjP8W6eCp1uZk/DixWMzg==}
@@ -1087,8 +1291,14 @@ packages:
   '@pindoba/styles-panel@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-FikpNhkh2MybukMJ5VCOJB4cerjVnUMdBaySq6+h+mb1mKXGobsYbBZRaPKyHfnBE3BV4LrDOkKENVMjweWYCA==}
 
+  '@pindoba/styles-panel@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-6KxktOzyutBQE+l1ir1ofPn0z232ms4/Vuwta5aSTQNHh8tSGBzOh5vQaOnThQWqct+Fv86FDeUPU5dn58Fpjg==}
+
   '@pindoba/styles-popover@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-FmmdaunUEpqpjNvJvalVu6U2+vOeQ3oIJpbwQm1E1IPhuZ8E31uibgaHchMAPRkJMqQX/pFFZvO8BiU/kGa1Yw==}
+
+  '@pindoba/styles-popover@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-ZJUOESrG/OB9ZYClad/VrsKW/ZGpEoUkqZVDUFdtWHIhi0urSeBK9Meu6HmwPgqB9P6DqqaRSYctKxSZE0Ahcg==}
 
   '@pindoba/styles-progress@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-I8sVSTiInazqPvNoG2E2J5hztWZpDI/rmlxPmgQprexLFak8gJN8IyBLQO8/UZt+sH84diigAAfGGGLP/R11ZQ==}
@@ -1104,6 +1314,9 @@ packages:
 
   '@pindoba/styles-stamp@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-m59J6kxW/xOAsgj2Ngv9s4bY5+fhSYqNcIHve95TXiQIGEZIH0c89GSX9mb+q4sI+pZUaS+rJvec2p3PTR4s3A==}
+
+  '@pindoba/styles-stamp@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-4SnUx40dUfYaR1jiIZpzj/hgdrYLmyQKfMSSypQFc9WXrnh7vW8ue3UkWo02rJmDizMhynjlO+tWZItYz5L0Yw==}
 
   '@pindoba/styles-tab@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-1LtLGhL0qI1NYTVPvVwGuLI5dBJf4oCChAUbkYmfFxqmKm2HLEkANw31qkNc1UGM1sQDFMHBFkswJ6D5RW/RWQ==}
@@ -1129,6 +1342,9 @@ packages:
   '@pindoba/styles-tree-view@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-vMAgFAsQe1cWWKF92E0ihnxdizzEhGQwGyPSgizZIoaUmcZ0sE3jBywIekZYNu0dBsCFchmEey9x/5taJOUPPw==}
 
+  '@pindoba/styles-tree-view@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-z/D+L1eegQXR6m/qyC2LOiAWr/eS6PFo1PYwQ1hoQfi0g2KULCVJdMLoVS36wpLN9HglHfE/+QLw5ZCE/U/xVw==}
+
   '@pindoba/svelte-accordion@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-iD1PpVW0ZoAhJ7Sv44eV0k/HNqRV8inFHG7RICYkNVVljY7KZlqtj2Nr+hGjlSnXeQk7S3w4D8lqlnZEU3lOFw==}
     peerDependencies:
@@ -1136,6 +1352,11 @@ packages:
 
   '@pindoba/svelte-affix@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-a8FJgeY3z4IoTxamCY+d/hjFBX76XEfujuBPzuhkV3a4YffU265Dl1nDrqJorh0uFWTT4zHm1ZgmXLVc2Oh8dw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-affix@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-LOs7I4AhAn/FwU676nb95zC8E53me3G/Fxu/3vPl+jUspD2YYD8sXXPFUuOIbJeAbhBAMj4zdJhz7D69iDREfA==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1154,8 +1375,23 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-badge@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-XrHdotL2RKllz8iyWKQFTdVPIPDz7lSOa5xEbD3yTDwM85RQuSH2A/EOim0B7MUbRmgXLM7bubEW4LFtYpEp3A==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-banner@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-n4l7x/DUDDK2xjOcYz5IgGU8fzBIM21KFbVc2rhO1z4dXydYg2VtFKgYBuXfCIoy1I8lZCVi1lnDuPnbRFhZZA==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-banner@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-mQYTXlC6nT2oTgYSV3T11SKQMpSyktRIMwwQ98Gv7E0Z/lJsOiR5NrCd4FlWJepq3LbM7kYWBPPZKR/2dkWmrQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-breadcrumb@0.0.0-alpha-20260619021129':
+    resolution: {integrity: sha512-KkeoVhQ+PrV7erFeKLzq9AFDIwofmnL0oHWimdeSpRG1w2Q4BvwoEE/Nrz2pDo5IiNgFVNhm392/hG3EiRxHXA==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1164,13 +1400,28 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-button@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-U7PWzym0xOWGHpX9q80fd80azKR5aAI188oOhfiWdcZiCJ4P04qFbDukH/AAGvtMBz+/dtCuZyDul30oLVkuqA==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-card@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-qdZxldcwCWEePos+AhpS5SChzv3rvPsR2SWN+X8UTVPTZPzyhieYnBiMXdgAk73C4HvbOuxxZc4shQYZvRdgSg==}
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-card@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-RNw9U6uG9W3u7lC6jCOhBYqvI9HnuzPLa6S6qaRZSwKTb4ukAV7hIocrvC6U9KNsaXqrg7VyynieGBuDSC6dpA==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-checkbox@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-lR54+GsIoo4fxR15lxKS+WAOnoxS5GAG5XiMul/7FtcaSNRmXJ/zjzqbExhODnyMXtdQ0MUZADpVsue/qWoIzQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-checkbox@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-usawhkSGaibSOTOIRp0kG2XVaEw1AivczDJFWCsGv8wA6Cde3IZtUxY3bw6Q6GfMd7xfZfos3he6yZ7jCmhaTw==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1184,6 +1435,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-dialog@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-bY+rr66EVuwWa/GPr53B2sWFZIcVRRjUo6k/FQ9z/6JJTw52G4gHP7lh7DXXIfHTU2G473Je3P+ICrmOwgrViQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-group@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-SqPdi7CjRE1JUUR6YfFJhi7wnQ5hDs2Ds8No8W90l4lJQ71CZ2ifA0F3SbISP7j8msd0g0/1k8IzehDj6p6RBg==}
     peerDependencies:
@@ -1194,8 +1450,28 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-input@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-2EOOgPU6H/GTaPdLNCCiqFknox3DIbaErEp4X9Pt9oSLWp1H7LBT62M6xeeURcf3G6g2qH9ECACUIxUpoy7IYQ==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-kbd@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-f/lR2BT4A3a+o0qgvsr8Ov2WPU8yXiIylHwbTusYXpg5M8z5QfyGPV8A/0MTFCGkdWRqg3FL/cFXpy5S2yL/ag==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-listbox@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-iznxWOZZKN78HkVW6YH8XDC/gJPFjI0euuGtM+RWpguPM7nmBGRcYCuS8xiGXWH2tl8jajQR2M/yEJXBc9HVDw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-loading@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-JydMemiK5Kw5BxKcdzkR8AnyTv48zSJ72/HknKLctPHuUylLm9h2YIPZQ9p1bcudc3iNEZHzeCVAgI+m2UeoEg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-menu@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-ZkH9RBQrPo5OhsIyVAca6/QPsUNuihGP1501TK8Js0e6kH+JPQY/X2k/MfudSbCF4xH2csFKnfuZMbPZYEYsbw==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1219,6 +1495,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-popover@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-0D5Doz89wz+K5ygxAcGUU0X9GlOb1fjakrtKdjbI2fKokaEVtsGKTXTyVxn5cQ414xjNVFIn0RN+xs4gxAthhA==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-progress@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-5cKEJbUu+PR/fwBd6k1sk3snhhOUmGwceE2w8qbacsC4dKkzaYPDSZ/8XT/HOSH2HXArUvL6TVsCU5hvkBbydQ==}
     peerDependencies:
@@ -1239,6 +1520,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-stamp@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-0UvS+kPoEUzj+NN8wfrHQCJWf46cVzHsB1WBIFt58GqFYE0SuqEg14WHBWwBqbcbzzIqOgSkKJBosxeuBRXkFg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-xEZBVYwBpO1A2OqCfte6kCAaeEiI+7D4joBTMtglzlTvOByh5vU9WWqF2uAF3KFymbYhUTlOSQwFanz+VhFmaQ==}
     peerDependencies:
@@ -1254,6 +1540,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-tree-view@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-mALoo1xem7XvpAWwyTbLXwb9BZ0jf+PIn9rklSK6devr70f2b39M6qL1IJcjMWBUoaA6wgrWXiQqxkIelOfvWA==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-use-store@0.0.0-alpha-20260320034942':
     resolution: {integrity: sha512-g0ty5L+FeZ1kfLSRB9WcdJX9x+Mo1Xz6E8ovc7qAC1UeWUu9WADPMtDMVaKYBdG/IaAK+tNMe3OIdudp9Ui1wA==}
     peerDependencies:
@@ -1261,6 +1552,9 @@ packages:
 
   '@pindoba/utils@0.0.0-alpha-20260619021129':
     resolution: {integrity: sha512-cQ2TAl5kdj+1ar5wAop+de47V6YCi60h1ByyAqHfvcR3j/nesIlMiqGCv4oEuL4nk35WUlUe5Q84g6xFPTSO6g==}
+
+  '@pindoba/utils@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-0FKILaO09OeMXTqkYWvbft6HsTapbhjJ2BmTesb0vMKQvP7dPAAIL2Afw4xI5FbdjAvCaKV0kz4kuzJqJKp7Vw==}
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
@@ -2299,15 +2593,31 @@ packages:
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
 
+  dom-serializer@3.1.1:
+    resolution: {integrity: sha512-4MEa38/QexBob6gFNwu+EGdWvhJ1OKuNwdYY3Y3NyeWDQfnGeDYQUDfIRzWu5B5gsv03so2Uxd28YC6zrsx3Lw==}
+    engines: {node: '>=20.19.0'}
+
   domelementtype@2.3.0:
     resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
+
+  domelementtype@3.0.0:
+    resolution: {integrity: sha512-umCQid3jKbDmVjx8jGaW7uUykm4DEUeyV21hPxNMo2nV955DhUThwqyOIDtreepP31hl84X7G5U9ZfsWvIB3Pg==}
+    engines: {node: '>=20.19.0'}
 
   domhandler@5.0.3:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
     engines: {node: '>= 4'}
 
+  domhandler@6.0.1:
+    resolution: {integrity: sha512-gYzvtM72ZtxQO0T048kd6HWSbbGCNOUwcnfQ01cqIJ4X2IYKFFHZ5mKvrQETcFXxsRObZulDaKmy//R7TPtsBg==}
+    engines: {node: '>=20.19.0'}
+
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
+
+  domutils@4.0.2:
+    resolution: {integrity: sha512-qI4JLRKnSzqFqr7hAlS5xQDusBCjKSEG4t4+7aNrIQMHBcsC2TGEhuyABJdYkgSewL57PNLYEiibY2iPKhKpaA==}
+    engines: {node: '>=20.19.0'}
 
   dotenv@8.6.0:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
@@ -2348,6 +2658,10 @@ packages:
   entities@7.0.1:
     resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
     engines: {node: '>=0.12'}
+
+  entities@8.0.0:
+    resolution: {integrity: sha512-zwfzJecQ/Uej6tusMqwAqU/6KL2XaB2VZ2Jg54Je6ahNBGNH6Ek6g3jjNCF0fG9EWQKGZNddNjU5F1ZQn/sBnA==}
+    engines: {node: '>=20.19.0'}
 
   env-paths@2.2.1:
     resolution: {integrity: sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==}
@@ -2615,8 +2929,17 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
+  fast-string-truncated-width@3.0.3:
+    resolution: {integrity: sha512-0jjjIEL6+0jag3l2XWWizO64/aZVtpiGE3t0Zgqxv0DPuxiMjvB3M24fCyhZUO4KomJQPj3LTSUnDP3GpdwC0g==}
+
+  fast-string-width@3.0.2:
+    resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
+
   fast-uri@3.1.3:
     resolution: {integrity: sha512-i70LwGWUduXqzicKXWshooq+sWL1K3WUU5rKZNG/0i3a1OSoX3HqhH5WbWwTmqWfor4urUakGPiRQcleRZTwOg==}
+
+  fast-wrap-ansi@0.2.2:
+    resolution: {integrity: sha512-7F2Fl+TjRSenLqlU3UjSH0iyqopqoZIu7eZVpEirP2g1GtWa2G/ecEmBdgz31+Mxr+ELclgg6sokpSFIQiZ02Q==}
 
   fastq@1.20.1:
     resolution: {integrity: sha512-GGToxJ/w1x32s/D2EKND7kTil4n8OVk/9mycTc4VDza13lOvpUZTGX3mFSCtV9ksdGBVzvsyAVLM6mHFThxXxw==}
@@ -2823,6 +3146,10 @@ packages:
 
   htmlparser2@10.1.0:
     resolution: {integrity: sha512-VTZkM9GWRAtEpveh7MSF6SjjrpNVNNVJfFup7xTY3UpFtm67foy9HDVXneLtFVt4pMz5kZtgNcvCniNFb1hlEQ==}
+
+  htmlparser2@12.0.0:
+    resolution: {integrity: sha512-Tz7u1i95/g2x2jz81+x0FBVhBhY5aRTvD3tXXdFaljuNdzDLJ8UGNRrTcj2cgQvAg3iW/h77Fz15nLW0L0CrZw==}
+    engines: {node: '>=20.19.0'}
 
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
@@ -3555,6 +3882,10 @@ packages:
     resolution: {integrity: sha512-i0tloweeudshAEuddpDxcg9Ik6pkPfVsHIgKyf143JrgG7/MOh0+q7BypdLXZPoOP7fOYt1eTcwGkyiVmhJFkA==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
+  nanostores@1.5.2:
+    resolution: {integrity: sha512-B0UbxzK1s0CN8Xht6r+7iT5+xV8PTaRERR1nATeplRv1Rw5YLWfVAid0hkqY3EceqpG4RjTk8GAwIxQY39Rnwg==}
+    engines: {node: ^20.0.0 || >=22.0.0}
+
   napi-postinstall@0.3.4:
     resolution: {integrity: sha512-PHI5f1O0EP5xJ9gQmFGMS6IZcrVvTjpXjz7Na41gTE7eE2hK11lg04CECCYEEjdc17EV4DO+fkGEtt7TpTaTiQ==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
@@ -4016,6 +4347,10 @@ packages:
 
   sanitize-html@2.17.5:
     resolution: {integrity: sha512-ZmU1joGRrvoyctKIiuwUxqR6moLoU2Wk+2bMccN6f7UwhAmwYDvWziqPxRDDN2Qip62NqnIrVrT9akbL6Wretg==}
+
+  sanitize-html@2.17.7:
+    resolution: {integrity: sha512-PGtEkc9cbnedU3s9TmzDbpsZ8w086g/0Q8k8/oIO1NLNU3i5k9yn835CrjJSajp1KMmkisbO1qPXxNKO3welAg==}
+    engines: {node: '>=22.12.0'}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -4880,10 +5215,22 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
+  '@clack/core@1.4.2':
+    dependencies:
+      fast-wrap-ansi: 0.2.2
+      sisteransi: 1.0.5
+
   '@clack/prompts@0.11.0':
     dependencies:
       '@clack/core': 0.5.0
       picocolors: 1.1.1
+      sisteransi: 1.0.5
+
+  '@clack/prompts@1.6.0':
+    dependencies:
+      '@clack/core': 1.4.2
+      fast-string-width: 3.0.2
+      fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
   '@commitlint/cli@21.2.1(@types/node@24.10.1)(conventional-commits-parser@7.0.1)(typescript@5.9.3)':
@@ -5163,12 +5510,23 @@ snapshots:
     dependencies:
       '@floating-ui/utils': 0.2.11
 
+  '@floating-ui/core@1.8.0':
+    dependencies:
+      '@floating-ui/utils': 0.2.12
+
   '@floating-ui/dom@1.7.6':
     dependencies:
       '@floating-ui/core': 1.7.5
       '@floating-ui/utils': 0.2.11
 
+  '@floating-ui/dom@1.8.0':
+    dependencies:
+      '@floating-ui/core': 1.8.0
+      '@floating-ui/utils': 0.2.12
+
   '@floating-ui/utils@0.2.11': {}
+
+  '@floating-ui/utils@0.2.12': {}
 
   '@hono/node-server@1.19.14(hono@4.12.28)':
     dependencies:
@@ -5226,6 +5584,10 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.5.5
 
   '@lucide/svelte@1.23.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))':
+    dependencies:
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+
+  '@lucide/svelte@1.37.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))':
     dependencies:
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
 
@@ -5307,6 +5669,19 @@ snapshots:
       microdiff: 1.5.0
       typescript: 6.0.2
 
+  '@pandacss/config@1.12.0':
+    dependencies:
+      '@pandacss/logger': 1.12.0
+      '@pandacss/preset-base': 1.12.0
+      '@pandacss/preset-panda': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/types': 1.12.0
+      esbuild: 0.25.12
+      escalade: 3.2.0
+      get-tsconfig: 4.14.0
+      microdiff: 1.5.0
+      typescript: 6.0.2
+
   '@pandacss/core@1.11.4':
     dependencies:
       '@csstools/postcss-cascade-layers': 5.0.2(postcss@8.5.14)
@@ -5315,6 +5690,26 @@ snapshots:
       '@pandacss/shared': 1.11.4
       '@pandacss/token-dictionary': 1.11.4
       '@pandacss/types': 1.11.4
+      browserslist: 4.28.1
+      lodash.merge: 4.6.2
+      outdent: 0.8.0
+      postcss: 8.5.14
+      postcss-discard-duplicates: 7.0.2(postcss@8.5.14)
+      postcss-discard-empty: 7.0.1(postcss@8.5.14)
+      postcss-minify-selectors: 7.0.5(postcss@8.5.14)
+      postcss-nested: 7.0.2(postcss@8.5.14)
+      postcss-normalize-whitespace: 7.0.1(postcss@8.5.14)
+      postcss-selector-parser: 7.1.1
+      ts-pattern: 5.9.0
+
+  '@pandacss/core@1.12.0':
+    dependencies:
+      '@csstools/postcss-cascade-layers': 5.0.2(postcss@8.5.14)
+      '@pandacss/is-valid-prop': 1.12.0
+      '@pandacss/logger': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/token-dictionary': 1.12.0
+      '@pandacss/types': 1.12.0
       browserslist: 4.28.1
       lodash.merge: 4.6.2
       outdent: 0.8.0
@@ -5347,9 +5742,35 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pandacss/dev@1.12.0(typescript@5.9.3)':
+    dependencies:
+      '@clack/prompts': 1.6.0
+      '@pandacss/config': 1.12.0
+      '@pandacss/logger': 1.12.0
+      '@pandacss/node': 1.12.0(typescript@5.9.3)
+      '@pandacss/postcss': 1.12.0(typescript@5.9.3)
+      '@pandacss/preset-base': 1.12.0
+      '@pandacss/preset-panda': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/token-dictionary': 1.12.0
+      '@pandacss/types': 1.12.0
+      cac: 6.7.14
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pandacss/extractor@1.11.4(typescript@5.9.3)':
     dependencies:
       '@pandacss/shared': 1.11.4
+      ts-evaluator: 1.2.0(typescript@5.9.3)
+      ts-morph: 28.0.0
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pandacss/extractor@1.12.0(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/shared': 1.12.0
       ts-evaluator: 1.2.0(typescript@5.9.3)
       ts-morph: 28.0.0
     transitivePeerDependencies:
@@ -5370,11 +5791,32 @@ snapshots:
       postcss: 8.5.14
       ts-pattern: 5.9.0
 
+  '@pandacss/generator@1.12.0':
+    dependencies:
+      '@pandacss/core': 1.12.0
+      '@pandacss/is-valid-prop': 1.12.0
+      '@pandacss/logger': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/token-dictionary': 1.12.0
+      '@pandacss/types': 1.12.0
+      javascript-stringify: 2.1.0
+      outdent: 0.8.0
+      pluralize: 8.0.0
+      postcss: 8.5.14
+      ts-pattern: 5.9.0
+
   '@pandacss/is-valid-prop@1.11.4': {}
+
+  '@pandacss/is-valid-prop@1.12.0': {}
 
   '@pandacss/logger@1.11.4':
     dependencies:
       '@pandacss/types': 1.11.4
+      kleur: 4.1.5
+
+  '@pandacss/logger@1.12.0':
+    dependencies:
+      '@pandacss/types': 1.12.0
       kleur: 4.1.5
 
   '@pandacss/mcp@1.11.4(typescript@5.9.3)':
@@ -5430,6 +5872,44 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pandacss/node@1.12.0(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/config': 1.12.0
+      '@pandacss/core': 1.12.0
+      '@pandacss/generator': 1.12.0
+      '@pandacss/logger': 1.12.0
+      '@pandacss/parser': 1.12.0(typescript@5.9.3)
+      '@pandacss/plugin-lightningcss': 1.12.0
+      '@pandacss/plugin-svelte': 1.12.0
+      '@pandacss/plugin-vue': 1.12.0
+      '@pandacss/reporter': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/token-dictionary': 1.12.0
+      '@pandacss/types': 1.12.0
+      browserslist: 4.28.1
+      chokidar: 4.0.3
+      fast-glob: 3.3.3
+      fs-extra: 11.3.2
+      get-tsconfig: 4.14.0
+      glob-parent: 6.0.2
+      is-glob: 4.0.3
+      lodash.merge: 4.6.2
+      look-it-up: 2.1.0
+      outdent: 0.8.0
+      p-limit: 5.0.0
+      package-manager-detector: 1.6.0
+      perfect-debounce: 1.0.0
+      picomatch: 4.0.4
+      pkg-types: 2.3.0
+      pluralize: 8.0.0
+      postcss: 8.5.14
+      prettier: 3.2.5
+      ts-morph: 28.0.0
+      ts-pattern: 5.9.0
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pandacss/parser@1.11.4(typescript@5.9.3)':
     dependencies:
       '@pandacss/config': 1.11.4
@@ -5444,10 +5924,31 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pandacss/parser@1.12.0(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/config': 1.12.0
+      '@pandacss/core': 1.12.0
+      '@pandacss/extractor': 1.12.0(typescript@5.9.3)
+      '@pandacss/logger': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/types': 1.12.0
+      ts-morph: 28.0.0
+      ts-pattern: 5.9.0
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pandacss/plugin-lightningcss@1.11.4':
     dependencies:
       '@pandacss/logger': 1.11.4
       '@pandacss/types': 1.11.4
+      browserslist: 4.28.1
+      lightningcss: 1.31.1
+
+  '@pandacss/plugin-lightningcss@1.12.0':
+    dependencies:
+      '@pandacss/logger': 1.12.0
+      '@pandacss/types': 1.12.0
       browserslist: 4.28.1
       lightningcss: 1.31.1
 
@@ -5456,9 +5957,20 @@ snapshots:
       '@pandacss/types': 1.11.4
       magic-string: 0.30.21
 
+  '@pandacss/plugin-svelte@1.12.0':
+    dependencies:
+      '@pandacss/types': 1.12.0
+      magic-string: 0.30.21
+
   '@pandacss/plugin-vue@1.11.4':
     dependencies:
       '@pandacss/types': 1.11.4
+      '@vue/compiler-sfc': 3.5.25
+      magic-string: 0.30.21
+
+  '@pandacss/plugin-vue@1.12.0':
+    dependencies:
+      '@pandacss/types': 1.12.0
       '@vue/compiler-sfc': 3.5.25
       magic-string: 0.30.21
 
@@ -5470,13 +5982,29 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pandacss/postcss@1.12.0(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/node': 1.12.0(typescript@5.9.3)
+      postcss: 8.5.14
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pandacss/preset-base@1.11.4':
     dependencies:
       '@pandacss/types': 1.11.4
 
+  '@pandacss/preset-base@1.12.0':
+    dependencies:
+      '@pandacss/types': 1.12.0
+
   '@pandacss/preset-panda@1.11.4':
     dependencies:
       '@pandacss/types': 1.11.4
+
+  '@pandacss/preset-panda@1.12.0':
+    dependencies:
+      '@pandacss/types': 1.12.0
 
   '@pandacss/reporter@1.11.4':
     dependencies:
@@ -5488,7 +6016,19 @@ snapshots:
       table: 6.9.0
       wordwrapjs: 5.1.1
 
+  '@pandacss/reporter@1.12.0':
+    dependencies:
+      '@pandacss/core': 1.12.0
+      '@pandacss/generator': 1.12.0
+      '@pandacss/logger': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/types': 1.12.0
+      table: 6.9.0
+      wordwrapjs: 5.1.1
+
   '@pandacss/shared@1.11.4': {}
+
+  '@pandacss/shared@1.12.0': {}
 
   '@pandacss/token-dictionary@1.11.4':
     dependencies:
@@ -5498,7 +6038,17 @@ snapshots:
       picomatch: 4.0.4
       ts-pattern: 5.9.0
 
+  '@pandacss/token-dictionary@1.12.0':
+    dependencies:
+      '@pandacss/logger': 1.12.0
+      '@pandacss/shared': 1.12.0
+      '@pandacss/types': 1.12.0
+      picomatch: 4.0.4
+      ts-pattern: 5.9.0
+
   '@pandacss/types@1.11.4': {}
+
+  '@pandacss/types@1.12.0': {}
 
   '@pindoba/core-accordion@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
@@ -5522,6 +6072,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/core-affix@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/core-alert@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5561,11 +6120,43 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-badge@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-badge': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-banner@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
       '@pindoba/styles-banner': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/core-banner@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-banner': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/core-breadcrumb@0.0.0-alpha-20260619021129(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
+      '@pindoba/styles-breadcrumb': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - jsdom
@@ -5585,6 +6176,17 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-button@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-button': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-card@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-banner': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -5598,6 +6200,17 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-card@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-banner': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-card': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-checkbox@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-affix': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -5609,6 +6222,17 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/core-checkbox@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-checkbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/core-choice@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5638,6 +6262,18 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-dialog@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-banner': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-button': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-dialog': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      nanostores: 1.5.2
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-group@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-panel': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -5663,6 +6299,39 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-input@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-input': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/core-kbd@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-kbd': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/core-listbox@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-listbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-loading@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
@@ -5671,6 +6340,21 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/core-menu@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-listbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-popover': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-listbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-menu': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      nanostores: 1.5.2
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/core-navigation@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5706,6 +6390,14 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-panel@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-popover@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@floating-ui/dom': 1.7.6
@@ -5717,6 +6409,17 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/core-popover@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@pindoba/core-dialog': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-popover': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      nanostores: 1.5.2
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/core-progress@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5766,6 +6469,16 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-stamp@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styles-stamp': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-theme-mode-select@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-popover': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -5805,7 +6518,20 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/core-tree-view@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-tree-view': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/normalize-props@0.0.0-alpha-20260617191010': {}
+
+  '@pindoba/normalize-props@0.0.0-alpha-20260829223243': {}
 
   '@pindoba/panda-buildinfo@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
@@ -5869,6 +6595,11 @@ snapshots:
       '@radix-ui/colors': 3.0.0
       culori: 4.0.2
 
+  '@pindoba/panda-preset@0.0.0-alpha-20260829223243':
+    dependencies:
+      '@radix-ui/colors': 3.0.0
+      culori: 4.0.2
+
   '@pindoba/panda@0.0.0-alpha-20250910225440':
     dependencies:
       '@pindoba/panda-preset': 0.0.0-alpha-20250910225440
@@ -5876,6 +6607,10 @@ snapshots:
   '@pindoba/styled-system@0.0.0-alpha-20260619021129':
     dependencies:
       '@pindoba/panda-preset': 0.0.0-alpha-20260617191010
+
+  '@pindoba/styled-system@0.0.0-alpha-20260829223243':
+    dependencies:
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
 
   '@pindoba/styles-accordion@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
@@ -5896,6 +6631,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-affix@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-alert@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5938,6 +6682,14 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-badge@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-banner@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
@@ -5946,6 +6698,14 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-banner@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-breadcrumb@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5967,6 +6727,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-button@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-calendar@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -5999,6 +6768,14 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-card@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-carousel@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
@@ -6018,6 +6795,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-checkbox@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-choice@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -6073,6 +6859,14 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-dialog@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-group@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
@@ -6124,6 +6918,15 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-input@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-kbd@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
@@ -6132,6 +6935,14 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-kbd@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-listbox@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -6145,6 +6956,15 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-listbox@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-loading@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
@@ -6153,6 +6973,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-menu@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-navigation@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -6196,6 +7025,14 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-panel@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-popover@0.0.0-alpha-20260619021129(typescript@5.9.3)':
     dependencies:
       '@pandacss/dev': 1.11.4(typescript@5.9.3)
@@ -6204,6 +7041,14 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-popover@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-progress@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -6256,6 +7101,14 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/styles-stamp@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/styles-tab@0.0.0-alpha-20260619021129(typescript@5.9.3)':
@@ -6338,6 +7191,14 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/styles-tree-view@0.0.0-alpha-20260829223243(typescript@5.9.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.0(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-accordion@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@lucide/svelte': 1.23.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))
@@ -6364,6 +7225,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/svelte-affix@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/svelte-alert@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
@@ -6405,9 +7275,39 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-badge@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-badge': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-banner@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-banner': 0.0.0-alpha-20260619021129(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260619021129
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - '@cfworker/json-schema'
+      - jsdom
+      - supports-color
+      - typescript
+
+  '@pindoba/svelte-banner@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-banner': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-breadcrumb@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-breadcrumb': 0.0.0-alpha-20260619021129(typescript@5.9.3)
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
       svelte: 5.56.4(@typescript-eslint/types@8.63.0)
     transitivePeerDependencies:
@@ -6427,6 +7327,15 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-button@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-button': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-card@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-card': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -6442,6 +7351,19 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-card@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-card': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-card': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/svelte-banner': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-checkbox@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-checkbox': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -6452,6 +7374,16 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/svelte-checkbox@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-checkbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/svelte-affix': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/svelte-choice@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
@@ -6492,6 +7424,26 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-dialog@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@lucide/svelte': 1.37.0(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+      '@pindoba/core-dialog': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-dialog': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/svelte-affix': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-banner': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-input': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-use-store': 0.0.0-alpha-20260320034942(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      nanostores: 1.5.2
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-group@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-group': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -6514,6 +7466,39 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-input@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-input': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-kbd@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-kbd': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-listbox@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-listbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-listbox': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-banner': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-card': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-loading@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-loading': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -6528,6 +7513,23 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/svelte-menu@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-menu': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-menu': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-kbd': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-listbox': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-popover': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/svelte-navigation@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
@@ -6590,6 +7592,21 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-popover@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@pindoba/core-popover': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-popover': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-dialog': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-use-store': 0.0.0-alpha-20260320034942(svelte@5.56.4(@typescript-eslint/types@8.63.0))
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-progress@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
     dependencies:
       '@pindoba/core-progress': 0.0.0-alpha-20260619021129(typescript@5.9.3)
@@ -6634,6 +7651,15 @@ snapshots:
       - '@cfworker/json-schema'
       - jsdom
       - supports-color
+      - typescript
+
+  '@pindoba/svelte-stamp@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-stamp': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
       - typescript
 
   '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20260619021129(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
@@ -6696,6 +7722,21 @@ snapshots:
       - supports-color
       - typescript
 
+  '@pindoba/svelte-tree-view@0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)':
+    dependencies:
+      '@pindoba/core-tree-view': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-tree-view': 0.0.0-alpha-20260829223243(typescript@5.9.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-card': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-checkbox': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260829223243(svelte@5.56.4(@typescript-eslint/types@8.63.0))(typescript@5.9.3)
+      svelte: 5.56.4(@typescript-eslint/types@8.63.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-use-store@0.0.0-alpha-20260320034942(svelte@5.56.4(@typescript-eslint/types@8.63.0))':
     dependencies:
       nanostores: 1.4.0
@@ -6705,6 +7746,13 @@ snapshots:
     dependencies:
       '@pindoba/styled-system': 0.0.0-alpha-20260619021129
       sanitize-html: 2.17.5
+      svg-tag-names: 3.0.1
+
+  '@pindoba/utils@0.0.0-alpha-20260829223243':
+    dependencies:
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      nanostores: 1.5.2
+      sanitize-html: 2.17.7
       svg-tag-names: 3.0.1
 
   '@polka/url@1.0.0-next.29': {}
@@ -7733,17 +8781,35 @@ snapshots:
       domhandler: 5.0.3
       entities: 4.5.0
 
+  dom-serializer@3.1.1:
+    dependencies:
+      domelementtype: 3.0.0
+      domhandler: 6.0.1
+      entities: 8.0.0
+
   domelementtype@2.3.0: {}
+
+  domelementtype@3.0.0: {}
 
   domhandler@5.0.3:
     dependencies:
       domelementtype: 2.3.0
+
+  domhandler@6.0.1:
+    dependencies:
+      domelementtype: 3.0.0
 
   domutils@3.2.2:
     dependencies:
       dom-serializer: 2.0.0
       domelementtype: 2.3.0
       domhandler: 5.0.3
+
+  domutils@4.0.2:
+    dependencies:
+      dom-serializer: 3.1.1
+      domelementtype: 3.0.0
+      domhandler: 6.0.1
 
   dotenv@8.6.0: {}
 
@@ -7776,6 +8842,8 @@ snapshots:
   entities@4.5.0: {}
 
   entities@7.0.1: {}
+
+  entities@8.0.0: {}
 
   env-paths@2.2.1: {}
 
@@ -8167,7 +9235,17 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
+  fast-string-truncated-width@3.0.3: {}
+
+  fast-string-width@3.0.2:
+    dependencies:
+      fast-string-truncated-width: 3.0.3
+
   fast-uri@3.1.3: {}
+
+  fast-wrap-ansi@0.2.2:
+    dependencies:
+      fast-string-width: 3.0.2
 
   fastq@1.20.1:
     dependencies:
@@ -8390,6 +9468,13 @@ snapshots:
       domhandler: 5.0.3
       domutils: 3.2.2
       entities: 7.0.1
+
+  htmlparser2@12.0.0:
+    dependencies:
+      domelementtype: 3.0.0
+      domhandler: 6.0.1
+      domutils: 4.0.2
+      entities: 8.0.0
 
   http-errors@2.0.1:
     dependencies:
@@ -9197,6 +10282,8 @@ snapshots:
 
   nanostores@1.4.0: {}
 
+  nanostores@1.5.2: {}
+
   napi-postinstall@0.3.4: {}
 
   natural-compare@1.4.0: {}
@@ -9661,6 +10748,16 @@ snapshots:
       deepmerge: 4.3.1
       escape-string-regexp: 4.0.0
       htmlparser2: 10.1.0
+      is-plain-object: 5.0.0
+      launder: 1.7.1
+      parse-srcset: 1.0.2
+      postcss: 8.5.16
+
+  sanitize-html@2.17.7:
+    dependencies:
+      deepmerge: 4.3.1
+      escape-string-regexp: 4.0.0
+      htmlparser2: 12.0.0
       is-plain-object: 5.0.0
       launder: 1.7.1
       parse-srcset: 1.0.2
