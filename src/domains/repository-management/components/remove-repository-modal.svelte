@@ -7,6 +7,7 @@
 	import { resolve } from '$app/paths';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';
@@ -41,9 +42,9 @@
 
 			// Navigate away immediately
 			if (otherRepository) {
-				await goto(resolve(`/repos/${otherRepository.id}`));
+				await goto(resolveRepositoryPath(otherRepository.id));
 			} else {
-				await goto(resolve(`/repos`));
+				await goto(resolve('/repos'));
 			}
 
 			// Show notification about repository removal

@@ -14,6 +14,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -75,7 +76,7 @@
 			if (activeId && removedIds.includes(activeId)) {
 				const survivor = repositories.find((repository) => !removedIds.includes(repository.id));
 				if (survivor) {
-					goto(resolve(`/repos/${survivor.id}`));
+					goto(resolveRepositoryPath(survivor.id));
 				} else {
 					goto(resolve('/repos'));
 				}

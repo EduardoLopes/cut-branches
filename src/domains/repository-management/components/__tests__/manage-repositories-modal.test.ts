@@ -15,7 +15,12 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: { push: h.push }
 }));
 vi.mock('$app/navigation', () => ({ goto: h.goto }));
-vi.mock('$app/paths', () => ({ resolve: (path: string) => path }));
+// Mirrors SvelteKit's `resolve`: a bare pathname passes through, a route id has
+// its params substituted (already encoded by the caller).
+vi.mock('$app/paths', () => ({
+	resolve: (path: string, params?: Record<string, string>) =>
+		params ? path.replace(/\[(\w+)\]/g, (_, name) => params[name]) : path
+}));
 vi.mock('$app/state', () => ({ page: { params: { id: '1' } } }));
 vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 	createGetRepositoryListQuery: vi.fn(() => ({
@@ -154,6 +159,19 @@ describe('ManageRepositoriesModal', () => {
 
 		await vi.waitFor(() => expect(h.execute).toHaveBeenCalledTimes(3));
 		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos'));
+	});
+
+	it('navigates with a percent-encoded id so odd ids still resolve', async () => {
+		h.repos = [
+			mockDataFactory.repository({ id: '1', name: 'repo-1', path: '/r1' }),
+			mockDataFactory.repository({ id: 'a#b?c%d', name: 'repo-odd', path: '/r2' })
+		];
+		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		await screen.getByTestId('manage-item').first().click();
+		await screen.getByTestId('manage-remove-selected').click();
+
+		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos/a%23b%3Fc%25d'));
 	});
 
 	it('navigates to a surviving repository when the active one is removed', async () => {

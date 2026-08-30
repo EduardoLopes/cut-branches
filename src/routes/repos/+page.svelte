@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import AddRepositoryMenu from '$domains/repository-management/components/add-repository-menu.svelte';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 	import EmptyState from '$ui/core/empty-state.svelte';
 	import PageShell from '$ui/patterns/page-shell.svelte';
 </script>
@@ -16,7 +16,7 @@
 			<AddRepositoryMenu
 				size="sm"
 				emphasis="primary"
-				onSuccess={(data) => goto(resolve(`/repos/${data.id}`))}
+				onSuccess={(data) => goto(resolveRepositoryPath(data.id))}
 			/>
 		{/snippet}
 	</EmptyState>

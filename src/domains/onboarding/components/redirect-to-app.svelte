@@ -6,6 +6,7 @@
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '$lib/create-prefetch-repository-data';
 	import { lastRepository } from '$lib/last-repository.svelte';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
 
 	// Query for repositories list from database
@@ -66,7 +67,7 @@
 		}
 		// Redirect to the resolved repository ONLY if on the /repos index or root page
 		else if (hasRepositories && (isOnReposIndex || isOnRootPage) && target) {
-			goto(resolve(`/repos/${target.id}`));
+			goto(resolveRepositoryPath(target.id));
 		}
 		// Do not redirect if on any other page - preserve current location
 	});

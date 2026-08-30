@@ -13,6 +13,7 @@
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '$lib/create-prefetch-repository-data';
+	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
 	import { formatCount } from '$utils/format-count';
 	import { css } from '@pindoba/styled-system/css';
@@ -115,7 +116,7 @@
 		return repositories.map((repo): NavigationItem => ({
 			id: repo.id,
 			label: repo.name,
-			href: `/repos/${repo.id}`,
+			href: resolveRepositoryPath(repo.id),
 			'data-testid': `repository-${repo.name}-${repo.id}`,
 			leading: repoIcon as NavigationItem['leading'],
 			// In the rail the badge can't sit inline next to the icon, so Navigation
