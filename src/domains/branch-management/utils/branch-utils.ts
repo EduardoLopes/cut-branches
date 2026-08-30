@@ -31,9 +31,11 @@ export function getBranchAlerts(
 	selected: boolean,
 	mergeStatus?: boolean
 ): string[] {
-	// Use provided mergeStatus if available, otherwise fall back to branch.isMerged()
-	// Alert should show when branch is NOT merged (warning about unmerged changes)
-	const isNotMerged = mergeStatus !== undefined ? !mergeStatus : !branch.isMerged();
+	// Merge status comes from the (lazily loaded) branch metrics. Sync never
+	// computes `fullyMerged` — it is always `false` — so falling back to it
+	// would flash "not fully merged" on every branch until metrics arrive.
+	// Unknown means "no alert yet", not "not merged".
+	const isNotMerged = mergeStatus === false;
 
 	const alerts = branch.getAlerts();
 	const filteredAlerts: string[] = [];
