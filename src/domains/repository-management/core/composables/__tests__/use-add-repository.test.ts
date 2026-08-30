@@ -91,14 +91,15 @@ describe('useAddRepository', () => {
 	});
 
 	describe('onSuccess handling', () => {
-		it('invalidates the list, notifies, and calls the caller callback', () => {
+		it('notifies and calls the caller callback', () => {
 			const onSuccess = vi.fn();
 			useAddRepository({ onSuccess });
 
 			const repo = mockDataFactory.repository();
 			h.options.onSuccess(repo);
 
-			expect(h.invalidate).toHaveBeenCalledWith({ queryKey: ['getRepositoryList'] });
+			// Invalidation is the global MutationCache's job (resource-keyed).
+			expect(h.invalidate).not.toHaveBeenCalled();
 			expect(h.push).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Repository added',
@@ -113,7 +114,6 @@ describe('useAddRepository', () => {
 
 			h.options.onSuccess(undefined);
 
-			expect(h.invalidate).toHaveBeenCalled();
 			expect(h.push).not.toHaveBeenCalled();
 			expect(onSuccess).not.toHaveBeenCalled();
 		});

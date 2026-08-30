@@ -1,4 +1,3 @@
-import { useQueryClient } from '@tanstack/svelte-query';
 import { open } from '@tauri-apps/plugin-dialog';
 import { createCreateRepositoryMutation } from '$domains/repository-management/infrastructure/mutations/create-create-repository-mutation';
 import type { CreateRepositoryOutput } from '$infrastructure/bindings';
@@ -16,12 +15,12 @@ interface UseAddRepositoryOptions {
  * invalidation) lives in exactly one place.
  */
 export function useAddRepository(options: UseAddRepositoryOptions = {}) {
-	const queryClient = useQueryClient();
-
+	// No invalidation here: repository queries are keyed by resource
+	// (`['repository', ...]`), so the `['getRepositoryList']` key this used to
+	// invalidate matched nothing. The global MutationCache already invalidates
+	// the `repository` resource for every `createRepository` mutation.
 	const mutation = createCreateRepositoryMutation({
 		onSuccess: (data) => {
-			queryClient.invalidateQueries({ queryKey: ['getRepositoryList'] });
-
 			if (data) {
 				notifications.push({
 					feedback: 'success',
