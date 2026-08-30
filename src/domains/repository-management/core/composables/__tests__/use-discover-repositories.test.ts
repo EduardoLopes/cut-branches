@@ -7,8 +7,18 @@ const h = vi.hoisted(() => ({
 	invalidate: vi.fn(),
 	mutateAsync: vi.fn(),
 	exec: vi.fn(),
+	listen: vi.fn(),
+	unlisten: vi.fn(),
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	listData: [] as any[]
+	listData: [] as any[],
+	// Last handler registered for `repository-scan-progress`, so a test can push
+	// progress ticks the way the backend would.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	onProgress: undefined as undefined | ((event: any) => void)
+}));
+
+vi.mock('@tauri-apps/api/event', () => ({
+	listen: h.listen
 }));
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
@@ -53,6 +63,12 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	h.listData = [];
 	h.exec.mockResolvedValue(undefined);
+	h.onProgress = undefined;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	h.listen.mockImplementation((_event: string, handler: (event: any) => void) => {
+		h.onProgress = handler;
+		return Promise.resolve(h.unlisten);
+	});
 });
 
 afterEach(() => {
@@ -118,6 +134,101 @@ describe('useDiscoverRepositories', () => {
 			expect(discover.addableCount).toBe(1);
 			expect(discover.selectedCount).toBe(1);
 			expect(discover.isSelected('/a')).toBe(false);
+		});
+	});
+
+	describe('concurrent scans', () => {
+		/** A promise plus its resolver, so a scan can be held mid-flight. */
+		function deferred<T>() {
+			let resolve!: (value: T) => void;
+			const promise = new Promise<T>((r) => (resolve = r));
+			return { promise, resolve };
+		}
+
+		it('reports isScanning while a scan is in flight', async () => {
+			const first = deferred<ReturnType<typeof scanOutput>>();
+			h.mutateAsync.mockReturnValueOnce(first.promise);
+
+			const discover = mount();
+			const scan = discover.scan();
+			expect(discover.isScanning).toBe(true);
+
+			first.resolve(scanOutput([{ path: '/a', name: 'a' }]));
+			await scan;
+			expect(discover.isScanning).toBe(false);
+		});
+
+		it('keeps the newest scan results when an older run finishes last', async () => {
+			const first = deferred<ReturnType<typeof scanOutput>>();
+			h.mutateAsync
+				.mockReturnValueOnce(first.promise)
+				.mockResolvedValueOnce(scanOutput([{ path: '/new', name: 'new' }]));
+
+			const discover = mount();
+			const stale = discover.scan();
+			await discover.scan();
+
+			expect(discover.results.map((r) => r.path)).toEqual(['/new']);
+
+			// The superseded run lands afterwards and must be ignored entirely.
+			first.resolve(scanOutput([{ path: '/stale', name: 'stale' }], ['/stale-root']));
+			await stale;
+
+			expect(discover.results.map((r) => r.path)).toEqual(['/new']);
+			expect(discover.scannedRoots).toEqual([]);
+			expect(discover.isScanning).toBe(false);
+		});
+
+		it('ignores progress events from a superseded scan', async () => {
+			const first = deferred<ReturnType<typeof scanOutput>>();
+			h.mutateAsync
+				.mockReturnValueOnce(first.promise)
+				.mockResolvedValueOnce(scanOutput([{ path: '/new', name: 'new' }]));
+
+			const discover = mount();
+			const stale = discover.scan();
+			const staleProgress = h.onProgress;
+
+			await discover.scan();
+			const currentProgress = discover.progress;
+
+			staleProgress?.({ payload: { scannedDirs: 999, foundCount: 999 } });
+			expect(discover.progress).toEqual(currentProgress);
+
+			// The live run's own ticks still land.
+			h.onProgress?.({ payload: { scannedDirs: 7, foundCount: 1 } });
+			expect(discover.progress).toEqual({ scannedDirs: 7, foundCount: 1 });
+
+			first.resolve(scanOutput([]));
+			await stale;
+		});
+
+		it('cancelScan discards the in-flight run', async () => {
+			const first = deferred<ReturnType<typeof scanOutput>>();
+			h.mutateAsync.mockReturnValueOnce(first.promise);
+
+			const discover = mount();
+			const stale = discover.scan();
+			discover.cancelScan();
+			expect(discover.isScanning).toBe(false);
+
+			first.resolve(scanOutput([{ path: '/stale', name: 'stale' }]));
+			await stale;
+
+			expect(discover.results).toEqual([]);
+			expect(discover.hasScanned).toBe(false);
+			expect(discover.isScanning).toBe(false);
+		});
+
+		it('scans without progress events when the event bridge is unavailable', async () => {
+			h.listen.mockRejectedValue(new Error('not in a tauri runtime'));
+			h.mutateAsync.mockResolvedValue(scanOutput([{ path: '/a', name: 'a' }]));
+
+			const discover = mount();
+			await discover.scan();
+
+			expect(discover.results).toHaveLength(1);
+			expect(h.unlisten).not.toHaveBeenCalled();
 		});
 	});
 

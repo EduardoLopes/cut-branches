@@ -28,6 +28,7 @@ vi.mock('../../core/composables/use-discover-repositories.svelte', () => ({
 		addableCount: 0,
 		isSelected: () => false,
 		scan: h.scan,
+		cancelScan: vi.fn(),
 		toggle: vi.fn(),
 		setAll: vi.fn(),
 		addSelected: vi.fn()

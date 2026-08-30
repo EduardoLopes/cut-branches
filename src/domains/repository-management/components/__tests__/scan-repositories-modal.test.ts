@@ -40,6 +40,7 @@ function makeStub(overrides: Record<string, any> = {}) {
 		addableCount: 0,
 		isSelected: vi.fn(() => false),
 		scan: vi.fn(() => Promise.resolve()),
+		cancelScan: vi.fn(),
 		toggle: vi.fn(),
 		setAll: vi.fn(),
 		addSelected: vi.fn(),
@@ -263,6 +264,18 @@ describe('ScanRepositoriesModal', () => {
 				'[data-testid="scan-repositories-modal"]'
 			) as HTMLElement | null;
 			await expect.element(modal).not.toHaveAttribute('open');
+		});
+
+		it('abandons the in-flight scan when the modal closes', async () => {
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await tick();
+			h.stub.cancelScan.mockClear();
+
+			await screen.getByTestId('scan-cancel').click();
+
+			// Otherwise reopening would race the old walk, whose results would land
+			// on top of the new scan's.
+			await vi.waitFor(() => expect(h.stub.cancelScan).toHaveBeenCalled());
 		});
 	});
 

@@ -39,6 +39,9 @@
 	// Local scanning flag with a floor duration so a fast scan doesn't flash the
 	// spinner and snap the modal's shape (see `runScan`).
 	let scanning = $state(false);
+	// Matches the composable's scan token: a superseded run must not clear the
+	// spinner (or the elapsed timer) out from under the run that replaced it.
+	let scanRun = 0;
 	const MIN_SCAN_MS = 300;
 	// Elapsed time shown while scanning; ticks on a light interval.
 	let elapsedMs = $state(0);
@@ -118,6 +121,7 @@
 	async function runScan() {
 		// A fresh scan replaces the results, so a stale filter shouldn't hide them.
 		searchQuery = '';
+		const run = ++scanRun;
 		scanning = true;
 		const startedAt = Date.now();
 		try {
@@ -131,7 +135,7 @@
 			if (elapsed < MIN_SCAN_MS) {
 				await new Promise((resolve) => setTimeout(resolve, MIN_SCAN_MS - elapsed));
 			}
-			scanning = false;
+			if (run === scanRun) scanning = false;
 		}
 	}
 
@@ -174,6 +178,11 @@
 		if (!open) {
 			started = false;
 			searchQuery = '';
+			// Closing abandons the scan: reopening starts a fresh one instead of
+			// racing the old walk, whose results would land on top of the new ones.
+			scanRun += 1;
+			scanning = false;
+			discover.cancelScan();
 		}
 	});
 

@@ -60,6 +60,11 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 	let hasScanned = $state(false);
 	let isAdding = $state(false);
 	let progress = $state<ScanProgress | null>(null);
+	let isScanning = $state(false);
+	// Every `scan()` run gets a token. Only the newest token may write results,
+	// progress or the scanning flag — the backend has no cancellation, so a
+	// superseded (or cancelled) run has to be discarded on this side instead.
+	let scanToken = 0;
 
 	const existingPaths = $derived(
 		new SvelteSet((repositoryListQuery.data ?? []).map((repo) => normalizePath(repo.path)))
@@ -77,6 +82,9 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 	 * previous results and pre-selecting every not-yet-added repository.
 	 */
 	async function scan(roots: string[] = [], includeWorktrees = false) {
+		// Supersede whatever run was in flight: its results are no longer wanted.
+		const token = ++scanToken;
+		isScanning = true;
 		progress = { scannedDirs: 0, foundCount: 0 };
 
 		// Stream live progress from the backend while the walk runs. `listen`
@@ -84,6 +92,9 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 		let unlisten: UnlistenFn | null = null;
 		try {
 			unlisten = await listen<RepositoryScanProgressEvent>('repository-scan-progress', (event) => {
+				// The backend keeps walking for a superseded run; its ticks must not
+				// overwrite the current run's counters.
+				if (token !== scanToken) return;
 				progress = {
 					scannedDirs: event.payload.scannedDirs,
 					foundCount: event.payload.foundCount
@@ -99,6 +110,10 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 				maxDepth: null,
 				includeWorktrees
 			});
+
+			// A newer scan (or a cancel) took over while this one was walking —
+			// dropping the payload keeps the newer run's results intact.
+			if (token !== scanToken) return;
 
 			scannedRoots = output.scannedRoots;
 			results = output.repositories
@@ -127,7 +142,17 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 			// Stop listening; keep the last counts so they stay visible during the
 			// modal's brief minimum-loading window.
 			unlisten?.();
+			if (token === scanToken) isScanning = false;
 		}
+	}
+
+	/**
+	 * Abandons the in-flight scan (if any). The backend walk keeps running — it
+	 * has no cancellation — but nothing it reports can reach the UI any more.
+	 */
+	function cancelScan() {
+		scanToken += 1;
+		isScanning = false;
 	}
 
 	/** Toggles a single result's selection. No-op for already-added repos. */
@@ -224,7 +249,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 			return hasScanned;
 		},
 		get isScanning() {
-			return discoverMutation.isPending;
+			return isScanning;
 		},
 		get progress() {
 			return progress;
@@ -242,6 +267,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 			return selected.has(path);
 		},
 		scan,
+		cancelScan,
 		toggle,
 		setAll,
 		addSelected
