@@ -3,9 +3,10 @@ import Providers from '../providers.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock dependencies following TypeScript guidelines
-const { mockPush } = vi.hoisted(() => {
+const { mockPush, mockInvalidateQueries } = vi.hoisted(() => {
 	const mockPush = vi.fn();
-	return { mockPush };
+	const mockInvalidateQueries = vi.fn().mockResolvedValue(undefined);
+	return { mockPush, mockInvalidateQueries };
 });
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
@@ -17,6 +18,16 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 vi.mock('$app/environment', () => ({
 	browser: true
 }));
+
+// The global `repository-changed` bridge. `listen` is held open per test so the
+// resolve-after-teardown race can be reproduced deliberately.
+const eventBridge = vi.hoisted(() => ({
+	listen: vi.fn(),
+	unlisten: vi.fn(),
+	resolveListen: undefined as undefined | ((unlisten: () => void) => void)
+}));
+
+vi.mock('@tauri-apps/api/event', () => ({ listen: eventBridge.listen }));
 
 vi.mock('$utils/error-utils', () => ({
 	createError: vi.fn((error) => ({
@@ -56,7 +67,7 @@ vi.mock('@tanstack/svelte-query', async () => {
 	}
 
 	class MockQueryClient {
-		invalidateQueries = vi.fn().mockResolvedValue(undefined);
+		invalidateQueries = mockInvalidateQueries;
 	}
 
 	return {
@@ -73,6 +84,62 @@ describe('Providers', () => {
 		vi.clearAllMocks();
 		_mutationCacheHandlers = {};
 		_queryCacheHandlers = {};
+		eventBridge.resolveListen = undefined;
+		eventBridge.listen.mockImplementation(
+			() =>
+				new Promise<() => void>((resolve) => {
+					eventBridge.resolveListen = resolve;
+				})
+		);
+	});
+
+	describe('repository-changed listener', () => {
+		it('detaches a listener that resolves after the component is gone', async () => {
+			const screen = renderWithTestWrapper(Providers);
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+
+			// Teardown wins the race: `listen` has not resolved yet, so the cleanup
+			// has no handle to call.
+			screen.unmount();
+			eventBridge.resolveListen?.(eventBridge.unlisten);
+			await vi.waitFor(() => expect(eventBridge.unlisten).toHaveBeenCalledTimes(1));
+		});
+
+		it('detaches on teardown when the listener resolved first', async () => {
+			const screen = renderWithTestWrapper(Providers);
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+
+			eventBridge.resolveListen?.(eventBridge.unlisten);
+			// Let the `.then` that stores the handle run before tearing down.
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(eventBridge.unlisten).not.toHaveBeenCalled();
+
+			screen.unmount();
+			await vi.waitFor(() => expect(eventBridge.unlisten).toHaveBeenCalledTimes(1));
+		});
+
+		it('invalidates the matching queries when a repository changes', async () => {
+			renderWithTestWrapper(Providers);
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+
+			const [eventName, handler] = eventBridge.listen.mock.calls[0];
+			expect(eventName).toBe('repository-changed');
+
+			handler({ payload: { repositoryId: 'repo-1' } });
+			// The mocked QueryClient records the call; the predicate itself is
+			// covered by the query-key-utils tests.
+			expect(mockInvalidateQueries).toHaveBeenCalledWith(
+				expect.objectContaining({ predicate: expect.any(Function) })
+			);
+		});
+
+		it('survives an unavailable event bridge', async () => {
+			eventBridge.listen.mockRejectedValue(new Error('not a tauri runtime'));
+
+			expect(() => renderWithTestWrapper(Providers)).not.toThrow();
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+			expect(eventBridge.unlisten).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('Component Rendering', () => {

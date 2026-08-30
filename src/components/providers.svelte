@@ -153,6 +153,10 @@
 	$effect(() => {
 		const client = queryClient;
 		let unlisten: UnlistenFn | null = null;
+		// `listen` resolves a turn later than the effect can be torn down. Without
+		// this flag the cleanup below sees a null handle and the listener survives
+		// the teardown — every re-run then stacks another one on the same event.
+		let cancelled = false;
 		listen<RepositoryChangedPayload>('repository-changed', (event) => {
 			const { repositoryId } = event.payload;
 			client.invalidateQueries({
@@ -160,13 +164,20 @@
 			});
 		})
 			.then((fn) => {
+				if (cancelled) {
+					fn();
+					return;
+				}
 				unlisten = fn;
 			})
 			.catch(() => {
 				// Event bridge unavailable (e.g. non-Tauri context); nothing to do.
 			});
 
-		return () => unlisten?.();
+		return () => {
+			cancelled = true;
+			unlisten?.();
+		};
 	});
 </script>
 
