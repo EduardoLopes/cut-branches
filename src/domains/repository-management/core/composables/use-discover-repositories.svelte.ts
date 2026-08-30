@@ -6,6 +6,7 @@ import type { RepositoryScanProgressEvent } from '$infrastructure/bindings';
 import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 import { executeCommand } from '$infrastructure/tauri-commands';
 import { notifications } from '$services/notifications/notifications.svelte';
+import { getErrorMessage } from '$utils/error-utils';
 
 /**
  * Strips trailing path separators so paths compare equal regardless of a
@@ -155,20 +156,27 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 
 		isAdding = true;
 		let added = 0;
-		const failed: string[] = [];
+		const failures: Array<{ path: string; message: string }> = [];
 
 		try {
 			for (const path of paths) {
 				try {
 					await executeCommand('createRepository', { path });
 					added += 1;
-				} catch {
-					failed.push(path);
+				} catch (error) {
+					// Keep the reason around: a bare count tells the user nothing about
+					// why a repository could not be added.
+					failures.push({ path, message: getErrorMessage(error) });
 				}
 			}
 		} finally {
 			isAdding = false;
 		}
+
+		const failed = failures.map((failure) => failure.path);
+		const failureLines = failures
+			.map((failure) => `- \`${failure.path}\` — ${failure.message}`)
+			.join('\n');
 
 		if (added > 0) {
 			// Repository queries are keyed by resource (`['repository', ...]`), so
@@ -187,16 +195,20 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 			notifications.push({
 				feedback: 'success',
 				title: added === 1 ? 'Repository added' : 'Repositories added',
-				message:
-					`Added ${added} ${added === 1 ? 'repository' : 'repositories'}` +
-					(failed.length > 0 ? `, ${failed.length} could not be added` : '')
+				message: `Added ${added} ${added === 1 ? 'repository' : 'repositories'}`
 			});
 			options.onAdded?.(added);
-		} else {
+		}
+
+		if (failures.length > 0) {
+			// One toast per outcome, and the failure one carries the reason for each
+			// path — a bare "N could not be added" left the user with no next step.
 			notifications.push({
 				feedback: 'danger',
-				title: 'Could not add repositories',
-				message: `None of the ${failed.length} selected repositories could be added`
+				title: failures.length === 1 ? 'Could not add repository' : 'Could not add repositories',
+				message:
+					`${failures.length} ${failures.length === 1 ? 'repository' : 'repositories'} could not be added:\n\n` +
+					failureLines
 			});
 		}
 	}

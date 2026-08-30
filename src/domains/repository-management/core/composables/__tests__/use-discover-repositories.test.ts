@@ -225,7 +225,13 @@ describe('useDiscoverRepositories', () => {
 			expect(h.push).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Repository added',
-				message: 'Added 1 repository, 1 could not be added'
+				message: 'Added 1 repository'
+			});
+			// The reason for the failure reaches the user, not just a count.
+			expect(h.push).toHaveBeenCalledWith({
+				feedback: 'danger',
+				title: 'Could not add repository',
+				message: '1 repository could not be added:\n\n- `/b` — nope'
 			});
 			// The successful one is marked added; the failed one stays addable.
 			expect(discover.results.find((r) => r.path === '/a')?.alreadyAdded).toBe(true);
@@ -241,10 +247,27 @@ describe('useDiscoverRepositories', () => {
 			await discover.addSelected();
 
 			expect(h.invalidate).not.toHaveBeenCalled();
+			expect(h.push).toHaveBeenCalledOnce();
 			expect(h.push).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Could not add repositories',
-				message: 'None of the 2 selected repositories could be added'
+				message: '2 repositories could not be added:\n\n- `/a` — all fail\n- `/b` — all fail'
+			});
+		});
+
+		it('falls back to a readable message for non-Error rejections', async () => {
+			h.exec.mockRejectedValue('disk is full');
+
+			const discover = mount();
+			await discover.scan();
+
+			await discover.addSelected();
+
+			expect(h.push).toHaveBeenCalledWith({
+				feedback: 'danger',
+				title: 'Could not add repositories',
+				message:
+					'2 repositories could not be added:\n\n- `/a` — disk is full\n- `/b` — disk is full'
 			});
 		});
 
