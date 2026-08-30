@@ -26,3 +26,33 @@ export function buildRestoreSuccessNotification(
 		message
 	};
 }
+
+/**
+ * Danger toast listing branches whose restoration failed without throwing
+ * (the batch command records per-item failures instead of aborting). Returns
+ * `null` when nothing failed.
+ */
+export function buildRestoreFailureNotification(
+	failedBranches: RestoreBranchResult[],
+	repositoryName: string | undefined
+): NotificationData | null {
+	if (failedBranches.length === 0) return null;
+
+	const message = failedBranches
+		.map((result) =>
+			formatString('- **{name}**: {reason}', {
+				name: ensureString(result.branchName).trim(),
+				reason: ensureString(result.message).trim() || 'unknown error'
+			})
+		)
+		.join('\n\n');
+
+	return {
+		feedback: 'danger',
+		title: formatString('{count} could not be restored to {repo} repository', {
+			count: failedBranches.length > 1 ? `${failedBranches.length} branches` : 'One branch',
+			repo: ensureString(repositoryName)
+		}),
+		message
+	};
+}

@@ -1,5 +1,8 @@
 import { describe, test, expect } from 'vitest';
-import { buildRestoreSuccessNotification } from '../build-restore-success-notification';
+import {
+	buildRestoreFailureNotification,
+	buildRestoreSuccessNotification
+} from '../build-restore-success-notification';
 import type { Branch, RestoreBranchResult } from '$infrastructure/bindings';
 
 function makeResult(name: string, shortSha: string | null = 'abc1234'): RestoreBranchResult {
@@ -65,5 +68,33 @@ describe('buildRestoreSuccessNotification', () => {
 	test('handles undefined repository name', () => {
 		const n = buildRestoreSuccessNotification([makeResult('feat-a')], undefined);
 		expect(n?.title).toBe('Branch restored to  repository');
+	});
+});
+
+describe('buildRestoreFailureNotification', () => {
+	test('returns null when nothing failed', () => {
+		expect(buildRestoreFailureNotification([], 'repo')).toBeNull();
+	});
+
+	test('lists a single failure with its reason', () => {
+		const n = buildRestoreFailureNotification(
+			[{ ...makeResult('a'), success: false, message: 'commit not found' }],
+			'repo'
+		);
+		expect(n?.feedback).toBe('danger');
+		expect(n?.title).toBe('One branch could not be restored to repo repository');
+		expect(n?.message).toBe('- **a**: commit not found');
+	});
+
+	test('counts several failures and falls back for an empty reason', () => {
+		const n = buildRestoreFailureNotification(
+			[
+				{ ...makeResult('a'), success: false, message: 'x' },
+				{ ...makeResult('b'), success: false, message: '' }
+			],
+			'repo'
+		);
+		expect(n?.title).toBe('2 branches could not be restored to repo repository');
+		expect(n?.message).toContain('- **b**: unknown error');
 	});
 });

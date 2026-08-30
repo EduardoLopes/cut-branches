@@ -15,7 +15,10 @@ import {
 	createRestoreDeletedBranchMutation,
 	createRestoreDeletedBranchesMutation
 } from '$domains/branch-management/infrastructure/mutations/create-restore-deleted-branch-mutation';
-import { buildRestoreSuccessNotification } from '$domains/branch-management/utils/build-restore-success-notification';
+import {
+	buildRestoreFailureNotification,
+	buildRestoreSuccessNotification
+} from '$domains/branch-management/utils/build-restore-success-notification';
 import type { ConflictResolution, RestoreBranchResult } from '$infrastructure/bindings';
 import { notifications } from '$services/notifications/notifications.svelte';
 
@@ -47,6 +50,9 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 	// Successes accumulated across the whole flow — flushed as a single
 	// notification once everything is done.
 	let restoredAccumulator: RestoreBranchResult[] = [];
+	// Per-item failures reported as `success: false` results (no exception, so
+	// no `onError` toast) — surfaced together once the flow completes.
+	let failedAccumulator: RestoreBranchResult[] = [];
 
 	function recordResult(branchName: string, result: RestoreBranchResult) {
 		restorationResults = { ...restorationResults, [branchName]: result };
@@ -89,6 +95,8 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 			dequeuePending(branchName);
 			if (data.result.success && !data.result.skipped) {
 				restoredAccumulator.push(data.result);
+			} else if (!data.result.success && !data.result.skipped) {
+				failedAccumulator.push(data.result);
 			}
 			progress.tick();
 			advance();
@@ -129,6 +137,8 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 				}
 				if (result.success && !result.skipped) {
 					restoredAccumulator.push(result);
+				} else if (!result.success && !result.skipped) {
+					failedAccumulator.push(result);
 				}
 				progress.tick();
 			}
@@ -196,6 +206,10 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 		if (notification) {
 			notifications.push(notification);
 		}
+		const failure = buildRestoreFailureNotification(failedAccumulator, repository?.name);
+		if (failure) {
+			notifications.push(failure);
+		}
 		isProcessing = false;
 		onComplete?.();
 	}
@@ -213,6 +227,7 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 		pendingConflictBranches = [];
 		inFlightBranches = [];
 		restoredAccumulator = [];
+		failedAccumulator = [];
 		progress.start(branches.length);
 
 		if (branches.length <= 1) {

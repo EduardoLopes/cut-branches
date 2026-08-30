@@ -318,6 +318,57 @@ describe('useRestoreFlow', () => {
 		cleanup();
 	});
 
+	test('batch per-item failures are surfaced in a danger toast', async () => {
+		const branches = [makeBranch('a'), makeBranch('b')];
+		const { value: flow, cleanup } = withEffectRoot(() =>
+			useRestoreFlow({
+				getRepository: () => repository,
+				getBranches: () => branches
+			})
+		);
+		flow.start();
+		await batch().onSuccess({
+			results: [
+				successResult('a'),
+				{ ...successResult('b'), success: false, message: 'commit not found' }
+			]
+		});
+		flushSync();
+
+		expect(mockPush).toHaveBeenCalledTimes(2);
+		expect(mockPush.mock.calls[0][0].title).toBe('Branch restored to my-repo repository');
+		expect(mockPush.mock.calls[1][0]).toEqual(
+			expect.objectContaining({
+				feedback: 'danger',
+				title: 'One branch could not be restored to my-repo repository',
+				message: '- **b**: commit not found'
+			})
+		);
+		expect(flow.isProcessing).toBe(false);
+		cleanup();
+	});
+
+	test('single per-item failure result is surfaced in a danger toast', async () => {
+		const branches = [makeBranch('a')];
+		const { value: flow, cleanup } = withEffectRoot(() =>
+			useRestoreFlow({
+				getRepository: () => repository,
+				getBranches: () => branches
+			})
+		);
+		flow.start();
+		await single().onSuccess(
+			{ result: { ...successResult('a'), success: false, message: 'unreachable' } },
+			{ path: repository.path, branchInfo: { originalName: 'a' } } as never
+		);
+		flushSync();
+
+		expect(mockPush).toHaveBeenCalledTimes(1);
+		expect(mockPush.mock.calls[0][0].feedback).toBe('danger');
+		expect(mockPush.mock.calls[0][0].message).toBe('- **a**: unreachable');
+		cleanup();
+	});
+
 	test('batch onError: pushes danger toast and clears isProcessing', async () => {
 		const branches = [makeBranch('a'), makeBranch('b')];
 		const { value: flow, cleanup } = withEffectRoot(() =>
