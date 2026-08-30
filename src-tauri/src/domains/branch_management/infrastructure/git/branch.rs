@@ -160,13 +160,9 @@ fn get_all_branches_with_last_commit_internal(
 
     branches.sort_by_cached_key(|b| b.name.to_lowercase());
 
-    if branches.is_empty() {
-        return Err(BranchError::NoBranches {
-            path: path.display().to_string(),
-        }
-        .into());
-    }
-
+    // An empty list is a legitimate state: a repository whose HEAD is unborn
+    // (freshly `git init`ed, no commits yet) simply has no branches. Treating
+    // it as an error made such repositories impossible to add.
     Ok(branches)
 }
 
@@ -614,21 +610,24 @@ pub fn bulk_get_branch_metrics(
     Ok(slots.into_iter().flatten().collect())
 }
 
-/// Name of the checked-out branch, or `None` when HEAD is detached.
+/// Name of the checked-out branch, or `None` when HEAD is detached or unborn.
 ///
 /// Detached HEAD is a normal state (`git checkout --detach`, a bisect, a tag
-/// checkout), so every read path that merely *describes* the repository uses
-/// this and treats `None` as "no branch is current". Only operations that
-/// genuinely require a branch treat `None` as an error themselves.
+/// checkout), and an *unborn* HEAD is just a repository with no commits yet, so
+/// every read path that merely *describes* the repository uses this and treats
+/// `None` as "no branch is current". Only operations that genuinely require a
+/// branch treat `None` as an error themselves.
 pub fn find_current_branch(path: &Path) -> Result<Option<String>, AppError> {
     let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
         path: path.display().to_string(),
         source: e,
     })?;
 
-    let head = repo
-        .head()
-        .map_err(|e| BranchError::HeadNotFound { source: e })?;
+    let head = match repo.head() {
+        Ok(head) => head,
+        Err(e) if e.code() == git2::ErrorCode::UnbornBranch => return Ok(None),
+        Err(e) => return Err(BranchError::HeadNotFound { source: e }.into()),
+    };
 
     if !head.is_branch() {
         return Ok(None);
@@ -1777,6 +1776,24 @@ mod tests {
         assert!(result.is_err(), "Expected error for malformed git repo");
     }
 
+    /// A repository with no commits at all (unborn HEAD) describes cleanly:
+    /// no current branch and an empty branch list, not an error. Adding such a
+    /// repository used to fail with a raw libgit2 message.
+    #[test]
+    fn test_unborn_head_lists_no_branches() {
+        let _guard = DirectoryGuard::new();
+        let empty = tempfile::tempdir().unwrap();
+        crate::shared::utils::test_utils::run_git(empty.path(), &["init"]);
+
+        assert_eq!(find_current_branch(empty.path()).unwrap(), None);
+        assert!(get_all_branches_with_last_commit(empty.path())
+            .expect("listing tolerates an unborn HEAD")
+            .is_empty());
+        assert!(get_all_branches_with_last_commit_fast(empty.path())
+            .expect("fast listing tolerates an unborn HEAD")
+            .is_empty());
+    }
+
     #[test]
     fn test_find_current_branch_errors() {
         let _guard = DirectoryGuard::new();
@@ -1785,15 +1802,15 @@ mod tests {
         let result = find_current_branch(non_git_path);
         assert!(result.is_err(), "Expected error for non-git directory");
 
-        // An initialised repository with no commits has an unborn HEAD, which
-        // is still an error (there is nothing to describe).
+        // An initialised repository with no commits has an unborn HEAD: not an
+        // error, just "no branch is current".
         let empty = tempfile::tempdir().unwrap();
         crate::shared::utils::test_utils::git_command()
             .args(["init"])
             .current_dir(empty.path())
             .output()
             .unwrap();
-        assert!(find_current_branch(empty.path()).is_err());
+        assert_eq!(find_current_branch(empty.path()).unwrap(), None);
     }
 
     #[test]

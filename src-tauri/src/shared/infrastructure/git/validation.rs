@@ -69,8 +69,12 @@ fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, RepoValid
 
     match repo.head() {
         Ok(_) => Ok(true),
+        // An unborn HEAD is a freshly `git init`ed repository with no commits
+        // yet — a perfectly valid repository to register; the app already
+        // tolerates an empty current branch. A bare repository has no working
+        // HEAD either.
         Err(source) => {
-            if repo.is_bare() {
+            if source.code() == git2::ErrorCode::UnbornBranch || repo.is_bare() {
                 Ok(true)
             } else {
                 Err(RepoValidationError::HeadUnreadable {
@@ -79,5 +83,59 @@ fn validate_repository(repo: &Repository, path: &Path) -> Result<bool, RepoValid
                 })
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::shared::utils::test_utils::{run_git, setup_test_repo, DirectoryGuard};
+
+    #[test]
+    fn a_normal_repository_is_valid() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        assert!(is_git_repository(repo.path()).unwrap());
+    }
+
+    #[test]
+    fn a_plain_directory_is_not_a_repository() {
+        let _guard = DirectoryGuard::new();
+        let dir = tempfile::tempdir().unwrap();
+        assert!(!is_git_repository(dir.path()).unwrap());
+    }
+
+    /// A freshly initialised repository has an unborn HEAD (no commits yet).
+    /// It is a perfectly usable repository — the app tolerates an empty
+    /// current branch — so it must validate.
+    #[test]
+    fn a_repository_with_no_commits_is_valid() {
+        let _guard = DirectoryGuard::new();
+        let dir = tempfile::tempdir().unwrap();
+        run_git(dir.path(), &["init"]);
+        assert!(
+            is_git_repository(dir.path()).unwrap(),
+            "an unborn HEAD is still a repository"
+        );
+    }
+
+    #[test]
+    fn a_bare_repository_is_valid() {
+        let _guard = DirectoryGuard::new();
+        let dir = tempfile::tempdir().unwrap();
+        run_git(dir.path(), &["init", "--bare"]);
+        assert!(is_git_repository(dir.path()).unwrap());
+    }
+
+    #[test]
+    fn validation_errors_carry_the_git_message() {
+        let app: AppError = RepoValidationError::HeadUnreadable {
+            path: PathBuf::from("/tmp/repo"),
+            source: git2::Error::from_str("boom"),
+        }
+        .into();
+        assert_eq!(app.kind, "git_repository_error");
+        assert!(app.message.contains("/tmp/repo"));
+        assert_eq!(app.description.as_deref(), Some("boom"));
     }
 }

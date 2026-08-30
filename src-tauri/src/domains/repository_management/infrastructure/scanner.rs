@@ -173,6 +173,23 @@ mod tests {
         path.join(".git").is_dir()
     }
 
+    /// The real predicate must accept a repository that has no commits yet —
+    /// `is_git_repository` used to reject an unborn HEAD, hiding freshly
+    /// initialised repositories from the scan.
+    #[test]
+    fn finds_a_repository_with_no_commits() {
+        let _guard = crate::shared::utils::test_utils::DirectoryGuard::new();
+        let tmp = TempDir::new().unwrap();
+        let repo = tmp.path().join("brand-new");
+        fs::create_dir_all(&repo).unwrap();
+        crate::shared::utils::test_utils::run_git(&repo, &["init"]);
+
+        let found =
+            find_git_repositories_reporting(&[tmp.path().to_path_buf()], 10, true, |_, _, _| {});
+
+        assert_eq!(found, vec![repo]);
+    }
+
     #[test]
     fn finds_repositories_at_various_depths() {
         let tmp = TempDir::new().unwrap();

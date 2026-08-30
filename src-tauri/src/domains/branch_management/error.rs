@@ -55,9 +55,6 @@ pub enum BranchError {
         source: git2::Error,
     },
 
-    #[error("Couldn\\'t retrieve branches with last commit info in the path **{path}**")]
-    NoBranches { path: String },
-
     #[error("Failed to get HEAD: {source}")]
     HeadNotFound {
         #[source]
@@ -177,7 +174,6 @@ impl From<BranchError> for AppError {
             BranchError::NameFailed { .. } => "branch_name_failed",
             BranchError::InvalidUtf8 => "invalid_utf8",
             BranchError::CommitPeelFailed { .. } => "commit_peel_failed",
-            BranchError::NoBranches { .. } => "no_branches",
             BranchError::HeadNotFound { .. } => "head_not_found",
             BranchError::FindBranchFailed { .. } => "branch_not_found",
             BranchError::HeadCommitFailed { .. } => "head_commit_failed",
@@ -265,7 +261,7 @@ impl From<BranchError> for AppError {
                 path
             )),
 
-            BranchError::InvalidUtf8 | BranchError::NoBranches { .. } => None,
+            BranchError::InvalidUtf8 => None,
         };
 
         AppError::new(err.to_string(), kind, description)
@@ -417,19 +413,5 @@ mod tests {
             app.description.as_deref(),
             Some("The pagination cursor is malformed; restart from the first page")
         );
-    }
-
-    #[test]
-    fn no_branches_has_no_description() {
-        let app: AppError = BranchError::NoBranches {
-            path: "/repo".into(),
-        }
-        .into();
-        assert_eq!(app.kind, "no_branches");
-        assert_eq!(
-            app.message,
-            "Couldn\\'t retrieve branches with last commit info in the path **/repo**"
-        );
-        assert_eq!(app.description, None);
     }
 }
