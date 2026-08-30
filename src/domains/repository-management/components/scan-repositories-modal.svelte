@@ -135,13 +135,15 @@
 		}
 	}
 
-	async function chooseFolder() {
+	async function chooseFolder(closeOnCancel = false) {
 		try {
 			const dir = await openFolderDialog({ directory: true, multiple: false });
 			if (dir === null) {
-				// Picker cancelled: there is nothing to show, so don't leave an
-				// empty dialog (or a previous scan's stale results) behind.
-				open = false;
+				// Picker cancelled. When the dialog auto-opened straight into the
+				// picker there is nothing to show, so close instead of leaving an
+				// empty well behind. From the in-dialog button, keep the current
+				// results and selection.
+				if (closeOnCancel) open = false;
 				return;
 			}
 			customRoots = [dir as string];
@@ -164,7 +166,7 @@
 		if (open && !started) {
 			started = true;
 			if (scope === 'folder') {
-				chooseFolder();
+				chooseFolder(true);
 			} else {
 				scanHome();
 			}
@@ -252,7 +254,7 @@
 						<Button
 							emphasis="secondary"
 							size="sm"
-							onclick={chooseFolder}
+							onclick={() => chooseFolder()}
 							disabled={scanning}
 							data-testid="choose-folder-button"
 						>
