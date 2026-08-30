@@ -26,8 +26,8 @@ pub enum RepositoryError {
     #[error("Failed to convert repository name to string")]
     NameNotUtf8,
 
-    #[error("Failed to get current time")]
-    CurrentTimeFailed { detail: String },
+    #[error("Failed to read the git state of the repository at {path}")]
+    StateUnreadable { path: String },
 }
 
 impl From<RepositoryError> for AppError {
@@ -37,7 +37,7 @@ impl From<RepositoryError> for AppError {
             RepositoryError::AlreadyExists { .. } => "repository_already_exists",
             RepositoryError::NameExtractionFailed => "repo_name_failed",
             RepositoryError::NameNotUtf8 => "repo_name_failed",
-            RepositoryError::CurrentTimeFailed { .. } => "time_error",
+            RepositoryError::StateUnreadable { .. } => "repo_state_unreadable",
         };
 
         let description = match &err {
@@ -55,7 +55,10 @@ impl From<RepositoryError> for AppError {
             RepositoryError::NameNotUtf8 => {
                 Some("Repository name contains invalid UTF-8 characters".to_string())
             }
-            RepositoryError::CurrentTimeFailed { detail } => Some(detail.clone()),
+            RepositoryError::StateUnreadable { path } => Some(format!(
+                "No refs, packed-refs or HEAD could be read under the git directory of '{}'",
+                path
+            )),
         };
 
         AppError::new(err.to_string(), kind, description)
@@ -113,13 +116,19 @@ mod tests {
     }
 
     #[test]
-    fn current_time_failed_carries_detail() {
-        let app: AppError = RepositoryError::CurrentTimeFailed {
-            detail: "clock went backwards".into(),
+    fn state_unreadable_carries_path() {
+        let app: AppError = RepositoryError::StateUnreadable {
+            path: "/tmp/broken".into(),
         }
         .into();
-        assert_eq!(app.kind, "time_error");
-        assert_eq!(app.message, "Failed to get current time");
-        assert_eq!(app.description.as_deref(), Some("clock went backwards"));
+        assert_eq!(app.kind, "repo_state_unreadable");
+        assert_eq!(
+            app.message,
+            "Failed to read the git state of the repository at /tmp/broken"
+        );
+        assert_eq!(
+            app.description.as_deref(),
+            Some("No refs, packed-refs or HEAD could be read under the git directory of '/tmp/broken'")
+        );
     }
 }
