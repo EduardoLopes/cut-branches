@@ -118,7 +118,12 @@
 			hintOpen = true;
 			return;
 		}
-		removeBatch.removeBatch([...selected]);
+		// The composable reports failures by name, so it needs more than the ids.
+		removeBatch.removeBatch(
+			repositories
+				.filter((repository) => selected.has(repository.id))
+				.map((repository) => ({ id: repository.id, name: repository.name }))
+		);
 	}
 
 	function handleCancel() {
