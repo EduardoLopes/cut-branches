@@ -118,6 +118,39 @@ describe('useRepositoryActions', () => {
 			});
 		});
 
+		test('pushes a danger notification when the refresh rejects', async () => {
+			const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+			const onRefresh = vi.fn(() => Promise.reject(new Error('watch failed')));
+
+			const actions = mount(() => REPO.id, { onRefresh });
+			await actions.update();
+
+			expect(mockNotifications.push).toHaveBeenCalledWith({
+				title: 'Could not update repository',
+				message: 'Failed to update **Test-Repo**: watch failed',
+				feedback: 'danger'
+			});
+			expect(mockNotifications.push).toHaveBeenCalledOnce();
+			expect(actions.isRefreshing).toBe(false);
+			expect(consoleError).toHaveBeenCalled();
+			consoleError.mockRestore();
+		});
+
+		test('stringifies non-Error rejections in the danger notification', async () => {
+			const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+			const onRefresh = vi.fn(() => Promise.reject('nope'));
+
+			const actions = mount(() => REPO.id, { onRefresh });
+			await actions.update();
+
+			expect(mockNotifications.push).toHaveBeenCalledWith({
+				title: 'Could not update repository',
+				message: 'Failed to update **Test-Repo**: nope',
+				feedback: 'danger'
+			});
+			consoleError.mockRestore();
+		});
+
 		test('ignores re-entrant calls while a refresh is in flight', async () => {
 			let resolveRefresh: (() => void) | undefined;
 			const onRefresh = vi.fn(

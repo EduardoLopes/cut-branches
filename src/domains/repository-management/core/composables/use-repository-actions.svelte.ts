@@ -1,6 +1,7 @@
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 import { notifications } from '$services/notifications/notifications.svelte';
+import { getErrorMessage } from '$utils/error-utils';
 
 interface UseRepositoryActionsOptions {
 	/**
@@ -50,15 +51,25 @@ export function useRepositoryActions(
 
 		isRefreshing = true;
 
+		const repoName = repository?.name ?? 'Repository';
+
 		try {
 			await options.onRefresh?.();
 
-			const repoName = repository?.name ?? 'Repository';
 			notifications.push({
 				title: 'Repository updated',
 				message: `The repository **${repoName}** was updated`,
 				feedback: 'success'
 			});
+		} catch (error) {
+			// A rejected refresh used to escape as an unhandled rejection while the
+			// success toast still fired. Report it instead.
+			notifications.push({
+				title: 'Could not update repository',
+				message: `Failed to update **${repoName}**: ${getErrorMessage(error)}`,
+				feedback: 'danger'
+			});
+			console.error('repository refresh failed', error);
 		} finally {
 			isRefreshing = false;
 		}
