@@ -303,7 +303,7 @@ mod tests {
         // et al. would otherwise point this subprocess at the outer repo instead
         // of `main`, failing with "`.git/index`: Not a directory".
         let wt = root.join("wt");
-        let mut cmd = std::process::Command::new("git");
+        let mut cmd = crate::shared::utils::test_utils::git_command();
         cmd.args(["worktree", "add", wt.to_str().unwrap(), "-b", "feature"])
             .current_dir(&main);
         for var in [

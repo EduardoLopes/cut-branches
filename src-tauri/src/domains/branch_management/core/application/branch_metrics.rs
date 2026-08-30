@@ -114,7 +114,6 @@ mod tests {
     use diesel::prelude::*;
     use diesel::r2d2::{ConnectionManager, Pool};
     use diesel_migrations::MigrationHarness;
-    use std::process::Command;
 
     fn test_conn() -> DbConnection {
         let manager = ConnectionManager::<SqliteConnection>::new(":memory:");
@@ -125,7 +124,7 @@ mod tests {
     }
 
     fn git(path: &Path, args: &[&str]) {
-        let out = Command::new("git")
+        let out = crate::shared::utils::test_utils::git_command()
             .args(args)
             .current_dir(path)
             .output()

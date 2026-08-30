@@ -283,12 +283,11 @@ pub fn unlock_worktree(path: &Path, name: &str) -> Result<(), WorktreeError> {
 mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
-    use std::process::Command;
 
     /// Create a local branch `name` in the repo at `path` (via the git CLI, so
     /// the code under test reads it back through git2).
     fn create_branch(path: &Path, name: &str) {
-        let status = Command::new("git")
+        let status = crate::shared::utils::test_utils::git_command()
             .args(["branch", name])
             .current_dir(path)
             .status()
@@ -390,7 +389,7 @@ mod tests {
         assert!(worktrees.iter().any(|w| w.name == "wt1" && !w.is_main));
 
         // git CLI sees it too
-        let out = Command::new("git")
+        let out = crate::shared::utils::test_utils::git_command()
             .args(["worktree", "list"])
             .current_dir(repo.path())
             .output()

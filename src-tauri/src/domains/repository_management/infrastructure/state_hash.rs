@@ -110,7 +110,6 @@ fn collect_ref_files(dir: &Path, root: &Path, out: &mut Vec<(String, Vec<u8>)>) 
 mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
-    use std::process::Command;
 
     #[test]
     fn test_compute_repo_state_timestamp() {
@@ -139,7 +138,7 @@ mod tests {
 
         let fp1 = compute_repo_state_timestamp(path).unwrap();
 
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "test-new-branch"])
             .current_dir(path)
             .output()
@@ -158,7 +157,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "test-delete-branch"])
             .current_dir(path)
             .output()
@@ -166,7 +165,7 @@ mod tests {
 
         let fp1 = compute_repo_state_timestamp(path).unwrap();
 
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "-D", "test-delete-branch"])
             .current_dir(path)
             .output()
@@ -188,12 +187,12 @@ mod tests {
         let fp1 = compute_repo_state_timestamp(path).unwrap();
 
         std::fs::write(path.join("test_file.txt"), "test content").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "test_file.txt"])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["commit", "-m", "Test commit"])
             .current_dir(path)
             .output()
@@ -210,7 +209,7 @@ mod tests {
     fn test_fingerprint_distinguishes_branch_names() {
         let _guard = DirectoryGuard::new();
         let repo_a = setup_test_repo();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "alpha"])
             .current_dir(repo_a.path())
             .output()
@@ -218,7 +217,7 @@ mod tests {
         let fp_a = compute_repo_state_timestamp(repo_a.path()).unwrap();
 
         let repo_b = setup_test_repo();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "beta"])
             .current_dir(repo_b.path())
             .output()

@@ -86,7 +86,6 @@ pub fn is_commit_reachable(path: &Path, commit_sha: &str) -> Result<bool, AppErr
 mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{setup_test_repo, DirectoryGuard};
-    use std::process::Command;
 
     #[test]
     fn test_format_commit_time() {
@@ -120,7 +119,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["rev-parse", "HEAD"])
             .current_dir(path)
             .output()
@@ -155,7 +154,7 @@ mod tests {
 
         let repo = setup_test_repo();
         let path = repo.path();
-        let commit_output = Command::new("git")
+        let commit_output = crate::shared::utils::test_utils::git_command()
             .args(["rev-parse", "HEAD"])
             .current_dir(path)
             .output()
@@ -220,7 +219,7 @@ mod tests {
         let repo = Repository::open(path).unwrap();
 
         let full = String::from_utf8(
-            Command::new("git")
+            crate::shared::utils::test_utils::git_command()
                 .args(["rev-parse", "HEAD"])
                 .current_dir(path)
                 .output()
@@ -240,7 +239,7 @@ mod tests {
         assert!(find_commit_by_sha(&repo, &full[..8]).is_ok(), "short SHA");
 
         let blob = String::from_utf8(
-            Command::new("git")
+            crate::shared::utils::test_utils::git_command()
                 .args(["rev-parse", "HEAD:test.txt"])
                 .current_dir(path)
                 .output()

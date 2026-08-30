@@ -33,12 +33,35 @@ pub trait GitCommand {
     ) -> std::io::Result<std::process::Output>;
 }
 
+/// A `git` command with git's own hook environment scrubbed.
+///
+/// Git exports `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` (and friends) into
+/// hook processes, and the pre-commit hook runs this suite. Inherited, they
+/// redirect every nested git call from the temp repo under test to the
+/// *project* repository — which is how a test's `git commit -m "Initial
+/// commit"` can land on the real branch.
+pub fn git_command() -> Command {
+    let mut cmd = Command::new("git");
+    for var in [
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_COMMON_DIR",
+        "GIT_PREFIX",
+    ] {
+        cmd.env_remove(var);
+    }
+    cmd
+}
+
 /// Real implementation of GitCommand that uses the actual git command
 pub struct RealGitCommand;
 
 impl GitCommand for RealGitCommand {
     fn init(&self, path: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
+        git_command()
             .args(["init", "--initial-branch=main"])
             .current_dir(path)
             .status()
@@ -50,17 +73,14 @@ impl GitCommand for RealGitCommand {
         key: &str,
         value: &str,
     ) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
+        git_command()
             .args(["config", "--local", key, value])
             .current_dir(path)
             .status()
     }
 
     fn add(&self, path: &std::path::Path, file: &str) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
-            .args(["add", file])
-            .current_dir(path)
-            .status()
+        git_command().args(["add", file]).current_dir(path).status()
     }
 
     fn commit(
@@ -68,7 +88,7 @@ impl GitCommand for RealGitCommand {
         path: &std::path::Path,
         message: &str,
     ) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
+        git_command()
             .args(["commit", "-m", message])
             .env("GIT_AUTHOR_NAME", "Test User")
             .env("GIT_AUTHOR_EMAIL", "test@example.com")
@@ -83,7 +103,7 @@ impl GitCommand for RealGitCommand {
         path: &std::path::Path,
         args: &[&str],
     ) -> std::io::Result<std::process::Output> {
-        let mut cmd = Command::new("git");
+        let mut cmd = git_command();
         cmd.arg("rev-parse").args(args).current_dir(path);
         cmd.output()
     }
@@ -93,7 +113,7 @@ impl GitCommand for RealGitCommand {
         path: &std::path::Path,
         args: &[&str],
     ) -> std::io::Result<std::process::Output> {
-        let mut cmd = Command::new("git");
+        let mut cmd = git_command();
         cmd.arg("branch").args(args).current_dir(path);
         cmd.output()
     }
@@ -181,7 +201,7 @@ fn setup_test_repo_with_git_command(git: &dyn GitCommand) -> tempfile::TempDir {
 /// success and returning trimmed stdout.
 #[cfg(test)]
 pub fn run_git(path: &std::path::Path, args: &[&str]) -> String {
-    let output = Command::new("git")
+    let output = git_command()
         .args(args)
         .env("GIT_AUTHOR_NAME", "Test User")
         .env("GIT_AUTHOR_EMAIL", "test@example.com")
@@ -215,7 +235,7 @@ pub fn commit_file(
     }
     fs::write(file_path, content).unwrap();
     run_git(path, &["add", file]);
-    let output = Command::new("git")
+    let output = git_command()
         .args(["commit", "-m", message])
         .env("GIT_AUTHOR_NAME", "Test User")
         .env("GIT_AUTHOR_EMAIL", "test@example.com")
@@ -282,7 +302,7 @@ pub fn setup_history_test_repo() -> tempfile::TempDir {
     );
 
     run_git(path, &["checkout", "main"]);
-    let merge_output = Command::new("git")
+    let merge_output = git_command()
         .args(["merge", "--no-ff", "feature/b", "-m", "Merge feature/b"])
         .env("GIT_AUTHOR_NAME", "Test User")
         .env("GIT_AUTHOR_EMAIL", "test@example.com")

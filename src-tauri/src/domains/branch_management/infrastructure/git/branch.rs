@@ -395,6 +395,9 @@ fn git_cli_available() -> bool {
     static AVAILABLE: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
     *AVAILABLE.get_or_init(|| {
         std::process::Command::new("git")
+            .env_remove("GIT_DIR")
+            .env_remove("GIT_WORK_TREE")
+            .env_remove("GIT_INDEX_FILE")
             .arg("--version")
             .output()
             .map(|out| out.status.success())
@@ -405,6 +408,9 @@ fn git_cli_available() -> bool {
 /// Runs one git subcommand in `path` and returns trimmed stdout on success.
 fn git_cli_stdout(path: &Path, args: &[&str]) -> Option<String> {
     let out = std::process::Command::new("git")
+        .env_remove("GIT_DIR")
+        .env_remove("GIT_WORK_TREE")
+        .env_remove("GIT_INDEX_FILE")
         .arg("-C")
         .arg(path)
         .args(args)
@@ -1125,7 +1131,6 @@ pub fn restore_deleted_branches(
 mod tests {
     use super::*;
     use crate::shared::utils::test_utils::{run_git, setup_test_repo, DirectoryGuard};
-    use std::process::Command;
 
     #[test]
     fn test_parse_shortstat() {
@@ -1146,28 +1151,28 @@ mod tests {
         let path = repo_dir.path();
 
         // One diverged branch, one merged branch (points at an ancestor).
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "merged-branch"])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", "-b", "diverged-branch"])
             .current_dir(path)
             .output()
             .unwrap();
         std::fs::write(path.join("diverged.txt"), "one\ntwo\n").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "."])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["commit", "-m", "diverge"])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", "main"])
             .current_dir(path)
             .output()
@@ -1195,7 +1200,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -1217,7 +1222,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -1242,12 +1247,12 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "side"])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", "--detach"])
             .current_dir(path)
             .output()
@@ -1273,7 +1278,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -1329,12 +1334,12 @@ mod tests {
         // Commit a multi-line message so summary (subject) and message (subject +
         // body) diverge.
         std::fs::write(path.join("body-file.txt"), "content").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "."])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args([
                 "commit",
                 "-m",
@@ -1346,7 +1351,7 @@ mod tests {
             .output()
             .unwrap();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -1384,14 +1389,14 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
             .unwrap();
         let original_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
 
-        let create_output = Command::new("git")
+        let create_output = crate::shared::utils::test_utils::git_command()
             .args(["checkout", "-b", "test-switch-branch"])
             .current_dir(path)
             .output()
@@ -1434,7 +1439,7 @@ mod tests {
         let path = repo.path();
 
         let original_branch = {
-            let output = Command::new("git")
+            let output = crate::shared::utils::test_utils::git_command()
                 .args(["branch", "--show-current"])
                 .current_dir(path)
                 .output()
@@ -1443,23 +1448,10 @@ mod tests {
         };
 
         // A second branch whose tip changes test.txt.
-        let run = |args: &[&str]| {
-            let out = Command::new(args[0])
-                .args(&args[1..])
-                .current_dir(path)
-                .output()
-                .unwrap();
-            assert!(
-                out.status.success(),
-                "{:?}: {}",
-                args,
-                String::from_utf8_lossy(&out.stderr)
-            );
-        };
-        run(&["git", "checkout", "-b", "other"]);
+        run_git(path, &["checkout", "-b", "other"]);
         std::fs::write(path.join("test.txt"), "committed on other\n").unwrap();
-        run(&["git", "commit", "-am", "change test.txt"]);
-        run(&["git", "checkout", &original_branch]);
+        run_git(path, &["commit", "-am", "change test.txt"]);
+        run_git(path, &["checkout", &original_branch]);
 
         // Uncommitted local edit to the same file.
         std::fs::write(path.join("test.txt"), "my uncommitted work\n").unwrap();
@@ -1475,7 +1467,7 @@ mod tests {
             std::fs::read_to_string(path.join("test.txt")).unwrap(),
             "my uncommitted work\n"
         );
-        let head = Command::new("git")
+        let head = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -1492,7 +1484,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -1500,7 +1492,7 @@ mod tests {
         let current_branch_name = String::from_utf8(output.stdout).unwrap().trim().to_string();
 
         let branch_to_delete_name = "test-branch-to-delete";
-        let create_output = Command::new("git")
+        let create_output = crate::shared::utils::test_utils::git_command()
             .args(["checkout", "-b", branch_to_delete_name])
             .current_dir(path)
             .output()
@@ -1513,7 +1505,7 @@ mod tests {
         );
 
         // Switch back to delete
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", &current_branch_name])
             .current_dir(path)
             .output()
@@ -1695,7 +1687,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["rev-parse", "HEAD"])
             .current_dir(path)
             .output()
@@ -1704,14 +1696,14 @@ mod tests {
 
         let branch_to_delete_name = "branch-for-restore-test";
 
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", branch_to_delete_name, &commit_sha])
             .current_dir(path)
             .output()
             .unwrap();
         assert!(branch_exists(path, branch_to_delete_name).unwrap());
 
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "-D", branch_to_delete_name])
             .current_dir(path)
             .output()
@@ -1796,7 +1788,7 @@ mod tests {
         // An initialised repository with no commits has an unborn HEAD, which
         // is still an error (there is nothing to describe).
         let empty = tempfile::tempdir().unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["init"])
             .current_dir(empty.path())
             .output()
@@ -1833,7 +1825,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let commit_output = Command::new("git")
+        let commit_output = crate::shared::utils::test_utils::git_command()
             .args(["rev-parse", "HEAD"])
             .current_dir(path)
             .output()
@@ -1931,7 +1923,7 @@ mod tests {
         let path = repo.path();
 
         // Get current commit SHA
-        let commit_output = Command::new("git")
+        let commit_output = crate::shared::utils::test_utils::git_command()
             .args(["rev-parse", "HEAD"])
             .current_dir(path)
             .output()
@@ -1944,12 +1936,12 @@ mod tests {
         // Create and delete test branches
         let branch_names = vec!["test-branch-1", "test-branch-2", "test-branch-3"];
         for branch_name in &branch_names {
-            Command::new("git")
+            crate::shared::utils::test_utils::git_command()
                 .args(["branch", branch_name, &commit_sha])
                 .current_dir(path)
                 .output()
                 .unwrap();
-            Command::new("git")
+            crate::shared::utils::test_utils::git_command()
                 .args(["branch", "-D", branch_name])
                 .current_dir(path)
                 .output()
@@ -2274,7 +2266,7 @@ mod tests {
         // Test with invalid branch name
         let repo = setup_test_repo();
         let path = repo.path();
-        let commit_output = Command::new("git")
+        let commit_output = crate::shared::utils::test_utils::git_command()
             .args(["rev-parse", "HEAD"])
             .current_dir(path)
             .output()
@@ -2310,7 +2302,7 @@ mod tests {
         let path = repo.path();
 
         // Get current branch name
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -2331,7 +2323,7 @@ mod tests {
 
         // Test 2: Create a new branch from current and check it's merged
         let merged_branch = "test-merged-branch";
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", merged_branch])
             .current_dir(path)
             .output()
@@ -2350,26 +2342,26 @@ mod tests {
 
         // Test 3: Create a branch with new commits (unmerged)
         let unmerged_branch = "test-unmerged-branch";
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", "-b", unmerged_branch])
             .current_dir(path)
             .output()
             .unwrap();
 
         std::fs::write(path.join("new-file.txt"), "new content").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "."])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["commit", "-m", "New commit on unmerged branch"])
             .current_dir(path)
             .output()
             .unwrap();
 
         // Switch back to original branch
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", &current_branch])
             .current_dir(path)
             .output()
@@ -2418,7 +2410,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -2426,30 +2418,30 @@ mod tests {
         let current_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
 
         // Merged branch: points at HEAD, no own changes.
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "bulk-merged-branch"])
             .current_dir(path)
             .output()
             .unwrap();
 
         // Unmerged branch with its own commit (adds 1 line in a new file).
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", "-b", "bulk-unmerged-branch"])
             .current_dir(path)
             .output()
             .unwrap();
         std::fs::write(path.join("bulk-file.txt"), "one line\n").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "."])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["commit", "-m", "bulk metrics commit"])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", &current_branch])
             .current_dir(path)
             .output()
@@ -2497,7 +2489,7 @@ mod tests {
         let repo = setup_test_repo();
         let path = repo.path();
 
-        let output = Command::new("git")
+        let output = crate::shared::utils::test_utils::git_command()
             .args(["branch", "--show-current"])
             .current_dir(path)
             .output()
@@ -2505,7 +2497,7 @@ mod tests {
         let current_branch = String::from_utf8(output.stdout).unwrap().trim().to_string();
 
         // A branch pointing at HEAD has no unique changes.
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["branch", "diff-noop-branch"])
             .current_dir(path)
             .output()
@@ -2519,24 +2511,24 @@ mod tests {
 
         // A branch with its own commit: rewrite test.txt (1 line removed,
         // 3 added) and add extra.txt (2 added) → (5, 1).
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", "-b", "diff-stats-branch"])
             .current_dir(path)
             .output()
             .unwrap();
         std::fs::write(path.join("test.txt"), "line one\nline two\nline three\n").unwrap();
         std::fs::write(path.join("extra.txt"), "alpha\nbeta\n").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "."])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["commit", "-m", "Diff stats commit"])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["checkout", &current_branch])
             .current_dir(path)
             .output()
@@ -2548,12 +2540,12 @@ mod tests {
         // Commits HEAD gains after divergence must not count as removals: the
         // diff is taken from the merge-base, not from HEAD's tip.
         std::fs::write(path.join("head-only.txt"), "head only\n").unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["add", "."])
             .current_dir(path)
             .output()
             .unwrap();
-        Command::new("git")
+        crate::shared::utils::test_utils::git_command()
             .args(["commit", "-m", "HEAD moves on"])
             .current_dir(path)
             .output()
