@@ -956,7 +956,9 @@ pub fn restore_deleted_branch(
     branch_info: &DeletedBranch,
     app_handle: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, AppError> {
-    let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
+    // Fail with a precise error when the path isn't a repository at all; the
+    // helpers below open their own handles.
+    Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
         path: path.display().to_string(),
         source: e,
     })?;
@@ -977,26 +979,14 @@ pub fn restore_deleted_branch(
         // Handle conflict based on user's preference
         match &branch_info.conflict_resolution {
             Some(ConflictResolution::Overwrite) => {
-                // Delete existing branch first
-                let mut branch = repo
-                    .find_branch(&branch_info.target_name, BranchType::Local)
-                    .map_err(|e| BranchError::FindBranchFailed {
-                        name: branch_info.target_name.to_string(),
-                        source: e,
-                    })?;
-
-                branch
-                    .delete()
-                    .map_err(|e| BranchError::DeleteBranchFailed {
-                        name: branch_info.target_name.to_string(),
-                        source: e,
-                    })?;
-
-                // Now create the branch
+                // Force-create: one atomic ref update. Deleting first and then
+                // creating meant a failure in between (a bad SHA, a locked ref)
+                // destroyed the branch the user was overwriting.
                 create_branch_at_commit(
                     path,
                     &branch_info.target_name,
                     &branch_info.commit_sha,
+                    true,
                     app_handle,
                 )
             }
@@ -1006,6 +996,7 @@ pub fn restore_deleted_branch(
                     path,
                     &branch_info.target_name,
                     &branch_info.commit_sha,
+                    false,
                     app_handle,
                 )
             }
@@ -1043,15 +1034,19 @@ pub fn restore_deleted_branch(
             path,
             &branch_info.target_name,
             &branch_info.commit_sha,
+            false,
             app_handle,
         )
     }
 }
 
+/// Creates `branch_name` at `commit_sha`. With `force`, an existing branch of
+/// that name is replaced in a single ref update rather than deleted first.
 fn create_branch_at_commit(
     path: &Path,
     branch_name: &str,
     commit_sha: &str,
+    force: bool,
     app_handle: Option<&tauri::AppHandle>,
 ) -> Result<RestoreBranchResult, AppError> {
     let repo = Repository::open(path).map_err(|e| BranchError::RepositoryOpenFailed {
@@ -1074,7 +1069,7 @@ fn create_branch_at_commit(
             source: e,
         })?;
 
-    repo.branch(branch_name, &commit, false)
+    repo.branch(branch_name, &commit, force)
         .map_err(|e| BranchError::CreateBranchFailed {
             name: branch_name.to_string(),
             source: e,
@@ -1102,6 +1097,10 @@ fn create_branch_at_commit(
     })
 }
 
+/// Restores each branch independently. A failure is recorded as that entry's
+/// result instead of aborting the batch: propagating the first error threw
+/// away the outcomes of every branch already restored, so the caller could
+/// neither report them nor mark them active in the database.
 pub fn restore_deleted_branches(
     path: &Path,
     branch_infos: &[DeletedBranch],
@@ -1110,7 +1109,18 @@ pub fn restore_deleted_branches(
     let mut results = Vec::new();
 
     for branch_info in branch_infos {
-        let result = restore_deleted_branch(path, branch_info, app_handle)?;
+        let result = match restore_deleted_branch(path, branch_info, app_handle) {
+            Ok(result) => result,
+            Err(error) => RestoreBranchResult {
+                success: false,
+                branch_name: branch_info.target_name.clone(),
+                message: error.message.clone(),
+                requires_user_action: false,
+                conflict_details: None,
+                skipped: false,
+                branch: None,
+            },
+        };
         results.push((branch_info.target_name.clone(), result));
     }
 
@@ -2052,11 +2062,56 @@ mod tests {
         }
     }
 
+    /// A failing entry is reported as a failed result, not as an aborted
+    /// batch: the branches restored before and after it survive.
     #[test]
-    fn test_restore_deleted_branches_errors() {
+    fn test_restore_deleted_branches_records_per_item_failures() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let path = repo.path();
+        let head_sha = run_git(path, &["rev-parse", "HEAD"]);
+
+        let inputs = vec![
+            DeletedBranch {
+                original_name: "first".to_string(),
+                target_name: "first".to_string(),
+                commit_sha: head_sha.clone(),
+                conflict_resolution: None,
+            },
+            DeletedBranch {
+                original_name: "broken".to_string(),
+                target_name: "broken".to_string(),
+                commit_sha: "invalid-sha".to_string(),
+                conflict_resolution: None,
+            },
+            DeletedBranch {
+                original_name: "third".to_string(),
+                target_name: "third".to_string(),
+                commit_sha: head_sha.clone(),
+                conflict_resolution: None,
+            },
+        ];
+
+        let results = restore_deleted_branches(path, &inputs, None)
+            .expect("a failing entry must not abort the batch");
+
+        assert_eq!(results.len(), 3);
+        assert!(results[0].1.success, "the first branch is restored");
+        assert!(!results[1].1.success, "the broken entry is reported failed");
+        assert!(!results[1].1.message.is_empty());
+        assert!(results[2].1.success, "later entries still run");
+
+        assert!(branch_exists(path, "first").unwrap());
+        assert!(!branch_exists(path, "broken").unwrap());
+        assert!(branch_exists(path, "third").unwrap());
+    }
+
+    /// A directory that isn't a repository fails every entry rather than
+    /// erroring the call.
+    #[test]
+    fn test_restore_deleted_branches_in_a_non_repository() {
         let _guard = DirectoryGuard::new();
         let temp_dir = tempfile::tempdir().unwrap();
-        let non_git_path = temp_dir.path();
 
         let restore_inputs = vec![DeletedBranch {
             original_name: "test-branch".to_string(),
@@ -2065,15 +2120,62 @@ mod tests {
             conflict_resolution: None,
         }];
 
-        // Test with non-git directory
-        let result = restore_deleted_branches(non_git_path, &restore_inputs, None);
-        assert!(result.is_err(), "Expected error for non-git directory");
+        let results = restore_deleted_branches(temp_dir.path(), &restore_inputs, None).unwrap();
+        assert_eq!(results.len(), 1);
+        assert!(!results[0].1.success);
+    }
 
-        // Test with invalid commit SHA
+    /// Overwrite is a single force-create: the branch never stops existing,
+    /// and it ends up on the requested commit.
+    #[test]
+    fn test_restore_with_overwrite_is_atomic() {
+        let _guard = DirectoryGuard::new();
         let repo = setup_test_repo();
         let path = repo.path();
-        let result = restore_deleted_branches(path, &restore_inputs, None);
-        assert!(result.is_err(), "Expected error for invalid commit SHA");
+
+        let first_sha = run_git(path, &["rev-parse", "HEAD"]);
+        run_git(path, &["branch", "conflicting"]);
+        let second_sha = crate::shared::utils::test_utils::commit_file(
+            path,
+            "second.txt",
+            "second\n",
+            "second commit",
+            "2024-01-02T00:00:00+00:00",
+        );
+        assert_ne!(first_sha, second_sha);
+
+        // A blob's SHA exists in the object database but is not a commit, so
+        // it passes the reachability guard and only fails when the branch is
+        // actually created - exactly where the old delete-then-create left the
+        // branch destroyed.
+        let blob_sha = run_git(path, &["rev-parse", "HEAD:test.txt"]);
+        let doomed = DeletedBranch {
+            original_name: "conflicting".to_string(),
+            target_name: "conflicting".to_string(),
+            commit_sha: blob_sha,
+            conflict_resolution: Some(ConflictResolution::Overwrite),
+        };
+        assert!(restore_deleted_branch(path, &doomed, None).is_err());
+        assert!(
+            branch_exists(path, "conflicting").unwrap(),
+            "a failed overwrite must not destroy the branch"
+        );
+        assert_eq!(
+            run_git(path, &["rev-parse", "conflicting"]),
+            first_sha,
+            "the branch still points at its original commit"
+        );
+
+        // A successful overwrite moves it to the requested commit.
+        let overwrite = DeletedBranch {
+            original_name: "conflicting".to_string(),
+            target_name: "conflicting".to_string(),
+            commit_sha: second_sha.clone(),
+            conflict_resolution: Some(ConflictResolution::Overwrite),
+        };
+        let result = restore_deleted_branch(path, &overwrite, None).unwrap();
+        assert!(result.success);
+        assert_eq!(run_git(path, &["rev-parse", "conflicting"]), second_sha);
     }
 
     #[test]
