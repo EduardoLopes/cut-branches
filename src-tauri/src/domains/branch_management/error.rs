@@ -213,7 +213,6 @@ impl From<BranchError> for AppError {
             | BranchError::HeadCommitFailed { source }
             | BranchError::BranchCommitFailed { source }
             | BranchError::SetHeadFailed { source, .. }
-            | BranchError::CheckoutFailed { source, .. }
             | BranchError::DeleteBranchFailed { source, .. }
             | BranchError::FindCommitFailed { source, .. }
             | BranchError::CreateBranchFailed { source, .. }
@@ -225,6 +224,18 @@ impl From<BranchError> for AppError {
             | BranchError::CommandExecutionFailed { detail, .. }
             | BranchError::BranchesNotFound { detail, .. }
             | BranchError::BranchesInUse { detail, .. } => Some(detail.clone()),
+
+            // A safe checkout refuses to overwrite local modifications. git2's
+            // own text ("1 conflict prevents checkout") names no next step.
+            BranchError::CheckoutFailed { source, .. }
+                if source.code() == git2::ErrorCode::Conflict =>
+            {
+                Some(
+                    "You have uncommitted changes that would be overwritten. Commit or stash them, then try again."
+                        .to_string(),
+                )
+            }
+            BranchError::CheckoutFailed { source, .. } => Some(source.to_string()),
 
             BranchError::DetachedHead { .. } => {
                 Some("Repository is in detached HEAD state".to_string())
@@ -290,6 +301,36 @@ mod tests {
         assert_eq!(app.kind, "branch_not_found");
         assert_eq!(app.message, "Failed to find branch 'feature/x': boom");
         assert_eq!(app.description.as_deref(), Some("boom"));
+    }
+
+    #[test]
+    fn checkout_conflict_gets_actionable_description() {
+        let src = git2::Error::new(
+            git2::ErrorCode::Conflict,
+            git2::ErrorClass::Checkout,
+            "1 conflict prevents checkout",
+        );
+        let app: AppError = BranchError::CheckoutFailed {
+            name: "feature/x".into(),
+            source: src,
+        }
+        .into();
+        assert_eq!(app.kind, "checkout_failed");
+        assert!(app
+            .description
+            .as_deref()
+            .unwrap()
+            .starts_with("You have uncommitted changes"));
+    }
+
+    #[test]
+    fn checkout_other_failure_keeps_git_message() {
+        let app: AppError = BranchError::CheckoutFailed {
+            name: "feature/x".into(),
+            source: git2::Error::from_str("disk full"),
+        }
+        .into();
+        assert_eq!(app.description.as_deref(), Some("disk full"));
     }
 
     #[test]
