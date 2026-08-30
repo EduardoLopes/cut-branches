@@ -51,8 +51,25 @@ impl RepoWatchPaths {
     }
 
     /// True when `path` belongs to this repository's watched ref surface.
+    ///
+    /// Matching is **exact**, never a plain `starts_with` on the git dirs: a
+    /// linked worktree's private dir lives *inside* the main repository's
+    /// `.git`, so a prefix match would fan a single ref change out to the main
+    /// repo and every one of its worktrees. Only three things belong to a
+    /// repository's branch surface:
+    ///
+    /// * `common_dir/refs/heads/**` — shared by the main repo and all its
+    ///   worktrees, so a branch change legitimately matches all of them;
+    /// * `common_dir/packed-refs` — likewise shared;
+    /// * `git_dir/HEAD` — worktree-*private*, so it matches exactly one
+    ///   registered repository.
+    ///
+    /// (Only `HEAD` is private in the worktree dir; `refs/heads` always
+    /// resolves to the common dir, so the private `refs/` is never matched.)
     fn contains(&self, path: &Path) -> bool {
-        path.starts_with(&self.git_dir) || path.starts_with(&self.common_dir)
+        path.starts_with(self.common_dir.join("refs").join("heads"))
+            || path == self.common_dir.join("packed-refs")
+            || path == self.git_dir.join("HEAD")
     }
 }
 
@@ -301,6 +318,60 @@ mod tests {
         assert!(paths.contains(&paths.git_dir.join("HEAD")));
         assert!(paths.contains(&main_git_dir.join("refs").join("heads").join("wt-watch")));
         assert!(!paths.contains(Path::new("/definitely/not/this/repo")));
+    }
+
+    /// A linked worktree's private git dir lives *inside* the main repository's
+    /// `.git`, so a prefix match would fan every ref change out to both. Only
+    /// the genuinely shared surface (`refs/heads/**`, `packed-refs`) may match
+    /// more than one repository; `HEAD` is private to exactly one.
+    #[test]
+    fn contains_separates_the_private_head_from_the_shared_refs() {
+        let _guard = DirectoryGuard::new();
+        let main = setup_test_repo();
+        let holder = tempfile::tempdir().unwrap();
+        let worktree = holder.path().join("wt");
+        run_git(
+            main.path(),
+            &[
+                "worktree",
+                "add",
+                worktree.to_str().unwrap(),
+                "-b",
+                "wt-sep",
+            ],
+        );
+
+        let main_paths = repo_watch_paths(main.path().to_str().unwrap());
+        let wt_paths = repo_watch_paths(worktree.to_str().unwrap());
+
+        // HEAD in the worktree: only the worktree.
+        let wt_head = wt_paths.git_dir.join("HEAD");
+        assert!(wt_paths.contains(&wt_head));
+        assert!(!main_paths.contains(&wt_head));
+
+        // HEAD in the main repo: only the main repo.
+        let main_head = main_paths.git_dir.join("HEAD");
+        assert!(main_paths.contains(&main_head));
+        assert!(!wt_paths.contains(&main_head));
+
+        // A branch ref is shared: both repositories must react.
+        let branch = main_paths
+            .common_dir
+            .join("refs")
+            .join("heads")
+            .join("wt-sep");
+        assert!(main_paths.contains(&branch));
+        assert!(wt_paths.contains(&branch));
+
+        // packed-refs is shared too.
+        let packed = main_paths.common_dir.join("packed-refs");
+        assert!(main_paths.contains(&packed));
+        assert!(wt_paths.contains(&packed));
+
+        // Everything else in the git dirs is ignored.
+        assert!(!main_paths.contains(&main_paths.git_dir.join("index")));
+        assert!(!wt_paths.contains(&wt_paths.git_dir.join("index")));
+        assert!(!wt_paths.contains(&wt_paths.git_dir.join("refs").join("bisect")));
     }
 
     /// An ordinary repository resolves to a single `.git` directory.
