@@ -158,6 +158,22 @@ describe('useDiscoverRepositories', () => {
 			expect(discover.isScanning).toBe(false);
 		});
 
+		it('holds isScanning past a fast scan so the spinner does not flash', async () => {
+			h.mutateAsync.mockResolvedValue(scanOutput([{ path: '/a', name: 'a' }]));
+
+			const discover = mount();
+			const scan = discover.scan();
+
+			// The command has already answered, but the flag stays up until the
+			// minimum duration elapses — otherwise the UI flickers.
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			expect(discover.results.map((r) => r.path)).toEqual(['/a']);
+			expect(discover.isScanning).toBe(true);
+
+			await scan;
+			expect(discover.isScanning).toBe(false);
+		});
+
 		it('keeps the newest scan results when an older run finishes last', async () => {
 			const first = deferred<ReturnType<typeof scanOutput>>();
 			h.mutateAsync

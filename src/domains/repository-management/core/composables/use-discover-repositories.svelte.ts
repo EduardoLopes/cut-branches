@@ -32,6 +32,13 @@ export interface ScanProgress {
 	foundCount: number;
 }
 
+/**
+ * Floor for how long `isScanning` stays up. A sub-100ms scan would otherwise
+ * flash the spinner and snap the surrounding layout in a jarring flicker, so
+ * the flag is held until the floor elapses even after the command answers.
+ */
+const MIN_SCAN_MS = 300;
+
 interface UseDiscoverRepositoriesOptions {
 	/** Invoked with the number of repositories added after a bulk add. */
 	onAdded?: (count: number) => void;
@@ -86,6 +93,7 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 		const token = ++scanToken;
 		isScanning = true;
 		progress = { scannedDirs: 0, foundCount: 0 };
+		const startedAt = Date.now();
 
 		// Stream live progress from the backend while the walk runs. `listen`
 		// rejects outside a Tauri runtime (e.g. tests) — degrade gracefully.
@@ -142,6 +150,11 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 			// Stop listening; keep the last counts so they stay visible during the
 			// modal's brief minimum-loading window.
 			unlisten?.();
+			// Hold the flag for at least MIN_SCAN_MS (see above) before clearing it.
+			const elapsed = Date.now() - startedAt;
+			if (elapsed < MIN_SCAN_MS) {
+				await new Promise((resolve) => setTimeout(resolve, MIN_SCAN_MS - elapsed));
+			}
 			if (token === scanToken) isScanning = false;
 		}
 	}

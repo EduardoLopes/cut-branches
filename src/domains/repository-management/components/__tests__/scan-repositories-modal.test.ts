@@ -111,7 +111,7 @@ describe('ScanRepositoriesModal', () => {
 	});
 
 	describe('rendering states', () => {
-		it('shows the scanning indicator while a scan runs', async () => {
+		it('shows the scanning indicator while the composable reports a scan', async () => {
 			h.stub = makeStub({ isScanning: true });
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
@@ -119,11 +119,20 @@ describe('ScanRepositoriesModal', () => {
 			expect(screen.getByTestId('scan-loading')).toBeInTheDocument();
 		});
 
+		it('shows no scanning indicator once the composable reports the scan is done', async () => {
+			// The modal renders straight off `discover.isScanning`; with no local
+			// flag of its own, the stub alone decides whether the spinner is up.
+			h.stub = makeStub({ isScanning: false, hasScanned: true });
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await tick();
+
+			expect(screen.container.querySelector('[data-testid="scan-loading"]')).toBeNull();
+		});
+
 		it('shows an empty state when a scan finds nothing', async () => {
 			h.stub = makeStub({ hasScanned: true, results: [] });
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
-			// The spinner holds for a minimum duration; wait for it to settle.
 			await vi.waitFor(() => expect(screen.getByTestId('scan-empty')).toBeInTheDocument());
 		});
 

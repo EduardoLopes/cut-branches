@@ -36,18 +36,24 @@
 	let customRoots = $state<string[] | null>(null);
 	// Guards the open-effect so the initial scan runs once per opening.
 	let started = $state(false);
-	// Local scanning flag with a floor duration so a fast scan doesn't flash the
-	// spinner and snap the modal's shape (see `runScan`).
-	let scanning = $state(false);
-	// Matches the composable's scan token: a superseded run must not clear the
-	// spinner (or the elapsed timer) out from under the run that replaced it.
-	let scanRun = 0;
-	const MIN_SCAN_MS = 300;
 	// Elapsed time shown while scanning; ticks on a light interval.
 	let elapsedMs = $state(0);
 	// Whether to also surface linked git worktrees (off by default — a worktree
 	// shares its repo with the main worktree, so it isn't a standalone repo).
 	let includeWorktrees = $state(false);
+
+	const discover = useDiscoverRepositories({
+		onAdded: () => {
+			// Close the dialog as soon as the add succeeds — the newly added repos
+			// show up in the sidebar list.
+			open = false;
+		}
+	});
+
+	// The composable owns the scanning flag — including the minimum duration that
+	// keeps a fast scan from flashing the spinner — and it already discards a
+	// superseded run, so there is nothing to mirror locally.
+	const scanning = $derived(discover.isScanning);
 
 	$effect(() => {
 		if (!scanning) {
@@ -59,14 +65,6 @@
 			elapsedMs = Date.now() - start;
 		}, 100);
 		return () => clearInterval(id);
-	});
-
-	const discover = useDiscoverRepositories({
-		onAdded: () => {
-			// Close the dialog as soon as the add succeeds — the newly added repos
-			// show up in the sidebar list.
-			open = false;
-		}
 	});
 
 	let hintOpen = $state(false);
@@ -121,21 +119,10 @@
 	async function runScan() {
 		// A fresh scan replaces the results, so a stale filter shouldn't hide them.
 		searchQuery = '';
-		const run = ++scanRun;
-		scanning = true;
-		const startedAt = Date.now();
 		try {
 			await discover.scan(customRoots ?? [], includeWorktrees);
 		} catch {
 			// The mutation already surfaces an error notification via its meta.
-		} finally {
-			// Keep the spinner up for a minimum time so a sub-100ms scan doesn't
-			// flicker the loading state and resize the modal in a jarring flash.
-			const elapsed = Date.now() - startedAt;
-			if (elapsed < MIN_SCAN_MS) {
-				await new Promise((resolve) => setTimeout(resolve, MIN_SCAN_MS - elapsed));
-			}
-			if (run === scanRun) scanning = false;
 		}
 	}
 
@@ -180,8 +167,6 @@
 			searchQuery = '';
 			// Closing abandons the scan: reopening starts a fresh one instead of
 			// racing the old walk, whose results would land on top of the new ones.
-			scanRun += 1;
-			scanning = false;
 			discover.cancelScan();
 		}
 	});
