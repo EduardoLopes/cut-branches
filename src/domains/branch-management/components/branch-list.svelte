@@ -33,6 +33,7 @@
 		getBranchElementId,
 		shouldShowBranchAlerts
 	} from '$domains/branch-management/utils/branch-utils';
+	import { filterBranchesBySearch } from '$domains/branch-management/utils/filter-branches-by-search';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
@@ -178,18 +179,14 @@
 		const branches = branchesQuery.data?.branches;
 		if (!branches) return undefined;
 
-		return branches
-			.toSorted((a, b) => {
-				if (a.isCurrent() && !b.isCurrent()) return -1;
-				if (!a.isCurrent() && b.isCurrent()) return 1;
-				return 0;
-			})
-			.filter((branch) =>
-				branch
-					.getName()
-					.toLowerCase()
-					.includes(search?.state?.toLowerCase() ?? '')
-			);
+		const sorted = branches.toSorted((a, b) => {
+			if (a.isCurrent() && !b.isCurrent()) return -1;
+			if (!a.isCurrent() && b.isCurrent()) return 1;
+			return 0;
+		});
+		// Same trimming/matching as the view-level filter, so the list never
+		// disagrees with the "N found" header or the empty state.
+		return filterBranchesBySearch(sorted, search?.state);
 	});
 
 	// ---------------------------------------------------------------------------

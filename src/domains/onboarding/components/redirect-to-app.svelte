@@ -31,6 +31,10 @@
 		if (repositoriesQuery.isPending || repositoriesQuery.isLoading) {
 			return;
 		}
+		// A failed list is not an empty list: never redirect/onboard on an error.
+		if (repositoriesQuery.isError) {
+			return;
+		}
 
 		const repositories = repositoriesQuery.data ?? [];
 		const hasRepositories = repositories.length > 0;

@@ -54,10 +54,6 @@
 	});
 
 	const deleteMutation = createDeleteBranchesMutation({
-		// Await repository query invalidation to ensure UI is updated before closing modal
-		queryInvalidation: {
-			awaitInvalidates: [['repository', 'branche']]
-		},
 		onSuccess(data) {
 			const m = data.deletedBranches
 				.map((item) => {
@@ -77,7 +73,12 @@
 				message: m
 			});
 		},
-		meta: { showErrorNotification: true }
+		meta: {
+			showErrorNotification: true,
+			// Await repository/branch query invalidation so the list is already
+			// refreshed by the time the modal closes.
+			awaitInvalidates: [['repository'], ['branch']]
+		}
 	});
 
 	// current branch first

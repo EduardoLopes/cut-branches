@@ -41,7 +41,7 @@
 
 			// Navigate away immediately
 			if (otherRepository) {
-				await goto(resolve(`/repos/${otherRepository.name}`));
+				await goto(resolve(`/repos/${otherRepository.id}`));
 			} else {
 				await goto(resolve(`/repos`));
 			}

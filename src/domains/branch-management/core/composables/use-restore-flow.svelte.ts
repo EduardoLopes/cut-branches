@@ -182,7 +182,7 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 			branchInfo: {
 				originalName: branchName,
 				targetName: branchName,
-				commitSha: branch.getLastCommit().getShortSha(),
+				commitSha: branch.getLastCommit().getSha(),
 				conflictResolution: conflictResolutions[branchName] || branchPreferences[branchName] || null
 			}
 		});
@@ -229,7 +229,7 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 			return {
 				originalName: branchName,
 				targetName: branchName,
-				commitSha: branch.getLastCommit().getShortSha(),
+				commitSha: branch.getLastCommit().getSha(),
 				conflictResolution: branchPreferences[branchName] || null
 			};
 		});
@@ -260,7 +260,7 @@ export function useRestoreFlow({ getRepository, getBranches, onComplete }: UseRe
 			branchInfo: {
 				originalName: branchName,
 				targetName: branchName,
-				commitSha: branch.getLastCommit().getShortSha(),
+				commitSha: branch.getLastCommit().getSha(),
 				conflictResolution: resolution
 			}
 		});
