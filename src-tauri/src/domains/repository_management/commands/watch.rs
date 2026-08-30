@@ -1,5 +1,6 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
@@ -96,9 +97,42 @@ pub(crate) fn repo_watch_paths(repo_root: &str) -> RepoWatchPaths {
     }
 }
 
+/// Memoized [`repo_watch_paths`] results, keyed by repository root.
+///
+/// Resolving a repository's git dirs costs a `Repository::open` plus two
+/// `canonicalize` syscalls. Without this cache the watcher callback paid that
+/// for *every* registered repository on *every* debounced batch. The mapping is
+/// stable for as long as a repository stays registered, so it is computed once
+/// and dropped when the repository is (un)registered.
+fn watch_paths_cache() -> &'static Mutex<HashMap<String, RepoWatchPaths>> {
+    static CACHE: OnceLock<Mutex<HashMap<String, RepoWatchPaths>>> = OnceLock::new();
+    CACHE.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// [`repo_watch_paths`] through the memo cache.
+pub(crate) fn cached_repo_watch_paths(repo_root: &str) -> RepoWatchPaths {
+    if let Some(hit) = watch_paths_cache().lock().unwrap().get(repo_root) {
+        return hit.clone();
+    }
+    let paths = repo_watch_paths(repo_root);
+    watch_paths_cache()
+        .lock()
+        .unwrap()
+        .insert(repo_root.to_string(), paths.clone());
+    paths
+}
+
+/// Drop a repository's memoized paths, so the next lookup re-resolves them.
+fn invalidate_repo_watch_paths(repo_root: &str) {
+    watch_paths_cache().lock().unwrap().remove(repo_root);
+}
+
 /// Register a repository's git ref surface with the shared watcher.
 pub fn watch_repository(watcher: &WatcherState, repo_root: &str) {
-    let paths = repo_watch_paths(repo_root);
+    // A repository is (re-)registered after it moved or was re-created on disk,
+    // so never trust a memo from a previous registration.
+    invalidate_repo_watch_paths(repo_root);
+    let paths = cached_repo_watch_paths(repo_root);
     // HEAD lives directly in the worktree-private git dir; branch refs (incl.
     // namespaced feature/* dirs) and packed-refs live in the shared one.
     let _ = watcher.watch_path(&paths.git_dir, RecursiveMode::NonRecursive);
@@ -118,11 +152,12 @@ pub fn watch_repository(watcher: &WatcherState, repo_root: &str) {
 /// worktree), and the watcher has no refcounting. A leftover watch is harmless
 /// — the callback only reacts to paths that map to a *registered* repository.
 pub fn unwatch_repository(watcher: &WatcherState, repo_root: &str) {
-    let paths = repo_watch_paths(repo_root);
+    let paths = cached_repo_watch_paths(repo_root);
     if !paths.is_linked_worktree() {
         watcher.unwatch_path(&paths.common_dir.join("refs").join("heads"));
     }
     watcher.unwatch_path(&paths.git_dir);
+    invalidate_repo_watch_paths(repo_root);
 }
 
 /// Watch every repository currently registered in the database. Called once at
@@ -196,18 +231,17 @@ pub fn build_watch_callback(app: AppHandle) -> WatchCallback {
 
         // Resolve each changed path to its repository and re-sync each affected
         // repo at most once per batch.
-        // A shared git dir can back several registered repositories (a main
-        // repo and its linked worktrees), so every match is re-synced — not
-        // just the first one found.
-        let watch_paths: Vec<(usize, RepoWatchPaths)> = repos
-            .iter()
-            .enumerate()
-            .map(|(i, r)| (i, repo_watch_paths(&r.path)))
-            .collect();
+        // The shared `refs/heads` surface can back several registered
+        // repositories (a main repo and its linked worktrees), so every match is
+        // re-synced — not just the first one found. Path resolution goes through
+        // the memo cache, so a batch costs no `Repository::open` at all once the
+        // repositories are registered.
         let mut synced: HashSet<String> = HashSet::new();
         for path in &changed {
-            for (index, _) in watch_paths.iter().filter(|(_, p)| p.contains(path)) {
-                let repo = &repos[*index];
+            for repo in repos
+                .iter()
+                .filter(|r| cached_repo_watch_paths(&r.path).contains(path))
+            {
                 if !synced.insert(repo.id.clone()) {
                     continue;
                 }
@@ -400,6 +434,36 @@ mod tests {
         assert_eq!(paths.git_dir, missing.join(".git"));
         assert_eq!(paths.common_dir, paths.git_dir);
         assert!(!paths.is_linked_worktree());
+    }
+
+    /// Resolving watch paths is memoized per repository root, and the memo is
+    /// dropped whenever the repository is registered or unregistered.
+    #[test]
+    fn watch_paths_are_memoized_until_the_repository_is_re_registered() {
+        let _guard = DirectoryGuard::new();
+        let repo = setup_test_repo();
+        let root = repo.path().to_str().unwrap();
+        let expected = repo_watch_paths(root);
+
+        // Miss, then hit.
+        assert_eq!(cached_repo_watch_paths(root), expected);
+        assert_eq!(cached_repo_watch_paths(root), expected);
+        assert_eq!(
+            watch_paths_cache().lock().unwrap().get(root),
+            Some(&expected)
+        );
+
+        // Unregistering drops the memo…
+        let watcher = WatcherState::new();
+        unwatch_repository(&watcher, root);
+        assert!(watch_paths_cache().lock().unwrap().get(root).is_none());
+
+        // …and registering re-resolves it rather than trusting a stale entry.
+        watch_repository(&watcher, root);
+        assert_eq!(
+            watch_paths_cache().lock().unwrap().get(root),
+            Some(&expected)
+        );
     }
 
     #[test]
