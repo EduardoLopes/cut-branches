@@ -9,12 +9,16 @@
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import Menu from '@pindoba/svelte-menu';
-	import Panel from '@pindoba/svelte-panel';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { open as openFolderDialog } from '@tauri-apps/plugin-dialog';
-	import { useDiscoverRepositories } from '../core/composables/use-discover-repositories.svelte';
+	import {
+		useDiscoverRepositories,
+		type DiscoveredItem
+	} from '../core/composables/use-discover-repositories.svelte';
+	import { groupDiscoveredRepositories } from '../utils/group-discovered-repositories';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -94,6 +98,13 @@
 		customRoots && customRoots.length > 0 ? customRoots.join(', ') : 'Your home folder'
 	);
 
+	// One-line outcome of the last scan, shown in the toolbar once it is done.
+	const scanSummary = $derived.by(() => {
+		const dirs = discover.progress?.scannedDirs ?? 0;
+		const found = discover.results.length;
+		return `${found.toLocaleString()} ${found === 1 ? 'repository' : 'repositories'} · ${dirs.toLocaleString()} ${dirs === 1 ? 'folder' : 'folders'} scanned`;
+	});
+
 	// Free-text filter over the scan results (view only — selection and counts
 	// still track the full result set).
 	let searchQuery = $state('');
@@ -106,6 +117,9 @@
 				)
 			: discover.results
 	);
+
+	// Linked worktrees sit under the repository they belong to.
+	const groups = $derived(groupDiscoveredRepositories(filteredResults));
 
 	const allSelected = $derived(
 		discover.addableCount > 0 && discover.selectedCount === discover.addableCount
@@ -181,116 +195,135 @@
 		{open}
 		onChange={handleOpenChange}
 		title="Find repositories"
+		subtitle="Scan a location on this computer for git repositories, then choose which ones to add."
 		aria-label="Find git repositories"
 		data-testid="scan-repositories-modal"
 		passThrough={{
 			root: {
 				style: css.raw({
-					width: '640px',
+					width: '720px',
 					maxWidth: 'calc(100vw - token(spacing.2xl))'
 				})
 			}
 		}}
 	>
+		{#snippet leading()}
+			<Stamp size="lg" emphasis="secondary" feedback="neutral">
+				<Icon icon="lucide:folder-search" width="22px" height="22px" />
+			</Stamp>
+		{/snippet}
+
+		<!-- Scan toolbar. Bleeds over the content inset (negative `md` margins)
+		     so it sits flush under the header border, full width, like a second
+		     header row. Two fixed rows — the path chip flexes to fill the first
+		     one — so choosing a long folder never changes the toolbar height. -->
 		<div
 			class={css({
 				display: 'flex',
 				flexDirection: 'column',
-				gap: 'lg',
-				width: 'full',
-				minHeight: '320px'
+				gap: 'xs',
+				marginX: 'calc(token(spacing.md) * -1)',
+				marginTop: 'calc(token(spacing.md) * -1)',
+				paddingX: 'md',
+				paddingY: 'sm',
+				borderBottomWidth: '1px',
+				borderBottomStyle: 'solid',
+				borderBottomColor: 'neutral.border.muted',
+				background: 'neutral.surface.hill'
 			})}
+			data-testid="scan-toolbar"
 		>
-			<p class={css({ margin: '0', color: 'neutral.text.muted', fontSize: 'sm' })}>
-				Scan a location on this computer for git repositories, then choose which ones to add.
-			</p>
+			<!-- Row 1: where the scan looks -->
+			<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs' })}>
+				<!-- Sized with the `control.sm` tokens so the chip reads as a peer of
+				     the sm buttons beside it (same height and corner). With the line
+				     height pinned to the glyphs, the horizontal padding equals the
+				     vertical inset left over by the control height, so the inset is
+				     the same on all four sides. -->
+				<span
+					class={css({
+						flex: '1',
+						minWidth: '0',
+						display: 'flex',
+						alignItems: 'center',
+						height: 'control.sm',
+						lineHeight: 'none',
+						paddingX: 'calc((token(sizes.control.sm) - token(fontSizes.xs)) / 2)',
+						borderRadius: 'control.sm',
+						fontSize: 'xs',
+						fontFamily: 'mono',
+						background: 'neutral.surface.valley',
+						overflow: 'hidden',
+						textOverflow: 'ellipsis',
+						whiteSpace: 'nowrap'
+					})}
+					title={scanLabel}
+					data-testid="scan-location"
+				>
+					{scanLabel}
+				</span>
 
-			<!-- Location controls -->
+				{#snippet homeIcon()}
+					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:house" width="14px" height="14px" />
+					</Stamp>
+				{/snippet}
+
+				<Group orientation="horizontal">
+					<Button
+						emphasis="secondary"
+						size="sm"
+						onclick={() => chooseFolder()}
+						disabled={scanning}
+						data-testid="choose-folder-button"
+					>
+						Change folder
+					</Button>
+					<Menu
+						placement="bottom-end"
+						aria-label="Scan location options"
+						items={[
+							{
+								type: 'action',
+								id: 'home',
+								label: 'Home folder',
+								leading: homeIcon,
+								disabled: scanning,
+								onSelect: scanHome
+							} satisfies MenuNode
+						]}
+					>
+						{#snippet trigger(triggerProps)}
+							<Button
+								emphasis="secondary"
+								size="sm"
+								shape="square"
+								aria-label="More scan locations"
+								disabled={scanning}
+								data-testid="scan-location-menu-trigger"
+								{...triggerProps}
+							>
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+								</Stamp>
+							</Button>
+						{/snippet}
+					</Menu>
+				</Group>
+			</div>
+
+			<!-- Row 2: scan options on the left, last outcome + rescan on the right -->
 			<div
 				class={css({
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'space-between',
-					gap: 'md',
-					padding: 'md',
-					borderRadius: 'lg',
-					borderWidth: '1px',
-					borderStyle: 'solid',
-					borderColor: 'neutral.border.muted',
-					background: 'neutral.surface.peak'
+					gap: 'sm'
 				})}
 			>
-				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm', minWidth: '0' })}>
-					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:folder-search" width="18px" height="18px" />
-					</Stamp>
-					<span
-						class={css({
-							fontSize: 'sm',
-							fontWeight: 'medium',
-							overflow: 'hidden',
-							textOverflow: 'ellipsis',
-							whiteSpace: 'nowrap'
-						})}
-						data-testid="scan-location"
-					>
-						{scanLabel}
-					</span>
-				</div>
-				<div class={css({ flexShrink: '0' })}>
-					{#snippet homeIcon()}
-						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:house" width="14px" height="14px" />
-						</Stamp>
-					{/snippet}
-
-					<Group orientation="horizontal">
-						<Button
-							emphasis="secondary"
-							size="sm"
-							onclick={() => chooseFolder()}
-							disabled={scanning}
-							data-testid="choose-folder-button"
-						>
-							Choose folder…
-						</Button>
-						<Menu
-							placement="bottom-end"
-							aria-label="Scan location options"
-							items={[
-								{
-									type: 'action',
-									id: 'home',
-									label: 'Home folder',
-									leading: homeIcon,
-									disabled: scanning,
-									onSelect: scanHome
-								} satisfies MenuNode
-							]}
-						>
-							{#snippet trigger(triggerProps)}
-								<Button
-									emphasis="secondary"
-									size="sm"
-									shape="square"
-									aria-label="More scan locations"
-									disabled={scanning}
-									data-testid="scan-location-menu-trigger"
-									{...triggerProps}
-								>
-									<Stamp emphasis="ghost" border="none" background="transparent">
-										<Icon icon="lucide:chevron-down" width="16px" height="16px" />
-									</Stamp>
-								</Button>
-							{/snippet}
-						</Menu>
-					</Group>
-				</div>
-			</div>
-
-			<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs' })}>
 				<Checkbox
 					id="scan-include-worktrees"
+					size="sm"
 					checked={includeWorktrees}
 					disabled={scanning}
 					onchange={() => {
@@ -302,14 +335,50 @@
 				>
 					Include linked worktrees
 				</Checkbox>
+				<div class={css({ display: 'flex', alignItems: 'center', gap: '2xs', minWidth: '0' })}>
+					{#if discover.hasScanned && !scanning}
+						<span
+							class={css({
+								fontSize: 'xs',
+								color: 'neutral.text.muted',
+								overflow: 'hidden',
+								textOverflow: 'ellipsis',
+								whiteSpace: 'nowrap'
+							})}
+							data-testid="scan-summary"
+						>
+							{scanSummary}
+						</span>
+					{/if}
+					<Button
+						emphasis="ghost"
+						border="muted"
+						size="sm"
+						shape="square"
+						aria-label="Scan again"
+						onclick={runScan}
+						disabled={scanning}
+						data-testid="scan-rescan-button"
+					>
+						<Stamp emphasis="ghost" border="none" background="transparent">
+							<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
+						</Stamp>
+					</Button>
+				</div>
 			</div>
+		</div>
 
-			<!-- Results panel (fixed height so the modal doesn't resize between states) -->
-			<Panel
-				background="surface.peak"
-				border="muted"
-				radius="lg"
-				padding="none"
+		<div
+			class={css({
+				display: 'flex',
+				flexDirection: 'column',
+				gap: 'lg',
+				width: 'full',
+				minHeight: '320px'
+			})}
+		>
+			<!-- Results (fixed height so the modal doesn't resize between states) -->
+			<div
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
@@ -379,54 +448,60 @@
 							<Icon icon="lucide:search-x" width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No git repositories found in this location.</span>
-						<span class={css({ fontSize: 'xs' })} data-testid="scan-summary">
-							Scanned {(discover.progress?.scannedDirs ?? 0).toLocaleString()}
-							{(discover.progress?.scannedDirs ?? 0) === 1 ? 'folder' : 'folders'}
-						</span>
+						<span class={css({ fontSize: 'xs' })}
+							>Try another folder or include linked worktrees.</span
+						>
 					</div>
 				{:else if discover.results.length > 0}
-					<!-- List header (anchored one step deeper than the rows well) -->
+					<!-- List header -->
 					<div
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
-							gap: '2xs',
-							paddingX: 'sm',
-							paddingY: 'xs',
+							gap: 'sm',
+							paddingBottom: 'sm',
 							borderBottomWidth: '1px',
 							borderBottomStyle: 'solid',
-							borderBottomColor: 'neutral.border.muted',
-							background: 'neutral.surface.hill'
+							borderBottomColor: 'neutral.border.muted'
 						})}
 					>
 						<Input
 							type="search"
-							size="sm"
+							size="md"
+							fullWidth
 							placeholder="Filter results"
 							aria-label="Filter results"
+							autocorrect="off"
 							bind:value={searchQuery}
 							data-testid="scan-search"
 						>
 							{#snippet leading()}
-								<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:search" width="14px" height="14px" />
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:search" width="16px" height="16px" />
 								</Stamp>
 							{/snippet}
+							{#snippet trailing()}
+								{#if query}
+									<span
+										class={css({
+											fontSize: 'xs',
+											color: 'neutral.text.muted',
+											whiteSpace: 'nowrap',
+											paddingX: '2xs'
+										})}
+										data-testid="scan-filter-count"
+									>
+										{filteredResults.length} of {discover.results.length}
+									</span>
+								{/if}
+							{/snippet}
 						</Input>
-						<span
-							class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}
-							data-testid="scan-summary"
-						>
-							Found {discover.results.length.toLocaleString()}
-							{discover.results.length === 1 ? 'repository' : 'repositories'} ·
-							{(discover.progress?.scannedDirs ?? 0).toLocaleString()}
-							{(discover.progress?.scannedDirs ?? 0) === 1 ? 'folder' : 'folders'} scanned
-						</span>
 						<div
 							class={css({
 								display: 'flex',
 								alignItems: 'center',
-								justifyContent: 'space-between'
+								justifyContent: 'space-between',
+								paddingX: '2xs'
 							})}
 						>
 							<Checkbox
@@ -445,81 +520,42 @@
 						</div>
 					</div>
 
-					<!-- Rows. A transparent Panel rather than a plain div so this
-					     scroller's inset counts as a nesting level and the rows can ask
-					     for `radius="inner"` instead of pinning a tier. -->
-					<Panel
-						background="transparent"
-						border="none"
-						radius="inner"
-						padding="2xs"
+					<!-- Rows -->
+					<div
 						class={css({
 							display: 'flex',
 							flexDirection: 'column',
 							gap: '3xs',
 							flex: '1',
+							paddingY: '2xs',
 							overflowY: 'auto'
 						})}
 					>
-						{#each filteredResults as item (item.path)}
-							{@const selected = discover.isSelected(item.path)}
-							<Checkbox
-								fullWidth
-								checked={item.alreadyAdded || selected}
-								disabled={item.alreadyAdded}
-								onchange={() => discover.toggle(item.path)}
-								aria-label={item.name}
-								data-testid="scan-item"
-								radius="inner"
-								class={css({
-									paddingX: 'sm',
-									paddingY: 'xs',
-									opacity: item.alreadyAdded ? 0.6 : 1,
-									background:
-										selected && !item.alreadyAdded ? 'neutral.surface.base' : 'transparent',
-									_hover: {
-										background: item.alreadyAdded
-											? undefined
-											: selected
-												? 'neutral.surface.valley'
-												: 'neutral.surface.hill'
-									}
-								})}
-							>
-								<span
+						{#each groups as group (group.item.path)}
+							{@render row(group.item)}
+							{#if group.worktrees.length > 0}
+								<!-- Indented with a guide line so the worktrees read as part of
+								     the repository above, not as more repositories. The 1px line is
+								     centred on the parent's checkbox: the row's `sm` inset plus half
+								     the `md` checkbox box (2rem), minus half the line itself. -->
+								<div
 									class={css({
 										display: 'flex',
 										flexDirection: 'column',
-										gap: '2xs',
-										minWidth: '0'
+										gap: '3xs',
+										marginLeft: 'calc(token(spacing.sm) + 1rem - 0.5px)',
+										paddingLeft: 'xs',
+										borderLeftWidth: '1px',
+										borderLeftStyle: 'solid',
+										borderLeftColor: 'neutral.border.muted'
 									})}
+									data-testid="scan-item-worktrees"
 								>
-									<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}>{item.name}</span>
-									<span
-										class={css({
-											fontSize: 'xs',
-											color: 'neutral.text.muted',
-											overflow: 'hidden',
-											textOverflow: 'ellipsis',
-											whiteSpace: 'nowrap'
-										})}
-									>
-										{item.path}
-									</span>
-								</span>
-								{#snippet trailing()}
-									{#if item.alreadyAdded}
-										<Badge
-											size="sm"
-											emphasis="secondary"
-											feedback="success"
-											data-testid="scan-item-added"
-										>
-											Added
-										</Badge>
-									{/if}
-								{/snippet}
-							</Checkbox>
+									{#each group.worktrees as worktree (worktree.path)}
+										{@render row(worktree)}
+									{/each}
+								</div>
+							{/if}
 						{:else}
 							<div
 								class={css({
@@ -536,20 +572,94 @@
 								No repositories match your filter.
 							</div>
 						{/each}
-					</Panel>
+
+						{#snippet row(item: DiscoveredItem)}
+							{@const selected = discover.isSelected(item.path)}
+							<Checkbox
+								fullWidth
+								checked={item.alreadyAdded || selected}
+								disabled={item.alreadyAdded}
+								onchange={() => discover.toggle(item.path)}
+								aria-label={item.name}
+								data-testid="scan-item"
+								radius="md"
+								passThrough={{ text: { style: css.raw({ flex: '1', minWidth: '0' }) } }}
+								class={css({
+									// Longhands on purpose: the checkbox root is a Panel with
+									// `padding="none"`, whose atomic `padding: 0` is emitted after
+									// `.p_*` in the sheet and would win over the shorthand.
+									paddingX: 'sm',
+									paddingY: 'sm',
+									opacity: item.alreadyAdded ? 0.6 : 1,
+									background:
+										selected && !item.alreadyAdded ? 'neutral.surface.base' : 'transparent',
+									_hover: {
+										background: item.alreadyAdded
+											? undefined
+											: selected
+												? 'neutral.surface.valley'
+												: 'neutral.surface.hill'
+									}
+								})}
+							>
+								<!-- One line: the name leads, the path takes the rest. The path is
+								     end-aligned with the folder highlighted so it lands in the same
+								     column on every row however deep the path is. -->
+								<span
+									class={css({
+										display: 'flex',
+										alignItems: 'center',
+										gap: 'sm',
+										minWidth: '0'
+									})}
+								>
+									<span class={css({ fontSize: 'sm', fontWeight: 'medium', flexShrink: '0' })}>
+										{item.name}
+									</span>
+									{#if item.isWorktree}
+										<Badge size="sm" feedback="warning" data-testid="scan-item-worktree">
+											{#snippet leading()}
+												<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+											{/snippet}
+											worktree
+										</Badge>
+									{/if}
+									<!-- The column, not the segment count, caps the path: short paths
+									     show whole, deep ones truncate to fit the column. `flex: 1`
+									     keeps the box width independent of its text so the fitter
+									     never chases its own output. -->
+									<TruncatedPath
+										path={item.path}
+										highlight={item.name}
+										align="end"
+										class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}
+										data-testid="scan-item-path"
+									/>
+								</span>
+								{#snippet trailing()}
+									{#if item.alreadyAdded}
+										<Badge
+											size="sm"
+											emphasis="secondary"
+											feedback="success"
+											data-testid="scan-item-added"
+										>
+											Added
+										</Badge>
+									{/if}
+								{/snippet}
+							</Checkbox>
+						{/snippet}
+					</div>
 				{/if}
-			</Panel>
+			</div>
 
 			<!-- Footer -->
 			<div
 				class={css({
 					display: 'flex',
 					justifyContent: 'flex-end',
-					gap: 'sm',
-					paddingTop: 'md',
-					borderTopWidth: '1px',
-					borderTopStyle: 'solid',
-					borderTopColor: 'neutral.border.muted'
+					gap: 'sm'
 				})}
 			>
 				<Button emphasis="ghost" onclick={() => (open = false)} data-testid="scan-cancel">
@@ -566,6 +676,7 @@
 								{...triggerProps}
 								emphasis="primary"
 								onclick={handleAdd}
+								disabled={scanning}
 								data-testid="scan-add-selected"
 							>
 								Add {discover.selectedCount}

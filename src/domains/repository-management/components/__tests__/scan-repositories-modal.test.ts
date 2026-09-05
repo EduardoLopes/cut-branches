@@ -111,12 +111,47 @@ describe('ScanRepositoriesModal', () => {
 	});
 
 	describe('rendering states', () => {
+		it('nests linked worktrees under their repository with a worktree badge', async () => {
+			h.stub = makeStub({
+				results: [
+					{ path: '/main', name: 'main', alreadyAdded: false },
+					{
+						path: '/wt',
+						name: 'wt',
+						alreadyAdded: false,
+						isWorktree: true,
+						mainRepositoryPath: '/main'
+					},
+					{
+						path: '/lost',
+						name: 'lost',
+						alreadyAdded: false,
+						isWorktree: true,
+						mainRepositoryPath: '/gone'
+					}
+				],
+				addableCount: 3,
+				selectedCount: 3
+			});
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+
+			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(3));
+			expect(screen.getByTestId('scan-item-worktree').elements()).toHaveLength(2);
+			// `/wt` is nested under `/main`; `/lost` has no parent here and stays top-level.
+			const nested = screen.getByTestId('scan-item-worktrees').elements();
+			expect(nested).toHaveLength(1);
+			expect(nested[0].querySelectorAll('[data-testid="scan-item"]')).toHaveLength(1);
+			expect(nested[0].textContent).toContain('wt');
+		});
+
 		it('shows the scanning indicator while the composable reports a scan', async () => {
 			h.stub = makeStub({ isScanning: true });
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			expect(screen.getByTestId('scan-loading')).toBeInTheDocument();
+			// Nothing can be added until the results are in.
+			expect(screen.getByTestId('scan-add-selected')).toBeDisabled();
 		});
 
 		it('shows no scanning indicator once the composable reports the scan is done', async () => {
@@ -130,10 +165,19 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('shows an empty state when a scan finds nothing', async () => {
-			h.stub = makeStub({ hasScanned: true, results: [] });
+			h.stub = makeStub({
+				hasScanned: true,
+				results: [],
+				progress: { scannedDirs: 1, foundCount: 0 }
+			});
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-empty')).toBeInTheDocument());
+			// The scan outcome lives in the toolbar, so it reads the same in every
+			// post-scan state.
+			expect(screen.getByTestId('scan-summary')).toHaveTextContent(
+				'0 repositories · 1 folder scanned'
+			);
 		});
 
 		it('lists results with a select-all control and an added marker', async () => {
@@ -142,6 +186,8 @@ describe('ScanRepositoriesModal', () => {
 					{ path: '/a', name: 'a', alreadyAdded: false },
 					{ path: '/b', name: 'b', alreadyAdded: true }
 				],
+				hasScanned: true,
+				progress: { scannedDirs: 1200, foundCount: 2 },
 				addableCount: 1,
 				selectedCount: 1,
 				isSelected: vi.fn((p: string) => p === '/a')
@@ -149,6 +195,9 @@ describe('ScanRepositoriesModal', () => {
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-select-all')).toBeInTheDocument());
+			expect(screen.getByTestId('scan-summary')).toHaveTextContent(
+				'2 repositories · 1,200 folders scanned'
+			);
 			expect(screen.getByTestId('scan-item').elements()).toHaveLength(2);
 			expect(screen.getByTestId('scan-item-added')).toBeInTheDocument();
 			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Add 1 repository');
@@ -167,8 +216,12 @@ describe('ScanRepositoriesModal', () => {
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(2));
 
+			// No query → no match count in the input.
+			expect(screen.getByTestId('scan-filter-count').elements()).toHaveLength(0);
+
 			await screen.getByPlaceholder('Filter results').fill('alpha');
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(1));
+			expect(screen.getByTestId('scan-filter-count')).toHaveTextContent('1 of 2');
 
 			await screen.getByPlaceholder('Filter results').fill('nope');
 			await vi.waitFor(() => expect(screen.getByTestId('scan-no-matches')).toBeInTheDocument());
@@ -211,6 +264,16 @@ describe('ScanRepositoriesModal', () => {
 				.getByRole('menuitem', { name: /home folder/i })
 				.first()
 				.click();
+
+			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith([], false));
+		});
+
+		it('re-runs the scan from the refresh button', async () => {
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await tick();
+			h.stub.scan.mockClear();
+
+			await screen.getByTestId('scan-rescan-button').click();
 
 			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith([], false));
 		});
