@@ -17,6 +17,21 @@ fn is_linked_worktree(path: &Path) -> bool {
         .unwrap_or(false)
 }
 
+/// Working directory of the main worktree that `path` is linked to, so the UI
+/// can nest the worktree under its repository. `None` for a main worktree or
+/// anything that fails to open as a repository.
+///
+/// The main worktree is found through git's *common dir* — the shared `.git`
+/// directory every linked worktree points back to — whose parent is the main
+/// working directory.
+pub fn main_repository_of_worktree(path: &Path) -> Option<PathBuf> {
+    let repo = git2::Repository::open(path).ok()?;
+    if !repo.is_worktree() {
+        return None;
+    }
+    repo.commondir().parent().map(Path::to_path_buf)
+}
+
 /// Directory names never worth descending into during a scan: package caches,
 /// build outputs, and OS/system folders that never hold user git repositories
 /// but are enormous to walk. Names starting with `.` are pruned separately.
@@ -347,6 +362,16 @@ mod tests {
         assert_eq!(with_worktrees.len(), 2);
         assert!(with_worktrees.contains(&main));
         assert!(with_worktrees.contains(&wt));
+
+        // The linked worktree resolves to its main repository; the main
+        // worktree (and a non-repository) resolve to nothing.
+        let resolved = main_repository_of_worktree(&wt).expect("main repository");
+        assert_eq!(
+            resolved.canonicalize().unwrap(),
+            main.canonicalize().unwrap()
+        );
+        assert_eq!(main_repository_of_worktree(&main), None);
+        assert_eq!(main_repository_of_worktree(root), None);
     }
 
     /// Initializes a git repository with a single empty commit so that

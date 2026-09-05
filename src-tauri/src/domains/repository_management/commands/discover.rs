@@ -41,6 +41,10 @@ pub struct DiscoveredRepository {
     pub path: String,
     /// Folder name, used as the default display name.
     pub name: String,
+    /// True for a linked git worktree (only present when the scan opted in).
+    pub is_worktree: bool,
+    /// For a linked worktree, the working directory of its main repository.
+    pub main_repository_path: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
@@ -151,9 +155,18 @@ pub async fn discover_repositories(
                 .file_name()
                 .map(|n| n.to_string_lossy().into_owned())
                 .unwrap_or_else(|| path.to_string_lossy().into_owned());
+            // Only opted-in scans can contain worktrees, so skip opening every
+            // repository a second time when they can't.
+            let main_repository = if include_worktrees {
+                scanner::main_repository_of_worktree(&path)
+            } else {
+                None
+            };
             DiscoveredRepository {
                 path: path.to_string_lossy().into_owned(),
                 name,
+                is_worktree: main_repository.is_some(),
+                main_repository_path: main_repository.map(|p| p.to_string_lossy().into_owned()),
             }
         })
         .collect();

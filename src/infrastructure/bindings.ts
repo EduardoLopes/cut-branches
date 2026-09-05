@@ -1130,7 +1130,15 @@ path: string;
 /**
  * Folder name, used as the default display name.
  */
-name: string }
+name: string; 
+/**
+ * True for a linked git worktree (only present when the scan opted in).
+ */
+isWorktree: boolean; 
+/**
+ * For a linked worktree, the working directory of its main repository.
+ */
+mainRepositoryPath: string | null }
 /**
  * Emitted after each file in a batch is processed, so the UI can show
  * `done / total` progress.

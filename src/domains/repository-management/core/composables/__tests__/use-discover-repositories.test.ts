@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useDiscoverRepositories } from '../use-discover-repositories.svelte';
+import type { DiscoveredRepository } from '$infrastructure/bindings';
 import { withEffectRoot } from '$lib/with-effect-root.svelte';
 
 const h = vi.hoisted(() => ({
@@ -55,8 +56,19 @@ function mount(options?: { onAdded?: (count: number) => void }) {
 	return value;
 }
 
-function scanOutput(repositories: Array<{ path: string; name: string }>, scanned: string[] = []) {
-	return { repositories, scannedRoots: scanned, scannedDirs: repositories.length };
+function scanOutput(
+	repositories: Array<Pick<DiscoveredRepository, 'path' | 'name'> & Partial<DiscoveredRepository>>,
+	scanned: string[] = []
+) {
+	return {
+		repositories: repositories.map((repo) => ({
+			isWorktree: false,
+			mainRepositoryPath: null,
+			...repo
+		})),
+		scannedRoots: scanned,
+		scannedDirs: repositories.length
+	};
 }
 
 beforeEach(() => {
@@ -106,6 +118,12 @@ describe('useDiscoverRepositories', () => {
 				includeWorktrees: false
 			});
 			expect(discover.results).toHaveLength(2);
+			// Worktree details ride along untouched.
+			expect(discover.results[0]).toMatchObject({
+				path: '/a',
+				isWorktree: false,
+				mainRepositoryPath: null
+			});
 			expect(discover.hasScanned).toBe(true);
 			expect(discover.scannedRoots).toEqual(['/home/user']);
 			expect(discover.addableCount).toBe(2);

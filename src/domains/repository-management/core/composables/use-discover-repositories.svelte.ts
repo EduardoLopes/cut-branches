@@ -24,6 +24,10 @@ export interface DiscoveredItem {
 	name: string;
 	/** True when a repository with this path is already in the list. */
 	alreadyAdded: boolean;
+	/** True for a linked git worktree (only when the scan included them). */
+	isWorktree: boolean;
+	/** For a worktree, the working directory of the repository it belongs to. */
+	mainRepositoryPath: string | null;
 }
 
 /** Live progress of an in-flight scan, streamed from the backend. */
@@ -128,6 +132,8 @@ export function useDiscoverRepositories(options: UseDiscoverRepositoriesOptions 
 				.map((repo) => ({
 					path: repo.path,
 					name: repo.name,
+					isWorktree: repo.isWorktree,
+					mainRepositoryPath: repo.mainRepositoryPath,
 					alreadyAdded: existingPaths.has(normalizePath(repo.path))
 				}))
 				// Surface the repositories that can still be added first; already-added
