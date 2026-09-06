@@ -179,14 +179,9 @@
 						<span class={css({ fontSize: 'sm' })}>Nothing to clean up here.</span>
 					</div>
 				{:else if cleanup.targetCount > 0}
-					<div
-						class={css({
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'space-between',
-							paddingX: '2xs'
-						})}
-					>
+					<!-- Select-all rides in the well's header, so the control and the rows
+					     it acts on read as one panel. -->
+					{#snippet listHeader()}
 						<Checkbox
 							id="cleanup-select-all"
 							checked={allSelected}
@@ -201,8 +196,13 @@
 								cleanup.selectedBytes
 							)}
 						</span>
-					</div>
-					<ScrollWell class={css({ flex: '1', minHeight: '0' })} testId="cleanup-target-scroller">
+					{/snippet}
+
+					<ScrollWell
+						class={css({ flex: '1', minHeight: '0' })}
+						header={listHeader}
+						testId="cleanup-target-scroller"
+					>
 						<CleanupTargetList
 							targets={cleanup.targets}
 							isSelected={(path) => cleanup.isSelected(path)}

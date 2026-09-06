@@ -245,14 +245,9 @@
 						<span class={css({ fontSize: 'sm' })}>No repositories match your search.</span>
 					</div>
 				{:else}
-					<div
-						class={css({
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'space-between',
-							paddingX: '2xs'
-						})}
-					>
+					<!-- Select-all rides in the well's header, so the control and the rows
+					     it acts on read as one panel. -->
+					{#snippet listHeader()}
 						<Checkbox
 							id="manage-select-all"
 							checked={allSelected}
@@ -268,9 +263,13 @@
 						>
 							{selectedCount} of {repositories.length} selected
 						</span>
-					</div>
+					{/snippet}
 
-					<ScrollWell class={css({ flex: '1', minHeight: '0' })} testId="manage-list">
+					<ScrollWell
+						class={css({ flex: '1', minHeight: '0' })}
+						header={listHeader}
+						testId="manage-list"
+					>
 						{#each filteredRepositories as repository (repository.id)}
 							{@const isSelected = selected.has(repository.id)}
 							<!-- Danger ladder: selecting here queues a removal. -->

@@ -443,15 +443,9 @@
 						>
 					</div>
 				{:else if discover.results.length > 0}
-					<!-- List header -->
-					<div
-						class={css({
-							display: 'flex',
-							flexDirection: 'column',
-							gap: 'sm',
-							paddingBottom: 'sm'
-						})}
-					>
+					<!-- List header. Only the filter sits outside the well; select-all
+					     belongs to the list, so it rides in the well's own header. -->
+					<div class={css({ paddingBottom: 'sm' })}>
 						<ListFilter
 							bind:value={searchQuery}
 							placeholder="Filter results"
@@ -459,28 +453,6 @@
 							total={discover.results.length}
 							testId="scan-search"
 						/>
-						<div
-							class={css({
-								display: 'flex',
-								alignItems: 'center',
-								justifyContent: 'space-between',
-								paddingX: '2xs'
-							})}
-						>
-							<Checkbox
-								id="scan-select-all"
-								checked={allSelected}
-								indeterminate={someSelected}
-								disabled={discover.addableCount === 0}
-								onchange={() => discover.setAll(!allSelected)}
-								data-testid="scan-select-all"
-							>
-								Select all
-							</Checkbox>
-							<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
-								{discover.selectedCount} of {discover.addableCount} selected
-							</span>
-						</div>
 					</div>
 
 					{#snippet row(item: DiscoveredItem)}
@@ -547,7 +519,27 @@
 						</SelectionRow>
 					{/snippet}
 
-					<ScrollWell class={css({ flex: '1', minHeight: '0' })} testId="scan-results-scroller">
+					{#snippet listHeader()}
+						<Checkbox
+							id="scan-select-all"
+							checked={allSelected}
+							indeterminate={someSelected}
+							disabled={discover.addableCount === 0}
+							onchange={() => discover.setAll(!allSelected)}
+							data-testid="scan-select-all"
+						>
+							Select all
+						</Checkbox>
+						<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
+							{discover.selectedCount} of {discover.addableCount} selected
+						</span>
+					{/snippet}
+
+					<ScrollWell
+						class={css({ flex: '1', minHeight: '0' })}
+						header={listHeader}
+						testId="scan-results-scroller"
+					>
 						{#each groups as group (group.item.path)}
 							{@render row(group.item)}
 							{#if group.worktrees.length > 0}
