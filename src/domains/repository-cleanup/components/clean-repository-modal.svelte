@@ -6,7 +6,6 @@
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
-	import Panel from '@pindoba/svelte-panel';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import CleanupTargetList from './cleanup-target-list.svelte';
@@ -14,6 +13,8 @@
 	import { useCleanupTargets } from '$domains/repository-cleanup/core/composables/use-cleanup-targets.svelte';
 	import type { DeletionMode } from '$infrastructure/bindings';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { formatBytes } from '$utils/format-bytes';
 	import { portal } from '$utils/portal-action';
@@ -98,6 +99,7 @@
 		{open}
 		onChange={(next: boolean) => (open = next)}
 		title="Clean up {repositoryName}"
+		subtitle="Delete regenerable dependency and build folders to reclaim disk space. Review the folders below before continuing."
 		aria-label="Clean up repository"
 		data-testid="clean-repository-modal"
 		showCloseButton={!cleanup.isCleaning}
@@ -107,6 +109,12 @@
 			}
 		}}
 	>
+		{#snippet leading()}
+			<Stamp size="lg" emphasis="secondary" feedback="neutral">
+				<Icon icon="lucide:sparkles" width="22px" height="22px" />
+			</Stamp>
+		{/snippet}
+
 		<div
 			class={css({
 				display: 'flex',
@@ -116,23 +124,13 @@
 				minHeight: '320px'
 			})}
 		>
-			<p class={css({ margin: '0', color: 'neutral.text.muted', fontSize: 'sm' })}>
-				Delete regenerable dependency and build folders to reclaim disk space. Review the folders
-				below before continuing.
-			</p>
-
-			<!-- Results panel. A Panel (not a styled div) so the target rows inside
-			     can derive their corners from this well's radius. -->
-			<Panel
-				background="surface.peak"
-				border="muted"
-				radius="lg"
-				padding="none"
+			<!-- Results (fixed height so the modal doesn't resize between states) -->
+			<div
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
-					height: '300px',
-					overflow: 'hidden'
+					gap: 'sm',
+					height: '300px'
 				})}
 			>
 				{#if cleanup.isScanning}
@@ -184,12 +182,7 @@
 							display: 'flex',
 							alignItems: 'center',
 							justifyContent: 'space-between',
-							paddingX: 'sm',
-							paddingY: 'xs',
-							borderBottomWidth: '1px',
-							borderBottomStyle: 'solid',
-							borderBottomColor: 'neutral.border.muted',
-							background: 'neutral.surface.hill'
+							paddingX: '2xs'
 						})}
 					>
 						<Checkbox
@@ -207,15 +200,15 @@
 							)}
 						</span>
 					</div>
-					<div class={css({ flex: '1', overflowY: 'auto' })}>
+					<ScrollWell class={css({ flex: '1', minHeight: '0' })} testId="cleanup-target-scroller">
 						<CleanupTargetList
 							targets={cleanup.targets}
 							isSelected={(path) => cleanup.isSelected(path)}
 							onToggle={(path) => cleanup.toggle(path)}
 						/>
-					</div>
+					</ScrollWell>
 				{/if}
-			</Panel>
+			</div>
 
 			<!-- Deletion mode -->
 			<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
@@ -258,18 +251,7 @@
 				/>
 			{/if}
 
-			<!-- Footer -->
-			<div
-				class={css({
-					display: 'flex',
-					justifyContent: 'flex-end',
-					gap: 'sm',
-					paddingTop: 'md',
-					borderTopWidth: '1px',
-					borderTopStyle: 'solid',
-					borderTopColor: 'neutral.border.muted'
-				})}
-			>
+			<DialogFooter>
 				<Button
 					emphasis="ghost"
 					onclick={() => (open = false)}
@@ -289,6 +271,7 @@
 								{...triggerProps}
 								feedback="danger"
 								onclick={handleConfirm}
+								disabled={cleanup.isScanning || cleanup.isCleaning}
 								data-testid="cleanup-confirm"
 							>
 								{mode === 'trash' ? 'Move to Trash' : 'Delete'}
@@ -297,7 +280,7 @@
 						</Loading>
 					{/snippet}
 				</ValidationHint>
-			</div>
+			</DialogFooter>
 		</div>
 	</Modal>
 </div>

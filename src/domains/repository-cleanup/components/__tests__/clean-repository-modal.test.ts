@@ -71,6 +71,44 @@ describe('CleanRepositoryModal', () => {
 		await vi.waitFor(() => expect(h.stub.clean).toHaveBeenCalledWith('r1', '/r1', 'trash'));
 	});
 
+	it('disables the confirm button while scanning', async () => {
+		h.stub = makeStub({ isScanning: true, selectedCount: 2, targetCount: 2 });
+		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		await tick();
+
+		expect(screen.getByTestId('cleanup-confirm')).toBeDisabled();
+	});
+
+	it('disables the confirm button while cleaning', async () => {
+		h.stub = makeStub({ isCleaning: true, selectedCount: 2, targetCount: 2 });
+		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		await tick();
+
+		expect(screen.getByTestId('cleanup-confirm')).toBeDisabled();
+	});
+
+	it('lists the targets with their folder, path and size', async () => {
+		h.stub = makeStub({
+			targets: [
+				{ path: '/r1/node_modules', folderName: 'node_modules', sizeBytes: 2048 },
+				{ path: '/r1/dist', folderName: 'dist', sizeBytes: 1024 }
+			],
+			targetCount: 2,
+			selectedCount: 1,
+			isSelected: vi.fn((path: string) => path === '/r1/dist')
+		});
+		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+
+		await vi.waitFor(() => expect(screen.getByTestId('cleanup-target').elements()).toHaveLength(2));
+		expect(screen.getByTestId('cleanup-target-size').elements()).toHaveLength(2);
+		expect(
+			screen.getByTestId('cleanup-target').nth(1).element().querySelector('input')
+		).toBeChecked();
+
+		await screen.getByTestId('cleanup-target').first().click();
+		expect(h.stub.toggle).toHaveBeenCalledWith('/r1/node_modules');
+	});
+
 	it('shows a validation hint and does not clean when nothing is selected', async () => {
 		h.stub = makeStub({ selectedCount: 0, targetCount: 0 });
 		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
