@@ -157,15 +157,14 @@ describe('ScanRepositoriesModal', () => {
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(40));
 
-			const top = screen.getByTestId('scan-scroll-shadow-top');
-			const bottom = screen.getByTestId('scan-scroll-shadow-bottom');
-			await vi.waitFor(() => expect(bottom.element().getAttribute('data-visible')).toBe('true'));
-			expect(top.element().getAttribute('data-visible')).toBe('false');
-
+			// The well flags the scroller; its shadow bars key off these attributes.
 			const scroller = screen.getByTestId('scan-results-scroller').element();
+			await vi.waitFor(() => expect(scroller.hasAttribute('data-overflow-bottom')).toBe(true));
+			expect(scroller.hasAttribute('data-overflow-top')).toBe(false);
+
 			scroller.scrollTop = scroller.scrollHeight;
-			await vi.waitFor(() => expect(top.element().getAttribute('data-visible')).toBe('true'));
-			expect(bottom.element().getAttribute('data-visible')).toBe('false');
+			await vi.waitFor(() => expect(scroller.hasAttribute('data-overflow-top')).toBe(true));
+			expect(scroller.hasAttribute('data-overflow-bottom')).toBe(false);
 		});
 
 		it('shows the scanning indicator while the composable reports a scan', async () => {
@@ -241,11 +240,11 @@ describe('ScanRepositoriesModal', () => {
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(2));
 
 			// No query → no match count in the input.
-			expect(screen.getByTestId('scan-filter-count').elements()).toHaveLength(0);
+			expect(screen.getByTestId('scan-search-count').elements()).toHaveLength(0);
 
 			await screen.getByPlaceholder('Filter results').fill('alpha');
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(1));
-			expect(screen.getByTestId('scan-filter-count')).toHaveTextContent('1 of 2');
+			expect(screen.getByTestId('scan-search-count')).toHaveTextContent('1 of 2');
 
 			await screen.getByPlaceholder('Filter results').fill('nope');
 			await vi.waitFor(() => expect(screen.getByTestId('scan-no-matches')).toBeInTheDocument());

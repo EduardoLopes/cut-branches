@@ -6,13 +6,11 @@
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
-	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import Menu from '@pindoba/svelte-menu';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { open as openFolderDialog } from '@tauri-apps/plugin-dialog';
-	import { tick } from 'svelte';
 	import {
 		useDiscoverRepositories,
 		type DiscoveredItem
@@ -20,6 +18,11 @@
 	import { groupDiscoveredRepositories } from '../utils/group-discovered-repositories';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogToolbar from '$ui/patterns/dialog-toolbar.svelte';
+	import ListFilter from '$ui/patterns/list-filter.svelte';
+	import ScrollWell from '$ui/patterns/scroll-well.svelte';
+	import SelectionRow from '$ui/patterns/selection-row.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -122,38 +125,6 @@
 	// Linked worktrees sit under the repository they belong to.
 	const groups = $derived(groupDiscoveredRepositories(filteredResults));
 
-	// Scroll shadows: shown at an edge only while there is content past it.
-	let scroller: HTMLElement | null = null;
-	let canScrollUp = $state(false);
-	let canScrollDown = $state(false);
-
-	function updateScrollShadows() {
-		if (!scroller) return;
-		canScrollUp = scroller.scrollTop > 0;
-		// Allow a sub-pixel slack: fractional layout can leave scrollTop just
-		// short of the end even when the list is fully scrolled.
-		canScrollDown = scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 1;
-	}
-
-	function trackScroll(node: HTMLElement) {
-		scroller = node;
-		node.addEventListener('scroll', updateScrollShadows, { passive: true });
-		const observer = new ResizeObserver(updateScrollShadows);
-		observer.observe(node);
-		return () => {
-			node.removeEventListener('scroll', updateScrollShadows);
-			observer.disconnect();
-			scroller = null;
-		};
-	}
-
-	// The list's height doesn't change when the filter changes its contents,
-	// so the observer won't fire; re-check once the new rows are in the DOM.
-	$effect(() => {
-		void groups;
-		tick().then(updateScrollShadows);
-	});
-
 	const allSelected = $derived(
 		discover.addableCount > 0 && discover.selectedCount === discover.addableCount
 	);
@@ -246,26 +217,9 @@
 			</Stamp>
 		{/snippet}
 
-		<!-- Scan toolbar. Bleeds over the content inset (negative `md` margins)
-		     so it sits flush under the header border, full width, like a second
-		     header row. Two fixed rows — the path chip flexes to fill the first
+		<!-- Scan toolbar: two fixed rows — the path chip flexes to fill the first
 		     one — so choosing a long folder never changes the toolbar height. -->
-		<div
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 'xs',
-				marginX: 'calc(token(spacing.md) * -1)',
-				marginTop: 'calc(token(spacing.md) * -1)',
-				paddingX: 'md',
-				paddingY: 'sm',
-				borderBottomWidth: '1px',
-				borderBottomStyle: 'solid',
-				borderBottomColor: 'neutral.border.muted',
-				background: 'neutral.surface.hill'
-			})}
-			data-testid="scan-toolbar"
-		>
+		<DialogToolbar testId="scan-toolbar">
 			<!-- Row 1: where the scan looks -->
 			<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs' })}>
 				<!-- Sized with the `control.sm` tokens so the chip reads as a peer of
@@ -399,7 +353,7 @@
 					</Button>
 				</div>
 			</div>
-		</div>
+		</DialogToolbar>
 
 		<div
 			class={css({
@@ -496,37 +450,13 @@
 							paddingBottom: 'sm'
 						})}
 					>
-						<Input
-							type="search"
-							size="md"
-							fullWidth
-							placeholder="Filter results"
-							aria-label="Filter results"
-							autocorrect="off"
+						<ListFilter
 							bind:value={searchQuery}
-							data-testid="scan-search"
-						>
-							{#snippet leading()}
-								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:search" width="16px" height="16px" />
-								</Stamp>
-							{/snippet}
-							{#snippet trailing()}
-								{#if query}
-									<span
-										class={css({
-											fontSize: 'xs',
-											color: 'neutral.text.muted',
-											whiteSpace: 'nowrap',
-											paddingX: '2xs'
-										})}
-										data-testid="scan-filter-count"
-									>
-										{filteredResults.length} of {discover.results.length}
-									</span>
-								{/if}
-							{/snippet}
-						</Input>
+							placeholder="Filter results"
+							matchCount={filteredResults.length}
+							total={discover.results.length}
+							testId="scan-search"
+						/>
 						<div
 							class={css({
 								display: 'flex',
@@ -551,206 +481,117 @@
 						</div>
 					</div>
 
-					<!-- Rows sit on a recessed surface; the wrapper clips so the scroll
-					     shadows below can bleed in from just outside its edges. -->
-					<div
-						class={css({
-							position: 'relative',
-							display: 'flex',
-							flexDirection: 'column',
-							flex: '1',
-							minHeight: '0',
-							overflow: 'hidden',
-							borderRadius: 'md',
-							background: 'neutral.surface.valley'
-						})}
-					>
-						<div
-							{@attach trackScroll}
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								gap: '3xs',
-								flex: '1',
-								padding: '2xs',
-								overflowY: 'auto'
-							})}
-							data-testid="scan-results-scroller"
+					{#snippet row(item: DiscoveredItem)}
+						{@const selected = discover.isSelected(item.path)}
+						<SelectionRow
+							checked={item.alreadyAdded || selected}
+							disabled={item.alreadyAdded}
+							muted={item.alreadyAdded}
+							onchange={() => discover.toggle(item.path)}
+							ariaLabel={item.name}
+							testId="scan-item"
 						>
-							{#each groups as group (group.item.path)}
-								{@render row(group.item)}
-								{#if group.worktrees.length > 0}
-									<!-- Indented with a guide line so the worktrees read as part of
+							<!-- One line: the name leads, the path takes the rest. The path is
+							     end-aligned with the folder highlighted so it lands in the same
+							     column on every row however deep the path is. -->
+							<span
+								class={css({
+									display: 'flex',
+									alignItems: 'center',
+									gap: 'sm',
+									minWidth: '0'
+								})}
+							>
+								<span class={css({ fontSize: 'sm', fontWeight: 'medium', flexShrink: '0' })}>
+									{item.name}
+								</span>
+								{#if item.isWorktree}
+									<Badge size="sm" feedback="warning" data-testid="scan-item-worktree">
+										{#snippet leading()}
+											<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+										{/snippet}
+										worktree
+									</Badge>
+								{/if}
+								<!-- The column, not the segment count, caps the path: short paths
+								     show whole, deep ones truncate to fit the column. `flex: 1`
+								     keeps the box width independent of its text so the fitter
+								     never chases its own output. -->
+								<TruncatedPath
+									path={item.path}
+									highlight={item.name}
+									align="end"
+									class={css({
+										flex: '1',
+										maxWidth: '60%',
+										marginLeft: 'auto',
+										fontSize: 'xs'
+									})}
+									data-testid="scan-item-path"
+								/>
+							</span>
+							{#snippet trailing()}
+								{#if item.alreadyAdded}
+									<Badge
+										size="sm"
+										emphasis="secondary"
+										feedback="success"
+										data-testid="scan-item-added"
+									>
+										Added
+									</Badge>
+								{/if}
+							{/snippet}
+						</SelectionRow>
+					{/snippet}
+
+					<ScrollWell class={css({ flex: '1', minHeight: '0' })} testId="scan-results-scroller">
+						{#each groups as group (group.item.path)}
+							{@render row(group.item)}
+							{#if group.worktrees.length > 0}
+								<!-- Indented with a guide line so the worktrees read as part of
 								     the repository above, not as more repositories. The 1px line is
 								     centred on the parent's checkbox: the row's `sm` inset plus half
 								     the `md` checkbox box (2rem), minus half the line itself. -->
-									<div
-										class={css({
-											display: 'flex',
-											flexDirection: 'column',
-											gap: '3xs',
-											marginLeft: 'calc(token(spacing.sm) + 1rem - 0.5px)',
-											paddingLeft: 'xs',
-											borderLeftWidth: '1px',
-											borderLeftStyle: 'solid',
-											borderLeftColor: 'neutral.border.muted'
-										})}
-										data-testid="scan-item-worktrees"
-									>
-										{#each group.worktrees as worktree (worktree.path)}
-											{@render row(worktree)}
-										{/each}
-									</div>
-								{/if}
-							{:else}
 								<div
 									class={css({
 										display: 'flex',
-										flex: '1',
-										alignItems: 'center',
-										justifyContent: 'center',
-										textAlign: 'center',
-										color: 'neutral.text.muted',
-										fontSize: 'sm'
+										flexDirection: 'column',
+										gap: '3xs',
+										marginLeft: 'calc(token(spacing.sm) + 1rem - 0.5px)',
+										paddingLeft: 'xs',
+										borderLeftWidth: '1px',
+										borderLeftStyle: 'solid',
+										borderLeftColor: 'neutral.border.muted'
 									})}
-									data-testid="scan-no-matches"
+									data-testid="scan-item-worktrees"
 								>
-									No repositories match your filter.
+									{#each group.worktrees as worktree (worktree.path)}
+										{@render row(worktree)}
+									{/each}
 								</div>
-							{/each}
-
-							{#snippet row(item: DiscoveredItem)}
-								{@const selected = discover.isSelected(item.path)}
-								<Checkbox
-									fullWidth
-									checked={item.alreadyAdded || selected}
-									disabled={item.alreadyAdded}
-									onchange={() => discover.toggle(item.path)}
-									aria-label={item.name}
-									data-testid="scan-item"
-									radius="sm"
-									passThrough={{ text: { style: css.raw({ flex: '1', minWidth: '0' }) } }}
-									class={css({
-										// Longhands on purpose: the checkbox root is a Panel with
-										// `padding="none"`, whose atomic `padding: 0` is emitted after
-										// `.p_*` in the sheet and would win over the shorthand.
-										paddingX: 'sm',
-										paddingY: 'sm',
-										opacity: item.alreadyAdded ? 0.6 : 1,
-										// The checkbox appearance is a non-interactive Panel, so the row
-										// states are drawn here, following pindoba's checked-tertiary
-										// stepping: selected rows lift to the dialog's own surface (peak),
-										// hover steps one down to hill from either side, press settles on base.
-										background:
-											selected && !item.alreadyAdded ? 'neutral.surface.peak' : 'transparent',
-										_hover: {
-											background: item.alreadyAdded ? undefined : 'neutral.surface.hill'
-										},
-										_active: {
-											background: item.alreadyAdded ? undefined : 'neutral.surface.base'
-										}
-									})}
-								>
-									<!-- One line: the name leads, the path takes the rest. The path is
-								     end-aligned with the folder highlighted so it lands in the same
-								     column on every row however deep the path is. -->
-									<span
-										class={css({
-											display: 'flex',
-											alignItems: 'center',
-											gap: 'sm',
-											minWidth: '0'
-										})}
-									>
-										<span class={css({ fontSize: 'sm', fontWeight: 'medium', flexShrink: '0' })}>
-											{item.name}
-										</span>
-										{#if item.isWorktree}
-											<Badge size="sm" feedback="warning" data-testid="scan-item-worktree">
-												{#snippet leading()}
-													<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
-												{/snippet}
-												worktree
-											</Badge>
-										{/if}
-										<!-- The column, not the segment count, caps the path: short paths
-									     show whole, deep ones truncate to fit the column. `flex: 1`
-									     keeps the box width independent of its text so the fitter
-									     never chases its own output. -->
-										<TruncatedPath
-											path={item.path}
-											highlight={item.name}
-											align="end"
-											class={css({
-												flex: '1',
-												maxWidth: '60%',
-												marginLeft: 'auto',
-												fontSize: 'xs'
-											})}
-											data-testid="scan-item-path"
-										/>
-									</span>
-									{#snippet trailing()}
-										{#if item.alreadyAdded}
-											<Badge
-												size="sm"
-												emphasis="secondary"
-												feedback="success"
-												data-testid="scan-item-added"
-											>
-												Added
-											</Badge>
-										{/if}
-									{/snippet}
-								</Checkbox>
-							{/snippet}
-						</div>
-
-						<!-- Shadows that appear only when there is more to scroll in that
-					     direction: a 1px bar just outside the wrapper whose shadow spills
-					     inward through the wrapper's overflow clip. -->
-						<div
-							class={css({
-								position: 'absolute',
-								top: '-1px',
-								left: '0',
-								right: '0',
-								height: '1px',
-								boxShadow: 'md',
-								pointerEvents: 'none',
-								transition: 'opacity 150ms ease',
-								opacity: canScrollUp ? 1 : 0
-							})}
-							data-testid="scan-scroll-shadow-top"
-							data-visible={canScrollUp}
-						></div>
-						<div
-							class={css({
-								position: 'absolute',
-								bottom: '-1px',
-								left: '0',
-								right: '0',
-								height: '1px',
-								boxShadow: 'md',
-								pointerEvents: 'none',
-								transition: 'opacity 150ms ease',
-								opacity: canScrollDown ? 1 : 0
-							})}
-							data-testid="scan-scroll-shadow-bottom"
-							data-visible={canScrollDown}
-						></div>
-					</div>
+							{/if}
+						{:else}
+							<div
+								class={css({
+									display: 'flex',
+									flex: '1',
+									alignItems: 'center',
+									justifyContent: 'center',
+									textAlign: 'center',
+									color: 'neutral.text.muted',
+									fontSize: 'sm'
+								})}
+								data-testid="scan-no-matches"
+							>
+								No repositories match your filter.
+							</div>
+						{/each}
+					</ScrollWell>
 				{/if}
 			</div>
 
-			<!-- Footer -->
-			<div
-				class={css({
-					display: 'flex',
-					justifyContent: 'flex-end',
-					gap: 'sm'
-				})}
-			>
+			<DialogFooter>
 				<Button emphasis="ghost" onclick={() => (open = false)} data-testid="scan-cancel">
 					Close
 				</Button>
@@ -774,7 +615,7 @@
 						</Loading>
 					{/snippet}
 				</ValidationHint>
-			</div>
+			</DialogFooter>
 		</div>
 	</Dialog>
 </div>
