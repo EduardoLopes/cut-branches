@@ -376,3 +376,17 @@ The project follows the **Framework-Agnostic Frontend Code Design** principles a
 - **Static Assets Strategy**: Hybrid approach with `src/assets/` for source assets and `static/` for build assets (see [@docs/adr/002-static-assets-strategy.md](docs/adr/002-static-assets-strategy.md))
 
 For detailed design guidelines, see [@docs/code-design-guide.md](docs/code-design-guide.md)
+
+<!-- commit-conventions:start -->
+
+## Commit conventions (cached by /commit — edit freely, delete block to re-detect)
+
+- **Format**: Conventional Commits 1.0.0 (commitlint `config-conventional`), English, lowercase imperative, subject ≤ 72 chars; body explains the _why_ in full sentences, wrapped at 72
+- **Types in use**: feat, fix, perf, refactor, style, test, docs, chore, build, ci
+- **Scope rule**: the `src/domains/<name>` directory the change lives in; global folders by name (`ui`, `utils`, `layout`); Rust side `backend` or its module (`git`, `db`); `deps` for dependency bumps; docs by document (`adr`, `code-design-guide`); cross-cutting changes omit the scope
+- **Scope examples**: `feat(branch-management): …`, `fix(repository-management): …`, `perf(git): …`, `style(ui): …`, `chore(deps): …`
+- **Footers**: none; no attribution trailers
+- **Versioning**: changesets (`.changeset/`) CLI v3 via `pnpm changeset`, baseBranch `main`, single package `cut-branches`, config `commit` is a custom function (`.changeset/commit.cjs`) so `changeset add` commits on its own — commit the code first, then add the changeset with an empty index; patch = fix/perf/refactor, minor = feat, major = breaking; changeset filenames are descriptive slugs (`delete-modal-stable-rows.md`); user-facing feats/fixes need one, tooling/docs/tests don't
+- **House rules**: pre-commit hooks run eslint, prettier, svelte-check, vitest related and cargo tests — never `--no-verify`; Node 24 via `nvm use 24` before pnpm/git commit
+
+<!-- commit-conventions:end -->
