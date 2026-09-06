@@ -29,9 +29,29 @@ describe('ScrollWell', () => {
 		});
 
 		const scroller = screen.getByTestId('list').element() as HTMLElement;
-		expect(getComputedStyle(scroller.parentElement as HTMLElement).maxHeight).toBe('100px');
+		const well = screen.getByTestId('list-well').element() as HTMLElement;
+		expect(getComputedStyle(well).maxHeight).toBe('100px');
 		expect(getComputedStyle(scroller).gap).not.toBe('0px');
 		expect(screen.getByTestId('list-shadow-top')).toBeInTheDocument();
+	});
+
+	test('renders an attached header above the scroller when one is given', async () => {
+		const screen = await renderWithTestWrapper(ScrollWell, {
+			children: rows(2),
+			header: createRawSnippet(() => ({ render: () => '<span>Select all</span>' })),
+			testId: 'list'
+		});
+
+		const header = screen.getByTestId('list-header').element() as HTMLElement;
+		expect(header).toMatchTextContent('Select all');
+		// Inside the well, so header and rows share one panel and one clip.
+		expect(header.parentElement).toBe(screen.getByTestId('list-well').element());
+	});
+
+	test('omits the header element when no header is given', async () => {
+		const screen = await renderWithTestWrapper(ScrollWell, { children: rows(2), testId: 'list' });
+
+		expect(screen.getByTestId('list-header').query()).toBeNull();
 	});
 
 	test('flags the edge with more content and flips it after scrolling', async () => {

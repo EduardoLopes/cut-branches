@@ -78,13 +78,16 @@ Every pindoba `Dialog` follows the shape of the Find repositories modal:
   controls that shape its content (scan location, options). Bleeds over the
   content inset so it reads as a second header row.
 - **Pick-lists:** `list-filter.svelte` (full-width `md` search with a live
-  "n of N" count) → a plain select-all row (no border, no background) →
-  `scroll-well.svelte` (recessed `surface.valley` well with shadows that appear
-  only towards the edge that has more to scroll; `bind:scroller` for
-  virtualizers) holding `selection-row.svelte`s (`Checkbox` rows; selected lifts
+  "n of N" count) → `scroll-well.svelte` (recessed `surface.valley` well with
+  shadows that appear only towards the edge that has more to scroll;
+  `bind:scroller` for virtualizers) holding `selection-row.svelte`s (`Checkbox` rows; selected lifts
   to `surface.peak`, hover `hill`, pressed `base`; `feedback="danger"` for lists
   whose action destroys the selection; `muted` + `disabled` for already-handled
-  items).
+  items). The list's own controls (select-all on the left, the selected count on
+  the right) go in the well's `header` snippet, not in a loose row above it: the
+  header is inside the well's radius and clip, sits one tier up on
+  `surface.base` over a hairline, and carries the rows' inline inset so its
+  checkbox lands in the rows' checkbox column.
 - **Paths:** `$ui/core/truncated-path.svelte` — `align="end"`, `highlight` the
   folder name, `class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}`
   so the highlighted folder lands in one column across rows.
