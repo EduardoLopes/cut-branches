@@ -90,12 +90,12 @@ fn bench_bulk_metrics_real_repo() {
 
     let t = Instant::now();
     let branches =
-        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
+        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit(
             &path,
         )
         .unwrap();
     println!(
-        "list_branches_fast: {} branches in {:?}",
+        "list_branches: {} branches in {:?}",
         branches.len(),
         t.elapsed()
     );
@@ -142,10 +142,10 @@ fn bench_branch_loading_hot_paths() {
     let bulk = t.elapsed();
     assert_eq!(metrics.len(), BRANCH_COUNT);
 
-    // 2. Full branch listing (the list_branches_fast path inside get_repository).
+    // 2. Full branch listing (the list_branches path inside get_repository).
     let t = Instant::now();
     let branches =
-        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(
+        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit(
             path,
         )
         .unwrap();
@@ -161,6 +161,6 @@ fn bench_branch_loading_hot_paths() {
     println!("== perf_bench ({BRANCH_COUNT} branches) ==");
     println!("per-card merge+diff, individual calls: {per_card:?}");
     println!("bulk merge+diff, one repo open:        {bulk:?}");
-    println!("list_branches_fast:                    {listing:?}");
+    println!("list_branches:                    {listing:?}");
     println!("state fingerprint walk:                {fingerprint:?}");
 }

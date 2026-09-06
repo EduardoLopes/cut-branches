@@ -17,8 +17,8 @@ use crate::shared::kernel::branch::Branch;
 pub struct BranchManagementGateway;
 
 impl BranchGateway for BranchManagementGateway {
-    fn list_branches_fast(&self, path: &Path) -> Result<Vec<Branch>, AppError> {
-        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit_fast(path)
+    fn list_branches(&self, path: &Path) -> Result<Vec<Branch>, AppError> {
+        crate::domains::branch_management::infrastructure::git::branch::get_all_branches_with_last_commit(path)
     }
 
     fn current_branch(&self, path: &Path) -> Result<String, AppError> {

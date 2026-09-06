@@ -14,8 +14,8 @@ use crate::shared::kernel::branch::Branch;
 
 /// Branch data + branch→DB sync, owned by branch_management.
 pub trait BranchGateway: Send + Sync {
-    /// List branches with last-commit info, skipping the expensive merge check.
-    fn list_branches_fast(&self, path: &Path) -> Result<Vec<Branch>, AppError>;
+    /// List branches with last-commit info and merge status.
+    fn list_branches(&self, path: &Path) -> Result<Vec<Branch>, AppError>;
 
     /// Name of the currently checked-out branch, or an empty string when
     /// HEAD is detached (a repository with no current branch is still valid).

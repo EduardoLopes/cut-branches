@@ -173,7 +173,7 @@ pub(crate) fn resync_repository(
     let current_timestamp = crate::domains::repository_management::infrastructure::state_hash::compute_repo_state_timestamp(raw_root_path)?;
 
     // Get full branch list (use fast version for better performance)
-    let branches = branch.list_branches_fast(raw_root_path)?;
+    let branches = branch.list_branches(raw_root_path)?;
     let branches_count = branches.len() as i32;
 
     // Get current branch name

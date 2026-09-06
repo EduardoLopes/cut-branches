@@ -76,7 +76,7 @@ pub async fn create_repository(
     let raw_root_path = Path::new(&root_path);
 
     // Get branches through the branch gateway (use fast version for performance)
-    let mut branches = services.branch.list_branches_fast(raw_root_path)?;
+    let mut branches = services.branch.list_branches(raw_root_path)?;
     branches.sort_by(|a, b| b.current.cmp(&a.current));
     let current = services.branch.current_branch(raw_root_path)?;
 
