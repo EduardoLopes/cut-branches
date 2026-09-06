@@ -79,7 +79,7 @@
 	"dependencies": {
 		"@pindoba/core-menu": "alpha",
 		"@pindoba/core-tree-view": "alpha",
-		"@pindoba/devtools": "link:../pindoba/packages/devtools",
+		"@pindoba/devtools": "alpha",
 		"@pindoba/panda": "alpha",
 		"@pindoba/panda-buildinfo": "alpha",
 		"@pindoba/panda-preset": "alpha",

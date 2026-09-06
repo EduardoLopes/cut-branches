@@ -20,6 +20,12 @@
 	// once at the shell so it persists across routes while tokens are tweaked;
 	// the built-in floating trigger is suppressed and it's opened from the
 	// sidebar footer (Ctrl/Cmd+K also works).
+	//
+	// The panel ships its own precompiled stylesheet (utilities + preview
+	// swatches, no tokens) — it is NOT part of our Panda build, so it's loaded
+	// here behind the same DEV guard. A dynamic import keeps the CSS out of the
+	// release bundle too (a static `import '…/styles.css'` would always ship).
+	if (import.meta.env.DEV) void import('@pindoba/devtools/styles.css');
 	let devtoolsOpen = $state(false);
 
 	interface Props {

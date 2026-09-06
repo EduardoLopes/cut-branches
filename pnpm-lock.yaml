@@ -15,8 +15,8 @@ importers:
         specifier: alpha
         version: 0.0.0-alpha-20260829223243(typescript@6.0.3)
       '@pindoba/devtools':
-        specifier: link:../pindoba/packages/devtools
-        version: link:../pindoba/packages/devtools
+        specifier: alpha
+        version: 0.0.0-alpha-20260906200353(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
       '@pindoba/panda':
         specifier: alpha
         version: 0.0.0-alpha-20250910225440
@@ -932,6 +932,9 @@ packages:
   '@pindoba/core-attachment@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-b7t8bes+ajCz4g4t6hPb1RehjIQNYiV2g3p4pkagBm69AA7mzI6Xq7SKaaTmRYdXqDrMilvQQjSC3OhXtRh/bA==}
 
+  '@pindoba/core-avatar@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-wmwhDEqKhmfHCATlSTH0DefVznPLAJgTYJWSc3vLzk12TEu4/ukdGh7aA+f7nlGRLeHo8TBHvacQXd9ri4dyaA==}
+
   '@pindoba/core-badge@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-16M5S3JaoCOfhvhFVXc0vqdc+pmFqy7ob4EJM8Qym4xm4tqdD6CFK6VswZBa2s1bf0/gn2hRm5I3UX4AAcjV7w==}
 
@@ -944,6 +947,9 @@ packages:
   '@pindoba/core-button@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-RCgMrfLv19cuknFIC0Q8mXJ9yl+yyP955ImWl0z5hfkt2TdPtasNxlEooyfMrRgS2dJr/OuzwBBURmk3L1AQbw==}
 
+  '@pindoba/core-capsule@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-h+Dc5X/Ddal77VwoT7gNIvOD9KAqQ98nHBZWRC4wzF1O85gu05U+qz64FLyhTxb5DW3t7tzpEg3zoEPQAvA9Fg==}
+
   '@pindoba/core-card@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-ejXVdyp+RF5QpYzxX8swU+GIVJNPUuooZSDEN9S3PfheZjVLTUtN5mo1LvM2L3pBfdxQKaEvj92zyUV2T+8U7g==}
 
@@ -952,6 +958,9 @@ packages:
 
   '@pindoba/core-choice@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-g4Y1AeRhFqT5gSMqaGZ8Ln+pNA55wsZFrS3SlRm35w/bfxFB0HF/YSKk0RqpnBnbA18dFnXGK/BnkFC6zqFWGw==}
+
+  '@pindoba/core-color-picker@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-7vtacM5CxnZTZcM+pagU2/I8drvtWCpTcaIQafgPM9FeO+bcnfzSZpTW5P4T6TBrlbgjbea8S0qzLLdJ6tx0hw==}
 
   '@pindoba/core-dialog@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-eDjBW4WEQcvmtGcWfYMje26sTR+ZzYm2kp5OI0bSgEreSKdJBRWpL2BPVtm2W+DgemVVU0ThkZMat4SrSphPfg==}
@@ -998,6 +1007,9 @@ packages:
   '@pindoba/core-stamp@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-kJ+K/ohvWwqJnAW/GSrfFAdVKgAWPhFl2ro14cn64xpNYlwXOihSZwB35jZHX9JbTc5B3eNoJN4g+0BAVW5k1w==}
 
+  '@pindoba/core-tab@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-yOCGZRfNHaEStk7KLspyM6zHVetus6F63DAV1zEl6B1i8eqCjgf3ReA+StA1qJeFBUyoahIyemBOgSE66lhMdA==}
+
   '@pindoba/core-theme-mode-select@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-iQv3OijtdoqCPp0uCM2VuTVk/GMEHzHwXkVc1XUvvkLjbaSVOh7WsgHA6u53g/SJsuwPJh8nDGRuC5Uj/ZMwEA==}
 
@@ -1007,8 +1019,16 @@ packages:
   '@pindoba/core-tooltip@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-xsdpFziulHKwa3NByKTM9jOkpupv1kzuCw6ido+jadVy5gqlir7S5GtfbnPaRLMk4xycaRO5jH9RWffsWMU5Sg==}
 
+  '@pindoba/core-tooltip@0.0.0-alpha-20260906200353':
+    resolution: {integrity: sha512-49xFGJo1ZyYyI4kU3NTSUouqVXJQOwztFr3NErB3ZCSrlelbXU61YYgHD9Vt6UEUuNneMrSu9F0LQR4V7ebDTw==}
+
   '@pindoba/core-tree-view@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-hPv6YNhUsrNfegHsBT+JcHmKWNAC2olo7gEilVCNtLDGh6JNeMVVVoHjVm0d/jch4mXn0RiyEKMtX1Uk9jM77w==}
+
+  '@pindoba/devtools@0.0.0-alpha-20260906200353':
+    resolution: {integrity: sha512-4CebT5bg+W/E5FdX5/ZTaVKZkT4+0ADaRsjHKoET+cxUgTMPNe6+wGiUKMGVj0VlEuzGtqoXwmK7OvuiW+7UGg==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   '@pindoba/normalize-props@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-g5sIi8jbRUyc4cBfgU7cjvsNUiFGbufylzv3GYuMtwQOf/4kX9UXxjWdxpiERi2tUzLg987ZahMJcG3Mn7/nSQ==}
@@ -1160,6 +1180,9 @@ packages:
   '@pindoba/styles-tooltip@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-E03bPd4+/LnWfChRLNuscPfkOKl7Vb4wimk8vzzYlWNE6LGwYVrfNBxN27fIzhxnVqsOKd77Iya8V+Kaol+rYQ==}
 
+  '@pindoba/styles-tooltip@0.0.0-alpha-20260906200353':
+    resolution: {integrity: sha512-6anWFeZwaneHBUdH3Yc9qsRBa+iQzo5OBxReqsDPaI+7WkWcpmlZiSDq/9nw9k5GGx69AH8BVybErpQWnN6hzA==}
+
   '@pindoba/styles-topbar@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-dmzdTNdRmNvmYqVuGT6tV+BPeQADFdNzANG7YTkAndyS9eSxOrrC2D9D7j2hTBaD75+t9+B891Y/g6sxHYMvGA==}
 
@@ -1186,6 +1209,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-avatar@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-ggB6/qa+dIvMi52AZilFCRU7vVaPhrOvzhIo7NaJHwmwylxKcrdBPz+j0yMi7r8gV60ho1C0jbznZwNxpXhrrw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-badge@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-XrHdotL2RKllz8iyWKQFTdVPIPDz7lSOa5xEbD3yTDwM85RQuSH2A/EOim0B7MUbRmgXLM7bubEW4LFtYpEp3A==}
     peerDependencies:
@@ -1206,6 +1234,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-capsule@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-/G68ZQzM8U+mBhZx92/RsrhCUOppKVGR+fe55FpQEEls40de5mBdKOG00Ignc8s8moOz9qoKzJDRztrEv1qPTg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-card@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-RNw9U6uG9W3u7lC6jCOhBYqvI9HnuzPLa6S6qaRZSwKTb4ukAV7hIocrvC6U9KNsaXqrg7VyynieGBuDSC6dpA==}
     peerDependencies:
@@ -1218,6 +1251,11 @@ packages:
 
   '@pindoba/svelte-choice@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-vijIr0PKHZJJI/Xdf3hnd4w7ZPNR1xG4X6o+8u2SwKcG4MA5+MDSigxC6klXobZ3GghuE/lBBfxjIH7lwigBaw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-color-picker@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-DrCD1gr/nbxhVZJUex9e4P2OtLZkCFWSvDzEV6cO9dmxzk8JQgKMuecUKnnrr0v7d2G8A/WxEA+HbsOF1n4jfg==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -1296,6 +1334,11 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  '@pindoba/svelte-tab@0.0.0-alpha-20260829223243':
+    resolution: {integrity: sha512-FBXVDvplGXiYOjKCp9rJ1ad+3YHtCiMeTsxbixroHPGBx1WUTxHdtvq+MdickPMnryiN412PAwRP9v7dtT+rOw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
   '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-grzUEGzVRaTMmQ10cmpNFVvYvk4gxAuf45x4MAIunADaiggNSwJP8fgCKK8i5RJSxy0QX6t2ve/P5mx7Nl5zVQ==}
     peerDependencies:
@@ -1308,6 +1351,11 @@ packages:
 
   '@pindoba/svelte-tooltip@0.0.0-alpha-20260829223243':
     resolution: {integrity: sha512-48lneEVufP5xL9n5CXPa827h/mU1rd3XG1hGScvRATU7//8SeREOOFFqUVGX49HKCZlKXAUMmvI6/1AK4CrcGw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-tooltip@0.0.0-alpha-20260906200353':
+    resolution: {integrity: sha512-JKKH4HDqgYC0cBHiuWk9uiVuSiH/FTwR1EhpMEbSygY5wZJmMR3RYczu5jyaXNIyWU+/rzaJESo9LFMyyoB3zQ==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -5194,6 +5242,16 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/core-avatar@0.0.0-alpha-20260829223243(typescript@6.0.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-avatar': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-badge@0.0.0-alpha-20260829223243(typescript@6.0.3)':
     dependencies:
       '@pindoba/core-affix': 0.0.0-alpha-20260829223243(typescript@6.0.3)
@@ -5235,6 +5293,16 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/core-capsule@0.0.0-alpha-20260829223243(typescript@6.0.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-capsule': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-card@0.0.0-alpha-20260829223243(typescript@6.0.3)':
     dependencies:
       '@pindoba/core-banner': 0.0.0-alpha-20260829223243(typescript@6.0.3)
@@ -5263,6 +5331,18 @@ snapshots:
       '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
       '@pindoba/styled-system': 0.0.0-alpha-20260829223243
       '@pindoba/styles-choice': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      nanostores: 1.5.3
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/core-color-picker@0.0.0-alpha-20260829223243(typescript@6.0.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-color-picker': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      culori: 4.0.2
       nanostores: 1.5.3
     transitivePeerDependencies:
       - jsdom
@@ -5428,6 +5508,18 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/core-tab@0.0.0-alpha-20260829223243(typescript@6.0.3)':
+    dependencies:
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/normalize-props': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styles-tab': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-theme-mode-select@0.0.0-alpha-20260829223243(typescript@6.0.3)':
     dependencies:
       '@pindoba/core-popover': 0.0.0-alpha-20260829223243(typescript@6.0.3)
@@ -5463,6 +5555,18 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/core-tooltip@0.0.0-alpha-20260906200353(typescript@6.0.3)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-tooltip': 0.0.0-alpha-20260906200353(typescript@6.0.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      nanostores: 1.5.3
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/core-tree-view@0.0.0-alpha-20260829223243(typescript@6.0.3)':
     dependencies:
       '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
@@ -5470,6 +5574,40 @@ snapshots:
       '@pindoba/styled-system': 0.0.0-alpha-20260829223243
       '@pindoba/styles-tree-view': 0.0.0-alpha-20260829223243(typescript@6.0.3)
       '@pindoba/utils': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/devtools@0.0.0-alpha-20260906200353(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
+    dependencies:
+      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@pindoba/core-color-picker': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/panda-preset': 0.0.0-alpha-20260829223243
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/svelte-accordion': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-alert': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-avatar': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-banner': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-capsule': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-card': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-checkbox': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-color-picker': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-dialog': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-group': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-input': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-panel': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-popover': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-progress': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-radio': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-select-native': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-tab': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-tooltip': 0.0.0-alpha-20260906200353(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      culori: 4.0.2
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
     transitivePeerDependencies:
       - jsdom
       - typescript
@@ -5908,6 +6046,14 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/styles-tooltip@0.0.0-alpha-20260906200353(typescript@6.0.3)':
+    dependencies:
+      '@pandacss/dev': 1.12.1(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/styles-topbar@0.0.0-alpha-20260829223243(typescript@6.0.3)':
     dependencies:
       '@pandacss/dev': 1.12.1(typescript@6.0.3)
@@ -5972,6 +6118,17 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/svelte-avatar@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
+    dependencies:
+      '@pindoba/core-avatar': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/svelte-attachment': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-group': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-badge@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
     dependencies:
       '@pindoba/core-badge': 0.0.0-alpha-20260829223243(typescript@6.0.3)
@@ -6009,6 +6166,17 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/svelte-capsule@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
+    dependencies:
+      '@pindoba/core-capsule': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/core-panel': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-capsule': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-card@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
     dependencies:
       '@pindoba/core-card': 0.0.0-alpha-20260829223243(typescript@6.0.3)
@@ -6041,6 +6209,20 @@ snapshots:
       '@pindoba/svelte-group': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
       '@pindoba/svelte-radio': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
       nanostores: 1.5.3
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-color-picker@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
+    dependencies:
+      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@pindoba/core-color-picker': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/svelte-affix': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-input': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-stamp': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
       svelte: 5.57.0(@typescript-eslint/types@8.69.0)
     transitivePeerDependencies:
       - jsdom
@@ -6232,6 +6414,23 @@ snapshots:
       - jsdom
       - typescript
 
+  '@pindoba/svelte-tab@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
+    dependencies:
+      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@pindoba/core-tab': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-tab': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/svelte-badge': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-group': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-popover': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-radio': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
   '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
     dependencies:
       '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
@@ -6276,6 +6475,22 @@ snapshots:
       '@pindoba/core-tooltip': 0.0.0-alpha-20260829223243(typescript@6.0.3)
       '@pindoba/styled-system': 0.0.0-alpha-20260829223243
       '@pindoba/styles-tooltip': 0.0.0-alpha-20260829223243(typescript@6.0.3)
+      '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-dialog': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/svelte-popover': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
+      '@pindoba/utils': 0.0.0-alpha-20260829223243
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
+    transitivePeerDependencies:
+      - jsdom
+      - typescript
+
+  '@pindoba/svelte-tooltip@0.0.0-alpha-20260906200353(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@pindoba/core-tooltip': 0.0.0-alpha-20260906200353(typescript@6.0.3)
+      '@pindoba/styled-system': 0.0.0-alpha-20260829223243
+      '@pindoba/styles-tooltip': 0.0.0-alpha-20260906200353(typescript@6.0.3)
       '@pindoba/svelte-button': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
       '@pindoba/svelte-dialog': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
       '@pindoba/svelte-popover': 0.0.0-alpha-20260829223243(svelte@5.57.0(@typescript-eslint/types@8.69.0))(typescript@6.0.3)
