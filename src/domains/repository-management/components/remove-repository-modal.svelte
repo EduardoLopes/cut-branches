@@ -1,9 +1,7 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
@@ -13,6 +11,7 @@
 	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
@@ -105,7 +104,6 @@
 	<Dialog
 		bind:open
 		title="Remove repository"
-		subtitle={`Are you sure you want to remove the repository ${getRepositoryQuery.data?.name ?? repositoryId}?`}
 		aria-label="Remove repository"
 		aria-describedby="Remove repository"
 		data-testid="remove-modal"
@@ -123,10 +121,12 @@
 			}
 		}}
 	>
-		{#snippet leading()}
-			<Stamp size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:folder-minus" width="22px" height="22px" />
-			</Stamp>
+		{#snippet header()}
+			<DialogHeader
+				title="Remove repository"
+				subtitle={`Are you sure you want to remove the repository ${getRepositoryQuery.data?.name ?? repositoryId}?`}
+				icon="lucide:folder-minus"
+			/>
 		{/snippet}
 
 		<DialogFooter>

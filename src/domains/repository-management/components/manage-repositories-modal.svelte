@@ -15,6 +15,7 @@
 	import { resolveRepositoryPath } from '$lib/repository-route';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ListFilter from '$ui/patterns/list-filter.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import SelectionRow from '$ui/patterns/selection-row.svelte';
@@ -159,7 +160,6 @@
 		{open}
 		onChange={handleOpenChange}
 		title="Manage repositories"
-		subtitle="Select the repositories to remove from Cut Branches. This only removes them from the app — the folders on disk are left untouched."
 		aria-label="Manage repositories"
 		data-testid="manage-repositories-modal"
 		passThrough={{
@@ -171,10 +171,12 @@
 			}
 		}}
 	>
-		{#snippet leading()}
-			<Stamp size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:folder-git-2" width="22px" height="22px" />
-			</Stamp>
+		{#snippet header()}
+			<DialogHeader
+				title="Manage repositories"
+				subtitle="Select the repositories to remove from Cut Branches. This only removes them from the app — the folders on disk are left untouched."
+				icon="lucide:folder-git-2"
+			/>
 		{/snippet}
 
 		<div

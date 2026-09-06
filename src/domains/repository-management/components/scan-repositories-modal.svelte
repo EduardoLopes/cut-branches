@@ -19,6 +19,7 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import DialogToolbar from '$ui/patterns/dialog-toolbar.svelte';
 	import ListFilter from '$ui/patterns/list-filter.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
@@ -199,7 +200,6 @@
 		{open}
 		onChange={handleOpenChange}
 		title="Find repositories"
-		subtitle="Scan a location on this computer for git repositories, then choose which ones to add."
 		aria-label="Find git repositories"
 		data-testid="scan-repositories-modal"
 		passThrough={{
@@ -211,10 +211,12 @@
 			}
 		}}
 	>
-		{#snippet leading()}
-			<Stamp size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:folder-search" width="22px" height="22px" />
-			</Stamp>
+		{#snippet header()}
+			<DialogHeader
+				title="Find repositories"
+				subtitle="Scan a location on this computer for git repositories, then choose which ones to add."
+				icon="lucide:folder-search"
+			/>
 		{/snippet}
 
 		<!-- Scan toolbar: two fixed rows — the path chip flexes to fill the first

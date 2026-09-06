@@ -67,10 +67,12 @@ Banner).
 
 Every pindoba `Dialog` follows the shape of the Find repositories modal:
 
-- **Header:** `title` + `subtitle` props (never a body `<p>` for the intro) and a
-  `{#snippet leading()}` Stamp — `size="lg" emphasis="secondary" feedback="neutral"`
-  with a 22px glyph — that names the dialog's subject. `subtitle` is a plain
-  string; emphasis inside it is not available.
+- **Header:** `{#snippet header()}<DialogHeader title subtitle icon />{/snippet}`
+  (`dialog-header.svelte`) instead of the Dialog's own Banner and a body `<p>`
+  for the intro. It uses the page-header Stamp convention (`sm`, 16px glyph) and
+  `leading.span: 'above'`, so the icon flanks the title only and the subtitle
+  runs full width beneath both. `subtitle` is a plain string; emphasis inside it
+  is not available. Keep `title` on the Dialog too for its accessible name.
 - **Root width:** `passThrough.root.style = css.raw({ width, maxWidth: 'calc(100vw - token(spacing.2xl))' })`.
 - **`dialog-toolbar.svelte`:** the first child of the body when the dialog has
   controls that shape its content (scan location, options). Bleeds over the

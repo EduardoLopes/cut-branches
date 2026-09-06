@@ -23,6 +23,7 @@
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
@@ -197,14 +198,10 @@
 <Modal
 	bind:open
 	title="Delete branches"
-	subtitle={`Are you sure you want these branches from the repository ${repository?.name ?? ''}?`}
 	aria-label="Delete branches"
 	aria-describedby="Delete branches"
 	data-testid="delete-branch-dialog"
 	showCloseButton={!deleteMutation.isPending}
-	bannerPassThrough={{
-		subheading: { props: { 'data-testid': 'delete-branch-dialog-question' } }
-	}}
 	passThrough={{
 		root: {
 			style: css.raw({ width: '640px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
@@ -218,10 +215,13 @@
 		}
 	}}
 >
-	{#snippet leading()}
-		<Stamp size="lg" emphasis="secondary" feedback="neutral">
-			<Icon icon="lucide:trash-2" width="22px" height="22px" />
-		</Stamp>
+	{#snippet header()}
+		<DialogHeader
+			title="Delete branches"
+			subtitle={`Are you sure you want these branches from the repository ${repository?.name ?? ''}?`}
+			icon="lucide:trash-2"
+			subtitleTestId="delete-branch-dialog-question"
+		/>
 	{/snippet}
 
 	<!-- Gated on `open`: the dialog element (and its children) exist in the

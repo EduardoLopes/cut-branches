@@ -1,13 +1,12 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import Stamp from '@pindoba/svelte-stamp';
 	import { type Worktree } from '../core/models/worktree';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -41,7 +40,6 @@
 		{open}
 		onChange={(next: boolean) => (open = next)}
 		title={count === 1 ? 'Delete worktree' : 'Delete worktrees'}
-		subtitle={`Delete ${count} worktree${count === 1 ? '' : 's'}? Their working directories will be deleted. The branches themselves are not removed.`}
 		aria-label="Delete worktrees"
 		data-testid="delete-worktrees-modal"
 		showCloseButton={!isDeleting}
@@ -51,10 +49,12 @@
 			}
 		}}
 	>
-		{#snippet leading()}
-			<Stamp size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:trash-2" width="22px" height="22px" />
-			</Stamp>
+		{#snippet header()}
+			<DialogHeader
+				title={count === 1 ? 'Delete worktree' : 'Delete worktrees'}
+				subtitle={`Delete ${count} worktree${count === 1 ? '' : 's'}? Their working directories will be deleted. The branches themselves are not removed.`}
+				icon="lucide:trash-2"
+			/>
 		{/snippet}
 
 		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'md', width: 'full' })}>

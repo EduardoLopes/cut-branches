@@ -14,6 +14,7 @@
 	import type { DeletionMode } from '$infrastructure/bindings';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { formatBytes } from '$utils/format-bytes';
@@ -99,7 +100,6 @@
 		{open}
 		onChange={(next: boolean) => (open = next)}
 		title="Clean up {repositoryName}"
-		subtitle="Delete regenerable dependency and build folders to reclaim disk space. Review the folders below before continuing."
 		aria-label="Clean up repository"
 		data-testid="clean-repository-modal"
 		showCloseButton={!cleanup.isCleaning}
@@ -109,10 +109,12 @@
 			}
 		}}
 	>
-		{#snippet leading()}
-			<Stamp size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:sparkles" width="22px" height="22px" />
-			</Stamp>
+		{#snippet header()}
+			<DialogHeader
+				title="Clean up {repositoryName}"
+				subtitle="Delete regenerable dependency and build folders to reclaim disk space. Review the folders below before continuing."
+				icon="lucide:sparkles"
+			/>
 		{/snippet}
 
 		<div

@@ -12,6 +12,7 @@
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -125,10 +126,8 @@
 		}
 	}}
 >
-	{#snippet leading()}
-		<Stamp size="lg" emphasis="secondary" feedback="neutral">
-			<Icon icon="lucide:rotate-ccw" width="22px" height="22px" />
-		</Stamp>
+	{#snippet header()}
+		<DialogHeader title="Restore Deleted Branches" icon="lucide:rotate-ccw" />
 	{/snippet}
 
 	{#if flow.currentConflictBranch}

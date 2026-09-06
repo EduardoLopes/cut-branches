@@ -5,10 +5,10 @@
 	import Modal from '@pindoba/svelte-dialog';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
-	import Stamp from '@pindoba/svelte-stamp';
 	import { useAddWorktreeFlow } from '../core/composables/use-add-worktree-flow.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import DialogToolbar from '$ui/patterns/dialog-toolbar.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
@@ -69,7 +69,6 @@
 		{open}
 		onChange={(next: boolean) => (open = next)}
 		title="Add worktree"
-		subtitle="Create a new working directory linked to this repository. Leave the branch empty to create a new branch named after the worktree."
 		aria-label="Add worktree"
 		data-testid="add-worktree-modal"
 		showCloseButton={!flow.isAdding}
@@ -79,10 +78,12 @@
 			}
 		}}
 	>
-		{#snippet leading()}
-			<Stamp size="lg" emphasis="secondary" feedback="neutral">
-				<Icon icon="lucide:folder-plus" width="22px" height="22px" />
-			</Stamp>
+		{#snippet header()}
+			<DialogHeader
+				title="Add worktree"
+				subtitle="Create a new working directory linked to this repository. Leave the branch empty to create a new branch named after the worktree."
+				icon="lucide:folder-plus"
+			/>
 		{/snippet}
 
 		<!-- Where the worktree lands. The chip is sized with the `control.sm`
