@@ -307,7 +307,7 @@ fn compute_refs_digest(repo: &Repository) -> Result<String, BranchError> {
         .references()
         .map_err(|e| BranchError::ListFailed { source: e })?;
     for reference in references.flatten() {
-        if let (Some(name), Some(oid)) = (reference.name(), reference.target()) {
+        if let (Ok(name), Some(oid)) = (reference.name(), reference.target()) {
             entries.push((name.to_string(), oid.to_string()));
         }
     }
@@ -415,7 +415,7 @@ fn build_decorations(repo: &Repository) -> HashMap<Oid, Vec<RefDecoration>> {
             let Some(oid) = reference.target() else {
                 continue;
             };
-            let Some(name) = reference.shorthand() else {
+            let Ok(name) = reference.shorthand() else {
                 continue;
             };
             let kind = if reference.is_remote() {
@@ -512,7 +512,7 @@ fn build_commits(
             email: author.email().unwrap_or("").to_string(),
             date: format_commit_time(commit.time()),
             message: match message_scope {
-                MessageScope::Subject => commit.summary().unwrap_or("").to_string(),
+                MessageScope::Subject => commit.summary().ok().flatten().unwrap_or("").to_string(),
                 // `message()` keeps git's trailing newline; the frontend splits
                 // subject from body, so trim it here rather than everywhere.
                 MessageScope::Full => commit.message().unwrap_or("").trim_end().to_string(),

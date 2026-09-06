@@ -28,6 +28,7 @@ pub struct ScanCleanupTargetsInput {
 pub struct ScanCleanupTargetsOutput {
     pub targets: Vec<CleanupTarget>,
     /// Sum of all target sizes in bytes.
+    #[specta(type = specta_typescript::Number)]
     pub total_bytes: u64,
 }
 

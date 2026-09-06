@@ -28,30 +28,30 @@ serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 async-trait = "0.1"
 tauri = { version = "2", features = [] }
-execute = "0.2.9"
-thiserror = "1.0.40"
+execute = "0.3"
+thiserror = "2"
 tokio = { version = "1.11.0", features = ["full"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
-git2 = { version = "0.20.2", default-features = false, features = ["https"] }
+git2 = { version = "0.21", default-features = false, features = ["https"] }
 chrono = { version = "0.4", features = ["serde"] }
-specta = { version = "=2.0.0-rc.22", features = ["chrono"] }
-tauri-specta = { version = "=2.0.0-rc.21", features = ["javascript", "typescript"] }
-specta-typescript = "=0.0.9"
+specta = { version = "=2.0.0-rc.25", features = ["chrono"] }
+tauri-specta = { version = "=2.0.0-rc.25", features = ["javascript", "typescript"] }
+specta-typescript = "=0.0.12"
 diesel = { version = "2.3.2", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "chrono", "r2d2"] }
 diesel_migrations = "2.3"
-libsqlite3-sys = { version = "0.35", features = ["bundled"] }
-notify = "6.1.1"
-notify-debouncer-full = "0.3.1"
+libsqlite3-sys = { version = "0.38", features = ["bundled"] }
+notify = "8"
+notify-debouncer-full = "0.7"
 tauri-plugin-opener = "2.5.4"
 tauri-plugin-log = "2.8.0"
 tauri-plugin-os = "2"
 log = "0.4.33"
 trash = "5"
 ignore = "0.4"
-jwalk = "0.8"
-tree-sitter = "0.25"
+jwalk = "0.9"
+tree-sitter = "0.27"
 tree-sitter-typescript = "0.23.2"
 tree-sitter-javascript = "0.25.0"
 streaming-iterator = "0.1"

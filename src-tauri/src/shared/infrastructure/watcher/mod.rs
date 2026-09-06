@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::Duration;
 
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_full::{
     new_debouncer, DebounceEventResult, DebouncedEvent, Debouncer, FileIdMap,
 };
@@ -98,15 +98,13 @@ impl WatcherState {
             *count += 1;
             return Ok(());
         }
-        debouncer.watcher().watch(path, mode).map_err(|e| {
+        debouncer.watch(path, mode).map_err(|e| {
             AppError::new(
                 format!("Failed to watch {}", path.display()),
                 "watcher_watch_failed",
                 Some(e.to_string()),
             )
         })?;
-        // Track file identity under this root so the debouncer can dedupe.
-        debouncer.cache().add_root(path, mode);
         roots.insert(path.to_path_buf(), 1);
         Ok(())
     }
@@ -124,8 +122,7 @@ impl WatcherState {
             Some(count) if *count > 1 => *count -= 1,
             Some(_) => {
                 roots.remove(path);
-                let _ = debouncer.watcher().unwatch(path);
-                debouncer.cache().remove_root(path);
+                let _ = debouncer.unwatch(path);
             }
             None => {}
         }

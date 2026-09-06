@@ -44,6 +44,7 @@ pub struct CleanupHistoryRecord {
     pub repository_id: String,
     pub target_path: String,
     pub folder_name: String,
+    #[specta(type = specta_typescript::Number)]
     pub bytes_freed: i64,
     pub deletion_mode: String,
     pub cleaned_at: NaiveDateTime,

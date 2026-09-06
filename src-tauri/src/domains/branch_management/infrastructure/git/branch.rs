@@ -224,7 +224,7 @@ fn build_branch(
     // git's trailing newline so an empty body isn't persisted as whitespace.
     let message = commit.message().unwrap_or("").trim_end().to_string();
     // The subject line, kept alongside the full message for compact display.
-    let summary = commit.summary().unwrap_or("").to_string();
+    let summary = commit.summary().ok().flatten().unwrap_or("").to_string();
 
     // Remote tracking ref (e.g. "origin/main"); `None` when the branch has
     // no configured upstream.
@@ -655,7 +655,7 @@ pub fn find_current_branch(path: &Path) -> Result<Option<String>, AppError> {
 
     let branch_name = head
         .shorthand()
-        .ok_or_else(|| BranchError::InvalidBranchName {
+        .map_err(|_| BranchError::InvalidBranchName {
             path: path.display().to_string(),
         })?;
 
@@ -746,7 +746,7 @@ fn branches_checked_out_in_worktrees(
         return checked_out;
     };
 
-    for name in names.iter().flatten() {
+    for name in names.iter().flatten().flatten() {
         let Ok(worktree) = repo.find_worktree(name) else {
             continue;
         };
@@ -759,7 +759,7 @@ fn branches_checked_out_in_worktrees(
         if !head.is_branch() {
             continue;
         }
-        if let Some(branch) = head.shorthand() {
+        if let Ok(branch) = head.shorthand() {
             checked_out.insert(branch.to_string(), worktree.path().display().to_string());
         }
     }
@@ -930,7 +930,7 @@ fn get_branch_info(repo: &Repository, branch_name: &str) -> Result<Branch, AppEr
 
     // Store the full commit message (subject + body) plus its subject line.
     let message = commit.message().unwrap_or("").trim_end().to_string();
-    let summary = commit.summary().unwrap_or("").to_string();
+    let summary = commit.summary().ok().flatten().unwrap_or("").to_string();
 
     // Remote tracking ref (e.g. "origin/main"); `None` when unset.
     let upstream = branch

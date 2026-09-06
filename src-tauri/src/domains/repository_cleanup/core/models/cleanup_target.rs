@@ -14,5 +14,6 @@ pub struct CleanupTarget {
     /// The directory's own name (last path component), e.g. `node_modules`.
     pub folder_name: String,
     /// Total size on disk in bytes.
+    #[specta(type = specta_typescript::Number)]
     pub size_bytes: u64,
 }

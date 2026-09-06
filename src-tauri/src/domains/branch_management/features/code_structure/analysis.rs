@@ -276,14 +276,14 @@ fn parse_block(
     while let Some(matched) = matches.next() {
         let text = |index: u32| {
             matched
-                .captures
+                .captures()
                 .iter()
                 .find(|c| c.index == index)
                 .and_then(|c| c.node.utf8_text(bytes).ok())
         };
         let node = |index: u32| {
             matched
-                .captures
+                .captures()
                 .iter()
                 .find(|c| c.index == index)
                 .map(|c| c.node)
@@ -430,7 +430,7 @@ fn collect_import_bindings(statement: Node<'_>, bytes: &[u8], parsed: &mut Parse
 /// The first named child of `node` with the given kind.
 fn named_child_of_kind<'tree>(node: Node<'tree>, kind: &str) -> Option<Node<'tree>> {
     (0..node.named_child_count())
-        .filter_map(|i| node.named_child(i))
+        .filter_map(|i| node.named_child(i as u32))
         .find(|child| child.kind() == kind)
 }
 

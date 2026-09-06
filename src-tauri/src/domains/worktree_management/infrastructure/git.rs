@@ -25,7 +25,7 @@ fn resolve_head(repo: &Repository) -> (Option<String>, Option<String>) {
         Ok(head) => {
             let sha = head.peel_to_commit().ok().map(|c| c.id().to_string());
             let branch = if head.is_branch() {
-                head.shorthand().map(|s| s.to_string())
+                head.shorthand().ok().map(|s| s.to_string())
             } else {
                 None
             };
@@ -64,7 +64,7 @@ fn build_main(repo: &Repository) -> Worktree {
 
 /// Build the model entry for a linked worktree.
 fn build_linked(wt: &git2::Worktree) -> Worktree {
-    let name = wt.name().unwrap_or_default().to_string();
+    let name = wt.name().ok().flatten().unwrap_or_default().to_string();
     let path = wt.path().to_string_lossy().into_owned();
 
     let (is_locked, lock_reason) = match wt.is_locked() {
@@ -102,7 +102,7 @@ pub fn list_worktrees(path: &Path) -> Result<Vec<Worktree>, WorktreeError> {
         detail: e.to_string(),
     })?;
 
-    for name in names.iter().flatten() {
+    for name in names.iter().flatten().flatten() {
         // A worktree whose admin entry exists but can't be opened is reported as
         // prunable rather than failing the whole list.
         if let Ok(wt) = repo.find_worktree(name) {
@@ -143,6 +143,7 @@ pub fn add_worktree(
             detail: e.to_string(),
         })?
         .iter()
+        .flatten()
         .flatten()
         .map(String::from)
         .collect();
@@ -190,6 +191,7 @@ pub fn remove_worktree(path: &Path, name: &str, force: bool) -> Result<(), Workt
         })?
         .iter()
         .flatten()
+        .flatten()
         .map(String::from)
         .collect();
 
@@ -229,6 +231,7 @@ fn find_linked(repo: &Repository, name: &str) -> Result<git2::Worktree, Worktree
             detail: e.to_string(),
         })?
         .iter()
+        .flatten()
         .flatten()
         .map(String::from)
         .collect();

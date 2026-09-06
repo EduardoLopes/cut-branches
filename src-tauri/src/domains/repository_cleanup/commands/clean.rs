@@ -32,6 +32,7 @@ pub struct CleanRepositoryInput {
 pub struct TargetResult {
     pub path: String,
     pub ok: bool,
+    #[specta(type = specta_typescript::Number)]
     pub bytes_freed: u64,
     pub error: Option<String>,
 }
@@ -40,6 +41,7 @@ pub struct TargetResult {
 #[serde(rename_all = "camelCase")]
 pub struct CleanRepositoryOutput {
     /// Total bytes freed across the successful targets.
+    #[specta(type = specta_typescript::Number)]
     pub freed_bytes: u64,
     pub results: Vec<TargetResult>,
 }

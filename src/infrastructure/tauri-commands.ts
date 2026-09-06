@@ -1,4 +1,9 @@
-import { commands, type AppError, type Result } from '$infrastructure/bindings';
+import { commands, type AppError } from '$infrastructure/bindings';
+
+// tauri-specta no longer exports a named `Result`; it inlines this union in
+// every command's return type. Re-declared here so the adapter (and tests) can
+// name it.
+export type Result<T, E> = { status: 'ok'; data: T } | { status: 'error'; error: E };
 
 // Shared type utilities for Tauri commands
 export type CommandName = keyof typeof commands;

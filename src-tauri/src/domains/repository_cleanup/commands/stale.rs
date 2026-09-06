@@ -34,7 +34,9 @@ pub struct StaleRepository {
     pub name: String,
     pub path: String,
     /// Unix seconds of the repository's most recent activity.
+    #[specta(type = specta_typescript::Number)]
     pub stale_since: i64,
+    #[specta(type = specta_typescript::Number)]
     pub reclaimable_bytes: u64,
     pub targets: Vec<CleanupTarget>,
 }
@@ -44,6 +46,7 @@ pub struct StaleRepository {
 pub struct ListStaleRepositoriesOutput {
     pub repositories: Vec<StaleRepository>,
     /// Total reclaimable bytes across all stale repositories.
+    #[specta(type = specta_typescript::Number)]
     pub total_reclaimable_bytes: u64,
 }
 

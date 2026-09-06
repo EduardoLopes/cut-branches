@@ -50,6 +50,7 @@ pub struct CleanupTargetCleanedEvent {
     /// Absolute path of the deleted folder.
     pub path: String,
     /// Bytes reclaimed by deleting it.
+    #[specta(type = specta_typescript::Number)]
     pub bytes_freed: u64,
 }
 

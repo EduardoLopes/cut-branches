@@ -175,11 +175,10 @@ fn main() {
     #[cfg(debug_assertions)]
     builder
         .export(
-            // Byte counts and Unix timestamps in the cleanup domain use 64-bit
-            // integers; emit them as `number` (disk sizes never approach 2^53)
-            // instead of the default `Fail` behavior, which would abort export.
-            specta_typescript::Typescript::default()
-                .bigint(specta_typescript::BigIntExportBehavior::Number),
+            // 64-bit fields (byte counts, Unix timestamps) opt into `number`
+            // per field via `#[specta(type = specta_typescript::Number)]`;
+            // any unannotated one aborts the export here.
+            specta_typescript::Typescript::default(),
             "../src/infrastructure/bindings.ts",
         )
         .expect("Failed to export typescript bindings");
