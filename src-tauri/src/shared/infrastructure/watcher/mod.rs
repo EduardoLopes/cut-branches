@@ -19,7 +19,7 @@ use std::time::Duration;
 
 use notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_full::{
-    new_debouncer, DebounceEventResult, DebouncedEvent, Debouncer, FileIdMap,
+    new_debouncer, DebounceEventResult, DebouncedEvent, Debouncer, RecommendedCache,
 };
 
 use crate::shared::error::AppError;
@@ -40,7 +40,11 @@ pub type WatchCallback = Box<dyn Fn(Vec<DebouncedEvent>) + Send + 'static>;
 /// last caller has released it. Without that, unregistering one caller silently
 /// deafened every other caller sharing the directory.
 pub struct WatcherState {
-    inner: Mutex<Option<Debouncer<RecommendedWatcher, FileIdMap>>>,
+    /// `RecommendedCache`, not a concrete cache type: `new_debouncer` returns
+    /// the platform's recommended one, which is `NoCache` on Linux and
+    /// `FileIdMap` elsewhere. Naming either concretely builds on one platform
+    /// and fails on the other.
+    inner: Mutex<Option<Debouncer<RecommendedWatcher, RecommendedCache>>>,
     /// How many outstanding `watch_path` registrations each watched path holds.
     roots: Mutex<HashMap<PathBuf, usize>>,
 }
