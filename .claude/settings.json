@@ -1,0 +1,9 @@
+{
+	"extraKnownMarketplaces": {
+		"commit-skill": {
+			"source": { "source": "github", "repo": "EduardoLopes/commit-skill" },
+			"autoUpdate": true
+		}
+	},
+	"enabledPlugins": { "edur@commit-skill": true }
+}
