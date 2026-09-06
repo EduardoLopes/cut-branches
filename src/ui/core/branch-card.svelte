@@ -114,7 +114,7 @@
 		onRecentCommitsIntent,
 		size,
 		background = 'surface.base',
-		border = 'muted',
+		border,
 		shadow,
 		radius
 	}: Props = $props();
@@ -127,6 +127,13 @@
 	const feedback = $derived(
 		branch.isCurrent() ? 'primary' : isVisuallySelected ? 'danger' : 'neutral'
 	);
+
+	// A feedback surface only reads as stateful if its border carries the
+	// palette: `muted` washes the hue out to near-neutral. Selection is the
+	// state worth shouting about, so it gets the accent border; the current
+	// branch is ambient context and stays muted, as does the neutral rest.
+	// An explicit `border` from the consumer still wins.
+	const cardBorder = $derived(border ?? (feedback === 'danger' ? 'accent' : 'muted'));
 
 	// Keep the state marker classes (+ consumer colorPalette) on the root so
 	// existing state hooks and tests keep working; the actual visuals come from
@@ -661,7 +668,7 @@
 	{feedback}
 	size={cardSize}
 	{background}
-	{border}
+	border={cardBorder}
 	{shadow}
 	{radius}
 	class={rootClass}
