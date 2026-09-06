@@ -147,6 +147,17 @@ describe('ManageRepositoriesModal', () => {
 		expect(h.goto).not.toHaveBeenCalled();
 	});
 
+	it('disables Remove while the batch is running', async () => {
+		// A removal that never settles keeps the mutation pending.
+		h.execute.mockImplementation(() => new Promise(() => {}));
+		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		await screen.getByTestId('manage-item').nth(1).click();
+		await screen.getByTestId('manage-remove-selected').click();
+
+		await vi.waitFor(() => expect(screen.getByTestId('manage-remove-selected')).toBeDisabled());
+	});
+
 	it('navigates to the repos index when the active repository is removed', async () => {
 		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 

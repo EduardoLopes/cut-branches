@@ -4,9 +4,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
-	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
-	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { useRemoveRepositoryBatch } from '../core/composables/use-remove-repository-batch.svelte';
@@ -15,6 +13,11 @@
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { resolveRepositoryPath } from '$lib/repository-route';
+	import TruncatedPath from '$ui/core/truncated-path.svelte';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import ListFilter from '$ui/patterns/list-filter.svelte';
+	import ScrollWell from '$ui/patterns/scroll-well.svelte';
+	import SelectionRow from '$ui/patterns/selection-row.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -156,6 +159,7 @@
 		{open}
 		onChange={handleOpenChange}
 		title="Manage repositories"
+		subtitle="Select the repositories to remove from Cut Branches. This only removes them from the app — the folders on disk are left untouched."
 		aria-label="Manage repositories"
 		data-testid="manage-repositories-modal"
 		passThrough={{
@@ -167,6 +171,12 @@
 			}
 		}}
 	>
+		{#snippet leading()}
+			<Stamp size="lg" emphasis="secondary" feedback="neutral">
+				<Icon icon="lucide:folder-git-2" width="22px" height="22px" />
+			</Stamp>
+		{/snippet}
+
 		<div
 			class={css({
 				display: 'flex',
@@ -175,40 +185,25 @@
 				width: 'full'
 			})}
 		>
-			<p class={css({ margin: '0', color: 'neutral.text.muted', fontSize: 'sm' })}>
-				Select the repositories to remove from Cut Branches. This only removes them from the app —
-				the folders on disk are left untouched.
-			</p>
-
-			{#if repositories.length > 0}
-				<Input
-					type="search"
-					size="md"
-					placeholder="Search repositories"
-					aria-label="Search repositories"
-					bind:value={searchQuery}
-					data-testid="manage-search"
-				>
-					{#snippet leading()}
-						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:search" width="16px" height="16px" />
-						</Stamp>
-					{/snippet}
-				</Input>
-			{/if}
-
-			<Panel
-				background="surface.peak"
-				border="muted"
-				radius="lg"
-				padding="none"
+			<!-- Results (fixed height so the modal doesn't resize between states) -->
+			<div
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
-					height: '320px',
-					overflow: 'hidden'
+					gap: 'sm',
+					height: '320px'
 				})}
 			>
+				{#if repositories.length > 0}
+					<ListFilter
+						bind:value={searchQuery}
+						placeholder="Search repositories"
+						matchCount={filteredRepositories.length}
+						total={repositories.length}
+						testId="manage-search"
+					/>
+				{/if}
+
 				{#if repositories.length === 0}
 					<div
 						class={css({
@@ -248,18 +243,12 @@
 						<span class={css({ fontSize: 'sm' })}>No repositories match your search.</span>
 					</div>
 				{:else}
-					<!-- Header with the select-all control -->
 					<div
 						class={css({
 							display: 'flex',
 							alignItems: 'center',
 							justifyContent: 'space-between',
-							paddingX: 'sm',
-							paddingY: 'xs',
-							borderBottomWidth: '1px',
-							borderBottomStyle: 'solid',
-							borderBottomColor: 'neutral.border.muted',
-							background: 'neutral.surface.hill'
+							paddingX: '2xs'
 						})}
 					>
 						<Checkbox
@@ -279,70 +268,35 @@
 						</span>
 					</div>
 
-					<!-- Rows. A transparent Panel rather than a plain div so this
-					     scroller's inset counts as a nesting level and the rows can ask
-					     for `radius="inner"` instead of pinning a tier. -->
-					<Panel
-						background="transparent"
-						border="none"
-						radius="inner"
-						padding="2xs"
-						class={css({
-							display: 'flex',
-							flexDirection: 'column',
-							gap: '3xs',
-							flex: '1',
-							overflowY: 'auto',
-							// Only the list scrolls vertically; long repo paths ellipsize
-							// rather than pushing the row wide and adding a horizontal bar.
-							overflowX: 'hidden'
-						})}
-					>
+					<ScrollWell class={css({ flex: '1', minHeight: '0' })} testId="manage-list">
 						{#each filteredRepositories as repository (repository.id)}
 							{@const isSelected = selected.has(repository.id)}
-							<Checkbox
-								fullWidth
+							<!-- Danger ladder: selecting here queues a removal. -->
+							<SelectionRow
+								feedback="danger"
 								checked={isSelected}
 								onchange={() => toggle(repository.id)}
-								aria-label={repository.name}
-								data-testid="manage-item"
-								radius="inner"
-								class={css({
-									paddingX: 'sm',
-									paddingY: 'xs',
-									// Let the row shrink to the well's width so its content can
-									// ellipsize instead of forcing horizontal overflow.
-									minWidth: '0',
-									maxWidth: 'full',
-									background: isSelected ? 'danger.surface.peak' : 'transparent',
-									_hover: {
-										background: isSelected ? 'danger.surface' : 'neutral.surface.hill'
-									}
-								})}
+								ariaLabel={repository.name}
+								testId="manage-item"
 							>
 								<span
 									class={css({
 										display: 'flex',
-										flexDirection: 'column',
-										gap: '2xs',
-										minWidth: '0',
-										width: 'full'
+										alignItems: 'center',
+										gap: 'md',
+										minWidth: '0'
 									})}
 								>
-									<span class={css({ fontSize: 'sm', fontWeight: 'medium' })}
-										>{repository.name}</span
-									>
-									<span
-										class={css({
-											fontSize: 'xs',
-											color: 'neutral.text.muted',
-											overflow: 'hidden',
-											textOverflow: 'ellipsis',
-											whiteSpace: 'nowrap'
-										})}
-									>
-										{repository.path}
+									<span class={css({ fontSize: 'sm', fontWeight: 'medium', flexShrink: '0' })}>
+										{repository.name}
 									</span>
+									<TruncatedPath
+										path={repository.path}
+										highlight={repository.name}
+										align="end"
+										class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}
+										data-testid="manage-item-path"
+									/>
 								</span>
 								{#snippet trailing()}
 									<Badge size="sm" emphasis="secondary">
@@ -350,24 +304,13 @@
 										{repository.branchesCount === 1 ? 'branch' : 'branches'}
 									</Badge>
 								{/snippet}
-							</Checkbox>
+							</SelectionRow>
 						{/each}
-					</Panel>
+					</ScrollWell>
 				{/if}
-			</Panel>
+			</div>
 
-			<!-- Footer -->
-			<div
-				class={css({
-					display: 'flex',
-					justifyContent: 'flex-end',
-					gap: 'sm',
-					paddingTop: 'md',
-					borderTopWidth: '1px',
-					borderTopStyle: 'solid',
-					borderTopColor: 'neutral.border.muted'
-				})}
-			>
+			<DialogFooter>
 				<Button emphasis="ghost" onclick={handleCancel} data-testid="manage-cancel">Cancel</Button>
 				<ValidationHint
 					bind:open={hintOpen}
@@ -380,6 +323,7 @@
 								{...triggerProps}
 								feedback="danger"
 								onclick={handleRemove}
+								disabled={removeBatch.isPending}
 								data-testid="manage-remove-selected"
 							>
 								Remove {selectedCount}
@@ -388,7 +332,7 @@
 						</Loading>
 					{/snippet}
 				</ValidationHint>
-			</div>
+			</DialogFooter>
 		</div>
 	</Dialog>
 </div>
