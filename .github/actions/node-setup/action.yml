@@ -1,6 +1,12 @@
 name: 'Node Setup'
 description: 'Setup Node.js environment'
 
+inputs:
+  playwright:
+    description: 'Install the Playwright browsers needed by the vitest browser-mode suite.'
+    required: false
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
@@ -65,3 +71,33 @@ runs:
       run: |
         pnpm install --frozen-lockfile
       shell: pwsh
+
+    # The vitest suite runs in browser mode against chromium. `onlyBuiltDependencies: []`
+    # blocks Playwright's postinstall, so the browser has to be fetched explicitly or the
+    # run dies with "Executable doesn't exist at .../chromium_headless_shell".
+    # `playwright` is a transitive peer of @vitest/browser-playwright and is not hoisted
+    # to the root, so the version comes from the linked bin rather than a require().
+    - name: Resolve Playwright version
+      if: inputs.playwright == 'true'
+      id: playwright-version
+      run: echo "version=$(pnpm exec playwright --version | tr -dc '0-9.')" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache Playwright browsers
+      if: inputs.playwright == 'true'
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
+    - name: Install Playwright browsers
+      if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+      run: pnpm exec playwright install --with-deps chromium
+      shell: bash
+
+    # A cache hit restores the browser binaries but not the apt packages they link against.
+    - name: Install Playwright system dependencies
+      if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+      run: pnpm exec playwright install-deps chromium
+      shell: bash

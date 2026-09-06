@@ -47,6 +47,8 @@ jobs:
 
       - name: node-setup
         uses: ./.github/actions/node-setup
+        with:
+          playwright: 'true'
 
       - name: Run Tests
         run: pnpm test
