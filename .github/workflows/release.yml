@@ -1,0 +1,71 @@
+name: release
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Opens/updates the "Version Packages" PR while changesets are pending. Once
+  # that PR is merged, main carries the bumped version with no changesets left,
+  # and the tag check below turns the merge into a release.
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_needed: ${{ steps.tag.outputs.release_needed }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Full history + tags: the tag check needs to know which versions
+          # have already shipped.
+          fetch-depth: 0
+
+      - name: node-setup
+        uses: ./.github/actions/node-setup
+
+      - name: Create or update the version PR
+        uses: changesets/action@v1
+        with:
+          version: pnpm version-packages
+          title: 'chore: version packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag the release
+        id: tag
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "v$VERSION is already tagged; nothing to release."
+            echo "release_needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # `changeset git-tag` creates v<version> for this single-package repo.
+          pnpm release
+          git push origin "refs/tags/v$VERSION"
+          echo "release_needed=true" >> "$GITHUB_OUTPUT"
+
+  # A tag pushed with GITHUB_TOKEN does not trigger other workflows, so publish
+  # is invoked directly rather than relying on the tag push.
+  publish:
+    needs: version
+    if: needs.version.outputs.release_needed == 'true'
+    uses: ./.github/workflows/publish.yml
+    permissions:
+      contents: write
+    secrets: inherit

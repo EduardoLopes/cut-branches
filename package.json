@@ -18,7 +18,7 @@
 		"update-all": "pnpm update -irL && cd src-tauri && cargo update && cd ..",
 		"changeset": "changeset",
 		"prepare": "svelte-kit sync && panda codegen && lefthook install",
-		"version-packages": "git push && changeset version && pnpm update-tauri-version",
+		"version-packages": "changeset version && pnpm update-tauri-version",
 		"test": "HEADLESS=true vitest --run --coverage",
 		"test:watch": "vitest --watch --coverage",
 		"test:ui": "vitest --coverage --ui",

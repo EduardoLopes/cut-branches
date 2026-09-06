@@ -1,10 +1,20 @@
 name: 'publish'
 
 on:
+  # Normal path: called by release.yml right after it pushes the version tag.
+  workflow_call:
+  # Escape hatches: re-running a release for a tag, or building one by hand.
   push:
     tags:
-      - '**'
+      - 'v*'
   workflow_dispatch:
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
   test-check:
@@ -15,6 +25,7 @@ jobs:
 
   publish-tauri:
     needs: [test-check, rust-check]
+    environment: release
     permissions:
       contents: write
     strategy:
@@ -31,7 +42,7 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
@@ -62,13 +73,37 @@ jobs:
           platform: ${{ matrix.platform }}
           cache_key_discriminator: ${{ matrix.args || matrix.platform }}
 
+      # Pulls this version's section out of CHANGELOG.md so the GitHub release
+      # carries the generated notes instead of a fixed sentence.
+      - name: Collect release notes
+        id: notes
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          NOTES="$(awk -v v="## $VERSION" '
+            $0 == v { capture = 1; next }
+            capture && /^## / { exit }
+            capture { print }
+          ' CHANGELOG.md)"
+
+          if [ -z "$(printf '%s' "$NOTES" | tr -d '[:space:]')" ]; then
+            NOTES="See the assets to download this version and install."
+          fi
+
+          {
+            echo "body<<RELEASE_NOTES_EOF"
+            printf '%s\n' "$NOTES"
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: cut_branches-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          # Matches the tag release.yml pushes, so a release has exactly one tag.
+          tagName: v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'Cut Branches v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
+          releaseBody: ${{ steps.notes.outputs.body }}
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
