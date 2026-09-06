@@ -13,23 +13,17 @@ permissions:
   contents: read
 
 jobs:
-  # Opens/updates the "Version Packages" PR while changesets are pending. Once
-  # that PR is merged, main carries the bumped version with no changesets left,
-  # and the tag check below turns the merge into a release.
+  # Opens/updates the "Version Packages" PR while changesets are pending. The
+  # version command rewrites package.json in this job's working tree before the
+  # action pushes it to its own branch, which is why the tag decision below is a
+  # separate job with its own checkout rather than another step here.
   version:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-    outputs:
-      release_needed: ${{ steps.tag.outputs.release_needed }}
-      version: ${{ steps.tag.outputs.version }}
     steps:
       - uses: actions/checkout@v7
-        with:
-          # Full history + tags: the tag check needs to know which versions
-          # have already shipped.
-          fetch-depth: 0
 
       - name: node-setup
         uses: ./.github/actions/node-setup
@@ -43,6 +37,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Releases when main carries a version that has never been tagged, which is
+  # true exactly once: on the commit that merges the version PR.
+  #
+  # This runs in its own job so its checkout is pristine. Reading the version
+  # from a tree the version command has already rewritten would report the NEXT
+  # version on every push and release on each one.
+  tag:
+    needs: version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release_needed: ${{ steps.tag.outputs.release_needed }}
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Tags are needed to tell an already-released version from a new one.
+          fetch-depth: 0
+
       - name: Tag the release
         id: tag
         run: |
@@ -55,16 +69,19 @@ jobs:
             exit 0
           fi
 
-          # `changeset git-tag` creates v<version> for this single-package repo.
-          pnpm release
+          # Tagged directly rather than through `changeset git-tag`, which derives
+          # the name from the working tree; this uses the version just read from
+          # the commit being released. Same name either way for a single package.
+          echo "Releasing v$VERSION"
+          git tag "v$VERSION"
           git push origin "refs/tags/v$VERSION"
           echo "release_needed=true" >> "$GITHUB_OUTPUT"
 
   # A tag pushed with GITHUB_TOKEN does not trigger other workflows, so publish
   # is invoked directly rather than relying on the tag push.
   publish:
-    needs: version
-    if: needs.version.outputs.release_needed == 'true'
+    needs: tag
+    if: needs.tag.outputs.release_needed == 'true'
     uses: ./.github/workflows/publish.yml
     permissions:
       contents: write
