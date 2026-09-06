@@ -108,6 +108,25 @@ const mockBranchesData: BranchData[] = [
 		isLocked: false
 	},
 	{
+		name: 'merged-feature',
+		current: false,
+		upstream: null,
+		lastCommit: {
+			sha: '0123456789abcdef0123456789abcdef01234567',
+			shortSha: '0123456',
+			date: '2023-01-02',
+			message: 'Merged commit',
+			summary: 'Merged commit',
+			author: 'Test User',
+			email: 'test@example.com'
+		},
+		fullyMerged: true,
+		deletedAt: null,
+		isReachable: null,
+		isSelected: false,
+		isLocked: false
+	},
+	{
 		name: 'main',
 		current: true,
 		upstream: null,
@@ -543,6 +562,37 @@ describe('DeleteBranchModal Component', () => {
 					message: '- **feature-1** (was abc123)\n\n- **feature-2** (was def456)'
 				});
 			});
+		});
+	});
+
+	describe('Merge status alerts', () => {
+		// Rows are virtualized and measured at mount, so the merge-status alert
+		// must be known synchronously: it comes from the listing's `fullyMerged`
+		// (computed by the Rust sync), not from a later metrics fetch — otherwise
+		// rows would grow after mount and the list would shift mid-scroll.
+		test('shows the not-merged alert straight from the branch listing', async () => {
+			const screen = renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
+			await screen.getByTestId('open-dialog-button').click();
+
+			await expect.element(screen.getByText(/not fully merged/)).toBeInTheDocument();
+		});
+
+		test('shows no merge alert for a merged branch', async () => {
+			mockSelectedBranches = ['merged-feature'];
+			const screen = renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
+			await screen.getByTestId('open-dialog-button').click();
+
+			await expect.element(screen.getByText('merged-feature')).toBeInTheDocument();
+			expect(screen.getByText(/not fully merged/).elements()).toHaveLength(0);
+		});
+
+		test('shows no merge alert for the current branch', async () => {
+			mockSelectedBranches = ['main'];
+			const screen = renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
+			await screen.getByTestId('open-dialog-button').click();
+
+			await expect.element(screen.getByText('main')).toBeInTheDocument();
+			expect(screen.getByText(/not fully merged/).elements()).toHaveLength(0);
 		});
 	});
 

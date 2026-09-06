@@ -23,7 +23,9 @@ export function getBranchColorPalette(branch: Branch, selected: boolean): string
  * Generates alert conditions for a branch
  * @param branch - The branch domain model
  * @param selected - Whether the branch is selected
- * @param mergeStatus - Optional override for merge status (when fetched via query)
+ * @param mergeStatus - Optional override for merge status (e.g. from the
+ *   branch-metrics query); falls back to the branch's own `fullyMerged`,
+ *   which the listing sync computes on the Rust side
  * @returns Array of alert types that should be shown
  */
 export function getBranchAlerts(
@@ -31,11 +33,10 @@ export function getBranchAlerts(
 	selected: boolean,
 	mergeStatus?: boolean
 ): string[] {
-	// Merge status comes from the (lazily loaded) branch metrics. Sync never
-	// computes `fullyMerged` — it is always `false` — so falling back to it
-	// would flash "not fully merged" on every branch until metrics arrive.
-	// Unknown means "no alert yet", not "not merged".
-	const isNotMerged = mergeStatus === false;
+	// The listing carries a truthful `fullyMerged` (one revwalk over HEAD's
+	// history per sync), so the alert is known synchronously — rows never
+	// grow after mount waiting for it. A caller with fresher data may override.
+	const isNotMerged = !(mergeStatus ?? branch.isMerged());
 
 	const alerts = branch.getAlerts();
 	const filteredAlerts: string[] = [];

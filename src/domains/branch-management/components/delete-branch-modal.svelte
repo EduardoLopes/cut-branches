@@ -10,7 +10,6 @@
 	import { type Branch } from '../core/models/branch';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
-	import { useBranchMetrics } from '$domains/branch-management/core/composables/use-branch-metrics.svelte';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import {
@@ -105,10 +104,24 @@
 	// hundreds of branches here; rendering a card per branch froze the modal on
 	// open. A plain sliding window is enough for a dialog (no retention games —
 	// this list is read once, top to bottom).
+	//
+	// Every row's height is known the moment it mounts: the alerts (including
+	// "not fully merged") come from the branch listing itself, nothing arrives
+	// later — so the list never shifts under the user while scrolling.
 	// ---------------------------------------------------------------------------
-	/** Rough compact-card height; each mounted row reports its real height. */
+	/** Compact-card height with no alerts; each mounted row reports its real height. */
 	const ESTIMATED_ROW_H = 72;
+	/** One single-line pindoba Alert, including the gap to the card body. */
+	const ESTIMATED_ALERT_H = 44;
 	const ROW_GAP = 8;
+
+	/** Estimate from the alerts the row will actually show, so unmeasured rows
+	 *  (and the total height) start close to reality. Measured heights win. */
+	function estimateRowSize(index: number): number {
+		const branch = branches[index];
+		if (!branch) return ESTIMATED_ROW_H;
+		return ESTIMATED_ROW_H + getBranchAlerts(branch, true).length * ESTIMATED_ALERT_H;
+	}
 
 	let scrollElement = $state<HTMLElement | null>(null);
 
@@ -120,7 +133,7 @@
 			return open ? branches.length : 0;
 		},
 		getScrollElement: () => scrollElement,
-		estimateSize: () => ESTIMATED_ROW_H,
+		estimateSize: estimateRowSize,
 		overscan: 8,
 		gap: ROW_GAP,
 		// The scroll port only exists once the dialog opens; seed a plausible
@@ -153,17 +166,6 @@
 	function measureRow(node: HTMLDivElement) {
 		get(virtualizer).measureElement(node);
 	}
-
-	// Merge status feeds the per-card alerts ("not fully merged" is the one
-	// warning that matters right before deletion). Batched over the visible
-	// window, same as the main list — no per-row commands.
-	const visibleRange = $derived($virtualizer.range);
-	const branchMetrics = useBranchMetrics({
-		path: () => repository?.path,
-		branchNames: () => branches.map((branch) => branch.getName()),
-		visibleRange: () => visibleRange,
-		enabled: () => open
-	});
 
 	function handleDelete() {
 		if (repository?.path && id) {
@@ -241,8 +243,7 @@
 				{#each virtualItems as virtualRow (virtualRow.key)}
 					{@const branch = branches[virtualRow.index]}
 					{#if branch}
-						{@const metrics = branchMetrics.getMetrics(branch.getName())}
-						{@const alerts = getBranchAlerts(branch, true, metrics?.isMerged)}
+						{@const alerts = getBranchAlerts(branch, true)}
 						<div
 							data-index={virtualRow.index}
 							use:measureRow

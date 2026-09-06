@@ -34,10 +34,18 @@ describe('getBranchAlerts', () => {
 		expect(getBranchAlerts(createBranch('feature'), false, true)).not.toContain('fullyMerged');
 	});
 
-	test('does not flash the not-merged alert while merge status is still unknown', () => {
-		// Sync never computes `fullyMerged` (always false); unknown metrics must
-		// not be read as "not merged".
-		expect(getBranchAlerts(createBranch('feature'), false, undefined)).toEqual([]);
+	test('falls back to the branch listing merge status when no override is given', () => {
+		// The listing computes `fullyMerged` on the Rust side, so it is trusted
+		// synchronously — no waiting on the metrics query.
+		expect(getBranchAlerts(createBranch('feature'), false)).toEqual(['fullyMerged']);
+		expect(getBranchAlerts(createBranch('feature', { fullyMerged: true }), false)).toEqual([]);
+	});
+
+	test('lets an explicit merge status override the listing', () => {
+		expect(getBranchAlerts(createBranch('feature', { fullyMerged: true }), false, false)).toEqual([
+			'fullyMerged'
+		]);
+		expect(getBranchAlerts(createBranch('feature'), false, true)).toEqual([]);
 	});
 
 	test('includes protected-words only when selected', () => {
