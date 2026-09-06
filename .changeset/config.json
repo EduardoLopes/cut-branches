@@ -7,12 +7,7 @@
 			"template": "\n\n- {pull} {commit} - {summary} (Thanks {authors})"
 		}
 	],
-	"commit": [
-		"./commit.cjs",
-		{
-			"customOption": true
-		}
-	],
+	"commit": false,
 	"fixed": [],
 	"linked": [],
 	"access": "restricted",

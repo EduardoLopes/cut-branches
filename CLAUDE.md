@@ -386,7 +386,7 @@ For detailed design guidelines, see [@docs/code-design-guide.md](docs/code-desig
 - **Scope rule**: the `src/domains/<name>` directory the change lives in; global folders by name (`ui`, `utils`, `layout`); Rust side `backend` or its module (`git`, `db`); `deps` for dependency bumps; docs by document (`adr`, `code-design-guide`); cross-cutting changes omit the scope
 - **Scope examples**: `feat(branch-management): …`, `fix(repository-management): …`, `perf(git): …`, `style(ui): …`, `chore(deps): …`
 - **Footers**: none; no attribution trailers
-- **Versioning**: changesets (`.changeset/`) CLI v3 via `pnpm changeset`, baseBranch `main`, single package `cut-branches`, config `commit` is a custom function (`.changeset/commit.cjs`) so `changeset add` commits on its own — commit the code first, then add the changeset with an empty index; patch = fix/perf/refactor, minor = feat, major = breaking; changeset filenames are descriptive slugs (`delete-modal-stable-rows.md`); user-facing feats/fixes need one, tooling/docs/tests don't
+- **Versioning**: changesets (`.changeset/`) CLI v3 via `pnpm changeset`, baseBranch `main`, single package `cut-branches`, config `commit` is `false`, so stage the changeset alongside the code or commit it separately as `chore: add changeset for …` (the history uses both); patch = fix/perf/refactor, minor = feat, major = breaking; changeset filenames are descriptive slugs (`delete-modal-stable-rows.md`); user-facing feats/fixes need one, tooling/docs/tests don't
 - **House rules**: pre-commit hooks run eslint, prettier, svelte-check, vitest related and cargo tests — never `--no-verify`; Node 24 via `nvm use 24` before pnpm/git commit
 
 <!-- commit-conventions:end -->
