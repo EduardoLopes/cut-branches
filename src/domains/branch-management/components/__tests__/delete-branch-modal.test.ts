@@ -265,12 +265,24 @@ describe('DeleteBranchModal Component', () => {
 			const button = screen.getByTestId('open-dialog-button');
 			await button.click();
 
-			vi.waitFor(() => {
+			await vi.waitFor(() => {
 				const dialogQuestion = screen.getByTestId('delete-branch-dialog-question');
 				expect(dialogQuestion).toHaveTextContent(
 					'Are you sure you want these branches from the repository test-repo?'
 				);
 			});
+		});
+
+		test('disables Delete while the deletion is pending', async () => {
+			vi.mocked(createDeleteBranchesMutation).mockReturnValueOnce({
+				mutate: vi.fn(),
+				isPending: true
+			} as unknown as ReturnType<typeof createDeleteBranchesMutation>);
+
+			const screen = renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
+			await screen.getByTestId('open-dialog-button').click();
+
+			await vi.waitFor(() => expect(screen.getByTestId('delete-button')).toBeDisabled());
 		});
 
 		// Skip this test as it appears to be timing-related in Svelte 5

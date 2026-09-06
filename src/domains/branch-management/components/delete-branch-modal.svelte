@@ -4,7 +4,6 @@
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
-	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { createVirtualizer } from '@tanstack/svelte-virtual';
 	import { get } from 'svelte/store';
@@ -23,6 +22,8 @@
 	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
 	import BranchCard from '$ui/core/branch-card.svelte';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
@@ -108,7 +109,7 @@
 	const ESTIMATED_ROW_H = 72;
 	const ROW_GAP = 8;
 
-	let scrollElement = $state<HTMLDivElement | null>(null);
+	let scrollElement = $state<HTMLElement | null>(null);
 
 	const virtualizerOptions = {
 		get count() {
@@ -130,7 +131,7 @@
 		}
 	};
 
-	const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>(virtualizerOptions);
+	const virtualizer = createVirtualizer<HTMLElement, HTMLDivElement>(virtualizerOptions);
 
 	// Re-apply live options before render whenever the list or the open state
 	// changes (same pattern as branch-list: the adapter re-imposes its seed
@@ -196,11 +197,18 @@
 <Modal
 	bind:open
 	title="Delete branches"
+	subtitle={`Are you sure you want these branches from the repository ${repository?.name ?? ''}?`}
 	aria-label="Delete branches"
 	aria-describedby="Delete branches"
 	data-testid="delete-branch-dialog"
 	showCloseButton={!deleteMutation.isPending}
+	bannerPassThrough={{
+		subheading: { props: { 'data-testid': 'delete-branch-dialog-question' } }
+	}}
 	passThrough={{
+		root: {
+			style: css.raw({ width: '640px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
+		},
 		content: {
 			style: css.raw({
 				display: 'flex',
@@ -210,109 +218,83 @@
 		}
 	}}
 >
-	<p data-testid="delete-branch-dialog-question">
-		Are you sure you want these branches from the repository <strong
-			class={css({
-				color: 'danger',
-				fontSize: 'lg'
-			})}>{repository?.name}</strong
-		>?
-	</p>
+	{#snippet leading()}
+		<Stamp size="lg" emphasis="secondary" feedback="neutral">
+			<Icon icon="lucide:trash-2" width="22px" height="22px" />
+		</Stamp>
+	{/snippet}
 
-	<Panel
-		title="Branches to delete"
-		aria-label="Branches to delete"
-		aria-describedby="Branches to delete"
-		radius="md"
-		padding="none"
-		class={css({
-			display: 'flex',
-			flexDirection: 'column',
-			minHeight: '0',
-			py: '1px'
-		})}
-	>
-		<!-- Gated on `open`: the dialog element (and its children) exist in the
-		     DOM even while closed, so without this every selection change would
-		     eagerly render a card per selected branch into a hidden dialog —
-		     select-all on a large repository froze on exactly that. The list is
-		     also virtualized: only the visible window of cards is mounted, so
-		     opening the modal costs a screenful regardless of how many branches
-		     are selected. The scroll port owns the overflow (the Panel root
-		     doesn't scroll its slotted content reliably inside a <dialog>). -->
-		{#if open}
-			<div
-				bind:this={scrollElement}
-				data-testid="delete-branch-list"
-				class={css({
-					maxHeight: '50vh',
-					overflowY: 'auto',
-					overflowX: 'hidden'
-				})}
-			>
-				<div class={css({ position: 'relative', width: 'full' })} style:height={`${totalSize}px`}>
-					{#each virtualItems as virtualRow (virtualRow.key)}
-						{@const branch = branches[virtualRow.index]}
-						{#if branch}
-							{@const metrics = branchMetrics.getMetrics(branch.getName())}
-							{@const alerts = getBranchAlerts(branch, true, metrics?.isMerged)}
-							<div
-								data-index={virtualRow.index}
-								use:measureRow
-								class={css({
-									position: 'absolute',
-									top: '0',
-									left: '0',
-									width: 'full'
-								})}
-								style:transform={`translateY(${virtualRow.start}px)`}
-							>
-								<!-- Compact: the last-commit block is dropped — right before a
+	<!-- Gated on `open`: the dialog element (and its children) exist in the
+	     DOM even while closed, so without this every selection change would
+	     eagerly render a card per selected branch into a hidden dialog —
+	     select-all on a large repository froze on exactly that. The list is
+	     also virtualized: only the visible window of cards is mounted, so
+	     opening the modal costs a screenful regardless of how many branches
+	     are selected. The well's scroller is the virtualizer's scroll port. -->
+	{#if open}
+		<ScrollWell
+			bind:scroller={scrollElement}
+			class={css({ maxHeight: '50vh' })}
+			testId="delete-branch-list"
+		>
+			<div class={css({ position: 'relative', width: 'full' })} style:height={`${totalSize}px`}>
+				{#each virtualItems as virtualRow (virtualRow.key)}
+					{@const branch = branches[virtualRow.index]}
+					{#if branch}
+						{@const metrics = branchMetrics.getMetrics(branch.getName())}
+						{@const alerts = getBranchAlerts(branch, true, metrics?.isMerged)}
+						<div
+							data-index={virtualRow.index}
+							use:measureRow
+							class={css({
+								position: 'absolute',
+								top: '0',
+								left: '0',
+								width: 'full'
+							})}
+							style:transform={`translateY(${virtualRow.start}px)`}
+						>
+							<!-- Compact: the last-commit block is dropped — right before a
 								     deletion the alerts (unmerged work, protected names) matter
 								     more than the commit subject, and the card stays short. The
 								     diff link remains for reviewing what the branch adds. -->
-								<BranchCard
-									{branch}
-									compact
-									radius="inner"
-									selected={true}
-									diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
-										? `${resolveRepositorySubPath(id, 'diff')}?branch=${encodeURIComponent(branch.getName())}`
-										: undefined}
-									children={shouldShowBranchAlerts(alerts, branch)
-										? branchAlertsContent
-										: undefined}
-								/>
-								{#snippet branchAlertsContent()}
-									<BranchAlerts {alerts} {branch} />
-								{/snippet}
-							</div>
-						{/if}
-					{/each}
-				</div>
+							<BranchCard
+								{branch}
+								compact
+								radius="sm"
+								selected={true}
+								diffHref={isFeatureEnabled('branch-diff') && id && !branch.isCurrent()
+									? `${resolveRepositorySubPath(id, 'diff')}?branch=${encodeURIComponent(branch.getName())}`
+									: undefined}
+								children={shouldShowBranchAlerts(alerts, branch) ? branchAlertsContent : undefined}
+							/>
+							{#snippet branchAlertsContent()}
+								<BranchAlerts {alerts} {branch} />
+							{/snippet}
+						</div>
+					{/if}
+				{/each}
 			</div>
-		{/if}
-	</Panel>
+		</ScrollWell>
+	{/if}
 
-	<div
-		class={css({
-			display: 'flex',
-			justifyContent: 'flex-end',
-			gap: 'md'
-		})}
-	>
+	<DialogFooter>
 		<Button
-			emphasis="secondary"
+			emphasis="ghost"
 			onclick={handleCancel}
 			data-testid="cancel-button"
 			disabled={deleteMutation.isPending}>Cancel</Button
 		>
-		<Loading loading={deleteMutation.isPending} variant="busy" indicator
-			><Button feedback="danger" autofocus onclick={handleDelete} data-testid="delete-button"
-				>Delete</Button
-			></Loading
-		>
-	</div>
+		<Loading loading={deleteMutation.isPending} variant="busy" indicator>
+			<Button
+				feedback="danger"
+				autofocus
+				onclick={handleDelete}
+				disabled={deleteMutation.isPending}
+				data-testid="delete-button">Delete</Button
+			>
+		</Loading>
+	</DialogFooter>
 </Modal>
 
 <ValidationHint
