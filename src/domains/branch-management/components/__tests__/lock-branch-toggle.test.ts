@@ -39,7 +39,7 @@ describe('LockBranchToggle Component', () => {
 	describe('Rendering', () => {
 		test('displays lock icon when branch is locked', async () => {
 			mockLockedBranches = ['test-branch'];
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -52,7 +52,7 @@ describe('LockBranchToggle Component', () => {
 		});
 
 		test('displays unlock icon when branch is unlocked', async () => {
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -62,7 +62,7 @@ describe('LockBranchToggle Component', () => {
 
 		test('has correct aria-label when branch is locked', async () => {
 			mockLockedBranches = ['test-branch'];
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -72,8 +72,8 @@ describe('LockBranchToggle Component', () => {
 			);
 		});
 
-		test('has correct aria-label when branch is unlocked', () => {
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+		test('has correct aria-label when branch is unlocked', async () => {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -84,7 +84,7 @@ describe('LockBranchToggle Component', () => {
 
 	describe('Interactions', () => {
 		test('calls lock mutation when clicking unlocked branch', async () => {
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -110,7 +110,7 @@ describe('LockBranchToggle Component', () => {
 
 		test('calls unlock mutation when clicking locked branch', async () => {
 			mockLockedBranches = ['test-branch'];
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -132,8 +132,8 @@ describe('LockBranchToggle Component', () => {
 			});
 		});
 
-		test('handles disabled state correctly', () => {
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+		test('handles disabled state correctly', async () => {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo',
 				disabled: true
@@ -144,12 +144,12 @@ describe('LockBranchToggle Component', () => {
 	});
 
 	describe('Multiple Repositories', () => {
-		test('handles different repository IDs correctly', () => {
+		test('handles different repository IDs correctly', async () => {
 			// Mock shows unlocked for test-repo (other-repo would be separate in backend)
 			mockLockedBranches = [];
 
 			// Render toggle for original repo - should be unlocked
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'test-branch',
 				repositoryID: 'test-repo'
 			});
@@ -162,7 +162,7 @@ describe('LockBranchToggle Component', () => {
 			mockLockedBranches = [];
 
 			// Test only one repository's behavior
-			const { getByTestId } = renderWithTestWrapper(LockBranchToggle, {
+			const { getByTestId } = await renderWithTestWrapper(LockBranchToggle, {
 				branch: 'feature-branch',
 				repositoryID: 'repo-1'
 			});

@@ -172,75 +172,75 @@ describe('BranchSelection Component', () => {
 	});
 
 	describe('Rendering', () => {
-		test('renders select all container when there are selectible branches', () => {
-			const { getByTestId } = renderWithTestWrapper(BranchSelection, defaultProps);
+		test('renders select all container when there are selectible branches', async () => {
+			const { getByTestId } = await renderWithTestWrapper(BranchSelection, defaultProps);
 			expect(getByTestId('select-all-container')).toBeInTheDocument();
 		});
 
-		test('does not render select all container when selectibleCount is 0', () => {
+		test('does not render select all container when selectibleCount is 0', async () => {
 			// Set mock to return only current branch
 			mockBranchData = [mockBranches[0]];
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 			expect(screen.getByTestId('select-all-container')).not.toBeInTheDocument();
 		});
 
-		test('renders checkbox', () => {
-			const { getByTestId } = renderWithTestWrapper(BranchSelection, defaultProps);
+		test('renders checkbox', async () => {
+			const { getByTestId } = await renderWithTestWrapper(BranchSelection, defaultProps);
 			expect(getByTestId('select-all-checkbox')).toBeInTheDocument();
 		});
 	});
 
 	describe('Search Query Display', () => {
-		test('shows search query info when search is active', () => {
+		test('shows search query info when search is active', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
 			search?.set('feature');
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			const searchQueryInfo = screen.getByTestId('search-query-info');
 			expect(searchQueryInfo).toBeInTheDocument();
-			expect(screen.container).toHaveTextContent(/feature/i);
+			expect(screen.container).toMatchTextContent(/feature/i);
 		});
 
-		test('does not show search query info when search is empty', () => {
+		test('does not show search query info when search is empty', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
 			search?.clear();
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			expect(screen.getByTestId('search-query-info')).not.toBeInTheDocument();
 		});
 
-		test('shows selectible count info when search is empty', () => {
+		test('shows selectible count info when search is empty', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
 			search?.clear();
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			expect(screen.getByTestId('selectible-count-info')).toBeInTheDocument();
 		});
 
-		test('does not show selectible count info when search is active', () => {
+		test('does not show selectible count info when search is active', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
 			search?.set('feature');
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			expect(screen.getByTestId('selectible-count-info')).not.toBeInTheDocument();
 		});
 	});
 
 	describe('Text and Pluralization', () => {
-		test('displays correct singular form when selectibleCount is 1', () => {
+		test('displays correct singular form when selectibleCount is 1', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
@@ -249,23 +249,23 @@ describe('BranchSelection Component', () => {
 			// Set mock to return only main (current) and feature-1 (1 selectible)
 			mockBranchData = [mockBranches[0], mockBranches[1]];
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			expect(screen.getByTestId('selectible-count-info')).toHaveTextContent('0 / 1 branch');
 		});
 
-		test('displays correct plural form when selectibleCount is greater than 1', () => {
+		test('displays correct plural form when selectibleCount is greater than 1', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
 			search?.clear();
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			expect(screen.getByTestId('selectible-count-info')).toHaveTextContent('0 / 2 branches');
 		});
 
-		test('shows correct singular form in search results', () => {
+		test('shows correct singular form in search results', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
@@ -277,14 +277,14 @@ describe('BranchSelection Component', () => {
 			// Set mock to return only 2 branches (main + feature-1)
 			mockBranchData = [mockBranches[0], mockBranches[1]];
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			const searchQueryInfo = screen.getByTestId('search-query-info');
-			expect(searchQueryInfo).toHaveTextContent('branch');
-			expect(searchQueryInfo).toHaveTextContent('was found');
+			expect(searchQueryInfo).toMatchTextContent('branch');
+			expect(searchQueryInfo).toMatchTextContent('was found');
 		});
 
-		test('shows correct plural form in search results', () => {
+		test('shows correct plural form in search results', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
@@ -293,48 +293,48 @@ describe('BranchSelection Component', () => {
 			const selectedStore = getSelectedBranchesStore('test-repo');
 			selectedStore?.add(['feature-1', 'feature-2']);
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
-			expect(screen.getByTestId('search-query-info')).toHaveTextContent('branches');
-			expect(screen.getByTestId('search-query-info')).toHaveTextContent('were found');
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
+			expect(screen.getByTestId('search-query-info')).toMatchTextContent('branches');
+			expect(screen.getByTestId('search-query-info')).toMatchTextContent('were found');
 		});
 	});
 
 	describe('Branch Labels', () => {
-		test('displays "branch" label', () => {
+		test('displays "branch" label', async () => {
 			const search = getSearchBranchesStore(
 				`${defaultProps?.repository.name}-${defaultProps.branchContext}`
 			);
 			search?.clear();
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
-			expect(screen.getByTestId('selectible-count-info')).toHaveTextContent('branches');
+			expect(screen.getByTestId('selectible-count-info')).toMatchTextContent('branches');
 		});
 	});
 
 	describe('Checkbox States', () => {
-		test('checkbox is unchecked when no branches are selected', () => {
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+		test('checkbox is unchecked when no branches are selected', async () => {
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			const checkbox = screen.getByTestId('select-all-checkbox') as unknown as HTMLInputElement;
 			expect(checkbox).not.toBeChecked();
 		});
 
-		test('checkbox is checked when all branches are selected', () => {
+		test('checkbox is checked when all branches are selected', async () => {
 			const selectedStore = getSelectedBranchesStore('test-repo');
 			selectedStore?.add(['feature-1', 'feature-2']);
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			const checkbox = screen.getByRole('checkbox', { name: /select all/i });
 			expect(checkbox).toBeChecked();
 		});
 
-		test('checkbox is indeterminate when some but not all branches are selected', () => {
+		test('checkbox is indeterminate when some but not all branches are selected', async () => {
 			const selectedStore = getSelectedBranchesStore('test-repo');
 			selectedStore?.add(['feature-1']);
 
-			const screen = renderWithTestWrapper(BranchSelection, defaultProps);
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			const checkbox = screen.getByRole('checkbox', { name: /select all/i });
 			expect(checkbox).toHaveAttribute('aria-checked', 'mixed');

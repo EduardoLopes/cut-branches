@@ -50,30 +50,30 @@ afterEach(() => {
 });
 
 describe('AddRepositoryMenu', () => {
-	it('renders the primary add label by default', () => {
-		const screen = renderWithTestWrapper(AddRepositoryMenu);
+	it('renders the primary add label by default', async () => {
+		const screen = await renderWithTestWrapper(AddRepositoryMenu);
 		expect(screen.getByText('Add a git repository')).toBeInTheDocument();
 	});
 
-	it('renders a visually hidden label in compact mode', () => {
-		const screen = renderWithTestWrapper(AddRepositoryMenu, { visuallyHiddenLabel: true });
+	it('renders a visually hidden label in compact mode', async () => {
+		const screen = await renderWithTestWrapper(AddRepositoryMenu, { visuallyHiddenLabel: true });
 		expect(screen.getByText('Add a git repository')).toHaveClass('sr_true');
 	});
 
 	it('adds a repository when the primary button is clicked', async () => {
-		const screen = renderWithTestWrapper(AddRepositoryMenu);
+		const screen = await renderWithTestWrapper(AddRepositoryMenu);
 		await screen.getByRole('button', { name: /add a git repository/i }).click();
 
 		expect(h.addFromDialog).toHaveBeenCalledOnce();
 	});
 
-	it('exposes a dropdown trigger for the scan options', () => {
-		const screen = renderWithTestWrapper(AddRepositoryMenu);
+	it('exposes a dropdown trigger for the scan options', async () => {
+		const screen = await renderWithTestWrapper(AddRepositoryMenu);
 		expect(screen.getByTestId('add-repository-menu-trigger')).toBeInTheDocument();
 	});
 
 	it('opens the scan modal from the "Scan this computer" option', async () => {
-		const screen = renderWithTestWrapper(AddRepositoryMenu);
+		const screen = await renderWithTestWrapper(AddRepositoryMenu);
 
 		await screen.getByTestId('add-repository-menu-trigger').click();
 		await tick();
@@ -88,7 +88,7 @@ describe('AddRepositoryMenu', () => {
 	});
 
 	it('offers a "Scan a specific folder…" option', async () => {
-		const screen = renderWithTestWrapper(AddRepositoryMenu);
+		const screen = await renderWithTestWrapper(AddRepositoryMenu);
 
 		await screen.getByTestId('add-repository-menu-trigger').click();
 		await tick();
@@ -102,7 +102,7 @@ describe('AddRepositoryMenu', () => {
 
 	describe('repository sort section', () => {
 		it('omits the sort options by default', async () => {
-			const screen = renderWithTestWrapper(AddRepositoryMenu);
+			const screen = await renderWithTestWrapper(AddRepositoryMenu);
 
 			await screen.getByTestId('add-repository-menu-trigger').click();
 			await tick();
@@ -113,7 +113,7 @@ describe('AddRepositoryMenu', () => {
 		});
 
 		it('exposes the sort radio group when enabled', async () => {
-			const screen = renderWithTestWrapper(AddRepositoryMenu, { withRepositorySort: true });
+			const screen = await renderWithTestWrapper(AddRepositoryMenu, { withRepositorySort: true });
 
 			await screen.getByTestId('add-repository-menu-trigger').click();
 			await tick();
@@ -124,7 +124,7 @@ describe('AddRepositoryMenu', () => {
 		});
 
 		it('updates the shared sort preference when an option is picked', async () => {
-			const screen = renderWithTestWrapper(AddRepositoryMenu, { withRepositorySort: true });
+			const screen = await renderWithTestWrapper(AddRepositoryMenu, { withRepositorySort: true });
 
 			await screen.getByTestId('add-repository-menu-trigger').click();
 			await tick();
@@ -142,7 +142,7 @@ describe('AddRepositoryMenu', () => {
 
 	describe('manage repositories action', () => {
 		it('omits the manage action by default', async () => {
-			const screen = renderWithTestWrapper(AddRepositoryMenu);
+			const screen = await renderWithTestWrapper(AddRepositoryMenu);
 
 			await screen.getByTestId('add-repository-menu-trigger').click();
 			await tick();
@@ -153,7 +153,9 @@ describe('AddRepositoryMenu', () => {
 		});
 
 		it('offers a manage action when enabled', async () => {
-			const screen = renderWithTestWrapper(AddRepositoryMenu, { withManageRepositories: true });
+			const screen = await renderWithTestWrapper(AddRepositoryMenu, {
+				withManageRepositories: true
+			});
 
 			await screen.getByTestId('add-repository-menu-trigger').click();
 			await tick();

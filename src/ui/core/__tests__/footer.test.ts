@@ -44,14 +44,14 @@ describe('Footer Component', () => {
 			mockedLastSyncedAt = '2023-01-01T12:00:00';
 		});
 
-		test('displays "now" when just synced', () => {
-			const { getByTestId } = renderWithTestWrapper(Footer);
+		test('displays "now" when just synced', async () => {
+			const { getByTestId } = await renderWithTestWrapper(Footer);
 			const lastUpdatedAt = getByTestId('last-updated-text');
 			expect(lastUpdatedAt).toHaveTextContent('Last updated now');
 		});
 
 		test('updates time display every second', async () => {
-			const { getByTestId } = renderWithTestWrapper(Footer);
+			const { getByTestId } = await renderWithTestWrapper(Footer);
 			vi.advanceTimersByTime(10000);
 			await tick();
 			const lastUpdatedAt = getByTestId('last-updated-text');
@@ -59,7 +59,7 @@ describe('Footer Component', () => {
 		});
 
 		test('displays minutes when more than 60 seconds have passed', async () => {
-			const { getByTestId } = renderWithTestWrapper(Footer);
+			const { getByTestId } = await renderWithTestWrapper(Footer);
 			vi.advanceTimersByTime(120000);
 			await tick();
 			const lastUpdatedAt = getByTestId('last-updated-text');
@@ -67,7 +67,7 @@ describe('Footer Component', () => {
 		});
 
 		test('displays hours when more than 60 minutes have passed', async () => {
-			const { getByTestId } = renderWithTestWrapper(Footer);
+			const { getByTestId } = await renderWithTestWrapper(Footer);
 			vi.advanceTimersByTime(7200000);
 			await tick();
 			const lastUpdatedAt = getByTestId('last-updated-text');
@@ -76,9 +76,9 @@ describe('Footer Component', () => {
 	});
 
 	describe('UI State', () => {
-		test('does not display last updated time when the repo has no lastSyncedAt', () => {
+		test('does not display last updated time when the repo has no lastSyncedAt', async () => {
 			mockedLastSyncedAt = null;
-			const { container } = renderWithTestWrapper(Footer);
+			const { container } = await renderWithTestWrapper(Footer);
 			const lastUpdatedAt = container.querySelector('[data-testid="last-updated-text"]');
 			expect(lastUpdatedAt).not.toBeInTheDocument();
 		});

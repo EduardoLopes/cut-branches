@@ -30,8 +30,8 @@ beforeEach(() => {
 });
 
 describe('FeatureFlagsPanel', () => {
-	it('shows an empty state and no reset button when the registry is empty', () => {
-		const screen = renderWithTestWrapper(FeatureFlagsPanel);
+	it('shows an empty state and no reset button when the registry is empty', async () => {
+		const screen = await renderWithTestWrapper(FeatureFlagsPanel);
 
 		expect(screen.getByTestId('feature-flags-empty')).toBeInTheDocument();
 		expect(screen.getByTestId('feature-flags-reset').elements().length).toBe(0);
@@ -43,8 +43,8 @@ describe('FeatureFlagsPanel', () => {
 			h.isEnabled.mockImplementation((key: string) => key === 'beta');
 		});
 
-		it('renders a toggle per flag reflecting its effective value', () => {
-			const screen = renderWithTestWrapper(FeatureFlagsPanel);
+		it('renders a toggle per flag reflecting its effective value', async () => {
+			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
 
 			expect(screen.getByTestId('feature-flag-toggle').elements()).toHaveLength(2);
 			expect(screen.getByText('Alpha')).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('FeatureFlagsPanel', () => {
 		});
 
 		it('sets a flag when its toggle changes', async () => {
-			const screen = renderWithTestWrapper(FeatureFlagsPanel);
+			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
 
 			await screen.getByTestId('feature-flag-checkbox-alpha').click();
 
@@ -60,7 +60,7 @@ describe('FeatureFlagsPanel', () => {
 		});
 
 		it('resets all flags from the reset button', async () => {
-			const screen = renderWithTestWrapper(FeatureFlagsPanel);
+			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
 
 			await screen.getByTestId('feature-flags-reset').click();
 

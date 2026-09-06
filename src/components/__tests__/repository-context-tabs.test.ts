@@ -44,7 +44,7 @@ beforeEach(() => {
 
 describe('RepositoryContextTabs', () => {
 	it('renders both contexts with the worktree count when enabled', async () => {
-		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
+		const screen = await renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		await expect.element(screen.getByTestId('repository-context-switch')).toBeInTheDocument();
 		await expect.element(screen.getByTestId('context-worktrees-count')).toHaveTextContent('3');
@@ -52,20 +52,20 @@ describe('RepositoryContextTabs', () => {
 
 	it('hides the tabs when the feature flag is off', async () => {
 		h.enabled = false;
-		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
+		const screen = await renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		expect(screen.container.querySelector('[data-testid="repository-context-switch"]')).toBeNull();
 	});
 
 	it('hides the tabs when the repository is itself a linked worktree', async () => {
 		h.repoData = { path: '/repos/wt', isWorktree: true };
-		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
+		const screen = await renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		expect(screen.container.querySelector('[data-testid="repository-context-switch"]')).toBeNull();
 	});
 
 	it('navigates to the worktrees route when selecting Worktrees', async () => {
-		const screen = renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
+		const screen = await renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		await screen.getByTestId('context-worktrees').click();
 		expect(h.goto).toHaveBeenCalledWith('/repos/r1/worktrees');

@@ -99,7 +99,7 @@ describe('RedirectToApp', () => {
 			// Still loading: the point is that the prefetch does not wait for the
 			// list to resolve — the id came out of localStorage.
 			mockIsLoading = true;
-			renderWithTestWrapper(RedirectToApp);
+			await renderWithTestWrapper(RedirectToApp);
 			await settle();
 
 			expect(mockPrefetchNow).toHaveBeenCalledWith('alpha');
@@ -109,7 +109,7 @@ describe('RedirectToApp', () => {
 		it('warms nothing when there is no remembered repository', async () => {
 			mockPathname = '/';
 			mockLastRepository = undefined;
-			renderWithTestWrapper(RedirectToApp);
+			await renderWithTestWrapper(RedirectToApp);
 			await settle();
 
 			expect(mockPrefetchNow).not.toHaveBeenCalled();
@@ -120,7 +120,7 @@ describe('RedirectToApp', () => {
 			// not the remembered one — so warming the remembered id would be wrong.
 			mockPathname = '/repos';
 			mockLastRepository = 'alpha';
-			renderWithTestWrapper(RedirectToApp);
+			await renderWithTestWrapper(RedirectToApp);
 			await settle();
 
 			expect(mockPrefetchNow).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('RedirectToApp', () => {
 
 	it('does not redirect while the query is loading', async () => {
 		mockIsLoading = true;
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		expect(goto).not.toHaveBeenCalled();
@@ -138,7 +138,7 @@ describe('RedirectToApp', () => {
 	it('redirects empty users to the app shell', async () => {
 		mockData = [];
 		mockPathname = '/';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos'));
@@ -147,7 +147,7 @@ describe('RedirectToApp', () => {
 	it('does not redirect empty users already on the repos index', async () => {
 		mockData = [];
 		mockPathname = '/repos';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		expect(goto).not.toHaveBeenCalled();
@@ -156,7 +156,7 @@ describe('RedirectToApp', () => {
 	it('redirects to the first repository from the repos index when repositories exist', async () => {
 		mockData = [repository('abc', 'abc')];
 		mockPathname = '/repos';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/abc'));
@@ -165,7 +165,7 @@ describe('RedirectToApp', () => {
 	it('redirects to the first repository from the root page when repositories exist', async () => {
 		mockData = [repository('abc', 'abc')];
 		mockPathname = '/';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/abc'));
@@ -174,7 +174,7 @@ describe('RedirectToApp', () => {
 	it('opens the sidebar order first repository, not the raw list order', async () => {
 		mockData = unsortedRepositories;
 		mockPathname = '/';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/alpha'));
@@ -184,7 +184,7 @@ describe('RedirectToApp', () => {
 		repositorySort.setMode('name-desc');
 		mockData = unsortedRepositories;
 		mockPathname = '/';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/zeta'));
@@ -194,7 +194,7 @@ describe('RedirectToApp', () => {
 		mockLastRepository = 'mid';
 		mockData = unsortedRepositories;
 		mockPathname = '/';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/mid'));
@@ -204,7 +204,7 @@ describe('RedirectToApp', () => {
 		mockLastRepository = 'removed';
 		mockData = unsortedRepositories;
 		mockPathname = '/';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/alpha'));
@@ -214,7 +214,7 @@ describe('RedirectToApp', () => {
 		mockLastRepository = 'mid';
 		mockData = unsortedRepositories;
 		mockPathname = '/repos';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		await vi.waitFor(() => expect(goto).toHaveBeenCalledWith('/repos/alpha'));
@@ -223,7 +223,7 @@ describe('RedirectToApp', () => {
 	it('does not redirect empty users on the settings root', async () => {
 		mockData = [];
 		mockPathname = '/settings';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		expect(goto).not.toHaveBeenCalled();
@@ -232,7 +232,7 @@ describe('RedirectToApp', () => {
 	it('does not redirect empty users on a settings subroute', async () => {
 		mockData = [];
 		mockPathname = '/settings/feature-flags';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		expect(goto).not.toHaveBeenCalled();
@@ -241,7 +241,7 @@ describe('RedirectToApp', () => {
 	it('does not redirect when repositories exist and the user is on a repository page', async () => {
 		mockData = [repository('abc', 'abc')];
 		mockPathname = '/repos/abc';
-		renderWithTestWrapper(RedirectToApp);
+		await renderWithTestWrapper(RedirectToApp);
 		await settle();
 
 		expect(goto).not.toHaveBeenCalled();

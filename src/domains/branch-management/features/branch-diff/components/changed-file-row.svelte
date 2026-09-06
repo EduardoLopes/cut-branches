@@ -98,6 +98,9 @@
 
 	const queryClient = useQueryClient();
 
+	// `defaultExpanded` is intentionally read once: the row owns its own
+	// expanded state after mount.
+	// svelte-ignore state_referenced_locally
 	let expanded = $state(defaultExpanded);
 
 	// The panel fetches the file's hunks only once it mounts, so a click on a

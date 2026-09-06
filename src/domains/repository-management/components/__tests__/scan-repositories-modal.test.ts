@@ -65,7 +65,7 @@ beforeEach(() => {
 describe('ScanRepositoriesModal', () => {
 	describe('auto-scan on open', () => {
 		it('scans the home folder when opened with the home scope', async () => {
-			renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'home' });
+			await renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'home' });
 			await tick();
 
 			expect(h.stub.scan).toHaveBeenCalledWith([], false);
@@ -73,7 +73,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('prompts for a folder when opened with the folder scope', async () => {
-			renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
+			await renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
 
 			await vi.waitFor(() => expect(h.stub.scan).toHaveBeenCalledWith(['/chosen/folder'], false));
 			expect(openFolderDialog).toHaveBeenCalledWith({ directory: true, multiple: false });
@@ -82,7 +82,7 @@ describe('ScanRepositoriesModal', () => {
 		it('does not scan when the folder picker is cancelled', async () => {
 			vi.mocked(openFolderDialog).mockResolvedValue(null);
 
-			renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
+			await renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
 
 			await vi.waitFor(() => expect(openFolderDialog).toHaveBeenCalled());
 			expect(h.stub.scan).not.toHaveBeenCalled();
@@ -91,7 +91,7 @@ describe('ScanRepositoriesModal', () => {
 		it('notifies when the folder picker fails', async () => {
 			vi.mocked(openFolderDialog).mockRejectedValue(new Error('kaboom'));
 
-			renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
+			await renderWithTestWrapper(ScanRepositoriesModal, { open: true, scope: 'folder' });
 
 			await vi.waitFor(() =>
 				expect(notifications.push).toHaveBeenCalledWith({
@@ -103,7 +103,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('does not scan while closed', async () => {
-			renderWithTestWrapper(ScanRepositoriesModal, { open: false, scope: 'home' });
+			await renderWithTestWrapper(ScanRepositoriesModal, { open: false, scope: 'home' });
 			await tick();
 
 			expect(h.stub.scan).not.toHaveBeenCalled();
@@ -133,7 +133,7 @@ describe('ScanRepositoriesModal', () => {
 				addableCount: 3,
 				selectedCount: 3
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(3));
 			expect(screen.getByTestId('scan-item-worktree').elements()).toHaveLength(2);
@@ -154,7 +154,7 @@ describe('ScanRepositoriesModal', () => {
 				addableCount: 40,
 				selectedCount: 0
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(40));
 
 			// The well flags the scroller; its shadow bars key off these attributes.
@@ -169,7 +169,7 @@ describe('ScanRepositoriesModal', () => {
 
 		it('shows the scanning indicator while the composable reports a scan', async () => {
 			h.stub = makeStub({ isScanning: true });
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			expect(screen.getByTestId('scan-loading')).toBeInTheDocument();
@@ -181,7 +181,7 @@ describe('ScanRepositoriesModal', () => {
 			// The modal renders straight off `discover.isScanning`; with no local
 			// flag of its own, the stub alone decides whether the spinner is up.
 			h.stub = makeStub({ isScanning: false, hasScanned: true });
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			expect(screen.container.querySelector('[data-testid="scan-loading"]')).toBeNull();
@@ -193,7 +193,7 @@ describe('ScanRepositoriesModal', () => {
 				results: [],
 				progress: { scannedDirs: 1, foundCount: 0 }
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-empty')).toBeInTheDocument());
 			// The scan outcome lives in the toolbar, so it reads the same in every
@@ -215,7 +215,7 @@ describe('ScanRepositoriesModal', () => {
 				selectedCount: 1,
 				isSelected: vi.fn((p: string) => p === '/a')
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-select-all')).toBeInTheDocument());
 			expect(screen.getByTestId('scan-summary')).toHaveTextContent(
@@ -235,7 +235,7 @@ describe('ScanRepositoriesModal', () => {
 				addableCount: 2,
 				selectedCount: 2
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(2));
 
@@ -257,7 +257,7 @@ describe('ScanRepositoriesModal', () => {
 				selectedCount: 2,
 				isAdding: true
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			// The label keeps the count; the in-flight state is shown by the busy Loading wrapper.
@@ -276,7 +276,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('re-scans the home folder from the Home folder menu option', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			// Let the initial auto-scan settle so the split-button menu is enabled.
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements().length).toBe(1));
 			h.stub.scan.mockClear();
@@ -292,7 +292,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('re-runs the scan from the refresh button', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 			h.stub.scan.mockClear();
 
@@ -302,7 +302,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('scans a chosen folder from the Choose folder button', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 			h.stub.scan.mockClear();
 
@@ -313,7 +313,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('toggles a result and toggles select-all', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			await screen.getByTestId('scan-item').click();
@@ -324,7 +324,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('adds the selected repositories', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			await screen.getByTestId('scan-add-selected').click();
@@ -337,7 +337,7 @@ describe('ScanRepositoriesModal', () => {
 				addableCount: 1,
 				selectedCount: 0
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			const addButton = screen.getByTestId('scan-add-selected');
@@ -350,7 +350,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('closes from the Close button', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			await screen.getByTestId('scan-cancel').click();
@@ -362,7 +362,7 @@ describe('ScanRepositoriesModal', () => {
 		});
 
 		it('abandons the in-flight scan when the modal closes', async () => {
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 			h.stub.cancelScan.mockClear();
 
@@ -377,7 +377,7 @@ describe('ScanRepositoriesModal', () => {
 	describe('onAdded callback', () => {
 		it('closes the modal when nothing is left to add', async () => {
 			h.stub = makeStub({ addableCount: 0 });
-			renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			h.onAdded(1);
@@ -394,7 +394,7 @@ describe('ScanRepositoriesModal', () => {
 				selectedCount: 1,
 				results: [{ path: '/a', name: 'a', alreadyAdded: false }]
 			});
-			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			h.onAdded(1);

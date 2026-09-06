@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe('DiffViewer — progressive mounting', () => {
 	it('streams every row in over frames without highlighting', async () => {
-		const { container } = renderWithTestWrapper(DiffViewer, {
+		const { container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			language: 'typescript'
 		});
@@ -66,7 +66,7 @@ describe('DiffViewer — progressive mounting', () => {
 	});
 
 	it('streams split rows in the flat path too', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [
@@ -90,7 +90,7 @@ describe('DiffViewer — progressive mounting', () => {
 	it('renders gap expanders in the flat path and expands them in place', async () => {
 		const onExpandGap = vi.fn();
 		// newStart 3 → a leading gap before the hunk; modified → a tail gap.
-		const { getByRole, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByRole, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk({ newStart: 3, oldStart: 3 })],
 			status: 'modified' as const,
 			onExpandGap
@@ -106,7 +106,7 @@ describe('DiffViewer — progressive mounting', () => {
 
 	it('grows the mounted window when a gap fills with new lines', async () => {
 		const expanded: DiffViewerLine[] = linesOf(3, 'ctx-extra');
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk({ newStart: 3, oldStart: 3 })],
 			status: 'modified' as const,
 			onExpandGap: vi.fn(),
@@ -122,7 +122,7 @@ describe('DiffViewer — progressive mounting', () => {
 
 	it('re-streams instead of synchronously remounting on a layout switch', async () => {
 		const hunks = [hunk({ lines: linesOf(12) })];
-		const { container, rerender } = renderWithTestWrapper(DiffViewer, {
+		const { container, rerender } = await renderWithTestWrapper(DiffViewer, {
 			hunks,
 			layout: 'unified' as const
 		});
@@ -145,7 +145,7 @@ describe('DiffViewer — progressive mounting', () => {
 	it('mounts everything at once when the plan already fits the initial batch', async () => {
 		// Just past the progressive floor (4) but no bigger than the initial
 		// batch counted with its header, so the first pump completes the ramp.
-		const { container } = renderWithTestWrapper(DiffViewer, {
+		const { container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk({ header: '@@ -1,4 +1,4 @@', oldLines: 4, newLines: 4, lines: linesOf(4) })]
 		});
 

@@ -4,14 +4,14 @@ import { DEFAULT_DIFF_VIEW_OPTIONS } from '../../application/use-diff-view-optio
 import DiffOptionsMenu from '../diff-options-menu.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
-async function openMenu(screen: ReturnType<typeof renderWithTestWrapper>) {
+async function openMenu(screen: Awaited<ReturnType<typeof renderWithTestWrapper>>) {
 	await screen.getByTestId('diff-options-trigger').click();
 	await tick();
 }
 
 describe('DiffOptionsMenu', () => {
 	it('lists layout, style, line numbers and wrapping controls', async () => {
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS },
 			onChange: vi.fn()
 		});
@@ -34,7 +34,7 @@ describe('DiffOptionsMenu', () => {
 
 	it('reports a layout change', async () => {
 		const onChange = vi.fn();
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS },
 			onChange
 		});
@@ -47,7 +47,7 @@ describe('DiffOptionsMenu', () => {
 
 	it('reports a style change', async () => {
 		const onChange = vi.fn();
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS },
 			onChange
 		});
@@ -60,7 +60,7 @@ describe('DiffOptionsMenu', () => {
 
 	it('reports a gutter change', async () => {
 		const onChange = vi.fn();
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS },
 			onChange
 		});
@@ -72,7 +72,7 @@ describe('DiffOptionsMenu', () => {
 	});
 
 	it('omits the line-numbers group in split layout, where each side has its own number', async () => {
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS, layout: 'split' as const },
 			onChange: vi.fn()
 		});
@@ -88,7 +88,7 @@ describe('DiffOptionsMenu', () => {
 
 	it('locks wrapping on in split layout, where the viewer enforces it', async () => {
 		const onChange = vi.fn();
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS, layout: 'split' as const },
 			onChange
 		});
@@ -106,7 +106,7 @@ describe('DiffOptionsMenu', () => {
 
 	it('toggles line wrapping on', async () => {
 		const onChange = vi.fn();
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS },
 			onChange
 		});
@@ -119,7 +119,7 @@ describe('DiffOptionsMenu', () => {
 
 	it('toggles line wrapping back off when already enabled', async () => {
 		const onChange = vi.fn();
-		const screen = renderWithTestWrapper(DiffOptionsMenu, {
+		const screen = await renderWithTestWrapper(DiffOptionsMenu, {
 			options: { ...DEFAULT_DIFF_VIEW_OPTIONS, wrap: true },
 			onChange
 		});

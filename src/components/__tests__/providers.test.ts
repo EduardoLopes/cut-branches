@@ -95,7 +95,7 @@ describe('Providers', () => {
 
 	describe('repository-changed listener', () => {
 		it('detaches a listener that resolves after the component is gone', async () => {
-			const screen = renderWithTestWrapper(Providers);
+			const screen = await renderWithTestWrapper(Providers);
 			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
 
 			// Teardown wins the race: `listen` has not resolved yet, so the cleanup
@@ -106,7 +106,7 @@ describe('Providers', () => {
 		});
 
 		it('detaches on teardown when the listener resolved first', async () => {
-			const screen = renderWithTestWrapper(Providers);
+			const screen = await renderWithTestWrapper(Providers);
 			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
 
 			eventBridge.resolveListen?.(eventBridge.unlisten);
@@ -119,7 +119,7 @@ describe('Providers', () => {
 		});
 
 		it('invalidates the matching queries when a repository changes', async () => {
-			renderWithTestWrapper(Providers);
+			await renderWithTestWrapper(Providers);
 			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
 
 			const [eventName, handler] = eventBridge.listen.mock.calls[0];
@@ -136,7 +136,7 @@ describe('Providers', () => {
 		it('survives an unavailable event bridge', async () => {
 			eventBridge.listen.mockRejectedValue(new Error('not a tauri runtime'));
 
-			expect(() => renderWithTestWrapper(Providers)).not.toThrow();
+			await expect(renderWithTestWrapper(Providers)).resolves.toBeDefined();
 			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
 			expect(eventBridge.unlisten).not.toHaveBeenCalled();
 		});
@@ -144,22 +144,22 @@ describe('Providers', () => {
 
 	describe('Component Rendering', () => {
 		it('should render without errors', () => {
-			expect(() => {
-				renderWithTestWrapper(Providers);
+			expect(async () => {
+				await renderWithTestWrapper(Providers);
 			}).not.toThrow();
 		});
 
-		it('should provide QueryClient context to children', () => {
-			const screen = renderWithTestWrapper(Providers);
+		it('should provide QueryClient context to children', async () => {
+			const screen = await renderWithTestWrapper(Providers);
 
 			expect(screen.container.firstChild).not.toBeNull();
 		});
 	});
 
 	describe('MutationCache onSuccess Handler', () => {
-		beforeEach(() => {
+		beforeEach(async () => {
 			// Render the component to initialize the cache handlers
-			renderWithTestWrapper(Providers);
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
@@ -224,8 +224,8 @@ describe('Providers', () => {
 	});
 
 	describe('MutationCache onError Handler', () => {
-		beforeEach(() => {
-			renderWithTestWrapper(Providers);
+		beforeEach(async () => {
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
@@ -311,8 +311,8 @@ describe('Providers', () => {
 	});
 
 	describe('QueryCache onSuccess Handler', () => {
-		beforeEach(() => {
-			renderWithTestWrapper(Providers);
+		beforeEach(async () => {
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
@@ -357,8 +357,8 @@ describe('Providers', () => {
 	});
 
 	describe('QueryCache onError Handler', () => {
-		beforeEach(() => {
-			renderWithTestWrapper(Providers);
+		beforeEach(async () => {
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
@@ -429,8 +429,8 @@ describe('Providers', () => {
 	});
 
 	describe('Browser Environment', () => {
-		it('should configure queries to be enabled in browser environment', () => {
-			renderWithTestWrapper(Providers);
+		it('should configure queries to be enabled in browser environment', async () => {
+			await renderWithTestWrapper(Providers);
 
 			// The component should render successfully with browser: true
 			// This indirectly tests that the defaultOptions.queries.enabled: browser works

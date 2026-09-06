@@ -125,7 +125,7 @@ describe.skipIf(!import.meta.env.VITE_BENCH)('ActiveBranchesView mount cost', ()
 			observer.observe({ entryTypes: ['longtask'] });
 
 			const start = performance.now();
-			const screen = renderWithTestWrapper(ActiveBranchesView, { id: 'repo1' });
+			const screen = await renderWithTestWrapper(ActiveBranchesView, { id: 'repo1' });
 			const syncMs = performance.now() - start;
 			await settle();
 			const totalMs = performance.now() - start;

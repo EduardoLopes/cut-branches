@@ -26,8 +26,8 @@ const graph = computeGraph([
 ]);
 
 describe('GraphRailCell', () => {
-	it('renders the row segments with themed lane colors', () => {
-		const { container } = renderWithTestWrapper(GraphRailCell, {
+	it('renders the row segments with themed lane colors', async () => {
+		const { container } = await renderWithTestWrapper(GraphRailCell, {
 			row: graph.rows[1],
 			laneCount: graph.laneCount
 		});
@@ -37,8 +37,8 @@ describe('GraphRailCell', () => {
 		expect(paths[0].getAttribute('stroke')).toBe(laneColorVar(0));
 	});
 
-	it('renders a quiet dot for an ordinary commit and no head overlay', () => {
-		const { container } = renderWithTestWrapper(GraphRailCell, {
+	it('renders a quiet dot for an ordinary commit and no head overlay', async () => {
+		const { container } = await renderWithTestWrapper(GraphRailCell, {
 			row: graph.rows[1],
 			laneCount: graph.laneCount
 		});
@@ -49,7 +49,7 @@ describe('GraphRailCell', () => {
 
 	it('renders the pinned head marker with a clamped position for a branch head', async () => {
 		const onCenterLane = vi.fn();
-		const { container, getByRole } = renderWithTestWrapper(GraphRailCell, {
+		const { container, getByRole } = await renderWithTestWrapper(GraphRailCell, {
 			row: graph.rows[0],
 			laneCount: graph.laneCount,
 			onCenterLane
@@ -67,7 +67,7 @@ describe('GraphRailCell', () => {
 	});
 
 	it('disables the head affordance when no centering callback is given', async () => {
-		const { getByRole } = renderWithTestWrapper(GraphRailCell, {
+		const { getByRole } = await renderWithTestWrapper(GraphRailCell, {
 			row: graph.rows[0],
 			laneCount: graph.laneCount
 		});
@@ -75,8 +75,8 @@ describe('GraphRailCell', () => {
 		await expect.element(getByRole('button', { name: 'Center this branch' })).toBeDisabled();
 	});
 
-	it('scales down for the preview geometry', () => {
-		const { container } = renderWithTestWrapper(GraphRailCell, {
+	it('scales down for the preview geometry', async () => {
+		const { container } = await renderWithTestWrapper(GraphRailCell, {
 			row: graph.rows[1],
 			laneCount: graph.laneCount,
 			size: 20,
@@ -89,9 +89,9 @@ describe('GraphRailCell', () => {
 		expect(svg?.getAttribute('height')).toBe('20');
 	});
 
-	it('uses the muted token for non-local segments', () => {
+	it('uses the muted token for non-local segments', async () => {
 		const nonLocal = computeGraph([mk('t1', ['t0'], [{ name: 'v1', kind: 'tag' }]), mk('t0', [])]);
-		const { container } = renderWithTestWrapper(GraphRailCell, {
+		const { container } = await renderWithTestWrapper(GraphRailCell, {
 			row: nonLocal.rows[0],
 			laneCount: nonLocal.laneCount
 		});
@@ -110,8 +110,8 @@ describe('GraphRailCell', () => {
 		]);
 		const featRow = twoBranches.rows[1];
 
-		it('keeps only the highlighted lane vivid, muting other local lines', () => {
-			const { container } = renderWithTestWrapper(GraphRailCell, {
+		it('keeps only the highlighted lane vivid, muting other local lines', async () => {
+			const { container } = await renderWithTestWrapper(GraphRailCell, {
 				row: featRow,
 				laneCount: twoBranches.laneCount,
 				highlightLane: 1
@@ -124,8 +124,8 @@ describe('GraphRailCell', () => {
 			expect(outgoing.getAttribute('opacity')).toBe('0.95');
 		});
 
-		it('mutes a branch head sitting off the highlighted lane', () => {
-			const { container } = renderWithTestWrapper(GraphRailCell, {
+		it('mutes a branch head sitting off the highlighted lane', async () => {
+			const { container } = await renderWithTestWrapper(GraphRailCell, {
 				row: featRow,
 				laneCount: twoBranches.laneCount,
 				highlightLane: 0
@@ -135,7 +135,7 @@ describe('GraphRailCell', () => {
 			expect(ring?.getAttribute('style')).toContain(mutedLaneVar());
 		});
 
-		it('mutes a foreign merge connector into the highlighted lane', () => {
+		it('mutes a foreign merge connector into the highlighted lane', async () => {
 			// `feat` (hovered, lane 0) with `main`'s merge commit in lane 1 whose
 			// second parent is on feat's chain. The merge connector curves from
 			// lane 1 into lane 0 and carries colorLane 0 — it must NOT light up
@@ -149,7 +149,7 @@ describe('GraphRailCell', () => {
 			]);
 			const mergeRow = merged.rows[1];
 
-			const { container } = renderWithTestWrapper(GraphRailCell, {
+			const { container } = await renderWithTestWrapper(GraphRailCell, {
 				row: mergeRow,
 				laneCount: merged.laneCount,
 				highlightLane: 0
@@ -169,10 +169,10 @@ describe('GraphRailCell', () => {
 			expect(connector?.stroke.getAttribute('opacity')).toBe('0.18');
 		});
 
-		it('mutes an ordinary local dot off the highlighted lane', () => {
+		it('mutes an ordinary local dot off the highlighted lane', async () => {
 			// Row `mid` from the shared graph: an ordinary commit on main's local
 			// line in lane 0, viewed while lane 1 is highlighted.
-			const { container } = renderWithTestWrapper(GraphRailCell, {
+			const { container } = await renderWithTestWrapper(GraphRailCell, {
 				row: graph.rows[1],
 				laneCount: graph.laneCount,
 				highlightLane: 1

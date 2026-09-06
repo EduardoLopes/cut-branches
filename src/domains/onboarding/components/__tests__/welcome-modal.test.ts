@@ -40,7 +40,7 @@ describe('WelcomeModal', () => {
 	});
 
 	it('opens automatically when the repository list is empty', async () => {
-		const screen = renderWithTestWrapper(WelcomeModal, { actionButton });
+		const screen = await renderWithTestWrapper(WelcomeModal, { actionButton });
 		await settle();
 
 		const dialogElement = screen.getByTestId('welcome-modal').element() as HTMLDialogElement;
@@ -55,7 +55,7 @@ describe('WelcomeModal', () => {
 
 	it('stays closed while the query is still loading', async () => {
 		mockIsPending = true;
-		const screen = renderWithTestWrapper(WelcomeModal, { actionButton });
+		const screen = await renderWithTestWrapper(WelcomeModal, { actionButton });
 		await settle();
 
 		const dialogElement = screen.getByTestId('welcome-modal').element() as HTMLDialogElement;
@@ -64,7 +64,7 @@ describe('WelcomeModal', () => {
 
 	it('stays closed when repositories already exist', async () => {
 		mockData = [{ id: '1' }];
-		const screen = renderWithTestWrapper(WelcomeModal, { actionButton });
+		const screen = await renderWithTestWrapper(WelcomeModal, { actionButton });
 		await settle();
 
 		const dialogElement = screen.getByTestId('welcome-modal').element() as HTMLDialogElement;
@@ -72,7 +72,7 @@ describe('WelcomeModal', () => {
 	});
 
 	it('closes when the user clicks Continue', async () => {
-		const screen = renderWithTestWrapper(WelcomeModal, { actionButton });
+		const screen = await renderWithTestWrapper(WelcomeModal, { actionButton });
 		await settle();
 
 		const dialogElement = screen.getByTestId('welcome-modal').element() as HTMLDialogElement;

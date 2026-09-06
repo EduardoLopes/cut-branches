@@ -63,38 +63,38 @@ describe('Restore Page Route', () => {
 	});
 
 	it('should render without errors', () => {
-		expect(() => {
-			renderWithTestWrapper(RestorePage);
+		expect(async () => {
+			await renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
-	it('should render RestoreBranchesView with correct id', () => {
-		const { container } = renderWithTestWrapper(RestorePage);
+	it('should render RestoreBranchesView with correct id', async () => {
+		const { container } = await renderWithTestWrapper(RestorePage);
 
 		// The component should render the RestoreBranchesView
 		expect(container.innerHTML).toBeTruthy();
 	});
 
-	it('should handle data prop with id', () => {
-		const { container } = renderWithTestWrapper(RestorePage);
+	it('should handle data prop with id', async () => {
+		const { container } = await renderWithTestWrapper(RestorePage);
 
 		expect(container).toBeDefined();
 	});
 
 	it('should handle missing data prop gracefully', () => {
-		expect(() => {
-			renderWithTestWrapper(RestorePage);
+		expect(async () => {
+			await renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
 	it('should handle data without id property', () => {
-		expect(() => {
-			renderWithTestWrapper(RestorePage);
+		expect(async () => {
+			await renderWithTestWrapper(RestorePage);
 		}).not.toThrow();
 	});
 
-	it('should have proper component structure', () => {
-		const { container } = renderWithTestWrapper(RestorePage);
+	it('should have proper component structure', async () => {
+		const { container } = await renderWithTestWrapper(RestorePage);
 
 		// Verify the component has content
 		expect(container.firstChild).not.toBeNull();

@@ -35,22 +35,22 @@ beforeEach(() => {
 });
 
 describe('SettingsShell', () => {
-	it('renders the settings title and the section menu links', () => {
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+	it('renders the settings title and the section menu links', async () => {
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByText('Settings')).toBeInTheDocument();
 		expect(screen.getByRole('menuitem', { name: 'Feature flags' })).toBeInTheDocument();
 		expect(screen.getByRole('menuitem', { name: 'About' })).toBeInTheDocument();
 	});
 
-	it('renders the active section route content in the content area', () => {
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+	it('renders the active section route content in the content area', async () => {
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByTestId('section-content')).toBeInTheDocument();
 	});
 
-	it('points each menu item at its own route', () => {
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+	it('points each menu item at its own route', async () => {
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).element()).toHaveAttribute(
 			'href',
@@ -62,9 +62,9 @@ describe('SettingsShell', () => {
 		);
 	});
 
-	it('marks the section matching the current route as active', () => {
+	it('marks the section matching the current route as active', async () => {
 		h.pathname = '/settings/about';
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByRole('menuitem', { name: 'About' }).element()).toHaveAttribute(
 			'aria-current',
@@ -75,9 +75,9 @@ describe('SettingsShell', () => {
 		);
 	});
 
-	it('falls back to the first section when the route matches none', () => {
+	it('falls back to the first section when the route matches none', async () => {
 		h.pathname = '/settings';
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).element()).toHaveAttribute(
 			'aria-current',
@@ -85,19 +85,19 @@ describe('SettingsShell', () => {
 		);
 	});
 
-	it('hides the Feature flags nav item when the section is not surfaced', () => {
+	it('hides the Feature flags nav item when the section is not surfaced', async () => {
 		h.sectionVisible = false;
 		h.pathname = '/settings/about';
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByRole('menuitem', { name: 'About' })).toBeInTheDocument();
 		expect(screen.getByRole('menuitem', { name: 'Feature flags' }).elements().length).toBe(0);
 	});
 
-	it('falls back to the first remaining section when Feature flags is hidden', () => {
+	it('falls back to the first remaining section when Feature flags is hidden', async () => {
 		h.sectionVisible = false;
 		h.pathname = '/settings';
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		expect(screen.getByRole('menuitem', { name: 'About' }).element()).toHaveAttribute(
 			'aria-current',
@@ -105,15 +105,15 @@ describe('SettingsShell', () => {
 		);
 	});
 
-	it('renders without a children snippet', () => {
-		const screen = renderWithTestWrapper(SettingsShell);
+	it('renders without a children snippet', async () => {
+		const screen = await renderWithTestWrapper(SettingsShell);
 
 		expect(screen.getByText('Settings')).toBeInTheDocument();
 		expect(screen.getByTestId('section-content').elements().length).toBe(0);
 	});
 
 	it('filters the section menu with the search input', async () => {
-		const screen = renderWithTestWrapper(SettingsShell, { children });
+		const screen = await renderWithTestWrapper(SettingsShell, { children });
 
 		await screen.getByPlaceholder('Search settings').fill('zzz');
 

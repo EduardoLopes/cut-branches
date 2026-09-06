@@ -3,19 +3,19 @@ import ErrorMessage from '../error-message.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('ErrorMessage Component', () => {
-	test('renders message correctly', () => {
+	test('renders message correctly', async () => {
 		const message = 'Error occurred';
-		const { getByText } = renderWithTestWrapper(ErrorMessage, {
+		const { getByText } = await renderWithTestWrapper(ErrorMessage, {
 			message
 		});
 
 		expect(getByText(message)).toBeInTheDocument();
 	});
 
-	test('renders description when provided', () => {
+	test('renders description when provided', async () => {
 		const message = 'Error occurred';
 		const description = 'This is a detailed error description';
-		const { getByText } = renderWithTestWrapper(ErrorMessage, {
+		const { getByText } = await renderWithTestWrapper(ErrorMessage, {
 			message,
 			description
 		});
@@ -23,9 +23,9 @@ describe('ErrorMessage Component', () => {
 		expect(getByText(description)).toBeInTheDocument();
 	});
 
-	test('does not render description when not provided', () => {
+	test('does not render description when not provided', async () => {
 		const message = 'Error occurred';
-		const { container } = renderWithTestWrapper(ErrorMessage, {
+		const { container } = await renderWithTestWrapper(ErrorMessage, {
 			message
 		});
 
@@ -33,8 +33,8 @@ describe('ErrorMessage Component', () => {
 		expect(descriptionElements.length).toBe(0);
 	});
 
-	test('renders component with default icon', () => {
-		const { container } = renderWithTestWrapper(ErrorMessage, {
+	test('renders component with default icon', async () => {
+		const { container } = await renderWithTestWrapper(ErrorMessage, {
 			message: 'Error occurred'
 		});
 
@@ -43,9 +43,9 @@ describe('ErrorMessage Component', () => {
 		expect(outerDiv).toBeInTheDocument();
 	});
 
-	test('renders component with custom icon', () => {
+	test('renders component with custom icon', async () => {
 		const customIcon = 'mdi:alert';
-		const { container } = renderWithTestWrapper(ErrorMessage, {
+		const { container } = await renderWithTestWrapper(ErrorMessage, {
 			message: 'Error occurred',
 			icon: customIcon
 		});
@@ -55,9 +55,9 @@ describe('ErrorMessage Component', () => {
 		expect(messageDiv).toBeInTheDocument();
 	});
 
-	test('renders component with custom icon color', () => {
+	test('renders component with custom icon color', async () => {
 		const customColor = '#FF0000';
-		const { container } = renderWithTestWrapper(ErrorMessage, {
+		const { container } = await renderWithTestWrapper(ErrorMessage, {
 			message: 'Error occurred',
 			iconColor: customColor
 		});

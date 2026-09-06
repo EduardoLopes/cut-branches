@@ -83,7 +83,7 @@ beforeEach(() => {
 describe('FileDiffPanel', () => {
 	it('shows a loading indicator while the diff is fetched', async () => {
 		setQuery({ isLoading: true });
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('Loading diff…')).toBeInTheDocument();
 	});
@@ -93,35 +93,35 @@ describe('FileDiffPanel', () => {
 			isError: true,
 			error: { message: 'Failed', description: 'File **x** is not part of this diff' }
 		});
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('File **x** is not part of this diff')).toBeInTheDocument();
 	});
 
 	it('falls back to the error message when there is no description', async () => {
 		setQuery({ isError: true, error: { message: 'Failed to compute diff', description: null } });
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('Failed to compute diff')).toBeInTheDocument();
 	});
 
 	it('explains binary files instead of rendering hunks', async () => {
 		setQuery({ data: diff({ isBinary: true, hunks: [] }) });
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText(/Binary file/)).toBeInTheDocument();
 	});
 
 	it('explains empty diffs, calling out pure renames', async () => {
 		setQuery({ data: diff({ status: 'renamed', hunks: [] }) });
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText(/file was renamed/)).toBeInTheDocument();
 	});
 
 	it('renders hunk headers and lines with a single own-side gutter number', async () => {
 		setQuery({ data: diff() });
-		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('@@ -1,2 +1,2 @@')).toBeInTheDocument();
 		await expect.element(getByText('unchanged line')).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('FileDiffPanel', () => {
 
 	it('renders the classic old/new number pair when gutter is double', async () => {
 		setQuery({ data: diff() });
-		const { container } = renderWithTestWrapper(FileDiffPanel, {
+		const { container } = await renderWithTestWrapper(FileDiffPanel, {
 			...defaultProps,
 			gutter: 'double' as const
 		});
@@ -177,7 +177,7 @@ describe('FileDiffPanel', () => {
 			]
 		]);
 
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('const', { exact: true })).toBeInTheDocument();
 		expect(h.highlightDiffCode).toHaveBeenCalledWith('const x = 1', 'typescript');
@@ -185,7 +185,10 @@ describe('FileDiffPanel', () => {
 
 	it('offers a tail expander for modified files and merges the loaded lines in', async () => {
 		setQuery({ data: diff() });
-		const { getByRole, getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByRole, getByText, container } = await renderWithTestWrapper(
+			FileDiffPanel,
+			defaultProps
+		);
 
 		const expander = getByRole('button', { name: 'Expand rest of file' });
 		await expect.element(expander).toBeInTheDocument();
@@ -235,7 +238,10 @@ describe('FileDiffPanel', () => {
 				status: 'added'
 			})
 		});
-		const { getByRole, getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByRole, getByText, container } = await renderWithTestWrapper(
+			FileDiffPanel,
+			defaultProps
+		);
 
 		await expect.element(getByText('@@ -5,2 +5,2 @@')).toBeInTheDocument();
 
@@ -267,7 +273,7 @@ describe('FileDiffPanel', () => {
 				]
 			})
 		});
-		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('new file')).toBeInTheDocument();
 		expect(container.querySelector('[data-testid="diff-gap-expander"]')).toBeNull();
@@ -276,7 +282,7 @@ describe('FileDiffPanel', () => {
 	it('surfaces expansion failures inline and keeps the expander usable', async () => {
 		h.executeCommand.mockRejectedValueOnce({ message: 'Failed', description: 'File is gone' });
 		setQuery({ data: diff() });
-		const { getByRole, getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByRole, getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await getByRole('button', { name: 'Expand rest of file' }).click();
 
@@ -286,7 +292,7 @@ describe('FileDiffPanel', () => {
 
 	it('marks search-term occurrences inside the code', async () => {
 		setQuery({ data: diff() });
-		const { container } = renderWithTestWrapper(FileDiffPanel, {
+		const { container } = await renderWithTestWrapper(FileDiffPanel, {
 			...defaultProps,
 			searchTerm: 'line'
 		});
@@ -301,7 +307,7 @@ describe('FileDiffPanel', () => {
 
 	it('notes when a very large diff was truncated', async () => {
 		setQuery({ data: diff({ truncated: true }) });
-		const { getByText } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText(/truncated/)).toBeInTheDocument();
 	});
@@ -329,7 +335,7 @@ describe('FileDiffPanel', () => {
 
 	it('gates very large diffs behind a message instead of rendering them', async () => {
 		setQuery({ data: manyLines(21) });
-		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText(/very large \(21 lines\)/)).toBeInTheDocument();
 		expect(container.querySelector('[data-testid="diff-viewer"]')).toBeNull();
@@ -340,7 +346,10 @@ describe('FileDiffPanel', () => {
 		// adds 2 context lines for a total of 21. The gate counts only the
 		// diff's own lines, so the rendered diff must stay.
 		setQuery({ data: manyLines(19) });
-		const { getByRole, getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByRole, getByText, container } = await renderWithTestWrapper(
+			FileDiffPanel,
+			defaultProps
+		);
 
 		await getByRole('button', { name: 'Expand rest of file' }).click();
 
@@ -350,7 +359,10 @@ describe('FileDiffPanel', () => {
 
 	it('renders a gated diff on demand, as plain text with a notice', async () => {
 		setQuery({ data: manyLines(21) });
-		const { getByRole, getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByRole, getByText, container } = await renderWithTestWrapper(
+			FileDiffPanel,
+			defaultProps
+		);
 
 		await getByRole('button', { name: 'Show diff' }).click();
 
@@ -364,7 +376,7 @@ describe('FileDiffPanel', () => {
 
 	it('skips highlighting (with a notice) for diffs over the highlight budget but under the gate', async () => {
 		setQuery({ data: manyLines(15) });
-		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 
 		await expect.element(getByText('line 0', { exact: true })).toBeInTheDocument();
 		expect(container.querySelector('[data-testid="file-diff-large"]')).toBeNull();
@@ -376,7 +388,7 @@ describe('FileDiffPanel', () => {
 
 	it('omits the plain-text notice when the file has no highlight language anyway', async () => {
 		setQuery({ data: manyLines(15) });
-		const { getByText, container } = renderWithTestWrapper(FileDiffPanel, {
+		const { getByText, container } = await renderWithTestWrapper(FileDiffPanel, {
 			...defaultProps,
 			file: file({ path: 'LICENSE' })
 		});
@@ -387,21 +399,21 @@ describe('FileDiffPanel', () => {
 
 	it('renders a per-hunk explanation inline under the hunk, only on its anchor', async () => {
 		setQuery({ data: diff() });
-		const { getByTestId, container } = renderWithTestWrapper(FileDiffPanel, {
+		const { getByTestId, container } = await renderWithTestWrapper(FileDiffPanel, {
 			...defaultProps,
 			hunkExplanations: new Map([[1, 'Swaps the old line for the new one.']])
 		});
 
 		await expect
 			.element(getByTestId('hunk-explanation'))
-			.toHaveTextContent('Swaps the old line for the new one.');
+			.toMatchTextContent('Swaps the old line for the new one.');
 		// Anchored to a single line — not repeated under every row.
 		expect(container.querySelectorAll('[data-testid="hunk-explanation"]')).toHaveLength(1);
 	});
 
 	it('renders no inline annotation when no explanations are given', async () => {
 		setQuery({ data: diff() });
-		const { container } = renderWithTestWrapper(FileDiffPanel, defaultProps);
+		const { container } = await renderWithTestWrapper(FileDiffPanel, defaultProps);
 		expect(container.querySelector('[data-testid="hunk-explanation"]')).toBeNull();
 		// And no empty annotation wrappers leak under the ordinary lines.
 		expect(container.querySelector('[data-testid="diff-line-annotation"]')).toBeNull();

@@ -47,7 +47,7 @@ describe('ChangedFileRow', () => {
 
 	describe('diff prefetch', () => {
 		it('warms the file diff once hovering the row settles', async () => {
-			const { getByTestId } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+			const { getByTestId } = await renderWithTestWrapper(ChangedFileRow, defaultProps);
 
 			await getByTestId('changed-file-row').hover();
 
@@ -68,7 +68,7 @@ describe('ChangedFileRow', () => {
 		});
 
 		it('does not warm a row whose panel is already mounted', async () => {
-			const { getByTestId } = renderWithTestWrapper(ChangedFileRow, {
+			const { getByTestId } = await renderWithTestWrapper(ChangedFileRow, {
 				...defaultProps,
 				defaultExpanded: true
 			});
@@ -81,7 +81,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('shows the status badge, path, and line stats', async () => {
-		const { getByText, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(ChangedFileRow, defaultProps);
 
 		await expect.element(getByText('modified')).toBeInTheDocument();
 		await expect.element(getByText('src/app.ts')).toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('marks the parts of the path that match the search term', async () => {
-		const { container, getByText } = renderWithTestWrapper(ChangedFileRow, {
+		const { container, getByText } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			searchTerm: 'app'
 		});
@@ -104,7 +104,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('shows the rename source for renamed files', async () => {
-		const { getByText } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByText } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			file: file({ status: 'renamed', path: 'src/new.ts', oldPath: 'src/old.ts' })
 		});
@@ -114,7 +114,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('replaces line stats with a binary badge for binary files', async () => {
-		const { getByText, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByText, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			file: file({ isBinary: true })
 		});
@@ -124,7 +124,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('expands and collapses the diff panel via the toggle', async () => {
-		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+		const { getByRole, container } = await renderWithTestWrapper(ChangedFileRow, defaultProps);
 
 		const toggle = getByRole('button', { name: 'Show diff of src/app.ts' });
 		await toggle.click();
@@ -137,7 +137,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('marks the matching part of the file name while searching', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			searchTerm: 'app'
 		});
@@ -151,7 +151,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('opens itself when the search term matches the diff content', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			searchTerm: 'needle',
 			searchMatched: true
@@ -163,7 +163,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('keeps the file header sticky so it stays visible while its diff scrolls', async () => {
-		const { getByText, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(ChangedFileRow, defaultProps);
 
 		await expect.element(getByText('modified')).toBeInTheDocument();
 		const row = container.querySelector('[data-testid="changed-file-row"]') as HTMLElement;
@@ -175,7 +175,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('opens when a reveal navigation targets it', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			revealSeq: 1
 		});
@@ -186,7 +186,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('starts expanded when defaultExpanded is set', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			defaultExpanded: true
 		});
@@ -201,7 +201,7 @@ describe('ChangedFileRow', () => {
 			startLine: 1,
 			endLine: 2
 		});
-		const { container, getByText } = renderWithTestWrapper(ChangedFileRow, {
+		const { container, getByText } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			structure: {
 				symbols: [symbol('alpha'), symbol('beta'), symbol('gamma'), symbol('delta')],
@@ -217,7 +217,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('shows glyphs per symbol kind without a +more suffix when all fit', async () => {
-		const { getByText } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByText } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			structure: {
 				symbols: [
@@ -234,7 +234,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('shows import-impact badges only for non-zero counts', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			structure: { symbols: [], importsChanged: 2, importedByChanged: 0 }
 		});
@@ -249,7 +249,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('pluralizes the imported-by badge title correctly', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			structure: { symbols: [], importsChanged: 0, importedByChanged: 1 }
 		});
@@ -260,7 +260,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('renders without structure data exactly as before', async () => {
-		const { container, getByText } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+		const { container, getByText } = await renderWithTestWrapper(ChangedFileRow, defaultProps);
 
 		await expect.element(getByText('src/app.ts')).toBeInTheDocument();
 		expect(container.querySelector('[data-testid="changed-file-symbols"]')).toBeNull();
@@ -270,7 +270,7 @@ describe('ChangedFileRow', () => {
 
 	it('reports reviewed toggle clicks and reflects the reviewed flag', async () => {
 		const onToggleReviewed = vi.fn();
-		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByRole, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			reviewed: false,
 			onToggleReviewed
@@ -284,7 +284,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('dims the row and flips the label when reviewed', async () => {
-		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByRole, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			reviewed: true,
 			onToggleReviewed: vi.fn()
@@ -297,7 +297,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('does not throw when the reviewed toggle has no handler', async () => {
-		const { getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByRole, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			reviewed: false
 		});
@@ -308,14 +308,14 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('opens the explanation panel when the Explain button is clicked', async () => {
-		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, defaultProps);
+		const { getByTestId, container } = await renderWithTestWrapper(ChangedFileRow, defaultProps);
 		expect(container.querySelector('[data-testid="explanation-panel"]')).toBeNull();
 		await getByTestId('toggle-file-explanation').click();
 		await expect.element(getByTestId('explanation-panel')).toBeInTheDocument();
 	});
 
 	it('hides the Explain affordance for binary files', async () => {
-		const { container } = renderWithTestWrapper(ChangedFileRow, {
+		const { container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			file: file({ isBinary: true })
 		});
@@ -323,7 +323,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('renders a batch explanation panel from batchState', async () => {
-		const { getByTestId } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByTestId } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			batchState: { text: 'Renames a helper for clarity.', status: 'done' }
 		});
@@ -333,7 +333,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('surfaces a batch failure in the panel', async () => {
-		const { getByTestId } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByTestId } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			batchState: { text: '', status: 'error', error: 'agent boom' }
 		});
@@ -341,7 +341,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('renders a per-change batch inline and reveals the diff', async () => {
-		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByTestId, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			batchState: {
 				text: '@@HUNK 1@@\nDoes a thing.',
@@ -357,7 +357,7 @@ describe('ChangedFileRow', () => {
 	});
 
 	it('reveals the diff and opens the panel in per-change mode', async () => {
-		const { getByTestId, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByTestId, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			explanationDetail: 'hunks'
 		});
@@ -372,7 +372,7 @@ describe('ChangedFileRow', () => {
 
 	it('lets one file override the global detail via its own dropdown', async () => {
 		// Global default is whole-file; this file is switched to per-change.
-		const { getByTestId, getByRole, container } = renderWithTestWrapper(ChangedFileRow, {
+		const { getByTestId, getByRole, container } = await renderWithTestWrapper(ChangedFileRow, {
 			...defaultProps,
 			explanationDetail: 'file'
 		});

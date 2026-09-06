@@ -28,7 +28,7 @@ function highlightStates(container: Element): Map<string, boolean> {
 
 describe('EdgeLayer', () => {
 	it('renders one SVG trace per edge with direction arrowheads', async () => {
-		const { container } = renderWithTestWrapper(EdgeLayer, { layout, edges });
+		const { container } = await renderWithTestWrapper(EdgeLayer, { layout, edges });
 
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-testid="diff-canvas-edge"]')).toHaveLength(2);
@@ -46,7 +46,7 @@ describe('EdgeLayer', () => {
 
 	it('highlights the hovered node’s edges on the IMPORTER side too', async () => {
 		// Hovering b.ts must light b→a (edge.from === path) and leave c→a alone.
-		const { container } = renderWithTestWrapper(EdgeLayer, {
+		const { container } = await renderWithTestWrapper(EdgeLayer, {
 			layout,
 			edges,
 			hoveredPath: 'b.ts'
@@ -61,7 +61,7 @@ describe('EdgeLayer', () => {
 	});
 
 	it('highlights both of the hovered imported file’s edges', async () => {
-		const { container } = renderWithTestWrapper(EdgeLayer, {
+		const { container } = await renderWithTestWrapper(EdgeLayer, {
 			layout,
 			edges,
 			hoveredPath: 'a.ts'
@@ -78,7 +78,11 @@ describe('EdgeLayer', () => {
 
 	it('dims edges unrelated to the hovered node', async () => {
 		// Hovering b.ts lifts b→a and pushes the unrelated c→a back.
-		const { container } = renderWithTestWrapper(EdgeLayer, { layout, edges, hoveredPath: 'b.ts' });
+		const { container } = await renderWithTestWrapper(EdgeLayer, {
+			layout,
+			edges,
+			hoveredPath: 'b.ts'
+		});
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-testid="diff-canvas-edge"]')).toHaveLength(2);
 		});
@@ -90,7 +94,7 @@ describe('EdgeLayer', () => {
 	});
 
 	it('colors call edges by lane and leaves import-only edges muted', async () => {
-		const { container } = renderWithTestWrapper(EdgeLayer, { layout, edges });
+		const { container } = await renderWithTestWrapper(EdgeLayer, { layout, edges });
 
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-testid="diff-canvas-edge"]')).toHaveLength(2);
@@ -112,7 +116,11 @@ describe('EdgeLayer', () => {
 	});
 
 	it('draws no symbol labels itself — those live in the on-top labels layer', async () => {
-		const { container } = renderWithTestWrapper(EdgeLayer, { layout, edges, hoveredPath: 'a.ts' });
+		const { container } = await renderWithTestWrapper(EdgeLayer, {
+			layout,
+			edges,
+			hoveredPath: 'a.ts'
+		});
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-testid="diff-canvas-edge"]')).toHaveLength(2);
 		});

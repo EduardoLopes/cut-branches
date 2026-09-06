@@ -29,37 +29,37 @@ beforeEach(() => {
 });
 
 describe('WindowTitlebar', () => {
-	it('draws the strip and its controls on macOS', () => {
-		const screen = renderWithTestWrapper(WindowTitlebar, { children });
+	it('draws the strip and its controls on macOS', async () => {
+		const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 		expect(screen.getByTestId('window-titlebar')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /collapse sidebar/i })).toBeInTheDocument();
 	});
 
-	it('marks the strip as a window drag region', () => {
-		const screen = renderWithTestWrapper(WindowTitlebar, { children });
+	it('marks the strip as a window drag region', async () => {
+		const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 		expect(screen.getByTestId('window-titlebar')).toHaveAttribute('data-tauri-drag-region');
 	});
 
-	it('renders nothing off macOS, where the OS draws its own titlebar', () => {
+	it('renders nothing off macOS, where the OS draws its own titlebar', async () => {
 		isMacOS.mockReturnValue(false);
 
-		const screen = renderWithTestWrapper(WindowTitlebar, { children });
+		const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 		expect(screen.getByTestId('window-titlebar')).not.toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /collapse sidebar/i })).not.toBeInTheDocument();
 	});
 
-	it('renders the strip with no controls passed', () => {
-		const screen = renderWithTestWrapper(WindowTitlebar, {});
+	it('renders the strip with no controls passed', async () => {
+		const screen = await renderWithTestWrapper(WindowTitlebar, {});
 
 		expect(screen.getByTestId('window-titlebar')).toBeInTheDocument();
 	});
 
 	describe('the traffic-light inset', () => {
 		it('is kept while the window is not fullscreen', async () => {
-			const screen = renderWithTestWrapper(WindowTitlebar, { children });
+			const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 			await expect
 				.element(screen.getByTestId('window-titlebar'))
@@ -72,7 +72,7 @@ describe('WindowTitlebar', () => {
 				return stopWatching;
 			});
 
-			const screen = renderWithTestWrapper(WindowTitlebar, { children });
+			const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 			await expect
 				.element(screen.getByTestId('window-titlebar'))
@@ -80,7 +80,7 @@ describe('WindowTitlebar', () => {
 		});
 
 		it('is dropped on entering fullscreen', async () => {
-			const screen = renderWithTestWrapper(WindowTitlebar, { children });
+			const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 			await expect
 				.element(screen.getByTestId('window-titlebar'))
@@ -94,7 +94,7 @@ describe('WindowTitlebar', () => {
 		});
 
 		it('comes back on leaving fullscreen', async () => {
-			const screen = renderWithTestWrapper(WindowTitlebar, { children });
+			const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 			emitFullscreen(true);
 			await expect
@@ -109,7 +109,7 @@ describe('WindowTitlebar', () => {
 		});
 
 		it('stops watching once unmounted', async () => {
-			const screen = renderWithTestWrapper(WindowTitlebar, { children });
+			const screen = await renderWithTestWrapper(WindowTitlebar, { children });
 
 			await expect
 				.element(screen.getByTestId('window-titlebar'))

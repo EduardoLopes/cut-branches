@@ -72,28 +72,28 @@ beforeEach(() => {
 
 describe('WorktreesView', () => {
 	it('renders the worktrees and the selection summary', async () => {
-		const screen = renderWithTestWrapper(WorktreesView, { id: 'r1' });
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
 		expect(screen.container.querySelectorAll('[data-testid="worktree-row"]')).toHaveLength(2);
 		await expect
 			.element(screen.getByTestId('worktrees-selection-count'))
-			.toHaveTextContent('0 of 1');
+			.toMatchTextContent('0 of 1');
 	});
 
 	it('filters worktrees by the search term', async () => {
 		h.view = makeView([wt('main', { isMain: true }), wt('alpha'), wt('beta')]);
-		const screen = renderWithTestWrapper(WorktreesView, { id: 'r1' });
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
 		await screen.getByTestId('worktrees-search').fill('alph');
 		await tick();
 		expect(screen.container.querySelectorAll('[data-testid="worktree-row"]')).toHaveLength(1);
-		await expect.element(screen.getByTestId('worktree-row')).toHaveTextContent('alpha');
+		await expect.element(screen.getByTestId('worktree-row')).toMatchTextContent('alpha');
 	});
 
 	it('locks a worktree from a row', async () => {
-		const screen = renderWithTestWrapper(WorktreesView, { id: 'r1' });
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
 		await screen.getByTestId('worktree-lock').click();
@@ -101,7 +101,7 @@ describe('WorktreesView', () => {
 	});
 
 	it('bulk-deletes selected worktrees through the confirm modal', async () => {
-		const screen = renderWithTestWrapper(WorktreesView, { id: 'r1' });
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
 		await screen.getByTestId('worktree-select-a').click();
@@ -115,7 +115,7 @@ describe('WorktreesView', () => {
 	});
 
 	it('shows a validation hint and does not delete when nothing is selected', async () => {
-		const screen = renderWithTestWrapper(WorktreesView, { id: 'r1' });
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
 		await screen.getByTestId('worktrees-delete').click();

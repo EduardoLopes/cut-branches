@@ -35,8 +35,8 @@ beforeEach(() => {
 });
 
 describe('AboutPanel', () => {
-	it('renders the app, OS, build and locale info rows', () => {
-		const screen = renderWithTestWrapper(AboutPanel);
+	it('renders the app, OS, build and locale info rows', async () => {
+		const screen = await renderWithTestWrapper(AboutPanel);
 
 		expect(screen.getByText('App version')).toBeInTheDocument();
 		expect(screen.getByText('Operating system')).toBeInTheDocument();
@@ -46,8 +46,8 @@ describe('AboutPanel', () => {
 		expect(screen.getByText('Identifier')).toBeInTheDocument();
 	});
 
-	it('renders a button per external link', () => {
-		const screen = renderWithTestWrapper(AboutPanel);
+	it('renders a button per external link', async () => {
+		const screen = await renderWithTestWrapper(AboutPanel);
 
 		expect(screen.getByTestId('about-link-repo')).toBeInTheDocument();
 		expect(screen.getByTestId('about-link-issue')).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe('AboutPanel', () => {
 	});
 
 	it('opens a link when its button is clicked', async () => {
-		const screen = renderWithTestWrapper(AboutPanel);
+		const screen = await renderWithTestWrapper(AboutPanel);
 
 		await screen.getByTestId('about-link-repo').click();
 
@@ -63,7 +63,7 @@ describe('AboutPanel', () => {
 	});
 
 	it('copies diagnostics from the copy button', async () => {
-		const screen = renderWithTestWrapper(AboutPanel);
+		const screen = await renderWithTestWrapper(AboutPanel);
 
 		await screen.getByTestId('about-copy-diagnostics').click();
 
@@ -71,7 +71,7 @@ describe('AboutPanel', () => {
 	});
 
 	it('opens the logs folder from its button', async () => {
-		const screen = renderWithTestWrapper(AboutPanel);
+		const screen = await renderWithTestWrapper(AboutPanel);
 
 		await screen.getByTestId('about-open-logs').click();
 

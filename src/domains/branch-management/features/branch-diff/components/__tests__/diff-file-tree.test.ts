@@ -16,7 +16,7 @@ const defaultFiles = [file('src/app.ts'), file('src/new.ts', 'added'), file('REA
 
 describe('DiffFileTree', () => {
 	it('renders directories expanded with their files visible', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffFileTree, {
+		const { getByText, container } = await renderWithTestWrapper(DiffFileTree, {
 			files: defaultFiles,
 			onSelectFile: vi.fn()
 		});
@@ -30,7 +30,7 @@ describe('DiffFileTree', () => {
 
 	it('fires onSelectFile with the changed file when a file node is activated', async () => {
 		const onSelectFile = vi.fn();
-		const { getByText } = renderWithTestWrapper(DiffFileTree, {
+		const { getByText } = await renderWithTestWrapper(DiffFileTree, {
 			files: defaultFiles,
 			onSelectFile
 		});
@@ -42,7 +42,7 @@ describe('DiffFileTree', () => {
 
 	it('does not fire onSelectFile for directory nodes', async () => {
 		const onSelectFile = vi.fn();
-		const { getByText } = renderWithTestWrapper(DiffFileTree, {
+		const { getByText } = await renderWithTestWrapper(DiffFileTree, {
 			files: defaultFiles,
 			onSelectFile
 		});
@@ -53,7 +53,7 @@ describe('DiffFileTree', () => {
 	});
 
 	it('marks the node of the selected path', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffFileTree, {
+		const { getByText, container } = await renderWithTestWrapper(DiffFileTree, {
 			files: defaultFiles,
 			selectedPath: 'src/new.ts',
 			onSelectFile: vi.fn()
@@ -65,7 +65,7 @@ describe('DiffFileTree', () => {
 	});
 
 	it('tints each file with its change status', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffFileTree, {
+		const { getByText, container } = await renderWithTestWrapper(DiffFileTree, {
 			files: defaultFiles,
 			onSelectFile: vi.fn()
 		});

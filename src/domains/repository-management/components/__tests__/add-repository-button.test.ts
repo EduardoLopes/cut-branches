@@ -62,19 +62,19 @@ describe('AddButton', () => {
 	});
 
 	describe('Rendering', () => {
-		it('renders correctly with default props', () => {
-			const screen = renderWithTestWrapper(AddButton);
+		it('renders correctly with default props', async () => {
+			const screen = await renderWithTestWrapper(AddButton);
 			expect(screen.getByText('Add a git repository')).toBeInTheDocument();
 		});
 
-		it('displays visually hidden label when visuallyHiddenLabel is true', () => {
-			const screen = renderWithTestWrapper(AddButton, { visuallyHiddenLabel: true });
+		it('displays visually hidden label when visuallyHiddenLabel is true', async () => {
+			const screen = await renderWithTestWrapper(AddButton, { visuallyHiddenLabel: true });
 			const label = screen.getByText('Add a git repository');
 			expect(label).toHaveClass('sr_true');
 		});
 
-		it('displays visible label when visuallyHiddenLabel is false', () => {
-			const screen = renderWithTestWrapper(AddButton, { visuallyHiddenLabel: false });
+		it('displays visible label when visuallyHiddenLabel is false', async () => {
+			const screen = await renderWithTestWrapper(AddButton, { visuallyHiddenLabel: false });
 			const label = screen.getByText('Add a git repository');
 			expect(label).not.toHaveClass('sr_true');
 		});
@@ -82,7 +82,7 @@ describe('AddButton', () => {
 
 	describe('Interactions', () => {
 		it('calls open function on button click', async () => {
-			const screen = renderWithTestWrapper(AddButton);
+			const screen = await renderWithTestWrapper(AddButton);
 			const button = screen.getByRole('button', { name: /add a git repository/i });
 			await button.click();
 
@@ -92,7 +92,7 @@ describe('AddButton', () => {
 		it('calls mutation when directory is selected', async () => {
 			vi.mocked(open).mockResolvedValue('/path/to/repo');
 
-			const screen = renderWithTestWrapper(AddButton);
+			const screen = await renderWithTestWrapper(AddButton);
 			const button = screen.getByRole('button', { name: /add a git repository/i });
 			await button.click();
 			await tick();
@@ -103,7 +103,7 @@ describe('AddButton', () => {
 		it('does not call mutation when directory selection is cancelled', async () => {
 			vi.mocked(open).mockResolvedValue(null);
 
-			const screen = renderWithTestWrapper(AddButton);
+			const screen = await renderWithTestWrapper(AddButton);
 			const button = screen.getByRole('button', { name: /add a git repository/i });
 			await button.click();
 			await tick();
@@ -115,7 +115,7 @@ describe('AddButton', () => {
 			const mockError = new Error('Failed to open directory');
 			vi.mocked(open).mockRejectedValue(mockError);
 
-			const screen = renderWithTestWrapper(AddButton);
+			const screen = await renderWithTestWrapper(AddButton);
 			const button = screen.getByRole('button', { name: /add a git repository/i });
 			await button.click();
 			await tick();
@@ -133,7 +133,7 @@ describe('AddButton', () => {
 			vi.mocked(open).mockResolvedValue('/path/to/new/repo');
 
 			// Render component to trigger mutation creation
-			renderWithTestWrapper(AddButton);
+			await renderWithTestWrapper(AddButton);
 			await tick();
 
 			// Now verify the mutation was called with correct options

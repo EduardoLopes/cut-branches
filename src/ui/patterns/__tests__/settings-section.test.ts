@@ -8,8 +8,8 @@ const children = createRawSnippet(() => ({
 }));
 
 describe('SettingsSection', () => {
-	it('renders the heading, subheading and children in the well', () => {
-		const screen = renderWithTestWrapper(SettingsSection, {
+	it('renders the heading, subheading and children in the well', async () => {
+		const screen = await renderWithTestWrapper(SettingsSection, {
 			heading: 'Feature flags',
 			subheading: 'Turn features on or off',
 			testId: 'flags-section',
@@ -22,12 +22,12 @@ describe('SettingsSection', () => {
 		expect(screen.getByTestId('section-body')).toBeInTheDocument();
 	});
 
-	it('renders a trailing header action when provided', () => {
+	it('renders a trailing header action when provided', async () => {
 		const trailing = createRawSnippet(() => ({
 			render: () => '<button data-testid="section-action">Reset</button>'
 		}));
 
-		const screen = renderWithTestWrapper(SettingsSection, {
+		const screen = await renderWithTestWrapper(SettingsSection, {
 			heading: 'Cleanup',
 			trailing,
 			children
@@ -36,8 +36,8 @@ describe('SettingsSection', () => {
 		expect(screen.getByTestId('section-action')).toBeInTheDocument();
 	});
 
-	it('renders without a trailing action', () => {
-		const screen = renderWithTestWrapper(SettingsSection, {
+	it('renders without a trailing action', async () => {
+		const screen = await renderWithTestWrapper(SettingsSection, {
 			heading: 'About',
 			children
 		});

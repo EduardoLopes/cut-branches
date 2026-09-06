@@ -261,7 +261,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('renders repository and menu components', async () => {
 		// Directly render the fixture component
-		const screen = renderWithTestWrapper(RepositoryPageFixture, {
+		const screen = await renderWithTestWrapper(RepositoryPageFixture, {
 			id: 'test-repo-id'
 		});
 
@@ -275,7 +275,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('renders repository fixture directly', async () => {
 		// Directly render the fixture component without TestWrapper
-		const screen = renderWithTestWrapper(RepositoryPageFixture, {
+		const screen = await renderWithTestWrapper(RepositoryPageFixture, {
 			id: 'test-repo-id'
 		});
 
@@ -289,7 +289,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('selects a branch and updates UI to reflect selection', async () => {
 		// Render with the test repository
-		const screen = renderWithTestWrapper(RepositoryPageFixture, {
+		const screen = await renderWithTestWrapper(RepositoryPageFixture, {
 			id: 'test-repo-id'
 		});
 
@@ -323,7 +323,7 @@ describe('Repository Page Integration Test', () => {
 		}
 
 		// Render the fixture
-		const screen = renderWithTestWrapper(RepositoryPageFixture, {
+		const screen = await renderWithTestWrapper(RepositoryPageFixture, {
 			id: 'test-repo-id'
 		});
 
@@ -356,7 +356,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('searches for branches and filters the list', async () => {
 		// Render the fixture
-		const screen = renderWithTestWrapper(RepositoryPageFixture, {
+		const screen = await renderWithTestWrapper(RepositoryPageFixture, {
 			id: 'test-repo-id'
 		});
 
@@ -390,7 +390,7 @@ describe('Repository Page Integration Test', () => {
 
 	it('switches the current branch', async () => {
 		// Render the fixture
-		const screen = renderWithTestWrapper(RepositoryPageFixture, {
+		const screen = await renderWithTestWrapper(RepositoryPageFixture, {
 			id: 'test-repo-id'
 		});
 

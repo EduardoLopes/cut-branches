@@ -56,8 +56,8 @@ const baseProps = {
 };
 
 describe('RestoreBranchStatusCard', () => {
-	test('shows pre-resolution buttons when branch already exists and not processing', () => {
-		const screen = renderWithTestWrapper(RestoreBranchStatusCard, {
+	test('shows pre-resolution buttons when branch already exists and not processing', async () => {
+		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -68,8 +68,8 @@ describe('RestoreBranchStatusCard', () => {
 		expect(screen.getByTestId('pre-overwrite-button')).toBeInTheDocument();
 	});
 
-	test('hides pre-resolution buttons when isProcessing', () => {
-		const screen = renderWithTestWrapper(RestoreBranchStatusCard, {
+	test('hides pre-resolution buttons when isProcessing', async () => {
+		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -81,7 +81,7 @@ describe('RestoreBranchStatusCard', () => {
 
 	test('clicking pre-skip calls onSetPreference with Skip', async () => {
 		const onSetPreference = vi.fn();
-		const screen = renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -92,8 +92,8 @@ describe('RestoreBranchStatusCard', () => {
 		expect(onSetPreference).toHaveBeenCalledWith('Skip');
 	});
 
-	test('renders Skipped label when result is skipped', () => {
-		const screen = renderWithTestWrapper(RestoreBranchStatusCard, {
+	test('renders Skipped label when result is skipped', async () => {
+		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: skippedResult('feat-x')
@@ -101,8 +101,8 @@ describe('RestoreBranchStatusCard', () => {
 		expect(screen.getByText('Skipped')).toBeInTheDocument();
 	});
 
-	test('shows "Waiting for user resolution..." when pending and not current', () => {
-		const screen = renderWithTestWrapper(RestoreBranchStatusCard, {
+	test('shows "Waiting for user resolution..." when pending and not current', async () => {
+		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -112,11 +112,11 @@ describe('RestoreBranchStatusCard', () => {
 		expect(screen.getByText('Waiting for user resolution...')).toBeInTheDocument();
 	});
 
-	test('hides pre-resolution buttons while a mutation is in flight for this branch', () => {
+	test('hides pre-resolution buttons while a mutation is in flight for this branch', async () => {
 		// isInFlight is the signal that conflict resolution is currently being
 		// applied — even outside the explicit isProcessing batch state we should
 		// not let the user re-pick a preference for this row.
-		const screen = renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: successResult('feat-x'),

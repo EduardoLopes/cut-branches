@@ -12,8 +12,8 @@ const trailing = createRawSnippet(() => ({
 }));
 
 describe('PageHeader', () => {
-	it('renders the heading and subheading', () => {
-		const screen = renderWithTestWrapper(PageHeader, {
+	it('renders the heading and subheading', async () => {
+		const screen = await renderWithTestWrapper(PageHeader, {
 			heading: 'Commit history',
 			subheading: '/Users/me/repo'
 		});
@@ -22,8 +22,8 @@ describe('PageHeader', () => {
 		expect(screen.getByText('/Users/me/repo')).toBeInTheDocument();
 	});
 
-	it('renders a trailing action and the context nav row', () => {
-		const screen = renderWithTestWrapper(PageHeader, {
+	it('renders a trailing action and the context nav row', async () => {
+		const screen = await renderWithTestWrapper(PageHeader, {
 			heading: 'Branches',
 			trailing,
 			nav,
@@ -35,14 +35,14 @@ describe('PageHeader', () => {
 		expect(screen.getByTestId('branches-header')).toBeInTheDocument();
 	});
 
-	it('omits the breadcrumb when none is given', () => {
-		const screen = renderWithTestWrapper(PageHeader, { heading: 'Branches' });
+	it('omits the breadcrumb when none is given', async () => {
+		const screen = await renderWithTestWrapper(PageHeader, { heading: 'Branches' });
 
 		expect(screen.container.querySelector('[data-testid="page-breadcrumb"]')).toBeNull();
 	});
 
-	it('renders breadcrumb crumbs, linking every one but the current page', () => {
-		const screen = renderWithTestWrapper(PageHeader, {
+	it('renders breadcrumb crumbs, linking every one but the current page', async () => {
+		const screen = await renderWithTestWrapper(PageHeader, {
 			heading: 'Changes',
 			breadcrumb: [{ label: 'Branches', href: '/repos/r1' }, { label: 'Changes' }]
 		});

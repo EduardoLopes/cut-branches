@@ -4,7 +4,7 @@ import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('CommitRunRow', () => {
 	it('offers to show a collapsed run', async () => {
-		const { getByText } = renderWithTestWrapper(CommitRunRow, {
+		const { getByText } = await renderWithTestWrapper(CommitRunRow, {
 			mode: 'collapsed',
 			count: 7
 		});
@@ -12,15 +12,15 @@ describe('CommitRunRow', () => {
 	});
 
 	it('offers to hide an expanded run', async () => {
-		const { getByText } = renderWithTestWrapper(CommitRunRow, {
+		const { getByText } = await renderWithTestWrapper(CommitRunRow, {
 			mode: 'header',
 			count: 7
 		});
 		await expect.element(getByText('Hide 7 commits')).toBeInTheDocument();
 	});
 
-	it('draws no graph lanes — the strip is a clean visual break', () => {
-		const { container } = renderWithTestWrapper(CommitRunRow, {
+	it('draws no graph lanes — the strip is a clean visual break', async () => {
+		const { container } = await renderWithTestWrapper(CommitRunRow, {
 			mode: 'collapsed',
 			count: 7
 		});

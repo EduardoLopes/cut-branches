@@ -5,7 +5,7 @@ import { renderWithTestWrapper } from '$utils/test-utils';
 describe('ExplanationPanel', () => {
 	it('offers an Explain action when idle and reports clicks', async () => {
 		const onExplain = vi.fn();
-		const screen = renderWithTestWrapper(ExplanationPanel, { status: 'idle', onExplain });
+		const screen = await renderWithTestWrapper(ExplanationPanel, { status: 'idle', onExplain });
 
 		const button = screen.getByTestId('explanation-explain');
 		await expect.element(button).toHaveTextContent('Explain this change');
@@ -14,13 +14,16 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('always makes the agent-cost transparent', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, { status: 'idle', onExplain: vi.fn() });
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
+			status: 'idle',
+			onExplain: vi.fn()
+		});
 		await expect.element(screen.getByText("Uses your agent's quota")).toBeInTheDocument();
 	});
 
 	it('shows the streaming text and a working cancel button', async () => {
 		const onCancel = vi.fn();
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'streaming',
 			text: 'partial…',
 			onExplain: vi.fn(),
@@ -34,7 +37,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('omits the cancel button when no cancel handler is given', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'streaming',
 			onExplain: vi.fn()
 		});
@@ -43,7 +46,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('renders the finished text with a Regenerate action', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'done',
 			text: 'This change renames a helper.',
 			onExplain: vi.fn()
@@ -55,7 +58,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('surfaces the failure message on error', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'error',
 			error: 'agent exited 1',
 			onExplain: vi.fn()
@@ -66,7 +69,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('falls back to a generic error when none is provided', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'error',
 			error: null,
 			onExplain: vi.fn()
@@ -77,7 +80,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('notes a cancellation that produced no text', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'cancelled',
 			onExplain: vi.fn()
 		});
@@ -87,7 +90,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('keeps partial text after cancellation without the empty-cancel note', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'cancelled',
 			text: 'half an explanation',
 			onExplain: vi.fn()
@@ -99,7 +102,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('points to the inline comments in per-change mode instead of listing text', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'done',
 			granularity: 'hunks',
 			text: '@@HUNK 1@@\nRenames the helper.',
@@ -111,7 +114,7 @@ describe('ExplanationPanel', () => {
 	});
 
 	it('shows no inline hint until a per-change explanation has started', async () => {
-		const screen = renderWithTestWrapper(ExplanationPanel, {
+		const screen = await renderWithTestWrapper(ExplanationPanel, {
 			status: 'idle',
 			granularity: 'hunks',
 			onExplain: vi.fn()

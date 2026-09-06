@@ -43,7 +43,7 @@ const defaultProps = {
 
 describe('CommitRow', () => {
 	it('shows the short sha, message, and author', async () => {
-		const { getByText } = renderWithTestWrapper(CommitRow, {
+		const { getByText } = await renderWithTestWrapper(CommitRow, {
 			row: graph.rows[0],
 			...defaultProps
 		});
@@ -54,7 +54,7 @@ describe('CommitRow', () => {
 	});
 
 	it('renders non-local refs as badges but keeps local branches in the gutter', async () => {
-		const { getByText, getByRole, container } = renderWithTestWrapper(CommitRow, {
+		const { getByText, getByRole, container } = await renderWithTestWrapper(CommitRow, {
 			row: graph.rows[0],
 			...defaultProps
 		});
@@ -69,16 +69,16 @@ describe('CommitRow', () => {
 		expect(badgeTexts.some((t) => t?.trim() === 'main')).toBe(false);
 	});
 
-	it('renders an empty gutter for a non-head commit', () => {
-		const { container } = renderWithTestWrapper(CommitRow, {
+	it('renders an empty gutter for a non-head commit', async () => {
+		const { container } = await renderWithTestWrapper(CommitRow, {
 			row: graph.rows[1],
 			...defaultProps
 		});
 		expect(container.querySelector('input')).toBeNull();
 	});
 
-	it('renders no run toggle when the row hosts no run', () => {
-		const { container } = renderWithTestWrapper(CommitRow, {
+	it('renders no run toggle when the row hosts no run', async () => {
+		const { container } = await renderWithTestWrapper(CommitRow, {
 			row: graph.rows[0],
 			...defaultProps
 		});
@@ -88,7 +88,7 @@ describe('CommitRow', () => {
 
 	it('offers to show a collapsed run below, with its count', async () => {
 		const onToggleRun = vi.fn();
-		const { getByRole, getByText } = renderWithTestWrapper(CommitRow, {
+		const { getByRole, getByText } = await renderWithTestWrapper(CommitRow, {
 			row: graph.rows[0],
 			...defaultProps,
 			runBelow: { groupId: 'def4567', count: 7, collapsed: true },
@@ -106,7 +106,7 @@ describe('CommitRow', () => {
 
 	it('offers to hide an expanded run below', async () => {
 		const onToggleRun = vi.fn();
-		const { getByRole } = renderWithTestWrapper(CommitRow, {
+		const { getByRole } = await renderWithTestWrapper(CommitRow, {
 			row: graph.rows[0],
 			...defaultProps,
 			runBelow: { groupId: 'def4567', count: 7, collapsed: false },

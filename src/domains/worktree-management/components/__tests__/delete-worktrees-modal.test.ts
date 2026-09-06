@@ -22,7 +22,7 @@ function wt(name: string, overrides: Partial<WorktreeData> = {}): Worktree {
 describe('DeleteWorktreesModal', () => {
 	it('confirms deletion without force when nothing is locked', async () => {
 		const onConfirm = vi.fn();
-		const screen = renderWithTestWrapper(DeleteWorktreesModal, {
+		const screen = await renderWithTestWrapper(DeleteWorktreesModal, {
 			open: true,
 			worktrees: [wt('a'), wt('b')],
 			onConfirm
@@ -35,7 +35,7 @@ describe('DeleteWorktreesModal', () => {
 	});
 
 	it('lists each worktree by name with its path', async () => {
-		const screen = renderWithTestWrapper(DeleteWorktreesModal, {
+		const screen = await renderWithTestWrapper(DeleteWorktreesModal, {
 			open: true,
 			worktrees: [wt('a'), wt('b')],
 			onConfirm: vi.fn()
@@ -44,13 +44,13 @@ describe('DeleteWorktreesModal', () => {
 
 		const items = screen.getByTestId('delete-worktrees-item');
 		expect(items.elements()).toHaveLength(2);
-		await vi.waitFor(() => expect(items.first()).toHaveTextContent('/repos/a'));
-		expect(items.nth(1)).toHaveTextContent('b');
+		await vi.waitFor(() => expect(items.first()).toMatchTextContent('/repos/a'));
+		expect(items.nth(1)).toMatchTextContent('b');
 	});
 
 	it('offers force when a selected worktree is locked and passes it through', async () => {
 		const onConfirm = vi.fn();
-		const screen = renderWithTestWrapper(DeleteWorktreesModal, {
+		const screen = await renderWithTestWrapper(DeleteWorktreesModal, {
 			open: true,
 			worktrees: [wt('a'), wt('b', { isLocked: true })],
 			onConfirm
@@ -64,7 +64,7 @@ describe('DeleteWorktreesModal', () => {
 
 	it('disables the confirm button while deleting', async () => {
 		const onConfirm = vi.fn();
-		const screen = renderWithTestWrapper(DeleteWorktreesModal, {
+		const screen = await renderWithTestWrapper(DeleteWorktreesModal, {
 			open: true,
 			worktrees: [wt('a')],
 			isDeleting: true,

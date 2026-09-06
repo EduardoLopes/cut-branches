@@ -14,8 +14,8 @@ vi.mock('$app/navigation', () => ({
 }));
 
 describe('Repos index (empty app) page', () => {
-	it('renders the empty state and an add-repository action', () => {
-		const screen = renderWithTestWrapper(ReposIndexPage);
+	it('renders the empty state and an add-repository action', async () => {
+		const screen = await renderWithTestWrapper(ReposIndexPage);
 
 		expect(screen.getByTestId('repos-empty-state')).toBeInTheDocument();
 		expect(screen.getByText(/no repositories yet/i)).toBeInTheDocument();

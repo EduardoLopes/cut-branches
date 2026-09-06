@@ -53,7 +53,7 @@ beforeEach(() => {
 
 describe('BranchContextFilter', () => {
 	it('renders both filters with their counts', async () => {
-		const screen = renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
 		await tick();
 
 		await expect.element(screen.getByTestId('branch-context-filter')).toBeInTheDocument();
@@ -62,7 +62,7 @@ describe('BranchContextFilter', () => {
 	});
 
 	it('navigates to the restore route when selecting Deleted', async () => {
-		const screen = renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
 		await tick();
 
 		clickFilter(screen.container, 'filter-deleted');
@@ -71,7 +71,7 @@ describe('BranchContextFilter', () => {
 
 	it('navigates back to the branches route when selecting Active', async () => {
 		h.pathname = '/repos/r1/restore';
-		const screen = renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
 		await tick();
 
 		clickFilter(screen.container, 'filter-active');
@@ -79,7 +79,7 @@ describe('BranchContextFilter', () => {
 	});
 
 	it('does not navigate when re-selecting the active filter', async () => {
-		const screen = renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
 		await tick();
 
 		clickFilter(screen.container, 'filter-active');

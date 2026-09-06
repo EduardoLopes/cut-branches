@@ -10,14 +10,17 @@ const base = {
 	onDetailChange: vi.fn()
 };
 
-async function openMenu(screen: ReturnType<typeof renderWithTestWrapper>) {
+async function openMenu(screen: Awaited<ReturnType<typeof renderWithTestWrapper>>) {
 	await screen.getByTestId('explanation-menu-trigger').click();
 	await tick();
 }
 
 describe('ExplanationMenu', () => {
 	it('lists both detail and style options', async () => {
-		const screen = renderWithTestWrapper(ExplanationMenu, { ...base, onStyleChange: vi.fn() });
+		const screen = await renderWithTestWrapper(ExplanationMenu, {
+			...base,
+			onStyleChange: vi.fn()
+		});
 		await openMenu(screen);
 
 		for (const name of ['Whole file', 'Per change']) {
@@ -30,7 +33,7 @@ describe('ExplanationMenu', () => {
 
 	it('reports a detail change', async () => {
 		const onDetailChange = vi.fn();
-		const screen = renderWithTestWrapper(ExplanationMenu, { ...base, onDetailChange });
+		const screen = await renderWithTestWrapper(ExplanationMenu, { ...base, onDetailChange });
 		await openMenu(screen);
 		await screen.getByRole('menuitemradio', { name: 'Per change' }).click();
 		expect(onDetailChange).toHaveBeenCalledWith('hunks');
@@ -38,7 +41,7 @@ describe('ExplanationMenu', () => {
 
 	it('reports a style change', async () => {
 		const onStyleChange = vi.fn();
-		const screen = renderWithTestWrapper(ExplanationMenu, { ...base, onStyleChange });
+		const screen = await renderWithTestWrapper(ExplanationMenu, { ...base, onStyleChange });
 		await openMenu(screen);
 		await screen.getByRole('menuitemradio', { name: 'Review-focused' }).click();
 		expect(onStyleChange).toHaveBeenCalledWith('reviewFocused');

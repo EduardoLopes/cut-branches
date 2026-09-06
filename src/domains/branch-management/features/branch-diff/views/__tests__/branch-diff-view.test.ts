@@ -109,7 +109,7 @@ beforeEach(() => {
 
 describe('BranchDiffView', () => {
 	it('shows the branch target badge, totals, and one row per changed file', async () => {
-		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -123,7 +123,7 @@ describe('BranchDiffView', () => {
 	});
 
 	it('tracks review progress across list rows and the header, persisting it', async () => {
-		const { getByRole, getByTestId, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByRole, getByTestId, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -135,7 +135,7 @@ describe('BranchDiffView', () => {
 
 		await getByRole('button', { name: 'Mark src/app.ts reviewed' }).click();
 		await tick();
-		await expect.element(progress).toHaveTextContent('1/2 reviewed');
+		await expect.element(progress).toMatchTextContent('1/2 reviewed');
 		// Stored as path → diff fingerprint (added:removed).
 		expect(
 			JSON.parse(localStorage.getItem('diff-reviewed:/repo:branch:feature/x') ?? '{}')
@@ -155,16 +155,16 @@ describe('BranchDiffView', () => {
 			'diff-reviewed:/repo:branch:feature/x',
 			JSON.stringify({ 'src/app.ts': '20:4', 'src/new.ts': '10:0' })
 		);
-		const { getByTestId } = renderWithTestWrapper(BranchDiffView, {
+		const { getByTestId } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
 
-		await expect.element(getByTestId('diff-reviewed-progress')).toHaveTextContent('2/2 reviewed');
+		await expect.element(getByTestId('diff-reviewed-progress')).toMatchTextContent('2/2 reviewed');
 	});
 
 	it('shows the short sha badge for a commit target', async () => {
-		const { getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			commitSha: 'abc1234567890def'
 		});
@@ -174,7 +174,7 @@ describe('BranchDiffView', () => {
 
 	it('shows a loading state while the changed files are computed', async () => {
 		setQueries({ changedFiles: { isLoading: true, isError: false, error: null } });
-		const { getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -190,7 +190,7 @@ describe('BranchDiffView', () => {
 				error: { message: 'Failed', description: 'Branch **gone** not found' }
 			}
 		});
-		const { getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'gone'
 		});
@@ -203,7 +203,7 @@ describe('BranchDiffView', () => {
 			repository: { isLoading: false, isError: true, error: { message: 'Repo not found' } },
 			changedFiles: { isLoading: false, isError: false, error: null }
 		});
-		const { getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'missing',
 			branchName: 'feature/x'
 		});
@@ -220,7 +220,7 @@ describe('BranchDiffView', () => {
 				data: output({ files: [], linesAdded: 0, linesRemoved: 0 })
 			}
 		});
-		const { getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -229,7 +229,7 @@ describe('BranchDiffView', () => {
 	});
 
 	it('filters the file list by path through the search input', async () => {
-		const { getByTestId, getByText, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByTestId, getByText, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -249,7 +249,7 @@ describe('BranchDiffView', () => {
 	});
 
 	it('shows the view options menu when there are changed files', async () => {
-		const { getByTestId } = renderWithTestWrapper(BranchDiffView, {
+		const { getByTestId } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -266,7 +266,7 @@ describe('BranchDiffView', () => {
 				data: output({ files: [], linesAdded: 0, linesRemoved: 0 })
 			}
 		});
-		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -276,7 +276,7 @@ describe('BranchDiffView', () => {
 	});
 
 	it('persists menu changes into the shared view options', async () => {
-		const screen = renderWithTestWrapper(BranchDiffView, {
+		const screen = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -292,7 +292,7 @@ describe('BranchDiffView', () => {
 	});
 
 	it('shows the file tree pane when more than one file changed', async () => {
-		const { getByTestId } = renderWithTestWrapper(BranchDiffView, {
+		const { getByTestId } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -309,7 +309,7 @@ describe('BranchDiffView', () => {
 				data: output({ files: [output().files[0]], linesAdded: 20, linesRemoved: 4 })
 			}
 		});
-		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -322,7 +322,7 @@ describe('BranchDiffView', () => {
 		const scrollIntoView = vi
 			.spyOn(Element.prototype, 'scrollIntoView')
 			.mockImplementation(() => {});
-		const { getByText, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByText, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -346,7 +346,7 @@ describe('BranchDiffView', () => {
 				data: output({ files: [output().files[0]], linesAdded: 20, linesRemoved: 4 })
 			}
 		});
-		const { container } = renderWithTestWrapper(BranchDiffView, {
+		const { container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -382,7 +382,7 @@ describe('BranchDiffView', () => {
 				}
 			}
 		});
-		const { container, getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { container, getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -400,7 +400,7 @@ describe('BranchDiffView', () => {
 		setQueries({
 			structure: { isLoading: false, isError: false, error: null, data: { files: [], edges: [] } }
 		});
-		const { container, getByText } = renderWithTestWrapper(BranchDiffView, {
+		const { container, getByText } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -431,7 +431,10 @@ describe('BranchDiffView', () => {
 			})
 		);
 		setQueries({ structure: { isLoading: true, isError: false, error: null, data: undefined } });
-		const first = renderWithTestWrapper(BranchDiffView, { id: 'repo-1', branchName: 'feature/x' });
+		const first = await renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
 		await expect.element(first.getByText('Analyzing code structure…')).toBeInTheDocument();
 		first.unmount();
 
@@ -443,7 +446,10 @@ describe('BranchDiffView', () => {
 				data: undefined
 			}
 		});
-		const second = renderWithTestWrapper(BranchDiffView, { id: 'repo-1', branchName: 'feature/x' });
+		const second = await renderWithTestWrapper(BranchDiffView, {
+			id: 'repo-1',
+			branchName: 'feature/x'
+		});
 		await expect.element(second.getByText('Analysis blew up')).toBeInTheDocument();
 	});
 
@@ -461,7 +467,7 @@ describe('BranchDiffView', () => {
 		setQueries({
 			structure: { isLoading: false, isError: false, error: null, data: { files: [], edges: [] } }
 		});
-		const { container } = renderWithTestWrapper(BranchDiffView, {
+		const { container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});
@@ -485,7 +491,7 @@ describe('BranchDiffView', () => {
 	});
 
 	it('offers an Explain all action that runs without throwing', async () => {
-		const { getByTestId, container } = renderWithTestWrapper(BranchDiffView, {
+		const { getByTestId, container } = await renderWithTestWrapper(BranchDiffView, {
 			id: 'repo-1',
 			branchName: 'feature/x'
 		});

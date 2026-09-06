@@ -61,7 +61,10 @@ beforeEach(() => {
 describe('CleanRepositoryModal', () => {
 	it('keeps the confirm button enabled and cleans when folders are selected', async () => {
 		h.stub = makeStub({ selectedCount: 2, targetCount: 2, selectedBytes: 2048 });
-		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(CleanRepositoryModal, {
+			open: true,
+			repositoryId: 'r1'
+		});
 		await tick();
 
 		const confirm = screen.getByTestId('cleanup-confirm');
@@ -73,7 +76,10 @@ describe('CleanRepositoryModal', () => {
 
 	it('disables the confirm button while scanning', async () => {
 		h.stub = makeStub({ isScanning: true, selectedCount: 2, targetCount: 2 });
-		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(CleanRepositoryModal, {
+			open: true,
+			repositoryId: 'r1'
+		});
 		await tick();
 
 		expect(screen.getByTestId('cleanup-confirm')).toBeDisabled();
@@ -81,7 +87,10 @@ describe('CleanRepositoryModal', () => {
 
 	it('disables the confirm button while cleaning', async () => {
 		h.stub = makeStub({ isCleaning: true, selectedCount: 2, targetCount: 2 });
-		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(CleanRepositoryModal, {
+			open: true,
+			repositoryId: 'r1'
+		});
 		await tick();
 
 		expect(screen.getByTestId('cleanup-confirm')).toBeDisabled();
@@ -97,7 +106,10 @@ describe('CleanRepositoryModal', () => {
 			selectedCount: 1,
 			isSelected: vi.fn((path: string) => path === '/r1/dist')
 		});
-		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(CleanRepositoryModal, {
+			open: true,
+			repositoryId: 'r1'
+		});
 
 		await vi.waitFor(() => expect(screen.getByTestId('cleanup-target').elements()).toHaveLength(2));
 		expect(screen.getByTestId('cleanup-target-size').elements()).toHaveLength(2);
@@ -111,7 +123,10 @@ describe('CleanRepositoryModal', () => {
 
 	it('shows a validation hint and does not clean when nothing is selected', async () => {
 		h.stub = makeStub({ selectedCount: 0, targetCount: 0 });
-		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(CleanRepositoryModal, {
+			open: true,
+			repositoryId: 'r1'
+		});
 		await tick();
 
 		await screen.getByTestId('cleanup-confirm').click();
@@ -123,7 +138,10 @@ describe('CleanRepositoryModal', () => {
 
 	it('requires typing "delete" in permanent mode before cleaning', async () => {
 		h.stub = makeStub({ selectedCount: 2, targetCount: 2, selectedBytes: 1024 });
-		const screen = renderWithTestWrapper(CleanRepositoryModal, { open: true, repositoryId: 'r1' });
+		const screen = await renderWithTestWrapper(CleanRepositoryModal, {
+			open: true,
+			repositoryId: 'r1'
+		});
 		await tick();
 
 		// Switch to permanent deletion — this surfaces the typed-confirm requirement.

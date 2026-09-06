@@ -16,16 +16,16 @@ const footer = createRawSnippet(() => ({
 }));
 
 describe('PageWell', () => {
-	it('renders only its children when no toolbar or footer is given', () => {
-		const screen = renderWithTestWrapper(PageWell, { children });
+	it('renders only its children when no toolbar or footer is given', async () => {
+		const screen = await renderWithTestWrapper(PageWell, { children });
 
 		expect(screen.getByTestId('well-body')).toBeInTheDocument();
 		expect(screen.container.querySelector('[data-testid="well-toolbar"]')).toBeNull();
 		expect(screen.container.querySelector('[data-testid="well-footer"]')).toBeNull();
 	});
 
-	it('renders the toolbar and footer slots when provided', () => {
-		const screen = renderWithTestWrapper(PageWell, {
+	it('renders the toolbar and footer slots when provided', async () => {
+		const screen = await renderWithTestWrapper(PageWell, {
 			children,
 			toolbar,
 			footer,
@@ -37,14 +37,14 @@ describe('PageWell', () => {
 		expect(screen.getByTestId('branches-well')).toBeInTheDocument();
 	});
 
-	it('still renders its children while loading', () => {
-		const screen = renderWithTestWrapper(PageWell, { children, isLoading: true });
+	it('still renders its children while loading', async () => {
+		const screen = await renderWithTestWrapper(PageWell, { children, isLoading: true });
 
 		expect(screen.getByTestId('well-body')).toBeInTheDocument();
 	});
 
-	it('renders unpadded content when padded is false', () => {
-		const screen = renderWithTestWrapper(PageWell, { children, padded: false });
+	it('renders unpadded content when padded is false', async () => {
+		const screen = await renderWithTestWrapper(PageWell, { children, padded: false });
 
 		expect(screen.getByTestId('well-body')).toBeInTheDocument();
 	});

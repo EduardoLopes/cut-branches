@@ -12,16 +12,16 @@ function rows(count: number, height = 40) {
 }
 
 describe('ScrollWell', () => {
-	test('renders its children in the scroller with default ids', () => {
-		const screen = renderWithTestWrapper(ScrollWell, { children: rows(3) });
+	test('renders its children in the scroller with default ids', async () => {
+		const screen = await renderWithTestWrapper(ScrollWell, { children: rows(3) });
 
-		expect(screen.getByTestId('scroll-well')).toHaveTextContent('row 0');
+		expect(screen.getByTestId('scroll-well')).toMatchTextContent('row 0');
 		expect(screen.getByTestId('scroll-well-shadow-top')).toBeInTheDocument();
 		expect(screen.getByTestId('scroll-well-shadow-bottom')).toBeInTheDocument();
 	});
 
-	test('applies the sizing, scroller and test-id overrides', () => {
-		const screen = renderWithTestWrapper(ScrollWell, {
+	test('applies the sizing, scroller and test-id overrides', async () => {
+		const screen = await renderWithTestWrapper(ScrollWell, {
 			children: rows(1),
 			class: css({ maxHeight: '100px' }),
 			scrollerClass: css({ gap: 'lg' }),
@@ -35,7 +35,7 @@ describe('ScrollWell', () => {
 	});
 
 	test('flags the edge with more content and flips it after scrolling', async () => {
-		const screen = renderWithTestWrapper(ScrollWell, {
+		const screen = await renderWithTestWrapper(ScrollWell, {
 			children: rows(40),
 			class: css({ maxHeight: '160px' }),
 			testId: 'list'
@@ -51,7 +51,7 @@ describe('ScrollWell', () => {
 	});
 
 	test('does not flag either edge when everything fits', async () => {
-		const screen = renderWithTestWrapper(ScrollWell, {
+		const screen = await renderWithTestWrapper(ScrollWell, {
 			children: rows(2),
 			class: css({ maxHeight: '400px' }),
 			testId: 'list'

@@ -44,7 +44,7 @@ describe('BranchRecentCommits', () => {
 	it('shows a loading line while the commits are in flight', async () => {
 		setQuery({ isPending: true });
 
-		const { getByTestId } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { getByTestId } = await renderWithTestWrapper(BranchRecentCommits, props);
 
 		await expect.element(getByTestId('recent-commits-loading')).toBeInTheDocument();
 	});
@@ -52,7 +52,7 @@ describe('BranchRecentCommits', () => {
 	it('surfaces the error message when the walk fails', async () => {
 		setQuery({ isError: true, error: { message: 'branch not found' } });
 
-		const { getByTestId } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { getByTestId } = await renderWithTestWrapper(BranchRecentCommits, props);
 
 		await expect.element(getByTestId('recent-commits-error')).toHaveTextContent('branch not found');
 	});
@@ -60,7 +60,7 @@ describe('BranchRecentCommits', () => {
 	it('reports an empty branch rather than rendering nothing', async () => {
 		setQuery({ data: { commits: [], hasMore: false } });
 
-		const { getByTestId } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { getByTestId } = await renderWithTestWrapper(BranchRecentCommits, props);
 
 		await expect.element(getByTestId('recent-commits-empty')).toBeInTheDocument();
 	});
@@ -68,7 +68,7 @@ describe('BranchRecentCommits', () => {
 	it('says so when the tip is the only commit, rather than repeating it', async () => {
 		setQuery({ data: { commits: [mk('abc1234567', 'feat: one')], hasMore: false } });
 
-		const { getByTestId, container } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { getByTestId, container } = await renderWithTestWrapper(BranchRecentCommits, props);
 
 		await expect.element(getByTestId('recent-commits-empty')).toBeInTheDocument();
 		expect(container.querySelectorAll('[data-testid="commit-sha"]').length).toBe(0);
@@ -86,7 +86,10 @@ describe('BranchRecentCommits', () => {
 			}
 		});
 
-		const { getByText, getByTestId, container } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { getByText, getByTestId, container } = await renderWithTestWrapper(
+			BranchRecentCommits,
+			props
+		);
 
 		await expect.element(getByText('fix: two')).toBeInTheDocument();
 		await expect.element(getByText('chore: three')).toBeInTheDocument();
@@ -114,7 +117,7 @@ describe('BranchRecentCommits', () => {
 			}
 		});
 
-		const { container } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { container } = await renderWithTestWrapper(BranchRecentCommits, props);
 
 		expect(container.querySelectorAll('[data-testid="commit-diff-link"]').length).toBe(0);
 	});
@@ -127,7 +130,7 @@ describe('BranchRecentCommits', () => {
 			}
 		});
 
-		const { getByTestId } = renderWithTestWrapper(BranchRecentCommits, props);
+		const { getByTestId } = await renderWithTestWrapper(BranchRecentCommits, props);
 
 		const link = getByTestId('recent-commits-open-history');
 		await expect.element(link).toBeInTheDocument();

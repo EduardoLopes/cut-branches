@@ -3,19 +3,19 @@ import EmptyState from '../empty-state.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('EmptyState Component', () => {
-	test('renders message correctly', () => {
+	test('renders message correctly', async () => {
 		const message = 'No items found';
-		const { getByText } = renderWithTestWrapper(EmptyState, {
+		const { getByText } = await renderWithTestWrapper(EmptyState, {
 			message
 		});
 
 		expect(getByText(message)).toBeInTheDocument();
 	});
 
-	test('uses the provided testId if specified', () => {
+	test('uses the provided testId if specified', async () => {
 		const message = 'No items found';
 		const testId = 'custom-test-id';
-		const { getByTestId } = renderWithTestWrapper(EmptyState, {
+		const { getByTestId } = await renderWithTestWrapper(EmptyState, {
 			message,
 			testId
 		});
@@ -23,8 +23,8 @@ describe('EmptyState Component', () => {
 		expect(getByTestId(testId)).toBeInTheDocument();
 	});
 
-	test('renders component with default icon', () => {
-		const { container } = renderWithTestWrapper(EmptyState, {
+	test('renders component with default icon', async () => {
+		const { container } = await renderWithTestWrapper(EmptyState, {
 			message: 'No items found'
 		});
 
@@ -38,9 +38,9 @@ describe('EmptyState Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
-	test('renders component with custom icon', () => {
+	test('renders component with custom icon', async () => {
 		const customIcon = 'mdi:alert';
-		const { container } = renderWithTestWrapper(EmptyState, {
+		const { container } = await renderWithTestWrapper(EmptyState, {
 			message: 'No items found',
 			icon: customIcon
 		});
@@ -54,9 +54,9 @@ describe('EmptyState Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
-	test('renders component with custom icon color', () => {
+	test('renders component with custom icon color', async () => {
 		const customColor = '#FF0000';
-		const { container } = renderWithTestWrapper(EmptyState, {
+		const { container } = await renderWithTestWrapper(EmptyState, {
 			message: 'No items found',
 			iconColor: customColor
 		});

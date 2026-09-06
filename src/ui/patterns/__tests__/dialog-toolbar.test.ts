@@ -6,8 +6,11 @@ import { renderWithTestWrapper } from '$utils/test-utils';
 const controls = createRawSnippet(() => ({ render: () => '<div>Change folder</div>' }));
 
 describe('DialogToolbar', () => {
-	test('renders its controls as a full-bleed strip', () => {
-		const screen = renderWithTestWrapper(DialogToolbar, { children: controls, testId: 'toolbar' });
+	test('renders its controls as a full-bleed strip', async () => {
+		const screen = await renderWithTestWrapper(DialogToolbar, {
+			children: controls,
+			testId: 'toolbar'
+		});
 
 		const toolbar = screen.getByTestId('toolbar').element() as HTMLElement;
 		expect(toolbar).toHaveTextContent('Change folder');

@@ -3,8 +3,8 @@ import RestoreProgressBar from '../restore-progress-bar.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('RestoreProgressBar', () => {
-	test('renders processed/total text', () => {
-		const screen = renderWithTestWrapper(RestoreProgressBar, {
+	test('renders processed/total text', async () => {
+		const screen = await renderWithTestWrapper(RestoreProgressBar, {
 			processed: 2,
 			total: 5,
 			progress: 40,
@@ -14,8 +14,8 @@ describe('RestoreProgressBar', () => {
 		expect(screen.getByTestId('progress-text')).toHaveTextContent('2 of 5 branches restored');
 	});
 
-	test('shows ETA when no pending conflicts', () => {
-		const screen = renderWithTestWrapper(RestoreProgressBar, {
+	test('shows ETA when no pending conflicts', async () => {
+		const screen = await renderWithTestWrapper(RestoreProgressBar, {
 			processed: 2,
 			total: 5,
 			progress: 40,
@@ -27,8 +27,8 @@ describe('RestoreProgressBar', () => {
 		);
 	});
 
-	test('hides ETA when conflicts are pending', () => {
-		const screen = renderWithTestWrapper(RestoreProgressBar, {
+	test('hides ETA when conflicts are pending', async () => {
+		const screen = await renderWithTestWrapper(RestoreProgressBar, {
 			processed: 2,
 			total: 5,
 			progress: 40,
@@ -39,8 +39,8 @@ describe('RestoreProgressBar', () => {
 		expect(matches.length).toBe(0);
 	});
 
-	test('hides ETA when no estimate provided', () => {
-		const screen = renderWithTestWrapper(RestoreProgressBar, {
+	test('hides ETA when no estimate provided', async () => {
+		const screen = await renderWithTestWrapper(RestoreProgressBar, {
 			processed: 0,
 			total: 5,
 			progress: 0,

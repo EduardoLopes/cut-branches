@@ -28,7 +28,7 @@ export default ts.config(
 			'package-lock.json',
 			'yarn.lock',
 			'styled-system',
-			'html',
+			'.vitest',
 			'src/infrastructure/bindings.ts'
 		]
 	},
@@ -99,7 +99,7 @@ export default ts.config(
 			}
 		}
 	},
-	{ languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+	{ languageOptions: { globals: { ...globals.builtin, ...globals.browser, ...globals.node } } },
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,

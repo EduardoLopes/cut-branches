@@ -47,14 +47,14 @@ beforeEach(() => {
 });
 
 describe('ManageRepositoriesModal', () => {
-	it('lists a selectable row per repository', () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+	it('lists a selectable row per repository', async () => {
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 		expect(screen.getByTestId('manage-item').elements()).toHaveLength(3);
 		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 0 repositories');
 	});
 
 	it('shows a validation hint and does not remove when nothing is selected', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		const removeButton = screen.getByTestId('manage-remove-selected');
 		expect(removeButton).not.toBeDisabled();
@@ -68,7 +68,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('dismisses the validation hint on an outside click', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-remove-selected').click();
 		await vi.waitFor(() => expect(openHint()).toBeTruthy());
@@ -80,14 +80,14 @@ describe('ManageRepositoriesModal', () => {
 		await vi.waitFor(() => expect(openHint()).toBeUndefined());
 	});
 
-	it('shows an empty state when there are no repositories', () => {
+	it('shows an empty state when there are no repositories', async () => {
 		h.repos = [];
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 		expect(screen.getByTestId('manage-empty')).toBeInTheDocument();
 	});
 
 	it('selecting all updates the remove button and count', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-select-all').click();
 
@@ -96,7 +96,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('re-selects all after select-all, deselecting one, then select-all again', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-select-all').click();
 		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('3 of 3 selected');
@@ -111,7 +111,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('filters the list by name and shows a no-match state', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByPlaceholder('Search repositories').fill('repo-2');
 		await vi.waitFor(() => expect(screen.getByTestId('manage-item').elements()).toHaveLength(1));
@@ -121,7 +121,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('scopes select-all to the filtered rows', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByPlaceholder('Search repositories').fill('repo-2');
 		await vi.waitFor(() => expect(screen.getByTestId('manage-item').elements()).toHaveLength(1));
@@ -135,7 +135,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('removes only the selected repository and stays on the current route', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		// Tick the second repository (repo-2) only — not the active repo (id "1").
 		await screen.getByTestId('manage-item').nth(1).click();
@@ -150,7 +150,7 @@ describe('ManageRepositoriesModal', () => {
 	it('disables Remove while the batch is running', async () => {
 		// A removal that never settles keeps the mutation pending.
 		h.execute.mockImplementation(() => new Promise(() => {}));
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-item').nth(1).click();
 		await screen.getByTestId('manage-remove-selected').click();
@@ -159,7 +159,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('navigates to the repos index when the active repository is removed', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-select-all').click();
 		await screen.getByTestId('manage-remove-selected').click();
@@ -173,7 +173,7 @@ describe('ManageRepositoriesModal', () => {
 			mockDataFactory.repository({ id: '1', name: 'repo-1', path: '/r1' }),
 			mockDataFactory.repository({ id: 'a#b?c%d', name: 'repo-odd', path: '/r2' })
 		];
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-item').first().click();
 		await screen.getByTestId('manage-remove-selected').click();
@@ -182,7 +182,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('navigates to a surviving repository when the active one is removed', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		// Select only the active repo (repo-1) so repo-2 survives.
 		await screen.getByTestId('manage-item').nth(0).click();
@@ -199,7 +199,7 @@ describe('ManageRepositoriesModal', () => {
 			payload.id === '2' ? Promise.reject(new Error('in use')) : Promise.resolve({ success: true })
 		);
 
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-select-all').click();
 		await screen.getByTestId('manage-remove-selected').click();
@@ -221,7 +221,7 @@ describe('ManageRepositoriesModal', () => {
 	});
 
 	it('closes and clears the selection when every removal succeeds', async () => {
-		const screen = renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		await screen.getByTestId('manage-item').nth(1).click();
 		await screen.getByTestId('manage-remove-selected').click();

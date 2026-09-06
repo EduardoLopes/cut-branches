@@ -111,7 +111,7 @@ describe.skipIf(!import.meta.env.VITE_BENCH)('BranchList mount/teardown cost', (
 			document.head.appendChild(style);
 
 			const mountStart = performance.now();
-			const screen = renderWithTestWrapper(BranchList, {
+			const screen = await renderWithTestWrapper(BranchList, {
 				repositoryID: 'repo1',
 				repositoryPath: '/repo1',
 				allowLocking: true,

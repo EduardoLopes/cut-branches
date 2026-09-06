@@ -1,7 +1,8 @@
 import { describe, expect, vi, beforeEach } from 'vitest';
 import RemoveRepositoryModal from '../remove-repository-modal.svelte';
 import { goto } from '$app/navigation';
-import type { AppError, DeleteRepositoryOutput, Result } from '$infrastructure/bindings';
+import type { AppError, DeleteRepositoryOutput } from '$infrastructure/bindings';
+import type { Result } from '$infrastructure/tauri-commands';
 import type { Repository } from '$types/repository';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -64,8 +65,8 @@ describe('RemoveRepositoryModal', () => {
 	});
 
 	describe('Modal Rendering', () => {
-		test('renders with correct initial state', () => {
-			const { getByText } = renderWithTestWrapper(RemoveRepositoryModal, {
+		test('renders with correct initial state', async () => {
+			const { getByText } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id
 			});
 
@@ -73,21 +74,23 @@ describe('RemoveRepositoryModal', () => {
 		});
 
 		test('renders repository name in modal content when open', async () => {
-			const { getByText } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByText } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
 
 			// The name is filled in once the getRepository query resolves.
 			await vi.waitFor(() => {
-				expect(getByText(/Are you sure you want to remove/)).toHaveTextContent(mockRepository.name);
+				expect(getByText(/Are you sure you want to remove/)).toMatchTextContent(
+					mockRepository.name
+				);
 			});
 		});
 	});
 
 	describe('Modal Interaction', () => {
 		test('should close the modal on cancel', async () => {
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -103,7 +106,7 @@ describe('RemoveRepositoryModal', () => {
 		});
 
 		test('closes modal after repository removal', async () => {
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -119,7 +122,7 @@ describe('RemoveRepositoryModal', () => {
 
 	describe('Repository Removal', () => {
 		test('should remove the repository from database', async () => {
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -133,7 +136,7 @@ describe('RemoveRepositoryModal', () => {
 		});
 
 		test('shows notification after repository removal', async () => {
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -154,7 +157,7 @@ describe('RemoveRepositoryModal', () => {
 			// Set up only the test repository (single repo scenario)
 			mockRepositories = [mockRepository];
 
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -170,7 +173,7 @@ describe('RemoveRepositoryModal', () => {
 			// Set up only the test repository
 			mockRepositories = [mockRepository];
 
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -192,7 +195,7 @@ describe('RemoveRepositoryModal', () => {
 					})
 			);
 
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -221,7 +224,7 @@ describe('RemoveRepositoryModal', () => {
 				error: { kind: 'repository_not_found', message: 'gone', description: null }
 			});
 
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});
@@ -243,7 +246,7 @@ describe('RemoveRepositoryModal', () => {
 				error: { kind: 'database_error', message: 'locked', description: null }
 			});
 
-			const { getByTestId } = renderWithTestWrapper(RemoveRepositoryModal, {
+			const { getByTestId } = await renderWithTestWrapper(RemoveRepositoryModal, {
 				repositoryId: mockRepository.id,
 				open: true
 			});

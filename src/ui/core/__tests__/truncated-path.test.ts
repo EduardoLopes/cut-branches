@@ -10,7 +10,7 @@ const path = '/Users/me/Projects/some/deeply/nested/folder/cut-branches';
 
 // The component sizes itself to its parent, so each test controls the width
 // by rendering into a fixed-width host.
-function renderAt(
+async function renderAt(
 	width: number,
 	props: {
 		path: string;
@@ -24,20 +24,20 @@ function renderAt(
 	host.style.fontFamily = 'monospace';
 	host.style.fontSize = '10px';
 	document.body.appendChild(host);
-	const screen = render(TruncatedPath, { target: host, props });
+	const screen = await render(TruncatedPath, { target: host, props });
 	return { host, el: screen.getByTestId('truncated-path') };
 }
 
 describe('TruncatedPath', () => {
 	test('renders the full path when it fits', async () => {
-		const { el } = renderAt(800, { path });
+		const { el } = await renderAt(800, { path });
 
 		await vi.waitFor(() => expect(el).toHaveTextContent(path));
 		expect(el.element().getAttribute('title')).toBe(path);
 	});
 
 	test('keeps the last segment when truncating in the middle', async () => {
-		const { el } = renderAt(200, { path });
+		const { el } = await renderAt(200, { path });
 
 		await vi.waitFor(() => expect(el.element().textContent).toMatch(/…\/.*cut-branches$/));
 		expect(el.element().textContent).not.toBe(path);
@@ -45,15 +45,15 @@ describe('TruncatedPath', () => {
 	});
 
 	test('honours the start and end positions', async () => {
-		const start = renderAt(120, { path, truncate: 'start' });
+		const start = await renderAt(120, { path, truncate: 'start' });
 		await vi.waitFor(() => expect(start.el.element().textContent).toMatch(/^…/));
 
-		const end = renderAt(120, { path, truncate: 'end' });
+		const end = await renderAt(120, { path, truncate: 'end' });
 		await vi.waitFor(() => expect(end.el.element().textContent).toMatch(/…$/));
 	});
 
 	test('re-fits when the container resizes', async () => {
-		const { host, el } = renderAt(120, { path });
+		const { host, el } = await renderAt(120, { path });
 		await vi.waitFor(() => expect(el.element().textContent).toContain('…'));
 
 		host.style.width = '800px';
@@ -63,7 +63,7 @@ describe('TruncatedPath', () => {
 
 describe('TruncatedPath highlight', () => {
 	test('emphasises the highlighted section and mutes the rest', async () => {
-		const { el } = renderAt(200, { path, highlight: 'cut-branches' });
+		const { el } = await renderAt(200, { path, highlight: 'cut-branches' });
 		await vi.waitFor(() => expect(el.element().textContent).toMatch(/…\/.*cut-branches$/));
 
 		const highlighted = el.element().querySelectorAll('[data-highlighted]');
@@ -76,13 +76,13 @@ describe('TruncatedPath highlight', () => {
 	});
 
 	test('renders plain text when the highlight is not in the path', async () => {
-		const { el } = renderAt(800, { path, highlight: 'nope' });
+		const { el } = await renderAt(800, { path, highlight: 'nope' });
 		await vi.waitFor(() => expect(el).toHaveTextContent(path));
 		expect(el.element().querySelectorAll('[data-highlighted]')).toHaveLength(0);
 	});
 
 	test('aligns to the end when asked', async () => {
-		const { el } = renderAt(800, { path, align: 'end' });
+		const { el } = await renderAt(800, { path, align: 'end' });
 		await vi.waitFor(() => expect(el).toHaveTextContent(path));
 		expect(getComputedStyle(el.element()).textAlign).toBe('right');
 	});

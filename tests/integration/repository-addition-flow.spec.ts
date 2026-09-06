@@ -74,7 +74,7 @@ describe('Navigation Integration', () => {
 		});
 
 		// Render component
-		const { getByRole } = renderWithTestWrapper(AddButton, {});
+		const { getByRole } = await renderWithTestWrapper(AddButton, {});
 
 		// Find and click the button
 		const button = getByRole('button');
@@ -126,7 +126,7 @@ describe('Navigation Integration', () => {
 		});
 
 		// Render component
-		const { getByRole } = renderWithTestWrapper(AddButton, {});
+		const { getByRole } = await renderWithTestWrapper(AddButton, {});
 
 		// Find and click the button
 		const button = getByRole('button');

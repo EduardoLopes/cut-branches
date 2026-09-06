@@ -86,7 +86,7 @@ function wheel(target: Element, init: WheelEventInit): void {
 
 describe('DiffCanvas', () => {
 	it('renders one node per file, edges, and every diff expanded by default', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-testid="canvas-file-node"]')).toHaveLength(2);
@@ -105,7 +105,7 @@ describe('DiffCanvas', () => {
 
 	it('starts collapsed past the auto-expand cap; expand-all mounts only near-viewport diffs', async () => {
 		const many = Array.from({ length: 31 }, (_, i) => file(`src/f${i}.ts`));
-		const { container } = renderWithTestWrapper(DiffCanvas, {
+		const { container } = await renderWithTestWrapper(DiffCanvas, {
 			...defaultProps,
 			files: many,
 			structure: undefined
@@ -136,7 +136,7 @@ describe('DiffCanvas', () => {
 
 	it('mounts more diffs after panning toward them', async () => {
 		const many = Array.from({ length: 31 }, (_, i) => file(`src/f${i}.ts`));
-		const { container } = renderWithTestWrapper(DiffCanvas, {
+		const { container } = await renderWithTestWrapper(DiffCanvas, {
 			...defaultProps,
 			files: many,
 			structure: undefined
@@ -163,7 +163,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('pans with the wheel and zooms with ctrl+wheel', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
 		});
@@ -177,7 +177,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('keeps the pan/zoom view when a diff toggle resizes the board', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-canvas-diff]')).not.toBeNull();
 		});
@@ -218,7 +218,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('bakes a settled zoom into the crisp zoom property', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
 		});
@@ -239,7 +239,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('clamps the zoom range', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
 		});
@@ -252,7 +252,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('never pans from a plain drag — panning by drag is the hand tool alone', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
 		});
@@ -289,7 +289,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('fits the whole board into the viewport via the fit button', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
 		});
@@ -303,7 +303,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('toggles individual diffs and collapses everything via the toolbar', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-canvas-diff]')).toHaveLength(2);
 		});
@@ -340,7 +340,7 @@ describe('DiffCanvas', () => {
 
 	it('hands off to the list via the node open-in-list button', async () => {
 		const onOpenFile = vi.fn();
-		const { container } = renderWithTestWrapper(DiffCanvas, {
+		const { container } = await renderWithTestWrapper(DiffCanvas, {
 			...defaultProps,
 			onOpenFile
 		});
@@ -357,7 +357,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('leaves plain wheel over a diff to the diff, but still zooms with ctrl', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-canvas-diff]')).not.toBeNull();
 		});
@@ -376,7 +376,7 @@ describe('DiffCanvas', () => {
 	it('focuses a file down to its import neighborhood and clears again', async () => {
 		// c.css is unrelated — focusing a.ts must hide it.
 		const files = [file('src/a.ts'), file('src/b.ts'), file('c.css')];
-		const { container, getByText } = renderWithTestWrapper(DiffCanvas, {
+		const { container, getByText } = await renderWithTestWrapper(DiffCanvas, {
 			...defaultProps,
 			files
 		});
@@ -404,7 +404,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('clears the focus with Escape', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-canvas-node="src/a.ts"]')).not.toBeNull();
 		});
@@ -426,7 +426,7 @@ describe('DiffCanvas', () => {
 
 	it('focusing an unconnected file shows only that file', async () => {
 		const files = [file('src/a.ts'), file('src/b.ts'), file('c.css')];
-		const { container } = renderWithTestWrapper(DiffCanvas, { ...defaultProps, files });
+		const { container } = await renderWithTestWrapper(DiffCanvas, { ...defaultProps, files });
 		await vi.waitFor(() => {
 			expect(container.querySelectorAll('[data-testid="canvas-file-node"]')).toHaveLength(3);
 		});
@@ -443,7 +443,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('highlights a hovered node’s edges', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-canvas-node="src/a.ts"]')).not.toBeNull();
 		});
@@ -461,7 +461,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('pans from anywhere with the space hand tool, even over nodes', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="canvas-file-node"]')).not.toBeNull();
 		});
@@ -489,7 +489,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('leaves the spacebar alone while typing in an editable element', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, defaultProps);
+		const { container } = await renderWithTestWrapper(DiffCanvas, defaultProps);
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas"]')).not.toBeNull();
 		});
@@ -503,7 +503,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('shows a hint when no import relationships exist', async () => {
-		const { container, getByText } = renderWithTestWrapper(DiffCanvas, {
+		const { container, getByText } = await renderWithTestWrapper(DiffCanvas, {
 			files: [file('src/a.ts')],
 			structure: structure({ edges: [] }),
 			repositoryPath: '/repo',
@@ -517,7 +517,7 @@ describe('DiffCanvas', () => {
 	});
 
 	it('renders nodes without any structure data at all', async () => {
-		const { container } = renderWithTestWrapper(DiffCanvas, {
+		const { container } = await renderWithTestWrapper(DiffCanvas, {
 			files: [file('src/a.ts'), file('src/b.ts')],
 			structure: undefined,
 			repositoryPath: '/repo',
@@ -531,7 +531,7 @@ describe('DiffCanvas', () => {
 
 	it('marks reviewed nodes and relays reviewed toggles', async () => {
 		const onToggleReviewed = vi.fn();
-		const { container } = renderWithTestWrapper(DiffCanvas, {
+		const { container } = await renderWithTestWrapper(DiffCanvas, {
 			...defaultProps,
 			isReviewed: (path: string) => path === 'src/a.ts',
 			onToggleReviewed

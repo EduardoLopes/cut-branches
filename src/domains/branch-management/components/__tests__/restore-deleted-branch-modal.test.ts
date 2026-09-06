@@ -96,17 +96,17 @@ beforeEach(() => {
 });
 
 describe('RestoreDeletedBranchModal', () => {
-	test('renders the trigger button with the selected count', () => {
-		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+	test('renders the trigger button with the selected count', async () => {
+		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 		const button = screen.getByTestId('open-restore-dialog-button');
 		expect(button).toBeInTheDocument();
-		expect(button).toHaveTextContent('Restore');
-		expect(button).toHaveTextContent('1');
+		expect(button).toMatchTextContent('Restore');
+		expect(button).toMatchTextContent('1');
 	});
 
 	test('keeps the trigger enabled and shows a validation hint when nothing to restore', async () => {
 		selectedBranches = [];
-		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 		const button = screen.getByTestId('open-restore-dialog-button');
 		expect(button).not.toBeDisabled();
 
@@ -121,7 +121,7 @@ describe('RestoreDeletedBranchModal', () => {
 		// `data` is undefined until the query settles — clicking used to open an
 		// empty dialog instead of hinting.
 		selectionLoading = true;
-		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 
 		await screen.getByTestId('open-restore-dialog-button').click();
 		await tick();
@@ -130,17 +130,17 @@ describe('RestoreDeletedBranchModal', () => {
 		expect(openHint()?.textContent).toContain('There are no deleted branches to restore.');
 	});
 
-	test('enables the trigger when at least one branch is selected', () => {
-		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+	test('enables the trigger when at least one branch is selected', async () => {
+		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 		expect(screen.getByTestId('open-restore-dialog-button')).not.toBeDisabled();
 	});
 
 	test('lists the selected branches and disables Restore once the run starts', async () => {
-		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 		await screen.getByTestId('open-restore-dialog-button').click();
 
 		await vi.waitFor(() =>
-			expect(screen.getByTestId('restore-branch-list')).toHaveTextContent('feat-a')
+			expect(screen.getByTestId('restore-branch-list')).toMatchTextContent('feat-a')
 		);
 		const restore = screen.getByTestId('restore-button');
 		expect(restore).not.toBeDisabled();

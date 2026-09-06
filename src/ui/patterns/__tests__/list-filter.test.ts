@@ -3,8 +3,8 @@ import ListFilter from '../list-filter.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('ListFilter', () => {
-	test('renders a search input with the placeholder as its label by default', () => {
-		const screen = renderWithTestWrapper(ListFilter, {});
+	test('renders a search input with the placeholder as its label by default', async () => {
+		const screen = await renderWithTestWrapper(ListFilter, {});
 
 		const input = screen.getByPlaceholder('Filter');
 		expect(input).toBeInTheDocument();
@@ -12,8 +12,8 @@ describe('ListFilter', () => {
 		expect(screen.getByTestId('list-filter')).toBeInTheDocument();
 	});
 
-	test('takes a custom placeholder, label and test id', () => {
-		const screen = renderWithTestWrapper(ListFilter, {
+	test('takes a custom placeholder, label and test id', async () => {
+		const screen = await renderWithTestWrapper(ListFilter, {
 			placeholder: 'Filter results',
 			ariaLabel: 'Filter the results',
 			testId: 'scan-search'
@@ -25,7 +25,7 @@ describe('ListFilter', () => {
 	});
 
 	test('shows the match count only while a query is active and both counts exist', async () => {
-		const screen = renderWithTestWrapper(ListFilter, {
+		const screen = await renderWithTestWrapper(ListFilter, {
 			matchCount: 3,
 			total: 12,
 			testId: 'filter'
@@ -42,7 +42,7 @@ describe('ListFilter', () => {
 	});
 
 	test('never shows a count without both numbers', async () => {
-		const onlyMatches = renderWithTestWrapper(ListFilter, {
+		const onlyMatches = await renderWithTestWrapper(ListFilter, {
 			matchCount: 3,
 			placeholder: 'Only matches',
 			testId: 'a'
@@ -50,7 +50,7 @@ describe('ListFilter', () => {
 		await onlyMatches.getByPlaceholder('Only matches').fill('x');
 		expect(onlyMatches.getByTestId('a-count').elements()).toHaveLength(0);
 
-		const onlyTotal = renderWithTestWrapper(ListFilter, {
+		const onlyTotal = await renderWithTestWrapper(ListFilter, {
 			total: 3,
 			placeholder: 'Only total',
 			testId: 'b'

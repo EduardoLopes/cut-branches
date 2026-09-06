@@ -148,6 +148,7 @@
 	// the old count would synchronously re-mount every row at once — the exact
 	// freeze progressive mounting exists to avoid. Deriving the count back to
 	// the initial batch on a layout mismatch restarts the stream instead.
+	// svelte-ignore state_referenced_locally
 	let mounted = $state({ layout, count: DIFF_PROGRESSIVE_INITIAL_BATCH });
 	const mountedCount = $derived(
 		mounted.layout === layout ? mounted.count : DIFF_PROGRESSIVE_INITIAL_BATCH

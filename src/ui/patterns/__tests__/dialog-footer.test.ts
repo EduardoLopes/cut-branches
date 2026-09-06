@@ -9,17 +9,20 @@ const buttons = createRawSnippet(() => ({
 }));
 
 describe('DialogFooter', () => {
-	test('right-aligns its children without a divider', () => {
-		const screen = renderWithTestWrapper(DialogFooter, { children: buttons, testId: 'footer' });
+	test('right-aligns its children without a divider', async () => {
+		const screen = await renderWithTestWrapper(DialogFooter, {
+			children: buttons,
+			testId: 'footer'
+		});
 
 		const footer = screen.getByTestId('footer').element() as HTMLElement;
-		expect(footer).toHaveTextContent('Cancel');
+		expect(footer).toMatchTextContent('Cancel');
 		expect(getComputedStyle(footer).justifyContent).toBe('flex-end');
 		expect(getComputedStyle(footer).borderTopWidth).toBe('0px');
 	});
 
-	test('merges extra classes', () => {
-		const screen = renderWithTestWrapper(DialogFooter, {
+	test('merges extra classes', async () => {
+		const screen = await renderWithTestWrapper(DialogFooter, {
 			children: buttons,
 			class: css({ marginTop: 'lg' }),
 			testId: 'footer'

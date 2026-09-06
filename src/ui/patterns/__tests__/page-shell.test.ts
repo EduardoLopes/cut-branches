@@ -8,21 +8,21 @@ const children = createRawSnippet(() => ({
 }));
 
 describe('PageShell', () => {
-	it('renders its children inside a main landmark', () => {
-		const screen = renderWithTestWrapper(PageShell, { children });
+	it('renders its children inside a main landmark', async () => {
+		const screen = await renderWithTestWrapper(PageShell, { children });
 
 		expect(screen.getByTestId('shell-body')).toBeInTheDocument();
 		expect(screen.container.querySelector('main')).toBeInTheDocument();
 	});
 
-	it('applies the testId to the shell root when provided', () => {
-		const screen = renderWithTestWrapper(PageShell, { children, testId: 'my-page' });
+	it('applies the testId to the shell root when provided', async () => {
+		const screen = await renderWithTestWrapper(PageShell, { children, testId: 'my-page' });
 
 		expect(screen.getByTestId('my-page')).toBeInTheDocument();
 	});
 
-	it('omits the test id attribute when no testId is given', () => {
-		const screen = renderWithTestWrapper(PageShell, { children });
+	it('omits the test id attribute when no testId is given', async () => {
+		const screen = await renderWithTestWrapper(PageShell, { children });
 
 		expect(screen.container.querySelector('main')).not.toHaveAttribute('data-testid');
 	});

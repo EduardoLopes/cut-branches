@@ -33,7 +33,7 @@ beforeEach(() => {
 
 describe('DiffViewer', () => {
 	it('renders unified rows with the single own-side gutter by default', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
 
 		await expect.element(getByText('unchanged line')).toBeInTheDocument();
 		const rows = container.querySelector('[data-layout="unified"]');
@@ -49,7 +49,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('scrolls horizontally only, letting vertical wheel chain to the page', async () => {
-		const { container } = renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
+		const { container } = await renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
 
 		const block = container.querySelector('[data-testid="diff-viewer"]') as HTMLElement;
 		const scroll = block.firstElementChild as HTMLElement;
@@ -62,7 +62,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('renders old/new number pairs in double-gutter mode', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			gutter: 'double' as const
 		});
@@ -77,7 +77,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('adds a +/− marker column only in the markers variant', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			variant: 'markers' as const
 		});
@@ -90,7 +90,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('omits markers outside the markers variant and stamps the bars variant attribute', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			variant: 'bars' as const
 		});
@@ -101,7 +101,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('stamps the wrap attribute when wrapping is enabled', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			wrap: true
 		});
@@ -111,7 +111,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('always wraps in split layout, even with wrapping off', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			layout: 'split' as const,
 			wrap: false
@@ -122,7 +122,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('pairs removed and added lines side by side in split layout', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			layout: 'split' as const
 		});
@@ -143,7 +143,7 @@ describe('DiffViewer', () => {
 			[{ content: 'gone 2', color: '#ff0000' }],
 			[{ content: 'kept', color: '#00ff00' }]
 		]);
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [
@@ -167,7 +167,7 @@ describe('DiffViewer', () => {
 	it('falls back to plain text for split lines the token arrays do not cover', async () => {
 		// One token array for two lines — the second line renders unstyled.
 		h.highlightDiffCode.mockResolvedValue([[{ content: 'old line', color: '#ff0000' }]]);
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [
@@ -190,7 +190,7 @@ describe('DiffViewer', () => {
 
 	it('renders split rows as plain text while highlighting is pending', async () => {
 		h.highlightDiffCode.mockReturnValue(new Promise(() => {}));
-		const { getByText } = renderWithTestWrapper(DiffViewer, {
+		const { getByText } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			layout: 'split' as const,
 			language: 'typescript'
@@ -201,7 +201,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('drops the expander for a gap that expanded to nothing', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			onExpandGap: vi.fn(),
 			expandedGaps: new Map([['gap-tail', []]])
@@ -219,7 +219,7 @@ describe('DiffViewer', () => {
 				{ content: ' x = 1', color: '#00ff00' }
 			]
 		]);
-		const { getByText } = renderWithTestWrapper(DiffViewer, {
+		const { getByText } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [{ kind: 'added', content: 'const x = 1', oldLineNo: null, newLineNo: 1 }]
@@ -237,7 +237,7 @@ describe('DiffViewer', () => {
 			[{ content: 'old line', color: '#ff0000' }],
 			[{ content: 'new line', color: '#00ff00' }]
 		]);
-		const { container } = renderWithTestWrapper(DiffViewer, {
+		const { container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [
@@ -258,7 +258,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('marks search-term occurrences inside the code', async () => {
-		const { container } = renderWithTestWrapper(DiffViewer, {
+		const { container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			searchTerm: 'line'
 		});
@@ -271,14 +271,14 @@ describe('DiffViewer', () => {
 	});
 
 	it('shows no gap expanders when no onExpandGap callback is provided', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
 
 		await expect.element(getByText('unchanged line')).toBeInTheDocument();
 		expect(container.querySelector('[data-testid="diff-gap-expander"]')).toBeNull();
 	});
 
 	it('labels a one-line gap in the singular', async () => {
-		const { getByRole } = renderWithTestWrapper(DiffViewer, {
+		const { getByRole } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk({ newStart: 2, oldStart: 2 })],
 			status: 'added' as const,
 			onExpandGap: vi.fn()
@@ -288,7 +288,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('leaves the gutter cell empty when a line has no number on its side', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [{ kind: 'context', content: 'numberless', oldLineNo: null, newLineNo: null }]
@@ -303,7 +303,7 @@ describe('DiffViewer', () => {
 
 	it('fires onExpandGap with the clicked gap', async () => {
 		const onExpandGap = vi.fn();
-		const { getByRole } = renderWithTestWrapper(DiffViewer, {
+		const { getByRole } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			onExpandGap
 		});
@@ -316,7 +316,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('disables the expander and relabels it while its gap is loading', async () => {
-		const { getByRole } = renderWithTestWrapper(DiffViewer, {
+		const { getByRole } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			onExpandGap: vi.fn(),
 			loadingGaps: new Set(['gap-tail'])
@@ -330,7 +330,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('surfaces gap errors next to the expander', async () => {
-		const { getByText } = renderWithTestWrapper(DiffViewer, {
+		const { getByText } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			onExpandGap: vi.fn(),
 			gapErrors: new Map([['gap-tail', 'File is gone']])
@@ -360,7 +360,7 @@ describe('DiffViewer', () => {
 			{ kind: 'context', content: 'between a', oldLineNo: 2, newLineNo: 2 },
 			{ kind: 'context', content: 'between b', oldLineNo: 3, newLineNo: 3 }
 		];
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks,
 			status: 'added' as const,
 			onExpandGap: vi.fn(),
@@ -378,7 +378,7 @@ describe('DiffViewer', () => {
 		const lineAnnotation = createRawSnippet((line: () => DiffViewerLine) => ({
 			render: () => `<span data-testid="note">note for ${line().kind}</span>`
 		}));
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			lineAnnotation
 		});
@@ -391,7 +391,7 @@ describe('DiffViewer', () => {
 		const lineAnnotation = createRawSnippet((line: () => DiffViewerLine) => ({
 			render: () => `<span>note:${line().kind}:${line().content}</span>`
 		}));
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [
@@ -409,7 +409,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('renders empty marker cells for unpaired sides in the split markers variant', async () => {
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [
 				hunk({
 					lines: [
@@ -432,7 +432,7 @@ describe('DiffViewer', () => {
 	});
 
 	it('hovering token runs is inert without an onTokenHover callback', async () => {
-		const { getByText } = renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
+		const { getByText } = await renderWithTestWrapper(DiffViewer, { hunks: [hunk()] });
 
 		await getByText('old line').hover();
 
@@ -446,7 +446,7 @@ describe('DiffViewer', () => {
 			oldLineNo: i + 1,
 			newLineNo: i + 1
 		}));
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk({ oldLines: 1001, newLines: 1001, lines })],
 			language: 'typescript'
 		});
@@ -467,7 +467,7 @@ describe('DiffViewer', () => {
 			oldLineNo: null,
 			newLineNo: i + 1
 		}));
-		const { getByText, container } = renderWithTestWrapper(DiffViewer, {
+		const { getByText, container } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk({ oldLines: 0, newLines: 1001, lines })],
 			layout: 'split' as const,
 			language: 'typescript'
@@ -480,7 +480,7 @@ describe('DiffViewer', () => {
 
 	it('fires onTokenHover when the pointer enters a token run', async () => {
 		const onTokenHover = vi.fn();
-		const { getByText } = renderWithTestWrapper(DiffViewer, {
+		const { getByText } = await renderWithTestWrapper(DiffViewer, {
 			hunks: [hunk()],
 			onTokenHover
 		});

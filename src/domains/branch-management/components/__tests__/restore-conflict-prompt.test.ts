@@ -3,8 +3,8 @@ import RestoreConflictPrompt from '../restore-conflict-prompt.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('RestoreConflictPrompt', () => {
-	test('renders the branch name in the prompt', () => {
-		const screen = renderWithTestWrapper(RestoreConflictPrompt, {
+	test('renders the branch name in the prompt', async () => {
+		const screen = await renderWithTestWrapper(RestoreConflictPrompt, {
 			branchName: 'feature-x',
 			onOverwrite: vi.fn(),
 			onSkip: vi.fn()
@@ -14,7 +14,7 @@ describe('RestoreConflictPrompt', () => {
 
 	test('clicking Overwrite calls onOverwrite', async () => {
 		const onOverwrite = vi.fn();
-		const screen = renderWithTestWrapper(RestoreConflictPrompt, {
+		const screen = await renderWithTestWrapper(RestoreConflictPrompt, {
 			branchName: 'feature-x',
 			onOverwrite,
 			onSkip: vi.fn()
@@ -25,7 +25,7 @@ describe('RestoreConflictPrompt', () => {
 
 	test('clicking Skip calls onSkip', async () => {
 		const onSkip = vi.fn();
-		const screen = renderWithTestWrapper(RestoreConflictPrompt, {
+		const screen = await renderWithTestWrapper(RestoreConflictPrompt, {
 			branchName: 'feature-x',
 			onOverwrite: vi.fn(),
 			onSkip

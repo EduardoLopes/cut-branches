@@ -70,7 +70,7 @@ const defaultProps = {
 
 describe('BranchGutterCell', () => {
 	it('shows the first local branch with a selection checkbox', async () => {
-		const { getByRole } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByRole } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps
 		});
@@ -81,7 +81,7 @@ describe('BranchGutterCell', () => {
 	});
 
 	it('renders the branch identity through the shared compact BranchCard', async () => {
-		const { getByTestId } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByTestId } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps
 		});
@@ -97,7 +97,7 @@ describe('BranchGutterCell', () => {
 		const trackedBranches = new Map<string, Branch>([
 			['feature/a', mkBranch('feature/a', { upstream: 'origin/feature/a' })]
 		]);
-		const { getByTestId } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByTestId } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			getBranch: (name: string) => trackedBranches.get(name)
@@ -110,7 +110,7 @@ describe('BranchGutterCell', () => {
 		const lockedBranches = new Map<string, Branch>([
 			['feature/a', mkBranch('feature/a', { isLocked: true })]
 		]);
-		const { container } = renderWithTestWrapper(BranchGutterCell, {
+		const { container } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			getBranch: (name: string) => lockedBranches.get(name),
@@ -127,7 +127,7 @@ describe('BranchGutterCell', () => {
 		const currentBranches = new Map<string, Branch>([
 			['feature/a', mkBranch('feature/a', { current: true })]
 		]);
-		const { getByTestId, container } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByTestId, container } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			getBranch: (name: string) => currentBranches.get(name),
@@ -141,7 +141,7 @@ describe('BranchGutterCell', () => {
 	});
 
 	it('falls back to a plain branch name while the branches cache is unresolved', async () => {
-		const { container, getByText } = renderWithTestWrapper(BranchGutterCell, {
+		const { container, getByText } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			getBranch: () => undefined,
@@ -156,7 +156,7 @@ describe('BranchGutterCell', () => {
 
 	it('reflects and toggles the shared selection', async () => {
 		const onToggle = vi.fn();
-		const { getByRole } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByRole } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			isSelected: (name: string) => name === 'feature/a',
@@ -171,7 +171,7 @@ describe('BranchGutterCell', () => {
 	});
 
 	it('disables the checkbox for non-selectable branches', async () => {
-		const { getByRole } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByRole } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			isSelectable: () => false
@@ -181,7 +181,7 @@ describe('BranchGutterCell', () => {
 	});
 
 	it('renders ahead/behind signals as badges', async () => {
-		const { getByText } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByText } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			signals: () => ({ sha: 's', ahead: 3, behind: 2 })
@@ -192,7 +192,7 @@ describe('BranchGutterCell', () => {
 	});
 
 	it('marks a fully-contained branch as merged', async () => {
-		const { getByText, container } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByText, container } = await renderWithTestWrapper(BranchGutterCell, {
 			row: singleHead,
 			...defaultProps,
 			signals: () => ({ sha: 's', ahead: 0, behind: 0 })
@@ -203,7 +203,7 @@ describe('BranchGutterCell', () => {
 	});
 
 	it('lists every co-located branch behind a "+N more" popover', async () => {
-		const { getByRole } = renderWithTestWrapper(BranchGutterCell, {
+		const { getByRole } = await renderWithTestWrapper(BranchGutterCell, {
 			row: multiHead,
 			...defaultProps
 		});
@@ -216,9 +216,9 @@ describe('BranchGutterCell', () => {
 		await expect.element(getByRole('checkbox', { name: 'feature/c' })).toBeInTheDocument();
 	});
 
-	it('renders nothing for a non-head row', () => {
+	it('renders nothing for a non-head row', async () => {
 		const nonHead = computeGraph([mk('a', ['b']), mk('b', [])]).rows[0];
-		const { container } = renderWithTestWrapper(BranchGutterCell, {
+		const { container } = await renderWithTestWrapper(BranchGutterCell, {
 			row: nonHead,
 			...defaultProps
 		});

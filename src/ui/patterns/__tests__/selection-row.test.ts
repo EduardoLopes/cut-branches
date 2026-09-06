@@ -10,7 +10,7 @@ const badge = createRawSnippet(() => ({ render: () => '<span>Added</span>' }));
 describe('SelectionRow', () => {
 	test('renders a full-width checkbox row and forwards label and test id', async () => {
 		const onchange = vi.fn();
-		const screen = renderWithTestWrapper(SelectionRow, {
+		const screen = await renderWithTestWrapper(SelectionRow, {
 			checked: false,
 			onchange,
 			ariaLabel: 'cut-branches',
@@ -27,8 +27,8 @@ describe('SelectionRow', () => {
 		expect(onchange).toHaveBeenCalledTimes(1);
 	});
 
-	test('reflects the checked state and renders the trailing addon', () => {
-		const screen = renderWithTestWrapper(SelectionRow, {
+	test('reflects the checked state and renders the trailing addon', async () => {
+		const screen = await renderWithTestWrapper(SelectionRow, {
 			checked: true,
 			onchange: vi.fn(),
 			testId: 'row',
@@ -38,14 +38,14 @@ describe('SelectionRow', () => {
 
 		const row = screen.getByTestId('row').element();
 		expect(row.querySelector('input')).toBeChecked();
-		expect(row).toHaveTextContent('Added');
+		expect(row).toMatchTextContent('Added');
 		// Selected rows lift to the dialog surface.
 		expect(row.className).toContain('bg_neutral.surface.peak');
 		expect(row.className).not.toContain('bg_danger');
 	});
 
-	test('climbs the danger ladder only when checked', () => {
-		const checked = renderWithTestWrapper(SelectionRow, {
+	test('climbs the danger ladder only when checked', async () => {
+		const checked = await renderWithTestWrapper(SelectionRow, {
 			checked: true,
 			onchange: vi.fn(),
 			feedback: 'danger',
@@ -56,7 +56,7 @@ describe('SelectionRow', () => {
 			'bg_danger.surface.peak'
 		);
 
-		const unchecked = renderWithTestWrapper(SelectionRow, {
+		const unchecked = await renderWithTestWrapper(SelectionRow, {
 			checked: false,
 			onchange: vi.fn(),
 			feedback: 'danger',
@@ -68,8 +68,8 @@ describe('SelectionRow', () => {
 		);
 	});
 
-	test('mutes an already-handled row: disabled, dimmed by the checkbox, no lift', () => {
-		const screen = renderWithTestWrapper(SelectionRow, {
+	test('mutes an already-handled row: disabled, dimmed by the checkbox, no lift', async () => {
+		const screen = await renderWithTestWrapper(SelectionRow, {
 			checked: true,
 			disabled: true,
 			muted: true,
@@ -85,8 +85,8 @@ describe('SelectionRow', () => {
 		expect(row.className).not.toContain('bg_neutral.surface.peak');
 	});
 
-	test('accepts a radius and extra classes', () => {
-		const screen = renderWithTestWrapper(SelectionRow, {
+	test('accepts a radius and extra classes', async () => {
+		const screen = await renderWithTestWrapper(SelectionRow, {
 			checked: false,
 			onchange: vi.fn(),
 			radius: 'md',

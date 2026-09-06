@@ -58,38 +58,38 @@ describe('RepositoryNavList', () => {
 	});
 
 	describe('Rendering', () => {
-		it('renders the list with the provided header action snippet', () => {
-			const screen = renderWithTestWrapper(RepositoryNavList, { headerAction });
+		it('renders the list with the provided header action snippet', async () => {
+			const screen = await renderWithTestWrapper(RepositoryNavList, { headerAction });
 			expect(screen.getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();
 		});
 
-		it('renders without a header action snippet', () => {
-			const screen = renderWithTestWrapper(RepositoryNavList);
+		it('renders without a header action snippet', async () => {
+			const screen = await renderWithTestWrapper(RepositoryNavList);
 			expect(screen.container).toBeInTheDocument();
 		});
 
-		it('renders as a collapsed rail', () => {
-			const screen = renderWithTestWrapper(RepositoryNavList, { compact: 'stack' });
+		it('renders as a collapsed rail', async () => {
+			const screen = await renderWithTestWrapper(RepositoryNavList, { compact: 'stack' });
 			expect(screen.container).toBeInTheDocument();
 		});
 	});
 
 	describe('Hover Prefetching', () => {
-		it('creates prefetch function on component mount', () => {
-			const screen = renderWithTestWrapper(RepositoryNavList, { headerAction });
+		it('creates prefetch function on component mount', async () => {
+			const screen = await renderWithTestWrapper(RepositoryNavList, { headerAction });
 			expect(screen.container).toBeInTheDocument();
 		});
 	});
 
 	describe('Sorting', () => {
-		it('orders the list by name ascending by default', () => {
-			const screen = renderWithTestWrapper(RepositoryNavList);
+		it('orders the list by name ascending by default', async () => {
+			const screen = await renderWithTestWrapper(RepositoryNavList);
 			expect(renderedOrder(screen.container)).toEqual(['1', '2', '3']);
 		});
 
-		it('reflects the shared sort preference', () => {
+		it('reflects the shared sort preference', async () => {
 			repositorySort.setMode('branches-desc');
-			const screen = renderWithTestWrapper(RepositoryNavList);
+			const screen = await renderWithTestWrapper(RepositoryNavList);
 			expect(renderedOrder(screen.container)).toEqual(['3', '1', '2']);
 		});
 	});

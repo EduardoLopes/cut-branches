@@ -149,7 +149,7 @@ describe('BranchList Component', () => {
 	});
 
 	test('renders branches list with checkboxes and switch buttons', async () => {
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -173,7 +173,7 @@ describe('BranchList Component', () => {
 	});
 
 	test('passes diff stats to branch cards for non-current branches only', async () => {
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -195,7 +195,7 @@ describe('BranchList Component', () => {
 		// Set many branches
 		branchesHolder.value = createManyMockBranches();
 
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -224,7 +224,7 @@ describe('BranchList Component', () => {
 	test('keeps rows it has already scrolled past mounted', async () => {
 		branchesHolder.value = createManyMockBranches();
 
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -259,7 +259,7 @@ describe('BranchList Component', () => {
 	test('drops the retained window when the branch list changes', async () => {
 		branchesHolder.value = createManyMockBranches(40);
 
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -304,7 +304,7 @@ describe('BranchList Component', () => {
 	test('collapses the retained window on a bulk selection flip, but not on a single toggle', async () => {
 		branchesHolder.value = createManyMockBranches(60);
 
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -356,7 +356,7 @@ describe('BranchList Component', () => {
 	});
 
 	test('scroll port is focusable and named for keyboard and AT users', async () => {
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});
@@ -377,7 +377,7 @@ describe('BranchList Component', () => {
 	});
 
 	test('toggle checkbox should update selected branches state', async () => {
-		const screen = renderWithTestWrapper(BranchList, {
+		const screen = await renderWithTestWrapper(BranchList, {
 			repositoryID: 'repo1',
 			repositoryPath: '/test/repo/path'
 		});

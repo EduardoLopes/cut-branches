@@ -28,8 +28,8 @@ describe('RepositoryHeader', () => {
 		vi.resetAllMocks();
 	});
 
-	test('should render the component', () => {
-		const { container } = renderWithTestWrapper(RepositoryHeader, {
+	test('should render the component', async () => {
+		const { container } = await renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 		expect(container).toBeInTheDocument();
@@ -54,7 +54,7 @@ describe('RepositoryHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { getByTestId } = renderWithTestWrapper(RepositoryHeader, {
+		const { getByTestId } = await renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -73,7 +73,7 @@ describe('RepositoryHeader', () => {
 			error: null
 		});
 
-		const { getByTestId } = renderWithTestWrapper(RepositoryHeader, {
+		const { getByTestId } = await renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 
@@ -101,7 +101,7 @@ describe('RepositoryHeader', () => {
 
 		mockGetRepositoryQuery.fn.mockReturnValue(mockData);
 
-		const { getByTestId } = renderWithTestWrapper(RepositoryHeader, {
+		const { getByTestId } = await renderWithTestWrapper(RepositoryHeader, {
 			repositoryId: 'test-repo-id'
 		});
 

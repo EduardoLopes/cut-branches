@@ -29,19 +29,22 @@ function render(props: Partial<Parameters<typeof WorktreeList>[1]> & { worktrees
 
 describe('WorktreeList', () => {
 	it('shows a loading state', async () => {
-		const screen = render({ worktrees: [], isLoading: true });
+		const screen = await render({ worktrees: [], isLoading: true });
 		await tick();
 		await expect.element(screen.getByTestId('worktree-list-loading')).toBeInTheDocument();
 	});
 
 	it('shows an empty state when there are no worktrees', async () => {
-		const screen = render({ worktrees: [], isLoading: false });
+		const screen = await render({ worktrees: [], isLoading: false });
 		await tick();
 		await expect.element(screen.getByTestId('worktree-list-empty')).toBeInTheDocument();
 	});
 
 	it('renders one row per worktree', async () => {
-		const screen = render({ worktrees: [wt('main', true), wt('a'), wt('b')], isLoading: false });
+		const screen = await render({
+			worktrees: [wt('main', true), wt('a'), wt('b')],
+			isLoading: false
+		});
 		await tick();
 		expect(screen.container.querySelectorAll('[data-testid="worktree-row"]')).toHaveLength(3);
 	});
@@ -49,7 +52,7 @@ describe('WorktreeList', () => {
 	it('locks a worktree from the left rail', async () => {
 		const onLock = vi.fn();
 		const worktree = wt('a');
-		const screen = render({ worktrees: [worktree], isLoading: false, onLock });
+		const screen = await render({ worktrees: [worktree], isLoading: false, onLock });
 		await tick();
 		await screen.getByTestId('worktree-lock').click();
 		expect(onLock).toHaveBeenCalledWith(worktree);
@@ -58,7 +61,7 @@ describe('WorktreeList', () => {
 	it('unlocks a locked worktree from the left rail', async () => {
 		const onUnlock = vi.fn();
 		const locked = Worktree.fromData({ ...wt('a').toData(), isLocked: true });
-		const screen = render({ worktrees: [locked], isLoading: false, onUnlock });
+		const screen = await render({ worktrees: [locked], isLoading: false, onUnlock });
 		await tick();
 		await screen.getByTestId('worktree-unlock').click();
 		expect(onUnlock).toHaveBeenCalledWith(locked);
@@ -68,7 +71,7 @@ describe('WorktreeList', () => {
 		const onToggleSelect = vi.fn();
 		const main = wt('main', true);
 		const linked = wt('a');
-		const screen = render({
+		const screen = await render({
 			worktrees: [main, linked],
 			isLoading: false,
 			allowSelection: true,

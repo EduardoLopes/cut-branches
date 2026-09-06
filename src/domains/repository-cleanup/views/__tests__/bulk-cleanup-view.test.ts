@@ -64,7 +64,7 @@ beforeEach(() => {
 describe('BulkCleanupView', () => {
 	it('cleans the selected repositories when the requirement is met', async () => {
 		h.stub = makeStub({ selectedCount: 2, selectedBytes: 4096 });
-		const screen = renderWithTestWrapper(BulkCleanupView, {});
+		const screen = await renderWithTestWrapper(BulkCleanupView, {});
 		await tick();
 
 		const clean = screen.getByTestId('cleanup-clean-selected');
@@ -76,7 +76,7 @@ describe('BulkCleanupView', () => {
 
 	it('shows a validation hint and does not clean when nothing is selected', async () => {
 		h.stub = makeStub({ selectedCount: 0 });
-		const screen = renderWithTestWrapper(BulkCleanupView, {});
+		const screen = await renderWithTestWrapper(BulkCleanupView, {});
 		await tick();
 
 		await screen.getByTestId('cleanup-clean-selected').click();

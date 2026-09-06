@@ -75,7 +75,7 @@ const defaultProps = {
 
 describe('FileNode', () => {
 	it('renders identity, stats, and layout position', async () => {
-		const { getByText, container } = renderWithTestWrapper(FileNode, defaultProps);
+		const { getByText, container } = await renderWithTestWrapper(FileNode, defaultProps);
 
 		await expect.element(getByText('modified')).toBeInTheDocument();
 		await expect.element(getByText('+12')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('FileNode', () => {
 	});
 
 	it('shows a binary badge instead of line stats for binary files', async () => {
-		const { getByText, container } = renderWithTestWrapper(FileNode, {
+		const { getByText, container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			file: file({ isBinary: true })
 		});
@@ -100,7 +100,7 @@ describe('FileNode', () => {
 
 	it('lists changed symbols up to the limit with a +more suffix', async () => {
 		const symbols = ['a', 'b', 'c', 'd', 'e', 'f', 'g'].map((name) => symbol(name));
-		const { getByText, container } = renderWithTestWrapper(FileNode, {
+		const { getByText, container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			structure: structure({ symbols })
 		});
@@ -110,7 +110,7 @@ describe('FileNode', () => {
 	});
 
 	it('shows impact counts only when non-zero', async () => {
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			structure: structure({ importsChanged: 2, importedByChanged: 0 })
 		});
@@ -127,7 +127,7 @@ describe('FileNode', () => {
 		const onToggle = vi.fn();
 		const onOpenInList = vi.fn();
 		const onHover = vi.fn();
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			onHover,
 			onToggle,
@@ -150,7 +150,7 @@ describe('FileNode', () => {
 
 	it('reports focus requests', async () => {
 		const onFocus = vi.fn();
-		const { container } = renderWithTestWrapper(FileNode, { ...defaultProps, onFocus });
+		const { container } = await renderWithTestWrapper(FileNode, { ...defaultProps, onFocus });
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="canvas-node-focus"]')).not.toBeNull();
 		});
@@ -162,7 +162,7 @@ describe('FileNode', () => {
 	it('embeds the file diff panel while expanded', async () => {
 		// The layout hands expanded nodes a bigger slot; geometry follows it.
 		const expandedNode = { ...node, width: 640, height: 490 };
-		const { container, getByText } = renderWithTestWrapper(FileNode, {
+		const { container, getByText } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			node: expandedNode,
 			expanded: true,
@@ -179,7 +179,7 @@ describe('FileNode', () => {
 		expect(toggle?.getAttribute('aria-expanded')).toBe('true');
 	});
 	it('pluralizes impact titles correctly on both sides', async () => {
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			structure: structure({ importsChanged: 1, importedByChanged: 2 })
 		});
@@ -195,7 +195,7 @@ describe('FileNode', () => {
 	});
 
 	it('reserves a placeholder while expanded but not yet near the viewport', async () => {
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			node: { ...node, width: 640, height: 490 },
 			expanded: true,
@@ -212,7 +212,7 @@ describe('FileNode', () => {
 
 	it('reports reviewed toggle clicks when not yet reviewed', async () => {
 		const onToggleReviewed = vi.fn();
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			reviewed: false,
 			onToggleReviewed
@@ -230,7 +230,7 @@ describe('FileNode', () => {
 	});
 
 	it('marks the panel reviewed when the flag is set', async () => {
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			reviewed: true,
 			onToggleReviewed: vi.fn()
@@ -246,7 +246,10 @@ describe('FileNode', () => {
 	});
 
 	it('does not throw when the reviewed toggle has no handler', async () => {
-		const { container } = renderWithTestWrapper(FileNode, { ...defaultProps, reviewed: false });
+		const { container } = await renderWithTestWrapper(FileNode, {
+			...defaultProps,
+			reviewed: false
+		});
 		const button = container.querySelector(
 			'[data-testid="canvas-node-reviewed"]'
 		) as HTMLButtonElement;
@@ -254,7 +257,7 @@ describe('FileNode', () => {
 	});
 
 	it('threads explicit diff options into the expanded panel', async () => {
-		const { container, getByText } = renderWithTestWrapper(FileNode, {
+		const { container, getByText } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			node: { ...node, width: 640, height: 490 },
 			expanded: true,
@@ -273,13 +276,13 @@ describe('FileNode', () => {
 
 	it('expands a collapsed node when Explain is clicked', async () => {
 		const onToggle = vi.fn();
-		const { getByTestId } = renderWithTestWrapper(FileNode, { ...defaultProps, onToggle });
+		const { getByTestId } = await renderWithTestWrapper(FileNode, { ...defaultProps, onToggle });
 		await getByTestId('canvas-node-explain').click();
 		expect(onToggle).toHaveBeenCalledWith('src/app.ts');
 	});
 
 	it('shows the explanation panel inside the diff area when opened', async () => {
-		const { getByTestId, container } = renderWithTestWrapper(FileNode, {
+		const { getByTestId, container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			node: { ...node, width: 640, height: 490 },
 			expanded: true,
@@ -291,7 +294,7 @@ describe('FileNode', () => {
 	});
 
 	it('hides the Explain affordance for binary files', async () => {
-		const { container } = renderWithTestWrapper(FileNode, {
+		const { container } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			file: file({ isBinary: true })
 		});
@@ -299,7 +302,7 @@ describe('FileNode', () => {
 	});
 
 	it('opens the explanation panel in per-change mode', async () => {
-		const { getByTestId } = renderWithTestWrapper(FileNode, {
+		const { getByTestId } = await renderWithTestWrapper(FileNode, {
 			...defaultProps,
 			node: { ...node, width: 640, height: 490 },
 			expanded: true,

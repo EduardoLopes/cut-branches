@@ -131,10 +131,9 @@ describe('Store', () => {
 		const schema = z.string();
 
 		// Mock implementation to verify schemas are correctly passed
-		// @ts-expect-error - mocking static method for testing
 		vi.spyOn(AbstractStore, 'getCommonInstance').mockImplementation((_ctor, args) => {
 			// Just return args for verification
-			return new Store(testKey, args[0]);
+			return new Store(testKey, args[0] as z.ZodType<string>);
 		});
 
 		const store = Store.getInstance<string>([testKey], schema);

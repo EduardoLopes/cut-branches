@@ -14,7 +14,7 @@ styled-system
 styled-system-studio
 
 /coverage
-/html
+/.vitest
 # Tarpaulin coverage files
 tarpaulin-report.html
 /src-tauri/tarpaulin-report.html

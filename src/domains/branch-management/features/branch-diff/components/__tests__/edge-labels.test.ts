@@ -19,7 +19,7 @@ const layout = buildCanvasLayout(
 
 describe('EdgeLabels', () => {
 	it('shows nothing until a node is hovered', async () => {
-		const { container } = renderWithTestWrapper(EdgeLabels, { layout, edges });
+		const { container } = await renderWithTestWrapper(EdgeLabels, { layout, edges });
 		await vi.waitFor(() => {
 			expect(container.querySelector('[data-testid="diff-canvas-edge-labels"]')).not.toBeNull();
 		});
@@ -27,7 +27,11 @@ describe('EdgeLabels', () => {
 	});
 
 	it('labels only the hovered node’s call edges, one symbol per line on a chip', async () => {
-		const { container } = renderWithTestWrapper(EdgeLabels, { layout, edges, hoveredPath: 'a.ts' });
+		const { container } = await renderWithTestWrapper(EdgeLabels, {
+			layout,
+			edges,
+			hoveredPath: 'a.ts'
+		});
 		await vi.waitFor(() => {
 			const labels = [...container.querySelectorAll('[data-testid="diff-canvas-edge-label"]')];
 			expect(labels).toHaveLength(1);
@@ -56,7 +60,7 @@ describe('EdgeLabels', () => {
 			],
 			many
 		);
-		const { container } = renderWithTestWrapper(EdgeLabels, {
+		const { container } = await renderWithTestWrapper(EdgeLabels, {
 			layout: manyLayout,
 			edges: many,
 			hoveredPath: 'a.ts'

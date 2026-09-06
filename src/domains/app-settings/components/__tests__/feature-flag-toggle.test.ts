@@ -11,8 +11,8 @@ const flag: FeatureFlagDefinition = {
 };
 
 describe('FeatureFlagToggle', () => {
-	it('renders the label and description', () => {
-		const screen = renderWithTestWrapper(FeatureFlagToggle, {
+	it('renders the label and description', async () => {
+		const screen = await renderWithTestWrapper(FeatureFlagToggle, {
 			flag,
 			enabled: false,
 			onToggle: vi.fn()
@@ -23,18 +23,24 @@ describe('FeatureFlagToggle', () => {
 	});
 
 	it('reflects the enabled state in the checkbox', async () => {
-		const screen = renderWithTestWrapper(FeatureFlagToggle, {
+		const screen = await renderWithTestWrapper(FeatureFlagToggle, {
 			flag,
 			enabled: true,
 			onToggle: vi.fn()
 		});
 
-		await expect.element(screen.getByRole('checkbox', { name: 'Demo flag' })).toBeChecked();
+		await expect
+			.element(screen.getByRole('checkbox', { name: 'Demo flag', exact: false }))
+			.toBeChecked();
 	});
 
 	it('calls onToggle with the negated value when changed', async () => {
 		const onToggle = vi.fn();
-		const screen = renderWithTestWrapper(FeatureFlagToggle, { flag, enabled: false, onToggle });
+		const screen = await renderWithTestWrapper(FeatureFlagToggle, {
+			flag,
+			enabled: false,
+			onToggle
+		});
 
 		await screen.getByTestId('feature-flag-checkbox-demo-flag').click();
 

@@ -37,7 +37,7 @@ beforeEach(() => {
 
 describe('AddWorktreeModal', () => {
 	it('invokes the directory picker', async () => {
-		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		const screen = await renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
 		await tick();
 
 		await screen.getByTestId('add-worktree-pick-dir').click();
@@ -45,7 +45,7 @@ describe('AddWorktreeModal', () => {
 	});
 
 	it('shows a validation hint and does not add when required fields are missing', async () => {
-		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		const screen = await renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
 		await tick();
 
 		await screen.getByTestId('add-worktree-confirm').click();
@@ -56,7 +56,7 @@ describe('AddWorktreeModal', () => {
 	});
 
 	it('prompts for a directory once a name is entered', async () => {
-		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		const screen = await renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
 		await tick();
 
 		await screen.getByTestId('add-worktree-name').fill('hotfix');
@@ -69,7 +69,7 @@ describe('AddWorktreeModal', () => {
 
 	it('previews the destination once a directory is chosen', async () => {
 		h.stub = makeStub({ selectedParent: '/chosen' });
-		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		const screen = await renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
 		await tick();
 
 		// No name yet: the last segment is a placeholder.
@@ -85,7 +85,7 @@ describe('AddWorktreeModal', () => {
 
 	it('disables Create while the worktree is being added', async () => {
 		h.stub = makeStub({ selectedParent: '/chosen', isAdding: true });
-		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		const screen = await renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
 		await tick();
 
 		expect(screen.getByTestId('add-worktree-confirm')).toBeDisabled();
@@ -93,7 +93,7 @@ describe('AddWorktreeModal', () => {
 
 	it('adds the worktree once name and directory are provided', async () => {
 		h.stub = makeStub({ selectedParent: '/chosen' });
-		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		const screen = await renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
 		await tick();
 
 		await screen.getByTestId('add-worktree-name').fill('hotfix');

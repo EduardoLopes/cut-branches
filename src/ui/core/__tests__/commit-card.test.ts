@@ -18,8 +18,8 @@ describe('CommitCard Component', () => {
 
 	const mockCommit = Commit.fromData(mockCommitData);
 
-	test('renders the short SHA in the footer with the full SHA as its title', () => {
-		const { getByTestId, container } = renderWithTestWrapper(CommitCard, {
+	test('renders the short SHA in the footer with the full SHA as its title', async () => {
+		const { getByTestId, container } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -30,8 +30,8 @@ describe('CommitCard Component', () => {
 		expect(titled?.getAttribute('title')).toBe('abc123def456');
 	});
 
-	test('renders the upstream ref badge when an upstream is provided and showUpstream is set', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders the upstream ref badge when an upstream is provided and showUpstream is set', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			upstream: 'origin/main',
 			showUpstream: true
@@ -42,8 +42,8 @@ describe('CommitCard Component', () => {
 		expect(upstreamElement.element().textContent).toContain('origin/main');
 	});
 
-	test('hides the upstream badge by default even when an upstream is provided', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('hides the upstream badge by default even when an upstream is provided', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			upstream: 'origin/main'
 		});
@@ -51,8 +51,8 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
 	});
 
-	test('does not render an upstream badge when no upstream is provided', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('does not render an upstream badge when no upstream is provided', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			showUpstream: true
 		});
@@ -60,8 +60,8 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
 	});
 
-	test('renders the history deep-link when a historyHref is provided', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders the history deep-link when a historyHref is provided', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			historyHref: '/repos/1/commits/abc123def456'
 		});
@@ -71,16 +71,16 @@ describe('CommitCard Component', () => {
 		expect(link.element().getAttribute('href')).toBe('/repos/1/commits/abc123def456');
 	});
 
-	test('does not render the history deep-link without a historyHref', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('does not render the history deep-link without a historyHref', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
 		expect(getByTestId('commit-history-link')).not.toBeInTheDocument();
 	});
 
-	test('renders the diff deep-link when a diffHref is provided', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders the diff deep-link when a diffHref is provided', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			diffHref: '/repos/1/diff?commit=abc123def456'
 		});
@@ -92,8 +92,8 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-history-link')).not.toBeInTheDocument();
 	});
 
-	test('renders both flanking links when historyHref and diffHref are provided', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders both flanking links when historyHref and diffHref are provided', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			historyHref: '/repos/1/history?commit=abc123def456',
 			diffHref: '/repos/1/diff?commit=abc123def456'
@@ -103,20 +103,20 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-diff-link')).toBeInTheDocument();
 	});
 
-	test('does not render the diff deep-link without a diffHref', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('does not render the diff deep-link without a diffHref', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
 		expect(getByTestId('commit-diff-link')).not.toBeInTheDocument();
 	});
 
-	test('mounts the hover-preview popover when both hoverPreview and historyHref are provided', () => {
+	test('mounts the hover-preview popover when both hoverPreview and historyHref are provided', async () => {
 		const hoverPreview = createRawSnippet(() => ({
 			render: () => '<div data-testid="hover-preview">preview</div>'
 		}));
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit,
 			historyHref: '/repos/1/commits/abc123def456',
 			hoverPreview
@@ -126,8 +126,8 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-history-link')).toBeInTheDocument();
 	});
 
-	test('renders commit message', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders commit message', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -136,14 +136,14 @@ describe('CommitCard Component', () => {
 		expect(messageElement.element().textContent).toContain('feat: add new feature');
 	});
 
-	test('renders commit message with markdown', () => {
+	test('renders commit message with markdown', async () => {
 		const commitWithMarkdownData: CommitData = {
 			...mockCommitData,
 			message: '**Bold** and *italic* text'
 		};
 		const commitWithMarkdown = Commit.fromData(commitWithMarkdownData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithMarkdown
 		});
 
@@ -151,14 +151,14 @@ describe('CommitCard Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
-	test('renders only the subject line in the message when the commit has a body', () => {
+	test('renders only the subject line in the message when the commit has a body', async () => {
 		const commitWithBodyData: CommitData = {
 			...mockCommitData,
 			message: 'feat: add new feature\n\nDetailed description line'
 		};
 		const commitWithBody = Commit.fromData(commitWithBodyData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithBody
 		});
 
@@ -167,14 +167,14 @@ describe('CommitCard Component', () => {
 		expect(messageElement.element().textContent).not.toContain('Detailed description line');
 	});
 
-	test('keeps the description body collapsed by default, exposing a toggle', () => {
+	test('keeps the description body collapsed by default, exposing a toggle', async () => {
 		const commitWithBodyData: CommitData = {
 			...mockCommitData,
 			message: 'feat: add new feature\n\nDetailed description line'
 		};
 		const commitWithBody = Commit.fromData(commitWithBodyData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithBody
 		});
 
@@ -190,7 +190,7 @@ describe('CommitCard Component', () => {
 		};
 		const commitWithBody = Commit.fromData(commitWithBodyData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithBody
 		});
 
@@ -207,8 +207,8 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('commit-description')).not.toBeInTheDocument();
 	});
 
-	test('does not render a description or toggle when the commit message is a single line', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('does not render a description or toggle when the commit message is a single line', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -216,8 +216,8 @@ describe('CommitCard Component', () => {
 		expect(getByTestId('toggle-commit-description')).not.toBeInTheDocument();
 	});
 
-	test('renders author name', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders author name', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -227,7 +227,7 @@ describe('CommitCard Component', () => {
 	});
 
 	test('displays email in author title attribute', async () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -235,8 +235,8 @@ describe('CommitCard Component', () => {
 		await expect.element(authorElement).toHaveAttribute('title', 'john.doe@example.com');
 	});
 
-	test('renders commit date with relative format', () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+	test('renders commit date with relative format', async () => {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -247,7 +247,7 @@ describe('CommitCard Component', () => {
 	});
 
 	test('displays full date in date title attribute', async () => {
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -258,8 +258,8 @@ describe('CommitCard Component', () => {
 		expect(title).toBeTruthy();
 	});
 
-	test('renders user icon for author', () => {
-		const { container } = renderWithTestWrapper(CommitCard, {
+	test('renders user icon for author', async () => {
+		const { container } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -267,8 +267,8 @@ describe('CommitCard Component', () => {
 		expect(authorSection).toBeInTheDocument();
 	});
 
-	test('renders clock icon for date', () => {
-		const { container } = renderWithTestWrapper(CommitCard, {
+	test('renders clock icon for date', async () => {
+		const { container } = await renderWithTestWrapper(CommitCard, {
 			commit: mockCommit
 		});
 
@@ -276,14 +276,14 @@ describe('CommitCard Component', () => {
 		expect(dateSection).toBeInTheDocument();
 	});
 
-	test('handles different date formats', () => {
+	test('handles different date formats', async () => {
 		const commitWithDifferentDateData: CommitData = {
 			...mockCommitData,
 			date: '2023-12-01T00:00:00Z'
 		};
 		const commitWithDifferentDate = Commit.fromData(commitWithDifferentDateData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithDifferentDate
 		});
 
@@ -291,14 +291,14 @@ describe('CommitCard Component', () => {
 		expect(dateElement).toBeInTheDocument();
 	});
 
-	test('handles empty commit message', () => {
+	test('handles empty commit message', async () => {
 		const commitWithEmptyMessageData: CommitData = {
 			...mockCommitData,
 			message: ''
 		};
 		const commitWithEmptyMessage = Commit.fromData(commitWithEmptyMessageData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithEmptyMessage
 		});
 
@@ -306,14 +306,14 @@ describe('CommitCard Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
-	test('handles special characters in author name', () => {
+	test('handles special characters in author name', async () => {
 		const commitWithSpecialCharsData: CommitData = {
 			...mockCommitData,
 			author: "José María O'Brien"
 		};
 		const commitWithSpecialChars = Commit.fromData(commitWithSpecialCharsData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithSpecialChars
 		});
 
@@ -328,7 +328,7 @@ describe('CommitCard Component', () => {
 		};
 		const commitWithSpecialEmail = Commit.fromData(commitWithSpecialEmailData);
 
-		const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 			commit: commitWithSpecialEmail
 		});
 
@@ -342,8 +342,8 @@ describe('CommitCard Component', () => {
 			message: 'feat: add new feature\n\nDetailed description line'
 		});
 
-		test('compact keeps the card chrome — footer badges and the body disclosure', () => {
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		test('compact keeps the card chrome — footer badges and the body disclosure', async () => {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: commitWithBody,
 				density: 'compact'
 			});
@@ -353,8 +353,8 @@ describe('CommitCard Component', () => {
 			expect(getByTestId('commit-mini-row')).not.toBeInTheDocument();
 		});
 
-		test('mini drops the card chrome, keeping only summary, author and date', () => {
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		test('mini drops the card chrome, keeping only summary, author and date', async () => {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: commitWithBody,
 				density: 'mini'
 			});
@@ -372,8 +372,8 @@ describe('CommitCard Component', () => {
 			expect(getByTestId('commit-description')).not.toBeInTheDocument();
 		});
 
-		test('mini renders no upstream badge even when asked for one', () => {
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		test('mini renders no upstream badge even when asked for one', async () => {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: mockCommit,
 				density: 'mini',
 				upstream: 'origin/main',
@@ -383,8 +383,8 @@ describe('CommitCard Component', () => {
 			expect(getByTestId('commit-upstream')).not.toBeInTheDocument();
 		});
 
-		test('mini keeps the history link — it is the graph preview trigger', () => {
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		test('mini keeps the history link — it is the graph preview trigger', async () => {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: mockCommit,
 				density: 'mini',
 				historyHref: '/repos/1/history?commit=abc123def456'
@@ -395,8 +395,8 @@ describe('CommitCard Component', () => {
 			expect(link.element().getAttribute('href')).toBe('/repos/1/history?commit=abc123def456');
 		});
 
-		test('mini omits the history link when no href is given', () => {
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+		test('mini omits the history link when no href is given', async () => {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: mockCommit,
 				density: 'mini'
 			});
@@ -409,7 +409,7 @@ describe('CommitCard Component', () => {
 				render: () => '<div data-testid="hover-preview">preview</div>'
 			}));
 
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: mockCommit,
 				density: 'mini',
 				historyHref: '/repos/1/history?commit=abc123def456',
@@ -422,7 +422,7 @@ describe('CommitCard Component', () => {
 		});
 
 		test('the history link stays a plain link when no preview is attached', async () => {
-			const { getByTestId } = renderWithTestWrapper(CommitCard, {
+			const { getByTestId } = await renderWithTestWrapper(CommitCard, {
 				commit: mockCommit,
 				density: 'mini',
 				historyHref: '/repos/1/history?commit=abc123def456'

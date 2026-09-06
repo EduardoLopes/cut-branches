@@ -71,7 +71,7 @@ describe('SidebarView Component', () => {
 	});
 
 	it('renders all repositories in the list', async () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -82,7 +82,7 @@ describe('SidebarView Component', () => {
 	});
 
 	it('displays badge counts for repositories with branches', async () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -102,14 +102,14 @@ describe('SidebarView Component', () => {
 		expect(repo3Badge).toHaveTextContent('');
 	});
 
-	it('renders the app title correctly', () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+	it('renders the app title correctly', async () => {
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		expect(screen.getByText('Cut Branches')).toBeInTheDocument();
 	});
 
 	it('displays the repositories heading', async () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -117,15 +117,15 @@ describe('SidebarView Component', () => {
 		expect(screen.getByText('Repositories')).toBeInTheDocument();
 	});
 
-	it('renders the add button for adding new repositories', () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+	it('renders the add button for adding new repositories', async () => {
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		// Check for the add button using accessible role and name
 		expect(screen.getByRole('button', { name: /add a git repository/i })).toBeInTheDocument();
 	});
 
 	it('collapses to a rail and expands again via the toggle', async () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();
@@ -154,7 +154,7 @@ describe('SidebarView Component', () => {
 	});
 
 	it('persists the collapsed state to localStorage', async () => {
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 
@@ -169,7 +169,7 @@ describe('SidebarView Component', () => {
 		// state itself rather than seeding localStorage before mounting.
 		sidebarCollapsed.set(true);
 
-		const screen = renderWithTestWrapper(SidebarView, { repositoryListAction });
+		const screen = await renderWithTestWrapper(SidebarView, { repositoryListAction });
 
 		await tick();
 		await tick();

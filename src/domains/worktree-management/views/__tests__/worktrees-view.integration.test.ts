@@ -46,7 +46,7 @@ beforeEach(() => {
 
 describe('WorktreesView (integration)', () => {
 	it('resolves the path, loads worktrees, and lists them', async () => {
-		const screen = renderWithTestWrapper(WorktreesView, { id: 'r1' });
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 
 		await vi.waitFor(async () => {
 			await tick();
@@ -57,7 +57,7 @@ describe('WorktreesView (integration)', () => {
 		// 9 linked worktrees are selectable (the main worktree is not).
 		await expect
 			.element(screen.getByTestId('worktrees-selection-count'))
-			.toHaveTextContent('0 of 9');
+			.toMatchTextContent('0 of 9');
 		expect(executeCommand).toHaveBeenCalledWith('listWorktrees', { path: '/repos/main' });
 	});
 });
