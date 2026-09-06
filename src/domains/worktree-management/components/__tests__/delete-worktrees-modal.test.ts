@@ -34,6 +34,20 @@ describe('DeleteWorktreesModal', () => {
 		expect(onConfirm).toHaveBeenCalledWith(false);
 	});
 
+	it('lists each worktree by name with its path', async () => {
+		const screen = renderWithTestWrapper(DeleteWorktreesModal, {
+			open: true,
+			worktrees: [wt('a'), wt('b')],
+			onConfirm: vi.fn()
+		});
+		await tick();
+
+		const items = screen.getByTestId('delete-worktrees-item');
+		expect(items.elements()).toHaveLength(2);
+		await vi.waitFor(() => expect(items.first()).toHaveTextContent('/repos/a'));
+		expect(items.nth(1)).toHaveTextContent('b');
+	});
+
 	it('offers force when a selected worktree is locked and passes it through', async () => {
 		const onConfirm = vi.fn();
 		const screen = renderWithTestWrapper(DeleteWorktreesModal, {
