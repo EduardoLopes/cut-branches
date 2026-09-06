@@ -67,6 +67,30 @@ describe('AddWorktreeModal', () => {
 		expect(h.stub.add).not.toHaveBeenCalled();
 	});
 
+	it('previews the destination once a directory is chosen', async () => {
+		h.stub = makeStub({ selectedParent: '/chosen' });
+		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		await tick();
+
+		// No name yet: the last segment is a placeholder.
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('add-worktree-selected-dir')).toHaveTextContent('/chosen/…')
+		);
+
+		await screen.getByTestId('add-worktree-name').fill('hotfix');
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('add-worktree-selected-dir')).toHaveTextContent('/chosen/hotfix')
+		);
+	});
+
+	it('disables Create while the worktree is being added', async () => {
+		h.stub = makeStub({ selectedParent: '/chosen', isAdding: true });
+		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });
+		await tick();
+
+		expect(screen.getByTestId('add-worktree-confirm')).toBeDisabled();
+	});
+
 	it('adds the worktree once name and directory are provided', async () => {
 		h.stub = makeStub({ selectedParent: '/chosen' });
 		const screen = renderWithTestWrapper(AddWorktreeModal, { open: true, repoPath: '/repo' });

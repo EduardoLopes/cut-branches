@@ -5,7 +5,11 @@
 	import Modal from '@pindoba/svelte-dialog';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useAddWorktreeFlow } from '../core/composables/use-add-worktree-flow.svelte';
+	import TruncatedPath from '$ui/core/truncated-path.svelte';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogToolbar from '$ui/patterns/dialog-toolbar.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -65,6 +69,7 @@
 		{open}
 		onChange={(next: boolean) => (open = next)}
 		title="Add worktree"
+		subtitle="Create a new working directory linked to this repository. Leave the branch empty to create a new branch named after the worktree."
 		aria-label="Add worktree"
 		data-testid="add-worktree-modal"
 		showCloseButton={!flow.isAdding}
@@ -74,12 +79,57 @@
 			}
 		}}
 	>
-		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'md', width: 'full' })}>
-			<p class={css({ margin: '0', color: 'neutral.text.muted', fontSize: 'sm' })}>
-				Create a new working directory linked to this repository. Leave the branch empty to create a
-				new branch named after the worktree.
-			</p>
+		{#snippet leading()}
+			<Stamp size="lg" emphasis="secondary" feedback="neutral">
+				<Icon icon="lucide:folder-plus" width="22px" height="22px" />
+			</Stamp>
+		{/snippet}
 
+		<!-- Where the worktree lands. The chip is sized with the `control.sm`
+		     tokens so it reads as a peer of the button beside it, and it flexes
+		     to fill the row so a long parent folder never changes the height. -->
+		<DialogToolbar testId="add-worktree-location">
+			<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs' })}>
+				<span
+					class={css({
+						flex: '1',
+						minWidth: '0',
+						display: 'flex',
+						alignItems: 'center',
+						height: 'control.sm',
+						lineHeight: 'none',
+						paddingX: 'calc((token(sizes.control.sm) - token(fontSizes.xs)) / 2)',
+						borderRadius: 'control.sm',
+						fontSize: 'xs',
+						fontFamily: 'mono',
+						background: 'neutral.surface.valley'
+					})}
+					data-testid="add-worktree-selected-dir"
+				>
+					{#if flow.selectedParent}
+						<TruncatedPath
+							path={`${flow.selectedParent}/${name.trim() || '…'}`}
+							highlight={name.trim() || '…'}
+							align="end"
+							class={css({ flex: '1' })}
+						/>
+					{:else}
+						<span class={css({ color: 'neutral.text.muted' })}>No directory chosen</span>
+					{/if}
+				</span>
+				<Button
+					size="sm"
+					emphasis="secondary"
+					onclick={() => flow.pickDirectory()}
+					data-testid="add-worktree-pick-dir"
+				>
+					{#snippet leading()}<Icon icon="lucide:folder" width="14px" height="14px" />{/snippet}
+					Choose directory…
+				</Button>
+			</div>
+		</DialogToolbar>
+
+		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'md', width: 'full' })}>
 			<label class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
 				<span class={css({ fontSize: 'xs', fontWeight: 'medium', color: 'neutral.text.muted' })}>
 					Worktree name
@@ -106,37 +156,6 @@
 				/>
 			</label>
 
-			<div class={css({ display: 'flex', flexDirection: 'column', gap: 'xs' })}>
-				<span class={css({ fontSize: 'xs', fontWeight: 'medium', color: 'neutral.text.muted' })}>
-					Location
-				</span>
-				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm' })}>
-					<Button
-						size="sm"
-						emphasis="secondary"
-						onclick={() => flow.pickDirectory()}
-						data-testid="add-worktree-pick-dir"
-					>
-						{#snippet leading()}<Icon icon="lucide:folder" width="14px" height="14px" />{/snippet}
-						Choose directory…
-					</Button>
-					<span
-						class={css({
-							fontSize: 'xs',
-							color: 'neutral.text.muted',
-							overflow: 'hidden',
-							textOverflow: 'ellipsis',
-							whiteSpace: 'nowrap'
-						})}
-						data-testid="add-worktree-selected-dir"
-					>
-						{flow.selectedParent
-							? `${flow.selectedParent}/${name.trim() || '…'}`
-							: 'No directory chosen'}
-					</span>
-				</div>
-			</div>
-
 			<Checkbox
 				id="add-worktree-lock"
 				checked={lock}
@@ -146,17 +165,7 @@
 				Lock after creating
 			</Checkbox>
 
-			<div
-				class={css({
-					display: 'flex',
-					justifyContent: 'flex-end',
-					gap: 'sm',
-					paddingTop: 'md',
-					borderTopWidth: '1px',
-					borderTopStyle: 'solid',
-					borderTopColor: 'neutral.border.muted'
-				})}
-			>
+			<DialogFooter>
 				<Button
 					emphasis="ghost"
 					onclick={() => (open = false)}
@@ -176,6 +185,7 @@
 								{...triggerProps}
 								emphasis="primary"
 								onclick={handleConfirm}
+								disabled={flow.isAdding}
 								data-testid="add-worktree-confirm"
 							>
 								Create worktree
@@ -183,7 +193,7 @@
 						</Loading>
 					{/snippet}
 				</ValidationHint>
-			</div>
+			</DialogFooter>
 		</div>
 	</Modal>
 </div>
