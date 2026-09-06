@@ -239,7 +239,15 @@
 			class={css({ maxHeight: '50vh' })}
 			testId="delete-branch-list"
 		>
-			<div class={css({ position: 'relative', width: 'full' })} style:height={`${totalSize}px`}>
+			<!-- `flexShrink: 0`: the well's scroller is a flex column and this sizer
+			     has no in-flow content (every row is absolutely positioned), so
+			     without it flex squeezes the box below `totalSize`; the rows still
+			     overflow to the right place but the scroller's bottom padding ends
+			     up on the squeezed box instead of after the last row. -->
+			<div
+				class={css({ position: 'relative', width: 'full', flexShrink: '0' })}
+				style:height={`${totalSize}px`}
+			>
 				{#each virtualItems as virtualRow (virtualRow.key)}
 					{@const branch = branches[virtualRow.index]}
 					{#if branch}
