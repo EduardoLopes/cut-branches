@@ -73,7 +73,7 @@ pub async fn get_repository(
         Some(branches) => branches,
         None => branch.list_db_branches(repo_id, conn)?,
     };
-    branches.sort_by(|a, b| b.current.cmp(&a.current));
+    branches.sort_by_key(|b| std::cmp::Reverse(b.current));
 
     // Detect whether this working directory is a linked worktree (vs the main
     // worktree). Derived live from git2 — not persisted.

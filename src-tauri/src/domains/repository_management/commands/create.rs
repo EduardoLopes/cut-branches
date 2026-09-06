@@ -77,7 +77,7 @@ pub async fn create_repository(
 
     // Get branches through the branch gateway (use fast version for performance)
     let mut branches = services.branch.list_branches(raw_root_path)?;
-    branches.sort_by(|a, b| b.current.cmp(&a.current));
+    branches.sort_by_key(|b| std::cmp::Reverse(b.current));
     let current = services.branch.current_branch(raw_root_path)?;
 
     // Extract repository name

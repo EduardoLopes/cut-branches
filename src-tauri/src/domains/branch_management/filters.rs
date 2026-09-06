@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 /// Filter for branch deletion status
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum DeletionStatusFilter {
     /// Only active (non-deleted) branches
+    #[default]
     Active,
     /// Only deleted branches
     Deleted,
@@ -12,14 +13,8 @@ pub enum DeletionStatusFilter {
     All,
 }
 
-impl Default for DeletionStatusFilter {
-    fn default() -> Self {
-        Self::Active
-    }
-}
-
 /// Filter for branch merge status
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum MergeStatusFilter {
     /// Only fully merged branches
@@ -27,17 +22,12 @@ pub enum MergeStatusFilter {
     /// Only unmerged branches
     Unmerged,
     /// Both merged and unmerged branches
+    #[default]
     All,
 }
 
-impl Default for MergeStatusFilter {
-    fn default() -> Self {
-        Self::All
-    }
-}
-
 /// Filter for branch selection status
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionStatusFilter {
     /// Only selected branches
@@ -45,17 +35,12 @@ pub enum SelectionStatusFilter {
     /// Only unselected branches
     Unselected,
     /// Both selected and unselected branches
+    #[default]
     All,
 }
 
-impl Default for SelectionStatusFilter {
-    fn default() -> Self {
-        Self::All
-    }
-}
-
 /// Filter for branch lock status
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, specta::Type, PartialEq, Eq, Default)]
 #[serde(rename_all = "camelCase")]
 pub enum LockStatusFilter {
     /// Only locked branches
@@ -63,13 +48,8 @@ pub enum LockStatusFilter {
     /// Only unlocked branches
     Unlocked,
     /// Both locked and unlocked branches
+    #[default]
     All,
-}
-
-impl Default for LockStatusFilter {
-    fn default() -> Self {
-        Self::All
-    }
 }
 
 /// Comprehensive filter configuration for querying branches
