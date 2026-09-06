@@ -144,6 +144,30 @@ describe('ScanRepositoriesModal', () => {
 			expect(nested[0].textContent).toContain('wt');
 		});
 
+		it('shows a scroll shadow only towards the edge with more content', async () => {
+			h.stub = makeStub({
+				results: Array.from({ length: 40 }, (_, i) => ({
+					path: `/repo-${i}`,
+					name: `repo-${i}`,
+					alreadyAdded: false
+				})),
+				addableCount: 40,
+				selectedCount: 0
+			});
+			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(40));
+
+			const top = screen.getByTestId('scan-scroll-shadow-top');
+			const bottom = screen.getByTestId('scan-scroll-shadow-bottom');
+			await vi.waitFor(() => expect(bottom.element().getAttribute('data-visible')).toBe('true'));
+			expect(top.element().getAttribute('data-visible')).toBe('false');
+
+			const scroller = screen.getByTestId('scan-results-scroller').element();
+			scroller.scrollTop = scroller.scrollHeight;
+			await vi.waitFor(() => expect(top.element().getAttribute('data-visible')).toBe('true'));
+			expect(bottom.element().getAttribute('data-visible')).toBe('false');
+		});
+
 		it('shows the scanning indicator while the composable reports a scan', async () => {
 			h.stub = makeStub({ isScanning: true });
 			const screen = renderWithTestWrapper(ScanRepositoriesModal, { open: true });
