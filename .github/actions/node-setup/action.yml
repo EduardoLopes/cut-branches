@@ -11,13 +11,14 @@ runs:
   using: 'composite'
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6
 
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
-        node-version: 'lts/*'
-        cache: 'pnpm'
+        # Track the version the project develops against rather than whatever
+        # is currently LTS; vite requires >= 22.12.
+        node-version-file: '.nvmrc'
 
     - name: Enable corepack
       run: corepack enable
@@ -42,24 +43,13 @@ runs:
         pnpm config set node-linker hoisted
       shell: pwsh
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       name: Setup pnpm store cache
       with:
         path: ${{ steps.pnpm-cache-dir.outputs.STORE_PATH }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
-
-    - uses: actions/cache@v4
-      name: Cache node_modules
-      if: runner.os != 'Windows'
-      with:
-        path: |
-          **/node_modules
-          !**/node_modules/.cache
-        key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-modules-
 
     - name: Install Dependencies
       if: runner.os != 'Windows'
@@ -86,7 +76,7 @@ runs:
     - name: Cache Playwright browsers
       if: inputs.playwright == 'true'
       id: playwright-cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.cache/ms-playwright
         key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}

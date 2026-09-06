@@ -25,7 +25,7 @@ jobs:
       release_needed: ${{ steps.tag.outputs.release_needed }}
       version: ${{ steps.tag.outputs.version }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Full history + tags: the tag check needs to know which versions
           # have already shipped.

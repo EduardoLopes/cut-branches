@@ -3,14 +3,19 @@ name: 'Svelte check'
 on:
   push:
     branches:
-      - '**' # Run on pushes to all branches
+      - main
+  pull_request:
   workflow_call:
+
+concurrency:
+  group: svelte-check-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: node-setup
         uses: ./.github/actions/node-setup
@@ -21,18 +26,18 @@ jobs:
   svelte-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: node-setup
         uses: ./.github/actions/node-setup
 
       - name: Run Svelte check
-        run: pnpm svelte-check
+        run: pnpm check
 
   eslint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: node-setup
         uses: ./.github/actions/node-setup
@@ -43,7 +48,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: node-setup
         uses: ./.github/actions/node-setup
