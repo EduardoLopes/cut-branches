@@ -61,6 +61,29 @@ describe('date-utils', () => {
 			expect(formatDate).not.toHaveBeenCalled();
 			expect(result).toBe('Unknown date');
 		});
+
+		it('memoizes repeated inputs so the expensive format runs once', () => {
+			safeFormatDate('2024-01-02T03:04:05Z');
+			safeFormatDate('2024-01-02T03:04:05Z');
+			expect(formatDate).toHaveBeenCalledTimes(1);
+
+			// Date objects key by their timestamp — two instances, one entry.
+			safeFormatDate(new Date('2024-01-02T03:04:05Z'));
+			safeFormatDate(new Date('2024-01-02T03:04:05Z'));
+			expect(formatDate).toHaveBeenCalledTimes(2);
+		});
+
+		it('clears the cache once it reaches its bound instead of growing forever', () => {
+			// Overflow the 500-entry cache with unique timestamps…
+			for (let i = 0; i < 501; i++) {
+				safeFormatDate(1700000000000 + i * 1000);
+			}
+			const callsAfterFill = vi.mocked(formatDate).mock.calls.length;
+			// …then a key from before the clear must be re-formatted, not served
+			// from a stale unbounded map.
+			safeFormatDate(1700000000000);
+			expect(vi.mocked(formatDate).mock.calls.length).toBe(callsAfterFill + 1);
+		});
 	});
 
 	describe('safeFormatRelativeDate', () => {
@@ -252,27 +275,27 @@ describe('date-utils', () => {
 
 		beforeEach(() => {
 			// Save the original Date constructor
-			realDate = global.Date;
+			realDate = window.Date;
 		});
 
 		afterEach(() => {
 			// Restore the original Date constructor
-			global.Date = realDate;
+			window.Date = realDate;
 			vi.restoreAllMocks();
 		});
 
 		it('should return true when date is today', () => {
 			// Setup a mock date implementation for "today"
 			const mockToday = new Date('2023-05-17');
-			global.Date = class extends realDate {
+			window.Date = class extends realDate {
 				constructor() {
 					super();
 					return mockToday;
 				}
 			} as DateConstructor;
-			global.Date.now = () => mockToday.getTime();
-			global.Date.parse = realDate.parse;
-			global.Date.UTC = realDate.UTC;
+			window.Date.now = () => mockToday.getTime();
+			window.Date.parse = realDate.parse;
+			window.Date.UTC = realDate.UTC;
 
 			// Use the same date as our mock "today"
 			const result = isToday(mockToday);

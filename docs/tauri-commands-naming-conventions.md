@@ -24,13 +24,13 @@ All Tauri commands should follow a consistent naming pattern that clearly indica
 #### Read Operations
 
 - **Single item**: `get_*`
-- **Multiple items**: `list_*`
+- **Multiple items**: `get_*_list`
 - **Usage**: For retrieving data without modification
 - **Examples**:
   - `get_repository` (not `get_repository_info`)
   - `get_branch` (not `get_branch_details`)
-  - `list_branches`
-  - `list_repositories`
+  - `get_branch_list`
+  - `get_repository_list`
 
 #### Update Operations
 
@@ -116,7 +116,7 @@ All Tauri commands should follow a consistent naming pattern that clearly indica
 - **Plural**: When operating on multiple items or collections
 - ✅ `delete_branch` (single)
 - ✅ `delete_branches` (multiple)
-- ✅ `list_repositories` (collection)
+- ✅ `get_repository_list` (collection)
 
 ### 4. Domain Context
 
@@ -281,17 +281,17 @@ When updating existing commands to follow these conventions:
 // Repository operations
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct ListRepositoriesInput {
+pub struct GetRepositoryListInput {
     pub base_path: String,
 }
 
 #[derive(Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
-pub struct ListRepositoriesOutput {
+pub struct GetRepositoryListOutput {
     pub repositories: Vec<Repository>,
 }
 
-pub async fn list_repositories(input: ListRepositoriesInput) -> Result<ListRepositoriesOutput, AppError>
+pub async fn get_repository_list(input: GetRepositoryListInput) -> Result<GetRepositoryListOutput, AppError>
 
 // Branch operations - Notice: get_branch not get_branch_details
 #[derive(Serialize, Deserialize, specta::Type)]

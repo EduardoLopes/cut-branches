@@ -1,0 +1,209 @@
+import {
+	createQuery,
+	type QueryKey,
+	type QueryClient,
+	type CreateQueryOptions,
+	type FetchQueryOptions,
+	useQueryClient
+} from '@tanstack/svelte-query';
+import debounce from 'just-debounce-it';
+import { getResource } from './query-key-utils';
+import {
+	type CommandName,
+	type CommandParams,
+	type CommandResult,
+	buildCommandExecutor
+} from './tauri-commands';
+import { type AppError } from '$infrastructure/bindings';
+
+// Helper to resolve input (static value or function)
+export type InputResolver<TCommand extends CommandName> =
+	CommandParams<TCommand> | (() => CommandParams<TCommand>);
+
+// Helper to resolve input value at runtime (shared with the infinite variant)
+export function resolveInput<TCommand extends CommandName>(
+	input: InputResolver<TCommand> | undefined
+): CommandParams<TCommand> | undefined {
+	return typeof input === 'function' ? input() : input;
+}
+
+// Type guard to ensure a value is a valid QueryKey
+function isQueryKey<TQueryKey extends QueryKey>(value: unknown): value is TQueryKey {
+	return Array.isArray(value) && value.every((v) => v !== undefined && v !== null);
+}
+
+// Helper to create default query key using resource-based naming (shared with
+// the infinite variant so both key families invalidate identically)
+export function createQueryKey<TCommand extends CommandName, TQueryKey extends QueryKey = QueryKey>(
+	commandName: TCommand,
+	input: CommandParams<TCommand> | undefined
+): TQueryKey {
+	// Use resource-based key (e.g., 'selected-branches' instead of 'listSelectedBranches')
+	const resource = getResource(commandName);
+	const queryKey = [resource, commandName, input].filter((v) => v !== undefined && v !== null);
+	if (isQueryKey<TQueryKey>(queryKey)) {
+		return queryKey;
+	}
+	// This should never happen in practice, but TypeScript needs a fallback
+	throw new Error('Invalid query key generated');
+}
+
+// Base query options - using explicit types for better inference
+export type TauriQueryOptions<
+	TCommand extends CommandName,
+	TData = CommandResult<TCommand>,
+	TQueryKey extends QueryKey = QueryKey,
+	TError = AppError
+> = Omit<
+	CreateQueryOptions<CommandResult<TCommand>, TError, TData, TQueryKey>,
+	'queryKey' | 'queryFn'
+> & {
+	/** Static key, or a thunk when the key depends on reactive state (same
+	 *  contract as the infinite variant). */
+	queryKey?: TQueryKey | (() => TQueryKey);
+	input?: InputResolver<TCommand>;
+	meta?: {
+		[key: string]: unknown;
+	};
+};
+
+// Prefetch options that extend TanStack Query's FetchQueryOptions
+export type TauriFetchQueryOptions<
+	TCommand extends CommandName,
+	TQueryKey extends QueryKey = QueryKey,
+	TError = AppError
+> = Omit<
+	FetchQueryOptions<CommandResult<TCommand>, TError, CommandResult<TCommand>, TQueryKey>,
+	'queryKey' | 'queryFn'
+> & {
+	queryKey?: TQueryKey;
+	input?: InputResolver<TCommand>;
+};
+
+// Helper to build queryFn for Tauri commands
+function buildQueryFn<TCommand extends CommandName>(
+	commandName: TCommand,
+	input: InputResolver<TCommand> | undefined
+): () => Promise<CommandResult<TCommand>> {
+	const executor = buildCommandExecutor(commandName);
+	return () => executor(resolveInput(input));
+}
+
+export function createTauriQuery<
+	TCommand extends CommandName,
+	TData = CommandResult<TCommand>,
+	TQueryKey extends QueryKey = QueryKey,
+	TError = AppError
+>(commandName: TCommand, config: TauriQueryOptions<TCommand, TData, TQueryKey, TError>) {
+	const { input, queryKey, meta, ...options } = config;
+
+	const queryClient = useQueryClient();
+
+	const resolveKey = () =>
+		(typeof queryKey === 'function' ? queryKey() : queryKey) ??
+		createQueryKey<TCommand, TQueryKey>(commandName, resolveInput(input));
+
+	function invalidate() {
+		return queryClient.invalidateQueries({ queryKey: resolveKey() });
+	}
+
+	return createQuery(() => {
+		const finalQueryKey = resolveKey();
+
+		return {
+			queryKey: finalQueryKey,
+			queryFn: buildQueryFn(commandName, input),
+			...options,
+			meta: {
+				...meta,
+				invalidate
+			}
+		};
+	});
+}
+
+/**
+ * Prefetches a query with automatic Tauri invoke integration
+ * Only prefetches if the data is not already cached
+ */
+export async function prefetchTauriQuery<
+	TCommand extends CommandName,
+	TQueryKey extends QueryKey = QueryKey
+>(
+	queryClient: QueryClient,
+	commandName: TCommand,
+	config: TauriFetchQueryOptions<TCommand, TQueryKey>
+) {
+	const { queryKey, input, ...fetchOptions } = config;
+
+	const resolvedInput = resolveInput(input);
+	const finalQueryKey = queryKey ?? createQueryKey<TCommand, TQueryKey>(commandName, resolvedInput);
+
+	// Check if data already exists in cache
+	const existingData = queryClient.getQueryData(finalQueryKey);
+	if (existingData !== undefined) {
+		return;
+	}
+
+	return await queryClient.prefetchQuery({
+		queryKey: finalQueryKey,
+		queryFn: buildQueryFn(commandName, input),
+		...fetchOptions
+	});
+}
+
+/**
+ * Creates a prefetch function bound to a specific query configuration
+ */
+export function createTauriPrefetcher<
+	TCommand extends CommandName,
+	TQueryKey extends QueryKey = QueryKey
+>(
+	commandName: TCommand,
+	config: Pick<TauriFetchQueryOptions<TCommand, TQueryKey>, 'queryKey' | 'input'>
+) {
+	return (
+		queryClient: QueryClient,
+		options?: Omit<TauriFetchQueryOptions<TCommand, TQueryKey>, 'queryKey' | 'input'>
+	) => {
+		return prefetchTauriQuery(queryClient, commandName, {
+			...config,
+			...options
+		});
+	};
+}
+
+/**
+ * Creates a debounced prefetch function for Tauri commands
+ * Useful for prefetching on hover to avoid excessive calls on quick mouse movements
+ *
+ * @param queryClient - TanStack Query client instance
+ * @param commandName - The Tauri command to prefetch
+ * @param config - Query configuration including input resolver and fetch options
+ * @param delay - Debounce delay in milliseconds (default: 200ms)
+ * @returns A debounced prefetch function that cancels pending calls
+ *
+ * @example
+ * const debouncedPrefetch = createDebouncedTauriPrefetcher(
+ *   queryClient,
+ *   'getBranchList',
+ *   { input: () => ({ repoId: '123' }) },
+ *   200
+ * );
+ *
+ * // On hover - only executes after 200ms of no calls
+ * element.onmouseenter = () => debouncedPrefetch();
+ */
+export function createDebouncedTauriPrefetcher<
+	TCommand extends CommandName,
+	TQueryKey extends QueryKey = QueryKey
+>(
+	queryClient: QueryClient,
+	commandName: TCommand,
+	config: TauriFetchQueryOptions<TCommand, TQueryKey>,
+	delay: number = 200
+) {
+	return debounce(() => {
+		return prefetchTauriQuery(queryClient, commandName, config);
+	}, delay);
+}

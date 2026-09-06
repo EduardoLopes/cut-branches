@@ -11,14 +11,16 @@ const config = {
 			strict: false
 		}),
 		alias: {
-			'@pindoba/panda': './styled-system/*',
+			'@pindoba/styled-system': './styled-system/*',
+			$core: './src/core',
 			$domains: './src/domains',
 			$ui: './src/ui',
 			$utils: './src/utils',
 			$services: './src/services',
-			$store: './src/store',
-			$actions: './src/actions',
-			$components: './src/components'
+			$components: './src/components',
+			$infrastructure: './src/infrastructure',
+			$types: './src/types',
+			$contracts: './tests/contracts'
 		}
 	}
 };

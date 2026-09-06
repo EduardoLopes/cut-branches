@@ -7,6 +7,10 @@ Cut Branches is a desktop application built with Tauri (Rust backend) and Svelte
 - [System Overview](system-overview.md) - High-level architecture of the application
 - [Component Diagram](component-diagram.md) - Detailed view of internal components
 
+## Project
+
+- [Roadmap](roadmap.md) - Planned and deliberately deferred work
+
 ## Key Features
 
 1. View all branches in a Git repository with their details (last commit, author, date)

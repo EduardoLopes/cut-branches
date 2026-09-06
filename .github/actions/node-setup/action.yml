@@ -1,17 +1,24 @@
 name: 'Node Setup'
 description: 'Setup Node.js environment'
 
+inputs:
+  playwright:
+    description: 'Install the Playwright browsers needed by the vitest browser-mode suite.'
+    required: false
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6
 
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
-        node-version: 'lts/*'
-        cache: 'pnpm'
+        # Track the version the project develops against rather than whatever
+        # is currently LTS; vite requires >= 22.12.
+        node-version-file: '.nvmrc'
 
     - name: Enable corepack
       run: corepack enable
@@ -36,24 +43,13 @@ runs:
         pnpm config set node-linker hoisted
       shell: pwsh
 
-    - uses: actions/cache@v4
+    - uses: actions/cache@v6
       name: Setup pnpm store cache
       with:
         path: ${{ steps.pnpm-cache-dir.outputs.STORE_PATH }}
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ runner.os }}-pnpm-store-
-
-    - uses: actions/cache@v4
-      name: Cache node_modules
-      if: runner.os != 'Windows'
-      with:
-        path: |
-          **/node_modules
-          !**/node_modules/.cache
-        key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-modules-
 
     - name: Install Dependencies
       if: runner.os != 'Windows'
@@ -65,3 +61,35 @@ runs:
       run: |
         pnpm install --frozen-lockfile
       shell: pwsh
+
+    # The vitest suite runs in browser mode against chromium. `onlyBuiltDependencies: []`
+    # blocks Playwright's postinstall, so the browser has to be fetched explicitly or the
+    # run dies with "Executable doesn't exist at .../chromium_headless_shell".
+    # Assigned first rather than inlined into the echo, so a failure here stops the
+    # job instead of silently writing an empty version into the cache key.
+    - name: Resolve Playwright version
+      if: inputs.playwright == 'true'
+      id: playwright-version
+      run: |
+        VERSION="$(node -p "require('playwright/package.json').version")"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Cache Playwright browsers
+      if: inputs.playwright == 'true'
+      id: playwright-cache
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+
+    - name: Install Playwright browsers
+      if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit != 'true'
+      run: pnpm exec playwright install --with-deps chromium
+      shell: bash
+
+    # A cache hit restores the browser binaries but not the apt packages they link against.
+    - name: Install Playwright system dependencies
+      if: inputs.playwright == 'true' && steps.playwright-cache.outputs.cache-hit == 'true'
+      run: pnpm exec playwright install-deps chromium
+      shell: bash

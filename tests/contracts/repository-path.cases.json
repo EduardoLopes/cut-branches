@@ -1,0 +1,18 @@
+{
+	"description": "Shared test cases for RepositoryPath Value Object. Both FE (src/core/repository-path.ts) and BE (src-tauri/src/domains/repository_management/core/models/repository_path.rs) must agree: every 'valid' input is accepted, every 'invalid' input is rejected. Validation is syntactic only — does not check filesystem existence.",
+	"valid": [
+		"/path/to/repo",
+		"/",
+		"./relative/path",
+		"../parent/path",
+		"repo",
+		"C:\\Users\\dev\\repo",
+		"/path with space/repo",
+		"/path/with-dashes/repo",
+		"/path/with.dots/repo"
+	],
+	"invalid": [
+		{ "input": "", "reason": "empty" },
+		{ "input": "   ", "reason": "whitespace only" }
+	]
+}

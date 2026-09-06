@@ -33,12 +33,35 @@ pub trait GitCommand {
     ) -> std::io::Result<std::process::Output>;
 }
 
+/// A `git` command with git's own hook environment scrubbed.
+///
+/// Git exports `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` (and friends) into
+/// hook processes, and the pre-commit hook runs this suite. Inherited, they
+/// redirect every nested git call from the temp repo under test to the
+/// *project* repository — which is how a test's `git commit -m "Initial
+/// commit"` can land on the real branch.
+pub fn git_command() -> Command {
+    let mut cmd = Command::new("git");
+    for var in [
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_COMMON_DIR",
+        "GIT_PREFIX",
+    ] {
+        cmd.env_remove(var);
+    }
+    cmd
+}
+
 /// Real implementation of GitCommand that uses the actual git command
 pub struct RealGitCommand;
 
 impl GitCommand for RealGitCommand {
     fn init(&self, path: &std::path::Path) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
+        git_command()
             .args(["init", "--initial-branch=main"])
             .current_dir(path)
             .status()
@@ -50,17 +73,14 @@ impl GitCommand for RealGitCommand {
         key: &str,
         value: &str,
     ) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
+        git_command()
             .args(["config", "--local", key, value])
             .current_dir(path)
             .status()
     }
 
     fn add(&self, path: &std::path::Path, file: &str) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
-            .args(["add", file])
-            .current_dir(path)
-            .status()
+        git_command().args(["add", file]).current_dir(path).status()
     }
 
     fn commit(
@@ -68,7 +88,7 @@ impl GitCommand for RealGitCommand {
         path: &std::path::Path,
         message: &str,
     ) -> std::io::Result<std::process::ExitStatus> {
-        Command::new("git")
+        git_command()
             .args(["commit", "-m", message])
             .env("GIT_AUTHOR_NAME", "Test User")
             .env("GIT_AUTHOR_EMAIL", "test@example.com")
@@ -83,7 +103,7 @@ impl GitCommand for RealGitCommand {
         path: &std::path::Path,
         args: &[&str],
     ) -> std::io::Result<std::process::Output> {
-        let mut cmd = Command::new("git");
+        let mut cmd = git_command();
         cmd.arg("rev-parse").args(args).current_dir(path);
         cmd.output()
     }
@@ -93,7 +113,7 @@ impl GitCommand for RealGitCommand {
         path: &std::path::Path,
         args: &[&str],
     ) -> std::io::Result<std::process::Output> {
-        let mut cmd = Command::new("git");
+        let mut cmd = git_command();
         cmd.arg("branch").args(args).current_dir(path);
         cmd.output()
     }
@@ -174,6 +194,135 @@ fn setup_test_repo_with_git_command(git: &dyn GitCommand) -> tempfile::TempDir {
     println!("Created repo with current branch: {}", current_branch);
 
     // Return the temp directory
+    dir
+}
+
+/// Runs a git command in `path` with a fixed test identity, asserting
+/// success and returning trimmed stdout.
+#[cfg(test)]
+pub fn run_git(path: &std::path::Path, args: &[&str]) -> String {
+    let output = git_command()
+        .args(args)
+        .env("GIT_AUTHOR_NAME", "Test User")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test User")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .current_dir(path)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git {:?} failed: {}",
+        args,
+        String::from_utf8_lossy(&output.stderr)
+    );
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
+/// Writes `content` to `file`, commits it with a fixed date (so ordering is
+/// deterministic), and returns the new commit's full SHA.
+#[cfg(test)]
+pub fn commit_file(
+    path: &std::path::Path,
+    file: &str,
+    content: &str,
+    message: &str,
+    date: &str,
+) -> String {
+    let file_path = path.join(file);
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent).unwrap();
+    }
+    fs::write(file_path, content).unwrap();
+    run_git(path, &["add", file]);
+    let output = git_command()
+        .args(["commit", "-m", message])
+        .env("GIT_AUTHOR_NAME", "Test User")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test User")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .env("GIT_AUTHOR_DATE", date)
+        .env("GIT_COMMITTER_DATE", date)
+        .current_dir(path)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git commit failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    run_git(path, &["rev-parse", "HEAD"])
+}
+
+/// Builds a deterministic multi-branch repository for commit-history tests:
+///
+/// ```text
+/// main:      C1 ── C2 ── C3 ──────── M   (merge of feature/b, tag v1.0 on M)
+///                    \          \   /
+/// feature/a:          A1 ── A2   B1      (feature/b, merged; ahead 0)
+/// ```
+///
+/// * `feature/a` branched at C2 with 2 commits → ahead 2 / behind 3 vs main.
+/// * `feature/b` branched at C3, merged back via merge commit `M` → ahead 0 / behind 1.
+/// * Tag `v1.0` points at `M`; `refs/remotes/origin/main` is faked onto `M`.
+/// * 7 commits total, strictly increasing commit dates.
+#[cfg(test)]
+pub fn setup_history_test_repo() -> tempfile::TempDir {
+    let dir = setup_test_repo(); // C1 "Initial commit" on main
+    let path = dir.path();
+
+    commit_file(path, "a.txt", "2", "main: second", "2024-01-02T10:00:00Z");
+    run_git(path, &["branch", "feature/a"]);
+    commit_file(path, "b.txt", "3", "main: third", "2024-01-03T10:00:00Z");
+
+    run_git(path, &["checkout", "feature/a"]);
+    commit_file(
+        path,
+        "fa1.txt",
+        "1",
+        "feature/a: one",
+        "2024-01-04T10:00:00Z",
+    );
+    commit_file(
+        path,
+        "fa2.txt",
+        "2",
+        "feature/a: two",
+        "2024-01-05T10:00:00Z",
+    );
+
+    run_git(path, &["checkout", "main"]);
+    run_git(path, &["checkout", "-b", "feature/b"]);
+    commit_file(
+        path,
+        "fb1.txt",
+        "1",
+        "feature/b: one",
+        "2024-01-06T10:00:00Z",
+    );
+
+    run_git(path, &["checkout", "main"]);
+    let merge_output = git_command()
+        .args(["merge", "--no-ff", "feature/b", "-m", "Merge feature/b"])
+        .env("GIT_AUTHOR_NAME", "Test User")
+        .env("GIT_AUTHOR_EMAIL", "test@example.com")
+        .env("GIT_COMMITTER_NAME", "Test User")
+        .env("GIT_COMMITTER_EMAIL", "test@example.com")
+        .env("GIT_AUTHOR_DATE", "2024-01-07T10:00:00Z")
+        .env("GIT_COMMITTER_DATE", "2024-01-07T10:00:00Z")
+        .current_dir(path)
+        .output()
+        .unwrap();
+    assert!(
+        merge_output.status.success(),
+        "git merge failed: {}",
+        String::from_utf8_lossy(&merge_output.stderr)
+    );
+
+    run_git(path, &["tag", "v1.0"]);
+    let main_sha = run_git(path, &["rev-parse", "main"]);
+    run_git(path, &["update-ref", "refs/remotes/origin/main", &main_sha]);
+
     dir
 }
 

@@ -28,8 +28,8 @@ export default ts.config(
 			'package-lock.json',
 			'yarn.lock',
 			'styled-system',
-			'html',
-			'src/lib/bindings.ts'
+			'.vitest',
+			'src/infrastructure/bindings.ts'
 		]
 	},
 	{
@@ -44,6 +44,18 @@ export default ts.config(
 					destructuredArrayIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
 					ignoreRestSiblings: true
+				}
+			],
+			// Route templates hide a real bug: a repository id is an opaque backend
+			// string, so `resolve(`/repos/${id}`)` leaves `#`, `?` or `%` raw and the
+			// route silently resolves to nothing. The helpers percent-encode it.
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						"CallExpression[callee.name='resolve'] > TemplateLiteral[quasis.0.value.raw='/repos/']",
+					message:
+						'Do not build a repository route from a template literal. Use resolveRepositoryPath()/resolveRepositorySubPath() from $lib/repository-route so the id is percent-encoded.'
 				}
 			],
 			'import/order': [
@@ -87,7 +99,7 @@ export default ts.config(
 			}
 		}
 	},
-	{ languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+	{ languageOptions: { globals: { ...globals.builtin, ...globals.browser, ...globals.node } } },
 	js.configs.recommended,
 	...ts.configs.recommended,
 	...svelte.configs.recommended,

@@ -1,43 +1,23 @@
 <script lang="ts">
 	import '../styles/app.css';
 	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
+	import Toaster from '@pindoba/svelte-toast';
 	import { type Snippet } from 'svelte';
-	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
+	import AppShell from '$components/app-shell.svelte';
 	import Providers from '$components/providers.svelte';
-	import { RepositoryStore } from '$domains/repository-management/store/repository.svelte';
+	import RedirectToApp from '$domains/onboarding/components/redirect-to-app.svelte';
+	import WelcomeModal from '$domains/onboarding/components/welcome-modal.svelte';
+	import AddRepositoryMenu from '$domains/repository-management/components/add-repository-menu.svelte';
+	import SidebarCollapseToggle from '$domains/repository-navigation/components/sidebar-collapse-toggle.svelte';
 	import Footer from '$ui/core/footer.svelte';
-	import { css } from '@pindoba/panda/css';
+	import WindowTitlebar from '$ui/core/window-titlebar.svelte';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		children?: Snippet;
 	}
 
 	let { children }: Props = $props();
-
-	// Add onMount to ensure repositories are loaded when the app starts
-	onMount(() => {
-		// This ensures repositories data is loaded from localStorage
-		RepositoryStore.loadRepositories();
-	});
-
-	const idExists = $derived(
-		page.params.id ? RepositoryStore.repositories?.has(page.params.id) : false
-	);
-
-	const first = $derived(RepositoryStore.repositories?.list[0]);
-
-	$effect(() => {
-		if (RepositoryStore.repositories?.list.length === 0) {
-			goto(resolve('/add-first'));
-		} else {
-			if (first && !idExists) {
-				goto(resolve(`/repos/${first}`));
-			}
-		}
-	});
 </script>
 
 <ThemeModeSelectScript />
@@ -47,18 +27,38 @@
 		class={css({
 			height: '100vh',
 			display: 'flex',
+			position: 'relative',
 			flexDirection: 'column',
 			overflow: 'hidden',
-			_light: {
-				background: 'neutral.200'
-			},
-			_dark: {
-				background: 'neutral.50'
-			}
+			// The backdrop the sidebar panel floats on. A semantic token, not a raw
+			// palette step: `neutral.50`/`200` don't invert, so in dark mode the
+			// strip around the panel came out light — invisible only while the
+			// titlebar was painted over it.
+			background: 'neutral.surface.base'
 		})}
 	>
-		{@render children?.()}
+		<!-- macOS only, and above the sidebar rather than inside it: collapsed,
+		     the rail is narrower than the traffic lights themselves, so a toggle
+		     beside them can't belong to the sidebar's own column. -->
+		<WindowTitlebar>
+			<SidebarCollapseToggle size="xs" />
+		</WindowTitlebar>
+
+		<!-- The sidebar + main grid wraps every route, so `/repos`, `/cleanup` and
+		     `/settings` no longer each need their own identical layout file. -->
+		<AppShell>
+			{@render children?.()}
+		</AppShell>
+
+		<RedirectToApp />
+
+		<WelcomeModal>
+			{#snippet actionButton()}
+				<AddRepositoryMenu size="md" emphasis="primary" />
+			{/snippet}
+		</WelcomeModal>
 
 		<Footer />
 	</div>
+	<Toaster position="top-right" enableHistory />
 </Providers>

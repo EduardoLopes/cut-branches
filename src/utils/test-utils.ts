@@ -1,8 +1,36 @@
+import type { QueryClientConfig } from '@tanstack/svelte-query';
+import type { Component, ComponentProps } from 'svelte';
 import { vi, type MockedFunction } from 'vitest';
-import type { Branch, Repository } from '$services/common';
+import { render } from 'vitest-browser-svelte';
+import TestWrapper from '$components/test-wrapper.svelte';
+import type { Branch } from '$infrastructure/bindings';
+import type { Repository } from '$types/repository';
 
 // Type for the mocked invoke function
 export type MockedInvoke = MockedFunction<typeof import('@tauri-apps/api/core').invoke>;
+
+/**
+ * Custom render function that wraps components with TanStack Query's QueryClientProvider
+ *
+ * @param component - The Svelte component to render
+ * @param options - Props to pass to the component
+ * @param queryClient - Optional custom QueryClient instance (a fresh one is created by default)
+ * @returns The rendered screen with locator methods
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function renderWithTestWrapper<T extends Component<any, any, string>>(
+	component: T,
+	props?: ComponentProps<T>,
+	queryClientConfig?: QueryClientConfig
+) {
+	// Render the component wrapped with QueryClientProvider
+	// Let vitest-browser-svelte handle the target container automatically
+	return render(TestWrapper, {
+		component,
+		componentProps: props,
+		queryClientOptions: queryClientConfig
+	});
+}
 
 /**
  * Cast a mocked function to the proper MockedInvoke type
@@ -19,15 +47,21 @@ export const mockDataFactory = {
 	branch: (overrides: Partial<Branch> = {}): Branch => ({
 		name: 'test-branch',
 		current: false,
+		upstream: null,
 		lastCommit: {
-			sha: 'abc123',
-			shortSha: 'abc123'.substring(0, 7),
+			sha: 'abc1234567890def1234567890abcdef12345678',
+			shortSha: 'abc1234',
 			date: '2023-01-01T00:00:00Z',
 			message: 'Test commit',
+			summary: 'Test commit',
 			author: 'Test User',
 			email: 'test@example.com'
 		},
 		fullyMerged: false,
+		deletedAt: null,
+		isReachable: null,
+		isSelected: false,
+		isLocked: false,
 		...overrides
 	}),
 

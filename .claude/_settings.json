@@ -1,0 +1,28 @@
+{
+	"hooks": {
+		"UserPromptSubmit": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "/Users/eduardolopes/Projects/cut-branches/.claude/hooks/code-design-validator.sh"
+					}
+				]
+			}
+		],
+		"Stop": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "/Users/eduardolopes/Projects/cut-branches/.claude/hooks/test-runner.sh"
+					},
+					{
+						"type": "command",
+						"command": "/Users/eduardolopes/Projects/cut-branches/.claude/hooks/type-checker.sh"
+					}
+				]
+			}
+		]
+	}
+}

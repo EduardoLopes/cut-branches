@@ -1,13 +1,13 @@
 [package]
 name = "app"
-version = "0.1.0"
+version = "0.5.0"
 description = "A Tauri App"
 authors = ["Eduardo Lopes"]
 license = ""
 repository = ""
 default-run = "app"
 edition = "2021"
-rust-version = "1.59"
+rust-version = "1.77.2"
 
 [lib]
 name = "app"
@@ -26,18 +26,35 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
+async-trait = "0.1"
 tauri = { version = "2", features = [] }
-execute = "0.2.9"
-thiserror = "1.0.40"
+execute = "0.3"
+thiserror = "2"
 tokio = { version = "1.11.0", features = ["full"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
-git2 = { version = "0.20.2", default-features = false, features = ["https"] }
-chrono = "0.4"
-specta = { version = "=2.0.0-rc.22", features = ["chrono"] }
-tauri-specta = { version = "=2.0.0-rc.21", features = ["javascript", "typescript"] }
-specta-typescript = "=0.0.9"
+git2 = { version = "0.21", default-features = false }
+chrono = { version = "0.4", features = ["serde"] }
+specta = { version = "=2.0.0-rc.25", features = ["chrono"] }
+tauri-specta = { version = "=2.0.0-rc.25", features = ["javascript", "typescript"] }
+specta-typescript = "=0.0.12"
+diesel = { version = "2.3.2", features = ["sqlite", "returning_clauses_for_sqlite_3_35", "chrono", "r2d2"] }
+diesel_migrations = "2.3"
+libsqlite3-sys = { version = "0.38", features = ["bundled"] }
+notify = "8"
+notify-debouncer-full = "0.7"
+tauri-plugin-opener = "2.5.4"
+tauri-plugin-log = "2.8.0"
+tauri-plugin-os = "2"
+log = "0.4.33"
+trash = "5"
+ignore = "0.4"
+jwalk = "0.9"
+tree-sitter = "0.27"
+tree-sitter-typescript = "0.23.2"
+tree-sitter-javascript = "0.25.0"
+streaming-iterator = "0.1"
 
 [dev-dependencies]
 tempfile = "3.3"
@@ -50,6 +67,9 @@ default = ["custom-protocol"]
 # this feature is used for production builds where `devPath` points to the filesystem
 # DO NOT remove this
 custom-protocol = ["tauri/custom-protocol"]
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2.4.2"
 
 # Custom script aliases
 [package.metadata.scripts]

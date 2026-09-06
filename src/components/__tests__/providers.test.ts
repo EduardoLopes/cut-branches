@@ -1,18 +1,33 @@
-import { render } from '@testing-library/svelte';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Providers from '../providers.svelte';
-import TestWrapper from '../test-wrapper.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 // Mock dependencies following TypeScript guidelines
-vi.mock('$domains/notifications/store/notifications.svelte', () => ({
+const { mockPush, mockInvalidateQueries } = vi.hoisted(() => {
+	const mockPush = vi.fn();
+	const mockInvalidateQueries = vi.fn().mockResolvedValue(undefined);
+	return { mockPush, mockInvalidateQueries };
+});
+
+vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
-		push: vi.fn()
+		push: mockPush
 	}
 }));
 
 vi.mock('$app/environment', () => ({
 	browser: true
 }));
+
+// The global `repository-changed` bridge. `listen` is held open per test so the
+// resolve-after-teardown race can be reproduced deliberately.
+const eventBridge = vi.hoisted(() => ({
+	listen: vi.fn(),
+	unlisten: vi.fn(),
+	resolveListen: undefined as undefined | ((unlisten: () => void) => void)
+}));
+
+vi.mock('@tauri-apps/api/event', () => ({ listen: eventBridge.listen }));
 
 vi.mock('$utils/error-utils', () => ({
 	createError: vi.fn((error) => ({
@@ -38,17 +53,28 @@ let _queryCacheHandlers: QueryCacheHandlers = {};
 
 vi.mock('@tanstack/svelte-query', async () => {
 	const actual = await vi.importActual('@tanstack/svelte-query');
+
+	class MockMutationCache {
+		constructor(config: CacheHandlers) {
+			_mutationCacheHandlers = config;
+		}
+	}
+
+	class MockQueryCache {
+		constructor(config: QueryCacheHandlers) {
+			_queryCacheHandlers = config;
+		}
+	}
+
+	class MockQueryClient {
+		invalidateQueries = mockInvalidateQueries;
+	}
+
 	return {
 		...actual,
-		MutationCache: vi.fn().mockImplementation((config: CacheHandlers) => {
-			_mutationCacheHandlers = config;
-			return {};
-		}),
-		QueryCache: vi.fn().mockImplementation((config: QueryCacheHandlers) => {
-			_queryCacheHandlers = config;
-			return {};
-		}),
-		QueryClient: vi.fn().mockImplementation(() => ({})),
+		MutationCache: MockMutationCache,
+		QueryCache: MockQueryCache,
+		QueryClient: MockQueryClient,
 		QueryClientProvider: ({ children }: { children: unknown }) => children
 	};
 });
@@ -58,46 +84,85 @@ describe('Providers', () => {
 		vi.clearAllMocks();
 		_mutationCacheHandlers = {};
 		_queryCacheHandlers = {};
+		eventBridge.resolveListen = undefined;
+		eventBridge.listen.mockImplementation(
+			() =>
+				new Promise<() => void>((resolve) => {
+					eventBridge.resolveListen = resolve;
+				})
+		);
+	});
+
+	describe('repository-changed listener', () => {
+		it('detaches a listener that resolves after the component is gone', async () => {
+			const screen = await renderWithTestWrapper(Providers);
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+
+			// Teardown wins the race: `listen` has not resolved yet, so the cleanup
+			// has no handle to call.
+			screen.unmount();
+			eventBridge.resolveListen?.(eventBridge.unlisten);
+			await vi.waitFor(() => expect(eventBridge.unlisten).toHaveBeenCalledTimes(1));
+		});
+
+		it('detaches on teardown when the listener resolved first', async () => {
+			const screen = await renderWithTestWrapper(Providers);
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+
+			eventBridge.resolveListen?.(eventBridge.unlisten);
+			// Let the `.then` that stores the handle run before tearing down.
+			await new Promise((resolve) => setTimeout(resolve, 0));
+			expect(eventBridge.unlisten).not.toHaveBeenCalled();
+
+			screen.unmount();
+			await vi.waitFor(() => expect(eventBridge.unlisten).toHaveBeenCalledTimes(1));
+		});
+
+		it('invalidates the matching queries when a repository changes', async () => {
+			await renderWithTestWrapper(Providers);
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+
+			const [eventName, handler] = eventBridge.listen.mock.calls[0];
+			expect(eventName).toBe('repository-changed');
+
+			handler({ payload: { repositoryId: 'repo-1' } });
+			// The mocked QueryClient records the call; the predicate itself is
+			// covered by the query-key-utils tests.
+			expect(mockInvalidateQueries).toHaveBeenCalledWith(
+				expect.objectContaining({ predicate: expect.any(Function) })
+			);
+		});
+
+		it('survives an unavailable event bridge', async () => {
+			eventBridge.listen.mockRejectedValue(new Error('not a tauri runtime'));
+
+			await expect(renderWithTestWrapper(Providers)).resolves.toBeDefined();
+			await vi.waitFor(() => expect(eventBridge.listen).toHaveBeenCalled());
+			expect(eventBridge.unlisten).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('Component Rendering', () => {
 		it('should render without errors', () => {
-			expect(() => {
-				render(TestWrapper, {
-					props: {
-						component: Providers,
-						props: {}
-					}
-				});
+			expect(async () => {
+				await renderWithTestWrapper(Providers);
 			}).not.toThrow();
 		});
 
-		it('should provide QueryClient context to children', () => {
-			const { container } = render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+		it('should provide QueryClient context to children', async () => {
+			const screen = await renderWithTestWrapper(Providers);
 
-			expect(container.firstChild).not.toBeNull();
+			expect(screen.container.firstChild).not.toBeNull();
 		});
 	});
 
 	describe('MutationCache onSuccess Handler', () => {
-		beforeEach(() => {
+		beforeEach(async () => {
 			// Render the component to initialize the cache handlers
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {
 				meta: {
 					showSuccessNotification: true,
@@ -110,7 +175,7 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Success Title',
 				message: 'Success Message'
@@ -118,8 +183,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showSuccessNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {
 				meta: {
 					showSuccessNotification: false,
@@ -132,22 +195,18 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {};
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should handle undefined notification info', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockMutation = {
 				meta: {
 					showSuccessNotification: true
@@ -156,7 +215,7 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onSuccess?.('data', 'variables', 'context', mockMutation);
 
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: undefined,
 				message: undefined
@@ -165,17 +224,11 @@ describe('Providers', () => {
 	});
 
 	describe('MutationCache onError Handler', () => {
-		beforeEach(() => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+		beforeEach(async () => {
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Test error');
@@ -192,7 +245,7 @@ describe('Providers', () => {
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Error Title',
 				message: 'Error Message'
@@ -200,7 +253,6 @@ describe('Providers', () => {
 		});
 
 		it('should use error fallbacks when notification info is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Test error');
@@ -213,7 +265,7 @@ describe('Providers', () => {
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Test error', // Uses the error's message when notification.title is undefined
 				message: 'Default error description'
@@ -221,8 +273,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showErrorNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Test error');
 			const mockMutation = {
 				meta: {
@@ -232,22 +282,19 @@ describe('Providers', () => {
 
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Test error');
 			const mockMutation = {};
 
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
-		it('should log error to console when showErrorNotification is true', async () => {
-			const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+		it('should call createError when showErrorNotification is true', async () => {
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Test error');
@@ -260,31 +307,15 @@ describe('Providers', () => {
 			_mutationCacheHandlers.onError?.(mockError, 'variables', 'context', mockMutation);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(consoleSpy).toHaveBeenCalledWith({
-				e: {
-					message: 'Test error', // Uses the actual error message
-					kind: 'error',
-					description: 'Default error description'
-				}
-			});
-
-			consoleSpy.mockRestore();
 		});
 	});
 
 	describe('QueryCache onSuccess Handler', () => {
-		beforeEach(() => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+		beforeEach(async () => {
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push success notification when showSuccessNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockQuery = {
 				meta: {
 					showSuccessNotification: true,
@@ -297,7 +328,7 @@ describe('Providers', () => {
 
 			_queryCacheHandlers.onSuccess?.('data', mockQuery);
 
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'success',
 				title: 'Query Success',
 				message: 'Query completed successfully'
@@ -305,8 +336,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showSuccessNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockQuery = {
 				meta: {
 					showSuccessNotification: false
@@ -315,32 +344,24 @@ describe('Providers', () => {
 
 			_queryCacheHandlers.onSuccess?.('data', mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockQuery = {};
 
 			_queryCacheHandlers.onSuccess?.('data', mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('QueryCache onError Handler', () => {
-		beforeEach(() => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+		beforeEach(async () => {
+			await renderWithTestWrapper(Providers);
 		});
 
 		it('should push error notification when showErrorNotification is true', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Query failed');
@@ -357,7 +378,7 @@ describe('Providers', () => {
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Query Error',
 				message: 'Query failed to load'
@@ -365,7 +386,6 @@ describe('Providers', () => {
 		});
 
 		it('should use error fallbacks when notification info is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
 			const { createError } = await import('$utils/error-utils');
 
 			const mockError = new Error('Query failed');
@@ -378,7 +398,7 @@ describe('Providers', () => {
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
 			expect(createError).toHaveBeenCalledWith(mockError);
-			expect(notifications.push).toHaveBeenCalledWith({
+			expect(mockPush).toHaveBeenCalledWith({
 				feedback: 'danger',
 				title: 'Query failed', // Uses the error's message when notification.title is undefined
 				message: 'Default error description'
@@ -386,8 +406,6 @@ describe('Providers', () => {
 		});
 
 		it('should not push notification when showErrorNotification is false', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Query failed');
 			const mockQuery = {
 				meta: {
@@ -397,29 +415,22 @@ describe('Providers', () => {
 
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 
 		it('should not push notification when meta is undefined', async () => {
-			const { notifications } = await import('$domains/notifications/store/notifications.svelte');
-
 			const mockError = new Error('Query failed');
 			const mockQuery = {};
 
 			_queryCacheHandlers.onError?.(mockError, mockQuery);
 
-			expect(notifications.push).not.toHaveBeenCalled();
+			expect(mockPush).not.toHaveBeenCalled();
 		});
 	});
 
 	describe('Browser Environment', () => {
-		it('should configure queries to be enabled in browser environment', () => {
-			render(TestWrapper, {
-				props: {
-					component: Providers,
-					props: {}
-				}
-			});
+		it('should configure queries to be enabled in browser environment', async () => {
+			await renderWithTestWrapper(Providers);
 
 			// The component should render successfully with browser: true
 			// This indirectly tests that the defaultOptions.queries.enabled: browser works

@@ -1,7 +1,13 @@
 {
-	"$schema": "https://unpkg.com/@changesets/config@3.0.3/schema.json",
-	"changelog": ["@changesets/changelog-github", { "repo": "eduardolopes/cut-branches" }],
-	"commit": ["./commit.cjs", { "customOption": true }],
+	"$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
+	"changelog": [
+		"@changesets/changelog-github",
+		{
+			"repo": "eduardolopes/cut-branches",
+			"template": "\n\n- {pull} {commit} - {summary} (Thanks {authors})"
+		}
+	],
+	"commit": false,
 	"fixed": [],
 	"linked": [],
 	"access": "restricted",

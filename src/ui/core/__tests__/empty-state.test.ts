@@ -1,30 +1,31 @@
-import { render } from '@testing-library/svelte';
 import { describe, expect, test } from 'vitest';
 import EmptyState from '../empty-state.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 describe('EmptyState Component', () => {
-	test('renders message correctly', () => {
+	test('renders message correctly', async () => {
 		const message = 'No items found';
-		const { getByText } = render(EmptyState, {
-			props: { message }
+		const { getByText } = await renderWithTestWrapper(EmptyState, {
+			message
 		});
 
 		expect(getByText(message)).toBeInTheDocument();
 	});
 
-	test('uses the provided testId if specified', () => {
+	test('uses the provided testId if specified', async () => {
 		const message = 'No items found';
 		const testId = 'custom-test-id';
-		const { getByTestId } = render(EmptyState, {
-			props: { message, testId }
+		const { getByTestId } = await renderWithTestWrapper(EmptyState, {
+			message,
+			testId
 		});
 
 		expect(getByTestId(testId)).toBeInTheDocument();
 	});
 
-	test('renders component with default icon', () => {
-		const { container } = render(EmptyState, {
-			props: { message: 'No items found' }
+	test('renders component with default icon', async () => {
+		const { container } = await renderWithTestWrapper(EmptyState, {
+			message: 'No items found'
 		});
 
 		// Since we can't directly access the Icon component's internals in the test environment,
@@ -37,13 +38,11 @@ describe('EmptyState Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
-	test('renders component with custom icon', () => {
+	test('renders component with custom icon', async () => {
 		const customIcon = 'mdi:alert';
-		const { container } = render(EmptyState, {
-			props: {
-				message: 'No items found',
-				icon: customIcon
-			}
+		const { container } = await renderWithTestWrapper(EmptyState, {
+			message: 'No items found',
+			icon: customIcon
 		});
 
 		// Verify the component structure is correct
@@ -55,13 +54,11 @@ describe('EmptyState Component', () => {
 		expect(messageElement).toBeInTheDocument();
 	});
 
-	test('renders component with custom icon color', () => {
+	test('renders component with custom icon color', async () => {
 		const customColor = '#FF0000';
-		const { container } = render(EmptyState, {
-			props: {
-				message: 'No items found',
-				iconColor: customColor
-			}
+		const { container } = await renderWithTestWrapper(EmptyState, {
+			message: 'No items found',
+			iconColor: customColor
 		});
 
 		// Verify the component structure is correct

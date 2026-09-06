@@ -1,8 +1,5 @@
 pub mod commands;
+pub(crate) mod core;
+pub(crate) mod error;
 pub mod events;
-pub mod git;
-pub mod services;
-pub mod types;
-
-pub use commands::*;
-pub use events::*;
+pub(crate) mod infrastructure;

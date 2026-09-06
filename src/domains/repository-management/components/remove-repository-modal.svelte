@@ -1,55 +1,98 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import Loading from '@pindoba/svelte-loading';
+	import { useQueryClient } from '@tanstack/svelte-query';
+	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
-	import { getSearchBranchesStore } from '$domains/branch-management/store/search-branches.svelte';
-	import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
-	import { notifications } from '$domains/notifications/store/notifications.svelte';
-	import {
-		getRepositoryStore,
-		RepositoryStore
-	} from '$domains/repository-management/store/repository.svelte';
-	import type { Repository } from '$services/common';
+	import { resolve } from '$app/paths';
+	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import { resolveRepositoryPath } from '$lib/repository-route';
+	import { notifications } from '$services/notifications/notifications.svelte';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import DialogHeader from '$ui/patterns/dialog-header.svelte';
+	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';
-	import { debounce } from '$utils/svelte-runes-utils';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
-		currentRepo: Repository;
+		repositoryId: string;
+		/** Bindable visibility, controlled by the repository options menu. */
+		open?: boolean;
 	}
 
-	let open = $state(false);
+	let { repositoryId, open = $bindable(false) }: Props = $props();
 
-	let { currentRepo }: Props = $props();
+	const queryClient = useQueryClient();
+	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
 
-	const search = $derived(getSearchBranchesStore(currentRepo?.name));
-	const repository = $derived(getRepositoryStore(currentRepo?.name));
-	const selected = $derived(getSelectedBranchesStore(currentRepo?.name));
+	// Query for repositories list
+	const repositoriesQuery = createGetRepositoryListQuery();
+	const repositories = $derived(repositoriesQuery.data ?? []);
+
+	const deleteRepositoryMutation = createDeleteRepositoryMutation({
+		onSuccess: async () => {
+			const repoName = ensureString(getRepositoryQuery.data?.name);
+
+			await leaveRemovedRepository();
+			open = false;
+
+			// Show notification about repository removal
+			notifications.push({
+				title: 'Repository removed',
+				message: formatString('The repository {name} has been removed', { name: repoName }),
+				feedback: 'success'
+			});
+		},
+		onError: async (error) => {
+			// `repository_not_found` means the row is already gone — the route we are
+			// sitting on is just as dead as it would be after a success, so leave it
+			// the same way. Any other failure leaves the repository (and its route)
+			// intact; the error notification explains what happened.
+			if (error?.kind === 'repository_not_found') {
+				await leaveRemovedRepository();
+			}
+
+			open = false;
+		},
+		meta: { showErrorNotification: true }
+	});
+
+	/** Drops the removed repository's cache and moves off its now-dead route. */
+	async function leaveRemovedRepository() {
+		const deletedId = repositoryId;
+
+		if (deletedId) {
+			queryClient.cancelQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
+			queryClient.removeQueries({ queryKey: ['repository', 'getRepository', { id: deletedId }] });
+		}
+
+		const otherRepository = repositories.find((repository) => repository.id !== deletedId);
+
+		if (otherRepository) {
+			await goto(resolveRepositoryPath(otherRepository.id));
+		} else {
+			await goto(resolve('/repos'));
+		}
+	}
+
 	function handleRemove() {
-		open = false;
+		const repoId = repositoryId;
 
-		const repoName = ensureString(repository?.state?.name || currentRepo?.name);
+		if (!repoId) {
+			open = false;
+			notifications.push({
+				title: 'Error',
+				message: 'Repository ID is missing',
+				feedback: 'danger'
+			});
+			return;
+		}
 
-		// Clear stores first
-		selected?.clear();
-		search?.clear();
-		repository?.clear();
-
-		// Then remove from repository store
-		RepositoryStore.repositories?.delete([repoName]);
-
-		// Show notification about repository removal
-		notifications.push({
-			title: 'Repository removed',
-			message: formatString('The repository {name} has been removed', { name: repoName }),
-			feedback: 'success'
-		});
-
-		const first = RepositoryStore.repositories?.list[0];
-
-		goto(first ? `/repos/${first}` : `/add-first`);
+		// The dialog stays up until the mutation settles: closing first would strand
+		// the user on the repository's route with nothing but a toast if it failed.
+		deleteRepositoryMutation.mutate({ id: repoId });
 	}
 
 	function handleCancel() {
@@ -57,46 +100,55 @@
 	}
 </script>
 
-<Dialog
-	bind:open
-	title="Remove repository"
-	aria-label="Remove repository"
-	aria-describedby="Remove repository"
-	data-testid="remove-modal"
->
-	<p>
-		Are you sure you want to remove the repository <strong
-			class={css({
-				color: 'danger.800',
-				fontSize: 'lg'
-			})}>{currentRepo?.name}</strong
-		>?
-	</p>
-
-	<div
-		class={css({
-			display: 'flex',
-			justifyContent: 'flex-end',
-			gap: 'md'
-		})}
+<div use:portal>
+	<Dialog
+		bind:open
+		title="Remove repository"
+		aria-label="Remove repository"
+		aria-describedby="Remove repository"
+		data-testid="remove-modal"
+		showCloseButton={!deleteRepositoryMutation.isPending}
+		passThrough={{
+			root: {
+				style: css.raw({ width: '560px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
+			},
+			content: {
+				style: css.raw({
+					display: 'flex',
+					flexDirection: 'column',
+					gap: 'md'
+				})
+			}
+		}}
 	>
-		<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-remove">Cancel</Button>
-		<Button feedback="danger" autofocus onclick={handleRemove} data-testid="confirm-remove"
-			>Remove</Button
-		>
-	</div>
-</Dialog>
+		{#snippet header()}
+			<DialogHeader
+				title="Remove repository"
+				subtitle={`Are you sure you want to remove the repository ${getRepositoryQuery.data?.name ?? repositoryId}?`}
+				icon="lucide:folder-minus"
+			/>
+		{/snippet}
 
-<Button
-	emphasis="ghost"
-	size="sm"
-	feedback="danger"
-	onclick={debounce(() => {
-		open = true;
-	}, 200)}
-	shape="square"
-	data-testid="open-remove-modal"
->
-	<Icon icon="solar:close-circle-linear" width="24px" height="24px" />
-	<span class={visuallyHidden()}>Remove</span>
-</Button>
+		<DialogFooter>
+			<Button
+				emphasis="ghost"
+				onclick={handleCancel}
+				disabled={deleteRepositoryMutation.isPending}
+				data-testid="cancel-remove"
+			>
+				Cancel
+			</Button>
+			<Loading loading={deleteRepositoryMutation.isPending} variant="busy" indicator>
+				<Button
+					feedback="danger"
+					autofocus
+					onclick={handleRemove}
+					disabled={deleteRepositoryMutation.isPending}
+					data-testid="confirm-remove"
+				>
+					Remove
+				</Button>
+			</Loading>
+		</DialogFooter>
+	</Dialog>
+</div>

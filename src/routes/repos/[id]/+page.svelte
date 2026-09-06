@@ -1,14 +1,10 @@
 <script lang="ts">
+	// Thin composition root: the repository header, context tabs and options menu
+	// come from `+layout.svelte`; this page supplies only the active-branches body.
 	import { page } from '$app/state';
-	import Repository from '$domains/repository-management/views/repository-view.svelte';
-	import { css } from '@pindoba/panda/css';
+	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';
+
+	const id = $derived(page.params.id ?? '');
 </script>
 
-<div
-	class={css({
-		width: 'full',
-		height: 'full'
-	})}
->
-	<Repository id={page.params.id} />
-</div>
+<ActiveBranchesView {id} />

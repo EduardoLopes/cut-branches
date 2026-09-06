@@ -1,11 +1,15 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
-	import { getLockedBranchesStore } from '$domains/branch-management/store/locked-branches.svelte';
-	import { getSelectedBranchesStore } from '$domains/branch-management/store/selected-branches.svelte';
+	import Stamp from '@pindoba/svelte-stamp';
+	import Tooltip from '@pindoba/svelte-tooltip';
+	import { createAddLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-add-locked-branches-mutation';
+	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-remove-locked-branches-mutation';
+	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
+	import { createLockedBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-locked-branches-query';
 	import { formatString } from '$utils/string-utils';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import { css } from '@pindoba/styled-system/css';
+	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		branch: string;
@@ -15,54 +19,85 @@
 
 	let { branch, repositoryID, disabled = false }: Props = $props();
 
-	const selected = $derived(getSelectedBranchesStore(repositoryID));
-	const locked = $derived(getLockedBranchesStore(repositoryID));
+	const lockedQueryInput = $derived({ repoId: repositoryID ?? '' });
+
+	// Query for locked branches
+	const lockedQuery = createLockedBranchesQuery(() => lockedQueryInput);
+
+	// Mutations for locked branches - no need for manual invalidation
+	const addLockedMutation = createAddLockedBranchesMutation();
+
+	const removeLockedMutation = createRemoveLockedBranchesMutation();
+
+	// Mutations for selected branches (to remove when locking) - no need for manual invalidation
+	const updateSelectionMutation = createUpdateBranchSelectionBatchMutation();
+
+	// Computed state
+	const isLocked = $derived(lockedQuery.data && lockedQuery.data.branches.includes(branch));
+
+	// Handler
+	function toggleLock() {
+		if (!repositoryID) return;
+
+		if (isLocked) {
+			removeLockedMutation.mutate({ repoId: lockedQueryInput.repoId, branchNames: [branch] });
+		} else {
+			addLockedMutation.mutate({ repoId: lockedQueryInput.repoId, branchNames: [branch] });
+			updateSelectionMutation.mutate({
+				repoId: lockedQueryInput.repoId,
+				branchNames: [branch],
+				isSelected: false
+			});
+		}
+	}
 </script>
 
-<Button
-	size="xs"
-	shape="square"
-	emphasis={locked?.has(branch) ? 'primary' : 'secondary'}
-	class={css({
-		width: '26px',
-		height: '26px'
-	})}
-	passThrough={{
-		root: css.raw({
-			boxShadow: 'none'
-		})
-	}}
-	onclick={() => {
-		if (locked?.has(branch)) {
-			locked?.delete([branch]);
-		} else {
-			locked?.add([branch]);
-			selected?.delete([branch]);
-		}
-	}}
-	data-testid="lock-toggle-button"
-	aria-label={formatString('{action} branch {name}', {
-		action: locked?.has(branch) ? 'unlock' : 'lock',
+<Tooltip
+	content={formatString('{action} branch {name}', {
+		action: isLocked ? 'unlock' : 'lock',
 		name: branch
 	})}
-	{disabled}
 >
-	{#if locked?.has(branch)}
-		<div data-testid="lock-icon">
-			<Icon icon="lucide:lock" width="14px" height="14px" />
-		</div>
-	{/if}
+	{#snippet children(triggerProps)}
+		<Button
+			size="xs"
+			shape="square"
+			emphasis={isLocked ? 'primary' : 'secondary'}
+			class={css({
+				width: '24px',
+				height: '24px'
+			})}
+			onclick={toggleLock}
+			data-testid="lock-toggle-button"
+			aria-label={formatString('{action} branch {name}', {
+				action: isLocked ? 'unlock' : 'lock',
+				name: branch
+			})}
+			{disabled}
+			{...triggerProps}
+		>
+			{#if isLocked}
+				<div data-testid="lock-icon">
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:lock" width="14px" height="14px" />
+					</Stamp>
+				</div>
+			{/if}
 
-	{#if !locked?.has(branch)}
-		<div data-testid="unlock-icon">
-			<Icon icon="lucide:lock-open" width="14px" height="14px" />
-		</div>
-	{/if}
+			{#if !isLocked}
+				<div data-testid="unlock-icon">
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:lock-open" width="14px" height="14px" />
+					</Stamp>
+				</div>
+			{/if}
 
-	<span class={visuallyHidden()}>
-		{formatString('{action} branch {name}', {
-			action: locked?.has(branch) ? 'unlock' : 'lock',
-			name: branch
-		})}
-	</span>
-</Button>
+			<span class={visuallyHidden()}>
+				{formatString('{action} branch {name}', {
+					action: isLocked ? 'unlock' : 'lock',
+					name: branch
+				})}
+			</span>
+		</Button>
+	{/snippet}
+</Tooltip>

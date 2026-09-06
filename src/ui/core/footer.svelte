@@ -1,12 +1,28 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
+	import Attachment from '@pindoba/svelte-attachment';
+	import Button from '@pindoba/svelte-button';
+	import Panel from '@pindoba/svelte-panel';
+	import Stamp from '@pindoba/svelte-stamp';
 	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
+	import { $unreadCount as unreadCountAtom, toggleCenter } from '@pindoba/svelte-toast';
+	import Tooltip from '@pindoba/svelte-tooltip';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { intlFormat, intlFormatDistance } from 'date-fns';
 	import { onDestroy, onMount } from 'svelte';
-	import NotificationsPopover from '$domains/notifications/components/notifications-popover.svelte';
-	import { globalStore } from '$store/global-store.svelte';
-	import { css } from '@pindoba/panda/css';
-	import { spacer } from '@pindoba/panda/patterns';
+	import { page } from '$app/state';
+	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import { css } from '@pindoba/styled-system/css';
+	import { spacer, visuallyHidden } from '@pindoba/styled-system/patterns';
+
+	let unread = $state(0);
+	let ringKey = $state(0);
+	$effect(() =>
+		unreadCountAtom.subscribe((v) => {
+			if (v > unread) ringKey += 1;
+			unread = v;
+		})
+	);
 
 	let now = $state(Date.now());
 	let intervalID = 0;
@@ -21,24 +37,34 @@
 		clearInterval(intervalID);
 	});
 
+	const repositoryQuery = createGetRepositoryQuery(() => ({ id: page.params.id ?? '' }));
+
+	const lastUpdatedAtDate = $derived.by(() => {
+		const raw = repositoryQuery.data?.lastSyncedAt;
+		if (!raw) return undefined;
+		// chrono::NaiveDateTime serializes without a timezone, but we always
+		// store UTC server-side. Tag it explicitly so JS parses as UTC.
+		return new Date(raw.endsWith('Z') ? raw : `${raw}Z`);
+	});
+
 	const lastUpdatedAt = $derived.by(() => {
-		return globalStore.lastUpdatedAt
-			? intlFormatDistance(globalStore.lastUpdatedAt, now)
-			: undefined;
+		return lastUpdatedAtDate ? intlFormatDistance(lastUpdatedAtDate, now) : undefined;
 	});
 </script>
 
-<div
+<!-- One continuous bar: the sidebar can collapse, so nothing in the footer
+     aligns to it anymore — the version sits plainly on the left and all the
+     controls (theme mode included) group on the right. -->
+<Panel
+	background="surface.ground"
+	radius="none"
 	class={css({
-		_dark: {
-			background: 'neutral.200'
-		},
-		_light: {
-			background: 'neutral.400'
-		},
-		height: 'calc((token(spacing.sm)) * 2.5)',
-		borderLeft: '1px dashed token(colors.primary.300)',
+		marginTop: 'auto',
 		display: 'flex',
+		flexDirection: 'row',
+		py: 'none',
+		px: '2xs',
+		minHeight: 'calc((token(spacing.sm)) * 2.5)',
 		justifyContent: 'flex-end',
 		alignItems: 'center',
 		gap: 'md'
@@ -47,74 +73,34 @@
 >
 	<div
 		class={css({
-			_dark: {
-				background: 'neutral.400'
-			},
-			_light: {
-				background: 'neutral.600'
-			},
+			fontSize: 'sm',
+			color: 'neutral.text.muted',
 			display: 'flex',
-			justifyContent: 'center',
-			alignItems: 'center',
-			height: 'calc((token(spacing.sm)) * 2.5)',
-			width: '259px',
-			p: 'token(spacing.xxs)'
+			flexShrink: '0'
 		})}
-		data-testid="version-container"
+		data-testid="app-version"
 	>
-		<div
-			class={css({
-				fontSize: 'sm',
-				_dark: {
-					color: 'neutral.900'
-				},
-				_light: {
-					color: 'neutral.900'
-				},
-				display: 'flex'
-			})}
-			data-testid="app-version"
-		>
-			<!-- eslint-disable-next-line -->
-			v{__APP_VERSION__}
-		</div>
-		<div class={spacer()}></div>
-		<ThemeModeSelect
-			popoverProps={{ placement: 'top' }}
-			buttonProps={{
-				size: 'xs',
-				passThrough: {
-					root: css.raw({
-						'& svg': {
-							width: '14px',
-							height: '14px'
-						},
-						padding: 0,
-						_dark: {
-							color: 'neutral.900'
-						},
-						_light: {
-							color: 'neutral.900'
-						}
-					})
-				}
-			}}
-		/>
+		<!-- eslint-disable-next-line -->
+		v{__APP_VERSION__}
 	</div>
 	<div class={spacer()}></div>
-	<div
+	<Panel
+		background="transparent"
 		class={css({
-			p: 'token(spacing.xxs)',
 			display: 'flex',
+			flexDirection: 'row',
 			gap: 'xs',
-			alignItems: 'center'
+			width: 'auto',
+			alignItems: 'center',
+			flexShrink: '0',
+			alignSelf: 'stretch'
 		})}
-		data-testid="last-updated-container"
+		padding="none"
 	>
-		{#if lastUpdatedAt && globalStore.lastUpdatedAt}
+		{#if lastUpdatedAt && lastUpdatedAtDate}
 			<time
-				datetime={globalStore.lastUpdatedAt.toISOString()}
-				title={intlFormat(globalStore.lastUpdatedAt, {
+				datetime={lastUpdatedAtDate.toISOString()}
+				title={intlFormat(lastUpdatedAtDate, {
 					year: 'numeric',
 					month: 'long',
 					day: 'numeric',
@@ -128,12 +114,7 @@
 					<div
 						class={css({
 							fontSize: 'sm',
-							_dark: {
-								color: 'neutral.900'
-							},
-							_light: {
-								color: 'neutral.900'
-							}
+							color: 'neutral.text.muted'
 						})}
 						data-testid="last-updated-text"
 					>
@@ -142,7 +123,85 @@
 				{/key}
 			</time>
 		{/if}
-		<NotificationsPopover />
+		<ThemeModeSelect
+			placement="top"
+			triggerProps={{
+				emphasis: 'ghost',
+				border: 'none',
+				size: 'xs',
+				passThrough: {
+					root: {
+						style: css.raw({
+							color: 'neutral.text.muted',
+							'& svg': {
+								width: '14px',
+								height: '14px'
+							}
+						})
+					}
+				}
+			}}
+		/>
+		<Tooltip content="Notifications">
+			{#snippet children(triggerProps)}
+				<Attachment placement="top-end" anchor="corner" shape="rect">
+					<Button
+						emphasis="ghost"
+						size="xs"
+						shape="square"
+						onclick={() => toggleCenter()}
+						data-testid="notifications-trigger"
+						aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
+						{...triggerProps}
+					>
+						{#key ringKey}
+							<span
+								class={css({
+									display: 'inline-flex',
+									transformOrigin: 'top center',
+									animation:
+										unread > 0
+											? 'bellRing 800ms ease-in-out, pulse 2s ease-in-out 800ms infinite'
+											: 'none'
+								})}
+								aria-hidden="true"
+							>
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="mingcute:notification-fill" width="12px" height="12px" />
+								</Stamp>
+							</span>
+						{/key}
+						<span class={visuallyHidden()}>
+							{unread > 0 ? `${unread} unread notifications` : 'Notifications'}
+						</span>
+					</Button>
+					{#snippet content()}
+						{#if unread > 0}
+							<span
+								class={css({
+									minWidth: '14px',
+									height: '14px',
+									px: '4xs',
+									borderRadius: 'full',
+									background: 'danger.surface.ground',
+									color: 'danger.text.contrast',
+									fontSize: '9px',
+									fontWeight: 'bold',
+									lineHeight: '1',
+									display: 'inline-flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									pointerEvents: 'none'
+								})}
+								data-testid="notifications-badge"
+							>
+								{unread > 99 ? '99+' : unread}
+							</span>
+						{/if}
+					{/snippet}
+				</Attachment>
+			{/snippet}
+		</Tooltip>
 		{#if import.meta.env.DEV}
 			<div
 				class={css({
@@ -171,5 +230,5 @@
 				<SvelteQueryDevtools />
 			</div>
 		{/if}
-	</div>
-</div>
+	</Panel>
+</Panel>

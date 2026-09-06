@@ -1,22 +1,36 @@
-import { render } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, expect, beforeEach, vi } from 'vitest';
-import TestWrapper from '../../../components/test-wrapper.svelte';
-import { globalStore } from '../../../store/global-store.svelte';
 import Footer from '../footer.svelte';
+import { renderWithTestWrapper } from '$utils/test-utils';
 
 vi.useFakeTimers();
 
 vi.mock('@tanstack/svelte-query-devtools', () => ({
 	SvelteQueryDevtools: vi.fn().mockImplementation(() => ({
-		$$: {
-			capture: () => {},
-			on: () => {},
-			render: () => {}
-		},
+		$$: { capture: () => {}, on: () => {}, render: () => {} },
 		$destroy: () => {},
 		$set: () => {}
 	}))
+}));
+
+vi.mock('$app/state', () => ({
+	page: {
+		params: { id: 'repo-1' }
+	}
+}));
+
+let mockedLastSyncedAt: string | null = null;
+
+vi.mock('$infrastructure/queries/create-get-repository-query', () => ({
+	createGetRepositoryQuery: () => ({
+		get data() {
+			return mockedLastSyncedAt
+				? { id: 'repo-1', name: 'r', lastSyncedAt: mockedLastSyncedAt }
+				: undefined;
+		},
+		isLoading: false,
+		isError: false
+	})
 }));
 
 describe('Footer Component', () => {
@@ -24,19 +38,20 @@ describe('Footer Component', () => {
 		const fixedDate = new Date('2023-01-01T12:00:00Z');
 
 		beforeEach(() => {
-			// Use a fixed date for consistent test results
 			vi.setSystemTime(fixedDate);
-			globalStore.lastUpdatedAt = new Date(fixedDate);
+			// Rust serializes NaiveDateTime without a timezone; the footer
+			// appends Z to interpret as UTC.
+			mockedLastSyncedAt = '2023-01-01T12:00:00';
 		});
 
-		test('displays "now" when just updated', async () => {
-			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
+		test('displays "now" when just synced', async () => {
+			const { getByTestId } = await renderWithTestWrapper(Footer);
 			const lastUpdatedAt = getByTestId('last-updated-text');
 			expect(lastUpdatedAt).toHaveTextContent('Last updated now');
 		});
 
 		test('updates time display every second', async () => {
-			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
+			const { getByTestId } = await renderWithTestWrapper(Footer);
 			vi.advanceTimersByTime(10000);
 			await tick();
 			const lastUpdatedAt = getByTestId('last-updated-text');
@@ -44,16 +59,16 @@ describe('Footer Component', () => {
 		});
 
 		test('displays minutes when more than 60 seconds have passed', async () => {
-			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
-			vi.advanceTimersByTime(120000); // 2 minutes
+			const { getByTestId } = await renderWithTestWrapper(Footer);
+			vi.advanceTimersByTime(120000);
 			await tick();
 			const lastUpdatedAt = getByTestId('last-updated-text');
 			expect(lastUpdatedAt).toHaveTextContent('Last updated 2 minutes ago');
 		});
 
 		test('displays hours when more than 60 minutes have passed', async () => {
-			const { getByTestId } = render(TestWrapper, { props: { component: Footer } });
-			vi.advanceTimersByTime(7200000); // 2 hours
+			const { getByTestId } = await renderWithTestWrapper(Footer);
+			vi.advanceTimersByTime(7200000);
 			await tick();
 			const lastUpdatedAt = getByTestId('last-updated-text');
 			expect(lastUpdatedAt).toHaveTextContent('Last updated 2 hours ago');
@@ -61,10 +76,10 @@ describe('Footer Component', () => {
 	});
 
 	describe('UI State', () => {
-		test('does not display last updated time if not available', async () => {
-			globalStore.lastUpdatedAt = undefined;
-			const { queryByTestId } = render(TestWrapper, { props: { component: Footer } });
-			const lastUpdatedAt = queryByTestId('last-updated-text');
+		test('does not display last updated time when the repo has no lastSyncedAt', async () => {
+			mockedLastSyncedAt = null;
+			const { container } = await renderWithTestWrapper(Footer);
+			const lastUpdatedAt = container.querySelector('[data-testid="last-updated-text"]');
 			expect(lastUpdatedAt).not.toBeInTheDocument();
 		});
 	});

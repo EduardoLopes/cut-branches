@@ -44,7 +44,12 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 	if (error instanceof z.ZodError) {
 		const errorMessage = z.prettifyError(error);
 
-		throw createErrorObject(
+		// Returned, not thrown: every other branch returns, and the callers are
+		// TanStack's QueryCache/MutationCache `onError` handlers, which use the
+		// result to build the user-facing notification. Throwing from there
+		// escaped into the cache callback and lost the notification for exactly
+		// the failures the user needs to hear about.
+		return createErrorObject(
 			{
 				message: error.message,
 				kind: error.name,
@@ -65,7 +70,12 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 		const baseError: AppError = {
 			message: error.message as string,
 			kind: error.kind as string,
-			description: error.description as string
+			// Rust's AppError.description is an `Option<String>`, so it arrives as
+			// `null` for the errors built without one (invalid_branch_name,
+			// invalid_repository_path, …). AppError declares it a string, and the
+			// cache-level onError handlers feed it straight to the toast body — so
+			// an un-normalized null reached the notification as its message.
+			description: (error.description as string | null) ?? ''
 		};
 		return createErrorObject(baseError, extraProps);
 	}
@@ -74,7 +84,11 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 	if (error instanceof Error) {
 		const baseError: AppError = {
 			message: error.message,
-			kind: kind || 'runtime',
+			// Not `kind || 'runtime'`: `kind` was already defaulted to 'unknown'
+			// above, so it is never falsy and the 'runtime' fallback could not be
+			// reached. Error instances without an explicit kind get 'unknown' —
+			// keeping the unreachable operand only implied otherwise.
+			kind,
 			description: error.stack || ''
 		};
 		const errorSpecific = {
@@ -113,9 +127,12 @@ export function createError<T extends Record<string, unknown> = Record<string, n
 			return createErrorObject(baseError, { ...originalExtra, ...extraProps });
 		}
 
-		// Extract message from object properties
-		const message =
-			'message' in error && typeof error.message === 'string' ? error.message : defaultMessage;
+		// Always the default here. We only reach this line when the safeParse
+		// above failed, and AppErrorSchema only requires `message: z.string()`
+		// (kind and description both have defaults) — so a failure means
+		// `message` is missing or is not a string. Reading it off the object
+		// was an unreachable branch.
+		const message = defaultMessage;
 
 		// Preserve original properties where they don't conflict with required ones
 		const originalProps = Object.entries(error as Record<string, unknown>)

@@ -17,4 +17,4 @@ package-lock.json
 yarn.lock
 
 # Ignore files for Tauri
-src/lib/bindings.ts
+src/infrastructure/bindings.ts

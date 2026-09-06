@@ -1,0 +1,52 @@
+use super::super::models::deletion::{DeletedBranch, RestoreBranchResult};
+use crate::shared::error::AppError;
+use std::path::Path;
+
+/// Restore a deleted branch in a git repository.
+///
+/// # Arguments
+///
+/// * `path` - Path to the git repository
+/// * `branch_info` - Information about the branch to restore
+/// * `app` - Optional app handle for events
+///
+/// # Returns
+///
+/// * `Result<RestoreBranchResult, AppError>` - The restoration result or an error
+pub fn restore_deleted_branch(
+    path: &Path,
+    branch_info: &DeletedBranch,
+    app: Option<&tauri::AppHandle>,
+) -> Result<RestoreBranchResult, AppError> {
+    crate::domains::branch_management::infrastructure::git::branch::restore_deleted_branch(
+        path,
+        branch_info,
+        app,
+    )
+}
+
+/// Restore multiple deleted branches in a git repository.
+///
+/// # Arguments
+///
+/// * `path` - Path to the git repository
+/// * `branch_infos` - Information about the branches to restore
+/// * `app` - Optional app handle for events
+///
+/// # Returns
+///
+/// * `Result<Vec<RestoreBranchResult>, AppError>` - The restoration results or an error
+pub fn restore_deleted_branches(
+    path: &Path,
+    branch_infos: &[DeletedBranch],
+    app: Option<&tauri::AppHandle>,
+) -> Result<Vec<RestoreBranchResult>, AppError> {
+    let results =
+        crate::domains::branch_management::infrastructure::git::branch::restore_deleted_branches(
+            path,
+            branch_infos,
+            app,
+        )?;
+    // Extract just the RestoreBranchResult from the (String, RestoreBranchResult) tuples
+    Ok(results.into_iter().map(|(_, result)| result).collect())
+}

@@ -8,7 +8,109 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"types": ["vitest/globals", "@testing-library/jest-dom"]
+		// `@testing-library/jest-dom` is deliberately absent: Vitest 4 ships the DOM
+		// matchers (`toBeInTheDocument` and friends) itself, and the package is not a
+		// dependency — listing it here only made TS fail to resolve the type entry.
+		"types": ["vitest/globals"],
+		"paths": {
+			// Pin `svelte` to this project's copy. In local-Pindoba mode the sibling
+			// `dist/*.d.ts` files resolve `svelte` from `../pindoba/node_modules`, which
+			// gives `Snippet` a second, unrelated `unique symbol` — every snippet prop
+			// then fails to typecheck with "two different types with this name exist".
+			// Harmless when local Pindoba is absent: it still points at our own install.
+			"svelte": ["./node_modules/svelte"],
+			"svelte/*": ["./node_modules/svelte/*"],
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
+			"$core": ["./src/core"],
+			"$core/*": ["./src/core/*"],
+			"$domains": ["./src/domains"],
+			"$domains/*": ["./src/domains/*"],
+			"$ui": ["./src/ui"],
+			"$ui/*": ["./src/ui/*"],
+			"$utils": ["./src/utils"],
+			"$utils/*": ["./src/utils/*"],
+			"$services": ["./src/services"],
+			"$services/*": ["./src/services/*"],
+			"$components": ["./src/components"],
+			"$components/*": ["./src/components/*"],
+			"$infrastructure": ["./src/infrastructure"],
+			"$infrastructure/*": ["./src/infrastructure/*"],
+			"$types": ["./src/types"],
+			"$types/*": ["./src/types/*"],
+			"$contracts": ["./tests/contracts"],
+			"$contracts/*": ["./tests/contracts/*"],
+			"@pindoba/styled-system": ["./styled-system"],
+			"@pindoba/styled-system/*": ["./styled-system/*"],
+			"@pindoba/devtools": ["../pindoba/packages/devtools/dist/index.d.ts"],
+			"@pindoba/devtools/*": ["../pindoba/packages/devtools/dist/*"],
+			"@pindoba/svelte-accordion": ["../pindoba/packages/ui/svelte/accordion/dist/index.d.ts"],
+			"@pindoba/svelte-accordion/*": ["../pindoba/packages/ui/svelte/accordion/dist/*"],
+			"@pindoba/svelte-alert": ["../pindoba/packages/ui/svelte/alert/dist/index.d.ts"],
+			"@pindoba/svelte-alert/*": ["../pindoba/packages/ui/svelte/alert/dist/*"],
+			"@pindoba/svelte-attachment": ["../pindoba/packages/ui/svelte/attachment/dist/index.d.ts"],
+			"@pindoba/svelte-attachment/*": ["../pindoba/packages/ui/svelte/attachment/dist/*"],
+			"@pindoba/svelte-badge": ["../pindoba/packages/ui/svelte/badge/dist/index.d.ts"],
+			"@pindoba/svelte-badge/*": ["../pindoba/packages/ui/svelte/badge/dist/*"],
+			"@pindoba/svelte-banner": ["../pindoba/packages/ui/svelte/banner/dist/index.d.ts"],
+			"@pindoba/svelte-banner/*": ["../pindoba/packages/ui/svelte/banner/dist/*"],
+			"@pindoba/svelte-breadcrumb": ["../pindoba/packages/ui/svelte/breadcrumb/dist/index.d.ts"],
+			"@pindoba/svelte-breadcrumb/*": ["../pindoba/packages/ui/svelte/breadcrumb/dist/*"],
+			"@pindoba/svelte-button": ["../pindoba/packages/ui/svelte/button/dist/index.d.ts"],
+			"@pindoba/svelte-button/*": ["../pindoba/packages/ui/svelte/button/dist/*"],
+			"@pindoba/svelte-card": ["../pindoba/packages/ui/svelte/card/dist/index.d.ts"],
+			"@pindoba/svelte-card/*": ["../pindoba/packages/ui/svelte/card/dist/*"],
+			"@pindoba/svelte-checkbox": ["../pindoba/packages/ui/svelte/checkbox/dist/index.d.ts"],
+			"@pindoba/svelte-checkbox/*": ["../pindoba/packages/ui/svelte/checkbox/dist/*"],
+			"@pindoba/svelte-choice": ["../pindoba/packages/ui/svelte/choice/dist/index.d.ts"],
+			"@pindoba/svelte-choice/*": ["../pindoba/packages/ui/svelte/choice/dist/*"],
+			"@pindoba/core-choice": ["../pindoba/packages/core/choice/dist/index.d.ts"],
+			"@pindoba/core-choice/*": ["../pindoba/packages/core/choice/dist/*"],
+			"@pindoba/svelte-dialog": ["../pindoba/packages/ui/svelte/dialog/dist/index.d.ts"],
+			"@pindoba/svelte-dialog/*": ["../pindoba/packages/ui/svelte/dialog/dist/*"],
+			"@pindoba/svelte-group": ["../pindoba/packages/ui/svelte/group/dist/index.d.ts"],
+			"@pindoba/svelte-group/*": ["../pindoba/packages/ui/svelte/group/dist/*"],
+			"@pindoba/svelte-input": ["../pindoba/packages/ui/svelte/input/dist/index.d.ts"],
+			"@pindoba/svelte-input/*": ["../pindoba/packages/ui/svelte/input/dist/*"],
+			"@pindoba/svelte-loading": ["../pindoba/packages/ui/svelte/loading/dist/index.d.ts"],
+			"@pindoba/svelte-loading/*": ["../pindoba/packages/ui/svelte/loading/dist/*"],
+			"@pindoba/svelte-menu": ["../pindoba/packages/ui/svelte/menu/dist/index.d.ts"],
+			"@pindoba/svelte-menu/*": ["../pindoba/packages/ui/svelte/menu/dist/*"],
+			"@pindoba/core-menu": ["../pindoba/packages/core/menu/dist/index.d.ts"],
+			"@pindoba/core-menu/*": ["../pindoba/packages/core/menu/dist/*"],
+			"@pindoba/svelte-navigation": ["../pindoba/packages/ui/svelte/navigation/dist/index.d.ts"],
+			"@pindoba/svelte-navigation/*": ["../pindoba/packages/ui/svelte/navigation/dist/*"],
+			"@pindoba/svelte-panel": ["../pindoba/packages/ui/svelte/panel/dist/index.d.ts"],
+			"@pindoba/svelte-panel/*": ["../pindoba/packages/ui/svelte/panel/dist/*"],
+			"@pindoba/svelte-popover": ["../pindoba/packages/ui/svelte/popover/dist/index.d.ts"],
+			"@pindoba/svelte-popover/*": ["../pindoba/packages/ui/svelte/popover/dist/*"],
+			"@pindoba/svelte-progress": ["../pindoba/packages/ui/svelte/progress/dist/index.d.ts"],
+			"@pindoba/svelte-progress/*": ["../pindoba/packages/ui/svelte/progress/dist/*"],
+			"@pindoba/svelte-radio": ["../pindoba/packages/ui/svelte/radio/dist/index.d.ts"],
+			"@pindoba/svelte-radio/*": ["../pindoba/packages/ui/svelte/radio/dist/*"],
+			"@pindoba/svelte-select": ["../pindoba/packages/ui/svelte/select/dist/index.d.ts"],
+			"@pindoba/svelte-select/*": ["../pindoba/packages/ui/svelte/select/dist/*"],
+			"@pindoba/svelte-stamp": ["../pindoba/packages/ui/svelte/stamp/dist/index.d.ts"],
+			"@pindoba/svelte-stamp/*": ["../pindoba/packages/ui/svelte/stamp/dist/*"],
+			"@pindoba/svelte-tooltip": ["../pindoba/packages/ui/svelte/tooltip/dist/index.d.ts"],
+			"@pindoba/svelte-tooltip/*": ["../pindoba/packages/ui/svelte/tooltip/dist/*"],
+			"@pindoba/svelte-tree-view": ["../pindoba/packages/ui/svelte/tree-view/dist/index.d.ts"],
+			"@pindoba/svelte-tree-view/*": ["../pindoba/packages/ui/svelte/tree-view/dist/*"],
+			"@pindoba/core-tree-view": ["../pindoba/packages/core/tree-view/dist/index.d.ts"],
+			"@pindoba/core-tree-view/*": ["../pindoba/packages/core/tree-view/dist/*"],
+			"@pindoba/svelte-toast": ["../pindoba/packages/blocks/svelte/toast/dist/index.d.ts"],
+			"@pindoba/svelte-toast/*": ["../pindoba/packages/blocks/svelte/toast/dist/*"],
+			"@pindoba/svelte-pagination": [
+				"../pindoba/packages/blocks/svelte/pagination/dist/index.d.ts"
+			],
+			"@pindoba/svelte-pagination/*": ["../pindoba/packages/blocks/svelte/pagination/dist/*"],
+			"@pindoba/svelte-theme-mode-select": [
+				"../pindoba/packages/blocks/svelte/theme-mode-select/dist/index.d.ts"
+			],
+			"@pindoba/svelte-theme-mode-select/*": [
+				"../pindoba/packages/blocks/svelte/theme-mode-select/dist/*"
+			]
+		}
 	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	//

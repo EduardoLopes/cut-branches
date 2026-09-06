@@ -1,140 +1,197 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { MenuNode } from '@pindoba/core-menu';
+	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
-	import Group from '@pindoba/svelte-group';
-	import Loading from '@pindoba/svelte-loading';
-	import { goto } from '$app/navigation';
-	import RemoveRepositoryModal from '$domains/repository-management/components/remove-repository-modal.svelte';
-	import { getRepositoryStore } from '$domains/repository-management/store/repository.svelte';
-	import { css } from '@pindoba/panda/css';
-	import { visuallyHidden } from '@pindoba/panda/patterns';
+	import Menu from '@pindoba/svelte-menu';
+	import Stamp from '@pindoba/svelte-stamp';
+	import Tooltip from '@pindoba/svelte-tooltip';
+	import type { Snippet } from 'svelte';
+	import { useRepositoryActions } from '../core/composables/use-repository-actions.svelte';
+	import { useRepositoryWatch } from '../core/composables/use-repository-watch.svelte';
+	import RemoveRepositoryModal from './remove-repository-modal.svelte';
+	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import PageHeader, { type PageBreadcrumbItem } from '$ui/patterns/page-header.svelte';
+	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
-		title?: string;
-		repositoryId?: string;
-		isLoading: boolean;
-		onUpdate: () => void;
-		showBackButton?: boolean;
-		showRestoreButton?: boolean;
-		showUpdateButton?: boolean;
-		showRemoveButton?: boolean;
+		repositoryId: string;
+		/**
+		 * Extra options-menu actions injected by the composition root (the route),
+		 * so features owned by other domains (e.g. repository cleanup) can appear
+		 * here without this domain importing them — see §1.3.
+		 */
+		extraMenuItems?: MenuNode[];
+		/**
+		 * Context navigation (e.g. Branches / Worktrees) rendered under the
+		 * repository name. Provided by the composition root so this domain stays
+		 * unaware of the contexts it links to — see §1.3.
+		 */
+		contextNav?: Snippet;
+		/** Ancestor trail for drill-down pages (commit history, diff). */
+		breadcrumb?: PageBreadcrumbItem[];
 	}
 
-	const {
-		repositoryId,
-		isLoading,
-		onUpdate,
-		title,
-		showBackButton = true,
-		showRestoreButton = true,
-		showUpdateButton = true,
-		showRemoveButton = true
-	}: Props = $props();
+	const { repositoryId, extraMenuItems = [], contextNav, breadcrumb }: Props = $props();
 
-	const repository = $derived(getRepositoryStore(repositoryId));
+	// Safety net for the active repo: detects (and heals) drift the global
+	// watcher may have missed. Exposes `outOfSync` so the manual Update action
+	// only appears when the projection is actually behind git.
+	const repositoryWatch = useRepositoryWatch(() => repositoryId);
 
-	function navigateToRestore() {
-		if (repositoryId) {
-			goto(`/repos/${repositoryId}/restore`);
+	// Reveal + update actions backing the repository options menu. Update reuses
+	// the watcher's refresh so it re-attaches the filesystem watch.
+	const repositoryActions = useRepositoryActions(() => repositoryId, {
+		onRefresh: () => repositoryWatch.refresh()
+	});
+
+	// The Remove action opens this confirmation dialog, which owns the deletion.
+	let removeModalOpen = $state(false);
+
+	// The options menu and its trigger tooltip are mutually exclusive: the menu
+	// already names the action, so a tooltip on top of it is noise. `openWhen`
+	// blocks re-opens while the menu is expanded; the effect dismisses a tooltip
+	// that was already showing when the menu opened.
+	let menuOpen = $state(false);
+	let tooltipOpen = $state(false);
+
+	$effect(() => {
+		if (menuOpen) tooltipOpen = false;
+	});
+
+	const getRepositoryQuery = createGetRepositoryQuery(() => ({ id: repositoryId }));
+
+	const repositoryName = $derived(getRepositoryQuery.data?.name ?? '');
+	const repositoryPath = $derived(getRepositoryQuery.data?.path ?? '');
+	// Whether this repository is a linked git worktree (not the main worktree).
+	const isWorktree = $derived(getRepositoryQuery.data?.isWorktree ?? false);
+
+	const menuItems = $derived<MenuNode[]>([
+		...(repositoryWatch.outOfSync
+			? [
+					{
+						type: 'action',
+						id: 'update',
+						label: 'Update',
+						leading: updateIcon,
+						disabled: repositoryActions.isRefreshing,
+						onSelect: repositoryActions.update
+					} satisfies MenuNode
+				]
+			: []),
+		{
+			type: 'action',
+			id: 'reveal',
+			label: 'Reveal in Finder',
+			leading: revealIcon,
+			disabled: !repositoryActions.repository,
+			onSelect: repositoryActions.reveal
+		},
+		...extraMenuItems,
+		{ type: 'separator', id: 'sep' },
+		{
+			type: 'action',
+			id: 'remove',
+			label: 'Remove',
+			feedback: 'danger',
+			leading: removeIcon,
+			onSelect: () => (removeModalOpen = true)
 		}
-	}
-
-	function navigateBack() {
-		if (repositoryId) {
-			goto(`/repos/${repositoryId}`);
-		}
-	}
+	]);
 </script>
 
-<div
-	class={css({
-		display: 'flex',
-		position: 'sticky',
-		justifyContent: 'space-between',
-		top: '0',
-		alignItems: 'center',
-		zIndex: '20',
-		flexShrink: '0',
-		px: 'md',
-		height: 'calc((token(spacing.xl)) * 2.5)'
-	})}
->
-	<div
-		class={css({
-			display: 'flex',
-			alignItems: 'center',
-			gap: 'sm'
-		})}
-	>
-		{#key repository?.state?.name}
-			<!-- back button -->
-			{#if showBackButton}
-				<Button
-					emphasis="ghost"
-					size="sm"
-					onclick={navigateBack}
-					shape="square"
-					data-testid="restore-navigate-button"
-				>
-					<Icon icon="lucide:arrow-left" width="24px" height="24px" />
-					<span class={visuallyHidden()}>Back</span>
-				</Button>
-			{/if}
-			<h2
+{#snippet updateIcon()}
+	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+{#snippet revealIcon()}
+	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:folder-open" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+{#snippet removeIcon()}
+	<Stamp size="sm" emphasis="ghost" feedback="danger" border="none" background="transparent">
+		<Icon icon="lucide:circle-x" width="14px" height="14px" />
+	</Stamp>
+{/snippet}
+
+{#snippet repositoryIcon()}
+	<Stamp shape="square" size="sm" emphasis="ghost" border="none" background="transparent">
+		<Icon icon="lucide:folder-git-2" width="16px" height="16px" />
+	</Stamp>
+{/snippet}
+
+{#snippet heading()}
+	<span class={css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' })}>
+		{#key repositoryName}
+			<span
 				class={css({
-					textStyle: '4xl'
+					textTransform: 'uppercase',
+					minWidth: '0',
+					overflow: 'hidden',
+					textOverflow: 'ellipsis',
+					whiteSpace: 'nowrap'
 				})}
 				data-testid="repository-name"
 			>
-				{#if title}
-					{title}
-				{:else if repository?.state?.name}
-					<span
-						class={css({
-							textTransform: 'uppercase'
-						})}
-					>
-						{repository.state.name}
-					</span>
-				{/if}
-			</h2>
+				{repositoryName}
+			</span>
 		{/key}
-	</div>
 
-	{#if showRestoreButton || showUpdateButton || showRemoveButton}
-		<Loading {isLoading}>
-			<Group direction="horizontal">
-				{#if repository?.state && showRestoreButton}
+		{#if isWorktree}
+			<Badge size="sm" feedback="warning" data-testid="repository-worktree-badge">
+				{#snippet leading()}
+					<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+				{/snippet}
+				worktree
+			</Badge>
+		{/if}
+	</span>
+{/snippet}
+
+<!-- Repository options sit as the page's trailing action, so every page reads
+     "title on the left, actions on the right" the same way (§4). -->
+{#snippet trailing()}
+	<Menu
+		placement="bottom-end"
+		aria-label="Repository options"
+		items={menuItems}
+		bind:open={menuOpen}
+	>
+		{#snippet trigger(props)}
+			<Tooltip
+				content="Repository options"
+				placement="bottom"
+				openWhen="[aria-expanded=&quot;false&quot;]"
+				bind:open={tooltipOpen}
+			>
+				{#snippet children(tipProps)}
 					<Button
-						emphasis="ghost"
 						size="sm"
-						onclick={navigateToRestore}
-						data-testid="restore-navigate-button"
-						class={css({
-							gap: 'sm'
-						})}
-					>
-						<Icon icon="lucide:undo" width="24px" height="24px" />
-						<span>Restore</span>
-					</Button>
-				{/if}
-				{#if showUpdateButton}
-					<Button
-						emphasis="ghost"
-						size="sm"
-						onclick={onUpdate}
+						emphasis="secondary"
 						shape="square"
-						data-testid="update-button"
+						data-testid="repository-options-button"
+						{...props}
+						{...tipProps}
 					>
-						<Icon icon="material-symbols:refresh-rounded" width="24px" height="24px" />
-						<span class={visuallyHidden()}>Update</span>
+						<Stamp emphasis="ghost" border="none" background="transparent">
+							<Icon icon="lucide:ellipsis-vertical" width="16px" height="16px" />
+						</Stamp>
 					</Button>
-				{/if}
+				{/snippet}
+			</Tooltip>
+		{/snippet}
+	</Menu>
+{/snippet}
 
-				{#if repository?.state && showRemoveButton}
-					<RemoveRepositoryModal currentRepo={repository?.state} />
-				{/if}
-			</Group>
-		</Loading>
-	{/if}
-</div>
+<PageHeader
+	leading={repositoryIcon}
+	{heading}
+	subheading={repositoryPath || undefined}
+	{trailing}
+	{breadcrumb}
+	nav={contextNav}
+/>
+
+<RemoveRepositoryModal {repositoryId} bind:open={removeModalOpen} />

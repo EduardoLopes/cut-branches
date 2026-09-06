@@ -2,8 +2,8 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri_specta::Event;
 
-use super::git::branch::Branch;
-use super::services::deletion::DeletedBranchInfo;
+use super::core::models::DeletedBranchInfo;
+use crate::shared::kernel::branch::Branch;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]

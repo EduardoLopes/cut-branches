@@ -7,17 +7,37 @@ import { formatDate } from './format-date';
  * @param dateInput - The date string, timestamp or Date object to format
  * @returns A formatted date string or 'Unknown date' if invalid
  */
+// `formatDate` uses date-fns 'PPPPpppp' — the heaviest pattern available —
+// and virtualized lists call this once per row per render with the same
+// commit dates over and over. The result is pure in its input, so memoize it;
+// bounded so a pathological stream of unique dates can't grow it forever.
+const FORMAT_DATE_CACHE_LIMIT = 500;
+const formatDateCache = new Map<string | number, string>();
+
 export function safeFormatDate(dateInput: string | number | Date): string {
+	const cacheKey = dateInput instanceof Date ? dateInput.getTime() : dateInput;
+	const cached = formatDateCache.get(cacheKey);
+	if (cached !== undefined) {
+		return cached;
+	}
+
+	let formatted: string;
 	try {
 		// Check if the date is valid
 		const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
 		if (isNaN(date.getTime())) {
 			throw new Error('Invalid date');
 		}
-		return formatDate(date);
+		formatted = formatDate(date);
 	} catch {
-		return 'Unknown date';
+		formatted = 'Unknown date';
 	}
+
+	if (formatDateCache.size >= FORMAT_DATE_CACHE_LIMIT) {
+		formatDateCache.clear();
+	}
+	formatDateCache.set(cacheKey, formatted);
+	return formatted;
 }
 
 /**
@@ -37,6 +57,39 @@ export function safeFormatRelativeDate(
 			throw new Error('Invalid date');
 		}
 		return intlFormatDistance(date, Date.now(), options);
+	} catch {
+		return 'Unknown';
+	}
+}
+
+/**
+ * Safely formats a date as a terse, single-token relative distance — e.g.
+ * "now", "5m", "3h", "8d", "2mo", "1y". `Intl` won't abbreviate day-level
+ * distances in English (narrow style still yields "8 days ago"), so this
+ * computes the largest fitting unit by hand for compact contexts (dense lists,
+ * badges). Pair it with a full date in a `title` for hover disclosure.
+ * @param dateInput - The date string, timestamp or Date object to format
+ * @returns A terse relative string, or 'Unknown' if invalid
+ */
+export function safeFormatRelativeDateShort(dateInput: string | number | Date): string {
+	try {
+		const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+		if (isNaN(date.getTime())) {
+			throw new Error('Invalid date');
+		}
+		const diffSeconds = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000));
+		const diffMinutes = Math.floor(diffSeconds / 60);
+		const diffHours = Math.floor(diffMinutes / 60);
+		const diffDays = Math.floor(diffHours / 24);
+		const diffMonths = Math.floor(diffDays / 30);
+		const diffYears = Math.floor(diffDays / 365);
+
+		if (diffSeconds < 60) return 'now';
+		if (diffMinutes < 60) return `${diffMinutes}m`;
+		if (diffHours < 24) return `${diffHours}h`;
+		if (diffDays < 30) return `${diffDays}d`;
+		if (diffMonths < 12) return `${diffMonths}mo`;
+		return `${diffYears}y`;
 	} catch {
 		return 'Unknown';
 	}

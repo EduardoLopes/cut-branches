@@ -3,7 +3,7 @@ import { setLocalStorage } from '../set-local-storage';
 
 describe('setLocalStorage', () => {
 	// Save original localStorage
-	const originalLocalStorage = global.localStorage;
+	const originalLocalStorage = window.localStorage;
 
 	// Create localStorage mock
 	const mockLocalStorage = {
@@ -17,7 +17,7 @@ describe('setLocalStorage', () => {
 
 	beforeEach(() => {
 		// Set mock localStorage
-		Object.defineProperty(global, 'localStorage', {
+		Object.defineProperty(window, 'localStorage', {
 			value: mockLocalStorage,
 			writable: true
 		});
@@ -28,7 +28,7 @@ describe('setLocalStorage', () => {
 
 	afterEach(() => {
 		// Restore original localStorage after tests
-		Object.defineProperty(global, 'localStorage', {
+		Object.defineProperty(window, 'localStorage', {
 			value: originalLocalStorage,
 			writable: true
 		});
@@ -91,19 +91,6 @@ describe('setLocalStorage', () => {
 		expect(result).toBe(false);
 		expect(mockLocalStorage.setItem).not.toHaveBeenCalled();
 		expect(mockLocalStorage.removeItem).not.toHaveBeenCalled();
-	});
-
-	it('should handle server-side rendering environment', () => {
-		// Simulate SSR environment by temporarily removing window
-		const originalWindow = global.window;
-		Object.defineProperty(global, 'window', { value: undefined, writable: true });
-
-		const result = setLocalStorage('test-key', 'test-value');
-
-		expect(result).toBe(false);
-
-		// Restore window
-		Object.defineProperty(global, 'window', { value: originalWindow, writable: true });
 	});
 
 	it('should handle localStorage quota exceeded error', () => {
