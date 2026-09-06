@@ -16,6 +16,12 @@ export interface FeatureFlagDefinition {
 	defaultEnabled: boolean;
 	/** Optional Iconify icon name shown as a Stamp beside the flag in Settings. */
 	icon?: string;
+	/**
+	 * When true the flag is not listed in Settings and any persisted override is
+	 * ignored, so `defaultEnabled` is its effective value. Use it to keep a
+	 * feature completely out of users' reach while its code stays in the tree.
+	 */
+	hidden?: boolean;
 }
 
 /**
@@ -26,6 +32,10 @@ export interface FeatureFlagDefinition {
  *   2. Guard the feature in code with `isFeatureEnabled('<key>')` — the read is
  *      reactive, so toggling it in Settings updates the UI live.
  *   3. Flip `defaultEnabled` to `true` (or remove the flag) once it's ready.
+ *
+ * To take a feature out of users' reach entirely, add `hidden: true`: the flag
+ * disappears from Settings and any override already saved on a device stops
+ * counting, so `defaultEnabled` always wins.
  *
  * Example:
  *   {
@@ -58,7 +68,10 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		description:
 			'Review the changes of a branch or commit — a changed-files list with expandable, syntax-highlighted diffs. Adds diff deep-links to branch cards and history rows.',
 		defaultEnabled: false,
-		icon: 'lucide:file-diff'
+		icon: 'lucide:file-diff',
+		// Hidden until the diff viewer is ready: not listed in Settings and not
+		// user-enablable, even on devices that toggled it on before.
+		hidden: true
 	},
 	{
 		key: 'commit-history',
@@ -69,6 +82,13 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		icon: 'lucide:git-graph'
 	}
 ];
+
+/** The flags surfaced in Settings — everything not marked `hidden`. */
+export function getVisibleFeatureFlags(
+	definitions: readonly FeatureFlagDefinition[] = FEATURE_FLAGS
+): readonly FeatureFlagDefinition[] {
+	return definitions.filter((flag) => !flag.hidden);
+}
 
 /** A feature flag key. */
 export type FeatureFlagKey = string;
@@ -82,19 +102,25 @@ function getOverridesStore() {
 }
 
 /**
- * Pure resolution of a flag's effective value: a stored override wins,
- * otherwise the registry default, otherwise `false` for unknown keys. Exported
- * for testing so the branching is covered without seeding the registry.
+ * Pure resolution of a flag's effective value: a `hidden` flag is pinned to its
+ * registry default (overrides can't reach it), otherwise a stored override
+ * wins, otherwise the registry default, otherwise `false` for unknown keys.
+ * Exported for testing so the branching is covered without seeding the
+ * registry.
  */
 export function resolveFeatureFlag(
 	overrides: FeatureFlagOverrides,
 	definitions: readonly FeatureFlagDefinition[],
 	key: string
 ): boolean {
+	const definition = definitions.find((flag) => flag.key === key);
+	if (definition?.hidden) {
+		return definition.defaultEnabled;
+	}
 	if (key in overrides) {
 		return overrides[key];
 	}
-	return definitions.find((flag) => flag.key === key)?.defaultEnabled ?? false;
+	return definition?.defaultEnabled ?? false;
 }
 
 /**
@@ -115,7 +141,7 @@ export function resolveFeatureFlagsSectionVisible(
 	definitions: readonly FeatureFlagDefinition[],
 	isDev: boolean
 ): boolean {
-	return definitions.length > 0 || isDev;
+	return getVisibleFeatureFlags(definitions).length > 0 || isDev;
 }
 
 /**

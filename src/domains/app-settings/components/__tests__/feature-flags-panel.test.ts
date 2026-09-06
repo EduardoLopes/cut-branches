@@ -13,6 +13,7 @@ const h = vi.hoisted(() => ({
 vi.mock('$lib/feature-flags.svelte', () => ({
 	// Stable array reference; tests mutate its contents in place.
 	FEATURE_FLAGS: h.flags,
+	getVisibleFeatureFlags: () => h.flags.filter((flag) => !flag.hidden),
 	isFeatureEnabled: (key: string) => h.isEnabled(key),
 	setFeatureFlag: (key: string, enabled: boolean) => h.setFlag(key, enabled),
 	resetFeatureFlags: () => h.reset()
@@ -22,6 +23,14 @@ const FLAGS: FeatureFlagDefinition[] = [
 	{ key: 'alpha', label: 'Alpha', description: 'First flag', defaultEnabled: false },
 	{ key: 'beta', label: 'Beta', description: 'Second flag', defaultEnabled: true }
 ];
+
+const HIDDEN_FLAG: FeatureFlagDefinition = {
+	key: 'gamma',
+	label: 'Gamma',
+	description: 'Hidden flag',
+	defaultEnabled: false,
+	hidden: true
+};
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -37,9 +46,18 @@ describe('FeatureFlagsPanel', () => {
 		expect(screen.getByTestId('feature-flags-reset').elements().length).toBe(0);
 	});
 
+	it('treats a registry of only hidden flags as empty', async () => {
+		h.flags.push(HIDDEN_FLAG);
+
+		const screen = await renderWithTestWrapper(FeatureFlagsPanel);
+
+		expect(screen.getByTestId('feature-flags-empty')).toBeInTheDocument();
+		expect(screen.getByTestId('feature-flag-toggle').elements()).toHaveLength(0);
+	});
+
 	describe('with flags in the registry', () => {
 		beforeEach(() => {
-			h.flags.push(...FLAGS);
+			h.flags.push(...FLAGS, HIDDEN_FLAG);
 			h.isEnabled.mockImplementation((key: string) => key === 'beta');
 		});
 
@@ -49,6 +67,8 @@ describe('FeatureFlagsPanel', () => {
 			expect(screen.getByTestId('feature-flag-toggle').elements()).toHaveLength(2);
 			expect(screen.getByText('Alpha')).toBeInTheDocument();
 			expect(screen.getByText('Beta')).toBeInTheDocument();
+			// A hidden flag stays out of Settings entirely.
+			expect(screen.getByText('Gamma').elements()).toHaveLength(0);
 		});
 
 		it('sets a flag when its toggle changes', async () => {

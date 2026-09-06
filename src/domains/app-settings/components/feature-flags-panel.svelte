@@ -5,13 +5,17 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import FeatureFlagToggle from './feature-flag-toggle.svelte';
 	import {
-		FEATURE_FLAGS,
+		getVisibleFeatureFlags,
 		isFeatureEnabled,
 		resetFeatureFlags,
 		setFeatureFlag
 	} from '$lib/feature-flags.svelte';
 	import EmptyState from '$ui/core/empty-state.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
+
+	// Flags marked `hidden` stay out of Settings entirely — they are pinned to
+	// their registry default and must not be user-toggleable.
+	const flags = getVisibleFeatureFlags();
 </script>
 
 {#snippet flagIcon()}
@@ -30,10 +34,10 @@
 	heading="Feature flags"
 	subheading="Turn in-development features on or off. Changes are saved on this device."
 	leading={flagIcon as BannerProps['leading']}
-	trailing={FEATURE_FLAGS.length > 0 ? (resetButton as BannerProps['trailing']) : undefined}
+	trailing={flags.length > 0 ? (resetButton as BannerProps['trailing']) : undefined}
 	testId="feature-flags-section"
 >
-	{#if FEATURE_FLAGS.length === 0}
+	{#if flags.length === 0}
 		<!-- The registry is a compile-time source constant, so an empty list is only
 		     ever a developer/build state — never something a user's actions produce.
 		     The instruction to edit source is therefore dev-only. -->
@@ -47,7 +51,7 @@
 			testId="feature-flags-empty"
 		/>
 	{:else}
-		{#each FEATURE_FLAGS as flag (flag.key)}
+		{#each flags as flag (flag.key)}
 			<FeatureFlagToggle
 				{flag}
 				enabled={isFeatureEnabled(flag.key)}

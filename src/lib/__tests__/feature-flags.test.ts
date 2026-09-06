@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
 	FEATURE_FLAGS,
+	getVisibleFeatureFlags,
 	isFeatureEnabled,
 	isFeatureFlagsSectionVisible,
 	resetFeatureFlags,
@@ -16,6 +17,24 @@ const DEFINITIONS: FeatureFlagDefinition[] = [
 	{ key: 'off-by-default', label: 'Off', description: '', defaultEnabled: false }
 ];
 
+const HIDDEN: FeatureFlagDefinition[] = [
+	{ key: 'hidden-off', label: 'Hidden off', description: '', defaultEnabled: false, hidden: true },
+	{ key: 'hidden-on', label: 'Hidden on', description: '', defaultEnabled: true, hidden: true }
+];
+
+describe('getVisibleFeatureFlags', () => {
+	it('drops hidden flags and keeps the rest', () => {
+		expect(getVisibleFeatureFlags([...DEFINITIONS, ...HIDDEN]).map((flag) => flag.key)).toEqual([
+			'on-by-default',
+			'off-by-default'
+		]);
+	});
+
+	it('defaults to the real registry, which never surfaces branch diffs', () => {
+		expect(getVisibleFeatureFlags().some((flag) => flag.key === 'branch-diff')).toBe(false);
+	});
+});
+
 describe('resolveFeatureFlagsSectionVisible', () => {
 	it('is visible whenever the registry has entries, regardless of build', () => {
 		expect(resolveFeatureFlagsSectionVisible(DEFINITIONS, false)).toBe(true);
@@ -25,6 +44,11 @@ describe('resolveFeatureFlagsSectionVisible', () => {
 	it('is visible for an empty registry only in a dev build', () => {
 		expect(resolveFeatureFlagsSectionVisible([], true)).toBe(true);
 		expect(resolveFeatureFlagsSectionVisible([], false)).toBe(false);
+	});
+
+	it('treats a registry of only hidden flags as empty', () => {
+		expect(resolveFeatureFlagsSectionVisible(HIDDEN, false)).toBe(false);
+		expect(resolveFeatureFlagsSectionVisible(HIDDEN, true)).toBe(true);
 	});
 });
 
@@ -53,6 +77,11 @@ describe('resolveFeatureFlag', () => {
 	it('returns false for an unknown key with no override', () => {
 		expect(resolveFeatureFlag({}, DEFINITIONS, 'does-not-exist')).toBe(false);
 	});
+
+	it('pins a hidden flag to its default, ignoring any override', () => {
+		expect(resolveFeatureFlag({ 'hidden-off': true }, HIDDEN, 'hidden-off')).toBe(false);
+		expect(resolveFeatureFlag({ 'hidden-on': false }, HIDDEN, 'hidden-on')).toBe(true);
+	});
 });
 
 describe('feature flag store API', () => {
@@ -65,6 +94,15 @@ describe('feature flag store API', () => {
 		const cleanup = FEATURE_FLAGS.find((f) => f.key === 'repository-cleanup');
 		expect(cleanup).toBeDefined();
 		expect(cleanup?.defaultEnabled).toBe(false);
+	});
+
+	it('keeps the branch-diff flag hidden and off, even with an override stored', () => {
+		const branchDiff = FEATURE_FLAGS.find((flag) => flag.key === 'branch-diff');
+		expect(branchDiff?.hidden).toBe(true);
+		expect(branchDiff?.defaultEnabled).toBe(false);
+
+		setFeatureFlag('branch-diff', true);
+		expect(isFeatureEnabled('branch-diff')).toBe(false);
 	});
 
 	it('defaults an unknown/undefined flag to disabled', () => {
