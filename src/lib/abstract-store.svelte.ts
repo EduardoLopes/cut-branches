@@ -3,6 +3,20 @@ import { z } from 'zod/v4';
 import { getValidatedLocalStorage } from '$utils/get-validated-local-storage';
 import { setValidatedLocalStorage } from '$utils/set-validated-local-storage';
 
+/**
+ * Bumped once for every store instance that gets created.
+ *
+ * Store singletons are reached lazily, usually from inside a `$derived` (e.g.
+ * `isFeatureEnabled()` in a component). A `$state` source created while a
+ * reaction is running is excluded from that run's dependencies, so the very
+ * first reader of a brand-new store never subscribes to it and would keep
+ * showing the initial value until a reload. Every reader also depends on this
+ * module-level counter — created at import time, so it is always trackable —
+ * and creating an instance schedules a bump, which makes that first reader run
+ * again and pick up the store's real source.
+ */
+let registryVersion = $state(0);
+
 export abstract class AbstractStore<T, C> {
 	protected static instances: Record<string, AbstractStore<unknown, unknown>> = {};
 
@@ -102,10 +116,20 @@ export abstract class AbstractStore<T, C> {
 			throw new Error('a schema must be provided');
 		}
 
+		// Subscribe the caller to instance creation before the lookup — see
+		// `registryVersion`.
+		void registryVersion;
+
 		if (!this.instances[storageKey]) {
-			this.instances[storageKey] = new ctor(storageKey, ...args, defaultValue);
 			untrack(() => {
+				this.instances[storageKey] = new ctor(storageKey, ...args, defaultValue);
 				this.instances[storageKey].updateFromLocalStorage();
+			});
+
+			// Not synchronous: we may well be inside a `$derived`, where writing to
+			// state throws.
+			queueMicrotask(() => {
+				registryVersion += 1;
 			});
 		}
 
