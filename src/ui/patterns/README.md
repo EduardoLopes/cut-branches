@@ -63,6 +63,34 @@ Banner).
 - Canonical card: `size: sm`, `background: surface.base`, `border: default`
   (raised above the section's `deep` well).
 
+## Dialog convention
+
+Every pindoba `Dialog` follows the shape of the Find repositories modal:
+
+- **Header:** `title` + `subtitle` props (never a body `<p>` for the intro) and a
+  `{#snippet leading()}` Stamp — `size="lg" emphasis="secondary" feedback="neutral"`
+  with a 22px glyph — that names the dialog's subject. `subtitle` is a plain
+  string; emphasis inside it is not available.
+- **Root width:** `passThrough.root.style = css.raw({ width, maxWidth: 'calc(100vw - token(spacing.2xl))' })`.
+- **`dialog-toolbar.svelte`:** the first child of the body when the dialog has
+  controls that shape its content (scan location, options). Bleeds over the
+  content inset so it reads as a second header row.
+- **Pick-lists:** `list-filter.svelte` (full-width `md` search with a live
+  "n of N" count) → a plain select-all row (no border, no background) →
+  `scroll-well.svelte` (recessed `surface.valley` well with shadows that appear
+  only towards the edge that has more to scroll; `bind:scroller` for
+  virtualizers) holding `selection-row.svelte`s (`Checkbox` rows; selected lifts
+  to `surface.peak`, hover `hill`, pressed `base`; `feedback="danger"` for lists
+  whose action destroys the selection; `muted` + `disabled` for already-handled
+  items).
+- **Paths:** `$ui/core/truncated-path.svelte` — `align="end"`, `highlight` the
+  folder name, `class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}`
+  so the highlighted folder lands in one column across rows.
+- **Footer:** `dialog-footer.svelte` — right-aligned, no divider. The primary
+  button is `disabled` while its work runs _and_ wrapped in
+  `<Loading variant="busy" indicator>`.
+- The `scrollShadow` action behind the well lives in `$lib/scroll-shadow`.
+
 ## Conventions
 
 - **Header Stamp:** pages and sections pass their own leading Stamp, sized
