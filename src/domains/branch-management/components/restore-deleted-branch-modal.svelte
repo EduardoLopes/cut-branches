@@ -11,6 +11,8 @@
 	import RestoreProgressBar from './restore-progress-bar.svelte';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
+	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -114,13 +116,21 @@
 	aria-describedby="Restore Deleted Branches"
 	data-testid="restore-branch-dialog"
 	showCloseButton={!flow.isProcessing || flow.isRestorationComplete}
-	class={css({ width: '600px' })}
 	passThrough={{
+		root: {
+			style: css.raw({ width: '600px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
+		},
 		content: {
 			style: css.raw({ display: 'flex', flexDirection: 'column', gap: 'md' })
 		}
 	}}
 >
+	{#snippet leading()}
+		<Stamp size="lg" emphasis="secondary" feedback="neutral">
+			<Icon icon="lucide:rotate-ccw" width="22px" height="22px" />
+		</Stamp>
+	{/snippet}
+
 	{#if flow.currentConflictBranch}
 		<RestoreConflictPrompt
 			branchName={flow.currentConflictBranch}
@@ -161,14 +171,12 @@
 		/>
 	{/if}
 
-	<div
-		class={css({
-			display: 'flex',
-			flexDirection: 'column',
-			gap: 'sm',
-			maxHeight: '50vh',
-			overflowY: 'auto'
-		})}
+	<!-- Status cards rather than rows, so the scroller gets a card-sized gap
+	     and inset instead of the well's row defaults. -->
+	<ScrollWell
+		class={css({ maxHeight: '50vh' })}
+		scrollerClass={css({ gap: 'sm', paddingX: 'xs', paddingY: 'xs' })}
+		testId="restore-branch-list"
 	>
 		<!-- Gated on `open`: the dialog's children render even while closed, so
 		     without this every selection change would build a status card per
@@ -187,23 +195,16 @@
 				onSetPreference={(resolution) => flow.setPreference(branchName, resolution)}
 			/>
 		{/each}
-	</div>
+	</ScrollWell>
 
-	<div
-		class={css({
-			display: 'flex',
-			justifyContent: 'flex-end',
-			gap: 'md',
-			marginTop: 'md'
-		})}
-	>
+	<DialogFooter>
 		{#if flow.isRestorationComplete}
 			<Button emphasis="primary" onclick={() => (open = false)} data-testid="done-button">
 				Done
 			</Button>
 		{:else}
 			<Button
-				emphasis="secondary"
+				emphasis="ghost"
 				onclick={handleCancel}
 				disabled={flow.isProcessing && !flow.isRestorationComplete}
 				data-testid="cancel-button"
@@ -220,6 +221,7 @@
 						emphasis="primary"
 						autofocus
 						onclick={() => flow.start()}
+						disabled={flow.isProcessing && !flow.isRestorationComplete}
 						data-testid="restore-button"
 					>
 						Restore
@@ -227,7 +229,7 @@
 				</Loading>
 			{/if}
 		{/if}
-	</div>
+	</DialogFooter>
 </Dialog>
 
 <ValidationHint

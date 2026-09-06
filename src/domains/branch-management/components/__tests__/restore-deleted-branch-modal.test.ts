@@ -134,4 +134,20 @@ describe('RestoreDeletedBranchModal', () => {
 		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 		expect(screen.getByTestId('open-restore-dialog-button')).not.toBeDisabled();
 	});
+
+	test('lists the selected branches and disables Restore once the run starts', async () => {
+		const screen = renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
+		await screen.getByTestId('open-restore-dialog-button').click();
+
+		await vi.waitFor(() =>
+			expect(screen.getByTestId('restore-branch-list')).toHaveTextContent('feat-a')
+		);
+		const restore = screen.getByTestId('restore-button');
+		expect(restore).not.toBeDisabled();
+
+		// The mocked mutation never reports back, so the flow stays in flight.
+		await restore.click();
+		await vi.waitFor(() => expect(restore).toBeDisabled());
+		expect(screen.getByTestId('cancel-button')).toBeDisabled();
+	});
 });
