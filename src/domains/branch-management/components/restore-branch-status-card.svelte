@@ -52,10 +52,14 @@
 <div class={css({ position: 'relative' })}>
 	<div class={css({ '& > div': { marginBottom: '0' } })}>
 		<Loading loading={showLoading} passThrough={{ root: { style: css.raw({ width: '100%' }) } }}>
+			<!-- Transparent: the card and its status rows sit straight on the
+			     dialog's list well; a filled container here would read as a box
+			     inside a box. -->
 			<Panel
-				background="surface.ground"
-				radius="lg"
-				padding="sm"
+				background="transparent"
+				border="none"
+				radius="md"
+				padding="none"
 				class={css({
 					display: 'flex',
 					flexDirection: 'column',
