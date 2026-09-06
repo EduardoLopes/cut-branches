@@ -65,12 +65,14 @@ runs:
     # The vitest suite runs in browser mode against chromium. `onlyBuiltDependencies: []`
     # blocks Playwright's postinstall, so the browser has to be fetched explicitly or the
     # run dies with "Executable doesn't exist at .../chromium_headless_shell".
-    # `playwright` is a transitive peer of @vitest/browser-playwright and is not hoisted
-    # to the root, so the version comes from the linked bin rather than a require().
+    # Assigned first rather than inlined into the echo, so a failure here stops the
+    # job instead of silently writing an empty version into the cache key.
     - name: Resolve Playwright version
       if: inputs.playwright == 'true'
       id: playwright-version
-      run: echo "version=$(pnpm exec playwright --version | tr -dc '0-9.')" >> $GITHUB_OUTPUT
+      run: |
+        VERSION="$(node -p "require('playwright/package.json').version")"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       shell: bash
 
     - name: Cache Playwright browsers
