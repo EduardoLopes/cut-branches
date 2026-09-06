@@ -59,12 +59,20 @@ jobs:
 
       - name: Tag the release
         id: tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION="$(node -p "require('./package.json').version")"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
-            echo "v$VERSION is already tagged; nothing to release."
+          # Whether the version actually shipped, rather than merely got tagged.
+          # The tag is pushed before the builds run, so a publish that fails
+          # halfway leaves a tag behind; keying on the tag would make every later
+          # push to main skip the release silently instead of retrying it.
+          # Releases before 0.6.0 used the cut_branches-v<version> tag name.
+          if gh release view "v$VERSION" >/dev/null 2>&1 ||
+            gh release view "cut_branches-v$VERSION" >/dev/null 2>&1; then
+            echo "v$VERSION is already released; nothing to do."
             echo "release_needed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -72,9 +80,13 @@ jobs:
           # Tagged directly rather than through `changeset git-tag`, which derives
           # the name from the working tree; this uses the version just read from
           # the commit being released. Same name either way for a single package.
-          echo "Releasing v$VERSION"
-          git tag "v$VERSION"
-          git push origin "refs/tags/v$VERSION"
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "v$VERSION is tagged but never released; retrying."
+          else
+            echo "Releasing v$VERSION"
+            git tag "v$VERSION"
+            git push origin "refs/tags/v$VERSION"
+          fi
           echo "release_needed=true" >> "$GITHUB_OUTPUT"
 
   # A tag pushed with GITHUB_TOKEN does not trigger other workflows, so publish
