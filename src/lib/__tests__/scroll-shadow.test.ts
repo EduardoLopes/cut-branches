@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { scrollShadow } from '../scroll-shadow';
 
 /** A real scrollable box: 50px viewport around 500px of content. */
@@ -48,6 +48,21 @@ describe('scrollShadow', () => {
 
 		expect(node.hasAttribute('data-overflow-top')).toBe(true);
 		expect(node.hasAttribute('data-overflow-bottom')).toBe(true);
+
+		action?.destroy?.();
+		node.remove();
+	});
+
+	it('re-evaluates when a descendant resizes through its inline style', async () => {
+		const node = makeScroller();
+		const content = node.firstElementChild as HTMLElement;
+		content.style.height = '20px';
+		const action = scrollShadow(node);
+		expect(node.hasAttribute('data-overflow-bottom')).toBe(false);
+
+		// Only the spacer's style changes — no nodes added, no viewport resize.
+		content.style.height = '500px';
+		await vi.waitFor(() => expect(node.hasAttribute('data-overflow-bottom')).toBe(true));
 
 		action?.destroy?.();
 		node.remove();

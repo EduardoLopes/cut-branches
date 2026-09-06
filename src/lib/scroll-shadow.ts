@@ -10,7 +10,10 @@ import type { Action } from 'svelte/action';
  * - `scroll` — the user moved within the list.
  * - `ResizeObserver` — the viewport (panel) height changed.
  * - `MutationObserver` — the content changed height, e.g. the async repository
- *   list arriving or the collapse rail swapping item layout.
+ *   list arriving or the collapse rail swapping item layout. Inline `style`
+ *   changes count too: a virtualizer grows its spacer by rewriting
+ *   `style.height`, which is neither a childList mutation nor a resize of the
+ *   scroll box itself.
  */
 export const scrollShadow: Action<HTMLElement> = (node) => {
 	function update() {
@@ -26,7 +29,12 @@ export const scrollShadow: Action<HTMLElement> = (node) => {
 	const resizeObserver = new ResizeObserver(update);
 	resizeObserver.observe(node);
 	const mutationObserver = new MutationObserver(update);
-	mutationObserver.observe(node, { childList: true, subtree: true });
+	mutationObserver.observe(node, {
+		childList: true,
+		subtree: true,
+		attributes: true,
+		attributeFilter: ['style']
+	});
 	update();
 
 	return {

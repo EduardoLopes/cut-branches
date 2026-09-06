@@ -9,12 +9,12 @@
 	import Stamp from '@pindoba/svelte-stamp';
 	import { createRawSnippet, mount, onDestroy, unmount, type Snippet } from 'svelte';
 	import { foldText } from '../utils/fold-text';
-	import { scrollShadow } from '../utils/scroll-shadow';
 	import { page } from '$app/state';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { createPrefetchRepositoryData } from '$lib/create-prefetch-repository-data';
 	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
+	import { scrollShadow } from '$lib/scroll-shadow';
 	import { formatCount } from '$utils/format-count';
 	import { css } from '@pindoba/styled-system/css';
 
