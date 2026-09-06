@@ -204,8 +204,10 @@ describe('RemoveRepositoryModal', () => {
 			expect(modal).toHaveAttribute('open');
 			expect(goto).not.toHaveBeenCalled();
 
-			// And a second click while it is in flight does not fire a second remove.
-			await getByTestId('confirm-remove').click();
+			// And the button is disabled while it is in flight, so there is no second
+			// remove to fire.
+			await vi.waitFor(() => expect(getByTestId('confirm-remove')).toBeDisabled());
+			expect(getByTestId('cancel-remove')).toBeDisabled();
 			expect(commands.deleteRepository).toHaveBeenCalledTimes(1);
 
 			settle({ status: 'ok', data: { success: true } });

@@ -1,6 +1,9 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import Loading from '@pindoba/svelte-loading';
+	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { createDeleteRepositoryMutation } from '../infrastructure/mutations/create-delete-repository-mutation';
 	import { goto } from '$app/navigation';
@@ -9,6 +12,7 @@
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import { portal } from '$utils/portal-action';
 	import { formatString, ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
@@ -75,12 +79,6 @@
 	}
 
 	function handleRemove() {
-		// The button is already marked disabled while the mutation runs, but the
-		// underlying control still fires clicks, so guard the second submit here.
-		if (deleteRepositoryMutation.isPending) {
-			return;
-		}
-
 		const repoId = repositoryId;
 
 		if (!repoId) {
@@ -107,11 +105,15 @@
 	<Dialog
 		bind:open
 		title="Remove repository"
+		subtitle={`Are you sure you want to remove the repository ${getRepositoryQuery.data?.name ?? repositoryId}?`}
 		aria-label="Remove repository"
 		aria-describedby="Remove repository"
 		data-testid="remove-modal"
 		showCloseButton={!deleteRepositoryMutation.isPending}
 		passThrough={{
+			root: {
+				style: css.raw({ width: '480px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
+			},
 			content: {
 				style: css.raw({
 					display: 'flex',
@@ -121,27 +123,32 @@
 			}
 		}}
 	>
-		<p>
-			Are you sure you want to remove the repository <strong
-				class={css({
-					color: 'danger.800',
-					fontSize: 'lg'
-				})}>{getRepositoryQuery.data?.name ?? repositoryId}</strong
-			>?
-		</p>
+		{#snippet leading()}
+			<Stamp size="lg" emphasis="secondary" feedback="neutral">
+				<Icon icon="lucide:folder-minus" width="22px" height="22px" />
+			</Stamp>
+		{/snippet}
 
-		<div
-			class={css({
-				display: 'flex',
-				justifyContent: 'flex-end',
-				gap: 'md'
-			})}
-		>
-			<Button emphasis="secondary" onclick={handleCancel} data-testid="cancel-remove">Cancel</Button
+		<DialogFooter>
+			<Button
+				emphasis="ghost"
+				onclick={handleCancel}
+				disabled={deleteRepositoryMutation.isPending}
+				data-testid="cancel-remove"
 			>
-			<Button feedback="danger" autofocus onclick={handleRemove} data-testid="confirm-remove"
-				>Remove</Button
-			>
-		</div>
+				Cancel
+			</Button>
+			<Loading loading={deleteRepositoryMutation.isPending} variant="busy" indicator>
+				<Button
+					feedback="danger"
+					autofocus
+					onclick={handleRemove}
+					disabled={deleteRepositoryMutation.isPending}
+					data-testid="confirm-remove"
+				>
+					Remove
+				</Button>
+			</Loading>
+		</DialogFooter>
 	</Dialog>
 </div>
