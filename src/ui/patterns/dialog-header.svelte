@@ -23,7 +23,15 @@
 </script>
 
 {#snippet stamp()}
-	<Stamp shape="square" size="sm" emphasis="secondary" feedback="neutral" shadow="sm">
+	<Stamp
+		shape="square"
+		size="sm"
+		emphasis="secondary"
+		feedback="neutral"
+		background="surface.base"
+		border="none"
+		shadow="sm"
+	>
 		<Icon {icon} width="16px" height="16px" />
 	</Stamp>
 {/snippet}
@@ -33,7 +41,8 @@
 	Banner, which can't take a `layout`. Same Banner settings as the dialog's
 	own (sm, no padding/background/border) plus `leading.span: 'above'`: the
 	stamp flanks the title only and the subtitle runs full width beneath both,
-	the same convention `page-header` uses.
+	the same convention `page-header` uses. The stamp is a quiet, borderless
+	`surface.base` tile so it reads as part of the header rather than a control.
 -->
 <Banner
 	headingLevel={2}
