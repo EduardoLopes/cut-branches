@@ -112,7 +112,7 @@
 		showCloseButton={!deleteRepositoryMutation.isPending}
 		passThrough={{
 			root: {
-				style: css.raw({ width: '480px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
+				style: css.raw({ width: '560px', maxWidth: 'calc(100vw - token(spacing.2xl))' })
 			},
 			content: {
 				style: css.raw({
