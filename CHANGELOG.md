@@ -1,5 +1,203 @@
 # cut-branches
 
+## 0.6.0
+
+### Minor Changes
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`3ca2539`](https://github.com/EduardoLopes/cut-branches/commit/3ca253981699ef26729e66ed26418b130ce89dc0) - Collapsing the sidebar now animates: the rail glides to its width on a single curve, the "Cut Branches" and "Repositories" headings fold away as it closes and unfurl as it reopens, and the collapse toggle cross-fades its icon while riding the shrinking edge to the centre of the rail. The toggle also moves out of the brand header into its own row at the bottom of the sidebar. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`2e7dbd9`](https://github.com/EduardoLopes/cut-branches/commit/2e7dbd94d5d7a03d97ef7d9b86059da927119745) - Branch cards now show the upstream ref as a footer badge and support a compact layout that reduces the card to the branch identity for dense contexts. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`487f176`](https://github.com/EduardoLopes/cut-branches/commit/487f176d6e1c86536b9a731a0116b5caff0482e1) - Branch cards now show the branch's line diff (+added/−removed) against its merge-base with the current branch, as badges on the right side of the card footer. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`7233841`](https://github.com/EduardoLopes/cut-branches/commit/72338419e0fb989b7eb624b8000adda221c33278) - Branch card footer now covers every state without layout shift: placeholder badges while the line diff is computing, a neutral "no diff" badge for branches with no unique changes, and an explicit "no upstream" badge for local-only branches. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`c5abe9f`](https://github.com/EduardoLopes/cut-branches/commit/c5abe9fdc630e1c80644c6b95737b8bb54c8ec43) - Branch cards now truncate long branch names and upstream refs with ellipses instead of overflowing, and accept extra footer badges from the consuming screen. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d155290`](https://github.com/EduardoLopes/cut-branches/commit/d155290790b362eef3228fa261cdf82079a46a41) - Add a branch/commit diff review view — a changed-files list with expandable, syntax-highlighted diffs — with entry points from branch cards, commit rows, and the delete-branch confirmation. Gated behind the `branch-diff` feature flag (off by default). (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`13a7e80`](https://github.com/EduardoLopes/cut-branches/commit/13a7e80b9e0a4e85b72342d31a5a236634dd989f) - Render symbol-level call edges on the diff canvas: edges now show which symbols one file uses from another, drawn as colored, multi-line labelled connections with wider node spacing so the relationships stay readable. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d2509ad`](https://github.com/EduardoLopes/cut-branches/commit/d2509ad5a628b34e7c8679e380d72b5b3b621ee1) - Render the commit history graph rows with the shared commit card in a compact density, showing the commit summary, author, relative time, short SHA, upstream, and ref decorations. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`02887fd`](https://github.com/EduardoLopes/cut-branches/commit/02887fd183bf57b07d3d88e2460b426613d39fbb) - Add a flag-gated commit-history view with an interactive branch graph. Open it from a repository's menu to browse the full commit log across branches, see each branch's ahead/behind comparison against the base, preview a branch's graph on hover from the branch list, and select branches to delete directly from the graph. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`1c12a55`](https://github.com/EduardoLopes/cut-branches/commit/1c12a555605d9f224121da20ba113d557b5e89ee) - Branch commit cards now show the commit's short SHA and, when configured, its upstream tracking ref, and can disclose the full commit message body via a per-card toggle. The backend now stores and exposes both the commit subject (summary) and the full message, plus each branch's upstream. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`801f8d8`](https://github.com/EduardoLopes/cut-branches/commit/801f8d8b22a4d61be8b6856eea4883cf70d86eec) - Give every dialog the same shape as Find repositories: an icon and subtitle in the header, lists on a recessed surface with scroll shadows, one-line rows whose paths truncate in the middle with the folder highlighted, consistent selected/hover/pressed row states, primary buttons disabled while their action runs, and footers without dividers. Manage repositories gains a live search match count; Clean up no longer lets you confirm mid-scan; Remove repository shows a busy state. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d7cf24e`](https://github.com/EduardoLopes/cut-branches/commit/d7cf24e82527a612d3cc4dff274206cf4dc338d7) - Add a canvas view mode to the branch diff. Changed files are laid out as pannable/zoomable node panels in dependency columns, with import edges drawn between them and each node embedding the file's diff, backed by a tree-sitter code-structure analysis. A list/canvas toggle is persisted alongside the other diff view options. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+  Work in progress — two known issues from review are not yet fixed: canvas pan/zoom resets when a node is toggled, and getDiffStructure is not yet wired into every cache-invalidation path.
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`4644854`](https://github.com/EduardoLopes/cut-branches/commit/4644854a2af86b853419eed5101610c9ec44b629) - "Explain all" now honors the Detail choice: in per-change mode each file's (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+  diff is revealed with its explanations rendered inline per hunk.
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`01b9bd6`](https://github.com/EduardoLopes/cut-branches/commit/01b9bd63ca556fdb5332a5eba83e460752ac8b8f) - Add AI-generated explanations to the branch diff: explain a single hunk, a whole file, or the entire changeset at once, with a chosen level of detail. Explanations render inline next to the diff and as per-file panels, and can be re-run or cancelled per file. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`ccaf606`](https://github.com/EduardoLopes/cut-branches/commit/ccaf606d5fa770c287c779d0829e550932ca8936) - The diff view gains a file tree: changed files grouped by directory (deep single-child paths compressed) in a pane beside the list — activating a file scrolls to its diff and opens it. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`e580667`](https://github.com/EduardoLopes/cut-branches/commit/e580667453f1b3cf069d9cfa6588a5dd29bd0c99) - New "View" menu in the diff header: unified/split layout, change style (background, markers, bars), one or two line-number columns, and line wrapping — persisted across sessions. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`62bd2f6`](https://github.com/EduardoLopes/cut-branches/commit/62bd2f6f6958c739541c4d78a35be514241cccd0) - Render large diffs progressively so huge files no longer freeze the diff view while opening, and keep page scrolling responsive over wide diffs. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d5d539f`](https://github.com/EduardoLopes/cut-branches/commit/d5d539fc9f681f4e4b1103705642ff5d4d1e4f3e) - feat: database integration with lot's of changes (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`0a58882`](https://github.com/EduardoLopes/cut-branches/commit/0a588822f196b08c508cbfb4768f7d80cebe292c) - The app now reopens the repository you were last working in, and when there is no (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+  repository to remember it opens the first one in the sidebar's current sort order
+  instead of an arbitrary one.
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`cf574e6`](https://github.com/EduardoLopes/cut-branches/commit/cf574e6f295d3631bc3331e74eaac6b27b99af56) - Redesign the Find repositories modal: scan location and options move into a toolbar under the header, results show a full-width filter, paths truncate smartly on one line with the repository folder highlighted, linked worktrees nest under their repository, the list sits on a recessed surface with scroll shadows, and adding is disabled while a scan runs. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`3376e47`](https://github.com/EduardoLopes/cut-branches/commit/3376e4717506e39e6cb35ebd3f7a1a874cac39a1) - The commit history's branch gutter now renders each branch through the shared compact branch card — upstream ref, current badge, and selected/locked visuals included — with a wider column for branch details and no checkbox on the undeletable current branch. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`1e39c88`](https://github.com/EduardoLopes/cut-branches/commit/1e39c88e541cbee23c926cae5895f5a4a76295c8) - Very large file diffs now ask before rendering ("Show diff") instead of mounting unprompted, and say so when syntax highlighting is disabled for size. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`52e40d0`](https://github.com/EduardoLopes/cut-branches/commit/52e40d0f67770550c14bfe1d764c068b086786b7) - Highlight the deep-linked branch in its own graph color when navigating from a commit card, and remove the now-inert hover on commit-history rows. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`8d12381`](https://github.com/EduardoLopes/cut-branches/commit/8d12381cbd49d16a1ab7d2be784e01072a5f4cac) - On macOS the window now draws its own titlebar alongside the traffic lights, following light and dark mode with the rest of the app, and reclaiming the space reserved for those controls when the window goes fullscreen. Windows and Linux keep their standard system titlebar. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`75a4069`](https://github.com/EduardoLopes/cut-branches/commit/75a4069566be4d8e4efbf853e6f513ae6beb12cb) - The sidebar repository list now reads as one recessed panel, keeps its branch-count badge visible in the collapsed rail, and fades clipped rows into the surface at the top and bottom edges to signal there is more to scroll to. Counts above 999 clamp to "99+" so a badge can no longer stretch across the rail, with the exact count kept on its accessible label. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`20edb5d`](https://github.com/EduardoLopes/cut-branches/commit/20edb5d44d2db5ee4e9ae47f5f0dfd592c4c6586) - Track review progress in the branch diff: mark files reviewed from either the list rows or the canvas nodes, see a reviewed count in the header, and clear all marks at once. Progress is persisted per repository and diff target. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`e9f4e88`](https://github.com/EduardoLopes/cut-branches/commit/e9f4e88650d130ff0027d0be786b475a7b1c9eec) - Replace the branch list's pagination with a single virtualized, infinitely-scrolling list — rows load as you scroll, stay mounted once passed, and the scroll port is keyboard-focusable. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`812a2f5`](https://github.com/EduardoLopes/cut-branches/commit/812a2f5f032fc72e023312015c3b0c40aecb70cb) - On macOS the sidebar collapse toggle now sits in the titlebar next to the traffic lights, so it stays reachable at the same spot whether the sidebar is open or collapsed to its rail. Windows and Linux keep it in the sidebar's own bottom row. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`164f302`](https://github.com/EduardoLopes/cut-branches/commit/164f302136d1f902c152fe5ecef06711f9163f41) - Slim down the commit shown inside a branch card to a single line — message, author and date — and add a "More" control that expands the branch's recent commits with full detail (description body, SHA, diff link). Expanding promotes the last commit to a full card so its description is readable, and the panel header follows along. Requires the "Commit history" feature flag. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`b0b5501`](https://github.com/EduardoLopes/cut-branches/commit/b0b550127b86b09d6a0ea994f20da84f0a54e27b) - Split diff layout now always wraps long lines — half-width columns made horizontal scrolling unusable. The "Wrap lines" option shows as on and locked while split is active and still applies when switching back to unified. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`4a3b375`](https://github.com/EduardoLopes/cut-branches/commit/4a3b3752650b286056f65d87de4d73e65625beae) - Each changed file's header now stays pinned to the top of the list while its diff scrolls, so long diffs never lose their file identity. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`54c405c`](https://github.com/EduardoLopes/cut-branches/commit/54c405c2c4c2d793993564b0ef72e8300df07a3f) - Every page now follows one layout: a shared header (icon, title, description, actions, context tabs) above a recessed content well with its own filter toolbar. The repository page splits its two navigation levels accordingly — Branches/Worktrees are tabs, Active/Deleted is a filter — and commit history and diff keep the repository header with a breadcrumb instead of being separate full-screen views. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+  The sidebar and the page content are now floating rounded panels on a shared backdrop, which also fixes a dark-mode bug where the strip around them rendered light.
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`5854b22`](https://github.com/EduardoLopes/cut-branches/commit/5854b22192313d8bec7b570982e8cd93f6e0fb78) - Action buttons are no longer disabled for validation reasons. Instead they stay (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+  enabled and, when clicked before they can submit, surface a floating validation
+  message (e.g. "Select at least one branch to delete"). In-flight operations now
+  show a busy indicator on the button instead of a disabled state.
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`421bdb5`](https://github.com/EduardoLopes/cut-branches/commit/421bdb5b62ab38979957d56d8e22e14e3644a748) - Add worktree management: a flag-gated worktrees view for a repository that lists, adds, removes, and locks git worktrees, with a Branches/Worktrees context switch in the repository header. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+### Patch Changes
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`f631e2a`](https://github.com/EduardoLopes/cut-branches/commit/f631e2a7443a7e232ae2063e97f5958035570eea) - Show the add-repository button's icon on the leading (left) side of the label instead of trailing it. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`aa69a37`](https://github.com/EduardoLopes/cut-branches/commit/aa69a379b38ead6b2b697aabfe1a6cab83e099a4) - The select-all control in every pick-list dialog — Find repositories, Manage repositories and Clean up repository — is now attached to the list it acts on: it rides in a header inside the list panel, one surface tier above the rows and separated by a hairline, with its checkbox in the same column as the rows' checkboxes. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`90e0b2f`](https://github.com/EduardoLopes/cut-branches/commit/90e0b2f8a8c998a748b307beeab1747b930cc0b6) - refactor: improve query invalidation and loading state handling in branch management components (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`ef38bbc`](https://github.com/EduardoLopes/cut-branches/commit/ef38bbce55cafad4f807d45962ff5122a8d913b7) - The branches/deleted tab strip no longer pulls a second full copy of every active branch over IPC just to show its count — it now reads the same cached list the page already fetched. One fewer round-trip and one fewer conversion pass on every visit to a repository. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d924b05`](https://github.com/EduardoLopes/cut-branches/commit/d924b05a8e65139b55015b4b78f1c2cb7de33f1b) - Opening a repository no longer stutters. The branch list used to mount its full scroll runway (22 cards) before the first paint, even though the viewport holds four — around 75ms of blocking work on every arrival. It now mounts a narrow window and widens to the full runway on the first scroll, roughly halving the time between navigating and seeing branches. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`b46ca0f`](https://github.com/EduardoLopes/cut-branches/commit/b46ca0ff6bbc349e72ed1756e136addc77e679a4) - Fix the branch selection counter and header checkbox while a search is active. The selected count was measured across the whole repository instead of the branches the search left visible, so the header could read "5 branches are selected / 2 branches were found" and the select-all checkbox appeared empty even with branches selected. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`4b9481c`](https://github.com/EduardoLopes/cut-branches/commit/4b9481c8970a465cbc520e64269f0ffae29411d1) - Commit history rows no longer duplicate the upstream ref badge on each commit; the upstream is shown by the branch card instead. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`7e23ecb`](https://github.com/EduardoLopes/cut-branches/commit/7e23ecb3647720d648afb92554c43f66e2c0b395) - Fix the commit history run toggle overflowing its gutter column: it is now a borderless ghost button that fits the column exactly, and the run divider strip's icon no longer oversizes. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`e10f21c`](https://github.com/EduardoLopes/cut-branches/commit/e10f21c6c4cd795b3944d130b631eff441c71b57) - Refine the current branch in the branch list: its card now fills the full row width and is marked with a "current" badge. The current branch is no longer lockable, since it already can't be deleted. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`e1546d3`](https://github.com/EduardoLopes/cut-branches/commit/e1546d3509f4374e29a6bf4e4836cd34664f2127) - Stop the delete-branches modal (and the branch list) from shifting while scrolling. Merge status is now computed during the branch listing sync — one revwalk over HEAD's history answers every branch in a few tens of milliseconds — so the "not fully merged" alert is known the moment a row mounts instead of popping in after a lazy per-viewport fetch. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`faa9e94`](https://github.com/EduardoLopes/cut-branches/commit/faa9e9425820882ff19895bee85ced0edbaf40e3) - Refresh the Rust and frontend dependency stack to the latest releases (git2 0.21, tree-sitter 0.27, notify 8, Tauri plugins, SvelteKit 2.70, Svelte 5.57), so the app ships with the newest upstream fixes. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`c5ac2bf`](https://github.com/EduardoLopes/cut-branches/commit/c5ac2bf18367dcef152a4e2c8177811e27d14d88) - Fix a white right border on the branch-diff file-tree pane. The border color was written separately from the border shorthand, so `border-right-color` fell back to `currentColor` (white) instead of the neutral token. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`90e0b2f`](https://github.com/EduardoLopes/cut-branches/commit/90e0b2f8a8c998a748b307beeab1747b930cc0b6) - refactor: improve query invalidation and loading state handling in branch management components (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`2fdd1e9`](https://github.com/EduardoLopes/cut-branches/commit/2fdd1e997d8c5b01950d4b055fe149cc88e159b6) - Fix error notifications showing an empty body for backend errors that carry no description. Rust sends `description` as `null` for those errors (invalid branch name, invalid repository path, and others), and it reached the toast unchanged instead of being normalised to an empty string. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`01ee07b`](https://github.com/EduardoLopes/cut-branches/commit/01ee07b37660f165fbeb5c97b040149a4ca58695) - feat: add testing documentation and testing utilities (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`6f3d485`](https://github.com/EduardoLopes/cut-branches/commit/6f3d48597c8b94ff0f245e52b3d171c89c828ed2) - The footer is one continuous bar now that the sidebar can collapse — the sidebar-width segment is gone and the theme mode select moved to the right, next to the notifications button. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`7c12a08`](https://github.com/EduardoLopes/cut-branches/commit/7c12a08eb08e649b272737ebde9a05708e7773c6) - Selecting a branch now draws an accent border on its card, so the selection reads clearly instead of blending into the unselected ones. The current branch keeps its subtler muted border. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`b7b790e`](https://github.com/EduardoLopes/cut-branches/commit/b7b790e345f79b5c5a3063dbf97a9f180e8233be) - refactor: standardize command input/output structures and update commands naming conventions (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`c43b2a5`](https://github.com/EduardoLopes/cut-branches/commit/c43b2a593f8148b444cd49d0c0a4683be3581f8c) - refactor: update error handling to use AppError struct across branch and repository services (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`9f4d53c`](https://github.com/EduardoLopes/cut-branches/commit/9f4d53c0bfcec5960026d2f547216322aedfaa84) - Hide the "Repository options" tooltip while the repository options menu is open. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`11f383d`](https://github.com/EduardoLopes/cut-branches/commit/11f383d8738cef09f24790ce0348a61409e9ee66) - Fix the bulk cleanup summary counting repositories it did not clean. A repository was counted as cleaned whenever the clean command ran, even when every folder in it failed to delete, so the notification could report "Cleaned 3 repositories" alongside "12 folder(s) could not be deleted" with nothing actually removed. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`6ce313d`](https://github.com/EduardoLopes/cut-branches/commit/6ce313ddf77789643078966faddb25df416a981e) - refactor: use a new architecture (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d6c4861`](https://github.com/EduardoLopes/cut-branches/commit/d6c48615065ac95516ea9e177fa03a7ada3126cd) - feat: add loading indicator and popover functionality to RepositoryManagementHeader (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`60811bd`](https://github.com/EduardoLopes/cut-branches/commit/60811bde88ad7a79ee564e0457eb9d7dec0137bb) - Open the "Repository options" tooltip to the left of its button instead of below it. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`f312b47`](https://github.com/EduardoLopes/cut-branches/commit/f312b4768835e4aa57e9d35995fa2281efadddb3) - Branch cards no longer flash a "not fully merged" alert on every branch while merge metrics are still loading. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`e1ea256`](https://github.com/EduardoLopes/cut-branches/commit/e1ea256186daddc6491044b694f73d8c0533265b) - Right-align the add-repository call to action in the welcome screen and render it at the medium size. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`36cc664`](https://github.com/EduardoLopes/cut-branches/commit/36cc66493f87dc51d0db207750a10c48fb820300) - Make the sticky page toolbar opaque. It now fills with `neutral.surface.hill` — one tier above the well's `surface.ground` — instead of a blurred 50% `surface.peak`, so rows scrolling underneath no longer ghost through it. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`ec353c7`](https://github.com/EduardoLopes/cut-branches/commit/ec353c7ef8ca1246358c1ba0e7a8cb7f0ec2a426) - refactor: reorganize code structure in src-tauri (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`faae7f8`](https://github.com/EduardoLopes/cut-branches/commit/faae7f886982e09a1fa9fae7ff75b94d25d8b14a) - The collapsed sidebar rail now keeps the add-repository button and the repository icons on one center line, with the scrollbar gutter reserved symmetrically. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`8fc0d88`](https://github.com/EduardoLopes/cut-branches/commit/8fc0d8865c5bb0ea8d25a8f463b9cfe161b79d2d) - Fix a set of repository flow bugs: closing the "Find repositories" dialog now abandons the running scan (and a re-scan can no longer be overwritten by a superseded one), batch removal reports why each repository failed and invalidates the same caches as a single removal, the global `repository-changed` listener no longer leaks a duplicate handle, a stale sync check can no longer flag the previously open repository as out of sync, and repository ids containing `#`, `?` or `%` now produce working routes. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`864d9e3`](https://github.com/EduardoLopes/cut-branches/commit/864d9e3d26dd1fe9a1c56f0f93803c101dbff319) - Repository navigation and removal fixes: every `/repos/<id>` link and redirect now goes through the shared route helpers, so ids containing `#`, `?`, `%`, spaces or non-ASCII characters resolve instead of silently breaking. A partially failed batch removal keeps the manage modal open with the failed repositories still selected, the single-remove dialog stays open until the mutation settles (and still navigates away when the repository turns out to be gone), the out-of-sync banner resets when you switch repositories, and batch removal no longer refetches the repositories it just deleted. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`606560b`](https://github.com/EduardoLopes/cut-branches/commit/606560baeb9837b1943192d0f18df2079289f91b) - Restore progress now counts each branch exactly once, so the bar no longer reaches 100% while conflicts are still waiting for a decision; cancelling the folder picker in "Scan a specific folder" closes the dialog instead of leaving it empty. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d979d84`](https://github.com/EduardoLopes/cut-branches/commit/d979d840b12f9133444a71c40b1062587ad65150) - Switching branches now refuses to discard uncommitted changes instead of force-overwriting them; branches deleted in the app and re-created outside it return to the active list on the next sync; the branch list applies the same trimmed search as the header count; branch restoration uses the full commit SHA; deleting branches waits for the list to refresh before the modal closes; a failed repository-list load no longer redirects to onboarding. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`54e3e7a`](https://github.com/EduardoLopes/cut-branches/commit/54e3e7ad326dfe78615f6d8c11ea4fc09a5c75b3) - feat: add showAlerts prop to BranchList component and update usage in DeletedBranchesView (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`5d4ccd6`](https://github.com/EduardoLopes/cut-branches/commit/5d4ccd6337a25d20ec7cc3504467b6764d4936a9) - Fixed the repository, diff, history, cleanup and settings pages overlapping the footer: they sized themselves from the viewport rather than from the space the app shell actually gives them. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`5122943`](https://github.com/EduardoLopes/cut-branches/commit/512294372a9db136fdb28a7b0f524d121cc8014a) - feat: introduce CommitCard component for better commit display in branch management (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`e744c7b`](https://github.com/EduardoLopes/cut-branches/commit/e744c7b7f925fac81dac9973fabbba1d0ec2ce78) - The sidebar repository list sits directly on the sidebar surface — removing the inset card wrapper gives the navigation items more horizontal room. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`570321f`](https://github.com/EduardoLopes/cut-branches/commit/570321f9cfb62c6e3632f3adb92a6e7ab8871b8a) - refactor: replace invoke calls with generated bindings for branch management and repository services (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`50e7148`](https://github.com/EduardoLopes/cut-branches/commit/50e7148ac531fc73258bfad11c1f23eeb98a03ca) - Show only one state at a time in the active branches view — the error message no longer stacks with the "no branches to delete" note and the empty-repository message. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d12aaae`](https://github.com/EduardoLopes/cut-branches/commit/d12aaaea6e24c7666bbb1d164f69edc9602a26b2) - Apply a settings or feature-flag change to the interface right away. Toggles backed by a persisted store only took effect after restarting the app the first time they were read. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`7697d00`](https://github.com/EduardoLopes/cut-branches/commit/7697d00e894b0e467905710918a9af8258bce1ad) - refactor: enhancing type safety and utility functions for tauri commands and svelte query (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`751d397`](https://github.com/EduardoLopes/cut-branches/commit/751d39757038ff2604020886b15877db01a82c29) - Keep the branches toolbar a fixed height so the Active and Deleted views no longer differ in height, and vertically centre the search field against the filter and bulk-action controls. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`908f6d9`](https://github.com/EduardoLopes/cut-branches/commit/908f6d9358cb286e5b919d3e09d1c67e99718d8f) - refact: update how serde is used (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`7874f70`](https://github.com/EduardoLopes/cut-branches/commit/7874f70575ed82d82fc796529d840061bd5c5657) - Failures no longer pass silently: a repository refresh that rejects now shows a "Could not update repository" toast (instead of an unhandled rejection plus a false success toast), and a bulk repository add reports the reason for each path it could not add rather than a bare count. The Delete and Restore triggers also treat a still-loading selection as "nothing selected", so a click no longer opens an empty dialog. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`62bebbb`](https://github.com/EduardoLopes/cut-branches/commit/62bebbb587a2db040497fb9b4e90664ce98758b4) - Switching branches now shows an actionable error when uncommitted changes would be overwritten; branches that fail to restore are reported in a toast instead of vanishing silently; cancelling the folder picker from inside the scan dialog keeps the current results; a failed repository-list load now shows an error notification. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`95287e4`](https://github.com/EduardoLopes/cut-branches/commit/95287e49f637c39749417d4a600dbebc01be83c4) - Migrate every surface token reference to pindoba's terrain ladder: `surface.soft` → `peak`, `step.1/2/3` → `hill`/`base`/`valley`, and `deep` → `ground` (same under `accent.surface`). (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`631fa08`](https://github.com/EduardoLopes/cut-branches/commit/631fa08fe36794b88a72049439d4e4e54dd6e6ac) - Large repositories no longer freeze when selecting branches, opening the delete modal, or scrolling the branch list: branch metrics are fetched in batches over the visible window, selection updates patch the cache instead of refetching the whole list, and unchanged repositories serve their branch list from the database. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`0f67c0b`](https://github.com/EduardoLopes/cut-branches/commit/0f67c0bef90807546aef6bd20bd7977c6b897e92) - refactor: update RepositoryManagementHeader with new tab functionality (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`931ea82`](https://github.com/EduardoLopes/cut-branches/commit/931ea82658b66f615232eb6f697911db6e710f62) - Keep a long commit summary on the branch card ellipsized inside the card instead of bleeding past its edge. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`aea88f4`](https://github.com/EduardoLopes/cut-branches/commit/aea88f4df61347fd6d51c590ca4304e9213a7592) - Rework the commit card layout: the branch/history icon now flanks the commit (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+  message, the subject reads as a heading, and author · relative date share a
+  single trailing meta line.
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`f8de56f`](https://github.com/EduardoLopes/cut-branches/commit/f8de56f0203fd51fe5c3a8179726b8bc001b446f) - Fix backend branch-management bugs: repositories with a detached HEAD can now be opened, listed and synced; batch branch deletion pre-validates every name so a partial delete can no longer lose branches; restoring with the Overwrite strategy is atomic and batch restores report per-item failures instead of aborting; and branch restore/reachability resolve commit SHAs strictly instead of accepting arbitrary revspecs. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`476fad9`](https://github.com/EduardoLopes/cut-branches/commit/476fad9fa18f09f708e6df7f892a489536f6f1ab) - feat: implement automatic query invalidation and resource-based keys for tauri mutations and queries (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`5791036`](https://github.com/EduardoLopes/cut-branches/commit/5791036e25db27462597d3ddf2b5e1423274fec5) - Match filesystem watcher events precisely against each repository's ref surface. A linked worktree's private git directory lives inside the main repository's `.git`, so the previous prefix match fanned a single ref change out to the main repository and every registered worktree, triggering N redundant re-syncs. Only shared `refs/heads/**` and `packed-refs` now match several repositories; `HEAD` matches exactly one. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`605d1c4`](https://github.com/EduardoLopes/cut-branches/commit/605d1c438d100ea8b2b499dc5f36c5e661dd3963) - feat: add utils for svelte query and mutation (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [`8428248`](https://github.com/EduardoLopes/cut-branches/commit/8428248621ee87a9a9ebe35486b9edc5fb0adecd) - chore: update deps (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
+- [#33](https://github.com/EduardoLopes/cut-branches/pull/33) [`d398647`](https://github.com/EduardoLopes/cut-branches/commit/d3986478ba5dbe102a283b697f52ec587b08a166) - Fix repositories whose `.git` is a pointer file (linked worktrees, submodules) never re-syncing: the state fingerprint and the filesystem watcher now resolve the real git directories through git2 instead of assuming `<root>/.git`. Repositories with no commits yet (unborn HEAD) can now be added, and removing a repository that is no longer in the database reports an error instead of a false success. (Thanks [@EduardoLopes](https://github.com/EduardoLopes))
+
 ## 0.5.0
 
 ### Minor Changes
