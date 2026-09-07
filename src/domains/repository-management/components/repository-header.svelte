@@ -162,7 +162,7 @@
 		{#snippet trigger(props)}
 			<Tooltip
 				content="Repository options"
-				placement="bottom"
+				placement="left"
 				openWhen="[aria-expanded=&quot;false&quot;]"
 				bind:open={tooltipOpen}
 			>
