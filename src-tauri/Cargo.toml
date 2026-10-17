@@ -71,6 +71,12 @@ custom-protocol = ["tauri/custom-protocol"]
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2.4.2"
 
+# Embedded W3C WebDriver server (port 4445) for driving and profiling the real
+# WKWebView, the only WebDriver option on macOS. Debug builds only, so release
+# binaries never carry it.
+[target.'cfg(debug_assertions)'.dependencies]
+tauri-plugin-wdio-webdriver = "1"
+
 # Custom script aliases
 [package.metadata.scripts]
 coverage = "cargo llvm-cov --html"

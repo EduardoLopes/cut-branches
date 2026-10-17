@@ -201,6 +201,13 @@ fn main() {
             }));
     }
 
+    // Embedded WebDriver server for driving the real webview from tests and
+    // profiling scripts (see Cargo.toml). Debug builds only.
+    #[cfg(debug_assertions)]
+    {
+        tauri_builder = tauri_builder.plugin(tauri_plugin_wdio_webdriver::init());
+    }
+
     tauri_builder
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_dialog::init())
