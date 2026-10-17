@@ -200,9 +200,13 @@
 	// surface.
 	// ---------------------------------------------------------------------------
 
-	/** Rough card height (header + one-line commit + footer). Only seeds the
-	 *  scrollbar — every mounted row reports its real height back. */
-	const ESTIMATED_ROW_H = 148;
+	/** Card height without an alert (header + one-line commit + footer), as
+	 *  rendered by the current Pindoba card. Only seeds the scrollbar — every
+	 *  mounted row reports its real height back — but the closer it is, the
+	 *  less the total size jumps as rows mount. Rows with a merge alert run
+	 *  ~270px; alerts depend on lazily-fetched merge status, so they can't be
+	 *  estimated up front. */
+	const ESTIMATED_ROW_H = 206;
 	/** Matches the `gap: md` rhythm the non-virtualized list used. */
 	const ROW_GAP = 16;
 	/** Rows mounted ahead of the viewport, in the direction of travel — the

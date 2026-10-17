@@ -133,7 +133,7 @@ describe.skipIf(!import.meta.env.VITE_BENCH)('BranchList mount/teardown cost', (
 
 			console.log(
 				`[BENCH] rows=${rows} syncRender=${syncMs.toFixed(1)}ms unmount=${unmountMs.toFixed(1)}ms ` +
-					`portH=${port?.clientHeight ?? 0} rowH=${rowH.toFixed(0)} (estimate ${148})`
+					`portH=${port?.clientHeight ?? 0} rowH=${rowH.toFixed(0)} (estimate ${206})`
 			);
 		});
 	}
