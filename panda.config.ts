@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import { defineConfig } from '@pandacss/dev';
 
 // The Panda CLI runs as a standalone Node process and does not auto-load `.env`
@@ -24,52 +23,40 @@ const useLocalPindoba = (process.env.USE_LOCAL_PINDOBA ?? dotenv.USE_LOCAL_PINDO
 
 // Pindoba is consumed as a Panda v2 design system: `designSystem` below loads
 // `@pindoba/styled-system`'s preset, import map and the pre-extracted styles of
-// every component recipe (its `panda lib` buildinfo) from `node_modules`.
+// every component (its `panda lib` buildinfo) from `node_modules`.
 //
-// Panda resolves `designSystem` by package name only, so it cannot be pointed
-// at the sibling checkout. In local mode we instead layer the sibling's built
-// preset and recipe buildinfo on top of it: the local preset wins over the
-// design system's (presets apply after it), and the local buildinfo adds any
-// recipe class the published one doesn't have yet. Both self-disable when
-// `../pindoba` is absent (CI / release), so this is safe to commit. Rebuild the
-// sibling (`pnpm --filter @pindoba/panda-preset build`, then
-// `pnpm --filter @pindoba/styled-system build`) and restart the dev server to
-// pick up an edit.
-//
-// The config is bundled to CommonJS by Panda (bundle-n-require), so top-level
-// `await` is unavailable. Instead we hand Panda a Promise as a preset entry:
-// `getResolvedConfig` does `await subPreset` for every entry, so a preset that
-// resolves asynchronously via dynamic `import()` is fully supported.
-const localPresetEntry = path.resolve(
-	process.cwd(),
-	'../pindoba/packages/panda-preset/dist/index.js'
-);
-const localBuildInfo = path.resolve(
-	process.cwd(),
-	'../pindoba/packages/styled-system/dist/panda/buildinfo.json'
-);
-const localPresets =
-	useLocalPindoba && existsSync(localPresetEntry)
-		? [import(pathToFileURL(localPresetEntry).href).then(({ preset }) => preset())]
-		: [];
-const localIncludes = useLocalPindoba && existsSync(localBuildInfo) ? [localBuildInfo] : [];
+// In local mode the runtime components come from the sibling checkout (Vite
+// aliases), so their styles must come from the sibling's design system too —
+// the published buildinfo lacks any class added since the last release. Panda
+// resolves `designSystem` with `require.resolve('<spec>/panda/lib.json')`, so a
+// path to the sibling's built `dist/` works in place of the package name and
+// loads its preset, buildinfo and import map as one unit. (A buildinfo can't be
+// layered through `include` in v2: it is parsed as source and fails.) Falls
+// back to the npm package when `../pindoba` is absent (CI / release), so this
+// is safe to commit. Rebuild the sibling (`pnpm --filter @pindoba/panda-preset
+// build`, then `pnpm --filter @pindoba/styled-system build`) and restart the
+// dev server to pick up an edit.
+const localDesignSystem = path.resolve(process.cwd(), '../pindoba/packages/styled-system/dist');
+const designSystem =
+	useLocalPindoba && existsSync(path.join(localDesignSystem, 'panda/lib.json'))
+		? localDesignSystem
+		: '@pindoba/styled-system';
 
 export default defineConfig({
 	// Whether to use css reset
 	preflight: true,
 
-	// Preset, import map (`@pindoba/styled-system/*`) and component recipe
-	// styles. Don't also add pindoba's preset, an importMap or its packages to
+	// Preset, import map (`@pindoba/styled-system/*`) and component styles.
+	// Don't also add pindoba's preset, an importMap or its packages to
 	// `include`.
-	designSystem: '@pindoba/styled-system',
+	designSystem,
 
 	// Where to look for your css declarations
 	include: [
-		'./src/**/*.{ts,tsx,svelte}',
+		'./src/**/*.{ts,tsx,svelte}'
 		// (The @pindoba/devtools panel is deliberately NOT included here: it ships
 		// its own precompiled `@pindoba/devtools/styles.css`, imported dev-only in
 		// app-shell.svelte, so its CSS never gets compiled into ours.)
-		...localIncludes
 	],
 	exclude: ['**/node_modules/**'],
 	watch: true,
@@ -229,7 +216,6 @@ export default defineConfig({
 		}
 	},
 
-	presets: localPresets,
 	jsxFramework: 'svelte',
 
 	// The output directory for your css system
