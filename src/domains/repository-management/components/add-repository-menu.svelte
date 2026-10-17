@@ -18,7 +18,7 @@
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
-	interface Props extends ButtonProps {
+	type Props = ButtonProps & {
 		icon?: string;
 		/** Renders the primary button as an icon-only (compact) control. */
 		visuallyHiddenLabel?: boolean;
@@ -34,7 +34,7 @@
 		 */
 		withManageRepositories?: boolean;
 		onSuccess?: (data: CreateRepositoryOutput) => void;
-	}
+	};
 
 	const {
 		size = 'lg',

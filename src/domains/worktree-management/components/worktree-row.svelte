@@ -39,8 +39,10 @@
 	// through the root passThrough style, mirroring branch-card: selected →
 	// dashed border, locked → dimmed + desaturated.
 	const rootStyle = $derived({
-		...(selected ? { borderStyle: 'dashed' } : {}),
-		...(worktree.isLocked() && !worktree.isMain() ? { opacity: 0.5, filter: 'grayscale(1)' } : {})
+		...(selected ? css.raw({ borderStyle: 'dashed' }) : {}),
+		...(worktree.isLocked() && !worktree.isMain()
+			? css.raw({ opacity: 0.5, filter: 'grayscale(1)' })
+			: {})
 	});
 </script>
 

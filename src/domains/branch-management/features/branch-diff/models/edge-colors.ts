@@ -10,7 +10,8 @@
  * lookups are render-side (CSS variables that follow theme changes for free).
  */
 
-import { token, type Token } from '@pindoba/styled-system/tokens';
+import { token } from '@pindoba/styled-system/tokens';
+import type { Token } from '@pindoba/styled-system/types';
 
 /** Distinct edge colors available (matches the graph lane palette). */
 export const EDGE_PALETTE_SIZE = 8;

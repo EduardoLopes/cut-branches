@@ -3,7 +3,8 @@
 // colors.graph.*), so SVG strokes receive CSS variables and follow theme
 // changes without any re-render.
 
-import { token, type Token } from '@pindoba/styled-system/tokens';
+import { token } from '@pindoba/styled-system/tokens';
+import type { Token } from '@pindoba/styled-system/types';
 
 /** How many distinct lane colors the palette defines. */
 export const LANE_PALETTE_SIZE = 8;

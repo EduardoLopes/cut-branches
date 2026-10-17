@@ -5,7 +5,7 @@
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
-	interface Props extends ButtonProps {
+	type Props = ButtonProps & {
 		icon: string;
 		label: string;
 		visuallyHiddenLabel?: boolean;
@@ -25,7 +25,7 @@
 		 * control, so a 2rem glyph plus affix padding cannot fit).
 		 */
 		iconSize?: string;
-	}
+	};
 
 	const {
 		icon,

@@ -20,8 +20,10 @@ describe('SelectionRow', () => {
 
 		const row = screen.getByTestId('row');
 		expect(row).toHaveTextContent('cut-branches');
-		expect(row.element().querySelector('input')).not.toBeChecked();
-		expect(row.element().getAttribute('aria-label')).toBe('cut-branches');
+		const input = row.element().querySelector('input');
+		expect(input).not.toBeChecked();
+		// Pindoba's Checkbox routes aria-* to the native input, not the root label.
+		expect(input?.getAttribute('aria-label')).toBe('cut-branches');
 
 		await row.click();
 		expect(onchange).toHaveBeenCalledTimes(1);

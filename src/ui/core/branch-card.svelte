@@ -154,9 +154,9 @@
 	// those through the root passThrough style.
 	const rootStyle = $derived({
 		overflow: 'hidden',
-		...(isVisuallySelected ? { borderStyle: 'dashed' } : {}),
+		...(isVisuallySelected ? css.raw({ borderStyle: 'dashed' }) : {}),
 		...(disabled || locked
-			? { opacity: 0.5, pointerEvents: 'none' as const, filter: 'grayscale(1)' }
+			? css.raw({ opacity: 0.5, pointerEvents: 'none', filter: 'grayscale(1)' })
 			: {})
 	});
 

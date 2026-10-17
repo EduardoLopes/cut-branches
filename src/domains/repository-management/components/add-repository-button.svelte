@@ -7,11 +7,11 @@
 	import type { CreateRepositoryOutput } from '$infrastructure/bindings';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
-	interface Props extends ButtonProps {
+	type Props = ButtonProps & {
 		icon?: string;
 		visuallyHiddenLabel?: boolean;
 		onSuccess?: (data: CreateRepositoryOutput) => void;
-	}
+	};
 
 	const {
 		size = 'lg',
