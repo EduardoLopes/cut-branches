@@ -92,6 +92,26 @@ describe('RedirectToApp', () => {
 		vi.clearAllMocks();
 	});
 
+	describe('loading indicator', () => {
+		it('shows the spinner while the repository list is loading', async () => {
+			mockIsPending = true;
+			const screen = await renderWithTestWrapper(RedirectToApp);
+			await settle();
+
+			expect(
+				screen.container.querySelector('[data-testid="redirect-to-app-loading"]')
+			).toBeInTheDocument();
+		});
+
+		it('removes the spinner once the repository list has loaded', async () => {
+			mockData = unsortedRepositories;
+			const screen = await renderWithTestWrapper(RedirectToApp);
+			await settle();
+
+			expect(screen.container.querySelector('[data-testid="redirect-to-app-loading"]')).toBeNull();
+		});
+	});
+
 	describe('startup warm-up', () => {
 		it('warms the remembered repository alongside the list, not after it', async () => {
 			mockPathname = '/';

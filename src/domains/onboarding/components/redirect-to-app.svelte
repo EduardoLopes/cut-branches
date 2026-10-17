@@ -73,4 +73,8 @@
 	});
 </script>
 
-<Loading loading={repositoriesQuery.isPending || repositoriesQuery.isLoading}></Loading>
+<!-- A childless Loading is a standalone spinner that is always on, whatever its
+     `loading` prop says, so mount it only while the list is loading. -->
+{#if repositoriesQuery.isPending || repositoriesQuery.isLoading}
+	<Loading loading data-testid="redirect-to-app-loading" />
+{/if}
