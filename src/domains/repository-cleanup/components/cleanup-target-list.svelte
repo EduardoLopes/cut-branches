@@ -1,32 +1,49 @@
 <script lang="ts">
+	import type { GridListPadding } from '@pindoba/core-grid-list';
 	import Badge from '@pindoba/svelte-badge';
-	import GridList from '@pindoba/svelte-grid-list';
+	import GridList, { type GridListGroupContext } from '@pindoba/svelte-grid-list';
+	import type { Snippet } from 'svelte';
 	import type { CleanupTarget } from '$infrastructure/bindings';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import { formatBytes } from '$utils/format-bytes';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
+		/** The folders, sorted by group when `groupOf` is set. */
 		targets: CleanupTarget[];
 		isSelected: (path: string) => boolean;
 		onToggle: (path: string) => void;
 		/**
-		 * Draw the column header, whose checkbox selects every target. Off where
-		 * the host already has a select-all for these rows (the bulk view's
-		 * per-repository header).
-		 * @default false
+		 * Group the folders (e.g. by repository). Each group title gets a
+		 * collapse chevron and a checkbox that selects the whole group.
 		 */
-		header?: boolean;
+		groupOf?: (target: CleanupTarget) => string;
+		/** Content at the end of each group title (its size, when it was active). */
+		groupTrailing?: Snippet<[GridListGroupContext<CleanupTarget>]>;
+		/** Be its own scroll port (the header and group titles pin to its top). */
+		scroll?: boolean;
+		/** Padding around the list (outside the scroll area with `scroll`). */
+		padding?: GridListPadding;
+		class?: string;
 	}
 
-	let { targets, isSelected, onToggle, header = false }: Props = $props();
+	let {
+		targets,
+		isSelected,
+		onToggle,
+		groupOf,
+		groupTrailing,
+		scroll = false,
+		padding,
+		class: className
+	}: Props = $props();
 
 	const selected = $derived(
 		new Set(targets.filter((target) => isSelected(target.path)).map((target) => target.path))
 	);
 
-	/** The list reports whole sets (a checkbox, a range, ⌘A, Esc); the hosts
-	 *  toggle one path at a time, so replay the difference. */
+	/** The list reports whole sets (a checkbox, a range, a group, ⌘A, Esc); the
+	 *  hosts toggle one path at a time, so replay the difference. */
 	function handleSelectionChange(next: Set<string>) {
 		for (const target of targets) {
 			if (next.has(target.path) !== selected.has(target.path)) onToggle(target.path);
@@ -39,10 +56,10 @@
 </script>
 
 <!--
-	Just the rows: the host decides how they scroll (the cleanup modal puts them
-	in a ScrollWell, the bulk view in an accordion). One line per folder — the
-	name leads, the path truncates in the middle with the folder highlighted so
-	it lands in the same column on every row — and the size pins to the end.
+	One line per folder — the name leads, the path truncates in the middle with
+	the folder highlighted so it lands in the same column on every row — and the
+	size pins to the end. The host decides how it scrolls: inside a ScrollWell
+	(the cleanup dialog) or as its own port (`scroll`, the bulk view).
 -->
 <GridList
 	label="Folders to clean"
@@ -50,8 +67,13 @@
 	getId={(target: CleanupTarget) => target.path}
 	rowName={(target: CleanupTarget) => target.path}
 	selectable
-	{header}
-	selectAll={header ? 'header' : false}
+	header
+	{groupOf}
+	groupSelect={groupOf !== undefined}
+	{groupTrailing}
+	{scroll}
+	{padding}
+	class={className}
 	value={selected}
 	onValueChange={handleSelectionChange}
 	tone="danger"

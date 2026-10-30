@@ -172,15 +172,16 @@
 						<span class={css({ fontSize: 'sm' })}>Nothing to clean up here.</span>
 					</div>
 				{:else if cleanup.targetCount > 0}
-					<!-- The list's own sticky header carries select-all. The well's
-					     scroller has no top padding, so the header pins flush. -->
+					<!-- The list's own sticky header carries select-all. The list
+					     scrolls itself inside the well, so the header pins to its top. -->
 					<ScrollWell
 						class={css({ flex: '1', minHeight: '0' })}
-						scrollerClass={css({ paddingTop: '0' })}
+						contained
 						testId="cleanup-target-scroller"
 					>
 						<CleanupTargetList
-							header
+							scroll
+							padding="xs"
 							targets={cleanup.targets}
 							isSelected={(path) => cleanup.isSelected(path)}
 							onToggle={(path) => cleanup.toggle(path)}

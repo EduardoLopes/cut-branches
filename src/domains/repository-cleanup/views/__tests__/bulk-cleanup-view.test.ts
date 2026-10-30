@@ -87,4 +87,67 @@ describe('BulkCleanupView', () => {
 	});
 	// The permanent-mode typed-confirm branch shares its logic with
 	// clean-repository-modal, which covers it directly.
+
+	describe('the grouped list', () => {
+		const repositories = [
+			{
+				id: 'r1',
+				name: 'alpha',
+				path: '/p/alpha',
+				staleSince: 0,
+				reclaimableBytes: 3072,
+				targets: [
+					{ path: '/p/alpha/node_modules', folderName: 'node_modules', sizeBytes: 2048 },
+					{ path: '/p/alpha/dist', folderName: 'dist', sizeBytes: 1024 }
+				]
+			},
+			{
+				id: 'r2',
+				name: 'beta',
+				path: '/p/beta',
+				staleSince: 0,
+				reclaimableBytes: 512,
+				targets: [{ path: '/p/beta/.next', folderName: '.next', sizeBytes: 512 }]
+			}
+		];
+
+		it('groups the folders by repository, with its activity and size on the title', async () => {
+			h.stub = makeStub({ repositories, repositoryCount: 2 });
+			const screen = await renderWithTestWrapper(BulkCleanupView, {});
+			await tick();
+
+			expect(screen.getByTestId('cleanup-target').elements()).toHaveLength(3);
+			expect(screen.getByTestId('cleanup-repo-size').elements()).toHaveLength(2);
+			await expect
+				.element(screen.getByTestId('cleanup-repo-activity').first())
+				.toMatchTextContent('/p/alpha');
+		});
+
+		it('routes a folder toggle to its own repository', async () => {
+			h.stub = makeStub({
+				repositories,
+				repositoryCount: 2,
+				isTargetSelected: vi.fn((_repoId: string, path: string) => path === '/p/alpha/dist')
+			});
+			const screen = await renderWithTestWrapper(BulkCleanupView, {});
+			await tick();
+
+			await expect
+				.element(screen.getByRole('checkbox', { name: 'Select /p/alpha/dist' }))
+				.toBeChecked();
+			await screen.getByRole('checkbox', { name: 'Select /p/beta/.next' }).click();
+			expect(h.stub.toggleTarget).toHaveBeenCalledWith('r2', '/p/beta/.next');
+		});
+
+		it('selects a whole repository from its group title', async () => {
+			h.stub = makeStub({ repositories, repositoryCount: 2 });
+			const screen = await renderWithTestWrapper(BulkCleanupView, {});
+			await tick();
+
+			await screen.getByRole('checkbox', { name: 'Select all in alpha' }).click();
+			expect(h.stub.toggleTarget).toHaveBeenCalledWith('r1', '/p/alpha/node_modules');
+			expect(h.stub.toggleTarget).toHaveBeenCalledWith('r1', '/p/alpha/dist');
+			expect(h.stub.toggleTarget).not.toHaveBeenCalledWith('r2', expect.anything());
+		});
+	});
 });

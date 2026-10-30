@@ -2,15 +2,12 @@
 	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
 	import LucideSettings from '@lucide/svelte/icons/settings';
 	import LucideSparkles from '@lucide/svelte/icons/sparkles';
-	import Accordion, { AccordionItem } from '@pindoba/svelte-accordion';
 	import Badge from '@pindoba/svelte-badge';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
-	import Checkbox from '@pindoba/svelte-checkbox';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
-	import Panel from '@pindoba/svelte-panel';
 	import Progress from '@pindoba/svelte-progress';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { goto } from '$app/navigation';
@@ -33,7 +30,21 @@
 
 	let mode = $state<DeletionMode>(getCleanupConfig().defaultDeletionMode);
 	let confirmText = $state('');
-	let expanded = $state<string[]>([]);
+
+	// The list takes the folders flat, sorted by repository, and groups them
+	// back by name; each folder's path finds its repository again.
+	const allTargets = $derived(stale.repositories.flatMap((repo) => repo.targets));
+	const repoByPath = $derived(
+		new Map(stale.repositories.flatMap((repo) => repo.targets.map((t) => [t.path, repo])))
+	);
+	const repoByName = $derived(new Map(stale.repositories.map((repo) => [repo.name, repo])));
+
+	/** Every folder in the list came from a repository, so the lookup holds. */
+	function repoOf(path: string) {
+		return repoByPath.get(path)!;
+	}
+
+	const listClass = css({ '--gl-scroll-end-inset': 'token(spacing.xs)' });
 
 	const needsTypedConfirm = $derived(mode === 'permanent');
 	const typedConfirmOk = $derived(confirmText.trim().toLowerCase() === 'delete');
@@ -97,6 +108,27 @@
 	</Stamp>
 {/snippet}
 
+{#snippet groupTrailing({ name }: { name: string })}
+	{@const repo = repoByName.get(name)!}
+	<span
+		class={css({
+			display: 'flex',
+			alignItems: 'center',
+			gap: 'sm',
+			minWidth: '0',
+			fontSize: 'xs',
+			color: 'neutral.text.muted'
+		})}
+	>
+		<span class={css({ truncate: true })} title={repo.path} data-testid="cleanup-repo-activity">
+			Last active {staleDate(repo.staleSince)} · {repo.path}
+		</span>
+		<Badge size="sm" emphasis="adaptive" data-testid="cleanup-repo-size">
+			{formatBytes(repo.reclaimableBytes)}
+		</Badge>
+	</span>
+{/snippet}
+
 {#snippet headerActions()}
 	<div class={css({ display: 'flex', alignItems: 'center', gap: 'xs' })}>
 		<Loading loading={stale.isRefreshing} variant="busy" indicator>
@@ -139,14 +171,11 @@
 			{#if stale.repositoryCount > 0}
 				<PageToolbar data-testid="cleanup-toolbar">
 					{#snippet left()}
-						<Checkbox
-							checked={stale.allSelected}
-							indeterminate={stale.someSelected}
-							onchange={() => stale.setAll(!stale.allSelected)}
-							data-testid="cleanup-select-all"
-						>
-							Select all
-						</Checkbox>
+						<!-- Select-all lives in the list's own header. -->
+						<span class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}>
+							{stale.repositoryCount.toLocaleString()}
+							{stale.repositoryCount === 1 ? 'repository' : 'repositories'}
+						</span>
 					{/snippet}
 					{#snippet right()}
 						<span
@@ -292,77 +321,19 @@
 				testId="cleanup-empty"
 			/>
 		{:else if stale.repositoryCount > 0}
-			<!-- Repositories as accordions. Transparent Panel so this scroller's
-			     inset counts as a cascade level for the items inside it. -->
-			<Panel
-				background="transparent"
-				border="none"
-				radius="inner"
+			<!-- One list grouped by repository: each group title collapses, selects
+			     the repository's folders, and says how stale and how big it is. The
+			     list is its own scroll port, so the header and group titles pin. -->
+			<CleanupTargetList
+				scroll
 				padding="xs"
-				class={css({
-					display: 'flex',
-					flexDirection: 'column',
-					flex: '1',
-					overflowY: 'auto'
-				})}
-			>
-				<Accordion type="multiple" collapsible bind:value={expanded}>
-					{#each stale.repositories as repo (repo.id)}
-						<AccordionItem
-							value={repo.id}
-							radius="inner"
-							title={repo.name}
-							subtitle={`Last active ${staleDate(repo.staleSince)} · ${repo.path}`}
-							bannerPassThrough={{
-								root: { style: css.raw({ flex: '1', minWidth: '0' }) },
-								headingGroup: { style: css.raw({ minWidth: '0' }) },
-								subheadingContainer: {
-									style: css.raw({ minWidth: '0', alignSelf: 'stretch' })
-								},
-								subheading: {
-									style: css.raw({
-										display: 'block',
-										minWidth: '0',
-										overflow: 'hidden',
-										textOverflow: 'ellipsis',
-										whiteSpace: 'nowrap'
-									})
-								},
-								trailing: { style: css.raw({ alignSelf: 'center', flexShrink: '0' }) }
-							}}
-							passThrough={{
-								contentBody: { style: css.raw({ background: 'neutral.surface.hill' }) },
-								actionsLeading: {
-									style: css.raw({ alignSelf: 'flex-start', paddingTop: 'xs' })
-								},
-								trigger: {
-									style: css.raw({ py: 'xs' })
-								}
-							}}
-						>
-							{#snippet actionsLeading()}
-								<Checkbox
-									checked={stale.isRepoAllSelected(repo.id)}
-									indeterminate={stale.isRepoIndeterminate(repo.id)}
-									onchange={() => stale.toggleRepo(repo.id, !stale.isRepoAllSelected(repo.id))}
-									aria-label={`Select ${repo.name}`}
-									data-testid="cleanup-repo-select"
-								/>
-							{/snippet}
-							{#snippet trailing()}
-								<Badge size="sm" emphasis="adaptive" data-testid="cleanup-repo-size">
-									{formatBytes(repo.reclaimableBytes)}
-								</Badge>
-							{/snippet}
-							<CleanupTargetList
-								targets={repo.targets}
-								isSelected={(path) => stale.isTargetSelected(repo.id, path)}
-								onToggle={(path) => stale.toggleTarget(repo.id, path)}
-							/>
-						</AccordionItem>
-					{/each}
-				</Accordion>
-			</Panel>
+				class={listClass}
+				targets={allTargets}
+				groupOf={(target) => repoOf(target.path).name}
+				isSelected={(path) => stale.isTargetSelected(repoOf(path).id, path)}
+				onToggle={(path) => stale.toggleTarget(repoOf(path).id, path)}
+				{groupTrailing}
+			/>
 		{/if}
 	</PageWell>
 </PageShell>
