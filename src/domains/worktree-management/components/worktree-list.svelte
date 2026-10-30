@@ -55,11 +55,11 @@
 	// A fresh Set per change: GridList adopts a new `value` by identity.
 	const value = $derived(new Set(selected));
 
-	// `scroll` makes the list its own scroll port; this adds the row inset and
-	// the room for the last row to scroll out from under the well's bulk bar.
-	const scrollPortClass = css({
-		paddingX: 'md',
-		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
+	// Room for the last row to scroll out from under the well's bulk bar, only
+	// while the bar is up (something is selected). Reserved for good, it would
+	// make a list that fits scroll through empty space.
+	const barClearanceClass = css({
+		'--gl-scroll-end-inset': 'var(--page-well-overlay-clearance, 0px)'
 	});
 
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
@@ -78,15 +78,14 @@
 </script>
 
 <!-- Surface comes from the enclosing PageWell, which is unpadded for this view.
-     The list is its own scroll port (see branch-list): only the top inset sits
-     outside it, so the sticky header pins to the list's top edge. -->
+     The list scrolls its own grid (see branch-list): its `xs` padding stays
+     outside the scroll area and the sticky header pins inside it. -->
 <div
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		flex: 1,
-		minHeight: '0',
-		paddingTop: 'md'
+		minHeight: '0'
 	})}
 	data-testid="worktree-list"
 >
@@ -119,7 +118,8 @@
 		<GridList
 			bind:element
 			scroll
-			class={scrollPortClass}
+			padding="xs"
+			class={selected.size > 0 ? barClearanceClass : undefined}
 			label="Worktrees"
 			items={worktrees}
 			getId={(worktree: Worktree) => worktree.getName()}
