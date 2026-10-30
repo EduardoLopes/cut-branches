@@ -303,8 +303,7 @@
 	});
 
 	// `scroll` makes the list's grid its scroll port; this leaves room for the
-	// last row to scroll out from under the well's bulk bar. The side insets
-	// are the wrapper's padding.
+	// last row to scroll out from under the well's bulk bar.
 	const scrollPortClass = css({
 		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
 	});
@@ -343,8 +342,7 @@
 		display: 'flex',
 		flexDirection: 'column',
 		flex: '1',
-		minHeight: '0',
-		paddingX: 'md'
+		minHeight: '0'
 	})}
 	onpointerover={(event) => (hoveredRow = rowIdOf(event.target))}
 	onpointerleave={() => (hoveredRow = null)}
@@ -357,6 +355,7 @@
 	<GridList
 		bind:element
 		scroll
+		padding="xs"
 		virtual={{
 			estimateSize: ESTIMATED_ROW_HEIGHT,
 			overscan: OVERSCAN_ROWS,
