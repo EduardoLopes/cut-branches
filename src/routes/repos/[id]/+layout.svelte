@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
+	import LucideGitCommitHorizontal from '@lucide/svelte/icons/git-commit-horizontal';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
@@ -12,6 +13,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { lastRepository } from '$lib/last-repository.svelte';
 	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
+	import Icon from '$ui/core/icon.svelte';
 	import type { PageBreadcrumbItem } from '$ui/patterns/page-header.svelte';
 
 	interface Props {
@@ -90,13 +92,13 @@
 
 {#snippet cleanupIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:brush-cleaning" width="14px" height="14px" />
+		<Icon icon={LucideBrushCleaning} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 
 {#snippet historyIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:git-commit-horizontal" width="14px" height="14px" />
+		<Icon icon={LucideGitCommitHorizontal} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 

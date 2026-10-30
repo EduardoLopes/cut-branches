@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideCloud from '@lucide/svelte/icons/cloud';
+	import LucideCloudOff from '@lucide/svelte/icons/cloud-off';
+	import LucideFileDiff from '@lucide/svelte/icons/file-diff';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideHistory from '@lucide/svelte/icons/history';
+	import LucideMapPin from '@lucide/svelte/icons/map-pin';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import GridList from '@pindoba/svelte-grid-list';
@@ -33,6 +38,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
@@ -431,7 +437,7 @@
 			>
 				<span class={lineClass}>
 					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:git-branch" width="14px" height="14px" />
+						<Icon icon={LucideGitBranch} width="14px" height="14px" />
 					</Stamp>
 					<span class={nameClass} title={branch.getName()} data-testid="branch-name">
 						{branch.getName()}
@@ -448,7 +454,7 @@
 								{#snippet children(triggerProps)}
 									<span {...triggerProps} data-testid="branch-upstream">
 										<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-											<Icon icon="lucide:cloud" width="14px" height="14px" />
+											<Icon icon={LucideCloud} width="14px" height="14px" />
 										</Stamp>
 									</span>
 								{/snippet}
@@ -458,7 +464,7 @@
 								{#snippet children(triggerProps)}
 									<span {...triggerProps} data-testid="branch-no-upstream">
 										<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-											<Icon icon="lucide:cloud-off" width="14px" height="14px" />
+											<Icon icon={LucideCloudOff} width="14px" height="14px" />
 										</Stamp>
 									</span>
 								{/snippet}
@@ -469,7 +475,7 @@
 				<span class={lineClass}>
 					<span class={iconSpacerClass} aria-hidden="true">
 						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:git-branch" width="14px" height="14px" />
+							<Icon icon={LucideGitBranch} width="14px" height="14px" />
 						</Stamp>
 					</span>
 					{#if hasAlerts}
@@ -573,7 +579,7 @@
 						{...triggerProps}
 					>
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:map-pin" width="14px" height="14px" />
+							<Icon icon={LucideMapPin} width="14px" height="14px" />
 						</Stamp>
 						<span class={visuallyHidden()}>Set as current</span>
 					</Button>
@@ -596,7 +602,7 @@
 					{...triggerProps}
 				>
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:file-diff" width="14px" height="14px" />
+						<Icon icon={LucideFileDiff} width="14px" height="14px" />
 					</Stamp>
 					<span class={visuallyHidden()}>View branch diff</span>
 				</Button>
@@ -615,7 +621,7 @@
 					{...triggerProps}
 				>
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:history" width="14px" height="14px" />
+						<Icon icon={LucideHistory} width="14px" height="14px" />
 					</Stamp>
 					<span class={visuallyHidden()}>Show in history</span>
 				</Button>

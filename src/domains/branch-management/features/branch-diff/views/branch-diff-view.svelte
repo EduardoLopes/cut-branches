@@ -3,7 +3,15 @@
 	// HEAD) or a single commit (vs its parent), each row expandable into a
 	// syntax-highlighted diff. First phase of the code-review surface — later
 	// phases will grow file/function connection graphs on top of this list.
-	import Icon from '@iconify/svelte';
+	import LucideCircleCheckBig from '@lucide/svelte/icons/circle-check-big';
+	import LucideFileDiff from '@lucide/svelte/icons/file-diff';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideGitCommitHorizontal from '@lucide/svelte/icons/git-commit-horizontal';
+	import LucideList from '@lucide/svelte/icons/list';
+	import LucideListChecks from '@lucide/svelte/icons/list-checks';
+	import LucideSearchX from '@lucide/svelte/icons/search-x';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
+	import LucideWorkflow from '@lucide/svelte/icons/workflow';
 	import Alert from '@pindoba/svelte-alert';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
@@ -26,6 +34,7 @@
 	import ExplanationMenu from '$domains/branch-management/features/diff-explanation/components/explanation-menu.svelte';
 	import { createGetRepositoryQuery } from '$domains/branch-management/infrastructure/queries/create-get-repository-query';
 	import EmptyState from '$ui/core/empty-state.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
 	import PageWell from '$ui/patterns/page-well.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -177,14 +186,14 @@
 				{#if branchName}
 					<Badge size="sm" emphasis="secondary" tone="primary" data-testid="diff-target-branch">
 						{#snippet leading()}
-							<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
+							<Stamp emphasis="ghost"><Icon icon={LucideGitBranch} /></Stamp>
 						{/snippet}
 						<span class={monoLabel} title={branchName}>{branchName}</span>
 					</Badge>
 				{:else if shortSha}
 					<Badge size="sm" emphasis="secondary" tone="primary" data-testid="diff-target-commit">
 						{#snippet leading()}
-							<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
+							<Stamp emphasis="ghost"><Icon icon={LucideGitCommitHorizontal} /></Stamp>
 						{/snippet}
 						<span class={monoLabel} title={commitSha}>{shortSha}</span>
 					</Badge>
@@ -237,8 +246,8 @@
 								<Stamp emphasis="ghost">
 									<Icon
 										icon={reviewedCount === summary.files.length
-											? 'lucide:circle-check-big'
-											: 'lucide:list-checks'}
+											? LucideCircleCheckBig
+											: LucideListChecks}
 									/>
 								</Stamp>
 							{/snippet}
@@ -279,14 +288,14 @@
 							<ChoiceItem value="list" label="List" data-testid="view-mode-list">
 								{#snippet leading()}
 									<Stamp emphasis="ghost" border="none" background="transparent">
-										<Icon icon="lucide:list" width="14px" height="14px" />
+										<Icon icon={LucideList} width="14px" height="14px" />
 									</Stamp>
 								{/snippet}
 							</ChoiceItem>
 							<ChoiceItem value="canvas" label="Canvas" data-testid="view-mode-canvas">
 								{#snippet leading()}
 									<Stamp emphasis="ghost" border="none" background="transparent">
-										<Icon icon="lucide:workflow" width="14px" height="14px" />
+										<Icon icon={LucideWorkflow} width="14px" height="14px" />
 									</Stamp>
 								{/snippet}
 							</ChoiceItem>
@@ -312,7 +321,7 @@
 						>
 							{#snippet leading()}
 								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:sparkles" width="14px" height="14px" />
+									<Icon icon={LucideSparkles} width="14px" height="14px" />
 								</Stamp>
 							{/snippet}
 							{#if explanationBatch.isRunning}
@@ -361,13 +370,13 @@
 				message="No changes to show — this {branchName
 					? 'branch matches its merge-base with the current branch'
 					: 'commit is empty'}."
-				icon="lucide:file-diff"
+				icon={LucideFileDiff}
 				testId="diff-empty"
 			/>
 		{:else if visibleFiles.length === 0}
 			<EmptyState
 				message="No files or code match **{searchTerm}**."
-				icon="lucide:search-x"
+				icon={LucideSearchX}
 				testId="diff-search-empty"
 			/>
 		{:else if viewOptions.options.viewMode === 'canvas'}

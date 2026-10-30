@@ -7,11 +7,13 @@
 	// text (no HTML — safe by construction); per-change explanations render
 	// inline in the diff instead, so this panel only points there. A note makes
 	// the cost transparent: this uses the agent's own quota, it is not free.
-	import Icon from '@iconify/svelte';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
+	import LucideX from '@lucide/svelte/icons/x';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	type ExplanationStatus = 'idle' | 'streaming' | 'done' | 'error' | 'cancelled';
@@ -78,7 +80,7 @@
 				>
 					{#snippet leading()}
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:x" width="14px" height="14px" />
+							<Icon icon={LucideX} width="14px" height="14px" />
 						</Stamp>
 					{/snippet}
 					Cancel
@@ -94,7 +96,7 @@
 			>
 				{#snippet leading()}
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:sparkles" width="14px" height="14px" />
+						<Icon icon={LucideSparkles} width="14px" height="14px" />
 					</Stamp>
 				{/snippet}
 				{status === 'idle' ? 'Explain this change' : 'Regenerate'}

@@ -5,8 +5,10 @@
 	// ("Hide N commits"). The WHOLE row is the click target — the parent row
 	// wrapper owns the click/keyboard handling; this component is purely
 	// visual.
-	import Icon from '@iconify/svelte';
+	import LucideChevronsDownUp from '@lucide/svelte/icons/chevrons-down-up';
+	import LucideChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import Stamp from '@pindoba/svelte-stamp';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -54,7 +56,7 @@
 	<span class={pill}>
 		<Stamp size="2xs" emphasis="ghost" border="none" background="transparent">
 			<Icon
-				icon={mode === 'collapsed' ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
+				icon={mode === 'collapsed' ? LucideChevronsUpDown : LucideChevronsDownUp}
 				width="14px"
 				height="14px"
 			/>

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideLock from '@lucide/svelte/icons/lock';
+	import LucideLockOpen from '@lucide/svelte/icons/lock-open';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
@@ -7,6 +8,7 @@
 	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-remove-locked-branches-mutation';
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
 	import { createLockedBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-locked-branches-query';
+	import Icon from '$ui/core/icon.svelte';
 	import { formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
@@ -79,7 +81,7 @@
 			{#if isLocked}
 				<div data-testid="lock-icon">
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:lock" width="14px" height="14px" />
+						<Icon icon={LucideLock} width="14px" height="14px" />
 					</Stamp>
 				</div>
 			{/if}
@@ -87,7 +89,7 @@
 			{#if !isLocked}
 				<div data-testid="unlock-icon">
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:lock-open" width="14px" height="14px" />
+						<Icon icon={LucideLockOpen} width="14px" height="14px" />
 					</Stamp>
 				</div>
 			{/if}

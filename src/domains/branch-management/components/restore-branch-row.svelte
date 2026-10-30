@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideCircle from '@lucide/svelte/icons/circle';
+	import LucideCircleAlert from '@lucide/svelte/icons/circle-alert';
+	import LucideCircleCheck from '@lucide/svelte/icons/circle-check';
+	import LucideCircleMinus from '@lucide/svelte/icons/circle-minus';
+	import LucideCircleX from '@lucide/svelte/icons/circle-x';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import type { GridListRowContext } from '@pindoba/svelte-grid-list';
@@ -8,6 +13,7 @@
 	import Markdown from 'svelte-exmarkdown';
 	import type { Branch } from '$domains/branch-management/core/models/branch';
 	import type { ConflictResolution, RestoreBranchResult } from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -38,14 +44,14 @@
 	}: Props = $props();
 
 	const status = $derived.by(() => {
-		if (!result) return { icon: 'ion:ellipse-outline', tone: 'neutral' as const, label: '' };
+		if (!result) return { icon: LucideCircle, tone: 'neutral' as const, label: '' };
 		if (result.skipped)
-			return { icon: 'ion:remove-circle', tone: 'neutral' as const, label: 'Skipped' };
+			return { icon: LucideCircleMinus, tone: 'neutral' as const, label: 'Skipped' };
 		if (result.success)
-			return { icon: 'ion:checkmark-circle', tone: 'success' as const, label: 'Restored' };
+			return { icon: LucideCircleCheck, tone: 'success' as const, label: 'Restored' };
 		if (result.requiresUserAction)
-			return { icon: 'ion:alert-circle', tone: 'warning' as const, label: 'Pending resolution' };
-		return { icon: 'ion:close-circle', tone: 'danger' as const, label: 'Failed' };
+			return { icon: LucideCircleAlert, tone: 'warning' as const, label: 'Pending resolution' };
+		return { icon: LucideCircleX, tone: 'danger' as const, label: 'Failed' };
 	});
 
 	// Show the spinner whenever this row's mutation is in flight, OR when the
@@ -84,7 +90,7 @@
      row) only when there is something to decide or read. -->
 <span {...cell('name', { class: lineClass })} data-testid="restore-branch-row">
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:git-branch" width="14px" height="14px" />
+		<Icon icon={LucideGitBranch} width="14px" height="14px" />
 	</Stamp>
 	<span class={css({ fontWeight: 'semibold', truncate: true })} title={branch.getName()}>
 		{branch.getName()}
@@ -107,7 +113,7 @@
 		{...cell('name', { line: 2, span: 'status', class: noteClass })}
 		data-testid="branch-conflict-warning"
 	>
-		<Icon icon="ion:alert-circle" width="16px" height="16px" />
+		<Icon icon={LucideCircleAlert} width="16px" height="16px" />
 		Branch already exists
 		<span class={css({ marginLeft: 'auto', display: 'flex', gap: 'xs' })}>
 			<Button

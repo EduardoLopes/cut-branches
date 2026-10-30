@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
@@ -11,6 +11,7 @@
 		resetCleanupConfig,
 		setCleanupConfig
 	} from '$domains/repository-cleanup/core/composables/use-cleanup-config.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import SettingsField from '$ui/patterns/settings-field.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -27,7 +28,7 @@
 
 {#snippet cleanupIcon()}
 	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" shadow="sm">
-		<Icon icon="lucide:brush-cleaning" width="16px" height="16px" />
+		<Icon icon={LucideBrushCleaning} width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 

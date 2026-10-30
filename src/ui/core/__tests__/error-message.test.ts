@@ -1,3 +1,4 @@
+import LucideTriangleAlert from '@lucide/svelte/icons/triangle-alert';
 import { describe, expect, test } from 'vitest';
 import ErrorMessage from '../error-message.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
@@ -44,7 +45,7 @@ describe('ErrorMessage Component', () => {
 	});
 
 	test('renders component with custom icon', async () => {
-		const customIcon = 'mdi:alert';
+		const customIcon = LucideTriangleAlert;
 		const { container } = await renderWithTestWrapper(ErrorMessage, {
 			message: 'Error occurred',
 			icon: customIcon

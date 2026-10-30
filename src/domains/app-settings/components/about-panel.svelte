@@ -1,9 +1,12 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideClipboardCopy from '@lucide/svelte/icons/clipboard-copy';
+	import LucideFolderOpen from '@lucide/svelte/icons/folder-open';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useAbout } from '../core/composables/use-about.svelte';
+	import BrandMark from '$ui/core/brand-mark.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import SettingsField from '$ui/patterns/settings-field.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -24,7 +27,7 @@
 	<!-- Identity exception to the settings-section Stamp convention: the About
 	     header brands the app, so it uses the primary circular stamp. -->
 	<Stamp shape="circle" size="sm" emphasis="primary" tone="primary" shadow="sm">
-		<Icon icon="game-icons:tree-branch" width="16px" height="16px" />
+		<BrandMark width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 
@@ -84,7 +87,7 @@
 		>
 			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:clipboard-copy" width="16px" height="16px" />
+					<Icon icon={LucideClipboardCopy} width="16px" height="16px" />
 				</Stamp>
 			{/snippet}
 			Copy diagnostics
@@ -92,7 +95,7 @@
 		<Button emphasis="ghost" size="sm" onclick={about.openLogsFolder} data-testid="about-open-logs">
 			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:folder-open" width="16px" height="16px" />
+					<Icon icon={LucideFolderOpen} width="16px" height="16px" />
 				</Stamp>
 			{/snippet}
 			Open logs folder

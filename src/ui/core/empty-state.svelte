@@ -1,8 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
+	import LucideSearchX from '@lucide/svelte/icons/search-x';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
+	import Icon from '$ui/core/icon.svelte';
 	import { ensureString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -13,7 +15,7 @@
 		message?: string;
 		/** Muted supporting line under the message. */
 		description?: string;
-		icon?: string;
+		icon?: LucideIcon;
 		iconColor?: string;
 		/** Call to action rendered under the copy (typically a Button). */
 		action?: Snippet;
@@ -26,7 +28,7 @@
 		heading,
 		message,
 		description,
-		icon = 'material-symbols:search-off',
+		icon = LucideSearchX,
 		iconColor,
 		action,
 		size = 'md',

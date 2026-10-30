@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LucideClock from '@lucide/svelte/icons/clock';
+	import LucideFileDiff from '@lucide/svelte/icons/file-diff';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideGitCommitHorizontal from '@lucide/svelte/icons/git-commit-horizontal';
+	import LucideUserRound from '@lucide/svelte/icons/user-round';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Card, {
@@ -11,6 +16,7 @@
 	import type { Snippet } from 'svelte';
 	import Markdown from 'svelte-exmarkdown';
 	import { type Commit } from '$domains/branch-management/core/models/commit';
+	import Icon from '$ui/core/icon.svelte';
 	import {
 		safeFormatDate,
 		safeFormatRelativeDate,
@@ -163,7 +169,7 @@
 		data-testid="commit-history-link"
 	>
 		<Stamp emphasis="ghost" border="muted" size={linkStampSize} background="transparent">
-			<Icon icon="lucide:git-branch" width={linkIconSize} height={linkIconSize} />
+			<Icon icon={LucideGitBranch} width={linkIconSize} height={linkIconSize} />
 		</Stamp>
 	</a>
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -189,7 +195,7 @@
 		data-testid="commit-diff-link"
 	>
 		<Stamp emphasis="ghost" border="muted" size={linkStampSize} background="transparent">
-			<Icon icon="lucide:file-diff" width={linkIconSize} height={linkIconSize} />
+			<Icon icon={LucideFileDiff} width={linkIconSize} height={linkIconSize} />
 		</Stamp>
 	</a>
 	<!-- eslint-enable svelte/no-navigation-without-resolve -->
@@ -217,7 +223,7 @@
 			})}
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+				<Icon icon={LucideChevronDown} width="16px" height="16px" />
 			</Stamp>
 		</span>
 	</Button>
@@ -301,7 +307,7 @@
 		{#if !dense}
 			<Stamp size="xs" border="muted">
 				<Icon
-					icon="lucide:user-round"
+					icon={LucideUserRound}
 					width="16px"
 					height="16px"
 					color={token('colors.colorPalette.text.muted')}
@@ -330,7 +336,7 @@
 	>
 		{#if !dense}
 			<Stamp size="xs" border="muted">
-				<Icon icon="lucide:clock" width="16px" height="16px" />
+				<Icon icon={LucideClock} width="16px" height="16px" />
 			</Stamp>
 		{/if}
 		{#if dense}
@@ -374,7 +380,7 @@
 	>
 		<Badge size={badgeSize} emphasis="secondary" tone={feedback} data-testid="commit-sha">
 			{#snippet leading()}
-				<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
+				<Stamp emphasis="ghost"><Icon icon={LucideGitCommitHorizontal} /></Stamp>
 			{/snippet}
 			<span class={css({ fontFamily: 'mono' })} title={commit.getSha()}>
 				{commit.getShortSha()}
@@ -383,7 +389,7 @@
 		{#if showUpstream && upstream}
 			<Badge size={badgeSize} emphasis="secondary" tone={feedback} data-testid="commit-upstream">
 				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
+					<Stamp emphasis="ghost"><Icon icon={LucideGitBranch} /></Stamp>
 				{/snippet}
 				<span title={upstream}>
 					{upstream}

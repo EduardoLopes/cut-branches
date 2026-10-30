@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideFolderGit2 from '@lucide/svelte/icons/folder-git-2';
 	import Badge from '@pindoba/svelte-badge';
 	import Loading from '@pindoba/svelte-loading';
 	import Navigation, {
@@ -15,6 +15,7 @@
 	import { resolveRepositoryPath } from '$lib/repository-route';
 	import { repositorySort, sortRepositories } from '$lib/repository-sort.svelte';
 	import { scrollShadow } from '$lib/scroll-shadow';
+	import Icon from '$ui/core/icon.svelte';
 	import { formatCount } from '$utils/format-count';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -137,7 +138,7 @@
 
 {#snippet repoIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:folder-git-2" />
+		<Icon icon={LucideFolderGit2} />
 	</Stamp>
 {/snippet}
 

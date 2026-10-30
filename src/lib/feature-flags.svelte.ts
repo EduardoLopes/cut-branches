@@ -1,3 +1,8 @@
+import type { LucideIcon } from '@lucide/svelte';
+import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
+import LucideFileDiff from '@lucide/svelte/icons/file-diff';
+import LucideGitGraph from '@lucide/svelte/icons/git-graph';
+import LucideTrees from '@lucide/svelte/icons/trees';
 import { z } from 'zod/v4';
 import { Store } from '$lib/store.svelte';
 
@@ -14,8 +19,8 @@ export interface FeatureFlagDefinition {
 	description: string;
 	/** Effective value when the user hasn't overridden the flag. */
 	defaultEnabled: boolean;
-	/** Optional Iconify icon name shown as a Stamp beside the flag in Settings. */
-	icon?: string;
+	/** Optional icon shown as a Stamp beside the flag in Settings. */
+	icon?: LucideIcon;
 	/**
 	 * When true the flag is not listed in Settings and any persisted override is
 	 * ignored, so `defaultEnabled` is its effective value. Use it to keep a
@@ -52,7 +57,7 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		description:
 			'Reclaim disk space by deleting stale dependency/build folders (node_modules, target, …). Adds a per-repository cleanup action and a bulk cleanup page.',
 		defaultEnabled: false,
-		icon: 'lucide:brush-cleaning'
+		icon: LucideBrushCleaning
 	},
 	{
 		key: 'worktree-management',
@@ -60,7 +65,7 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		description:
 			'Manage git worktrees for a repository — list, add, remove, and lock worktrees. Adds a worktrees section to the repository view.',
 		defaultEnabled: false,
-		icon: 'lucide:trees'
+		icon: LucideTrees
 	},
 	{
 		key: 'branch-diff',
@@ -68,7 +73,7 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		description:
 			'Review the changes of a branch or commit — a changed-files list with expandable, syntax-highlighted diffs. Adds diff deep-links to branch cards and history rows.',
 		defaultEnabled: false,
-		icon: 'lucide:file-diff',
+		icon: LucideFileDiff,
 		// Hidden until the diff viewer is ready: not listed in Settings and not
 		// user-enablable, even on devices that toggled it on before.
 		hidden: true
@@ -79,7 +84,7 @@ export const FEATURE_FLAGS: readonly FeatureFlagDefinition[] = [
 		description:
 			"Browse a repository's commit history and branch graph. Adds a per-branch history deep-link, a hover graph preview, and a dedicated history view.",
 		defaultEnabled: false,
-		icon: 'lucide:git-graph'
+		icon: LucideGitGraph
 	}
 ];
 

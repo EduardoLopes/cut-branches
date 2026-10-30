@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
+	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
+	import LucideFlag from '@lucide/svelte/icons/flag';
+	import LucideInfo from '@lucide/svelte/icons/info';
+	import LucideSearch from '@lucide/svelte/icons/search';
+	import LucideSettings from '@lucide/svelte/icons/settings';
 	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
 	import Input from '@pindoba/svelte-input';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
@@ -8,6 +13,7 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { isFeatureEnabled, isFeatureFlagsSectionVisible } from '$lib/feature-flags.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import PageShell from '$ui/patterns/page-shell.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -20,7 +26,7 @@
 	type SectionId = 'feature-flags' | 'cleanup' | 'about';
 
 	// The cleanup section only appears when its feature flag is enabled.
-	const sections = $derived<{ id: SectionId; label: string; icon: string; href: string }[]>([
+	const sections = $derived<{ id: SectionId; label: string; icon: LucideIcon; href: string }[]>([
 		// Feature flags are surfaced when the registry has entries, or in dev builds
 		// so the empty-registry guidance stays reachable (see feature-flags.svelte).
 		...(isFeatureFlagsSectionVisible()
@@ -28,7 +34,7 @@
 					{
 						id: 'feature-flags' as const,
 						label: 'Feature flags',
-						icon: 'lucide:flag',
+						icon: LucideFlag,
 						href: resolve('/settings/feature-flags')
 					}
 				]
@@ -38,12 +44,12 @@
 					{
 						id: 'cleanup' as const,
 						label: 'Cleanup',
-						icon: 'lucide:brush-cleaning',
+						icon: LucideBrushCleaning,
 						href: resolve('/settings/cleanup')
 					}
 				]
 			: []),
-		{ id: 'about', label: 'About', icon: 'lucide:info', href: resolve('/settings/about') }
+		{ id: 'about', label: 'About', icon: LucideInfo, href: resolve('/settings/about') }
 	]);
 
 	let searchQuery = $state('');
@@ -79,22 +85,22 @@
 
 {#snippet settingsIcon()}
 	<Stamp shape="square" size="md" emphasis="ghost" tone="neutral" border="none">
-		<Icon icon="lucide:settings" width="18px" height="18px" />
+		<Icon icon={LucideSettings} width="18px" height="18px" />
 	</Stamp>
 {/snippet}
 {#snippet flagIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:flag" />
+		<Icon icon={LucideFlag} />
 	</Stamp>
 {/snippet}
 {#snippet cleanupIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:brush-cleaning" />
+		<Icon icon={LucideBrushCleaning} />
 	</Stamp>
 {/snippet}
 {#snippet infoIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:info" />
+		<Icon icon={LucideInfo} />
 	</Stamp>
 {/snippet}
 
@@ -146,7 +152,7 @@
 				>
 					{#snippet leading()}
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:search" width="16px" height="16px" />
+							<Icon icon={LucideSearch} width="16px" height="16px" />
 						</Stamp>
 					{/snippet}
 				</Input>

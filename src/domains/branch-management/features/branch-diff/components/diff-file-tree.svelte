@@ -3,12 +3,19 @@
 	// (single-child runs compressed) and each leaf is a changed file with its
 	// status icon. Pure delivery-layer UI — the owner receives the clicked
 	// file via `onSelectFile` and decides what "navigating to it" means.
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
+	import LucideFileMinus from '@lucide/svelte/icons/file-minus';
+	import LucideFilePen from '@lucide/svelte/icons/file-pen';
+	import LucideFilePlus from '@lucide/svelte/icons/file-plus';
+	import LucideFileSymlink from '@lucide/svelte/icons/file-symlink';
+	import LucideFolder from '@lucide/svelte/icons/folder';
+	import LucideFolderOpen from '@lucide/svelte/icons/folder-open';
 	import type { Key, TreeItemApi, TreeNodeInput } from '@pindoba/core-tree-view';
 	import Stamp from '@pindoba/svelte-stamp';
 	import TreeView from '@pindoba/svelte-tree-view';
 	import { buildDiffFileTree, type DiffFileTreeNode } from '../models/build-diff-file-tree';
 	import type { ChangedFile, FileChangeStatus } from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -61,11 +68,11 @@
 		}
 	}
 
-	const STATUS_ICON: Record<FileChangeStatus, string> = {
-		added: 'lucide:file-plus',
-		deleted: 'lucide:file-minus',
-		modified: 'lucide:file-pen',
-		renamed: 'lucide:file-symlink'
+	const STATUS_ICON: Record<FileChangeStatus, LucideIcon> = {
+		added: LucideFilePlus,
+		deleted: LucideFileMinus,
+		modified: LucideFilePen,
+		renamed: LucideFileSymlink
 	};
 
 	const statusTint = css({
@@ -87,7 +94,7 @@
 		</span>
 	{:else}
 		<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-			<Icon icon={item.expanded ? 'lucide:folder-open' : 'lucide:folder'} />
+			<Icon icon={item.expanded ? LucideFolderOpen : LucideFolder} />
 		</Stamp>
 	{/if}
 {/snippet}

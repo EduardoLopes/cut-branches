@@ -1,5 +1,7 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
+	import LucidePalette from '@lucide/svelte/icons/palette';
+	import LucideSettings from '@lucide/svelte/icons/settings';
 	import Badge from '@pindoba/svelte-badge';
 	import Navigation, { type NavigationItem } from '@pindoba/svelte-navigation';
 	import Panel from '@pindoba/svelte-panel';
@@ -13,6 +15,7 @@
 	import { cleanupSummary } from '$lib/cleanup-summary.svelte';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { sidebarCollapsed } from '$lib/sidebar-collapsed.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import { formatBytes } from '$utils/format-bytes';
 	import { isMacOS } from '$utils/is-macos';
 	import { css } from '@pindoba/styled-system/css';
@@ -91,17 +94,17 @@
 
 {#snippet settingsIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:settings" />
+		<Icon icon={LucideSettings} />
 	</Stamp>
 {/snippet}
 {#snippet themeEditorIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:palette" />
+		<Icon icon={LucidePalette} />
 	</Stamp>
 {/snippet}
 {#snippet cleanupIcon()}
 	<Stamp size="sm" shape="square" emphasis="ghost" background="transparent" border="none">
-		<Icon icon="lucide:brush-cleaning" />
+		<Icon icon={LucideBrushCleaning} />
 	</Stamp>
 {/snippet}
 {#snippet cleanupBadge()}

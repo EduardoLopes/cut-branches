@@ -3,7 +3,9 @@
 	// slice, and the commit info rendered by the shared commit card in its
 	// compact density. Ref decorations the card doesn't model (tags, extra
 	// remotes) are threaded in through the card's footer-badges slot.
-	import Icon from '@iconify/svelte';
+	import LucideChevronsDownUp from '@lucide/svelte/icons/chevrons-down-up';
+	import LucideChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
+	import LucideTag from '@lucide/svelte/icons/tag';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -21,6 +23,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import CommitCard from '$ui/core/commit-card.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -167,7 +170,7 @@
 					>
 						<Stamp emphasis="ghost" border="none" background="transparent">
 							<Icon
-								icon={runBelow.collapsed ? 'lucide:chevrons-up-down' : 'lucide:chevrons-down-up'}
+								icon={runBelow.collapsed ? LucideChevronsUpDown : LucideChevronsDownUp}
 								width="14px"
 								height="14px"
 							/>
@@ -200,7 +203,7 @@
 </div>
 
 {#snippet tagStamp()}
-	<Stamp emphasis="ghost"><Icon icon="lucide:tag" /></Stamp>
+	<Stamp emphasis="ghost"><Icon icon={LucideTag} /></Stamp>
 {/snippet}
 
 {#snippet refBadges()}

@@ -4,7 +4,7 @@
 	// centred on the sha (served from the cached history session) and renders
 	// it through the SAME graph model + rail renderer as the full view, at
 	// reduced geometry. No second graph renderer.
-	import Icon from '@iconify/svelte';
+	import LucideChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -20,6 +20,7 @@
 	} from '$domains/branch-management/features/commit-history/models/commit-graph';
 	import type { AppError } from '$infrastructure/bindings';
 	import { resolveRepositorySubPath } from '$lib/repository-route';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -143,7 +144,7 @@
 				Open full history
 				{#snippet trailing()}
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:chevron-right" width="14px" height="14px" />
+						<Icon icon={LucideChevronRight} width="14px" height="14px" />
 					</Stamp>
 				{/snippet}
 			</Button>

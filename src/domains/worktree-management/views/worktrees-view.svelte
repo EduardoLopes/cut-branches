@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import LucideX from '@lucide/svelte/icons/x';
 	import type { BulkSelection } from '@pindoba/core-bulk-bar';
 	import BulkBar from '@pindoba/svelte-bulk-bar';
 	import Button from '@pindoba/svelte-button';
@@ -15,6 +15,7 @@
 	import { useWorktreesView } from '../core/composables/use-worktrees-view.svelte';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import ErrorMessage from '$ui/core/error-message.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
 	import PageWell from '$ui/patterns/page-well.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -117,7 +118,7 @@
 						data-testid="worktrees-search-clear"
 					>
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="mdi:clear" width="16px" height="16px" />
+							<Icon icon={LucideX} width="16px" height="16px" />
 						</Stamp>
 						<span class={visuallyHidden()}>Clear search</span>
 					</Button>

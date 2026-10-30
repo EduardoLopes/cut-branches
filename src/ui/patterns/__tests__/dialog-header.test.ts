@@ -1,3 +1,5 @@
+import LucideFolderSearch from '@lucide/svelte/icons/folder-search';
+import LucideTrash2 from '@lucide/svelte/icons/trash-2';
 import { describe, expect, test } from 'vitest';
 import DialogHeader from '../dialog-header.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
@@ -7,7 +9,7 @@ describe('DialogHeader', () => {
 		const screen = await renderWithTestWrapper(DialogHeader, {
 			title: 'Find repositories',
 			subtitle: 'Scan a location for git repositories.',
-			icon: 'lucide:folder-search'
+			icon: LucideFolderSearch
 		});
 
 		const header = screen.getByTestId('dialog-header').element();
@@ -19,14 +21,14 @@ describe('DialogHeader', () => {
 	test('renders without a subtitle and tags the subtitle when asked', async () => {
 		const bare = await renderWithTestWrapper(DialogHeader, {
 			title: 'Remove',
-			icon: 'lucide:trash-2'
+			icon: LucideTrash2
 		});
 		expect(bare.getByTestId('dialog-header')).toHaveTextContent('Remove');
 
 		const tagged = await renderWithTestWrapper(DialogHeader, {
 			title: 'Delete branches',
 			subtitle: 'Are you sure?',
-			icon: 'lucide:trash-2',
+			icon: LucideTrash2,
 			subtitleTestId: 'question'
 		});
 		expect(tagged.getByTestId('question')).toHaveTextContent('Are you sure?');

@@ -10,7 +10,13 @@
 	// The collapsed row heights are pixel-pinned to the constants in
 	// canvas-layout.ts — the layout computes node heights instead of
 	// measuring them, so any drift here would clip content.
-	import Icon from '@iconify/svelte';
+	import LucideArrowDownLeft from '@lucide/svelte/icons/arrow-down-left';
+	import LucideArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import LucideCircle from '@lucide/svelte/icons/circle';
+	import LucideCircleCheckBig from '@lucide/svelte/icons/circle-check-big';
+	import LucideCrosshair from '@lucide/svelte/icons/crosshair';
+	import LucideList from '@lucide/svelte/icons/list';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -34,6 +40,7 @@
 		FileChangeStatus,
 		SymbolKind
 	} from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import type {
 		DiffViewerGutter,
 		DiffViewerLayout,
@@ -335,11 +342,7 @@
 			data-testid="canvas-node-reviewed"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon
-					icon={reviewed ? 'lucide:circle-check-big' : 'lucide:circle'}
-					width="12px"
-					height="12px"
-				/>
+				<Icon icon={reviewed ? LucideCircleCheckBig : LucideCircle} width="12px" height="12px" />
 			</Stamp>
 		</Button>
 		{#if !file.isBinary}
@@ -355,7 +358,7 @@
 				data-testid="canvas-node-explain"
 			>
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:sparkles" width="12px" height="12px" />
+					<Icon icon={LucideSparkles} width="12px" height="12px" />
 				</Stamp>
 			</Button>
 			<ExplanationDetailDropdown detail={granularity} onChange={setFileDetail} />
@@ -370,7 +373,7 @@
 			data-testid="canvas-node-focus"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:crosshair" width="12px" height="12px" />
+				<Icon icon={LucideCrosshair} width="12px" height="12px" />
 			</Stamp>
 		</Button>
 		<Button
@@ -383,7 +386,7 @@
 			data-testid="canvas-node-open-in-list"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:list" width="12px" height="12px" />
+				<Icon icon={LucideList} width="12px" height="12px" />
 			</Stamp>
 		</Button>
 	</span>
@@ -400,7 +403,7 @@
 				data-testid="canvas-node-imports"
 			>
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:arrow-up-right" width="12px" height="12px" />
+					<Icon icon={LucideArrowUpRight} width="12px" height="12px" />
 				</Stamp>{structure.importsChanged}
 			</span>
 		{/if}
@@ -410,7 +413,7 @@
 				data-testid="canvas-node-imported-by"
 			>
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:arrow-down-left" width="12px" height="12px" />
+					<Icon icon={LucideArrowDownLeft} width="12px" height="12px" />
 				</Stamp>{structure.importedByChanged}
 			</span>
 		{/if}

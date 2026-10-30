@@ -3,7 +3,17 @@
 	// identity (status badge, path, rename source) and its +/− line stats,
 	// with a disclosure toggle that expands the actual diff inline. The diff
 	// itself is fetched lazily by the panel — collapsed rows cost nothing.
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
+	import LucideArrowDownLeft from '@lucide/svelte/icons/arrow-down-left';
+	import LucideArrowUpRight from '@lucide/svelte/icons/arrow-up-right';
+	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LucideCircle from '@lucide/svelte/icons/circle';
+	import LucideCircleCheckBig from '@lucide/svelte/icons/circle-check-big';
+	import LucideFileMinus from '@lucide/svelte/icons/file-minus';
+	import LucideFilePen from '@lucide/svelte/icons/file-pen';
+	import LucideFilePlus from '@lucide/svelte/icons/file-plus';
+	import LucideFileSymlink from '@lucide/svelte/icons/file-symlink';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Card from '@pindoba/svelte-card';
@@ -26,6 +36,7 @@
 		FileChangeStatus,
 		SymbolKind
 	} from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import { buildMarkedRuns } from '$ui/patterns/diff-viewer/line-marks';
 	import type {
 		DiffViewerGutter,
@@ -233,11 +244,11 @@
 		modified: 'primary',
 		renamed: 'warning'
 	};
-	const STATUS_ICON: Record<FileChangeStatus, string> = {
-		added: 'lucide:file-plus',
-		deleted: 'lucide:file-minus',
-		modified: 'lucide:file-pen',
-		renamed: 'lucide:file-symlink'
+	const STATUS_ICON: Record<FileChangeStatus, LucideIcon> = {
+		added: LucideFilePlus,
+		deleted: LucideFileMinus,
+		modified: LucideFilePen,
+		renamed: LucideFileSymlink
 	};
 
 	const pathText = css({
@@ -374,7 +385,7 @@
 				data-testid="changed-file-imports"
 			>
 				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:arrow-up-right" /></Stamp>
+					<Stamp emphasis="ghost"><Icon icon={LucideArrowUpRight} /></Stamp>
 				{/snippet}
 				{structure.importsChanged}
 			</Badge>
@@ -388,7 +399,7 @@
 				data-testid="changed-file-imported-by"
 			>
 				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:arrow-down-left" /></Stamp>
+					<Stamp emphasis="ghost"><Icon icon={LucideArrowDownLeft} /></Stamp>
 				{/snippet}
 				{structure.importedByChanged}
 			</Badge>
@@ -419,7 +430,7 @@
 					data-testid="toggle-file-explanation"
 				>
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:sparkles" width="16px" height="16px" />
+						<Icon icon={LucideSparkles} width="16px" height="16px" />
 					</Stamp>
 				</Button>
 				<ExplanationDetailDropdown detail={granularity} onChange={setFileDetail} />
@@ -437,11 +448,7 @@
 			data-testid="toggle-file-reviewed"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon
-					icon={reviewed ? 'lucide:circle-check-big' : 'lucide:circle'}
-					width="16px"
-					height="16px"
-				/>
+				<Icon icon={reviewed ? LucideCircleCheckBig : LucideCircle} width="16px" height="16px" />
 			</Stamp>
 		</Button>
 		<Button
@@ -462,7 +469,7 @@
 				})}
 			>
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+					<Icon icon={LucideChevronDown} width="16px" height="16px" />
 				</Stamp>
 			</span>
 		</Button>

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
+	import LucideSettings from '@lucide/svelte/icons/settings';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import Accordion, { AccordionItem } from '@pindoba/svelte-accordion';
 	import Badge from '@pindoba/svelte-badge';
 	import { type BannerProps } from '@pindoba/svelte-banner';
@@ -18,6 +20,7 @@
 	import { useStaleRepositories } from '$domains/repository-cleanup/core/composables/use-stale-repositories.svelte';
 	import type { DeletionMode } from '$infrastructure/bindings';
 	import EmptyState from '$ui/core/empty-state.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import PageHeader from '$ui/patterns/page-header.svelte';
 	import PageShell from '$ui/patterns/page-shell.svelte';
 	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
@@ -90,7 +93,7 @@
 
 {#snippet cleanupIcon()}
 	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" shadow="sm">
-		<Icon icon="lucide:brush-cleaning" width="16px" height="16px" />
+		<Icon icon={LucideBrushCleaning} width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 
@@ -115,7 +118,7 @@
 			onclick={() => goto(resolve('/settings/cleanup'))}
 			data-testid="cleanup-settings-shortcut"
 		>
-			<Icon icon="lucide:settings" width="16px" height="16px" />
+			<Icon icon={LucideSettings} width="16px" height="16px" />
 		</Button>
 	</div>
 {/snippet}
@@ -283,7 +286,7 @@
 			</div>
 		{:else if stale.hasScanned && stale.repositoryCount === 0}
 			<EmptyState
-				icon="lucide:sparkles"
+				icon={LucideSparkles}
 				size="sm"
 				message="No stale repositories with reclaimable space."
 				testId="cleanup-empty"

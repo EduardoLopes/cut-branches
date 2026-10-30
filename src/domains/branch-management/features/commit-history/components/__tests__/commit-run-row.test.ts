@@ -25,6 +25,8 @@ describe('CommitRunRow', () => {
 			count: 7
 		});
 
-		expect(container.querySelectorAll('svg, path')).toHaveLength(0);
+		// The toggle's chevron is an inline SVG too: only lane drawings count.
+		expect(container.querySelectorAll('svg:not(.lucide-icon)')).toHaveLength(0);
+		expect(container.querySelector('svg.lucide-icon')).not.toBeNull();
 	});
 });

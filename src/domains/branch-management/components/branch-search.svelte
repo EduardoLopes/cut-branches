@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideX from '@lucide/svelte/icons/x';
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Input, { type InputProps } from '@pindoba/svelte-input';
@@ -7,6 +7,7 @@
 	import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
 	import { createToggle } from '$lib/svelte-runes-utils';
 	import type { Repository } from '$types/repository';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -67,7 +68,7 @@
 		data-testid="clear-search-button"
 	>
 		<Stamp emphasis="ghost" border="none" background="transparent">
-			<Icon icon="mdi:clear" width="16px" height="16px" />
+			<Icon icon={LucideX} width="16px" height="16px" />
 		</Stamp>
 		<span class={visuallyHidden()}>Clear search</span>
 	</Button>

@@ -1,11 +1,13 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideFolder from '@lucide/svelte/icons/folder';
+	import LucideFolderPlus from '@lucide/svelte/icons/folder-plus';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Modal from '@pindoba/svelte-dialog';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import { useAddWorktreeFlow } from '../core/composables/use-add-worktree-flow.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
@@ -82,7 +84,7 @@
 			<DialogHeader
 				title="Add worktree"
 				subtitle="Create a new working directory linked to this repository. Leave the branch empty to create a new branch named after the worktree."
-				icon="lucide:folder-plus"
+				icon={LucideFolderPlus}
 			/>
 		{/snippet}
 
@@ -124,7 +126,7 @@
 					onclick={() => flow.pickDirectory()}
 					data-testid="add-worktree-pick-dir"
 				>
-					{#snippet leading()}<Icon icon="lucide:folder" width="14px" height="14px" />{/snippet}
+					{#snippet leading()}<Icon icon={LucideFolder} width="14px" height="14px" />{/snippet}
 					Choose directory…
 				</Button>
 			</div>

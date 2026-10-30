@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LucideRotateCcw from '@lucide/svelte/icons/rotate-ccw';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import GridList from '@pindoba/svelte-grid-list';
@@ -113,7 +114,7 @@
 	}}
 >
 	{#snippet header()}
-		<DialogHeader title="Restore Deleted Branches" icon="lucide:rotate-ccw" />
+		<DialogHeader title="Restore Deleted Branches" icon={LucideRotateCcw} />
 	{/snippet}
 
 	{#if flow.currentConflictBranch}

@@ -1,11 +1,14 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideArchiveRestore from '@lucide/svelte/icons/archive-restore';
+	import LucideCircleCheck from '@lucide/svelte/icons/circle-check';
+	import LucideZap from '@lucide/svelte/icons/zap';
 	import Banner from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { type Snippet } from 'svelte';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
+	import Icon from '$ui/core/icon.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -22,17 +25,17 @@
 
 	const features = [
 		{
-			icon: 'mdi:check-circle-outline',
+			icon: LucideCircleCheck,
 			eyebrow: 'Confidence',
 			heading: 'Clean up merged branches safely'
 		},
 		{
-			icon: 'mdi:backup-restore',
+			icon: LucideArchiveRestore,
 			eyebrow: 'Undo',
 			heading: 'Restore anything you delete by mistake'
 		},
 		{
-			icon: 'mdi:lightning-bolt-outline',
+			icon: LucideZap,
 			eyebrow: 'Speed',
 			heading: 'Delete in bulk in a single action'
 		}

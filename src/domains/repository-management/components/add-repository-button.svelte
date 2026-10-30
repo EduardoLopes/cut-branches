@@ -1,14 +1,16 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
+	import LucideCirclePlus from '@lucide/svelte/icons/circle-plus';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useAddRepository } from '../core/composables/use-add-repository.svelte';
 	import type { CreateRepositoryOutput } from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	type Props = ButtonProps & {
-		icon?: string;
+		icon?: LucideIcon;
 		visuallyHiddenLabel?: boolean;
 		onSuccess?: (data: CreateRepositoryOutput) => void;
 	};
@@ -16,7 +18,7 @@
 	const {
 		size = 'lg',
 		emphasis = 'primary',
-		icon = 'material-symbols:add-circle-outline-rounded',
+		icon = LucideCirclePlus,
 		visuallyHiddenLabel = false,
 		onSuccess,
 		...props

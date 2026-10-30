@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideBell from '@lucide/svelte/icons/bell';
 	import Attachment from '@pindoba/svelte-attachment';
 	import Button from '@pindoba/svelte-button';
 	import Panel from '@pindoba/svelte-panel';
@@ -12,6 +12,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { spacer, visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -167,7 +168,7 @@
 								aria-hidden="true"
 							>
 								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="mingcute:notification-fill" width="12px" height="12px" />
+									<Icon icon={LucideBell} width="12px" height="12px" />
 								</Stamp>
 							</span>
 						{/key}

@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideFolderGit2 from '@lucide/svelte/icons/folder-git-2';
+	import LucideSearchX from '@lucide/svelte/icons/search-x';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
@@ -14,6 +15,7 @@
 	import type { Repository } from '$infrastructure/bindings';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { resolveRepositoryPath } from '$lib/repository-route';
+	import Icon from '$ui/core/icon.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
@@ -157,7 +159,7 @@
 			<DialogHeader
 				title="Manage repositories"
 				subtitle="Select the repositories to remove from Cut Branches. This only removes them from the app — the folders on disk are left untouched."
-				icon="lucide:folder-git-2"
+				icon={LucideFolderGit2}
 			/>
 		{/snippet}
 
@@ -203,7 +205,7 @@
 						data-testid="manage-empty"
 					>
 						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
-							<Icon icon="lucide:folder-git-2" width="20px" height="20px" />
+							<Icon icon={LucideFolderGit2} width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No repositories to manage.</span>
 					</div>
@@ -222,7 +224,7 @@
 						data-testid="manage-no-matches"
 					>
 						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
-							<Icon icon="lucide:search-x" width="20px" height="20px" />
+							<Icon icon={LucideSearchX} width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No repositories match your search.</span>
 					</div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LucideGitBranchMinus from '@lucide/svelte/icons/git-branch-minus';
 	import EmptyState from '$ui/core/empty-state.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -42,6 +43,6 @@
 	{/if}
 
 	{#if branchesLength === 0 && !searchNoResultsFound && !isLoading}
-		<EmptyState message={emptyStateMessage} icon="mdi:source-branch-remove" />
+		<EmptyState message={emptyStateMessage} icon={LucideGitBranchMinus} />
 	{/if}
 {/key}

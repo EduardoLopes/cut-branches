@@ -1,9 +1,9 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
 	import type { FeatureFlagDefinition } from '$lib/feature-flags.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import SettingsField from '$ui/patterns/settings-field.svelte';
 	import { css } from '@pindoba/styled-system/css';
 

@@ -12,7 +12,7 @@
 	// lines render as plain text immediately and re-render colored once shiki
 	// resolves (or stay plain when the language is unknown / highlighting
 	// fails).
-	import Icon from '@iconify/svelte';
+	import LucideChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { ThemedToken } from 'shiki';
@@ -39,6 +39,7 @@
 		DiffViewerTokenHover,
 		DiffViewerVariant
 	} from './types';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -457,7 +458,7 @@
 			>
 				{#snippet leading()}
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:chevrons-up-down" width="14px" height="14px" />
+						<Icon icon={LucideChevronsUpDown} width="14px" height="14px" />
 					</Stamp>
 				{/snippet}
 				{loadingGaps?.has(gap.id) ? 'Loading…' : gapLabel(gap)}

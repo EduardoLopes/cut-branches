@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideCircleX from '@lucide/svelte/icons/circle-x';
+	import LucideEllipsisVertical from '@lucide/svelte/icons/ellipsis-vertical';
+	import LucideFolderGit2 from '@lucide/svelte/icons/folder-git-2';
+	import LucideFolderOpen from '@lucide/svelte/icons/folder-open';
+	import LucideRefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import LucideTrees from '@lucide/svelte/icons/trees';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
@@ -11,6 +16,7 @@
 	import { useRepositoryWatch } from '../core/composables/use-repository-watch.svelte';
 	import RemoveRepositoryModal from './remove-repository-modal.svelte';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import Icon from '$ui/core/icon.svelte';
 	import PageHeader, { type PageBreadcrumbItem } from '$ui/patterns/page-header.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -102,23 +108,23 @@
 
 {#snippet updateIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
+		<Icon icon={LucideRefreshCw} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 {#snippet revealIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:folder-open" width="14px" height="14px" />
+		<Icon icon={LucideFolderOpen} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 {#snippet removeIcon()}
 	<Stamp size="sm" emphasis="ghost" tone="danger" border="none" background="transparent">
-		<Icon icon="lucide:circle-x" width="14px" height="14px" />
+		<Icon icon={LucideCircleX} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 
 {#snippet repositoryIcon()}
 	<Stamp shape="square" size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:folder-git-2" width="16px" height="16px" />
+		<Icon icon={LucideFolderGit2} width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 
@@ -142,7 +148,7 @@
 		{#if isWorktree}
 			<Badge size="sm" tone="warning" data-testid="repository-worktree-badge">
 				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+					<Stamp emphasis="ghost"><Icon icon={LucideTrees} /></Stamp>
 				{/snippet}
 				worktree
 			</Badge>
@@ -176,7 +182,7 @@
 						{...tipProps}
 					>
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:ellipsis-vertical" width="16px" height="16px" />
+							<Icon icon={LucideEllipsisVertical} width="16px" height="16px" />
 						</Stamp>
 					</Button>
 				{/snippet}

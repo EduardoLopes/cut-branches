@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LucideGitBranchPlus from '@lucide/svelte/icons/git-branch-plus';
 	import { goto } from '$app/navigation';
 	import AddRepositoryMenu from '$domains/repository-management/components/add-repository-menu.svelte';
 	import { resolveRepositoryPath } from '$lib/repository-route';
@@ -8,7 +9,7 @@
 
 <PageShell testId="repos-empty-state">
 	<EmptyState
-		icon="mdi:source-branch-plus"
+		icon={LucideGitBranchPlus}
 		heading="No repositories yet"
 		message="Add a Git repository to see its branches and start tidying up."
 	>

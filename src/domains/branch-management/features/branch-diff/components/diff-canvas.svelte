@@ -11,7 +11,9 @@
 	// the canvas IS a viewport, so it consumes the wheel entirely: plain
 	// wheel pans, ctrl/cmd+wheel (macOS pinch arrives as ctrl+wheel) zooms
 	// toward the cursor.
-	import Icon from '@iconify/svelte';
+	import LucideChevronsDownUp from '@lucide/svelte/icons/chevrons-down-up';
+	import LucideChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
+	import LucideMaximize from '@lucide/svelte/icons/maximize';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -28,6 +30,7 @@
 		ExplanationStyle,
 		GetDiffStructureOutput
 	} from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import type {
 		DiffViewerGutter,
 		DiffViewerLayout,
@@ -484,7 +487,7 @@
 			data-testid="canvas-expand-all-button"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:chevrons-up-down" width="14px" height="14px" />
+				<Icon icon={LucideChevronsUpDown} width="14px" height="14px" />
 			</Stamp>
 		</Button>
 		<Button
@@ -497,7 +500,7 @@
 			data-testid="canvas-collapse-all-button"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:chevrons-down-up" width="14px" height="14px" />
+				<Icon icon={LucideChevronsDownUp} width="14px" height="14px" />
 			</Stamp>
 		</Button>
 		<Button
@@ -510,7 +513,7 @@
 			data-testid="canvas-fit-button"
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:maximize" width="14px" height="14px" />
+				<Icon icon={LucideMaximize} width="14px" height="14px" />
 			</Stamp>
 		</Button>
 	</div>

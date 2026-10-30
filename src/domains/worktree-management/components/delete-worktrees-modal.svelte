@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LucideTrash2 from '@lucide/svelte/icons/trash-2';
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Modal from '@pindoba/svelte-dialog';
@@ -57,7 +58,7 @@
 			<DialogHeader
 				title={count === 1 ? 'Delete worktree' : 'Delete worktrees'}
 				subtitle={`Delete ${count} worktree${count === 1 ? '' : 's'}? Their working directories will be deleted. The branches themselves are not removed.`}
-				icon="lucide:trash-2"
+				icon={LucideTrash2}
 			/>
 		{/snippet}
 

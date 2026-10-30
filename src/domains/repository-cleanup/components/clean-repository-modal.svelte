@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
@@ -12,6 +12,7 @@
 	import { useCleanupTargets } from '$domains/repository-cleanup/core/composables/use-cleanup-targets.svelte';
 	import type { DeletionMode } from '$infrastructure/bindings';
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
+	import Icon from '$ui/core/icon.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
@@ -105,7 +106,7 @@
 			<DialogHeader
 				title="Clean up {repositoryName}"
 				subtitle="Delete regenerable dependency and build folders to reclaim disk space. Review the folders below before continuing."
-				icon="lucide:sparkles"
+				icon={LucideSparkles}
 			/>
 		{/snippet}
 
@@ -166,7 +167,7 @@
 						data-testid="cleanup-empty"
 					>
 						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
-							<Icon icon="lucide:sparkles" width="20px" height="20px" />
+							<Icon icon={LucideSparkles} width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>Nothing to clean up here.</span>
 					</div>

@@ -1,5 +1,7 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideFileDiff from '@lucide/svelte/icons/file-diff';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideTrash2 from '@lucide/svelte/icons/trash-2';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
@@ -20,6 +22,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
@@ -146,7 +149,7 @@
 		<DialogHeader
 			title="Delete branches"
 			subtitle={`Are you sure you want these branches from the repository ${repository?.name ?? ''}?`}
-			icon="lucide:trash-2"
+			icon={LucideTrash2}
 			subtitleTestId="delete-branch-dialog-question"
 		/>
 	{/snippet}
@@ -176,7 +179,7 @@
 					<div {...cell('name', { class: nameCellClass })} data-testid="delete-branch-row">
 						<span class={lineClass}>
 							<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-								<Icon icon="lucide:git-branch" width="14px" height="14px" />
+								<Icon icon={LucideGitBranch} width="14px" height="14px" />
 							</Stamp>
 							<span class={nameClass} title={branch.getName()}>{branch.getName()}</span>
 							{#if branch.isCurrent()}
@@ -202,7 +205,7 @@
 										{...triggerProps}
 									>
 										<Stamp emphasis="ghost" border="none" background="transparent">
-											<Icon icon="lucide:file-diff" width="14px" height="14px" />
+											<Icon icon={LucideFileDiff} width="14px" height="14px" />
 										</Stamp>
 										<span class={visuallyHidden()}>View branch diff</span>
 									</Button>

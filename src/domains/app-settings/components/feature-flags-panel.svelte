@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideFlag from '@lucide/svelte/icons/flag';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -11,6 +11,7 @@
 		setFeatureFlag
 	} from '$lib/feature-flags.svelte';
 	import EmptyState from '$ui/core/empty-state.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
 
 	// Flags marked `hidden` stay out of Settings entirely — they are pinned to
@@ -20,7 +21,7 @@
 
 {#snippet flagIcon()}
 	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" shadow="sm">
-		<Icon icon="lucide:flag" width="16px" height="16px" />
+		<Icon icon={LucideFlag} width="16px" height="16px" />
 	</Stamp>
 {/snippet}
 
@@ -42,7 +43,7 @@
 		     ever a developer/build state — never something a user's actions produce.
 		     The instruction to edit source is therefore dev-only. -->
 		<EmptyState
-			icon="lucide:flag"
+			icon={LucideFlag}
 			size="sm"
 			heading="No feature flags yet"
 			message={import.meta.env.DEV

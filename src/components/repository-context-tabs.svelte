@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideTrees from '@lucide/svelte/icons/trees';
 	import Badge from '@pindoba/svelte-badge';
 	import Group from '@pindoba/svelte-group';
 	import Radio from '@pindoba/svelte-radio';
@@ -10,6 +11,7 @@
 	import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	/**
@@ -84,7 +86,7 @@
 			Branches
 			{#snippet leading()}
 				<Stamp emphasis="ghost" tone="neutral" border="muted" background="transparent">
-					<Icon icon="lucide:git-branch" width="14px" height="14px" />
+					<Icon icon={LucideGitBranch} width="14px" height="14px" />
 				</Stamp>
 			{/snippet}
 			{#snippet trailing()}
@@ -106,7 +108,7 @@
 			Worktrees
 			{#snippet leading()}
 				<Stamp emphasis="ghost" tone="neutral" border="muted" background="transparent">
-					<Icon icon="lucide:trees" width="14px" height="14px" />
+					<Icon icon={LucideTrees} width="14px" height="14px" />
 				</Stamp>
 			{/snippet}
 			{#snippet trailing()}

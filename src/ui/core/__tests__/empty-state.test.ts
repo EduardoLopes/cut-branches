@@ -1,3 +1,4 @@
+import LucideTriangleAlert from '@lucide/svelte/icons/triangle-alert';
 import { describe, expect, test } from 'vitest';
 import EmptyState from '../empty-state.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
@@ -39,7 +40,7 @@ describe('EmptyState Component', () => {
 	});
 
 	test('renders component with custom icon', async () => {
-		const customIcon = 'mdi:alert';
+		const customIcon = LucideTriangleAlert;
 		const { container } = await renderWithTestWrapper(EmptyState, {
 			message: 'No items found',
 			icon: customIcon

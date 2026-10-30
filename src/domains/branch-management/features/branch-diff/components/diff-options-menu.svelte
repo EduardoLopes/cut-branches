@@ -4,12 +4,13 @@
 	// +− markers / edge bars), line numbers (one or two columns) and line
 	// wrapping. Pure delivery-layer UI — the owner holds the option state and
 	// receives changes via `onChange`.
-	import Icon from '@iconify/svelte';
+	import LucideSlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Button from '@pindoba/svelte-button';
 	import Menu from '@pindoba/svelte-menu';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { DiffViewOptions } from '../application/use-diff-view-options.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import type {
 		DiffViewerGutter,
 		DiffViewerLayout,
@@ -102,7 +103,7 @@
 		>
 			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:sliders-horizontal" width="16px" height="16px" />
+					<Icon icon={LucideSlidersHorizontal} width="16px" height="16px" />
 				</Stamp>
 			{/snippet}
 			View

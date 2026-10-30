@@ -4,6 +4,7 @@
 	// is the decision surface; the graph rail is context. The header hosts the
 	// SAME DeleteBranchModal the branches screen uses, fed by the shared
 	// cache-backed selection the gutter checkboxes write into.
+	import LucideGitCommitHorizontal from '@lucide/svelte/icons/git-commit-horizontal';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import { useCommitHistoryView } from '../application/use-commit-history-view.svelte';
@@ -80,7 +81,7 @@
 		</Alert>
 	{:else if !view.isLoading && view.totalCount === 0}
 		<EmptyState
-			icon="lucide:git-commit-horizontal"
+			icon={LucideGitCommitHorizontal}
 			heading="No commits yet"
 			message="This repository has no commit history to show."
 			testId="history-empty"

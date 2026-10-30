@@ -3,7 +3,7 @@
 	// feeds them to the shared DiffViewer pattern. This panel owns everything
 	// that talks to the backend — the diff query and the hidden-context
 	// expansion (getFileLines) — while the viewer owns all rendering.
-	import Icon from '@iconify/svelte';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import Alert from '@pindoba/svelte-alert';
 	import Button from '@pindoba/svelte-button';
 	import Loading from '@pindoba/svelte-loading';
@@ -13,6 +13,7 @@
 	import { getDiffLanguage } from '../models/diff-language';
 	import type { ChangedFile, DiffHunk, DiffLine } from '$infrastructure/bindings';
 	import { executeCommand } from '$infrastructure/tauri-commands';
+	import Icon from '$ui/core/icon.svelte';
 	import type { DiffGap } from '$ui/patterns/diff-viewer/diff-gaps';
 	import DiffViewer from '$ui/patterns/diff-viewer/diff-viewer.svelte';
 	import {
@@ -213,7 +214,7 @@
 		<div class={annotation} data-testid="hunk-explanation">
 			<span class={annotationHeader}>
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:sparkles" width="13px" height="13px" />
+					<Icon icon={LucideSparkles} width="13px" height="13px" />
 				</Stamp>
 				AI explanation
 			</span>

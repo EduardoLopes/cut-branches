@@ -5,13 +5,14 @@
 	//   • Detail — whole-file summary vs inline per-change-group explanations.
 	// Pure delivery-layer UI — the owner holds the persisted options and gets
 	// changes via the callbacks. Applies to per-file Explain and Explain-all.
-	import Icon from '@iconify/svelte';
+	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Button from '@pindoba/svelte-button';
 	import Menu from '@pindoba/svelte-menu';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { ExplanationDetail } from '../../branch-diff/application/use-diff-view-options.svelte';
 	import type { ExplanationStyle } from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 
 	interface Props {
 		style: ExplanationStyle;
@@ -73,7 +74,7 @@
 		>
 			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:sparkles" width="16px" height="16px" />
+					<Icon icon={LucideSparkles} width="16px" height="16px" />
 				</Stamp>
 			{/snippet}
 			Explanation

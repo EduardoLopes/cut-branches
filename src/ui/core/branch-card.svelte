@@ -1,5 +1,11 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LucideCloudOff from '@lucide/svelte/icons/cloud-off';
+	import LucideFileDiff from '@lucide/svelte/icons/file-diff';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideGitCommitHorizontal from '@lucide/svelte/icons/git-commit-horizontal';
+	import LucideMapPin from '@lucide/svelte/icons/map-pin';
+	import LucideTrash from '@lucide/svelte/icons/trash';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Card, {
@@ -12,6 +18,7 @@
 	import type { Snippet } from 'svelte';
 	import CommitCard from './commit-card.svelte';
 	import { type Branch } from '$domains/branch-management/core/models/branch';
+	import Icon from '$ui/core/icon.svelte';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { token } from '@pindoba/styled-system/tokens';
@@ -293,7 +300,7 @@
 					data-testid="branch-current-badge"
 				>
 					{#snippet leading()}
-						<Stamp emphasis="ghost"><Icon icon="lucide:map-pin" /></Stamp>
+						<Stamp emphasis="ghost"><Icon icon={LucideMapPin} /></Stamp>
 					{/snippet}
 					current
 				</Badge>
@@ -331,7 +338,7 @@
 				passThrough={truncatingBadgePassThrough}
 			>
 				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
+					<Stamp emphasis="ghost"><Icon icon={LucideGitBranch} /></Stamp>
 				{/snippet}
 				<span class={badgeLabelTruncate} title={branch.getUpstream()}>
 					{branch.getUpstream()}
@@ -349,7 +356,7 @@
 				passThrough={truncatingBadgePassThrough}
 			>
 				{#snippet leading()}
-					<Stamp emphasis="ghost"><Icon icon="lucide:cloud-off" /></Stamp>
+					<Stamp emphasis="ghost"><Icon icon={LucideCloudOff} /></Stamp>
 				{/snippet}
 				<span class={badgeLabelTruncate}>no upstream</span>
 			</Badge>
@@ -438,7 +445,7 @@
 					background="transparent"
 				>
 					<Icon
-						icon="lucide:file-diff"
+						icon={LucideFileDiff}
 						width={compact ? '14px' : '16px'}
 						height={compact ? '14px' : '16px'}
 					/>
@@ -462,11 +469,7 @@
 		})}
 		data-testid="deleted-at-info"
 	>
-		<Icon
-			icon="lucide:trash"
-			width={compact ? '14px' : '16px'}
-			height={compact ? '14px' : '16px'}
-		/>
+		<Icon icon={LucideTrash} width={compact ? '14px' : '16px'} height={compact ? '14px' : '16px'} />
 		<span title={safeFormatDate(deletedAt)} data-testid={`deleted-at-title-${branch.getName()}`}>
 			Deleted {safeFormatRelativeDate(deletedAt)}
 		</span>
@@ -536,7 +539,7 @@
 					})}
 				>
 					<Icon
-						icon="lucide:git-commit-horizontal"
+						icon={LucideGitCommitHorizontal}
 						width="16px"
 						height="16px"
 						color={token('colors.colorPalette.text.muted')}
@@ -595,7 +598,7 @@
 										})}
 									>
 										<Stamp emphasis="ghost" border="none" background="transparent">
-											<Icon icon="lucide:chevron-down" width="14px" height="14px" />
+											<Icon icon={LucideChevronDown} width="14px" height="14px" />
 										</Stamp>
 									</span>
 								{/snippet}

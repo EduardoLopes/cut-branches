@@ -1,4 +1,6 @@
 <script lang="ts">
+	import LucidePanelLeftClose from '@lucide/svelte/icons/panel-left-close';
+	import LucidePanelLeftOpen from '@lucide/svelte/icons/panel-left-open';
 	import type { ButtonProps } from '@pindoba/svelte-button';
 	import { sidebarCollapsed } from '$lib/sidebar-collapsed.svelte';
 	import IconButton from '$ui/core/icon-button.svelte';
@@ -31,8 +33,8 @@
 	{iconSize}
 	shape="square"
 	emphasis="ghost"
-	icon="lucide:panel-left-close"
-	swapIcon="lucide:panel-left-open"
+	icon={LucidePanelLeftClose}
+	swapIcon={LucidePanelLeftOpen}
 	swapped={collapsed}
 	label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 	visuallyHiddenLabel

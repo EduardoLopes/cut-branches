@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LucideFolderMinus from '@lucide/svelte/icons/folder-minus';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
 	import Loading from '@pindoba/svelte-loading';
@@ -125,7 +126,7 @@
 			<DialogHeader
 				title="Remove repository"
 				subtitle={`Are you sure you want to remove the repository ${getRepositoryQuery.data?.name ?? repositoryId}?`}
-				icon="lucide:folder-minus"
+				icon={LucideFolderMinus}
 			/>
 		{/snippet}
 

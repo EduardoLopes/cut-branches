@@ -1,12 +1,13 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Stamp from '@pindoba/svelte-stamp';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	type Props = ButtonProps & {
-		icon: string;
+		icon: LucideIcon;
 		label: string;
 		visuallyHiddenLabel?: boolean;
 		/**
@@ -15,7 +16,7 @@
 		 * animates in both directions instead of hard-cutting — use it for
 		 * state-change icons (open/close, play/pause).
 		 */
-		swapIcon?: string;
+		swapIcon?: LucideIcon;
 		/** Shows `swapIcon` instead of `icon`. Only meaningful with `swapIcon`. */
 		swapped?: boolean;
 		/**

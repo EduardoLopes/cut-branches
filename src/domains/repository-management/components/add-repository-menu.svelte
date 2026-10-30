@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
+	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LucideCirclePlus from '@lucide/svelte/icons/circle-plus';
+	import LucideFolderSearch from '@lucide/svelte/icons/folder-search';
+	import LucideListChecks from '@lucide/svelte/icons/list-checks';
+	import LucideRadar from '@lucide/svelte/icons/radar';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Button, { type ButtonProps } from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
@@ -15,11 +20,12 @@
 		repositorySort,
 		type RepositorySortMode
 	} from '$lib/repository-sort.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	type Props = ButtonProps & {
-		icon?: string;
+		icon?: LucideIcon;
 		/** Renders the primary button as an icon-only (compact) control. */
 		visuallyHiddenLabel?: boolean;
 		/**
@@ -39,7 +45,7 @@
 	const {
 		size = 'lg',
 		emphasis = 'primary',
-		icon = 'material-symbols:add-circle-outline-rounded',
+		icon = LucideCirclePlus,
 		visuallyHiddenLabel = false,
 		withRepositorySort = false,
 		withManageRepositories = false,
@@ -116,17 +122,17 @@
 
 {#snippet scanIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:radar" width="14px" height="14px" />
+		<Icon icon={LucideRadar} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 {#snippet folderIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:folder-search" width="14px" height="14px" />
+		<Icon icon={LucideFolderSearch} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 {#snippet manageIcon()}
 	<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-		<Icon icon="lucide:list-checks" width="14px" height="14px" />
+		<Icon icon={LucideListChecks} width="14px" height="14px" />
 	</Stamp>
 {/snippet}
 
@@ -164,7 +170,7 @@
 					{...triggerProps}
 				>
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:chevron-down" width="18px" height="18px" />
+						<Icon icon={LucideChevronDown} width="18px" height="18px" />
 					</Stamp>
 				</Button>
 			{/snippet}

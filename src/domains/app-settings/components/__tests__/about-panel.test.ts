@@ -1,12 +1,15 @@
+import LucideBug from '@lucide/svelte/icons/bug';
+import LucideCodeXml from '@lucide/svelte/icons/code-xml';
+import LucideTag from '@lucide/svelte/icons/tag';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { AboutLink } from '../../core/composables/use-about.svelte';
 import AboutPanel from '../about-panel.svelte';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
 const LINKS: AboutLink[] = [
-	{ id: 'repo', label: 'GitHub', icon: 'lucide:github', url: 'https://example.com/repo' },
-	{ id: 'issue', label: 'Report an issue', icon: 'lucide:bug', url: 'https://example.com/issue' },
-	{ id: 'releases', label: 'Releases', icon: 'lucide:tag', url: 'https://example.com/releases' }
+	{ id: 'repo', label: 'GitHub', icon: LucideCodeXml, url: 'https://example.com/repo' },
+	{ id: 'issue', label: 'Report an issue', icon: LucideBug, url: 'https://example.com/issue' },
+	{ id: 'releases', label: 'Releases', icon: LucideTag, url: 'https://example.com/releases' }
 ];
 
 const h = vi.hoisted(() => ({

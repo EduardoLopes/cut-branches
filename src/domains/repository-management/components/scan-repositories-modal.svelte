@@ -1,5 +1,10 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LucideFolderSearch from '@lucide/svelte/icons/folder-search';
+	import LucideHouse from '@lucide/svelte/icons/house';
+	import LucideRefreshCw from '@lucide/svelte/icons/refresh-cw';
+	import LucideSearchX from '@lucide/svelte/icons/search-x';
+	import LucideTrees from '@lucide/svelte/icons/trees';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
@@ -18,6 +23,7 @@
 	} from '../core/composables/use-discover-repositories.svelte';
 	import { groupDiscoveredRepositories } from '../utils/group-discovered-repositories';
 	import { notifications } from '$services/notifications/notifications.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
@@ -251,7 +257,7 @@
 			<DialogHeader
 				title="Find repositories"
 				subtitle="Scan a location on this computer for git repositories, then choose which ones to add."
-				icon="lucide:folder-search"
+				icon={LucideFolderSearch}
 			/>
 		{/snippet}
 
@@ -290,7 +296,7 @@
 
 				{#snippet homeIcon()}
 					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-						<Icon icon="lucide:house" width="14px" height="14px" />
+						<Icon icon={LucideHouse} width="14px" height="14px" />
 					</Stamp>
 				{/snippet}
 
@@ -329,7 +335,7 @@
 								{...triggerProps}
 							>
 								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:chevron-down" width="16px" height="16px" />
+									<Icon icon={LucideChevronDown} width="16px" height="16px" />
 								</Stamp>
 							</Button>
 						{/snippet}
@@ -386,7 +392,7 @@
 						data-testid="scan-rescan-button"
 					>
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:refresh-cw" width="14px" height="14px" />
+							<Icon icon={LucideRefreshCw} width="14px" height="14px" />
 						</Stamp>
 					</Button>
 				</div>
@@ -471,7 +477,7 @@
 						data-testid="scan-empty"
 					>
 						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
-							<Icon icon="lucide:search-x" width="20px" height="20px" />
+							<Icon icon={LucideSearchX} width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No git repositories found in this location.</span>
 						<span class={css({ fontSize: 'xs' })}
@@ -535,7 +541,7 @@
 										{#if item.isWorktree}
 											<Badge size="sm" tone="warning" data-testid="scan-item-worktree">
 												{#snippet leading()}
-													<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+													<Stamp emphasis="ghost"><Icon icon={LucideTrees} /></Stamp>
 												{/snippet}
 												worktree
 											</Badge>

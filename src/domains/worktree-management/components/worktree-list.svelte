@@ -1,5 +1,9 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideHouse from '@lucide/svelte/icons/house';
+	import LucideLock from '@lucide/svelte/icons/lock';
+	import LucideLockOpen from '@lucide/svelte/icons/lock-open';
+	import LucideTrees from '@lucide/svelte/icons/trees';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import GridList from '@pindoba/svelte-grid-list';
@@ -8,6 +12,7 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { type Worktree } from '../core/models/worktree';
 	import EmptyState from '$ui/core/empty-state.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
@@ -50,14 +55,11 @@
 	// A fresh Set per change: GridList adopts a new `value` by identity.
 	const value = $derived(new Set(selected));
 
+	// `scroll` makes the list its own scroll port; this adds the row inset and
+	// the room for the last row to scroll out from under the well's bulk bar.
 	const scrollPortClass = css({
-		flex: '1',
-		minHeight: '0',
-		overflowY: 'auto',
-		overflowX: 'hidden',
 		paddingX: 'md',
-		// Room for the last row to scroll out from under the well's bulk bar.
-		paddingBottom: 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
+		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
 	});
 
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
@@ -105,7 +107,7 @@
 		</div>
 	{:else if worktrees.length === 0}
 		<EmptyState
-			icon="lucide:trees"
+			icon={LucideTrees}
 			size="sm"
 			message="No worktrees found."
 			testId="worktree-list-empty"
@@ -116,6 +118,7 @@
 		     its two lines. -->
 		<GridList
 			bind:element
+			scroll
 			class={scrollPortClass}
 			label="Worktrees"
 			items={worktrees}
@@ -148,7 +151,7 @@
 					<span class={lineClass}>
 						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
 							<Icon
-								icon={worktree.isMain() ? 'lucide:house' : 'lucide:trees'}
+								icon={worktree.isMain() ? LucideHouse : LucideTrees}
 								width="16px"
 								height="16px"
 							/>
@@ -177,7 +180,7 @@
 					</span>
 					<span class={lineClass}>
 						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-							<Icon icon="lucide:git-branch" width="14px" height="14px" />
+							<Icon icon={LucideGitBranch} width="14px" height="14px" />
 						</Stamp>
 						<span class={branchClass} data-testid="worktree-branch">
 							{worktree.getBranch() ?? 'detached'}
@@ -225,7 +228,7 @@
 								>
 									<Stamp emphasis="ghost" border="none" background="transparent">
 										<Icon
-											icon={worktree.isLocked() ? 'lucide:lock' : 'lucide:lock-open'}
+											icon={worktree.isLocked() ? LucideLock : LucideLockOpen}
 											width="14px"
 											height="14px"
 										/>

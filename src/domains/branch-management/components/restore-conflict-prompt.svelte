@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideCircleAlert from '@lucide/svelte/icons/circle-alert';
 	import Banner from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -26,7 +27,7 @@
 >
 	<Banner tone="warning" heading="Branch Name Conflict">
 		{#snippet leading()}
-			<Icon icon="ion:alert-circle" width="24px" height="24px" />
+			<Icon icon={LucideCircleAlert} width="24px" height="24px" />
 		{/snippet}
 	</Banner>
 	<p class={css({ color: 'warning.text.accent' })}>

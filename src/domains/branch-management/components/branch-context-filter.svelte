@@ -1,5 +1,6 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
+	import LucideTrash2 from '@lucide/svelte/icons/trash-2';
 	import Badge from '@pindoba/svelte-badge';
 	import { Choice, ChoiceItem } from '@pindoba/svelte-choice';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -7,6 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
+	import Icon from '$ui/core/icon.svelte';
 
 	/**
 	 * Active / Deleted split for the branches page.
@@ -75,7 +77,7 @@
 		<ChoiceItem value="active" label="Active" data-testid="filter-active">
 			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:git-branch" width="14px" height="14px" />
+					<Icon icon={LucideGitBranch} width="14px" height="14px" />
 				</Stamp>
 			{/snippet}
 			{#snippet trailing()}
@@ -86,7 +88,7 @@
 		<ChoiceItem value="deleted" label="Deleted" data-testid="filter-deleted">
 			{#snippet leading()}
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:trash-2" width="14px" height="14px" />
+					<Icon icon={LucideTrash2} width="14px" height="14px" />
 				</Stamp>
 			{/snippet}
 			{#snippet trailing()}

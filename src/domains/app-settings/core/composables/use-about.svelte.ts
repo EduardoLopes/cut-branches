@@ -1,3 +1,7 @@
+import type { LucideIcon } from '@lucide/svelte';
+import LucideBug from '@lucide/svelte/icons/bug';
+import LucideCodeXml from '@lucide/svelte/icons/code-xml';
+import LucideTag from '@lucide/svelte/icons/tag';
 import { appLogDir } from '@tauri-apps/api/path';
 import { openPath, openUrl } from '@tauri-apps/plugin-opener';
 import { getAppInfo } from '../../infrastructure/get-app-info';
@@ -9,7 +13,7 @@ const REPO_URL = 'https://github.com/EduardoLopes/cut-branches';
 export interface AboutLink {
 	id: string;
 	label: string;
-	icon: string;
+	icon: LucideIcon;
 	url: string;
 }
 
@@ -65,9 +69,9 @@ export function useAbout() {
 	}
 
 	const links: AboutLink[] = [
-		{ id: 'repo', label: 'GitHub', icon: 'lucide:github', url: REPO_URL },
-		{ id: 'issue', label: 'Report an issue', icon: 'lucide:bug', url: `${REPO_URL}/issues/new` },
-		{ id: 'releases', label: 'Releases', icon: 'lucide:tag', url: `${REPO_URL}/releases` }
+		{ id: 'repo', label: 'GitHub', icon: LucideCodeXml, url: REPO_URL },
+		{ id: 'issue', label: 'Report an issue', icon: LucideBug, url: `${REPO_URL}/issues/new` },
+		{ id: 'releases', label: 'Releases', icon: LucideTag, url: `${REPO_URL}/releases` }
 	];
 
 	async function openLink(url: string) {

@@ -4,12 +4,13 @@
 	// lets one file be explained per-change while another stays whole-file.
 	// Pure delivery-layer UI — the owner holds the effective value and gets the
 	// choice via `onChange`.
-	import Icon from '@iconify/svelte';
+	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
 	import type { MenuNode } from '@pindoba/core-menu';
 	import Button from '@pindoba/svelte-button';
 	import Menu from '@pindoba/svelte-menu';
 	import Stamp from '@pindoba/svelte-stamp';
 	import type { ExplanationDetail } from '../../branch-diff/application/use-diff-view-options.svelte';
+	import Icon from '$ui/core/icon.svelte';
 
 	interface Props {
 		/** The effective detail for this file (per-file override or the global). */
@@ -52,7 +53,7 @@
 			{...triggerProps}
 		>
 			<Stamp emphasis="ghost" border="none" background="transparent">
-				<Icon icon="lucide:chevron-down" width="14px" height="14px" />
+				<Icon icon={LucideChevronDown} width="14px" height="14px" />
 			</Stamp>
 		</Button>
 	{/snippet}

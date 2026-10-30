@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LucidePlus from '@lucide/svelte/icons/plus';
 	import { Devtools } from '@pindoba/devtools';
 	import Panel from '@pindoba/svelte-panel';
 	import { useQueryClient } from '@tanstack/svelte-query';
@@ -100,7 +101,7 @@
 				<AddRepositoryMenu
 					size="sm"
 					emphasis="secondary"
-					icon="material-symbols:add-rounded"
+					icon={LucidePlus}
 					visuallyHiddenLabel
 					withRepositorySort
 					withManageRepositories

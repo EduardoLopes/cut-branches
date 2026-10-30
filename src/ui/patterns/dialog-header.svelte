@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import type { LucideIcon } from '@lucide/svelte';
 	import Banner, { type BannerProps } from '@pindoba/svelte-banner';
 	import Stamp from '@pindoba/svelte-stamp';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -9,8 +10,8 @@
 		title: string;
 		/** Supporting line under the title; runs full width beneath the icon. */
 		subtitle?: string;
-		/** Iconify name for the leading Stamp, e.g. `lucide:folder-git-2`. */
-		icon: string;
+		/** Icon for the leading Stamp, e.g. `LucideFolderGit2` from `@lucide/svelte/icons/folder-git-2`. */
+		icon: LucideIcon;
 		/** `data-testid` for the subtitle element. */
 		subtitleTestId?: string;
 	}

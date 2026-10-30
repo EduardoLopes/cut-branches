@@ -10,7 +10,7 @@
 	// The component is mounted only while the disclosure is open (branch-card
 	// renders the snippet conditionally), so the query below runs on first
 	// expand rather than on page load.
-	import Icon from '@iconify/svelte';
+	import LucideChevronRight from '@lucide/svelte/icons/chevron-right';
 	import Alert from '@pindoba/svelte-alert';
 	import Stamp from '@pindoba/svelte-stamp';
 	import {
@@ -21,6 +21,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import CommitCard from '$ui/core/commit-card.svelte';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -120,7 +121,7 @@
 			<a href={historyHref} class={moreLink} data-testid="recent-commits-open-history">
 				Full history
 				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:chevron-right" width="14px" height="14px" />
+					<Icon icon={LucideChevronRight} width="14px" height="14px" />
 				</Stamp>
 			</a>
 		</div>

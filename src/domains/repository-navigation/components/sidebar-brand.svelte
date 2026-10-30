@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
 	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { foldText } from '../utils/fold-text';
+	import BrandMark from '$ui/core/brand-mark.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -61,7 +61,7 @@
 			}
 		}}
 	>
-		<Icon icon="game-icons:tree-branch" />
+		<BrandMark />
 	</Stamp>
 	{#if !collapsed}
 		<!-- Folds out as the rail closes, unfurls as it reopens. -->

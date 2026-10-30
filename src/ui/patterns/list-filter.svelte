@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
+	import LucideSearch from '@lucide/svelte/icons/search';
 	import Input from '@pindoba/svelte-input';
 	import Stamp from '@pindoba/svelte-stamp';
+	import Icon from '$ui/core/icon.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -54,7 +55,7 @@
 >
 	{#snippet leading()}
 		<Stamp emphasis="ghost" border="none" background="transparent">
-			<Icon icon="lucide:search" width="16px" height="16px" />
+			<Icon icon={LucideSearch} width="16px" height="16px" />
 		</Stamp>
 	{/snippet}
 	{#snippet trailing()}
