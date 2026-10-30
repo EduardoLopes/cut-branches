@@ -10,6 +10,7 @@ Cut Branches is a desktop application built with Tauri (Rust backend) and Svelte
 ## Project
 
 - [Roadmap](roadmap.md) - Planned and deliberately deferred work
+- [ADR 003: Blank band on fast scrolls](adr/003-webkit-fast-scroll-blank-band.md) - Why a blank band ahead of fast flicks is WebKit's and won't be fixed in our lists
 
 ## Key Features
 
