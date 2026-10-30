@@ -269,7 +269,10 @@
 		const isFirstRun = lastSearchTerm === undefined;
 		lastSearchTerm = term;
 		if (isFirstRun) return;
-		untrack(() => element)?.scrollTo({ top: 0 });
+		// The grid inside the root is the scroll port (`scroll` mode).
+		untrack(() => element)
+			?.querySelector('[role="grid"]')
+			?.scrollTo({ top: 0 });
 	});
 
 	/** Five digits and up read as `12K`: the changes column has a fixed
@@ -279,14 +282,31 @@
 		return count < 10_000 ? String(count) : compactCount.format(count);
 	}
 
-	/** A two-line row plus the cards look's gap. Only seeds the scrollbar:
-	 *  every mounted row reports its measured height. */
-	const ESTIMATED_ROW_HEIGHT = 90;
+	/** A two-line row (65px) plus the cards look's gap (2px), as measured in
+	 *  the app. Every mounted row reports its own height, but rows not yet
+	 *  rendered are placed by this: too high and a fast jump lands on the
+	 *  wrong rows while the scrollbar shrinks under the pointer. */
+	const ESTIMATED_ROW_HEIGHT = 67;
 
-	// `scroll` makes the list its own scroll port; this adds the row inset and
-	// the room for the last row to scroll out from under the well's bulk bar.
+	/** Rows rendered past each end of the view (GridList's default is 6).
+	 *  Rows are light now that their actions mount on hover, so a deeper
+	 *  buffer is cheap, and it is what a fast flick scrolls into before the
+	 *  next render catches up. */
+	const OVERSCAN_ROWS = 12;
+
+	// Where a flick outruns even that buffer, the spacers standing in for
+	// unrendered rows show empty cards instead of a blank well: the row fill
+	// for one row's height, then the gap, repeated (ESTIMATED_ROW_HEIGHT).
+	const spacerStyle = css.raw({
+		backgroundImage:
+			'repeating-linear-gradient(to bottom, var(--gl-row-bg) 0 65px, transparent 65px 67px)'
+	});
+
+	// `scroll` makes the list's grid its scroll port inside a padded frame:
+	// side insets only (nothing above the header), plus room for the last row
+	// to scroll out from under the well's bulk bar.
 	const scrollPortClass = css({
-		paddingX: 'md',
+		'--gl-scroll-inset': '0 token(spacing.md)',
 		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
 	});
 
@@ -315,17 +335,16 @@
 
 <!-- Surface comes from the enclosing PageWell, which is unpadded for this view.
      The list is its own scroll port, so the sticky header pins to the list's
-     top edge and rows scroll under it, never above it. Only the top inset sits
-     outside the port; the sides and bottom are the port's own padding, so rows
-     travel to the well's edges and the scrollbar rides that edge. -->
+     top edge (flush under the toolbar) and rows scroll under it, never above
+     it. The sides and bottom are the port's own padding, so rows travel to
+     the well's edges and the scrollbar rides that edge. -->
 <div
 	role="presentation"
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		flex: '1',
-		minHeight: '0',
-		paddingTop: 'md'
+		minHeight: '0'
 	})}
 	onpointerover={(event) => (hoveredRow = rowIdOf(event.target))}
 	onpointerleave={() => (hoveredRow = null)}
@@ -340,6 +359,7 @@
 		scroll
 		virtual={{
 			estimateSize: ESTIMATED_ROW_HEIGHT,
+			overscan: OVERSCAN_ROWS,
 			onVisibleRangeChange: handleVisibleRangeChange
 		}}
 		data-testid="branch-list-scroller"
@@ -357,6 +377,7 @@
 		tone={isRestoreView ? 'primary' : 'danger'}
 		look="cards"
 		rowBackground="surface.peak"
+		passThrough={{ spacer: { style: spacerStyle } }}
 		aria-busy={branchesQuery.isLoading}
 		columns={[
 			{ id: 'name', track: 'minmax(14rem, 1.2fr)', header: 'Branch' },

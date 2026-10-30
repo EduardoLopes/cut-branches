@@ -209,6 +209,12 @@ describe('BranchList', () => {
 			await expect
 				.element(screen.getByRole('grid', { name: 'Branches' }))
 				.toHaveAttribute('aria-rowcount', '301');
+			// The unrendered rows' stand-in paints empty cards, not a blank well.
+			const spacers = [...scroller.querySelectorAll<HTMLElement>('[data-grid-list-spacer]')];
+			expect(spacers.some((el) => el.offsetHeight > 0)).toBe(true);
+			for (const el of spacers) {
+				expect(getComputedStyle(el).backgroundImage).toContain('repeating-linear-gradient');
+			}
 		});
 
 		test('shows the last commit: subject, author, short sha and when', async () => {
@@ -558,14 +564,17 @@ describe('BranchList', () => {
 			scroller.style.flex = 'none';
 			scroller.style.height = '200px';
 			await tick();
-			scroller.scrollTop = 400;
+			// `scroll` mode: the root is a frame, the grid inside it scrolls.
+			const port = screen.getByRole('grid', { name: 'Branches' }).element() as HTMLElement;
+			port.scrollTop = 400;
+			expect(port.scrollTop).toBeGreaterThan(0);
 
 			searchHolder.value = 'b-1';
 			await tick();
 
 			// b-1 and b-10…b-19.
 			expect(screen.getByTestId('branch-row').elements()).toHaveLength(11);
-			await vi.waitFor(() => expect(scroller.scrollTop).toBe(0));
+			await vi.waitFor(() => expect(port.scrollTop).toBe(0));
 		});
 	});
 
