@@ -302,11 +302,10 @@
 			'repeating-linear-gradient(to bottom, var(--gl-row-bg) 0 65px, transparent 65px 67px)'
 	});
 
-	// `scroll` makes the list's grid its scroll port inside a padded frame:
-	// side insets only (nothing above the header), plus room for the last row
-	// to scroll out from under the well's bulk bar.
+	// `scroll` makes the list's grid its scroll port; this leaves room for the
+	// last row to scroll out from under the well's bulk bar. The side insets
+	// are the wrapper's padding.
 	const scrollPortClass = css({
-		'--gl-scroll-inset': '0 token(spacing.md)',
 		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
 	});
 
@@ -344,7 +343,8 @@
 		display: 'flex',
 		flexDirection: 'column',
 		flex: '1',
-		minHeight: '0'
+		minHeight: '0',
+		paddingX: 'md'
 	})}
 	onpointerover={(event) => (hoveredRow = rowIdOf(event.target))}
 	onpointerleave={() => (hoveredRow = null)}
