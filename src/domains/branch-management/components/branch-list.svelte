@@ -14,7 +14,6 @@
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { useQueryClient } from '@tanstack/svelte-query';
 	import { onDestroy, untrack } from 'svelte';
-	import { SvelteSet } from 'svelte/reactivity';
 	import { getSearchBranchesStore } from '../core/composables/search-branches.svelte';
 	import CommitGraphPreview from '../features/commit-history/components/commit-graph-preview.svelte';
 	import {
@@ -119,7 +118,6 @@
 		// disagrees with the "N found" header or the empty state.
 		return filterBranchesBySearch(sorted, search?.state);
 	});
-	const indexByName = $derived(new Map(branches.map((branch, i) => [branch.getName(), i])));
 
 	// ---------------------------------------------------------------------------
 	// Selection. It lives in the database (it survives restarts and drives the
@@ -162,56 +160,20 @@
 	// ---------------------------------------------------------------------------
 	// Merge status + diff stats, fetched only for the rows on screen. GridList
 	// mounts a window of rows (plus overscan), and the metrics cost a git walk
-	// each, so an IntersectionObserver on the scroll port reports which of the
-	// mounted rows are actually visible and the composable batches those into
-	// bucketed bulk queries.
+	// each, so the list reports which rows are on screen and the composable
+	// batches those into bucketed bulk queries.
 	// ---------------------------------------------------------------------------
-	const visibleIndices = new SvelteSet<number>();
-	const visibleRange = $derived.by(() => {
-		if (visibleIndices.size === 0) return null;
-		const indices = [...visibleIndices];
-		return { startIndex: Math.min(...indices), endIndex: Math.max(...indices) };
-	});
+	let visibleRange = $state<{ startIndex: number; endIndex: number } | null>(null);
 
-	// State, not a plain variable: rows mount before this effect creates it,
-	// and they read it through their attachment's argument so they register
-	// once it exists.
-	let observer = $state<IntersectionObserver>();
-	$effect(() => {
-		const root = element;
-		if (!root) return;
-		const io = new IntersectionObserver(
-			(entries) => {
-				for (const entry of entries) {
-					const index = Number((entry.target as HTMLElement).dataset.index);
-					if (entry.isIntersecting) visibleIndices.add(index);
-					else visibleIndices.delete(index);
-				}
-			},
-			// Fetch a screen ahead, so stats are usually there before a row is.
-			{ root, rootMargin: '100% 0px' }
-		);
-		observer = io;
-		return () => {
-			io.disconnect();
-			observer = undefined;
-			visibleIndices.clear();
-		};
-	});
-
-	/** Reports a row's visibility. `index` and `io` come from the template
-	 *  (an attachment doesn't track what it reads inside), so it re-runs when
-	 *  the row moves or the observer appears. */
-	function observeRow(index: number, io: IntersectionObserver | undefined) {
-		return (node: HTMLElement) => {
-			if (!io) return;
-			node.dataset.index = String(index);
-			io.observe(node);
-			return () => {
-				io.unobserve(node);
-				visibleIndices.delete(index);
-			};
-		};
+	function handleVisibleRangeChange({
+		startIndex,
+		endIndex
+	}: {
+		startIndex: number;
+		endIndex: number;
+	}) {
+		// A screen ahead too, so stats are usually there before a row is.
+		visibleRange = { startIndex, endIndex: endIndex + (endIndex - startIndex + 1) };
 	}
 
 	const branchMetrics = useBranchMetrics({
@@ -321,14 +283,11 @@
 	 *  every mounted row reports its measured height. */
 	const ESTIMATED_ROW_HEIGHT = 90;
 
+	// `scroll` makes the list its own scroll port; this adds the row inset and
+	// the room for the last row to scroll out from under the well's bulk bar.
 	const scrollPortClass = css({
-		flex: '1',
-		minHeight: '0',
-		overflowY: 'auto',
-		overflowX: 'hidden',
 		paddingX: 'md',
-		// Room for the last row to scroll out from under the well's bulk bar.
-		paddingBottom: 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
+		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
 	});
 
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
@@ -378,7 +337,11 @@
 	     640px the commit subject drops and each row keeps its two lines. -->
 	<GridList
 		bind:element
-		virtual={{ scrollElement: () => element, estimateSize: ESTIMATED_ROW_HEIGHT }}
+		scroll
+		virtual={{
+			estimateSize: ESTIMATED_ROW_HEIGHT,
+			onVisibleRangeChange: handleVisibleRangeChange
+		}}
 		data-testid="branch-list-scroller"
 		class={scrollPortClass}
 		label="Branches"
@@ -416,7 +379,6 @@
 		}}
 	>
 		{#snippet row(branch, { cell })}
-			{@const index = indexByName.get(branch.getName()) ?? -1}
 			{@const commit = branch.getLastCommit()}
 			{@const metrics = branch.isCurrent() ? undefined : branchMetrics.getMetrics(branch.getName())}
 			{@const alerts = getBranchAlerts(branch, branch.getIsSelected() ?? false, metrics?.isMerged)}
@@ -433,7 +395,6 @@
 				{...cell('name', { class: twoLineCellClass })}
 				id={getBranchElementId(branch.getName(), 'container')}
 				data-testid="branch-row"
-				{@attach observeRow(index, observer)}
 			>
 				<span class={lineClass}>
 					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
