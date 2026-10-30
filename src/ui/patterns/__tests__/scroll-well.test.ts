@@ -81,4 +81,22 @@ describe('ScrollWell', () => {
 		await vi.waitFor(() => expect(scroller.hasAttribute('data-overflow-bottom')).toBe(false));
 		expect(scroller.hasAttribute('data-overflow-top')).toBe(false);
 	});
+
+	test('contained: frames content that scrolls itself, with no scroller or shadows', async () => {
+		const screen = await renderWithTestWrapper(ScrollWell, {
+			children: rows(3),
+			contained: true,
+			testId: 'framed'
+		});
+
+		const body = screen.getByTestId('framed').element() as HTMLElement;
+		expect(body).toMatchTextContent('row 2');
+		expect(getComputedStyle(body).overflowY).toBe('visible');
+		expect(body.hasAttribute('data-overflow-top')).toBe(false);
+		expect(screen.getByTestId('framed-shadow-top').elements()).toHaveLength(0);
+		expect(screen.getByTestId('framed-well').element()).toHaveAttribute(
+			'data-surface-floor',
+			'valley'
+		);
+	});
 });

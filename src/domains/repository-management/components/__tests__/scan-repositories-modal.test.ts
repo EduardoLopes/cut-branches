@@ -158,7 +158,7 @@ describe('ScanRepositoriesModal', () => {
 			]);
 		});
 
-		it('shows a scroll shadow only towards the edge with more content', async () => {
+		it('scrolls the results inside the list, under its pinned header', async () => {
 			h.stub = makeStub({
 				results: Array.from({ length: 40 }, (_, i) => ({
 					path: `/repo-${i}`,
@@ -171,14 +171,10 @@ describe('ScanRepositoriesModal', () => {
 			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(40));
 
-			// The well flags the scroller; its shadow bars key off these attributes.
-			const scroller = screen.getByTestId('scan-results-scroller').element();
-			await vi.waitFor(() => expect(scroller.hasAttribute('data-overflow-bottom')).toBe(true));
-			expect(scroller.hasAttribute('data-overflow-top')).toBe(false);
-
-			scroller.scrollTop = scroller.scrollHeight;
-			await vi.waitFor(() => expect(scroller.hasAttribute('data-overflow-top')).toBe(true));
-			expect(scroller.hasAttribute('data-overflow-bottom')).toBe(false);
+			// The list's own grid scrolls; the well only frames it.
+			const grid = screen.getByRole('grid', { name: 'Found repositories' }).element();
+			expect(getComputedStyle(grid).overflowY).toBe('auto');
+			await vi.waitFor(() => expect(grid.scrollHeight).toBeGreaterThan(grid.clientHeight));
 		});
 
 		it('shows the scanning indicator while the composable reports a scan', async () => {

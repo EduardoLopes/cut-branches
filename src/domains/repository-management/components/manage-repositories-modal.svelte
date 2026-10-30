@@ -233,13 +233,11 @@
 					     closed <dialog> too, and this is a row per repository.
 					     The list's own sticky header carries select-all (it covers the
 					     rows the filter leaves, and keeps ticks on hidden ones). The
-					     well's scroller has no top padding, so the header pins flush. -->
-					<ScrollWell
-						class={css({ flex: '1', minHeight: '0' })}
-						scrollerClass={css({ paddingTop: '0' })}
-						testId="manage-list"
-					>
+					     list scrolls itself inside the well, so the header pins to its top. -->
+					<ScrollWell class={css({ flex: '1', minHeight: '0' })} contained testId="manage-list">
 						<GridList
+							scroll
+							padding="xs"
 							label="Repositories"
 							items={filteredRepositories}
 							getId={(repository: Repository) => repository.id}

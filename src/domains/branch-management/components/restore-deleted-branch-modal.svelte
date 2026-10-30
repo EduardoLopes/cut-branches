@@ -160,9 +160,11 @@
 	<!-- Gated on `open`: the dialog's children render even while closed, so
 	     without this every selection change would build a row per selected
 	     branch into a hidden dialog. -->
-	<ScrollWell class={css({ maxHeight: '50vh' })} testId="restore-branch-list">
+	<ScrollWell class={css({ maxHeight: '50vh' })} contained testId="restore-branch-list">
 		{#if open}
 			<GridList
+				scroll
+				padding="xs"
 				label="Branches to restore"
 				items={sortedBranches}
 				getId={(branch: Branch) => branch.getName()}

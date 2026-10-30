@@ -162,8 +162,10 @@
 	     work, protected names) matter more, and the diff link stays for
 	     reviewing what the branch adds. -->
 	{#if open}
-		<ScrollWell class={css({ maxHeight: '50vh' })} testId="delete-branch-list">
+		<ScrollWell class={css({ maxHeight: '50vh' })} contained testId="delete-branch-list">
 			<GridList
+				scroll
+				padding="xs"
 				label="Branches to delete"
 				items={branches}
 				getId={(branch: Branch) => branch.getName()}

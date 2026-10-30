@@ -63,8 +63,10 @@
 		{/snippet}
 
 		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'md', width: 'full' })}>
-			<ScrollWell class={css({ maxHeight: '160px' })} testId="delete-worktrees-list">
+			<ScrollWell class={css({ maxHeight: '160px' })} contained testId="delete-worktrees-list">
 				<GridList
+					scroll
+					padding="xs"
 					label="Worktrees to delete"
 					items={worktrees}
 					getId={(worktree: Worktree) => worktree.getName()}

@@ -497,15 +497,17 @@
 						/>
 					</div>
 
-					<!-- The list's own sticky header carries select-all. The well's
-					     scroller has no top padding, so the header pins flush. -->
+					<!-- The list's own sticky header carries select-all. The list
+					     scrolls itself inside the well, so the header pins to its top. -->
 					<ScrollWell
 						class={css({ flex: '1', minHeight: '0' })}
-						scrollerClass={css({ paddingTop: '0' })}
+						contained
 						testId="scan-results-scroller"
 					>
 						{#if rows.length > 0}
 							<GridList
+								scroll
+								padding="xs"
 								label="Found repositories"
 								items={rows}
 								getId={(row: ScanRow) => row.item.path}

@@ -23,6 +23,13 @@
 		/** Bindable reference to the scrolling element; virtualizers need it. */
 		scroller?: HTMLElement | null;
 		/**
+		 * The content scrolls itself (a GridList with `scroll`): the well only
+		 * frames it — surface, radius, header — with no scroller and no edge
+		 * shadows of its own.
+		 * @default false
+		 */
+		contained?: boolean;
+		/**
 		 * `data-testid` of the scroller. The well gets `${testId}-well`, the header
 		 * `${testId}-header` and the shadow bars `${testId}-shadow-top` /
 		 * `${testId}-shadow-bottom`.
@@ -36,6 +43,7 @@
 		class: className,
 		scrollerClass,
 		scroller = $bindable(null),
+		contained = false,
 		testId = 'scroll-well'
 	}: Props = $props();
 
@@ -101,66 +109,75 @@
 			{@render header()}
 		</div>
 	{/if}
-	<div
-		class={css({
-			position: 'relative',
-			display: 'flex',
-			flexDirection: 'column',
-			flex: '1',
-			minHeight: '0'
-		})}
-	>
+	{#if contained}
 		<div
-			bind:this={scroller}
-			use:scrollShadow
-			class={cx(
-				css({
-					display: 'flex',
-					flexDirection: 'column',
-					gap: '3xs',
-					flex: '1',
-					minHeight: '0',
-					padding: '2xs',
-					overflowY: 'auto',
-					overflowX: 'hidden'
-				}),
-				scrollerClass
-			)}
+			class={css({ display: 'flex', flexDirection: 'column', flex: '1', minHeight: '0' })}
 			data-testid={testId}
 		>
 			{@render children()}
 		</div>
-		<!-- The bars must stay siblings *after* the scroller: `~` only looks
-		     forward from the attributed element. -->
+	{:else}
 		<div
-			aria-hidden="true"
 			class={css({
-				position: 'absolute',
-				top: '-1px',
-				insetInline: '0',
-				height: '1px',
-				boxShadow: 'md',
-				pointerEvents: 'none',
-				opacity: 0,
-				transition: 'opacity 150ms ease',
-				'[data-overflow-top] ~ &': { opacity: 1 }
+				position: 'relative',
+				display: 'flex',
+				flexDirection: 'column',
+				flex: '1',
+				minHeight: '0'
 			})}
-			data-testid={topShadowId}
-		></div>
-		<div
-			aria-hidden="true"
-			class={css({
-				position: 'absolute',
-				bottom: '-1px',
-				insetInline: '0',
-				height: '1px',
-				boxShadow: 'md',
-				pointerEvents: 'none',
-				opacity: 0,
-				transition: 'opacity 150ms ease',
-				'[data-overflow-bottom] ~ &': { opacity: 1 }
-			})}
-			data-testid={bottomShadowId}
-		></div>
-	</div>
+		>
+			<div
+				bind:this={scroller}
+				use:scrollShadow
+				class={cx(
+					css({
+						display: 'flex',
+						flexDirection: 'column',
+						gap: '3xs',
+						flex: '1',
+						minHeight: '0',
+						padding: '2xs',
+						overflowY: 'auto',
+						overflowX: 'hidden'
+					}),
+					scrollerClass
+				)}
+				data-testid={testId}
+			>
+				{@render children()}
+			</div>
+			<!-- The bars must stay siblings *after* the scroller: `~` only looks
+			     forward from the attributed element. -->
+			<div
+				aria-hidden="true"
+				class={css({
+					position: 'absolute',
+					top: '-1px',
+					insetInline: '0',
+					height: '1px',
+					boxShadow: 'md',
+					pointerEvents: 'none',
+					opacity: 0,
+					transition: 'opacity 150ms ease',
+					'[data-overflow-top] ~ &': { opacity: 1 }
+				})}
+				data-testid={topShadowId}
+			></div>
+			<div
+				aria-hidden="true"
+				class={css({
+					position: 'absolute',
+					bottom: '-1px',
+					insetInline: '0',
+					height: '1px',
+					boxShadow: 'md',
+					pointerEvents: 'none',
+					opacity: 0,
+					transition: 'opacity 150ms ease',
+					'[data-overflow-bottom] ~ &': { opacity: 1 }
+				})}
+				data-testid={bottomShadowId}
+			></div>
+		</div>
+	{/if}
 </div>
