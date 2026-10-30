@@ -15,7 +15,9 @@ type QueryResultShape = {
 };
 
 let queriesAccessor: (() => { queries: QueryOptionsShape[] }) | undefined;
-let queryResults: QueryResultShape[] = [];
+// State, like the real createQueries result: the composable's derivation
+// re-runs when a test swaps it.
+let queryResults = $state<QueryResultShape[]>([]);
 
 vi.mock('@tanstack/svelte-query', async (importOriginal) => ({
 	...(await importOriginal<typeof import('@tanstack/svelte-query')>()),
@@ -125,17 +127,62 @@ describe('useBranchMetrics', () => {
 		});
 		expect(harness.metrics.getMetrics('branch-b')?.isMerged).toBe(false);
 		expect(harness.metrics.getMetrics('missing')).toBeUndefined();
-		expect(harness.metrics.isLoading).toBe(false);
 		harness.cleanup();
 	});
 
-	test('reports loading while any bucket is fetching', () => {
+	test('has nothing for a branch while its bucket is fetching', () => {
 		const harness = setup();
 		harness.setRange({ startIndex: 0, endIndex: 1 });
 		settle();
 
 		queryResults = [{ data: undefined, isLoading: true }];
-		expect(harness.metrics.isLoading).toBe(true);
+		expect(harness.metrics.getMetrics('merged-a')).toBeUndefined();
+		harness.cleanup();
+	});
+
+	test('keeps metrics after the viewport leaves their bucket', () => {
+		const harness = setup();
+		harness.setRange({ startIndex: 0, endIndex: 1 });
+		settle();
+		queryResults = [{ data: metricsOutput(['merged-a', 'branch-b']), isLoading: false }];
+		expect(harness.metrics.getMetrics('branch-b')?.linesAdded).toBe(3);
+
+		// Scrolled elsewhere: the bucket's query is no longer subscribed.
+		queryResults = [{ data: undefined, isLoading: true }];
+		expect(harness.metrics.getMetrics('branch-b')?.linesAdded).toBe(3);
+
+		// A refetch overwrites what was kept.
+		queryResults = [
+			{
+				data: { metrics: [{ name: 'branch-b', isMerged: true, linesAdded: 9, linesRemoved: 0 }] },
+				isLoading: false
+			}
+		];
+		expect(harness.metrics.getMetrics('branch-b')).toEqual({
+			isMerged: true,
+			linesAdded: 9,
+			linesRemoved: 0
+		});
+		harness.cleanup();
+	});
+
+	test('forgets kept metrics when the repository changes or metrics turn off', () => {
+		let path = $state('/repo');
+		let enabled = $state(true);
+		const harness = setup({ path: () => path, enabled: () => enabled });
+		harness.setRange({ startIndex: 0, endIndex: 1 });
+		settle();
+		queryResults = [{ data: metricsOutput(['merged-a']), isLoading: false }];
+		expect(harness.metrics.getMetrics('merged-a')).toBeDefined();
+
+		queryResults = [];
+		path = '/other';
+		flushSync();
+		expect(harness.metrics.getMetrics('merged-a')).toBeUndefined();
+
+		queryResults = [{ data: metricsOutput(['merged-a']), isLoading: false }];
+		enabled = false;
+		flushSync();
 		expect(harness.metrics.getMetrics('merged-a')).toBeUndefined();
 		harness.cleanup();
 	});

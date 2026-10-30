@@ -1,5 +1,6 @@
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import BranchList from '../branch-list.svelte';
 import { branchesHolder, pathHolder, searchHolder } from './reactive-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
@@ -13,7 +14,6 @@ const mocks = vi.hoisted(() => ({
 	selectionMutate: vi.fn(),
 	flags: new Set<string>(),
 	metrics: {
-		isLoading: false,
 		value: { isMerged: false, linesAdded: 3, linesRemoved: 1 } as
 			{ isMerged: boolean; linesAdded: number; linesRemoved: number } | undefined
 	},
@@ -138,10 +138,7 @@ vi.mock('$domains/branch-management/core/composables/use-branch-metrics.svelte',
 	useBranchMetrics: (config: NonNullable<typeof mocks.metricsConfig>) => {
 		mocks.metricsConfig = config;
 		return {
-			getMetrics: () => mocks.metrics.value,
-			get isLoading() {
-				return mocks.metrics.isLoading;
-			}
+			getMetrics: () => mocks.metrics.value
 		};
 	}
 }));
@@ -161,6 +158,12 @@ function row(screen: Screen, name: string) {
 	return screen.getByRole('row').filter({ hasText: name });
 }
 
+/** The hover actions mount for the hovered row only. */
+async function hoverRow(screen: Screen, name: string) {
+	await row(screen, name).getByTestId('branch-name').hover();
+	await tick();
+}
+
 describe('BranchList', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -170,7 +173,6 @@ describe('BranchList', () => {
 		mocks.flags.clear();
 		mocks.switchState.isPending = false;
 		mocks.switchState.variables = null;
-		mocks.metrics.isLoading = false;
 		mocks.metrics.value = { isMerged: false, linesAdded: 3, linesRemoved: 1 };
 	});
 
@@ -297,14 +299,35 @@ describe('BranchList', () => {
 			await expect.element(screen.getByTestId('branch-diff-none')).toHaveTextContent('±0');
 		});
 
-		test('shows a placeholder while the stats load', async () => {
+		test('holds the slot with a placeholder until the stats arrive', async () => {
 			mocks.metrics.value = undefined;
-			mocks.metrics.isLoading = true;
-			branchesHolder.value = [branch({ name: 'pending' })];
+			branchesHolder.value = [
+				branch({ name: 'pending' }),
+				branch({ name: 'current-branch', current: true })
+			];
 			const screen = await render();
 			await tick();
 
-			await expect.element(screen.getByTestId('branch-diff-stats-loading')).toBeInTheDocument();
+			await expect
+				.element(row(screen, 'pending').getByTestId('branch-diff-stats-loading'))
+				.toBeInTheDocument();
+			expect(
+				row(screen, 'current-branch').getByTestId('branch-diff-stats-loading').elements()
+			).toHaveLength(0);
+		});
+
+		test('shortens five-digit counts so the column keeps its width', async () => {
+			mocks.metrics.value = { isMerged: false, linesAdded: 118229, linesRemoved: 9999 };
+			branchesHolder.value = [branch({ name: 'huge' })];
+			const screen = await render();
+			await tick();
+
+			await expect
+				.element(screen.getByTestId('branch-diff-stats'))
+				.toHaveTextContent('+118K −9999');
+			await expect
+				.element(screen.getByTestId('branch-diff-stats'))
+				.toHaveAttribute('title', '118229 lines added, 9999 lines removed vs current branch');
 		});
 
 		test('asks for metrics only for the rows on screen', async () => {
@@ -377,13 +400,64 @@ describe('BranchList', () => {
 	});
 
 	describe('row actions', () => {
+		test('mounts the actions only for the hovered or focused row', async () => {
+			const screen = await render();
+			await tick();
+
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(0);
+
+			await hoverRow(screen, 'feature/test-branch');
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(1);
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('switch-button'))
+				.toBeInTheDocument();
+
+			// The pointer moves on: the actions follow it.
+			await hoverRow(screen, 'selected-branch');
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(1);
+			await expect
+				.element(row(screen, 'selected-branch').getByTestId('switch-button'))
+				.toBeInTheDocument();
+
+			// Leaving the list drops them; a focused row keeps its own.
+			(row(screen, 'locked-branch').element() as HTMLElement).focus();
+			await userEvent.unhover(screen.getByTestId('branch-list-scroller'));
+			await tick();
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(1);
+			await expect
+				.element(row(screen, 'locked-branch').getByTestId('switch-button'))
+				.toBeInTheDocument();
+
+			// Focus moving to another row takes them along.
+			(row(screen, 'selected-branch').element() as HTMLElement).focus();
+			await tick();
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(1);
+			await expect
+				.element(row(screen, 'selected-branch').getByTestId('switch-button'))
+				.toBeInTheDocument();
+
+			// Focus leaving the list drops those too.
+			(row(screen, 'selected-branch').element() as HTMLElement).blur();
+			await tick();
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(0);
+		});
+
+		test("keeps the switching row's actions mounted", async () => {
+			mocks.switchState.isPending = true;
+			mocks.switchState.variables = { branch: 'feature/test-branch' };
+			const screen = await render();
+			await tick();
+
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('switch-button'))
+				.toBeInTheDocument();
+		});
+
 		test('switches to a branch and drops it from the selection once current', async () => {
 			const screen = await render();
 			await tick();
 
-			const switches = screen.getByTestId('switch-button');
-			// Every branch but the current one can become current.
-			expect(switches.elements()).toHaveLength(3);
+			await hoverRow(screen, 'feature/test-branch');
 			await row(screen, 'feature/test-branch').getByTestId('switch-button').click({ force: true });
 			expect(mocks.switchMutate).toHaveBeenCalledWith({
 				path: '/test/repo/path',
@@ -402,6 +476,7 @@ describe('BranchList', () => {
 			const screen = await render({ repositoryPath: undefined, repositoryID: undefined });
 			await tick();
 
+			await hoverRow(screen, 'feature/test-branch');
 			await row(screen, 'feature/test-branch').getByTestId('switch-button').click({ force: true });
 			expect(mocks.switchMutate).not.toHaveBeenCalled();
 			mocks.switchOnSuccess?.({ currentBranch: 'feature/test-branch' });
@@ -414,6 +489,7 @@ describe('BranchList', () => {
 			const screen = await render();
 			await tick();
 
+			await hoverRow(screen, 'selected-branch');
 			await expect
 				.element(row(screen, 'selected-branch').getByTestId('switch-button'))
 				.toBeDisabled();
@@ -428,6 +504,7 @@ describe('BranchList', () => {
 			const screen = await render();
 			await tick();
 
+			await hoverRow(screen, 'feature/test-branch');
 			await expect
 				.element(row(screen, 'feature/test-branch').getByTestId('branch-diff-link'))
 				.toHaveAttribute('href', expect.stringContaining('diff?branch=feature%2Ftest-branch'));
@@ -435,6 +512,7 @@ describe('BranchList', () => {
 				.element(row(screen, 'feature/test-branch').getByTestId('branch-history-link'))
 				.toHaveAttribute('href', expect.stringContaining('history?commit=abc1234'));
 			// The current branch has nothing to diff against itself.
+			await hoverRow(screen, 'current-branch');
 			expect(row(screen, 'current-branch').getByTestId('branch-diff-link').elements()).toHaveLength(
 				0
 			);
@@ -444,6 +522,7 @@ describe('BranchList', () => {
 			const screen = await render({ allowSetCurrent: false, allowLocking: false });
 			await tick();
 
+			await hoverRow(screen, 'feature/test-branch');
 			expect(screen.getByTestId('switch-button').elements()).toHaveLength(0);
 			expect(screen.getByTestId('stub-component').elements()).toHaveLength(0);
 		});
@@ -456,6 +535,9 @@ describe('BranchList', () => {
 			mocks.flags.add('commit-history');
 			branchesHolder.value = [branch({ name: 'gone', deletedAt: '2024-01-01T00:00:00Z' })];
 			const screen = await render({ allowSetCurrent: false, allowLocking: false });
+			await tick();
+			// Focus mounts the row's actions as hover does: there are none here.
+			(row(screen, 'gone').element() as HTMLElement).focus();
 			await tick();
 
 			await expect

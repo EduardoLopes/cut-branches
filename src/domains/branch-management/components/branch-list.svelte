@@ -268,6 +268,30 @@
 
 	onDestroy(clearPreviewTimers);
 
+	// ---------------------------------------------------------------------------
+	// Row actions. The hover cell (switch, lock, diff, history) is most of a
+	// row's weight — a tooltip, button and their effects per action — and it
+	// only shows while the row is hovered or holds the focus. So it mounts for
+	// that row alone: rows scrolling past stay light. GridList finds a row's
+	// controls when a key asks for them, and the focus lands on the row first,
+	// which mounts them.
+	// ---------------------------------------------------------------------------
+	let hoveredRow = $state<string | null>(null);
+	let focusedRow = $state<string | null>(null);
+
+	function rowIdOf(target: EventTarget | null): string | null {
+		return target instanceof Element
+			? (target.closest<HTMLElement>('[data-row-id]')?.dataset.rowId ?? null)
+			: null;
+	}
+
+	function handleFocusOut(event: FocusEvent) {
+		const { currentTarget, relatedTarget } = event;
+		if (!(relatedTarget instanceof Node) || !(currentTarget as Node).contains(relatedTarget)) {
+			focusedRow = null;
+		}
+	}
+
 	// Filtering rewrites the list under a scroll offset that no longer means
 	// anything: land back at the top of the new result set.
 	let lastSearchTerm: string | undefined;
@@ -279,6 +303,13 @@
 		if (isFirstRun) return;
 		untrack(() => element)?.scrollTo({ top: 0 });
 	});
+
+	/** Five digits and up read as `12K`: the changes column has a fixed
+	 *  width, so the row never reflows when a big diff lands. */
+	const compactCount = new Intl.NumberFormat('en', { notation: 'compact' });
+	function formatLineCount(count: number): string {
+		return count < 10_000 ? String(count) : compactCount.format(count);
+	}
 
 	/** A two-line row plus the cards look's gap. Only seeds the scrollbar:
 	 *  every mounted row reports its measured height. */
@@ -323,6 +354,7 @@
      outside the port; the sides and bottom are the port's own padding, so rows
      travel to the well's edges and the scrollbar rides that edge. -->
 <div
+	role="presentation"
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
@@ -330,6 +362,10 @@
 		minHeight: '0',
 		paddingTop: 'md'
 	})}
+	onpointerover={(event) => (hoveredRow = rowIdOf(event.target))}
+	onpointerleave={() => (hoveredRow = null)}
+	onfocusin={(event) => (focusedRow = rowIdOf(event.target))}
+	onfocusout={handleFocusOut}
 >
 	<!-- The sticky header carries select-all (it covers the selectable rows
 	     the search leaves; ⌘A does the same from a focused row). Narrower than
@@ -356,8 +392,12 @@
 		columns={[
 			{ id: 'name', track: 'minmax(14rem, 1.2fr)', header: 'Branch' },
 			{ id: 'commit', track: 'minmax(0, 1.5fr)', header: 'Last commit' },
-			{ id: 'changes', track: 'auto', header: 'Changes' },
-			{ id: 'meta', track: 'minmax(6rem, auto)', header: isRestoreView ? 'Deleted' : 'Updated' }
+			// Fixed widths, not `auto`: an auto track follows whichever rows
+			// are mounted, so every scroll nudged the whole grid sideways. The
+			// meta floor fits the longest relative date and all four hover
+			// actions, which mount only for the hovered row.
+			{ id: 'changes', track: '12rem', header: 'Changes' },
+			{ id: 'meta', track: 'minmax(12rem, auto)', header: isRestoreView ? 'Deleted' : 'Updated' }
 		]}
 		narrow={{
 			columns: 'minmax(0, 1fr) auto',
@@ -378,6 +418,8 @@
 			{@const switching =
 				switchBranchMutation.isPending &&
 				switchBranchMutation.variables?.branch === branch.getName()}
+			{@const showActions =
+				switching || hoveredRow === branch.getName() || focusedRow === branch.getName()}
 
 			<!-- Line 1: who the branch is. Line 2: what needs attention, then who
 			     last touched it. -->
@@ -463,8 +505,12 @@
 						title={`${metrics.linesAdded} line${metrics.linesAdded === 1 ? '' : 's'} added, ${metrics.linesRemoved} line${metrics.linesRemoved === 1 ? '' : 's'} removed vs current branch`}
 						data-testid="branch-diff-stats"
 					>
-						<Badge size="sm" emphasis="secondary" tone="success">+{metrics.linesAdded}</Badge>
-						<Badge size="sm" emphasis="secondary" tone="danger">−{metrics.linesRemoved}</Badge>
+						<Badge size="sm" emphasis="secondary" tone="success">
+							+{formatLineCount(metrics.linesAdded)}
+						</Badge>
+						<Badge size="sm" emphasis="secondary" tone="danger">
+							−{formatLineCount(metrics.linesRemoved)}
+						</Badge>
 					</span>
 				{:else if metrics}
 					<Badge
@@ -475,8 +521,13 @@
 					>
 						±0
 					</Badge>
-				{:else if !branch.isCurrent() && !isRestoreView && branchMetrics.isLoading}
-					<span title="Computing diff vs current branch…" data-testid="branch-diff-stats-loading">
+				{:else if !branch.isCurrent() && !isRestoreView}
+					<!-- Holds the slot from the first frame, so the numbers replace
+					     it instead of popping in. -->
+					<span
+						title="Diff vs current branch not computed yet"
+						data-testid="branch-diff-stats-loading"
+					>
 						<Badge size="sm" emphasis="secondary">±–</Badge>
 					</span>
 				{/if}
@@ -498,73 +549,80 @@
 				{/if}
 			</span>
 			<span {...cell('meta', { reveal: 'hover', class: actionsCellClass })}>
-				{#if allowSetCurrent && !branch.isCurrent()}
-					<Loading loading={switching}>
-						<Tooltip content="Set as current">
-							{#snippet children(triggerProps)}
-								<Button
-									size="xs"
-									shape="square"
-									emphasis="ghost"
-									disabled={switchBranchMutation.isPending && !switching}
-									onclick={() => handleSwitchBranch(branch.getName())}
-									data-testid="switch-button"
-									{...triggerProps}
-								>
-									<Stamp emphasis="ghost" border="none" background="transparent">
-										<Icon icon="lucide:map-pin" width="14px" height="14px" />
-									</Stamp>
-									<span class={visuallyHidden()}>Set as current</span>
-								</Button>
-							{/snippet}
-						</Tooltip>
-					</Loading>
-				{/if}
-				{#if allowLocking && !branch.isCurrent()}
-					<LockBranchToggle {repositoryID} branch={branch.getName()} />
-				{/if}
-				{#if diffEnabled && !branch.isCurrent() && repositoryID}
-					<Tooltip content="View branch diff">
-						{#snippet children(triggerProps)}
-							<Button
-								size="xs"
-								shape="square"
-								emphasis="ghost"
-								href={`${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`}
-								data-testid="branch-diff-link"
-								{...triggerProps}
-							>
-								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:file-diff" width="14px" height="14px" />
-								</Stamp>
-								<span class={visuallyHidden()}>View branch diff</span>
-							</Button>
-						{/snippet}
-					</Tooltip>
-				{/if}
-				{#if historyEnabled && repositoryID}
-					<Tooltip content="Show in history">
-						{#snippet children(triggerProps)}
-							<Button
-								size="xs"
-								shape="square"
-								emphasis="ghost"
-								href={`${resolveRepositorySubPath(repositoryID, 'history')}?commit=${commit.getSha()}`}
-								data-testid="branch-history-link"
-								{...triggerProps}
-							>
-								<Stamp emphasis="ghost" border="none" background="transparent">
-									<Icon icon="lucide:history" width="14px" height="14px" />
-								</Stamp>
-								<span class={visuallyHidden()}>Show in history</span>
-							</Button>
-						{/snippet}
-					</Tooltip>
+				{#if showActions}
+					{@render rowActions(branch, switching)}
 				{/if}
 			</span>
 		{/snippet}
 	</GridList>
 </div>
+
+{#snippet rowActions(branch: Branch, switching: boolean)}
+	{@const commit = branch.getLastCommit()}
+	{#if allowSetCurrent && !branch.isCurrent()}
+		<Loading loading={switching}>
+			<Tooltip content="Set as current">
+				{#snippet children(triggerProps)}
+					<Button
+						size="xs"
+						shape="square"
+						emphasis="ghost"
+						disabled={switchBranchMutation.isPending && !switching}
+						onclick={() => handleSwitchBranch(branch.getName())}
+						data-testid="switch-button"
+						{...triggerProps}
+					>
+						<Stamp emphasis="ghost" border="none" background="transparent">
+							<Icon icon="lucide:map-pin" width="14px" height="14px" />
+						</Stamp>
+						<span class={visuallyHidden()}>Set as current</span>
+					</Button>
+				{/snippet}
+			</Tooltip>
+		</Loading>
+	{/if}
+	{#if allowLocking && !branch.isCurrent()}
+		<LockBranchToggle {repositoryID} branch={branch.getName()} />
+	{/if}
+	{#if diffEnabled && !branch.isCurrent() && repositoryID}
+		<Tooltip content="View branch diff">
+			{#snippet children(triggerProps)}
+				<Button
+					size="xs"
+					shape="square"
+					emphasis="ghost"
+					href={`${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`}
+					data-testid="branch-diff-link"
+					{...triggerProps}
+				>
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:file-diff" width="14px" height="14px" />
+					</Stamp>
+					<span class={visuallyHidden()}>View branch diff</span>
+				</Button>
+			{/snippet}
+		</Tooltip>
+	{/if}
+	{#if historyEnabled && repositoryID}
+		<Tooltip content="Show in history">
+			{#snippet children(triggerProps)}
+				<Button
+					size="xs"
+					shape="square"
+					emphasis="ghost"
+					href={`${resolveRepositorySubPath(repositoryID, 'history')}?commit=${commit.getSha()}`}
+					data-testid="branch-history-link"
+					{...triggerProps}
+				>
+					<Stamp emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:history" width="14px" height="14px" />
+					</Stamp>
+					<span class={visuallyHidden()}>Show in history</span>
+				</Button>
+			{/snippet}
+		</Tooltip>
+	{/if}
+{/snippet}
 
 {#if historyEnabled && preview && repositoryID && repositoryPath}
 	<!-- Hover-only, like the card's preview was: keyboard users reach the

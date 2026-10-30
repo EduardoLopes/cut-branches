@@ -5,10 +5,13 @@
  * bulk `bulkGetBranchMetrics` command instead of two Tauri commands per row:
  * the currently visible index range is mapped to position-aligned buckets
  * (see branch-metrics-buckets.ts), one query runs per touched bucket, and
- * rows read their numbers out of a derived name → metrics map.
+ * rows read their numbers out of a name → metrics map.
  *
  * The range is debounced so a fast flick doesn't fire a request per frame —
- * only where the viewport settles costs anything.
+ * only where the viewport settles costs anything. The map outlives the
+ * buckets that filled it: a row scrolling back into view (or a search
+ * reshuffling the buckets) shows its numbers at once instead of blanking
+ * until its bucket is subscribed again.
  */
 import { createQueries } from '@tanstack/svelte-query';
 import debounce from 'just-debounce-it';
@@ -98,35 +101,41 @@ export function useBranchMetrics(config: UseBranchMetricsConfig) {
 			)
 	}));
 
+	// Every metric a bucket has resolved, for this path. Not reactive itself:
+	// the derivation below refills it from whichever buckets are subscribed
+	// and re-runs when their data changes, so a refetch overwrites in place
+	// and an unsubscribed bucket's numbers stay readable.
+	// eslint-disable-next-line svelte/prefer-svelte-reactivity
+	const known = new Map<string, BranchMetricsEntry>();
+	let knownPath: string | undefined;
+
 	const metricsByName = $derived.by(() => {
-		// Built fresh inside the derivation and never mutated afterwards — the
-		// reactivity comes from the derivation re-running, not from the Map.
-		// eslint-disable-next-line svelte/prefer-svelte-reactivity
-		const map = new Map<string, BranchMetricsEntry>();
+		const path = (config.enabled?.() ?? true) ? config.path() : undefined;
+		if (path !== knownPath) {
+			known.clear();
+			knownPath = path;
+		}
+		// Just cleared: nothing to read without a repository.
+		if (!path) return known;
 		for (const query of queries) {
 			for (const metric of query.data?.metrics ?? []) {
-				map.set(metric.name, {
+				known.set(metric.name, {
 					isMerged: metric.isMerged,
 					linesAdded: metric.linesAdded,
 					linesRemoved: metric.linesRemoved
 				});
 			}
 		}
-		return map;
+		// A fresh copy, so the derivation's value changes when the data does.
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		return new Map(known);
 	});
 
-	const anyLoading = $derived(queries.some((query) => query.isLoading));
-
 	return {
-		/** Metrics for a branch, or undefined while its bucket is pending (or
-		 *  when the branch no longer resolves on the Rust side). */
+		/** Metrics for a branch, or undefined until its bucket first resolves
+		 *  (or when the branch no longer resolves on the Rust side). */
 		getMetrics(name: string): BranchMetricsEntry | undefined {
 			return metricsByName.get(name);
-		},
-		/** True while any touched bucket is still fetching — drives the cards'
-		 *  placeholder badges. */
-		get isLoading() {
-			return anyLoading;
 		}
 	};
 }

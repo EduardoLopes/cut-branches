@@ -397,7 +397,12 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Row actions are revealed on hover/focus; force the click past that.
+		// Row actions mount for the hovered (or focused) row only.
+		await screen
+			.getByRole('row')
+			.filter({ hasText: 'feature-branch' })
+			.getByTestId('branch-name')
+			.hover({ force: true });
 		const switchButtons = screen.getByTestId('switch-button').first();
 		await expect.element(switchButtons).toBeInTheDocument();
 
