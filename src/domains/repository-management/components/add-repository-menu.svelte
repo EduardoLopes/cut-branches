@@ -179,4 +179,8 @@
 </Loading>
 
 <ScanRepositoriesModal bind:open={scanOpen} scope={scanScope} />
-<ManageRepositoriesModal bind:open={manageOpen} />
+<!-- Only where the menu offers it: the welcome modal's copy of this menu
+     would otherwise carry a second, unreachable list of every repository. -->
+{#if withManageRepositories}
+	<ManageRepositoriesModal bind:open={manageOpen} />
+{/if}

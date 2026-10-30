@@ -228,8 +228,10 @@
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No repositories match your search.</span>
 					</div>
-				{:else}
-					<!-- The list's own sticky header carries select-all (it covers the
+				{:else if open}
+					<!-- Only while open: pindoba's Dialog renders its children into the
+					     closed <dialog> too, and this is a row per repository.
+					     The list's own sticky header carries select-all (it covers the
 					     rows the filter leaves, and keeps ticks on hidden ones). The
 					     well's scroller has no top padding, so the header pins flush. -->
 					<ScrollWell
