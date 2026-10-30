@@ -37,3 +37,21 @@ export function getBucketBranchNames(
 ): string[] {
 	return names.slice(bucketIndex * bucketSize, (bucketIndex + 1) * bucketSize);
 }
+
+/** Every bucket of a list of `count` names, nearest to `from` first: `from`,
+ *  then alternating one below and one above, outward to both ends. */
+export function getBucketIndicesOutward(
+	count: number,
+	from: number,
+	bucketSize: number = BRANCH_METRICS_BUCKET_SIZE
+): number[] {
+	const total = Math.ceil(Math.max(0, count) / bucketSize);
+	if (total === 0) return [];
+	const start = Math.min(Math.max(0, from), total - 1);
+	const order = [start];
+	for (let step = 1; order.length < total; step++) {
+		if (start + step < total) order.push(start + step);
+		if (start - step >= 0) order.push(start - step);
+	}
+	return order;
+}

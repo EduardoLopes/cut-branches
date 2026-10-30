@@ -397,12 +397,12 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Row actions mount for the hovered (or focused) row only.
-		await screen
-			.getByRole('row')
-			.filter({ hasText: 'feature-branch' })
-			.getByTestId('branch-name')
-			.hover({ force: true });
+		// Row actions mount for the hovered (or focused) row only. Focus, not a
+		// pointer hover: it doesn't depend on where the pointer lands.
+		const featureRow = screen.getByRole('row').filter({ hasText: 'feature-branch' });
+		await expect.element(featureRow).toBeInTheDocument();
+		(featureRow.element() as HTMLElement).focus();
+		await tick();
 		const switchButtons = screen.getByTestId('switch-button').first();
 		await expect.element(switchButtons).toBeInTheDocument();
 

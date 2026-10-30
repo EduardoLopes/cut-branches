@@ -1,6 +1,11 @@
+import type { QueryClient } from '@tanstack/svelte-query';
 import { flushSync } from 'svelte';
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useBranchMetrics, type VisibleRange } from '../use-branch-metrics.svelte';
+import {
+	BACKGROUND_FILL_DELAY_MS,
+	useBranchMetrics,
+	type VisibleRange
+} from '../use-branch-metrics.svelte';
 import type { BulkGetBranchMetricsOutput } from '$infrastructure/bindings';
 
 // Capture the queries accessor handed to createQueries and drive its results
@@ -64,6 +69,7 @@ describe('useBranchMetrics', () => {
 		path?: () => string | undefined;
 		enabled?: () => boolean;
 		names?: () => readonly string[];
+		queryClient?: QueryClient;
 	}) {
 		let range = $state<VisibleRange | null>(null);
 		let metrics: ReturnType<typeof useBranchMetrics>;
@@ -72,7 +78,8 @@ describe('useBranchMetrics', () => {
 				path: overrides?.path ?? (() => '/repo'),
 				branchNames: overrides?.names ?? (() => ['merged-a', 'branch-b']),
 				visibleRange: () => range,
-				enabled: overrides?.enabled
+				enabled: overrides?.enabled,
+				queryClient: overrides?.queryClient
 			});
 		});
 		flushSync();
@@ -250,5 +257,132 @@ describe('useBranchMetrics', () => {
 		settle();
 		expect(queriesAccessor!().queries).toEqual([]);
 		harness.cleanup();
+	});
+
+	describe('background fill', () => {
+		/** A query client whose fetchQuery answers any bucket with its names. */
+		function fakeClient(fail?: (names: string[]) => boolean) {
+			const fetchQuery = vi.fn(async ({ queryKey }: { queryKey: unknown[] }) => {
+				const input = queryKey.at(-1) as { branchNames: string[] };
+				if (fail?.(input.branchNames)) throw new Error('boom');
+				return metricsOutput(input.branchNames);
+			});
+			return { client: { fetchQuery } as unknown as QueryClient, fetchQuery };
+		}
+
+		const requested = (fetchQuery: ReturnType<typeof fakeClient>['fetchQuery']) =>
+			fetchQuery.mock.calls.map(
+				([options]) => (options.queryKey.at(-1) as { branchNames: string[] }).branchNames[0]
+			);
+
+		test('fetches every bucket once settled, nearest the viewport first', async () => {
+			const names = Array.from({ length: 35 }, (_, i) => `branch-${i}`);
+			const { client, fetchQuery } = fakeClient();
+			const harness = setup({ names: () => names, queryClient: client });
+			harness.setRange({ startIndex: 12, endIndex: 15 });
+
+			// Nothing until the list has settled.
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS - 1);
+			expect(fetchQuery).not.toHaveBeenCalled();
+			expect(harness.metrics.getMetrics('branch-30')).toBeUndefined();
+
+			await vi.advanceTimersByTimeAsync(1);
+			flushSync();
+			// Buckets of 10: the fill started before the range settled into
+			// bucket 1, so it runs from bucket 0 outward.
+			expect(requested(fetchQuery)).toEqual(['branch-0', 'branch-10', 'branch-20', 'branch-30']);
+			expect(harness.metrics.getMetrics('branch-30')?.linesAdded).toBe(3);
+			harness.cleanup();
+		});
+
+		test('skips a bucket that fails and carries on', async () => {
+			const names = Array.from({ length: 25 }, (_, i) => `branch-${i}`);
+			const { client, fetchQuery } = fakeClient((batch) => batch[0] === 'branch-10');
+			const harness = setup({ names: () => names, queryClient: client });
+
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS);
+			flushSync();
+			expect(fetchQuery).toHaveBeenCalledTimes(3);
+			expect(harness.metrics.getMetrics('branch-12')).toBeUndefined();
+			expect(harness.metrics.getMetrics('branch-22')?.linesAdded).toBe(3);
+			harness.cleanup();
+		});
+
+		test('restarts on new names, stops when torn down, and forgets on a new repository', async () => {
+			let names = $state(Array.from({ length: 25 }, (_, i) => `branch-${i}`));
+			let path = $state('/repo');
+			const { client, fetchQuery } = fakeClient();
+			const harness = setup({ names: () => names, path: () => path, queryClient: client });
+
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS);
+			flushSync();
+			expect(harness.metrics.getMetrics('branch-0')).toBeDefined();
+
+			// A search narrows the list: the fill starts over for the new set.
+			names = ['branch-3'];
+			flushSync();
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS);
+			expect(requested(fetchQuery).at(-1)).toBe('branch-3');
+
+			// Another repository: what the fill found no longer applies.
+			path = '/other';
+			flushSync();
+			expect(harness.metrics.getMetrics('branch-0')).toBeUndefined();
+
+			harness.cleanup();
+			const calls = fetchQuery.mock.calls.length;
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS * 2);
+			expect(fetchQuery).toHaveBeenCalledTimes(calls);
+		});
+
+		test('does nothing when disabled, or without a client', async () => {
+			const { client, fetchQuery } = fakeClient();
+			const disabled = setup({ enabled: () => false, queryClient: client });
+			const clientless = setup();
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS * 2);
+			expect(fetchQuery).not.toHaveBeenCalled();
+			disabled.cleanup();
+			clientless.cleanup();
+		});
+
+		test('drops a bucket that resolves after the fill was cancelled', async () => {
+			let release: (() => void) | undefined;
+			const fetchQuery = vi.fn(
+				() =>
+					new Promise<BulkGetBranchMetricsOutput>((resolve) => {
+						release = () => resolve(metricsOutput(['late']));
+					})
+			);
+			const harness = setup({
+				names: () => ['late'],
+				queryClient: { fetchQuery } as unknown as QueryClient
+			});
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS);
+			expect(fetchQuery).toHaveBeenCalledTimes(1);
+			harness.cleanup();
+			release!();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(harness.metrics.getMetrics('late')).toBeUndefined();
+		});
+
+		test('starts no further bucket after one fails past cancellation', async () => {
+			let fail: (() => void) | undefined;
+			const fetchQuery = vi.fn(
+				() =>
+					new Promise<BulkGetBranchMetricsOutput>((_, reject) => {
+						fail = () => reject(new Error('boom'));
+					})
+			);
+			const harness = setup({
+				names: () => Array.from({ length: 25 }, (_, i) => `branch-${i}`),
+				queryClient: { fetchQuery } as unknown as QueryClient
+			});
+			await vi.advanceTimersByTimeAsync(BACKGROUND_FILL_DELAY_MS);
+			expect(fetchQuery).toHaveBeenCalledTimes(1);
+			harness.cleanup();
+			fail!();
+			await vi.advanceTimersByTimeAsync(0);
+			expect(fetchQuery).toHaveBeenCalledTimes(1);
+		});
 	});
 });

@@ -176,12 +176,16 @@
 		visibleRange = { startIndex, endIndex: endIndex + (endIndex - startIndex + 1) };
 	}
 
+	const queryClient = useQueryClient();
 	const branchMetrics = useBranchMetrics({
 		path: () => repositoryPath,
 		branchNames: () => branches.map((branch) => branch.getName()),
 		visibleRange: () => visibleRange,
 		// Deleted branches can't be measured (their ref is gone).
-		enabled: () => !isRestoreView
+		enabled: () => !isRestoreView,
+		// Fill in the whole list behind the viewport, so scrolling lands on rows
+		// whose counts are already there.
+		queryClient
 	});
 
 	// ---------------------------------------------------------------------------
@@ -190,7 +194,6 @@
 	// moves to whichever subject was hovered, instead of every row mounting
 	// its own.
 	// ---------------------------------------------------------------------------
-	const queryClient = useQueryClient();
 	/** How long the pointer rests on a subject before the preview opens —
 	 *  long enough that sweeping across rows doesn't flash previews. */
 	const PREVIEW_OPEN_DELAY = 350;

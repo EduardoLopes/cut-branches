@@ -2,7 +2,8 @@ import { describe, test, expect } from 'vitest';
 import {
 	BRANCH_METRICS_BUCKET_SIZE,
 	getBucketBranchNames,
-	getBucketIndicesForRange
+	getBucketIndicesForRange,
+	getBucketIndicesOutward
 } from '../branch-metrics-buckets';
 
 describe('getBucketIndicesForRange', () => {
@@ -50,5 +51,27 @@ describe('getBucketBranchNames', () => {
 
 	test('uses the default bucket size when none is given', () => {
 		expect(getBucketBranchNames(names, 0)).toHaveLength(BRANCH_METRICS_BUCKET_SIZE);
+	});
+});
+
+describe('getBucketIndicesOutward', () => {
+	test('starts at the given bucket and alternates outward to both ends', () => {
+		// 45 names in buckets of 10: buckets 0..4.
+		expect(getBucketIndicesOutward(45, 2, 10)).toEqual([2, 3, 1, 4, 0]);
+	});
+
+	test('runs on past the nearer end', () => {
+		expect(getBucketIndicesOutward(45, 0, 10)).toEqual([0, 1, 2, 3, 4]);
+		expect(getBucketIndicesOutward(45, 4, 10)).toEqual([4, 3, 2, 1, 0]);
+	});
+
+	test('clamps a start outside the list', () => {
+		expect(getBucketIndicesOutward(25, 9, 10)).toEqual([2, 1, 0]);
+		expect(getBucketIndicesOutward(25, -3, 10)).toEqual([0, 1, 2]);
+	});
+
+	test('has nothing for an empty list, and uses the default bucket size', () => {
+		expect(getBucketIndicesOutward(0, 0)).toEqual([]);
+		expect(getBucketIndicesOutward(BRANCH_METRICS_BUCKET_SIZE * 2, 0)).toEqual([0, 1]);
 	});
 });
