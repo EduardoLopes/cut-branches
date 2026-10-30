@@ -362,7 +362,7 @@ describe('BranchCard Component', () => {
 		});
 
 		const card = getByTestId('branch-card');
-		// When selected=false and variant=inverted, visually it should appear selected (danger style)
+		// When selected=false and variant=inverted, visually it should appear marked (dashed danger border)
 		expect(card).toHaveClass('selected');
 		expect(card).toHaveAttribute('data-variant', 'inverted');
 	});
@@ -375,9 +375,45 @@ describe('BranchCard Component', () => {
 		});
 
 		const card = getByTestId('branch-card');
-		// When selected=true and variant=inverted, visually it should NOT appear selected (neutral style)
+		// When selected=true and variant=inverted, visually it should NOT appear marked (normal border)
 		expect(card).not.toHaveClass('selected');
 		expect(card).toHaveAttribute('data-variant', 'inverted');
+	});
+
+	test('marks a selected branch with a dashed danger border only, leaving the surface neutral', async () => {
+		const { getByTestId } = await renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true
+		});
+
+		const card = getByTestId('branch-card').element() as HTMLElement;
+		expect(getComputedStyle(card).borderStyle).toBe('dashed');
+		expect(card.className).toContain('bd-c_danger.border.accent');
+		expect(card.className).toContain('color-palette_neutral');
+	});
+
+	test('inverted + selected drops the dashed border back to the normal one', async () => {
+		const { getByTestId } = await renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true,
+			variant: 'inverted'
+		});
+
+		const card = getByTestId('branch-card').element() as HTMLElement;
+		expect(getComputedStyle(card).borderStyle).toBe('solid');
+		expect(card.className).not.toContain('bd-c_danger.border.accent');
+	});
+
+	test('a consumer border prop wins over the dashed marker', async () => {
+		const { getByTestId } = await renderWithTestWrapper(BranchCard, {
+			branch: mockBranch,
+			selected: true,
+			border: 'none'
+		});
+
+		const card = getByTestId('branch-card').element() as HTMLElement;
+		expect(getComputedStyle(card).borderStyle).not.toBe('dashed');
+		expect(card.className).not.toContain('bd-c_danger.border.accent');
 	});
 
 	test('shows the upstream badge in the card footer when the branch has an upstream', async () => {

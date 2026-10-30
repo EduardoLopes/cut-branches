@@ -645,7 +645,7 @@
 								branchMetrics.isLoading}
 							selected={branch.getIsSelected()}
 							locked={branch.getIsLocked() && !branch.isCurrent()}
-							colorPalette={getBranchColorPalette(branch, branch.getIsSelected() ?? false)}
+							colorPalette={getBranchColorPalette(branch)}
 							id={getBranchElementId(branch.getName(), 'container')}
 							title={branch.isCurrent()
 								? 'Current branch'

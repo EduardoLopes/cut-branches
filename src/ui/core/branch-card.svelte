@@ -122,18 +122,16 @@
 	// In inverted mode, visual state is opposite of selection state
 	const isVisuallySelected = $derived(variant === 'inverted' ? !selected : selected);
 
-	// Map branch state onto the Card's semantic feedback surface: current →
-	// primary border, (visually) selected → danger border, otherwise neutral.
-	const feedback = $derived(
-		branch.isCurrent() ? 'primary' : isVisuallySelected ? 'danger' : 'neutral'
-	);
+	// The card surface never goes danger: the current branch reads primary,
+	// everything else stays neutral. The "marked" state (selected for deletion
+	// in the active view, still deleted in the restore view) is carried by the
+	// border alone — see `rootStyle` — so the body stays calm and the danger
+	// hue is one outline, not a whole red card.
+	const feedback = $derived(branch.isCurrent() ? 'primary' : 'neutral');
 
-	// A feedback surface only reads as stateful if its border carries the
-	// palette: `muted` washes the hue out to near-neutral. Selection is the
-	// state worth shouting about, so it gets the accent border; the current
-	// branch is ambient context and stays muted, as does the neutral rest.
+	// Muted border by default; the marked state overrides the colour below.
 	// An explicit `border` from the consumer still wins.
-	const cardBorder = $derived(border ?? (feedback === 'danger' ? 'accent' : 'muted'));
+	const cardBorder = $derived(border ?? 'muted');
 
 	// Keep the state marker classes (+ consumer colorPalette) on the root so
 	// existing state hooks and tests keep working; the actual visuals come from
@@ -151,10 +149,16 @@
 	);
 
 	// Card has no dashed-border or disabled/locked-dimming variants, so express
-	// those through the root passThrough style.
+	// those through the root passThrough style. The marked state is a dashed
+	// danger outline: in the active view it says "this will be deleted", in the
+	// restore view (inverted) it says "this is deleted" — and selecting a
+	// deleted branch drops it back to the normal solid border, previewing the
+	// restore.
 	const rootStyle = $derived({
 		overflow: 'hidden',
-		...(isVisuallySelected ? css.raw({ borderStyle: 'dashed' }) : {}),
+		...(isVisuallySelected && !border
+			? css.raw({ borderStyle: 'dashed', borderColor: 'danger.border.accent' })
+			: {}),
 		...(disabled || locked
 			? css.raw({ opacity: 0.5, pointerEvents: 'none', filter: 'grayscale(1)' })
 			: {})

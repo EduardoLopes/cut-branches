@@ -2,16 +2,14 @@ import { type Branch } from '$domains/branch-management/core/models/branch';
 import { css } from '@pindoba/styled-system/css';
 
 /**
- * Gets the appropriate color palette for a branch based on its state
+ * Gets the appropriate color palette for a branch based on its state.
+ * Selection deliberately does not tint the palette: the card marks a
+ * selected/deleted branch with a dashed danger border only, so the body
+ * stays neutral.
  * @param branch - The branch domain model
- * @param selected - Whether the branch is selected
  * @returns CSS class string for the color palette
  */
-export function getBranchColorPalette(branch: Branch, selected: boolean): string {
-	if (selected) {
-		return css({ colorPalette: 'danger' });
-	}
-
+export function getBranchColorPalette(branch: Branch): string {
 	if (branch.isCurrent()) {
 		return css({ colorPalette: 'primary' });
 	}
