@@ -320,7 +320,37 @@
 		// The subject column starts at about 37% of the row: 50% of the room
 		// a 26%-wide bar leaves. The date is right-aligned.
 		backgroundPosition: '76px 0, 76px 0, 50% 0, right 16px top 0, 0 0',
-		backgroundRepeat: 'repeat-y'
+		backgroundRepeat: 'repeat-y',
+		// The leading spacer's sizer spans every row: it paints the well colour
+		// behind them (the gaps between cards), with the scrolled content. See
+		// the port's backdrop below. It starts at the first row, so it reaches
+		// up under the sticky header to cover the gap above that row too.
+		'&[data-grid-list-spacer-lead]::after': {
+			visibility: 'visible',
+			left: '0',
+			right: '0',
+			width: 'auto',
+			marginTop: '-64px',
+			height: 'calc(var(--gl-virtual-total, 0px) + 64px + var(--gl-scroll-end-inset, 0px))',
+			background: 'neutral.surface.ground',
+			zIndex: '-1'
+		}
+	});
+
+	// A real flick scrolls on WebKit's scrolling thread, ahead of the main
+	// thread drawing the rows' tiles, and the transparent port let the
+	// near-black well show through wherever they were still missing (even a
+	// plain scroll box does this in WKWebView). The port's own fill stays
+	// behind its scrolled tiles, so it is the row fill: an undrawn stretch
+	// reads as cards still loading. The well colour between the cards comes
+	// from the sizer above instead, drawn with the rows. Not a `local`
+	// background layer: one of those moves the whole background into the
+	// scrolled tiles. Clipped to the content box, so it stays off the
+	// scrollbar's gap; `isolation` keeps the sizer's -1 above it.
+	const scrollPortStyle = css.raw({
+		backgroundColor: 'var(--gl-row-bg)',
+		backgroundClip: 'content-box',
+		isolation: 'isolate'
 	});
 
 	// Room for the last row to scroll out from under the well's bulk bar, only
@@ -398,7 +428,7 @@
 		tone={isRestoreView ? 'primary' : 'danger'}
 		look="cards"
 		rowBackground="surface.peak"
-		passThrough={{ spacer: { style: spacerStyle } }}
+		passThrough={{ grid: { style: scrollPortStyle }, spacer: { style: spacerStyle } }}
 		aria-busy={branchesQuery.isLoading}
 		columns={[
 			{ id: 'name', track: 'minmax(14rem, 1.2fr)', header: 'Branch' },

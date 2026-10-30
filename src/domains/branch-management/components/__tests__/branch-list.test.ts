@@ -216,6 +216,15 @@ describe('BranchList', () => {
 				expect(getComputedStyle(el).backgroundImage).toContain('linear-gradient');
 				expect(getComputedStyle(el).backgroundRepeat).toContain('repeat-y');
 			}
+			// Where a flick outruns the drawn tiles, the port shows the row fill;
+			// the lead spacer's sizer paints the well colour behind the rows.
+			const port = getComputedStyle(screen.getByRole('grid', { name: 'Branches' }).element());
+			expect(port.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
+			expect(port.backgroundClip).toBe('content-box');
+			const lead = scroller.querySelector('[data-grid-list-spacer-lead]')!;
+			const sizer = getComputedStyle(lead, '::after');
+			expect(sizer.visibility).toBe('visible');
+			expect(sizer.backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
 		});
 
 		test('shows the last commit: subject, author, short sha and when', async () => {
