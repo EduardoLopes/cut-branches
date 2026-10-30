@@ -209,11 +209,12 @@ describe('BranchList', () => {
 			await expect
 				.element(screen.getByRole('grid', { name: 'Branches' }))
 				.toHaveAttribute('aria-rowcount', '301');
-			// The unrendered rows' stand-in paints empty cards, not a blank well.
+			// The unrendered rows' stand-in paints loading rows, not a blank well.
 			const spacers = [...scroller.querySelectorAll<HTMLElement>('[data-grid-list-spacer]')];
 			expect(spacers.some((el) => el.offsetHeight > 0)).toBe(true);
 			for (const el of spacers) {
-				expect(getComputedStyle(el).backgroundImage).toContain('repeating-linear-gradient');
+				expect(getComputedStyle(el).backgroundImage).toContain('linear-gradient');
+				expect(getComputedStyle(el).backgroundRepeat).toContain('repeat-y');
 			}
 		});
 

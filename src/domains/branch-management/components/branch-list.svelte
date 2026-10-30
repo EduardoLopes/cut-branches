@@ -289,17 +289,35 @@
 	const ESTIMATED_ROW_HEIGHT = 67;
 
 	/** Rows rendered past each end of the view (GridList's default is 6).
-	 *  Rows are light now that their actions mount on hover, so a deeper
-	 *  buffer is cheap, and it is what a fast flick scrolls into before the
-	 *  next render catches up. */
-	const OVERSCAN_ROWS = 12;
+	 *  Rows are light now that their actions mount on hover, so a deep buffer
+	 *  is cheap per frame, and it is what a fast flick scrolls into before
+	 *  the next render catches up. Arrival mounts the narrower one, so the
+	 *  list opens fast; once it has settled the buffer widens, mounting the
+	 *  extra rows while nobody is scrolling. */
+	const OVERSCAN_ON_ARRIVAL = 12;
+	const OVERSCAN_SETTLED = 24;
+	const OVERSCAN_WIDEN_DELAY = 600;
+
+	let overscan = $state(OVERSCAN_ON_ARRIVAL);
+	$effect(() => {
+		const timer = setTimeout(() => (overscan = OVERSCAN_SETTLED), OVERSCAN_WIDEN_DELAY);
+		return () => clearTimeout(timer);
+	});
 
 	// Where a flick outruns even that buffer, the spacers standing in for
-	// unrendered rows show empty cards instead of a blank well: the row fill
-	// for one row's height, then the gap, repeated (ESTIMATED_ROW_HEIGHT).
+	// unrendered rows draw rows still loading instead of a blank well: per
+	// ESTIMATED_ROW_HEIGHT tile, bars where the name, the author line, the
+	// commit subject and the date sit, over the row fill (65px) and the gap.
+	// Bands are painted within each 67px tile, so they repeat with the rows.
 	const spacerStyle = css.raw({
+		// One literal: Panda extracts static values only.
 		backgroundImage:
-			'repeating-linear-gradient(to bottom, var(--gl-row-bg) 0 65px, transparent 65px 67px)'
+			'linear-gradient(to bottom, transparent 13px, token(colors.neutral.border.muted) 13px 23px, transparent 23px), linear-gradient(to bottom, transparent 43px, token(colors.neutral.border.muted) 43px 51px, transparent 51px), linear-gradient(to bottom, transparent 17px, token(colors.neutral.border.muted) 17px 27px, transparent 27px), linear-gradient(to bottom, transparent 17px, token(colors.neutral.border.muted) 17px 27px, transparent 27px), linear-gradient(to bottom, var(--gl-row-bg) 65px, transparent 65px)',
+		backgroundSize: '180px 67px, 120px 67px, 26% 67px, 64px 67px, 100% 67px',
+		// The subject column starts at about 37% of the row: 50% of the room
+		// a 26%-wide bar leaves. The date is right-aligned.
+		backgroundPosition: '76px 0, 76px 0, 50% 0, right 16px top 0, 0 0',
+		backgroundRepeat: 'repeat-y'
 	});
 
 	// Room for the last row to scroll out from under the well's bulk bar, only
@@ -359,7 +377,7 @@
 		padding="xs"
 		virtual={{
 			estimateSize: ESTIMATED_ROW_HEIGHT,
-			overscan: OVERSCAN_ROWS,
+			overscan,
 			onVisibleRangeChange: handleVisibleRangeChange
 		}}
 		data-testid="branch-list-scroller"
