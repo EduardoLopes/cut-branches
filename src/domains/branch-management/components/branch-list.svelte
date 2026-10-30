@@ -302,10 +302,11 @@
 			'repeating-linear-gradient(to bottom, var(--gl-row-bg) 0 65px, transparent 65px 67px)'
 	});
 
-	// `scroll` makes the list's grid its scroll port; this leaves room for the
-	// last row to scroll out from under the well's bulk bar.
-	const scrollPortClass = css({
-		'--gl-scroll-end-inset': 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
+	// Room for the last row to scroll out from under the well's bulk bar, only
+	// while the bar is up (it shows for a selection). Always on, it gave a list
+	// that fits a scrollbar and a stretch of empty space to scroll through.
+	const barClearanceClass = css({
+		'--gl-scroll-end-inset': 'var(--page-well-overlay-clearance, 0px)'
 	});
 
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
@@ -362,7 +363,7 @@
 			onVisibleRangeChange: handleVisibleRangeChange
 		}}
 		data-testid="branch-list-scroller"
-		class={scrollPortClass}
+		class={selected.size > 0 ? barClearanceClass : undefined}
 		label="Branches"
 		items={branches}
 		getId={(branch: Branch) => branch.getName()}
