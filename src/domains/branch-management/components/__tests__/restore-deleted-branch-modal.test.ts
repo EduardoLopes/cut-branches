@@ -1,4 +1,3 @@
-import { tick } from 'svelte';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { Branch } from '../../core/models/branch';
 import RestoreDeletedBranchModal from '../restore-deleted-branch-modal.svelte';
@@ -39,7 +38,6 @@ function makeBranchData(name: string): BranchData {
 
 let selectedBranches: Branch[] = [];
 // When true the selection query behaves as still-loading (`data` undefined).
-let selectionLoading = false;
 
 vi.mock(
 	'$domains/branch-management/infrastructure/mutations/create-restore-deleted-branch-mutation',
@@ -68,7 +66,7 @@ vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-q
 		get data() {
 			const filters = input().filters || {};
 			if (filters.selectionStatus === 'selected') {
-				return selectionLoading ? undefined : { branches: selectedBranches };
+				return { branches: selectedBranches };
 			}
 			return { branches: [] };
 		},
@@ -82,62 +80,24 @@ vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: { push: vi.fn() }
 }));
 
-// The validation hint renders inside a native <dialog> that is always present;
-// its visibility is the dialog's own open state. Find the open one.
-function openHint(): HTMLDialogElement | undefined {
-	return [...document.querySelectorAll('dialog[data-popover]')].find(
-		(el) => (el as HTMLDialogElement).open
-	) as HTMLDialogElement | undefined;
-}
-
 beforeEach(() => {
 	selectedBranches = [Branch.fromData(makeBranchData('feat-a'))];
-	selectionLoading = false;
 });
 
 describe('RestoreDeletedBranchModal', () => {
-	test('renders the trigger button with the selected count', async () => {
-		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
-		const button = screen.getByTestId('open-restore-dialog-button');
-		expect(button).toBeInTheDocument();
-		expect(button).toMatchTextContent('Restore');
-		expect(button).toMatchTextContent('1');
-	});
-
-	test('keeps the trigger enabled and shows a validation hint when nothing to restore', async () => {
-		selectedBranches = [];
-		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
-		const button = screen.getByTestId('open-restore-dialog-button');
-		expect(button).not.toBeDisabled();
-
-		await button.click();
-		await tick();
-
-		await vi.waitFor(() => expect(openHint()).toBeTruthy());
-		expect(openHint()?.textContent).toContain('There are no deleted branches to restore.');
-	});
-
-	test('shows the validation hint while the selection query is still loading', async () => {
-		// `data` is undefined until the query settles — clicking used to open an
-		// empty dialog instead of hinting.
-		selectionLoading = true;
+	test('stays closed, with no branch cards built, until something opens it', async () => {
 		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
 
-		await screen.getByTestId('open-restore-dialog-button').click();
-		await tick();
-
-		await vi.waitFor(() => expect(openHint()).toBeTruthy());
-		expect(openHint()?.textContent).toContain('There are no deleted branches to restore.');
-	});
-
-	test('enables the trigger when at least one branch is selected', async () => {
-		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
-		expect(screen.getByTestId('open-restore-dialog-button')).not.toBeDisabled();
+		const dialog = screen.getByTestId('restore-branch-dialog').element() as HTMLDialogElement;
+		expect(dialog.open).toBe(false);
+		expect(screen.getByTestId('restore-branch-list')).not.toMatchTextContent('feat-a');
 	});
 
 	test('lists the selected branches and disables Restore once the run starts', async () => {
-		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, { repoId: 'r1' });
-		await screen.getByTestId('open-restore-dialog-button').click();
+		const screen = await renderWithTestWrapper(RestoreDeletedBranchModal, {
+			repoId: 'r1',
+			open: true
+		});
 
 		await vi.waitFor(() =>
 			expect(screen.getByTestId('restore-branch-list')).toMatchTextContent('feat-a')

@@ -185,9 +185,10 @@ describe('BranchSelection Component', () => {
 			expect(screen.getByTestId('select-all-container')).not.toBeInTheDocument();
 		});
 
-		test('renders checkbox', async () => {
-			const { getByTestId } = await renderWithTestWrapper(BranchSelection, defaultProps);
-			expect(getByTestId('select-all-checkbox')).toBeInTheDocument();
+		test('leaves select-all to the list header: the toolbar only counts', async () => {
+			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
+			expect(screen.getByRole('checkbox').elements()).toHaveLength(0);
+			expect(screen.getByTestId('selectible-count-info')).toBeInTheDocument();
 		});
 	});
 
@@ -309,35 +310,6 @@ describe('BranchSelection Component', () => {
 			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
 
 			expect(screen.getByTestId('selectible-count-info')).toMatchTextContent('branches');
-		});
-	});
-
-	describe('Checkbox States', () => {
-		test('checkbox is unchecked when no branches are selected', async () => {
-			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
-
-			const checkbox = screen.getByTestId('select-all-checkbox') as unknown as HTMLInputElement;
-			expect(checkbox).not.toBeChecked();
-		});
-
-		test('checkbox is checked when all branches are selected', async () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.add(['feature-1', 'feature-2']);
-
-			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
-
-			const checkbox = screen.getByRole('checkbox', { name: /select all/i });
-			expect(checkbox).toBeChecked();
-		});
-
-		test('checkbox is indeterminate when some but not all branches are selected', async () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.add(['feature-1']);
-
-			const screen = await renderWithTestWrapper(BranchSelection, defaultProps);
-
-			const checkbox = screen.getByRole('checkbox', { name: /select all/i });
-			expect(checkbox).toHaveAttribute('aria-checked', 'mixed');
 		});
 	});
 });

@@ -83,7 +83,7 @@
 		>
 			Branches
 			{#snippet leading()}
-				<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
+				<Stamp emphasis="ghost" tone="neutral" border="muted" background="transparent">
 					<Icon icon="lucide:git-branch" width="14px" height="14px" />
 				</Stamp>
 			{/snippet}
@@ -105,7 +105,7 @@
 		>
 			Worktrees
 			{#snippet leading()}
-				<Stamp emphasis="ghost" feedback="neutral" border="muted" background="transparent">
+				<Stamp emphasis="ghost" tone="neutral" border="muted" background="transparent">
 					<Icon icon="lucide:trees" width="14px" height="14px" />
 				</Stamp>
 			{/snippet}

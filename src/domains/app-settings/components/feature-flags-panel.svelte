@@ -19,7 +19,7 @@
 </script>
 
 {#snippet flagIcon()}
-	<Stamp shape="square" size="sm" emphasis="secondary" feedback="neutral" shadow="sm">
+	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" shadow="sm">
 		<Icon icon="lucide:flag" width="16px" height="16px" />
 	</Stamp>
 {/snippet}

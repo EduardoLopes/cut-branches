@@ -263,51 +263,12 @@ describe('useBranchSelection', () => {
 				// Both counts must describe the same set: one branch matches the
 				// search and that one branch is selected. Counting selection
 				// repository-wide instead reported 2 / 1, which reads as
-				// "2 branches are selected / 1 branch was found" and leaves the
-				// header checkbox neither checked nor indeterminate.
+				// "2 branches are selected / 1 branch was found".
 				expect(selection.selectibleCount).toBe(1);
 				expect(selection.selectedCount).toBe(1);
-				expect(selection.isAllSelected).toBe(true);
-				expect(selection.isIndeterminate).toBe(false);
 			} finally {
 				search?.clear();
 			}
-		});
-
-		test('isIndeterminate is true when some but not all branches are selected', () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.add(['feature-1']);
-
-			const selection = useBranchSelection({
-				repository: () => mockRepo,
-				branchContext: () => 'active' as const
-			});
-
-			expect(selection.isIndeterminate).toBe(true);
-			expect(selection.isAllSelected).toBe(false);
-		});
-
-		test('isAllSelected is true when all selectible branches are selected', () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.add(['feature-1', 'feature-2']);
-
-			const selection = useBranchSelection({
-				repository: () => mockRepo,
-				branchContext: () => 'active' as const
-			});
-
-			expect(selection.isIndeterminate).toBe(false);
-			expect(selection.isAllSelected).toBe(true);
-		});
-
-		test('both isIndeterminate and isAllSelected are false when no branches are selected', () => {
-			const selection = useBranchSelection({
-				repository: () => mockRepo,
-				branchContext: () => 'active' as const
-			});
-
-			expect(selection.isIndeterminate).toBe(false);
-			expect(selection.isAllSelected).toBe(false);
 		});
 	});
 
@@ -323,59 +284,7 @@ describe('useBranchSelection', () => {
 		});
 	});
 
-	describe('handleSelectAll', () => {
-		test('selects all selectible branches when none are selected', async () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.clear();
-
-			const selection = useBranchSelection({
-				repository: () => mockRepo,
-				branchContext: () => 'active' as const
-			});
-
-			await selection.handleSelectAll();
-
-			await vi.waitFor(() => {
-				expect(selectedStore?.has('feature-1')).toBe(true);
-				expect(selectedStore?.has('feature-2')).toBe(true);
-				expect(selectedStore?.has('main')).toBe(false);
-			});
-		});
-
-		test('deselects all branches when some are selected (indeterminate)', async () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.add(['feature-1']);
-
-			const selection = useBranchSelection({
-				repository: () => mockRepo,
-				branchContext: () => 'active' as const
-			});
-
-			await selection.handleSelectAll();
-
-			await vi.waitFor(() => {
-				expect(selectedStore?.has('feature-1')).toBe(false);
-				expect(selectedStore?.has('feature-2')).toBe(false);
-			});
-		});
-
-		test('deselects all branches when all are selected', async () => {
-			const selectedStore = getSelectedBranchesStore('test-repo');
-			selectedStore?.add(['feature-1', 'feature-2']);
-
-			const selection = useBranchSelection({
-				repository: () => mockRepo,
-				branchContext: () => 'active' as const
-			});
-
-			await selection.handleSelectAll();
-
-			await vi.waitFor(() => {
-				expect(selectedStore?.has('feature-1')).toBe(false);
-				expect(selectedStore?.has('feature-2')).toBe(false);
-			});
-		});
-
+	describe('selectAll edge cases', () => {
 		test('does not select current branch', async () => {
 			const selectedStore = getSelectedBranchesStore('test-repo');
 			selectedStore?.clear();
@@ -385,7 +294,7 @@ describe('useBranchSelection', () => {
 				branchContext: () => 'active' as const
 			});
 
-			await selection.handleSelectAll();
+			await selection.selectAll();
 
 			await vi.waitFor(() => {
 				expect(selectedStore?.has('main')).toBe(false);
@@ -401,7 +310,7 @@ describe('useBranchSelection', () => {
 				branchContext: () => 'active' as const
 			});
 
-			await selection.handleSelectAll();
+			await selection.selectAll();
 
 			// Should not change the store
 			expect(selectedStore?.state?.size).toBe(initialSize);
@@ -426,13 +335,62 @@ describe('useBranchSelection', () => {
 				branchContext: () => 'deleted' as const
 			});
 
-			await selection.handleSelectAll();
+			await selection.selectAll();
 
 			// Should select deleted branches using the deleted mutations
 			await vi.waitFor(() => {
 				expect(selectedStore?.has('feature-1')).toBe(true);
 				expect(selectedStore?.has('feature-2')).toBe(true);
 			});
+		});
+	});
+
+	describe('clearSelection and selectAll', () => {
+		test('selectAll selects every selectable branch, whatever is selected already', async () => {
+			const selectedStore = getSelectedBranchesStore('test-repo');
+			// Already partly selected: selectAll still selects every selectable branch.
+			selectedStore?.add(['feature-1']);
+
+			const selection = useBranchSelection({
+				repository: () => mockRepo,
+				branchContext: () => 'active' as const
+			});
+
+			await selection.selectAll();
+
+			await vi.waitFor(() => {
+				expect(selectedStore?.has('feature-1')).toBe(true);
+				expect(selectedStore?.has('feature-2')).toBe(true);
+				expect(selectedStore?.has('main')).toBe(false);
+			});
+		});
+
+		test('clearSelection empties the selection', async () => {
+			const selectedStore = getSelectedBranchesStore('test-repo');
+			selectedStore?.add(['feature-1', 'feature-2']);
+
+			const selection = useBranchSelection({
+				repository: () => mockRepo,
+				branchContext: () => 'active' as const
+			});
+
+			await selection.clearSelection();
+
+			await vi.waitFor(() => expect(selectedStore?.state?.size ?? 0).toBe(0));
+		});
+
+		test('clearSelection does nothing when repository is undefined', async () => {
+			const selectedStore = getSelectedBranchesStore('test-repo');
+			selectedStore?.add(['feature-1']);
+
+			const selection = useBranchSelection({
+				repository: () => undefined,
+				branchContext: () => 'active' as const
+			});
+
+			await selection.clearSelection();
+
+			expect(selectedStore?.has('feature-1')).toBe(true);
 		});
 	});
 

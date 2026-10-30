@@ -78,7 +78,7 @@
 </script>
 
 {#snippet settingsIcon()}
-	<Stamp shape="square" size="md" emphasis="ghost" feedback="neutral" border="none">
+	<Stamp shape="square" size="md" emphasis="ghost" tone="neutral" border="none">
 		<Icon icon="lucide:settings" width="18px" height="18px" />
 	</Stamp>
 {/snippet}

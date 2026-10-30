@@ -175,14 +175,14 @@
 		<PageToolbar data-testid="diff-toolbar">
 			{#snippet left()}
 				{#if branchName}
-					<Badge size="sm" emphasis="secondary" feedback="primary" data-testid="diff-target-branch">
+					<Badge size="sm" emphasis="secondary" tone="primary" data-testid="diff-target-branch">
 						{#snippet leading()}
 							<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
 						{/snippet}
 						<span class={monoLabel} title={branchName}>{branchName}</span>
 					</Badge>
 				{:else if shortSha}
-					<Badge size="sm" emphasis="secondary" feedback="primary" data-testid="diff-target-commit">
+					<Badge size="sm" emphasis="secondary" tone="primary" data-testid="diff-target-commit">
 						{#snippet leading()}
 							<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
 						{/snippet}
@@ -217,8 +217,8 @@
 							{summary.files.length}
 							{summary.files.length === 1 ? 'file' : 'files'}
 						</span>
-						<Badge size="sm" emphasis="secondary" feedback="success">+{summary.linesAdded}</Badge>
-						<Badge size="sm" emphasis="secondary" feedback="danger">−{summary.linesRemoved}</Badge>
+						<Badge size="sm" emphasis="secondary" tone="success">+{summary.linesAdded}</Badge>
+						<Badge size="sm" emphasis="secondary" tone="danger">−{summary.linesRemoved}</Badge>
 					</span>
 				{/if}
 			{/snippet}
@@ -230,7 +230,7 @@
 						<Badge
 							size="sm"
 							emphasis="secondary"
-							feedback={reviewedCount === summary.files.length ? 'success' : 'neutral'}
+							tone={reviewedCount === summary.files.length ? 'success' : 'neutral'}
 							title="Files marked reviewed"
 						>
 							{#snippet leading()}
@@ -339,13 +339,13 @@
 
 	{#if repositoryQuery.isError}
 		<div class={css({ p: 'md' })}>
-			<Alert feedback="danger" data-testid="diff-repository-error">
+			<Alert tone="danger" data-testid="diff-repository-error">
 				{repositoryQuery.error.message}
 			</Alert>
 		</div>
 	{:else if changedFilesQuery.isError}
 		<div class={css({ p: 'md' })}>
-			<Alert feedback="danger" data-testid="diff-error">
+			<Alert tone="danger" data-testid="diff-error">
 				{changedFilesQuery.error.description ?? changedFilesQuery.error.message}
 			</Alert>
 		</div>
@@ -382,7 +382,7 @@
 				</div>
 			{:else if structureQuery.isError}
 				<div class={css({ p: 'md' })}>
-					<Alert feedback="danger" data-testid="canvas-structure-error">
+					<Alert tone="danger" data-testid="canvas-structure-error">
 						{structureQuery.error.description ?? structureQuery.error.message}
 					</Alert>
 				</div>

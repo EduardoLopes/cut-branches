@@ -67,20 +67,120 @@ describe('WorktreeList', () => {
 		expect(onUnlock).toHaveBeenCalledWith(locked);
 	});
 
-	it('shows selection checkboxes for linked worktrees when enabled, but not the main worktree', async () => {
-		const onToggleSelect = vi.fn();
-		const main = wt('main', true);
-		const linked = wt('a');
+	it('lets linked worktrees be selected but keeps the main worktree out of the selection', async () => {
+		const onSelectionChange = vi.fn();
 		const screen = await render({
-			worktrees: [main, linked],
+			worktrees: [wt('main', true), wt('a')],
 			isLoading: false,
 			allowSelection: true,
-			isSelected: () => false,
-			onToggleSelect
+			onSelectionChange
 		});
 		await tick();
-		expect(screen.container.querySelector('[data-testid="worktree-select-main"]')).toBeNull();
-		await screen.getByTestId('worktree-select-a').click();
-		expect(onToggleSelect).toHaveBeenCalledWith(linked);
+
+		const mainRow = screen.getByRole('row').filter({ hasText: 'main' });
+		const linkedRow = screen.getByRole('row').filter({ hasText: '/repos/a' });
+		await expect.element(mainRow.getByRole('checkbox')).toBeDisabled();
+		await expect.element(mainRow).toHaveAttribute('aria-disabled', 'true');
+
+		await linkedRow.getByRole('checkbox').click();
+		expect(onSelectionChange).toHaveBeenLastCalledWith(new Set(['a']));
+	});
+
+	it('keeps a locked worktree out of the selection', async () => {
+		const locked = Worktree.fromData({ ...wt('a').toData(), isLocked: true });
+		const screen = await render({
+			worktrees: [locked, wt('b')],
+			isLoading: false,
+			allowSelection: true
+		});
+		await tick();
+
+		const lockedRow = screen.getByRole('row').filter({ hasText: '/repos/a' });
+		await expect.element(lockedRow.getByRole('checkbox')).toBeDisabled();
+	});
+
+	it('checks the rows it is told are selected', async () => {
+		const screen = await render({
+			worktrees: [wt('a'), wt('b')],
+			isLoading: false,
+			allowSelection: true,
+			selected: new Set(['b'])
+		});
+		await tick();
+
+		const row = (path: string) => screen.getByRole('row').filter({ hasText: path });
+		await expect.element(row('/repos/b').getByRole('checkbox')).toBeChecked();
+		await expect.element(row('/repos/a').getByRole('checkbox')).not.toBeChecked();
+		await expect.element(row('/repos/b')).toHaveAttribute('aria-selected', 'true');
+	});
+
+	it('renders no checkboxes when selection is off', async () => {
+		const screen = await render({ worktrees: [wt('a')], isLoading: false });
+		await tick();
+
+		expect(screen.getByRole('checkbox').elements()).toHaveLength(0);
+	});
+
+	describe('row content', () => {
+		function one(overrides: Partial<WorktreeData> = {}) {
+			return Worktree.fromData({ ...wt('wt1').toData(), headSha: 'abc1234567', ...overrides });
+		}
+
+		it('shows the name, branch, short sha and path', async () => {
+			const screen = await render({ worktrees: [one({ branch: 'feature' })] });
+			await tick();
+
+			await expect.element(screen.getByTestId('worktree-name')).toHaveTextContent('wt1');
+			await expect.element(screen.getByTestId('worktree-branch')).toHaveTextContent('feature');
+			await expect.element(screen.getByTestId('worktree-row')).toMatchTextContent('abc1234');
+			await expect
+				.element(screen.getByTestId('worktree-path'))
+				.toHaveAttribute('title', '/repos/wt1');
+		});
+
+		it('marks the main worktree and gives it no lock control', async () => {
+			const screen = await render({ worktrees: [one({ isMain: true })] });
+			await tick();
+
+			await expect.element(screen.getByTestId('worktree-main-badge')).toBeInTheDocument();
+			expect(screen.getByTestId('worktree-lock').elements()).toHaveLength(0);
+		});
+
+		it('marks locked and prunable worktrees', async () => {
+			const screen = await render({
+				worktrees: [
+					one({ name: 'a', isLocked: true, lockReason: 'busy' }),
+					one({ name: 'b', isLocked: true, lockReason: null }),
+					one({ name: 'c', isPrunable: true })
+				]
+			});
+			await tick();
+
+			expect(screen.getByTestId('worktree-locked-badge').elements()).toHaveLength(2);
+			await expect.element(screen.getByTestId('worktree-prunable-badge')).toBeInTheDocument();
+		});
+
+		it('reads "detached" without a branch and drops the sha without a HEAD', async () => {
+			const screen = await render({
+				worktrees: [
+					one({ name: 'a', branch: null }),
+					one({ name: 'b', branch: null, headSha: null })
+				]
+			});
+			await tick();
+
+			const rows = screen.getByTestId('worktree-row');
+			await expect.element(rows.nth(0)).toMatchTextContent('detached');
+			await expect.element(rows.nth(0)).toMatchTextContent('abc1234');
+			await expect.element(rows.nth(1)).toMatchTextContent('detached');
+			await expect.element(rows.nth(1)).not.toMatchTextContent('abc1234');
+		});
+
+		it('disables the lock controls while a lock change is in flight', async () => {
+			const screen = await render({ worktrees: [one()], busy: true });
+			await tick();
+
+			await expect.element(screen.getByTestId('worktree-lock')).toBeDisabled();
+		});
 	});
 });

@@ -2,6 +2,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Modal from '@pindoba/svelte-dialog';
+	import GridList from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
 	import { type Worktree } from '../core/models/worktree';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
@@ -33,12 +34,15 @@
 		if (isDeleting) return;
 		await onConfirm(force);
 	}
+
+	const nameClass = css({ fontSize: 'sm', fontWeight: 'medium', whiteSpace: 'nowrap' });
+	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
 </script>
 
 <div use:portal>
 	<Modal
 		{open}
-		onChange={(next: boolean) => (open = next)}
+		onOpenChange={(next: boolean) => (open = next)}
 		title={count === 1 ? 'Delete worktree' : 'Delete worktrees'}
 		aria-label="Delete worktrees"
 		data-testid="delete-worktrees-modal"
@@ -59,30 +63,31 @@
 
 		<div class={css({ display: 'flex', flexDirection: 'column', gap: 'md', width: 'full' })}>
 			<ScrollWell class={css({ maxHeight: '160px' })} testId="delete-worktrees-list">
-				{#each worktrees as worktree (worktree.getName())}
-					<div
-						class={css({
-							display: 'flex',
-							alignItems: 'center',
-							gap: 'md',
-							minWidth: '0',
-							paddingX: 'sm',
-							paddingY: 'xs',
-							fontSize: 'sm'
-						})}
-						data-testid="delete-worktrees-item"
-					>
-						<strong class={css({ fontWeight: 'medium', flexShrink: '0' })}
-							>{worktree.getName()}</strong
-						>
-						<TruncatedPath
-							path={worktree.getPath()}
-							highlight={worktree.getName()}
-							align="end"
-							class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}
-						/>
-					</div>
-				{/each}
+				<GridList
+					label="Worktrees to delete"
+					items={worktrees}
+					getId={(worktree: Worktree) => worktree.getName()}
+					look="cards"
+					rowBackground="surface.peak"
+					columns={[
+						{ id: 'name', track: 'auto' },
+						{ id: 'path', track: 'minmax(0, 1fr)' }
+					]}
+				>
+					{#snippet row(worktree, { cell })}
+						<span {...cell('name', { class: nameClass })} data-testid="delete-worktrees-item">
+							{worktree.getName()}
+						</span>
+						<span {...cell('path')}>
+							<TruncatedPath
+								path={worktree.getPath()}
+								highlight={worktree.getName()}
+								align="end"
+								class={pathClass}
+							/>
+						</span>
+					{/snippet}
+				</GridList>
 			</ScrollWell>
 
 			{#if hasLocked}
@@ -107,7 +112,7 @@
 				</Button>
 				<Loading loading={isDeleting} variant="busy" indicator>
 					<Button
-						feedback="danger"
+						tone="danger"
 						onclick={handleConfirm}
 						disabled={isDeleting}
 						data-testid="delete-worktrees-confirm"

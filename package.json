@@ -79,6 +79,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@lucide/svelte": "^1.65.0",
 		"@pindoba/core-menu": "alpha",
 		"@pindoba/core-tree-view": "alpha",
 		"@pindoba/devtools": "alpha",

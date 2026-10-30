@@ -86,7 +86,7 @@
 <div use:portal>
 	<Dialog
 		{open}
-		onChange={handleOpenChange}
+		onOpenChange={handleOpenChange}
 		title={null}
 		aria-label="Welcome to Cut Branches"
 		data-testid="welcome-modal"
@@ -251,20 +251,14 @@
 						<Banner
 							eyebrow={feature.eyebrow}
 							heading={feature.heading}
-							feedback="primary"
+							tone="primary"
 							passThrough={{
 								eyebrow: { style: css.raw({}) },
 								heading: { style: css.raw({ fontWeight: '500' }) }
 							}}
 						>
 							{#snippet leading()}
-								<Stamp
-									shape="circle"
-									size="lg"
-									border="none"
-									emphasis="tertiary"
-									feedback="primary"
-								>
+								<Stamp shape="circle" size="lg" border="none" emphasis="tertiary" tone="primary">
 									<Icon icon={feature.icon} width="18px" height="18px" />
 								</Stamp>
 							{/snippet}

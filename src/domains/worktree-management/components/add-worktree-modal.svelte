@@ -67,7 +67,7 @@
 <div use:portal>
 	<Modal
 		{open}
-		onChange={(next: boolean) => (open = next)}
+		onOpenChange={(next: boolean) => (open = next)}
 		title="Add worktree"
 		aria-label="Add worktree"
 		data-testid="add-worktree-modal"

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import Button from '@pindoba/svelte-button';
-	import Checkbox from '@pindoba/svelte-checkbox';
 	import Modal from '@pindoba/svelte-dialog';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
@@ -43,13 +42,6 @@
 			if (cleanup.targetCount === 0) open = false;
 		}
 	});
-
-	const allSelected = $derived(
-		cleanup.targetCount > 0 && cleanup.selectedCount === cleanup.targetCount
-	);
-	const someSelected = $derived(
-		cleanup.selectedCount > 0 && cleanup.selectedCount < cleanup.targetCount
-	);
 
 	// Permanent deletion is irreversible — require the user to type "delete".
 	const needsTypedConfirm = $derived(mode === 'permanent');
@@ -98,7 +90,7 @@
 <div use:portal>
 	<Modal
 		{open}
-		onChange={(next: boolean) => (open = next)}
+		onOpenChange={(next: boolean) => (open = next)}
 		title="Clean up {repositoryName}"
 		aria-label="Clean up repository"
 		data-testid="clean-repository-modal"
@@ -173,37 +165,21 @@
 						})}
 						data-testid="cleanup-empty"
 					>
-						<Stamp shape="circle" size="lg" emphasis="secondary" feedback="neutral">
+						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
 							<Icon icon="lucide:sparkles" width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>Nothing to clean up here.</span>
 					</div>
 				{:else if cleanup.targetCount > 0}
-					<!-- Select-all rides in the well's header, so the control and the rows
-					     it acts on read as one panel. -->
-					{#snippet listHeader()}
-						<Checkbox
-							id="cleanup-select-all"
-							checked={allSelected}
-							indeterminate={someSelected}
-							onchange={() => cleanup.setAll(!allSelected)}
-							data-testid="cleanup-select-all"
-						>
-							Select all
-						</Checkbox>
-						<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
-							{cleanup.selectedCount} of {cleanup.targetCount} · {formatBytes(
-								cleanup.selectedBytes
-							)}
-						</span>
-					{/snippet}
-
+					<!-- The list's own sticky header carries select-all. The well's
+					     scroller has no top padding, so the header pins flush. -->
 					<ScrollWell
 						class={css({ flex: '1', minHeight: '0' })}
-						header={listHeader}
+						scrollerClass={css({ paddingTop: '0' })}
 						testId="cleanup-target-scroller"
 					>
 						<CleanupTargetList
+							header
 							targets={cleanup.targets}
 							isSelected={(path) => cleanup.isSelected(path)}
 							onToggle={(path) => cleanup.toggle(path)}
@@ -229,7 +205,7 @@
 					<Button
 						size="sm"
 						emphasis={mode === 'permanent' ? 'primary' : 'secondary'}
-						feedback={mode === 'permanent' ? 'danger' : undefined}
+						tone={mode === 'permanent' ? 'danger' : undefined}
 						onclick={() => (mode = 'permanent')}
 						data-testid="cleanup-mode-permanent"
 					>
@@ -271,7 +247,7 @@
 						<Loading loading={cleanup.isCleaning} variant="busy" indicator>
 							<Button
 								{...triggerProps}
-								feedback="danger"
+								tone="danger"
 								onclick={handleConfirm}
 								disabled={cleanup.isScanning || cleanup.isCleaning}
 								data-testid="cleanup-confirm"

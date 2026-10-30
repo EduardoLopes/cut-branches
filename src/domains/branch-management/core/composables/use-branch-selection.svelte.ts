@@ -8,7 +8,6 @@
 import { getSearchBranchesStore } from '$domains/branch-management/core/composables/search-branches.svelte';
 import { createSetBranchSelectionAllMutation } from '$domains/branch-management/infrastructure/mutations/create-set-branch-selection-all-mutation';
 import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
-import { calculateSelectionState } from '$domains/branch-management/utils/calculate-selection-state';
 import { filterSelectableBranches } from '$domains/branch-management/utils/filter-selectable-branches';
 import {
 	formatSearchInfoText,
@@ -61,10 +60,9 @@ export function useBranchSelection({ repository, branchContext }: UseBranchSelec
 	// that query is repository-wide, while `selectibleCount` has already dropped
 	// the current branch, locked branches and anything the search filtered out.
 	// Comparing the two directly made the pair incoherent whenever a search was
-	// active — "5 branches are selected / 2 branches were found" — and drove
-	// `calculateSelectionState` to report neither indeterminate nor all-selected
-	// (5 < 2 is false), so the header checkbox read as empty with five branches
-	// selected. Both numbers now describe the same set.
+	// active — "5 branches are selected / 2 branches were found" — and the bulk
+	// bar's "Select all N" would offer to select fewer than were selected. Both
+	// numbers now describe the same set.
 	const selectedCount = $derived.by(() => {
 		// Built fresh inside the derivation and never mutated afterwards — the
 		// reactivity comes from the derivation re-running, not from the Set.
@@ -75,15 +73,6 @@ export function useBranchSelection({ repository, branchContext }: UseBranchSelec
 		return branches.filter((branch) => selectedNames.has(branch.getName())).length;
 	});
 
-	const selectionState = $derived(
-		calculateSelectionState({
-			selectedCount,
-			selectibleCount
-		})
-	);
-
-	const isIndeterminate = $derived(selectionState.isIndeterminate);
-	const isAllSelected = $derived(selectionState.isAllSelected);
 	const hasSearchQuery = $derived((search?.state?.length ?? 0) > 0);
 
 	// Computed text for search info display
@@ -105,27 +94,30 @@ export function useBranchSelection({ repository, branchContext }: UseBranchSelec
 		})
 	);
 
-	async function handleSelectAll() {
+	/** Deselects every branch in the context, locked and current included. */
+	async function clearSelection() {
 		const repo = repository();
 		if (!repo?.id) return;
 
-		// If indeterminate or all are selected, deselect all (including locked and current)
-		if (isIndeterminate || isAllSelected) {
-			await setSelectionAllMutation.mutateAsync({
-				repoId: repo.id,
-				isSelected: false,
-				deletionStatus: branchContext(),
-				excludeLocked: false,
-				excludeCurrent: false
-			});
-		} else {
-			// Select all selectable branches (defaults: excludeLocked=true, excludeCurrent=true)
-			await setSelectionAllMutation.mutateAsync({
-				repoId: repo.id,
-				isSelected: true,
-				deletionStatus: branchContext()
-			});
-		}
+		await setSelectionAllMutation.mutateAsync({
+			repoId: repo.id,
+			isSelected: false,
+			deletionStatus: branchContext(),
+			excludeLocked: false,
+			excludeCurrent: false
+		});
+	}
+
+	/** Selects every selectable branch (defaults: excludeLocked=true, excludeCurrent=true). */
+	async function selectAll() {
+		const repo = repository();
+		if (!repo?.id) return;
+
+		await setSelectionAllMutation.mutateAsync({
+			repoId: repo.id,
+			isSelected: true,
+			deletionStatus: branchContext()
+		});
 	}
 
 	return {
@@ -147,12 +139,6 @@ export function useBranchSelection({ repository, branchContext }: UseBranchSelec
 		get selectedCount() {
 			return selectedCount;
 		},
-		get isIndeterminate() {
-			return isIndeterminate;
-		},
-		get isAllSelected() {
-			return isAllSelected;
-		},
 		get hasSearchQuery() {
 			return hasSearchQuery;
 		},
@@ -162,8 +148,11 @@ export function useBranchSelection({ repository, branchContext }: UseBranchSelec
 		get countInfoText() {
 			return countInfoText;
 		},
-		get handleSelectAll() {
-			return handleSelectAll;
+		get clearSelection() {
+			return clearSelection;
+		},
+		get selectAll() {
+			return selectAll;
 		}
 	};
 }

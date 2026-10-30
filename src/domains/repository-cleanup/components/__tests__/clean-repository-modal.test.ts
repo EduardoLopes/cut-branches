@@ -113,11 +113,11 @@ describe('CleanRepositoryModal', () => {
 
 		await vi.waitFor(() => expect(screen.getByTestId('cleanup-target').elements()).toHaveLength(2));
 		expect(screen.getByTestId('cleanup-target-size').elements()).toHaveLength(2);
-		expect(
-			screen.getByTestId('cleanup-target').nth(1).element().querySelector('input')
-		).toBeChecked();
+		const rowCheckbox = (path: string) =>
+			screen.getByRole('row').filter({ hasText: path }).getByRole('checkbox');
+		await expect.element(rowCheckbox('/r1/dist')).toBeChecked();
 
-		await screen.getByTestId('cleanup-target').first().click();
+		await rowCheckbox('/r1/node_modules').click();
 		expect(h.stub.toggle).toHaveBeenCalledWith('/r1/node_modules');
 	});
 

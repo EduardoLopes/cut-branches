@@ -318,7 +318,7 @@
 			data-testid="canvas-node-toggle"
 			onclick={() => onToggle(file.path)}
 		>
-			<Badge size="xs" emphasis="secondary" feedback={STATUS_FEEDBACK[file.status]}>
+			<Badge size="xs" emphasis="secondary" tone={STATUS_FEEDBACK[file.status]}>
 				{file.status}
 			</Badge>
 			<span class={pathText}>&lrm;{file.path}</span>
@@ -327,7 +327,7 @@
 			emphasis="ghost"
 			size="xs"
 			shape="square"
-			feedback={reviewed ? 'success' : undefined}
+			tone={reviewed ? 'success' : undefined}
 			onclick={() => onToggleReviewed?.(file.path)}
 			aria-pressed={reviewed}
 			aria-label={reviewed ? `Mark ${file.path} not reviewed` : `Mark ${file.path} reviewed`}
@@ -347,7 +347,7 @@
 				emphasis="ghost"
 				size="xs"
 				shape="square"
-				feedback={explanationOpen ? 'primary' : undefined}
+				tone={explanationOpen ? 'primary' : undefined}
 				onclick={toggleExplanation}
 				aria-expanded={explanationOpen}
 				aria-label={explanationOpen ? `Hide explanation of ${file.path}` : `Explain ${file.path}`}
@@ -389,10 +389,10 @@
 	</span>
 	<span class={statsRow}>
 		{#if file.isBinary}
-			<Badge size="xs" emphasis="secondary" feedback="neutral">binary</Badge>
+			<Badge size="xs" emphasis="secondary" tone="neutral">binary</Badge>
 		{:else}
-			<Badge size="xs" emphasis="secondary" feedback="success">+{file.linesAdded}</Badge>
-			<Badge size="xs" emphasis="secondary" feedback="danger">−{file.linesRemoved}</Badge>
+			<Badge size="xs" emphasis="secondary" tone="success">+{file.linesAdded}</Badge>
+			<Badge size="xs" emphasis="secondary" tone="danger">−{file.linesRemoved}</Badge>
 		{/if}
 		{#if structure && structure.importsChanged > 0}
 			<span

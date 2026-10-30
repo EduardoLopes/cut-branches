@@ -2,8 +2,8 @@
 	import Icon from '@iconify/svelte';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
-	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
+	import GridList from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { SvelteSet } from 'svelte/reactivity';
@@ -11,6 +11,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import type { Repository } from '$infrastructure/bindings';
 	import { createGetRepositoryListQuery } from '$infrastructure/queries/create-get-repository-list-query';
 	import { resolveRepositoryPath } from '$lib/repository-route';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
@@ -18,7 +19,6 @@
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ListFilter from '$ui/patterns/list-filter.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
-	import SelectionRow from '$ui/patterns/selection-row.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
 	import { css } from '@pindoba/styled-system/css';
@@ -59,14 +59,6 @@
 			hintOpen = false;
 		}
 	});
-	// Select-all reflects the currently visible (filtered) rows.
-	const allSelected = $derived(
-		filteredRepositories.length > 0 &&
-			filteredRepositories.every((repository) => selected.has(repository.id))
-	);
-	const someSelected = $derived(
-		filteredRepositories.some((repository) => selected.has(repository.id)) && !allSelected
-	);
 
 	const removeBatch = useRemoveRepositoryBatch({
 		onComplete: ({ removedIds, failedIds }) => {
@@ -108,25 +100,12 @@
 		hintOpen = false;
 	}
 
-	function toggle(id: string) {
-		if (selected.has(id)) {
-			selected.delete(id);
-		} else {
-			selected.add(id);
-		}
-	}
+	// GridList adopts a new `value` by identity, so hand it a fresh Set.
+	const selectedIds = $derived(new Set(selected));
 
-	function toggleAll() {
-		// Decide once up front: reading the reactive `allSelected` inside the loop
-		// would flip mid-iteration as we mutate `selected`, inverting the action.
-		const shouldSelectAll = !allSelected;
-		for (const repository of filteredRepositories) {
-			if (shouldSelectAll) {
-				selected.add(repository.id);
-			} else {
-				selected.delete(repository.id);
-			}
-		}
+	function setSelection(next: Set<string>) {
+		selected.clear();
+		for (const id of next) selected.add(id);
 	}
 
 	function handleRemove() {
@@ -147,6 +126,9 @@
 		open = false;
 	}
 
+	const nameClass = css({ fontSize: 'sm', fontWeight: 'medium', whiteSpace: 'nowrap' });
+	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
+
 	function handleOpenChange(next: boolean) {
 		if (!next) {
 			reset();
@@ -158,7 +140,7 @@
 <div use:portal>
 	<Dialog
 		{open}
-		onChange={handleOpenChange}
+		onOpenChange={handleOpenChange}
 		title="Manage repositories"
 		aria-label="Manage repositories"
 		data-testid="manage-repositories-modal"
@@ -220,7 +202,7 @@
 						})}
 						data-testid="manage-empty"
 					>
-						<Stamp shape="circle" size="lg" emphasis="secondary" feedback="neutral">
+						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
 							<Icon icon="lucide:folder-git-2" width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No repositories to manage.</span>
@@ -239,74 +221,59 @@
 						})}
 						data-testid="manage-no-matches"
 					>
-						<Stamp shape="circle" size="lg" emphasis="secondary" feedback="neutral">
+						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
 							<Icon icon="lucide:search-x" width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No repositories match your search.</span>
 					</div>
 				{:else}
-					<!-- Select-all rides in the well's header, so the control and the rows
-					     it acts on read as one panel. -->
-					{#snippet listHeader()}
-						<Checkbox
-							id="manage-select-all"
-							checked={allSelected}
-							indeterminate={someSelected}
-							onchange={toggleAll}
-							data-testid="manage-select-all"
-						>
-							Select all
-						</Checkbox>
-						<span
-							class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}
-							data-testid="manage-selected-count"
-						>
-							{selectedCount} of {repositories.length} selected
-						</span>
-					{/snippet}
-
+					<!-- The list's own sticky header carries select-all (it covers the
+					     rows the filter leaves, and keeps ticks on hidden ones). The
+					     well's scroller has no top padding, so the header pins flush. -->
 					<ScrollWell
 						class={css({ flex: '1', minHeight: '0' })}
-						header={listHeader}
+						scrollerClass={css({ paddingTop: '0' })}
 						testId="manage-list"
 					>
-						{#each filteredRepositories as repository (repository.id)}
-							{@const isSelected = selected.has(repository.id)}
-							<!-- Danger ladder: selecting here queues a removal. -->
-							<SelectionRow
-								feedback="danger"
-								checked={isSelected}
-								onchange={() => toggle(repository.id)}
-								ariaLabel={repository.name}
-								testId="manage-item"
-							>
-								<span
-									class={css({
-										display: 'flex',
-										alignItems: 'center',
-										gap: 'md',
-										minWidth: '0'
-									})}
-								>
-									<span class={css({ fontSize: 'sm', fontWeight: 'medium', flexShrink: '0' })}>
-										{repository.name}
-									</span>
+						<GridList
+							label="Repositories"
+							items={filteredRepositories}
+							getId={(repository: Repository) => repository.id}
+							rowName={(repository: Repository) => repository.name}
+							selectable
+							header
+							value={selectedIds}
+							onValueChange={setSelection}
+							tone="danger"
+							look="cards"
+							rowBackground="surface.peak"
+							columns={[
+								{ id: 'name', track: 'auto', header: 'Repository' },
+								{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
+								{ id: 'branches', track: 'auto', header: 'Branches' }
+							]}
+						>
+							{#snippet row(repository, { cell })}
+								<span {...cell('name', { class: nameClass })} data-testid="manage-item">
+									{repository.name}
+								</span>
+								<span {...cell('path')}>
 									<TruncatedPath
 										path={repository.path}
 										highlight={repository.name}
 										align="end"
-										class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}
+										class={pathClass}
 										data-testid="manage-item-path"
 									/>
 								</span>
-								{#snippet trailing()}
+								<span {...cell('branches')}>
 									<Badge size="sm" emphasis="secondary">
 										{repository.branchesCount}
 										{repository.branchesCount === 1 ? 'branch' : 'branches'}
 									</Badge>
-								{/snippet}
-							</SelectionRow>
-						{/each}
+								</span>
+							{/snippet}
+						</GridList>
 					</ScrollWell>
 				{/if}
 			</div>
@@ -322,7 +289,7 @@
 						<Loading loading={removeBatch.isPending} variant="busy" indicator>
 							<Button
 								{...triggerProps}
-								feedback="danger"
+								tone="danger"
 								onclick={handleRemove}
 								disabled={removeBatch.isPending}
 								data-testid="manage-remove-selected"

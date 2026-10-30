@@ -23,5 +23,5 @@
 			<span data-testid="time-remaining">Estimated time remaining: {estimatedTimeRemaining}</span>
 		{/if}
 	</div>
-	<Progress value={progress} max={100} feedback="primary" data-testid="progress-bar" />
+	<Progress value={progress} max={100} tone="primary" data-testid="progress-bar" />
 </div>

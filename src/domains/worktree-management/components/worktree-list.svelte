@@ -1,13 +1,14 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
-	import Checkbox from '@pindoba/svelte-checkbox';
+	import GridList from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { type Worktree } from '../core/models/worktree';
-	import WorktreeRow from './worktree-row.svelte';
 	import EmptyState from '$ui/core/empty-state.svelte';
+	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -15,12 +16,17 @@
 		worktrees: Worktree[];
 		isLoading?: boolean;
 		busy?: boolean;
-		/** Whether to show selection checkboxes for linked worktrees. */
+		/** Whether rows carry selection checkboxes (the list's own). */
 		allowSelection?: boolean;
-		isSelected?: (name: string) => boolean;
-		onToggleSelect?: (worktree: Worktree) => void;
+		/** The selected worktree names. */
+		selected?: ReadonlySet<string>;
+		/** The list changed the selection (a checkbox, x/Space, a Shift range, ⌘A, Esc). */
+		onSelectionChange?: (names: Set<string>) => void;
 		onLock: (worktree: Worktree) => void;
 		onUnlock: (worktree: Worktree) => void;
+		/** Bindable: the list's root, e.g. for a bulk bar's `returnFocus` via
+		 *  `gridListFocusTarget`. */
+		element?: HTMLDivElement | null;
 	}
 
 	let {
@@ -28,20 +34,57 @@
 		isLoading = false,
 		busy = false,
 		allowSelection = false,
-		isSelected = () => false,
-		onToggleSelect = () => {},
+		selected = new Set<string>(),
+		onSelectionChange = () => {},
 		onLock,
-		onUnlock
+		onUnlock,
+		element = $bindable()
 	}: Props = $props();
+
+	// The main worktree can't be removed and a locked one is protected until
+	// unlocked: both keep their row (and the lock control) but never join a
+	// selection — not by click, range, ⌘A or the toolbar's select-all.
+	const disabledIds = $derived(
+		new Set(worktrees.filter((w) => w.isMain() || w.isLocked()).map((w) => w.getName()))
+	);
+	// A fresh Set per change: GridList adopts a new `value` by identity.
+	const value = $derived(new Set(selected));
+
+	const scrollPortClass = css({
+		flex: '1',
+		minHeight: '0',
+		overflowY: 'auto',
+		overflowX: 'hidden',
+		paddingX: 'md',
+		// Room for the last row to scroll out from under the well's bulk bar.
+		paddingBottom: 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
+	});
+
+	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
+	const nameCellClass = css({ display: 'grid', gap: '3xs', minWidth: '0' });
+	const lineClass = css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' });
+	const nameClass = css({ fontWeight: 'semibold', truncate: true });
+	const branchClass = css({ fontSize: 'sm', color: 'neutral.text.muted', truncate: true });
+	const shaClass = css({
+		flexShrink: '0',
+		fontSize: 'xs',
+		fontFamily: 'mono',
+		color: 'neutral.text.muted'
+	});
+	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
+	const actionsCellClass = css({ justifyContent: 'flex-end' });
 </script>
 
-<!-- Surface and inset come from the enclosing PageWell. -->
+<!-- Surface comes from the enclosing PageWell, which is unpadded for this view.
+     The list is its own scroll port (see branch-list): only the top inset sits
+     outside it, so the sticky header pins to the list's top edge. -->
 <div
 	class={css({
 		display: 'flex',
 		flexDirection: 'column',
 		flex: 1,
-		minHeight: '0'
+		minHeight: '0',
+		paddingTop: 'md'
 	})}
 	data-testid="worktree-list"
 >
@@ -68,87 +111,134 @@
 			testId="worktree-list-empty"
 		/>
 	{:else}
-		<div
-			role="list"
-			class={css({
-				display: 'flex',
-				flexDirection: 'column',
-				gap: 'md',
-				width: 'full'
-			})}
+		<!-- The sticky header carries select-all (⌘A does the same from a
+		     focused row). Narrower than 640px the path drops and the row keeps
+		     its two lines. -->
+		<GridList
+			bind:element
+			class={scrollPortClass}
+			label="Worktrees"
+			items={worktrees}
+			getId={(worktree: Worktree) => worktree.getName()}
+			rowName={(worktree: Worktree) => worktree.getName()}
+			selectable={allowSelection}
+			header
+			{value}
+			{disabledIds}
+			onValueChange={onSelectionChange}
+			tone="danger"
+			look="cards"
+			rowBackground="surface.peak"
+			columns={[
+				{ id: 'name', track: 'minmax(12rem, 1fr)', header: 'Worktree' },
+				{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
+				{ id: 'actions', track: 'auto', srHeader: 'Actions' }
+			]}
+			narrow={{
+				columns: 'minmax(0, 1fr) auto',
+				cells: {
+					name: { column: '1', row: '1' },
+					actions: { column: '2', row: '1' },
+					path: { hidden: true }
+				}
+			}}
 		>
-			{#each worktrees as worktree (worktree.getName())}
-				<div
-					role="listitem"
-					class={css({
-						display: 'grid',
-						alignItems: 'start',
-						gap: 'xs'
-					})}
-					style:grid-template-columns={worktree.isMain() ? '1fr' : 'auto 1fr'}
-				>
-					<!-- Left rail: selection on top, lock/unlock below (branches convention),
-					     anchored to the top of the card and left-aligned so the checkbox and
-					     the (narrower) lock button share a left edge — matching the branches
-					     rail. The main worktree has neither control, so it drops the rail
-					     entirely and its card fills the full width. -->
-					{#if !worktree.isMain()}
-						<div
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								alignItems: 'flex-start',
-								gap: 'xs'
-							})}
-						>
-							{#if allowSelection}
-								<Checkbox
-									size="lg"
-									id={`worktree-select-${worktree.getName()}`}
-									checked={isSelected(worktree.getName())}
-									disabled={worktree.isLocked()}
-									onclick={() => onToggleSelect(worktree)}
-									data-testid={`worktree-select-${worktree.getName()}`}
-								>
-									<div class={visuallyHidden()}>{worktree.getName()}</div>
-								</Checkbox>
-							{/if}
-
-							<Tooltip
-								content={worktree.isLocked() ? 'Unlock worktree' : 'Lock worktree'}
-								placement="left"
-							>
+			{#snippet row(worktree, { cell })}
+				<div {...cell('name', { class: nameCellClass })} data-testid="worktree-row">
+					<span class={lineClass}>
+						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+							<Icon
+								icon={worktree.isMain() ? 'lucide:house' : 'lucide:trees'}
+								width="16px"
+								height="16px"
+							/>
+						</Stamp>
+						<span class={nameClass} data-testid="worktree-name">{worktree.getName()}</span>
+						{#if worktree.isMain()}
+							<Badge size="sm" emphasis="secondary" data-testid="worktree-main-badge">main</Badge>
+						{/if}
+						{#if worktree.isLocked()}
+							<Tooltip content={worktree.getLockReason() ?? 'Locked'}>
 								{#snippet children(triggerProps)}
-									<Button
-										size="xs"
-										shape="square"
-										emphasis="secondary"
-										feedback={worktree.isLocked() ? 'warning' : undefined}
-										disabled={busy}
-										class={css({ width: '24px', height: '24px' })}
-										onclick={() => (worktree.isLocked() ? onUnlock(worktree) : onLock(worktree))}
-										data-testid={worktree.isLocked() ? 'worktree-unlock' : 'worktree-lock'}
+									<Badge
 										{...triggerProps}
+										size="sm"
+										tone="warning"
+										data-testid="worktree-locked-badge"
 									>
-										<Stamp emphasis="ghost" border="none" background="transparent">
-											<Icon
-												icon={worktree.isLocked() ? 'lucide:lock' : 'lucide:lock-open'}
-												width="14px"
-												height="14px"
-											/>
-										</Stamp>
-										<span class={visuallyHidden()}>
-											{worktree.isLocked() ? 'Unlock' : 'Lock'}
-										</span>
-									</Button>
+										locked
+									</Badge>
 								{/snippet}
 							</Tooltip>
-						</div>
-					{/if}
-
-					<WorktreeRow {worktree} selected={isSelected(worktree.getName())} />
+						{/if}
+						{#if worktree.isPrunable()}
+							<Badge size="sm" tone="danger" data-testid="worktree-prunable-badge">missing</Badge>
+						{/if}
+					</span>
+					<span class={lineClass}>
+						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+							<Icon icon="lucide:git-branch" width="14px" height="14px" />
+						</Stamp>
+						<span class={branchClass} data-testid="worktree-branch">
+							{worktree.getBranch() ?? 'detached'}
+						</span>
+						{#if worktree.getShortSha()}
+							<Tooltip content={`Commit sha: ${worktree.getHeadSha()}`} wrap={false}>
+								{#snippet children(triggerProps)}
+									<span {...triggerProps} class={shaClass}>{worktree.getShortSha()}</span>
+								{/snippet}
+							</Tooltip>
+						{/if}
+					</span>
 				</div>
-			{/each}
-		</div>
+
+				<!-- The tail of the path identifies the worktree, so the folder is
+				     highlighted and pinned to the column's end on every row. -->
+				<span {...cell('path')}>
+					<TruncatedPath
+						path={worktree.getPath()}
+						highlight={worktree.getName()}
+						align="end"
+						class={pathClass}
+						title={worktree.getPath()}
+						data-testid="worktree-path"
+					/>
+				</span>
+
+				<span {...cell('actions', { class: actionsCellClass })}>
+					<!-- The main worktree has no lock to toggle. -->
+					{#if !worktree.isMain()}
+						<Tooltip
+							content={worktree.isLocked() ? 'Unlock worktree' : 'Lock worktree'}
+							placement="left"
+						>
+							{#snippet children(triggerProps)}
+								<Button
+									size="xs"
+									shape="square"
+									emphasis="ghost"
+									tone={worktree.isLocked() ? 'warning' : undefined}
+									disabled={busy}
+									onclick={() => (worktree.isLocked() ? onUnlock(worktree) : onLock(worktree))}
+									data-testid={worktree.isLocked() ? 'worktree-unlock' : 'worktree-lock'}
+									{...triggerProps}
+								>
+									<Stamp emphasis="ghost" border="none" background="transparent">
+										<Icon
+											icon={worktree.isLocked() ? 'lucide:lock' : 'lucide:lock-open'}
+											width="14px"
+											height="14px"
+										/>
+									</Stamp>
+									<span class={visuallyHidden()}>
+										{worktree.isLocked() ? 'Unlock' : 'Lock'}
+									</span>
+								</Button>
+							{/snippet}
+						</Tooltip>
+					{/if}
+				</span>
+			{/snippet}
+		</GridList>
 	{/if}
 </div>

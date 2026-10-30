@@ -19,3 +19,9 @@ function reactiveHolder<T>(initial: T) {
 }
 
 export const branchesHolder = reactiveHolder<Branch[]>([]);
+
+/** The search term the list filters by (its search store's `state`). */
+export const searchHolder = reactiveHolder<string>('');
+
+/** The route path, which decides the active vs. restore view. */
+export const pathHolder = reactiveHolder<string>('/repos/repo1');

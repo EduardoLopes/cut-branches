@@ -44,7 +44,7 @@
 		shape="square"
 		radius="inner"
 		emphasis="primary"
-		feedback="primary"
+		tone="primary"
 		border="none"
 		aria-hidden="true"
 		passThrough={{

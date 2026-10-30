@@ -330,8 +330,11 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Find the delete button in the bulk actions and click it
-		const deleteButton = screen.getByTestId('open-dialog-button');
+		// The bulk bar floats in while something is selected; its Delete opens
+		// the confirmation dialog.
+		const deleteButton = screen
+			.getByRole('toolbar', { name: 'Branch actions' })
+			.getByRole('button', { name: 'Delete' });
 		await userEvent.click(deleteButton);
 
 		await tick(); // Initial tick
@@ -378,14 +381,11 @@ describe('Repository Page Integration Test', () => {
 		const searchStore = getSearchBranchesStore('test-repo-id-active');
 		expect(searchStore?.state).toBe('feature');
 
-		// Verify that the branch list is rendered
-		const branchList = screen.getByRole('list');
-		expect(branchList).toBeInTheDocument();
-
-		// Check the number of visible checkboxes after filtering
-		// Should have 1 checkbox for feature-branch (main is current and doesn't have checkbox)
-		const branchCheckboxes = screen.container.querySelectorAll('input[type="checkbox"]');
-		expect(branchCheckboxes.length).toBeGreaterThanOrEqual(1);
+		// The grid now holds only the branch the search matches.
+		const branchList = screen.getByRole('grid', { name: 'Branches' });
+		await expect.element(branchList).toBeInTheDocument();
+		const names = branchList.getByTestId('branch-name').elements();
+		expect(names.map((el) => el.textContent?.trim())).toEqual(['feature-branch']);
 	});
 
 	it('switches the current branch', async () => {
@@ -397,11 +397,11 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Wait for branches to render
-		const switchButtons = screen.getByTestId('switch-button');
-		expect(switchButtons).toBeVisible();
+		// Row actions are revealed on hover/focus; force the click past that.
+		const switchButtons = screen.getByTestId('switch-button').first();
+		await expect.element(switchButtons).toBeInTheDocument();
 
-		await userEvent.click(switchButtons);
+		await switchButtons.click({ force: true });
 
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
@@ -409,6 +409,6 @@ describe('Repository Page Integration Test', () => {
 		// The switch functionality works via mutations
 		// The notification would be shown via the mutation's onSuccess callback
 		// For now, we just verify the switch flow completes without errors
-		expect(switchButtons).toBeVisible();
+		await expect.element(switchButtons).toBeInTheDocument();
 	});
 });

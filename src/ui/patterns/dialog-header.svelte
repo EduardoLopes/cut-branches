@@ -27,7 +27,7 @@
 		shape="square"
 		size="sm"
 		emphasis="secondary"
-		feedback="neutral"
+		tone="neutral"
 		background="surface.base"
 		border="none"
 		shadow="sm"

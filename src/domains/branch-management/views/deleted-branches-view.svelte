@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BranchBulkBar from '../components/branch-bulk-bar.svelte';
 	import BranchContextFilter from '../components/branch-context-filter.svelte';
 	import { useDeletedBranchesView } from '../core/composables/use-deleted-branches-view.svelte';
 	import BranchListEmptyState from '$domains/branch-management/components/branch-list-empty-state.svelte';
@@ -17,6 +18,9 @@
 	const { id }: Props = $props();
 
 	const viewState = useDeletedBranchesView({ getId: () => id });
+
+	let restoreOpen = $state(false);
+	let branchListElement = $state<HTMLDivElement | null>();
 </script>
 
 <!-- `padded={false}`: see the note in active-branches-view — the inset belongs
@@ -37,13 +41,17 @@
 					placeholder="Search branches"
 					data-testid="search-input"
 				/>
-				{#if viewState.currentRepoData}
-					<div data-testid="restore-branch-modal">
-						<RestoreDeletedBranchModal repoId={viewState.currentRepoData.id} />
-					</div>
-				{/if}
 			{/snippet}
 		</PageToolbar>
+	{/snippet}
+
+	{#snippet overlay()}
+		<BranchBulkBar
+			repository={viewState.currentRepoData}
+			branchContext="deleted"
+			listElement={branchListElement}
+			onAction={() => (restoreOpen = true)}
+		/>
 	{/snippet}
 
 	<!-- Error and empty are mutually exclusive, same as the active view — before,
@@ -67,14 +75,18 @@
 	{#key `${id}-deleted`}
 		{#if !viewState.isError && !viewState.searchNoResultsFound && viewState.branches.length > 0}
 			<BranchList
+				bind:element={branchListElement}
 				repositoryID={id}
 				repositoryPath={viewState.path}
 				allowLocking={false}
 				allowSelection={true}
 				allowSetCurrent={false}
 				showAlerts={false}
-				variant="inverted"
 			/>
 		{/if}
 	{/key}
 </PageWell>
+
+{#if viewState.currentRepoData}
+	<RestoreDeletedBranchModal repoId={viewState.currentRepoData.id} bind:open={restoreOpen} />
+{/if}

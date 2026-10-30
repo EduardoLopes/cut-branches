@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BranchBulkBar from '../components/branch-bulk-bar.svelte';
 	import BranchContextFilter from '../components/branch-context-filter.svelte';
 	import DeleteBranchModal from '../components/delete-branch-modal.svelte';
 	import { useActiveBranchesView } from '../core/composables/use-active-branches-view.svelte';
@@ -19,6 +20,9 @@
 
 	const viewState = useActiveBranchesView({ getId: () => id });
 	usePruneOrphanedSearchKeys();
+
+	let deleteOpen = $state(false);
+	let branchListElement = $state<HTMLDivElement | null>();
 </script>
 
 <!-- `padded={false}`: the branch list scrolls internally, so the well's inset has
@@ -41,13 +45,17 @@
 					placeholder="Search branches"
 					data-testid="search-input"
 				/>
-				{#if viewState.currentRepoData}
-					<div data-testid="delete-branch-modal">
-						<DeleteBranchModal id={viewState.currentRepoData.name} />
-					</div>
-				{/if}
 			{/snippet}
 		</PageToolbar>
+	{/snippet}
+
+	{#snippet overlay()}
+		<BranchBulkBar
+			repository={viewState.currentRepoData}
+			branchContext="active"
+			listElement={branchListElement}
+			onAction={() => (deleteOpen = true)}
+		/>
 	{/snippet}
 
 	{#if viewState.isError && viewState.error}
@@ -77,13 +85,17 @@
 	{#key `${id}-current`}
 		{#if !viewState.isError && !viewState.searchNoResultsFound && viewState.branches.length > 0}
 			<BranchList
+				bind:element={branchListElement}
 				repositoryID={id}
 				repositoryPath={viewState.path}
 				allowLocking={true}
 				allowSelection={true}
 				allowSetCurrent={true}
-				variant="default"
 			/>
 		{/if}
 	{/key}
 </PageWell>
+
+{#if viewState.currentRepoData}
+	<DeleteBranchModal id={viewState.currentRepoData.name} bind:open={deleteOpen} />
+{/if}

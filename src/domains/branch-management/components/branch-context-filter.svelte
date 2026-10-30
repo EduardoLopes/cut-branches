@@ -90,7 +90,7 @@
 				</Stamp>
 			{/snippet}
 			{#snippet trailing()}
-				<Badge size="sm" emphasis="adaptive" feedback="danger" data-testid="filter-deleted-count">
+				<Badge size="sm" emphasis="adaptive" tone="danger" data-testid="filter-deleted-count">
 					{deletedCount}
 				</Badge>
 			{/snippet}

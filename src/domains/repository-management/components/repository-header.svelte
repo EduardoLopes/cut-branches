@@ -93,7 +93,7 @@
 			type: 'action',
 			id: 'remove',
 			label: 'Remove',
-			feedback: 'danger',
+			tone: 'danger',
 			leading: removeIcon,
 			onSelect: () => (removeModalOpen = true)
 		}
@@ -111,7 +111,7 @@
 	</Stamp>
 {/snippet}
 {#snippet removeIcon()}
-	<Stamp size="sm" emphasis="ghost" feedback="danger" border="none" background="transparent">
+	<Stamp size="sm" emphasis="ghost" tone="danger" border="none" background="transparent">
 		<Icon icon="lucide:circle-x" width="14px" height="14px" />
 	</Stamp>
 {/snippet}
@@ -140,7 +140,7 @@
 		{/key}
 
 		{#if isWorktree}
-			<Badge size="sm" feedback="warning" data-testid="repository-worktree-badge">
+			<Badge size="sm" tone="warning" data-testid="repository-worktree-badge">
 				{#snippet leading()}
 					<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
 				{/snippet}

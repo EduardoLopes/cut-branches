@@ -43,6 +43,12 @@ export function useWorktreeSelection({ getWorktrees }: UseWorktreeSelectionProps
 		}
 	}
 
+	/** Replaces the selection, e.g. with what a GridList reports. */
+	function set(names: Iterable<string>) {
+		selected.clear();
+		for (const name of names) selected.add(name);
+	}
+
 	function clear() {
 		selected.clear();
 	}
@@ -68,6 +74,7 @@ export function useWorktreeSelection({ getWorktrees }: UseWorktreeSelectionProps
 		},
 		toggle,
 		setAll,
+		set,
 		clear
 	};
 }

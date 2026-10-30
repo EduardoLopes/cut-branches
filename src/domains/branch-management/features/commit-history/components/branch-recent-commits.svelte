@@ -77,7 +77,7 @@
 	{#if query.isPending}
 		<span class={stateText} data-testid="recent-commits-loading">Loading commits…</span>
 	{:else if query.isError}
-		<Alert feedback="danger" emphasis="secondary" data-testid="recent-commits-error">
+		<Alert tone="danger" emphasis="secondary" data-testid="recent-commits-error">
 			{query.error.message}
 		</Alert>
 	{:else if earlierCommits.length === 0}

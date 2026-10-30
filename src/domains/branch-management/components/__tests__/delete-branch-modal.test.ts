@@ -170,17 +170,6 @@ vi.mock('$infrastructure/queries/create-get-repository-list-query', () => ({
 // Variable to track selected branches for mocking
 let mockSelectedBranches: string[] = ['feature-1'];
 
-// When true the selection query behaves as still-loading (`data` undefined).
-let mockSelectionLoading = false;
-
-// The validation hint renders inside a native <dialog> that is always present;
-// its visibility is the dialog's own open state. Find the open one.
-function openHint(): HTMLDialogElement | undefined {
-	return [...document.querySelectorAll('dialog[data-popover]')].find(
-		(el) => (el as HTMLDialogElement).open
-	) as HTMLDialogElement | undefined;
-}
-
 // Mock get branches query with dynamic filtering based on filters
 vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', () => ({
 	createGetBranchesQuery: vi.fn((filtersFactory) => {
@@ -190,7 +179,6 @@ vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-q
 		if (filters?.filters?.selectionStatus === 'selected') {
 			return {
 				get data() {
-					if (mockSelectionLoading) return undefined;
 					const selectedBranchesData = mockBranches.filter((b) =>
 						mockSelectedBranches.includes(b.getName())
 					);
@@ -216,7 +204,6 @@ describe('DeleteBranchModal Component', () => {
 	beforeEach(() => {
 		// Reset selected branches to default
 		mockSelectedBranches = ['feature-1'];
-		mockSelectionLoading = false;
 
 		// Reset mocks
 		vi.clearAllMocks();
@@ -225,64 +212,27 @@ describe('DeleteBranchModal Component', () => {
 	describe('Rendering', () => {
 		test('renders correctly with default state', async () => {
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
 			expect(screen.getByText('Delete branches')).toBeInTheDocument();
 		});
 
-		test('keeps the trigger enabled and shows a validation hint when no branches selected', async () => {
-			// Set no selected branches
-			mockSelectedBranches = [];
+		test('stays closed, with no list mounted, until something opens it', async () => {
+			const screen = await renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
 
-			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
-			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			// The button is never disabled — validation is communicated on click.
-			expect(button).not.toBeDisabled();
-
-			await button.click();
-			await tick();
-
-			await vi.waitFor(() => expect(openHint()).toBeTruthy());
-			expect(openHint()?.textContent).toContain('Select at least one branch to delete.');
-		});
-
-		test('shows the validation hint while the selection query is still loading', async () => {
-			// `data` is undefined until the query settles — clicking used to open an
-			// empty dialog instead of hinting.
-			mockSelectionLoading = true;
-
-			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
-			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
-			await tick();
-
-			await vi.waitFor(() => expect(openHint()).toBeTruthy());
-			expect(openHint()?.textContent).toContain('Select at least one branch to delete.');
-		});
-
-		test('renders delete button in enabled state when branches are selected', async () => {
-			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
-			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			expect(button).not.toBeDisabled();
+			const dialog = screen.getByTestId('delete-branch-dialog').element() as HTMLDialogElement;
+			expect(dialog.open).toBe(false);
+			expect(screen.getByTestId('delete-branch-list').elements()).toHaveLength(0);
 		});
 	});
 
 	describe('Modal Interaction', () => {
-		test('opens modal on button click', async () => {
+		test('opens when the open prop is set', async () => {
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			await vi.waitFor(() => {
 				const dialogQuestion = screen.getByTestId('delete-branch-dialog-question');
@@ -298,8 +248,10 @@ describe('DeleteBranchModal Component', () => {
 				isPending: true
 			} as unknown as ReturnType<typeof createDeleteBranchesMutation>);
 
-			const screen = await renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
-			await screen.getByTestId('open-dialog-button').click();
+			const screen = await renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo',
+				open: true
+			});
 
 			await vi.waitFor(() => expect(screen.getByTestId('delete-button')).toBeDisabled());
 		});
@@ -308,14 +260,12 @@ describe('DeleteBranchModal Component', () => {
 		// The modal state change doesn't seem to properly propagate in the test environment
 		test('closes modal on cancel button click', async () => {
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
 
 			const dialog = screen.getByTestId('delete-branch-dialog');
 			const dialogElement = dialog.element() as HTMLDialogElement;
-
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			// Wait for multiple ticks to ensure the dialog opens
 			await tick();
@@ -349,10 +299,9 @@ describe('DeleteBranchModal Component', () => {
 			const deleteMutate = createDeleteBranchesMutation();
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			// Wait for the dialog to open and render
 			await tick();
@@ -393,10 +342,9 @@ describe('DeleteBranchModal Component', () => {
 			const deleteMutate = createDeleteBranchesMutation();
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			const deleteButton = screen.getByTestId('delete-button');
 			await deleteButton.click();
@@ -430,10 +378,9 @@ describe('DeleteBranchModal Component', () => {
 			mockMutate.mockClear();
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			const deleteButton = screen.getByTestId('delete-button');
 			await deleteButton.click();
@@ -462,11 +409,9 @@ describe('DeleteBranchModal Component', () => {
 			(createDeleteBranchesMutation as Mock).mockClear();
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			const deleteButton = screen.getByTestId('delete-button');
 			await deleteButton.click();
@@ -513,11 +458,9 @@ describe('DeleteBranchModal Component', () => {
 			(createDeleteBranchesMutation as Mock).mockClear();
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			const deleteButton = screen.getByTestId('delete-button');
 			await deleteButton.click();
@@ -571,28 +514,34 @@ describe('DeleteBranchModal Component', () => {
 		// (computed by the Rust sync), not from a later metrics fetch — otherwise
 		// rows would grow after mount and the list would shift mid-scroll.
 		test('shows the not-merged alert straight from the branch listing', async () => {
-			const screen = await renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
-			await screen.getByTestId('open-dialog-button').click();
+			const screen = await renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo',
+				open: true
+			});
 
-			await expect.element(screen.getByText(/not fully merged/)).toBeInTheDocument();
+			await expect.element(screen.getByTestId('branch-alert-not-merged')).toBeInTheDocument();
 		});
 
 		test('shows no merge alert for a merged branch', async () => {
 			mockSelectedBranches = ['merged-feature'];
-			const screen = await renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
-			await screen.getByTestId('open-dialog-button').click();
+			const screen = await renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo',
+				open: true
+			});
 
 			await expect.element(screen.getByText('merged-feature')).toBeInTheDocument();
-			expect(screen.getByText(/not fully merged/).elements()).toHaveLength(0);
+			expect(screen.getByTestId('branch-alert-not-merged').elements()).toHaveLength(0);
 		});
 
 		test('shows no merge alert for the current branch', async () => {
 			mockSelectedBranches = ['main'];
-			const screen = await renderWithTestWrapper(DeleteBranchModal, { id: 'test-repo' });
-			await screen.getByTestId('open-dialog-button').click();
+			const screen = await renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo',
+				open: true
+			});
 
 			await expect.element(screen.getByText('main')).toBeInTheDocument();
-			expect(screen.getByText(/not fully merged/).elements()).toHaveLength(0);
+			expect(screen.getByTestId('branch-alert-not-merged').elements()).toHaveLength(0);
 		});
 	});
 
@@ -602,11 +551,9 @@ describe('DeleteBranchModal Component', () => {
 			mockSelectedBranches = ['feature-1', 'main'];
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			// The current branch (main) should appear first in the list
 			// This tests the sort function that puts current: true branches first
@@ -618,11 +565,9 @@ describe('DeleteBranchModal Component', () => {
 			const deleteMutate = createDeleteBranchesMutation();
 
 			const screen = await renderWithTestWrapper(DeleteBranchModal, {
-				id: 'test-repo'
+				id: 'test-repo',
+				open: true
 			});
-
-			const button = screen.getByTestId('open-dialog-button');
-			await button.click();
 
 			const deleteButton = screen.getByTestId('delete-button');
 			await deleteButton.click();

@@ -71,7 +71,10 @@ export default ts.config(
 			'import/no-unresolved': [
 				'error',
 				{
-					ignore: ['\\$app.*$', '\\$service-worker.*$']
+					// `@lucide/svelte/icons/*`: its exports map points `types` at
+					// `*.svelte.d.ts` while the files ship as `*.d.ts`; svelte-check
+					// falls back to the sibling, the eslint TS resolver doesn't.
+					ignore: ['\\$app.*$', '\\$service-worker.*$', '^@lucide/svelte/icons/']
 				}
 			],
 			'import/no-duplicates': 'warn',

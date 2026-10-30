@@ -23,7 +23,7 @@
 		shape="square"
 		size="md"
 		emphasis={enabled ? 'secondary' : 'ghost'}
-		feedback={enabled ? 'primary' : 'neutral'}
+		tone={enabled ? 'primary' : 'neutral'}
 	>
 		<Icon icon={flag.icon!} width="18px" height="18px" />
 	</Stamp>

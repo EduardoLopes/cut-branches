@@ -42,10 +42,10 @@ describe('DeleteWorktreesModal', () => {
 		});
 		await tick();
 
-		const items = screen.getByTestId('delete-worktrees-item');
-		expect(items.elements()).toHaveLength(2);
-		await vi.waitFor(() => expect(items.first()).toMatchTextContent('/repos/a'));
-		expect(items.nth(1)).toMatchTextContent('b');
+		const rows = screen.getByRole('grid', { name: 'Worktrees to delete' }).getByRole('row');
+		expect(rows.elements()).toHaveLength(2);
+		await vi.waitFor(() => expect(rows.first()).toMatchTextContent('/repos/a'));
+		expect(screen.getByTestId('delete-worktrees-item').nth(1)).toMatchTextContent('b');
 	});
 
 	it('offers force when a selected worktree is locked and passes it through', async () => {

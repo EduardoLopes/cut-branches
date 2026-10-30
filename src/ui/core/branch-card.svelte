@@ -288,7 +288,7 @@
 			<span class={css({ flexShrink: '0', display: 'inline-flex' })}>
 				<Badge
 					size={badgeSize}
-					feedback="primary"
+					tone="primary"
 					emphasis="secondary"
 					data-testid="branch-current-badge"
 				>
@@ -326,7 +326,7 @@
 			<Badge
 				size={badgeSize}
 				emphasis="secondary"
-				{feedback}
+				tone={feedback}
 				data-testid="branch-upstream"
 				passThrough={truncatingBadgePassThrough}
 			>
@@ -343,7 +343,7 @@
 			<Badge
 				size={badgeSize}
 				emphasis="secondary"
-				feedback="neutral"
+				tone="neutral"
 				title="No remote tracking branch configured"
 				data-testid="branch-no-upstream"
 				passThrough={truncatingBadgePassThrough}
@@ -369,18 +369,13 @@
 				title={`${added} line${added === 1 ? '' : 's'} added, ${removed} line${removed === 1 ? '' : 's'} removed vs current branch`}
 				data-testid="branch-diff-stats"
 			>
-				<Badge
-					size={badgeSize}
-					emphasis="secondary"
-					feedback="success"
-					data-testid="branch-diff-added"
-				>
+				<Badge size={badgeSize} emphasis="secondary" tone="success" data-testid="branch-diff-added">
 					+{added}
 				</Badge>
 				<Badge
 					size={badgeSize}
 					emphasis="secondary"
-					feedback="danger"
+					tone="danger"
 					data-testid="branch-diff-removed"
 				>
 					−{removed}
@@ -393,7 +388,7 @@
 			<Badge
 				size={badgeSize}
 				emphasis="secondary"
-				feedback="neutral"
+				tone="neutral"
 				title="No line changes vs current branch"
 				data-testid="branch-diff-none"
 			>
@@ -409,8 +404,8 @@
 				aria-busy="true"
 				data-testid="branch-diff-stats-loading"
 			>
-				<Badge size={badgeSize} emphasis="secondary" feedback="neutral">+–</Badge>
-				<Badge size={badgeSize} emphasis="secondary" feedback="neutral">−–</Badge>
+				<Badge size={badgeSize} emphasis="secondary" tone="neutral">+–</Badge>
+				<Badge size={badgeSize} emphasis="secondary" tone="neutral">−–</Badge>
 			</span>
 		{/if}
 		{#if branch.getDeletedAt()}
@@ -516,7 +511,7 @@
 			     whatever `radius`/`size` the consumer gave the card. -->
 			<Panel
 				emphasis="secondary"
-				{feedback}
+				tone={feedback}
 				background="surface.ground"
 				radius="inner"
 				padding="xs"
@@ -579,7 +574,7 @@
 							<Button
 								emphasis="ghost"
 								size="xs"
-								{feedback}
+								tone={feedback}
 								onclick={toggleRecentCommits}
 								onmouseenter={onRecentCommitsIntent}
 								onfocus={onRecentCommitsIntent}
@@ -669,7 +664,7 @@
 <Card
 	{id}
 	{title}
-	{feedback}
+	tone={feedback}
 	size={cardSize}
 	{background}
 	border={cardBorder}

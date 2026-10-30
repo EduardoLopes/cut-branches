@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@lucide/svelte':
+        specifier: ^1.65.0
+        version: 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-menu':
         specifier: alpha
         version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -631,8 +634,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@lucide/svelte@1.41.0':
-    resolution: {integrity: sha512-N5dInvHWGxNcnu3VJvbO2zOJA832Uy4he6qGwcqd8i3m8iYGlLoebp+e+X8NfncXXLnXkYvru5BnkUVdNdo1xg==}
+  '@lucide/svelte@1.65.0':
+    resolution: {integrity: sha512-VfM4Ej7JFYz33WXm/JdqtOsOqRtfca5H9eFcyfcbFthWvbOnvvCerY/YkEk0ZiAvOvqo5hpK3u+opC0zY7Caxw==}
     peerDependencies:
       svelte: ^5
 
@@ -4432,7 +4435,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@lucide/svelte@1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
+  '@lucide/svelte@1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
       svelte: 5.57.0(@typescript-eslint/types@8.69.0)
 
@@ -4983,7 +4986,7 @@ snapshots:
 
   '@pindoba/devtools@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-color-picker': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/panda-preset': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5255,7 +5258,7 @@ snapshots:
 
   '@pindoba/svelte-accordion@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-accordion': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-accordion': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5278,7 +5281,7 @@ snapshots:
 
   '@pindoba/svelte-alert@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-alert': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-alert': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5391,7 +5394,7 @@ snapshots:
 
   '@pindoba/svelte-color-picker@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-color-picker': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/svelte-affix': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
@@ -5406,7 +5409,7 @@ snapshots:
 
   '@pindoba/svelte-dialog@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-card': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/core-dialog': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5518,7 +5521,7 @@ snapshots:
 
   '@pindoba/svelte-pagination@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-pagination': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-pagination': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5602,7 +5605,7 @@ snapshots:
 
   '@pindoba/svelte-tab@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-tab': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-tab': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5619,7 +5622,7 @@ snapshots:
 
   '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-theme-mode-select': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-theme-mode-select': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5633,7 +5636,7 @@ snapshots:
 
   '@pindoba/svelte-toast@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-toast': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-alert': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5655,7 +5658,7 @@ snapshots:
   '@pindoba/svelte-tooltip@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
       '@floating-ui/dom': 1.8.0
-      '@lucide/svelte': 1.41.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/core-tooltip': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       '@pindoba/styles-tooltip': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))

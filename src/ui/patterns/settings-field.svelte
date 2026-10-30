@@ -20,7 +20,7 @@
 		as?: CardProps['as'];
 		interactive?: boolean;
 		background?: CardProps['background'];
-		feedback?: CardProps['feedback'];
+		feedback?: CardProps['tone'];
 		border?: CardProps['border'];
 		/** Corner radius. Defaults to `"inner"` so a field nested in a
 		 *  `SettingsSection` well stays concentric with it; pass a fixed tier when
@@ -67,7 +67,7 @@
 	{as}
 	{interactive}
 	{background}
-	{feedback}
+	tone={feedback}
 	{border}
 	{radius}
 	class={className}

@@ -95,7 +95,7 @@
 <TreeView
 	{items}
 	{defaultExpandedKeys}
-	{selectedKeys}
+	value={selectedKeys}
 	size="sm"
 	selectionMode="single"
 	aria-label="Changed files"

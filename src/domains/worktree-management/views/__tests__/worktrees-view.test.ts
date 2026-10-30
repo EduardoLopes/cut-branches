@@ -100,27 +100,49 @@ describe('WorktreesView', () => {
 		expect(h.actions.lock).toHaveBeenCalledWith('a');
 	});
 
-	it('bulk-deletes selected worktrees through the confirm modal', async () => {
+	it('bulk-deletes selected worktrees from the bulk bar, through the confirm modal', async () => {
 		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
-		await screen.getByTestId('worktree-select-a').click();
+		await screen.getByRole('row').filter({ hasText: '/repos/a' }).getByRole('checkbox').click();
 		await tick();
 
-		await screen.getByTestId('worktrees-delete').click();
+		const bar = screen.getByRole('toolbar', { name: 'Worktree actions' });
+		await expect.element(bar).toHaveAttribute('data-open', 'true');
+		// The test frame is narrow: the bar folds Delete into "More".
+		await bar.getByRole('button', { name: 'More' }).click();
+		await screen.getByRole('menuitem', { name: 'Delete' }).click();
 		await tick();
 
 		await screen.getByTestId('delete-worktrees-confirm').click();
 		await vi.waitFor(() => expect(h.actions.removeMany).toHaveBeenCalledWith(['a'], false));
 	});
 
-	it('shows a validation hint and does not delete when nothing is selected', async () => {
+	it('keeps the bulk bar closed while nothing is selected', async () => {
 		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
-		await screen.getByTestId('worktrees-delete').click();
+		expect(screen.getByTestId('worktrees-bulk-bar')).toHaveAttribute('data-open', 'false');
+		expect(h.actions.removeMany).not.toHaveBeenCalled();
+	});
+
+	it('the bulk bar selects every selectable worktree and clears the selection', async () => {
+		h.view = makeView([wt('main', { isMain: true }), wt('a'), wt('b')]);
+		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
-		expect(h.actions.removeMany).not.toHaveBeenCalled();
+		await screen.getByRole('row').filter({ hasText: '/repos/a' }).getByRole('checkbox').click();
+		const bar = screen.getByRole('toolbar', { name: 'Worktree actions' });
+		// Narrow frame: "Select all N" moves into "More" with the actions.
+		await bar.getByRole('button', { name: 'More' }).click();
+		await screen.getByRole('menuitem', { name: /Select all 2/ }).click();
+		await expect
+			.element(screen.getByTestId('worktrees-selection-count'))
+			.toMatchTextContent('2 of 2');
+
+		await bar.getByRole('button', { name: /Clear selection/ }).click();
+		await expect
+			.element(screen.getByTestId('worktrees-selection-count'))
+			.toMatchTextContent('0 of 2');
 	});
 });

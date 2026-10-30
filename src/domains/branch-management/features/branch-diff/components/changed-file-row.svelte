@@ -326,7 +326,7 @@
 				<Badge
 					size="xs"
 					emphasis="secondary"
-					feedback={STATUS_FEEDBACK[file.status]}
+					tone={STATUS_FEEDBACK[file.status]}
 					data-testid="changed-file-status"
 				>
 					{#snippet leading()}
@@ -369,7 +369,7 @@
 			<Badge
 				size="xs"
 				emphasis="secondary"
-				feedback="primary"
+				tone="primary"
 				title={`Imports ${structure.importsChanged} changed ${structure.importsChanged === 1 ? 'file' : 'files'}`}
 				data-testid="changed-file-imports"
 			>
@@ -383,7 +383,7 @@
 			<Badge
 				size="xs"
 				emphasis="secondary"
-				feedback="primary"
+				tone="primary"
 				title={`Imported by ${structure.importedByChanged} changed ${structure.importedByChanged === 1 ? 'file' : 'files'}`}
 				data-testid="changed-file-imported-by"
 			>
@@ -394,14 +394,14 @@
 			</Badge>
 		{/if}
 		{#if file.isBinary}
-			<Badge size="xs" emphasis="secondary" feedback="neutral" data-testid="changed-file-binary">
+			<Badge size="xs" emphasis="secondary" tone="neutral" data-testid="changed-file-binary">
 				binary
 			</Badge>
 		{:else}
-			<Badge size="xs" emphasis="secondary" feedback="success" data-testid="changed-file-added">
+			<Badge size="xs" emphasis="secondary" tone="success" data-testid="changed-file-added">
 				+{file.linesAdded}
 			</Badge>
-			<Badge size="xs" emphasis="secondary" feedback="danger" data-testid="changed-file-removed">
+			<Badge size="xs" emphasis="secondary" tone="danger" data-testid="changed-file-removed">
 				−{file.linesRemoved}
 			</Badge>
 		{/if}
@@ -411,7 +411,7 @@
 					emphasis="ghost"
 					size="xs"
 					shape="square"
-					feedback={explanationOpen ? 'primary' : undefined}
+					tone={explanationOpen ? 'primary' : undefined}
 					onclick={toggleExplanation}
 					aria-expanded={explanationOpen}
 					aria-label={explanationOpen ? `Hide explanation of ${file.path}` : `Explain ${file.path}`}
@@ -429,7 +429,7 @@
 			emphasis="ghost"
 			size="xs"
 			shape="square"
-			feedback={reviewed ? 'success' : undefined}
+			tone={reviewed ? 'success' : undefined}
 			onclick={() => onToggleReviewed?.(file.path)}
 			aria-pressed={reviewed}
 			aria-label={reviewed ? `Mark ${file.path} not reviewed` : `Mark ${file.path} reviewed`}

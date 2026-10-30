@@ -1,12 +1,11 @@
 <script lang="ts">
-	import Icon from '@iconify/svelte';
-	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Dialog from '@pindoba/svelte-dialog';
+	import GridList from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
-	import Stamp from '@pindoba/svelte-stamp';
 	import { useRestoreFlow } from '../core/composables/use-restore-flow.svelte';
-	import RestoreBranchStatusCard from './restore-branch-status-card.svelte';
+	import { type Branch } from '../core/models/branch';
+	import RestoreBranchRow from './restore-branch-row.svelte';
 	import RestoreConflictPrompt from './restore-conflict-prompt.svelte';
 	import RestoreProgressBar from './restore-progress-bar.svelte';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
@@ -14,14 +13,15 @@
 	import DialogFooter from '$ui/patterns/dialog-footer.svelte';
 	import DialogHeader from '$ui/patterns/dialog-header.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
-	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
 		repoId?: string;
+		/** Bindable visibility, opened by the branches' bulk bar. */
+		open?: boolean;
 	}
 
-	let { repoId }: Props = $props();
+	let { repoId, open = $bindable(false) }: Props = $props();
 
 	const getRepositoryQuery = createGetRepositoryListQuery();
 	const getBranchesQuery = createGetBranchesQuery(() => ({
@@ -35,21 +35,7 @@
 
 	const repository = $derived(getRepositoryQuery.data?.find((repo) => repo.id === repoId));
 
-	let open = $state(false);
 	let prefsInitialized = $state(false);
-	let hintOpen = $state(false);
-
-	// `?? 0` is load-bearing: while the selection query is still loading the data
-	// is `undefined`, so an unguarded `length === 0` check was false and a click
-	// opened an empty dialog. Treat "not loaded yet" as "nothing to restore".
-	const noBranchesToRestore = $derived((selectedQuery.data?.branches.length ?? 0) === 0);
-
-	// Clear the validation hint once there is something to restore.
-	$effect(() => {
-		if (hintOpen && !noBranchesToRestore) {
-			hintOpen = false;
-		}
-	});
 
 	const flow = useRestoreFlow({
 		getRepository: () => {
@@ -170,30 +156,39 @@
 		/>
 	{/if}
 
-	<!-- Status cards rather than rows, so the scroller gets a card-sized gap
-	     and inset instead of the well's row defaults. -->
-	<ScrollWell
-		class={css({ maxHeight: '50vh' })}
-		scrollerClass={css({ gap: 'sm', paddingX: 'xs', paddingY: 'xs' })}
-		testId="restore-branch-list"
-	>
-		<!-- Gated on `open`: the dialog's children render even while closed, so
-		     without this every selection change would build a status card per
-		     selected branch into a hidden dialog. -->
-		{#each open ? sortedBranches : [] as branch (`${branch.getName()}-${branch.getLastCommit().getShortSha()}`)}
-			{@const branchName = branch.getName()}
-			<RestoreBranchStatusCard
-				{branch}
-				result={flow.restorationResults[branchName]}
-				isPending={flow.pendingConflictBranches.includes(branchName)}
-				isCurrentConflict={flow.currentConflictBranch === branchName}
-				isInFlight={flow.inFlightBranches.includes(branchName)}
-				existsAlready={existingBranches.includes(branchName)}
-				preference={flow.branchPreferences[branchName]}
-				isProcessing={flow.isProcessing}
-				onSetPreference={(resolution) => flow.setPreference(branchName, resolution)}
-			/>
-		{/each}
+	<!-- Gated on `open`: the dialog's children render even while closed, so
+	     without this every selection change would build a row per selected
+	     branch into a hidden dialog. -->
+	<ScrollWell class={css({ maxHeight: '50vh' })} testId="restore-branch-list">
+		{#if open}
+			<GridList
+				label="Branches to restore"
+				items={sortedBranches}
+				getId={(branch: Branch) => branch.getName()}
+				look="cards"
+				rowBackground="surface.peak"
+				columns={[
+					{ id: 'name', track: 'minmax(0, 1fr)' },
+					{ id: 'status', track: 'auto' }
+				]}
+			>
+				{#snippet row(branch, { cell })}
+					{@const branchName = branch.getName()}
+					<RestoreBranchRow
+						{cell}
+						{branch}
+						result={flow.restorationResults[branchName]}
+						isPending={flow.pendingConflictBranches.includes(branchName)}
+						isCurrentConflict={flow.currentConflictBranch === branchName}
+						isInFlight={flow.inFlightBranches.includes(branchName)}
+						existsAlready={existingBranches.includes(branchName)}
+						preference={flow.branchPreferences[branchName]}
+						isProcessing={flow.isProcessing}
+						onSetPreference={(resolution) => flow.setPreference(branchName, resolution)}
+					/>
+				{/snippet}
+			</GridList>
+		{/if}
 	</ScrollWell>
 
 	<DialogFooter>
@@ -230,36 +225,3 @@
 		{/if}
 	</DialogFooter>
 </Dialog>
-
-<ValidationHint
-	bind:open={hintOpen}
-	message="There are no deleted branches to restore."
-	data-testid="open-restore-validation"
->
-	{#snippet trigger(triggerProps)}
-		<Button
-			{...triggerProps}
-			emphasis="primary"
-			size="sm"
-			class={css({ whiteSpace: 'nowrap' })}
-			onclick={() => {
-				if (noBranchesToRestore) {
-					hintOpen = true;
-					return;
-				}
-				open = true;
-			}}
-			data-testid="open-restore-dialog-button"
-		>
-			Restore
-			{#snippet leading()}
-				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon="lucide:undo" width="16px" height="16px" />
-				</Stamp>
-			{/snippet}
-			{#snippet trailing()}
-				<Badge size="sm" emphasis="adaptive">{selectedQuery.data?.branches.length ?? 0}</Badge>
-			{/snippet}
-		</Button>
-	{/snippet}
-</ValidationHint>

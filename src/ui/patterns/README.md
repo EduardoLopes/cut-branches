@@ -79,15 +79,14 @@ Every pindoba `Dialog` follows the shape of the Find repositories modal:
   content inset so it reads as a second header row.
 - **Pick-lists:** `list-filter.svelte` (full-width `md` search with a live
   "n of N" count) → `scroll-well.svelte` (recessed `surface.valley` well with
-  shadows that appear only towards the edge that has more to scroll;
-  `bind:scroller` for virtualizers) holding `selection-row.svelte`s (`Checkbox` rows; selected lifts
-  to `surface.peak`, hover `hill`, pressed `base`; `feedback="danger"` for lists
-  whose action destroys the selection; `muted` + `disabled` for already-handled
-  items). The list's own controls (select-all on the left, the selected count on
-  the right) go in the well's `header` snippet, not in a loose row above it: the
-  header is inside the well's radius and clip, sits one tier up on
-  `surface.base` over a hairline, and carries the rows' inline inset so its
-  checkbox lands in the rows' checkbox column.
+  shadows that appear only towards the edge that has more to scroll) holding a
+  pindoba `GridList` with `selectable` and `header`: the list's sticky header
+  carries select-all, so give the well `scrollerClass={css({ paddingTop: '0' })}`
+  and the header pins flush. Rows use `look="cards"` with
+  `rowBackground="surface.peak"` (the app-wide row surface) and a `rowName`, so
+  each checkbox reads "Select {name}". Lists whose action destroys the
+  selection take `tone="danger"`. Already-handled items go in `disabledIds`
+  (kept checked if they are in `value`).
 - **Paths:** `$ui/core/truncated-path.svelte` — `align="end"`, `highlight` the
   folder name, `class={css({ flex: '1', maxWidth: '60%', marginLeft: 'auto', fontSize: 'xs' })}`
   so the highlighted folder lands in one column across rows.

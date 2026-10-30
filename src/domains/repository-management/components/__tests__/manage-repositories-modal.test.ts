@@ -46,6 +46,21 @@ beforeEach(() => {
 	];
 });
 
+type Screen = Awaited<ReturnType<typeof renderWithTestWrapper>>;
+
+/** The list header's select-all (it covers the rows the filter leaves). */
+function selectAll(screen: Screen) {
+	return screen
+		.getByRole('grid', { name: 'Repositories' })
+		.getByRole('columnheader')
+		.getByRole('checkbox');
+}
+
+/** A repository row's checkbox (the row itself toggles too, see below). */
+function rowCheckbox(screen: Screen, name: string) {
+	return screen.getByRole('row').filter({ hasText: name }).getByRole('checkbox');
+}
+
 describe('ManageRepositoriesModal', () => {
 	it('lists a selectable row per repository', async () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
@@ -86,28 +101,28 @@ describe('ManageRepositoriesModal', () => {
 		expect(screen.getByTestId('manage-empty')).toBeInTheDocument();
 	});
 
-	it('selecting all updates the remove button and count', async () => {
+	it('selecting all updates the remove button', async () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-select-all').click();
+		await selectAll(screen).click();
 
 		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 3 repositories');
-		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('3 of 3 selected');
+		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 3 repositories');
 	});
 
 	it('re-selects all after select-all, deselecting one, then select-all again', async () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-select-all').click();
-		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('3 of 3 selected');
+		await selectAll(screen).click();
+		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 3 repositories');
 
 		// Deselect one row → partial selection.
-		await screen.getByTestId('manage-item').nth(1).click();
-		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('2 of 3 selected');
+		await rowCheckbox(screen, 'repo-2').click();
+		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 2 repositories');
 
 		// Select-all again must bring every row back, not toggle mid-loop.
-		await screen.getByTestId('manage-select-all').click();
-		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('3 of 3 selected');
+		await selectAll(screen).click();
+		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 3 repositories');
 	});
 
 	it('filters the list by name and shows a no-match state', async () => {
@@ -126,7 +141,7 @@ describe('ManageRepositoriesModal', () => {
 		await screen.getByPlaceholder('Search repositories').fill('repo-2');
 		await vi.waitFor(() => expect(screen.getByTestId('manage-item').elements()).toHaveLength(1));
 
-		await screen.getByTestId('manage-select-all').click();
+		await selectAll(screen).click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() =>
@@ -138,7 +153,7 @@ describe('ManageRepositoriesModal', () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		// Tick the second repository (repo-2) only — not the active repo (id "1").
-		await screen.getByTestId('manage-item').nth(1).click();
+		await rowCheckbox(screen, 'repo-2').click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() =>
@@ -152,7 +167,7 @@ describe('ManageRepositoriesModal', () => {
 		h.execute.mockImplementation(() => new Promise(() => {}));
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-item').nth(1).click();
+		await rowCheckbox(screen, 'repo-2').click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() => expect(screen.getByTestId('manage-remove-selected')).toBeDisabled());
@@ -161,7 +176,7 @@ describe('ManageRepositoriesModal', () => {
 	it('navigates to the repos index when the active repository is removed', async () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-select-all').click();
+		await selectAll(screen).click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() => expect(h.execute).toHaveBeenCalledTimes(3));
@@ -175,7 +190,7 @@ describe('ManageRepositoriesModal', () => {
 		];
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-item').first().click();
+		await rowCheckbox(screen, 'repo-1').click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos/a%23b%3Fc%25d'));
@@ -185,7 +200,7 @@ describe('ManageRepositoriesModal', () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
 		// Select only the active repo (repo-1) so repo-2 survives.
-		await screen.getByTestId('manage-item').nth(0).click();
+		await rowCheckbox(screen, 'repo-1').click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() =>
@@ -201,14 +216,14 @@ describe('ManageRepositoriesModal', () => {
 
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-select-all').click();
+		await selectAll(screen).click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() => expect(h.execute).toHaveBeenCalledTimes(3));
 
 		// Only the failure is left ticked, so the user can see what stayed behind.
 		await vi.waitFor(() =>
-			expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('1 of 3 selected')
+			expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 1 repository')
 		);
 
 		const modal = document.querySelector(
@@ -223,7 +238,7 @@ describe('ManageRepositoriesModal', () => {
 	it('closes and clears the selection when every removal succeeds', async () => {
 		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
 
-		await screen.getByTestId('manage-item').nth(1).click();
+		await rowCheckbox(screen, 'repo-2').click();
 		await screen.getByTestId('manage-remove-selected').click();
 
 		await vi.waitFor(() => expect(h.execute).toHaveBeenCalledTimes(1));
@@ -232,6 +247,14 @@ describe('ManageRepositoriesModal', () => {
 			'[data-testid="manage-repositories-modal"]'
 		) as HTMLElement | null;
 		await vi.waitFor(() => expect(modal).not.toHaveAttribute('open'));
-		expect(screen.getByTestId('manage-selected-count')).toHaveTextContent('0 of 3 selected');
+		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 0 repositories');
+	});
+
+	it('toggles a repository from anywhere on its row', async () => {
+		const screen = await renderWithTestWrapper(ManageRepositoriesModal, { open: true });
+
+		await screen.getByTestId('manage-item').nth(1).click();
+		expect(screen.getByTestId('manage-remove-selected')).toHaveTextContent('Remove 1 repository');
+		await expect.element(rowCheckbox(screen, 'repo-2')).toBeChecked();
 	});
 });

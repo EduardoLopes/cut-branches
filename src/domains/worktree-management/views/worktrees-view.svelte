@@ -1,11 +1,12 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import Badge from '@pindoba/svelte-badge';
+	import Trash2 from '@lucide/svelte/icons/trash-2';
+	import type { BulkSelection } from '@pindoba/core-bulk-bar';
+	import BulkBar from '@pindoba/svelte-bulk-bar';
 	import Button from '@pindoba/svelte-button';
-	import Checkbox from '@pindoba/svelte-checkbox';
+	import { gridListFocusTarget } from '@pindoba/svelte-grid-list';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
-	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import DeleteWorktreesModal from '../components/delete-worktrees-modal.svelte';
 	import WorktreeList from '../components/worktree-list.svelte';
@@ -16,7 +17,6 @@
 	import ErrorMessage from '$ui/core/error-message.svelte';
 	import PageToolbar from '$ui/patterns/page-toolbar.svelte';
 	import PageWell from '$ui/patterns/page-well.svelte';
-	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -49,24 +49,23 @@
 	const selection = useWorktreeSelection({ getWorktrees: () => filteredWorktrees });
 
 	let deleteOpen = $state(false);
-	let hintOpen = $state(false);
+	let listElement = $state<HTMLDivElement | null>();
 
 	const selectedWorktrees = $derived(
 		filteredWorktrees.filter((worktree) => selection.isSelected(worktree.getName()))
 	);
+	const selectedNames = $derived(new Set(selection.selectedNames));
 
-	// Clear the hint once something is selected.
-	$effect(() => {
-		if (hintOpen && selection.selectedCount > 0) hintOpen = false;
+	// The selection covers the visible, selectable worktrees, so the page and
+	// the collection are one set: "Select all N" matches the toolbar checkbox.
+	const bulkSelection: BulkSelection = $derived({
+		count: selection.selectedCount,
+		pageCount: selection.selectableCount,
+		pageSelected: selection.selectedCount,
+		total: selection.selectableCount,
+		clear: () => selection.clear(),
+		selectAll: () => selection.setAll(true)
 	});
-
-	function openDelete() {
-		if (selection.selectedCount === 0) {
-			hintOpen = true;
-			return;
-		}
-		deleteOpen = true;
-	}
 
 	async function confirmDelete(force: boolean) {
 		const { ok } = await actions.removeMany(selection.selectedNames, force);
@@ -75,34 +74,24 @@
 	}
 </script>
 
-<PageWell testId="worktrees-view">
+<!-- `padded={false}`: the worktree list is its own scroll port, so the
+     inset lives inside it (see the note in worktree-list). -->
+<PageWell padded={false} testId="worktrees-view">
 	{#snippet toolbar()}
 		<PageToolbar data-testid="worktrees-toolbar">
 			{#snippet left()}
-				<!-- Same shape as the branches toolbar: an `lg` checkbox (matching the
-				     per-row checkbox column) with the count as a small muted sibling,
-				     not as the control's own label. Keeps both pages' bars identical. -->
+				<!-- Select-all lives in the list's own header; the toolbar keeps
+				     the count. -->
 				{#if selection.selectableCount > 0}
-					<div class={css({ display: 'flex', alignItems: 'center', gap: '2xs' })}>
-						<Checkbox
-							id="worktrees-select-all"
-							size="lg"
-							aria-label="Select all worktrees"
-							checked={selection.allSelected}
-							indeterminate={selection.someSelected}
-							onclick={() => selection.setAll(!selection.allSelected)}
-							data-testid="worktrees-select-all"
-						/>
-						<span
-							class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}
-							data-testid="worktrees-selection-count"
-						>
-							<span class={css({ color: 'neutral.text.bold' })}>{selection.selectedCount}</span>
-							of
-							<span class={css({ color: 'neutral.text.bold' })}>{selection.selectableCount}</span>
-							worktrees selected
-						</span>
-					</div>
+					<span
+						class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}
+						data-testid="worktrees-selection-count"
+					>
+						<span class={css({ color: 'neutral.text.bold' })}>{selection.selectedCount}</span>
+						of
+						<span class={css({ color: 'neutral.text.bold' })}>{selection.selectableCount}</span>
+						worktrees selected
+					</span>
 				{:else}
 					<span class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}>
 						No worktrees to manage
@@ -133,37 +122,19 @@
 						<span class={visuallyHidden()}>Clear search</span>
 					</Button>
 				</Group>
-
-				<ValidationHint
-					bind:open={hintOpen}
-					message="Select at least one worktree to delete."
-					data-testid="worktrees-delete-validation"
-				>
-					{#snippet trigger(triggerProps)}
-						<Loading loading={actions.isRemoving} variant="busy" indicator>
-							<Button
-								{...triggerProps}
-								feedback="danger"
-								size="sm"
-								class={css({ whiteSpace: 'nowrap' })}
-								onclick={openDelete}
-								data-testid="worktrees-delete"
-							>
-								Delete
-								{#snippet leading()}
-									<Stamp emphasis="ghost" border="none" background="transparent">
-										<Icon icon="ion:trash-outline" width="16px" height="16px" />
-									</Stamp>
-								{/snippet}
-								{#snippet trailing()}
-									<Badge size="sm" emphasis="adaptive">{selection.selectedCount}</Badge>
-								{/snippet}
-							</Button>
-						</Loading>
-					{/snippet}
-				</ValidationHint>
 			{/snippet}
 		</PageToolbar>
+	{/snippet}
+
+	{#snippet overlay()}
+		<BulkBar
+			selected={bulkSelection}
+			actions={[{ id: 'delete', label: 'Delete', icon: Trash2, tone: 'danger' }]}
+			onAction={() => (deleteOpen = true)}
+			returnFocus={() => (listElement ? gridListFocusTarget(listElement) : null)}
+			labels={{ toolbar: 'Worktree actions' }}
+			data-testid="worktrees-bulk-bar"
+		/>
 	{/snippet}
 
 	{#if view.isError && view.error}
@@ -173,12 +144,13 @@
 		/>
 	{:else}
 		<WorktreeList
+			bind:element={listElement}
 			worktrees={filteredWorktrees}
 			isLoading={view.isLoading}
 			busy={actions.isLocking || actions.isUnlocking}
 			allowSelection
-			isSelected={(name) => selection.isSelected(name)}
-			onToggleSelect={(worktree) => selection.toggle(worktree.getName())}
+			selected={selectedNames}
+			onSelectionChange={(names) => selection.set(names)}
 			onLock={(worktree) => actions.lock(worktree.getName())}
 			onUnlock={(worktree) => actions.unlock(worktree.getName())}
 		/>

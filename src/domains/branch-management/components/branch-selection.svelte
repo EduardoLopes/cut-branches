@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Checkbox from '@pindoba/svelte-checkbox';
 	import { useBranchSelection } from '$domains/branch-management/core/composables/use-branch-selection.svelte';
 	import { pluralize } from '$domains/branch-management/utils/format-branch-selection-text';
 	import type { Repository } from '$types/repository';
@@ -16,24 +15,12 @@
 		repository: () => repository,
 		branchContext: () => branchContext
 	});
-
-	// Local state to control checkbox - synced with selection state
-	let isIndeterminate = $state(false);
-	let isAllSelected = $state(false);
-
-	// Sync local state with selection state
-	$effect(() => {
-		isIndeterminate = selection.isIndeterminate;
-		isAllSelected = selection.isAllSelected;
-	});
 </script>
 
 {#if selection.selectibleCount > 0}
 	{#key selection.selectibleCount}
-		<!-- The count sits beside the control, not inside its label slot: it
-		     describes the list, not the checkbox. The slot is left empty (the
-		     control is named by `aria-label`) so the row carries a single small
-		     gap instead of the control's internal label gap plus its own. -->
+		<!-- Select-all lives in the list's own header; the toolbar keeps the
+		     count, which also says what the search narrowed it to. -->
 		<div
 			class={css({
 				display: 'flex',
@@ -44,16 +31,6 @@
 			})}
 			data-testid="select-all-container"
 		>
-			<Checkbox
-				id="select-all"
-				size="lg"
-				aria-label="Select all"
-				bind:indeterminate={isIndeterminate}
-				onclick={selection.handleSelectAll}
-				bind:checked={isAllSelected}
-				data-testid="select-all-checkbox"
-			/>
-
 			{#if selection.hasSearchQuery}
 				<div
 					class={css({ fontSize: 'sm', color: 'neutral.text.muted' })}

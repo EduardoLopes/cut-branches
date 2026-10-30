@@ -1,23 +1,21 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
-	import Checkbox from '@pindoba/svelte-checkbox';
+	import GridList from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
+	import Popover from '@pindoba/svelte-popover';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { useQueryClient } from '@tanstack/svelte-query';
-	import { createVirtualizer } from '@tanstack/svelte-virtual';
-	import debounce from 'just-debounce-it';
 	import { onDestroy, untrack } from 'svelte';
-	import { get } from 'svelte/store';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { getSearchBranchesStore } from '../core/composables/search-branches.svelte';
-	import BranchRecentCommits from '../features/commit-history/components/branch-recent-commits.svelte';
 	import CommitGraphPreview from '../features/commit-history/components/commit-graph-preview.svelte';
 	import {
 		fetchCommitHistoryWindow,
 		PREVIEW_WINDOW
 	} from '../features/commit-history/infrastructure/queries/create-get-commit-history-window-query';
-	import { prefetchBranchCommits } from '../features/commit-history/infrastructure/queries/create-list-branch-commits-query';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
@@ -27,7 +25,6 @@
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
 	import {
-		getBranchColorPalette,
 		getBranchAlerts,
 		getBranchElementId,
 		shouldShowBranchAlerts
@@ -36,8 +33,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositorySubPath } from '$lib/repository-route';
 	import { notifications } from '$services/notifications/notifications.svelte';
-	import BranchCard from '$ui/core/branch-card.svelte';
-	import { formatString } from '$utils/string-utils';
+	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
@@ -48,93 +44,39 @@
 		allowSelection?: boolean;
 		allowSetCurrent?: boolean;
 		showAlerts?: boolean;
-		variant?: 'default' | 'inverted';
+		/** Bindable: the list's root (its scroll port), e.g. for a bulk bar's
+		 *  `returnFocus` via `gridListFocusTarget`. */
+		element?: HTMLDivElement | null;
 	}
 
-	const {
+	let {
 		repositoryID,
 		repositoryPath,
 		allowLocking = true,
 		allowSelection = true,
 		allowSetCurrent = true,
-		variant = 'default',
-		showAlerts = true
+		showAlerts = true,
+		element = $bindable()
 	}: Props = $props();
 
+	const isRestoreView = $derived(page.url.pathname.includes('restore'));
 	const search = $derived(
-		getSearchBranchesStore(
-			`${repositoryID}-${page.url.pathname.includes('restore') ? 'deleted' : 'active'}`
-		)
+		getSearchBranchesStore(`${repositoryID}-${isRestoreView ? 'deleted' : 'active'}`)
 	);
 
-	// Commit-card ↔ history integration: active branches get a deep-link into
-	// the history view plus a hover preview of the graph around their tip.
-	// Deleted branches don't — their commits may no longer be reachable.
-	const queryClient = useQueryClient();
-	const isRestoreView = $derived(page.url.pathname.includes('restore'));
-	// Commit history (view, deep-link, hover preview) is gated behind a flag.
-	const historyEnabled = $derived(isFeatureEnabled('commit-history'));
-	// Diff review view (per-branch changed-files deep-link) has its own flag.
-	const diffEnabled = $derived(isFeatureEnabled('branch-diff'));
-
-	// Warm the preview's cache entry on hover so the popover usually opens
-	// with data already there. Debounced so quick mouse travel costs nothing.
-	let prefetchSha = '';
-	const prefetchPreview = debounce(() => {
-		if (!repositoryID || !repositoryPath || !prefetchSha) return;
-		fetchCommitHistoryWindow(queryClient, {
-			repoId: repositoryID,
-			path: repositoryPath,
-			targetSha: prefetchSha,
-			...PREVIEW_WINDOW
-		}).catch(() => {
-			// Prefetch only; the preview surfaces errors when actually opened.
-		});
-	}, 200);
-
-	function prefetchPreviewFor(sha: string) {
-		prefetchSha = sha;
-		prefetchPreview();
-	}
-
-	// Same idea one level out: the "More" disclosure mounts its query only when
-	// it opens, so without a warm-up the panel always opens on "Loading
-	// commits…". Hovering (or focusing) the toggle is the intent signal.
-	let prefetchCommitsBranch = '';
-	const prefetchRecentCommits = debounce(() => {
-		if (!repositoryID || !repositoryPath || !prefetchCommitsBranch) return;
-		prefetchBranchCommits(queryClient, {
-			repoId: repositoryID,
-			path: repositoryPath,
-			branch: prefetchCommitsBranch
-		})?.catch(() => {
-			// Prefetch only; the panel surfaces errors when actually opened.
-		});
-	}, 200);
-
-	function prefetchRecentCommitsFor(branchName: string) {
-		prefetchCommitsBranch = branchName;
-		prefetchRecentCommits();
-	}
-
-	// A pending prefetch outliving the component would fire against a torn-down
-	// query scope; just-debounce-it exposes .cancel for exactly this.
-	onDestroy(() => {
-		prefetchPreview.cancel();
-		prefetchRecentCommits.cancel();
-	});
+	// Deep-links per row, each behind its own flag. Deleted branches get
+	// neither — their commits may no longer be reachable.
+	const historyEnabled = $derived(isFeatureEnabled('commit-history') && !isRestoreView);
+	const diffEnabled = $derived(isFeatureEnabled('branch-diff') && !isRestoreView);
 
 	const branchesQuery = createGetBranchesQuery(() => ({
 		repoId: repositoryID ?? '',
 		filters: {
-			deletionStatus: page.url.pathname.includes('restore')
-				? ('deleted' as const)
-				: ('active' as const),
+			deletionStatus: isRestoreView ? ('deleted' as const) : ('active' as const),
 			includeCurrent: true
 		}
 	}));
 
-	// Unified mutation for selected branches
 	const updateSelectionMutation = createUpdateBranchSelectionBatchMutation();
 
 	const switchBranchMutation = createSwitchBranchMutation({
@@ -145,7 +87,7 @@
 				feedback: 'success'
 			});
 
-			// Remove from selected branches in database - invalidation happens automatically
+			// The new current branch can't stay selected for deletion.
 			if (repositoryID) {
 				updateSelectionMutation.mutate({
 					repoId: repositoryID,
@@ -156,271 +98,178 @@
 		}
 	});
 
-	function handleToggleSelect(branch: Branch) {
-		if (!repositoryID) return;
-
-		updateSelectionMutation.mutate({
-			repoId: repositoryID,
-			branchNames: [branch.getName()],
-			isSelected: !branch.getIsSelected()
-		});
-	}
-
 	function handleSwitchBranch(branch: string) {
 		if (repositoryPath) {
-			switchBranchMutation.mutate({
-				path: repositoryPath,
-				branch
-			});
+			switchBranchMutation.mutate({ path: repositoryPath, branch });
 		}
 	}
 
-	let sortedBranches = $derived.by((): Branch[] | undefined => {
-		const branches = branchesQuery.data?.branches;
-		if (!branches) return undefined;
+	const branches = $derived.by((): Branch[] => {
+		const all = branchesQuery.data?.branches;
+		if (!all) return [];
 
-		const sorted = branches.toSorted((a, b) => {
-			if (a.isCurrent() && !b.isCurrent()) return -1;
-			if (!a.isCurrent() && b.isCurrent()) return 1;
-			return 0;
-		});
+		const sorted = all.toSorted((a, b) => Number(b.isCurrent()) - Number(a.isCurrent()));
 		// Same trimming/matching as the view-level filter, so the list never
 		// disagrees with the "N found" header or the empty state.
 		return filterBranchesBySearch(sorted, search?.state);
 	});
+	const indexByName = $derived(new Map(branches.map((branch, i) => [branch.getName(), i])));
 
 	// ---------------------------------------------------------------------------
-	// Virtualized, infinitely-scrolling list.
-	//
-	// The branch set arrives in one shot from git, so there is nothing to page
-	// over the wire; the cost that used to justify pagination is per-row — every
-	// card mounts its own merge-status and diff-stat queries. Windowing keeps
-	// exactly the visible rows (plus overscan) mounted, so those queries fire as
-	// the user scrolls instead of all at once, and the list stays one continuous
-	// surface.
+	// Selection. It lives in the database (it survives restarts and drives the
+	// delete/restore dialogs), so the list is controlled: GridList reports the
+	// next set and the difference goes out as at most two batch writes.
 	// ---------------------------------------------------------------------------
+	const selected = $derived(
+		new Set(branches.filter((branch) => branch.getIsSelected()).map((b) => b.getName()))
+	);
+	// The current branch can't be deleted and a locked one is protected until
+	// unlocked: both stay visible but never join a selection.
+	const disabledIds = $derived(
+		new Set(
+			branches
+				.filter((branch) => branch.isCurrent() || branch.getIsLocked())
+				.map((b) => b.getName())
+		)
+	);
 
-	/** Card height without an alert (header + one-line commit + footer), as
-	 *  rendered by the current Pindoba card. Only seeds the scrollbar — every
-	 *  mounted row reports its real height back — but the closer it is, the
-	 *  less the total size jumps as rows mount. Rows with a merge alert run
-	 *  ~270px; alerts depend on lazily-fetched merge status, so they can't be
-	 *  estimated up front. */
-	const ESTIMATED_ROW_H = 206;
-	/** Matches the `gap: md` rhythm the non-virtualized list used. */
-	const ROW_GAP = 16;
-	/** Rows mounted ahead of the viewport, in the direction of travel — the
-	 *  runway a flick lands on before the window has caught up. */
-	const OVERSCAN_LEAD = 16;
-	/** Lead used until the user has actually scrolled.
-	 *
-	 *  The runway above only earns its keep once there is travel to absorb; on
-	 *  arrival it is pure cost, and it is *synchronous* cost — mounting a branch
-	 *  row is a card, a nested panel, badges, icons, a popover anchor and a lock
-	 *  toggle with its own query observer. Measured at ~4ms per row, so the full
-	 *  lead put ~90-145ms of blocking work between the navigation and the first
-	 *  paint of a page whose viewport holds four cards. That is the freeze when
-	 *  you open a repository or come back from worktrees.
-	 *
-	 *  So the list arrives narrow and widens on the first scroll event, before
-	 *  any meaningful travel has happened. Nothing is deferred to a later frame
-	 *  (that would only move the jank) — the extra rows are simply mounted as
-	 *  the user scrolls into them, which is what the growing window already does
-	 *  for new territory. */
-	const OVERSCAN_LEAD_INITIAL = 3;
-	/** Behind the viewport. Smaller, but never zero — a reversal has to land on
-	 *  something too, and it keeps focus and hover popovers alive through a
-	 *  scroll nudge. */
-	const OVERSCAN_TRAIL = 6;
-	/** Ceiling on the retained window (see `rangeExtractor`). Roughly 120 × 164px
-	 *  ≈ 20 000px of standing list: past any single flick, but bounded so a repo
-	 *  with a thousand branches can't turn the page into an unvirtualized one. */
-	const MAX_MOUNTED_ROWS = 120;
-	/** The scroll port's real height only lands once its ResizeObserver fires, a
-	 *  frame after mount. Seeding from the window means the first paint is
-	 *  already a full screen of branches instead of a blank flash that fills in;
-	 *  innerHeight over-estimates the port by the surrounding chrome, which errs
-	 *  toward one spare row rather than a blank strip. Reads `window` directly —
-	 *  the app is ssr = false throughout (src/routes/+layout.ts). */
-	const INITIAL_VIEWPORT = { width: 0, height: window.innerHeight };
-
-	let scrollElement = $state<HTMLDivElement | null>(null);
-
-	const branches = $derived(sortedBranches ?? []);
-	const branchKey = (branch: Branch) => `${branch.getName()}-${branch.getLastCommit().getSha()}`;
-
-	// ---------------------------------------------------------------------------
-	// A growing window, not a sliding one.
-	//
-	// The default extractor mounts a fixed band around the viewport and unmounts
-	// everything else, so a free-spinning wheel is a race: rows have to mount
-	// faster than the scroll travels, and a branch row is not a `<div>` — it's a
-	// card, a nested panel, badges, icons, a popover anchor and two query
-	// observers. Lose that race and you see the spacer.
-	//
-	// So rows are never unmounted on the way past. Every index the viewport has
-	// touched stays mounted, capped at MAX_MOUNTED_ROWS and evicted farthest-
-	// first. Scrolling back over ground you've covered is then pure compositing —
-	// no mounting, no measuring, no blank — and scrolling into new territory is
-	// the only thing that costs anything, which is what "load more as you scroll"
-	// should mean. Retained rows also keep their measured heights, so the total
-	// size stops drifting and the scrollbar settles.
-	//
-	// Direction comes from the virtualizer's own scrollDirection, which is set
-	// from real scroll deltas and null while idle. The extractor also re-runs on
-	// measurement passes (a row reporting its height shifts startIndex), and a
-	// range-history heuristic would read those shifts as travel and flip the
-	// overscan asymmetry; latching the last non-null direction ignores them.
-	// ---------------------------------------------------------------------------
-	let scrollingForward = true;
-	// Deliberately a plain Set, not a SvelteSet: the virtualizer already notifies
-	// on every range change, and making this reactive would mean mutating tracked
-	// state from inside a derivation the render pass is currently reading.
-	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	let mountedRows = new Set<number>();
-
-	function resetMountedRows() {
-		mountedRows = new Set();
+	function handleSelectionChange(next: Set<string>) {
+		if (!repositoryID) return;
+		const added = [...next].filter((name) => !selected.has(name));
+		const removed = [...selected].filter((name) => !next.has(name));
+		if (added.length > 0) {
+			updateSelectionMutation.mutate({
+				repoId: repositoryID,
+				branchNames: added,
+				isSelected: true
+			});
+		}
+		if (removed.length > 0) {
+			updateSelectionMutation.mutate({
+				repoId: repositoryID,
+				branchNames: removed,
+				isSelected: false
+			});
+		}
 	}
 
-	/** Flipped by the first real scroll (see the scroll handler on the port).
-	 *  Plain `let`: the extractor reads it during the virtualizer's own
-	 *  recompute, so making it reactive would mean writing tracked state from
-	 *  inside a derivation the render pass is reading. */
-	let hasScrolled = false;
+	// ---------------------------------------------------------------------------
+	// Merge status + diff stats, fetched only for the rows on screen. GridList
+	// mounts a window of rows (plus overscan), and the metrics cost a git walk
+	// each, so an IntersectionObserver on the scroll port reports which of the
+	// mounted rows are actually visible and the composable batches those into
+	// bucketed bulk queries.
+	// ---------------------------------------------------------------------------
+	const visibleIndices = new SvelteSet<number>();
+	const visibleRange = $derived.by(() => {
+		if (visibleIndices.size === 0) return null;
+		const indices = [...visibleIndices];
+		return { startIndex: Math.min(...indices), endIndex: Math.max(...indices) };
+	});
 
-	function rangeExtractor(range: { startIndex: number; endIndex: number; count: number }) {
-		const direction = get(virtualizer).scrollDirection;
-		if (direction !== null) scrollingForward = direction === 'forward';
-		const forward = scrollingForward;
+	// State, not a plain variable: rows mount before this effect creates it,
+	// and they read it through their attachment's argument so they register
+	// once it exists.
+	let observer = $state<IntersectionObserver>();
+	$effect(() => {
+		const root = element;
+		if (!root) return;
+		const io = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					const index = Number((entry.target as HTMLElement).dataset.index);
+					if (entry.isIntersecting) visibleIndices.add(index);
+					else visibleIndices.delete(index);
+				}
+			},
+			// Fetch a screen ahead, so stats are usually there before a row is.
+			{ root, rootMargin: '100% 0px' }
+		);
+		observer = io;
+		return () => {
+			io.disconnect();
+			observer = undefined;
+			visibleIndices.clear();
+		};
+	});
 
-		const lead = hasScrolled ? OVERSCAN_LEAD : OVERSCAN_LEAD_INITIAL;
-		const start = Math.max(0, range.startIndex - (forward ? OVERSCAN_TRAIL : lead));
-		const end = Math.min(range.count - 1, range.endIndex + (forward ? lead : OVERSCAN_TRAIL));
-
-		for (const index of mountedRows) {
-			// The list can shrink under us (a filter, a refetch); drop anything the
-			// count no longer covers before it becomes an out-of-bounds row.
-			if (index >= range.count) mountedRows.delete(index);
-		}
-		for (let index = start; index <= end; index++) mountedRows.add(index);
-
-		if (mountedRows.size > MAX_MOUNTED_ROWS) {
-			// Evict by distance from the viewport: the rows most likely to be
-			// needed again are the ones nearest to where the user is.
-			const centre = (range.startIndex + range.endIndex) / 2;
-			const byDistance = [...mountedRows].sort(
-				(a, b) => Math.abs(a - centre) - Math.abs(b - centre)
-			);
-			mountedRows = new Set(byDistance.slice(0, MAX_MOUNTED_ROWS));
-		}
-
-		return [...mountedRows].sort((a, b) => a - b);
+	/** Reports a row's visibility. `index` and `io` come from the template
+	 *  (an attachment doesn't track what it reads inside), so it re-runs when
+	 *  the row moves or the observer appears. */
+	function observeRow(index: number, io: IntersectionObserver | undefined) {
+		return (node: HTMLElement) => {
+			if (!io) return;
+			node.dataset.index = String(index);
+			io.observe(node);
+			return () => {
+				io.unobserve(node);
+				visibleIndices.delete(index);
+			};
+		};
 	}
 
-	// `count` and `getScrollElement` are live getters rather than snapshots
-	// because the svelte-virtual store re-applies *these* options every time it
-	// gains its first subscriber — a plain `count: 0` seed would be re-imposed
-	// during the first render and blank the list until the next frame.
-	const virtualizerOptions = {
-		get count() {
-			return branches.length;
-		},
-		getScrollElement: () => scrollElement,
-		estimateSize: () => ESTIMATED_ROW_H,
-		overscan: OVERSCAN_TRAIL,
-		rangeExtractor,
-		gap: ROW_GAP,
-		initialRect: INITIAL_VIEWPORT,
-		/** Stable across filtering and refetches, so measured heights stay
-		 *  attached to the branch they were measured from, not to a position. */
-		getItemKey: (index: number) => {
-			const branch = branches[index];
-			return branch ? branchKey(branch) : index;
-		}
-	};
-
-	const virtualizer = createVirtualizer<HTMLDivElement, HTMLDivElement>(virtualizerOptions);
-
-	// `.pre` matters: this has to land before the render pass reads the virtual
-	// items, or the first paint of a changed list is computed from stale options.
-	// get() reads the store without subscribing, so setOptions can't re-trigger
-	// this effect.
-	$effect.pre(() => {
-		const count = branches.length;
-		const element = scrollElement;
-		get(virtualizer).setOptions({
-			...virtualizerOptions,
-			count,
-			getScrollElement: () => element
-		});
+	const branchMetrics = useBranchMetrics({
+		path: () => repositoryPath,
+		branchNames: () => branches.map((branch) => branch.getName()),
+		visibleRange: () => visibleRange,
+		// Deleted branches can't be measured (their ref is gone).
+		enabled: () => !isRestoreView
 	});
 
-	// The retained window is index-based, so any change to the list's identity —
-	// a refetch after a deletion, the sort flipping after a branch switch, a
-	// filter — re-means every index: retained far-away indices would keep
-	// unrelated rows, and their query observers, alive. Fingerprint the keys and
-	// drop the window whenever they change; the extractor repopulates it around
-	// the current viewport in the same render pass, so visible rows never blank.
-	// No scroll-to-top here — a background refetch mustn't yank the user.
-	// `.pre` so the reset lands before the render pass reads the virtual items.
-	let lastListFingerprint: string | undefined;
-	$effect.pre(() => {
-		const fingerprint = branches.map(branchKey).join('\u0000');
-		if (fingerprint === lastListFingerprint) return;
-		const isFirstRun = lastListFingerprint === undefined;
-		lastListFingerprint = fingerprint;
-		if (isFirstRun) return;
-		resetMountedRows();
-		// The virtualizer memoizes its index range on (extractor identity, count,
-		// start, end) — none of which move when the list is rewritten in place —
-		// so hand it a fresh extractor identity to force a recompute against the
-		// now-empty retained set. The adapter's setOptions also notifies the
-		// store, so the template re-reads the items in this same pass.
-		get(virtualizer).setOptions({
-			...virtualizerOptions,
-			rangeExtractor: (range) => rangeExtractor(range)
-		});
-	});
+	// ---------------------------------------------------------------------------
+	// Commit graph preview. Resting on a commit subject opens a small graph of
+	// the history around that commit. One popover serves the whole list: it
+	// moves to whichever subject was hovered, instead of every row mounting
+	// its own.
+	// ---------------------------------------------------------------------------
+	const queryClient = useQueryClient();
+	/** How long the pointer rests on a subject before the preview opens —
+	 *  long enough that sweeping across rows doesn't flash previews. */
+	const PREVIEW_OPEN_DELAY = 350;
+	/** Grace period to move the pointer from the subject into the preview. */
+	const PREVIEW_CLOSE_DELAY = 150;
 
-	// A bulk selection change (select all / deselect all) flips `isSelected` on
-	// nearly every branch at once. The list identity doesn't change (same
-	// name-sha keys), so the fingerprint above doesn't fire — but every one of
-	// the up-to-MAX_MOUNTED_ROWS retained rows would re-render in one flush:
-	// new palette, checkbox state, and alert badges mounting per row. That
-	// synchronous storm is what froze select-all on large repositories.
-	// Collapsing the retained window back to the viewport turns ~120 full card
-	// re-renders into ~25; rows past the viewport unmount (cheap) and remount
-	// lazily as the user scrolls. Single toggles stay under the threshold and
-	// keep the window intact.
-	const BULK_SELECTION_RESET_THRESHOLD = OVERSCAN_LEAD + OVERSCAN_TRAIL + 8;
-	let lastSelectionFingerprint: string | undefined;
-	$effect.pre(() => {
-		const fingerprint = branches.map((branch) => (branch.getIsSelected() ? '1' : '0')).join('');
-		if (fingerprint === lastSelectionFingerprint) return;
-		const previous = lastSelectionFingerprint;
-		lastSelectionFingerprint = fingerprint;
-		// First run, or the list itself changed shape (covered by the key
-		// fingerprint above) — only compare like-for-like selection flips.
-		if (previous === undefined || previous.length !== fingerprint.length) return;
-		let flipped = 0;
-		for (let i = 0; i < fingerprint.length; i++) {
-			if (fingerprint[i] !== previous[i]) flipped++;
-		}
-		if (flipped <= BULK_SELECTION_RESET_THRESHOLD) return;
-		resetMountedRows();
-		// Fresh extractor identity for the same reason as the reset above.
-		get(virtualizer).setOptions({
-			...virtualizerOptions,
-			rangeExtractor: (range) => rangeExtractor(range)
-		});
-	});
+	let preview = $state<{ anchor: HTMLElement; sha: string } | null>(null);
+	let previewOpen = $state(false);
+	let openTimer: ReturnType<typeof setTimeout> | undefined;
+	let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+	function clearPreviewTimers() {
+		clearTimeout(openTimer);
+		clearTimeout(closeTimer);
+	}
+
+	function hoverSubject(anchor: HTMLElement, sha: string) {
+		if (!historyEnabled || !repositoryID || !repositoryPath) return;
+		clearPreviewTimers();
+		// Warm the cache while the pointer rests, so the popover usually opens
+		// with its graph already there. Prefetch only: the preview surfaces
+		// errors itself when opened.
+		fetchCommitHistoryWindow(queryClient, {
+			repoId: repositoryID,
+			path: repositoryPath,
+			targetSha: sha,
+			...PREVIEW_WINDOW
+		}).catch(() => {});
+		openTimer = setTimeout(() => {
+			preview = { anchor, sha };
+			previewOpen = true;
+		}, PREVIEW_OPEN_DELAY);
+	}
+
+	function leavePreview() {
+		clearPreviewTimers();
+		closeTimer = setTimeout(() => (previewOpen = false), PREVIEW_CLOSE_DELAY);
+	}
+
+	function enterPreview() {
+		clearTimeout(closeTimer);
+	}
+
+	onDestroy(clearPreviewTimers);
 
 	// Filtering rewrites the list under a scroll offset that no longer means
-	// anything — land the user back at the top of the new result set, and drop
-	// the retained window with it: those indices point at different branches now.
-	// Plain `let`, not `$state`: this is the effect's own bookkeeping, and making
-	// it reactive would just have the effect re-trigger itself.
+	// anything: land back at the top of the new result set.
 	let lastSearchTerm: string | undefined;
 	$effect(() => {
 		const term = search?.state ?? '';
@@ -428,253 +277,314 @@
 		const isFirstRun = lastSearchTerm === undefined;
 		lastSearchTerm = term;
 		if (isFirstRun) return;
-		resetMountedRows();
-		untrack(() => scrollElement)?.scrollTo({ top: 0 });
+		untrack(() => element)?.scrollTo({ top: 0 });
 	});
 
-	const virtualItems = $derived($virtualizer.getVirtualItems());
-	const totalSize = $derived($virtualizer.getTotalSize());
+	/** A two-line row plus the cards look's gap. Only seeds the scrollbar:
+	 *  every mounted row reports its measured height. */
+	const ESTIMATED_ROW_HEIGHT = 90;
 
-	// ---------------------------------------------------------------------------
-	// Per-card metrics (merge status + diff stats), batched.
-	//
-	// The retained window keeps up to MAX_MOUNTED_ROWS rows mounted, but only the
-	// *visible* range needs metrics fetched — the virtualizer's raw range (before
-	// the growing rangeExtractor widens it) is exactly that. The composable
-	// debounces the range, maps it to position-aligned buckets, and runs one
-	// bulk command per bucket instead of two commands per row.
-	// ---------------------------------------------------------------------------
-	const visibleRange = $derived($virtualizer.range);
-	const branchMetrics = useBranchMetrics({
-		path: () => repositoryPath,
-		branchNames: () => branches.map((branch) => branch.getName()),
-		visibleRange: () => visibleRange,
-		// Deleted branches can't be measured (their ref is gone) — skip the
-		// whole pipeline in the restore view.
-		enabled: () => !isRestoreView
-	});
-
-	/** Widen the runway the first time the user scrolls. The virtualizer's own
-	 *  scroll handling already recomputes the range on this event, so the wider
-	 *  lead is picked up on that pass — no extra invalidation needed. */
-	function handleFirstScroll() {
-		if (hasScrolled) return;
-		hasScrolled = true;
-	}
-
-	/** Registers a row with the virtualizer's ResizeObserver; the row's real
-	 *  height replaces the estimate (and tracks it as cards expand). */
-	function measureRow(node: HTMLDivElement) {
-		get(virtualizer).measureElement(node);
-	}
-
-	// Hoisted out of the row loop: `css()` is a runtime merge, and calling it per
-	// row per frame is real work in the one place that can't afford any.
-	const rowClass = css({
-		position: 'absolute',
-		top: '0',
-		left: '0',
-		width: 'full',
-		display: 'grid',
-		gap: 'xs',
-		borderRadius: 'sm',
-		borderTopLeftRadius: 0
-	});
-	const cardCellClass = css({ minWidth: '0' });
-</script>
-
-<!-- Surface comes from the enclosing PageWell, which is unpadded for this view:
-     the inset is the scroll port's own padding, so cards travel all the way to
-     the well's edges and the scrollbar rides that edge instead of floating in a
-     gutter. -->
-<!-- The scroll port is a focus stop (WCAG 2.1.1: scrollable regions must be
-     keyboard-reachable); once focusable, the browser scrolls it natively with
-     Arrow/PageUp/PageDown/Home/End, so no key handling is needed. The region
-     role names the stop for AT without disturbing the inner list semantics. -->
-<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<div
-	bind:this={scrollElement}
-	data-testid="branch-list-scroller"
-	onscroll={handleFirstScroll}
-	role="region"
-	aria-label="Branch list"
-	tabindex="0"
-	class={css({
+	const scrollPortClass = css({
 		flex: '1',
 		minHeight: '0',
 		overflowY: 'auto',
 		overflowX: 'hidden',
-		padding: 'md',
-		_focusVisible: {
-			outline: '2px solid token(colors.primary.border)',
-			outlineOffset: '-2px'
-		}
+		paddingX: 'md',
+		// Room for the last row to scroll out from under the well's bulk bar.
+		paddingBottom: 'calc(token(spacing.md) + var(--page-well-overlay-clearance, 0px))'
+	});
+
+	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
+	const twoLineCellClass = css({ display: 'grid', gap: '3xs', minWidth: '0' });
+	const lineClass = css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' });
+	const iconSpacerClass = css({ display: 'flex', visibility: 'hidden' });
+	const nameClass = css({ fontWeight: 'semibold', truncate: true });
+	const mutedClass = css({ fontSize: 'sm', color: 'neutral.text.muted', truncate: true });
+	const shaClass = css({
+		flexShrink: '0',
+		fontSize: 'xs',
+		fontFamily: 'mono',
+		color: 'neutral.text.muted'
+	});
+	const subjectClass = css({ fontSize: 'sm', truncate: true });
+	const statsCellClass = css({ gap: '3xs', justifyContent: 'flex-end' });
+	const dateCellClass = css({
+		justifyContent: 'flex-end',
+		fontSize: 'sm',
+		color: 'neutral.text.muted',
+		whiteSpace: 'nowrap'
+	});
+	const actionsCellClass = css({ gap: '3xs', justifyContent: 'flex-end' });
+</script>
+
+<!-- Surface comes from the enclosing PageWell, which is unpadded for this view.
+     The list is its own scroll port, so the sticky header pins to the list's
+     top edge and rows scroll under it, never above it. Only the top inset sits
+     outside the port; the sides and bottom are the port's own padding, so rows
+     travel to the well's edges and the scrollbar rides that edge. -->
+<div
+	class={css({
+		display: 'flex',
+		flexDirection: 'column',
+		flex: '1',
+		minHeight: '0',
+		paddingTop: 'md'
 	})}
 >
-	<div
-		role="list"
+	<!-- The sticky header carries select-all (it covers the selectable rows
+	     the search leaves; ⌘A does the same from a focused row). Narrower than
+	     640px the commit subject drops and each row keeps its two lines. -->
+	<GridList
+		bind:element
+		virtual={{ scrollElement: () => element, estimateSize: ESTIMATED_ROW_HEIGHT }}
+		data-testid="branch-list-scroller"
+		class={scrollPortClass}
+		label="Branches"
+		items={branches}
+		getId={(branch: Branch) => branch.getName()}
+		rowName={(branch: Branch) => branch.getName()}
+		selectable={allowSelection}
+		header
+		value={selected}
+		{disabledIds}
+		onValueChange={handleSelectionChange}
+		// Selecting here queues a deletion; in the restore view, a restore.
+		tone={isRestoreView ? 'primary' : 'danger'}
+		look="cards"
+		rowBackground="surface.peak"
 		aria-busy={branchesQuery.isLoading}
-		class={css({
-			position: 'relative',
-			zIndex: '0',
-			width: 'full'
-		})}
-		style:height={`${totalSize}px`}
+		columns={[
+			{ id: 'name', track: 'minmax(14rem, 1.2fr)', header: 'Branch' },
+			{ id: 'commit', track: 'minmax(0, 1.5fr)', header: 'Last commit' },
+			{ id: 'changes', track: 'auto', header: 'Changes' },
+			{ id: 'meta', track: 'minmax(6rem, auto)', header: isRestoreView ? 'Deleted' : 'Updated' }
+		]}
+		narrow={{
+			columns: 'minmax(0, 1fr) auto',
+			cells: {
+				name: { column: '1', row: '1' },
+				changes: { column: '2', row: '1' },
+				meta: { column: '2', row: '1' },
+				commit: { hidden: true }
+			}
+		}}
 	>
-		{#each virtualItems as virtualRow (virtualRow.key)}
-			{@const branch = branches[virtualRow.index]}
-			{#if branch}
-				{@const metrics = branch.isCurrent()
-					? undefined
-					: branchMetrics.getMetrics(branch.getName())}
-				{@const alerts = getBranchAlerts(
-					branch,
-					branch.getIsSelected() ?? false,
-					metrics?.isMerged
-				)}
-				{@const hasAlerts = showAlerts && shouldShowBranchAlerts(alerts, branch)}
-				<!-- The card column is `minmax(0, 1fr)`, not a bare `1fr`: a `1fr`
-				     track floors at its content's min width, so one long unbroken
-				     commit line would widen the row past the list instead of
-				     ellipsizing inside it. -->
-				<div
-					role="listitem"
-					aria-setsize={branches.length}
-					aria-posinset={virtualRow.index + 1}
-					data-index={virtualRow.index}
-					use:measureRow
-					class={rowClass}
-					class:selected={branch.getIsSelected()}
-					style:grid-template-columns={branch.isCurrent()
-						? 'minmax(0, 1fr)'
-						: 'auto minmax(0, 1fr)'}
-					style:transform={`translateY(${virtualRow.start}px)`}
-				>
-					{#if !branch.isCurrent()}
-						<div
-							class={css({
-								display: 'flex',
-								flexDirection: 'column',
-								gap: 'xs'
-							})}
-						>
-							{#if allowSelection && !branch.getIsLocked()}
-								<Checkbox
-									size="lg"
-									id={`checkbox-${branch.getName()}`}
-									onclick={() => handleToggleSelect(branch)}
-									checked={branch.getIsSelected()}
-									disabled={branch.getIsLocked()}
-								>
-									<div class={visuallyHidden()}>
-										{branch.getName()}
-									</div>
-								</Checkbox>
-							{/if}
+		{#snippet row(branch, { cell })}
+			{@const index = indexByName.get(branch.getName()) ?? -1}
+			{@const commit = branch.getLastCommit()}
+			{@const metrics = branch.isCurrent() ? undefined : branchMetrics.getMetrics(branch.getName())}
+			{@const alerts = getBranchAlerts(branch, branch.getIsSelected() ?? false, metrics?.isMerged)}
+			{@const hasAlerts = showAlerts && shouldShowBranchAlerts(alerts, branch)}
+			{@const switching =
+				switchBranchMutation.isPending &&
+				switchBranchMutation.variables?.branch === branch.getName()}
 
-							{#if allowSetCurrent}
-								<Loading
-									loading={switchBranchMutation.variables?.branch === branch.getName() &&
-										switchBranchMutation.isPending}
-								>
-									<Tooltip content="Set as current">
-										{#snippet children(triggerProps)}
-											<Button
-												size="xs"
-												shape="square"
-												emphasis="secondary"
-												disabled={switchBranchMutation.variables?.branch !== branch.getName() &&
-													switchBranchMutation.isPending}
-												class={css({
-													width: '24px',
-													height: '24px'
-												})}
-												onclick={() => handleSwitchBranch(branch.getName())}
-												data-testid="switch-button"
-												{...triggerProps}
-											>
-												<Stamp emphasis="ghost" border="none" background="transparent">
-													<Icon icon="lucide:map-pin" width="14px" height="14px" />
-												</Stamp>
-												<span class={visuallyHidden()}>Set as current</span>
-											</Button>
-										{/snippet}
-									</Tooltip>
-								</Loading>
-							{/if}
-
-							{#if allowLocking}
-								<LockBranchToggle {repositoryID} branch={branch.getName()} />
-							{/if}
-						</div>
+			<!-- Line 1: who the branch is. Line 2: what needs attention, then who
+			     last touched it. -->
+			<div
+				{...cell('name', { class: twoLineCellClass })}
+				id={getBranchElementId(branch.getName(), 'container')}
+				data-testid="branch-row"
+				{@attach observeRow(index, observer)}
+			>
+				<span class={lineClass}>
+					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+						<Icon icon="lucide:git-branch" width="14px" height="14px" />
+					</Stamp>
+					<span class={nameClass} title={branch.getName()} data-testid="branch-name">
+						{branch.getName()}
+					</span>
+					{#if branch.isCurrent()}
+						<Badge size="sm" tone="primary" data-testid="branch-current-badge">current</Badge>
 					{/if}
+					{#if branch.getIsLocked() && !branch.isCurrent()}
+						<Badge size="sm" tone="warning" data-testid="branch-locked-badge">locked</Badge>
+					{/if}
+					{#if !isRestoreView}
+						{#if branch.getUpstream()}
+							<Tooltip content={`Tracks ${branch.getUpstream()}`}>
+								{#snippet children(triggerProps)}
+									<span {...triggerProps} data-testid="branch-upstream">
+										<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+											<Icon icon="lucide:cloud" width="14px" height="14px" />
+										</Stamp>
+									</span>
+								{/snippet}
+							</Tooltip>
+						{:else}
+							<Tooltip content="No remote tracking branch configured">
+								{#snippet children(triggerProps)}
+									<span {...triggerProps} data-testid="branch-no-upstream">
+										<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+											<Icon icon="lucide:cloud-off" width="14px" height="14px" />
+										</Stamp>
+									</span>
+								{/snippet}
+							</Tooltip>
+						{/if}
+					{/if}
+				</span>
+				<span class={lineClass}>
+					<span class={iconSpacerClass} aria-hidden="true">
+						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+							<Icon icon="lucide:git-branch" width="14px" height="14px" />
+						</Stamp>
+					</span>
+					{#if hasAlerts}
+						<BranchAlerts {alerts} {branch} />
+					{/if}
+					<span class={mutedClass} data-testid="branch-author">{commit.getAuthor()}</span>
+					<span class={shaClass} title={commit.getSha()} data-testid="branch-sha">
+						{commit.getShortSha()}
+					</span>
+				</span>
+			</div>
 
-					{#snippet commitPreview()}
-						{#if repositoryID && repositoryPath}
-							<CommitGraphPreview
-								repoId={repositoryID}
-								path={repositoryPath}
-								sha={branch.getLastCommit().getSha()}
-							/>
-						{/if}
-					{/snippet}
-					{#snippet recentCommits()}
-						{#if repositoryID && repositoryPath}
-							<BranchRecentCommits
-								repoId={repositoryID}
-								path={repositoryPath}
-								branch={branch.getName()}
-							/>
-						{/if}
-					{/snippet}
-					<div
-						role="presentation"
-						class={cardCellClass}
-						onmouseenter={historyEnabled && !isRestoreView && repositoryPath
-							? () => prefetchPreviewFor(branch.getLastCommit().getSha())
-							: undefined}
+			<span {...cell('commit')}>
+				<!-- With history on, the subject previews the graph instead of
+				     showing a title tooltip: two hover overlays would fight. -->
+				<span
+					role="presentation"
+					class={subjectClass}
+					title={historyEnabled ? undefined : commit.getMessage()}
+					onmouseenter={(event) => hoverSubject(event.currentTarget, commit.getSha())}
+					onmouseleave={leavePreview}
+					data-testid="branch-commit-subject"
+				>
+					{commit.getMessageFirstLine()}
+				</span>
+			</span>
+
+			<!-- Lines the branch adds/removes vs the current branch. -->
+			<span {...cell('changes', { class: statsCellClass })}>
+				{#if metrics && (metrics.linesAdded > 0 || metrics.linesRemoved > 0)}
+					<span
+						class={css({ display: 'flex', gap: '3xs' })}
+						title={`${metrics.linesAdded} line${metrics.linesAdded === 1 ? '' : 's'} added, ${metrics.linesRemoved} line${metrics.linesRemoved === 1 ? '' : 's'} removed vs current branch`}
+						data-testid="branch-diff-stats"
 					>
-						<BranchCard
-							{branch}
-							diffStats={metrics
-								? { linesAdded: metrics.linesAdded, linesRemoved: metrics.linesRemoved }
-								: undefined}
-							diffStatsLoading={!metrics &&
-								!branch.isCurrent() &&
-								!isRestoreView &&
-								branchMetrics.isLoading}
-							selected={branch.getIsSelected()}
-							locked={branch.getIsLocked() && !branch.isCurrent()}
-							colorPalette={getBranchColorPalette(branch)}
-							id={getBranchElementId(branch.getName(), 'container')}
-							title={branch.isCurrent()
-								? 'Current branch'
-								: formatString('{name}', { name: branch.getName() })}
-							{variant}
-							commitHistoryHref={historyEnabled && !isRestoreView && repositoryID
-								? `${resolveRepositorySubPath(repositoryID, 'history')}?commit=${branch.getLastCommit().getSha()}`
-								: undefined}
-							diffHref={diffEnabled && !isRestoreView && !branch.isCurrent() && repositoryID
-								? `${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`
-								: undefined}
-							commitDiffHref={diffEnabled && !isRestoreView && repositoryID
-								? `${resolveRepositorySubPath(repositoryID, 'diff')}?commit=${branch.getLastCommit().getSha()}`
-								: undefined}
-							commitHoverPreview={historyEnabled && !isRestoreView && repositoryID && repositoryPath
-								? commitPreview
-								: undefined}
-							recentCommits={historyEnabled && !isRestoreView && repositoryID && repositoryPath
-								? recentCommits
-								: undefined}
-							onRecentCommitsIntent={() => prefetchRecentCommitsFor(branch.getName())}
-							children={hasAlerts ? branchAlertsContent : undefined}
-						/>
-						{#snippet branchAlertsContent()}
-							<BranchAlerts {alerts} {branch} />
+						<Badge size="sm" emphasis="secondary" tone="success">+{metrics.linesAdded}</Badge>
+						<Badge size="sm" emphasis="secondary" tone="danger">−{metrics.linesRemoved}</Badge>
+					</span>
+				{:else if metrics}
+					<Badge
+						size="sm"
+						emphasis="secondary"
+						title="No line changes vs current branch"
+						data-testid="branch-diff-none"
+					>
+						±0
+					</Badge>
+				{:else if !branch.isCurrent() && !isRestoreView && branchMetrics.isLoading}
+					<span title="Computing diff vs current branch…" data-testid="branch-diff-stats-loading">
+						<Badge size="sm" emphasis="secondary">±–</Badge>
+					</span>
+				{/if}
+			</span>
+
+			<!-- At rest: when. On hover or focus: what you can do. -->
+			<span {...cell('meta', { reveal: 'rest', class: dateCellClass })}>
+				{#if isRestoreView && branch.getDeletedAt()}
+					<span
+						title={safeFormatDate(branch.getDeletedAt()!)}
+						data-testid={`deleted-at-title-${branch.getName()}`}
+					>
+						Deleted {safeFormatRelativeDate(branch.getDeletedAt()!)}
+					</span>
+				{:else}
+					<span title={commit.getFormattedDate()} data-testid="branch-commit-date">
+						{commit.getRelativeTime()}
+					</span>
+				{/if}
+			</span>
+			<span {...cell('meta', { reveal: 'hover', class: actionsCellClass })}>
+				{#if allowSetCurrent && !branch.isCurrent()}
+					<Loading loading={switching}>
+						<Tooltip content="Set as current">
+							{#snippet children(triggerProps)}
+								<Button
+									size="xs"
+									shape="square"
+									emphasis="ghost"
+									disabled={switchBranchMutation.isPending && !switching}
+									onclick={() => handleSwitchBranch(branch.getName())}
+									data-testid="switch-button"
+									{...triggerProps}
+								>
+									<Stamp emphasis="ghost" border="none" background="transparent">
+										<Icon icon="lucide:map-pin" width="14px" height="14px" />
+									</Stamp>
+									<span class={visuallyHidden()}>Set as current</span>
+								</Button>
+							{/snippet}
+						</Tooltip>
+					</Loading>
+				{/if}
+				{#if allowLocking && !branch.isCurrent()}
+					<LockBranchToggle {repositoryID} branch={branch.getName()} />
+				{/if}
+				{#if diffEnabled && !branch.isCurrent() && repositoryID}
+					<Tooltip content="View branch diff">
+						{#snippet children(triggerProps)}
+							<Button
+								size="xs"
+								shape="square"
+								emphasis="ghost"
+								href={`${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`}
+								data-testid="branch-diff-link"
+								{...triggerProps}
+							>
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:file-diff" width="14px" height="14px" />
+								</Stamp>
+								<span class={visuallyHidden()}>View branch diff</span>
+							</Button>
 						{/snippet}
-					</div>
-				</div>
-			{/if}
-		{/each}
-	</div>
+					</Tooltip>
+				{/if}
+				{#if historyEnabled && repositoryID}
+					<Tooltip content="Show in history">
+						{#snippet children(triggerProps)}
+							<Button
+								size="xs"
+								shape="square"
+								emphasis="ghost"
+								href={`${resolveRepositorySubPath(repositoryID, 'history')}?commit=${commit.getSha()}`}
+								data-testid="branch-history-link"
+								{...triggerProps}
+							>
+								<Stamp emphasis="ghost" border="none" background="transparent">
+									<Icon icon="lucide:history" width="14px" height="14px" />
+								</Stamp>
+								<span class={visuallyHidden()}>Show in history</span>
+							</Button>
+						{/snippet}
+					</Tooltip>
+				{/if}
+			</span>
+		{/snippet}
+	</GridList>
 </div>
+
+{#if historyEnabled && preview && repositoryID && repositoryPath}
+	<!-- Hover-only, like the card's preview was: keyboard users reach the
+	     same graph through the row's history link. -->
+	<Popover
+		bind:open={previewOpen}
+		triggerStrategy="manual"
+		anchorElement={preview.anchor}
+		placement="bottom-start"
+		isModal={false}
+		lockScroll={false}
+		autoFocus={false}
+	>
+		<div
+			role="presentation"
+			onmouseenter={enterPreview}
+			onmouseleave={leavePreview}
+			data-testid="branch-commit-preview"
+		>
+			<CommitGraphPreview repoId={repositoryID} path={repositoryPath} sha={preview.sha} />
+		</div>
+	</Popover>
+{/if}

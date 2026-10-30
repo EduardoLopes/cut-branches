@@ -61,6 +61,11 @@
 	edges — inside the well, so they land under the header rather than at the top
 	of the panel — and reveal themselves off those attributes, so their `md`
 	shadow spills inward through the well's overflow clip. No local state.
+
+	`data-surface-floor="valley"` publishes the well's own opaque colour the
+	way a solid Panel does (the well is a plain div), so a GridList inside
+	paints its sticky header and group titles valley rather than the surface
+	of the Panel above.
 -->
 <div
 	class={cx(
@@ -73,6 +78,7 @@
 		}),
 		className
 	)}
+	data-surface-floor="valley"
 	data-testid={wellId}
 >
 	{#if header}

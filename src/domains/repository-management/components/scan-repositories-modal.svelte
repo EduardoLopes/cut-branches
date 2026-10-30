@@ -5,6 +5,7 @@
 	import Button from '@pindoba/svelte-button';
 	import Checkbox from '@pindoba/svelte-checkbox';
 	import Dialog from '@pindoba/svelte-dialog';
+	import GridList from '@pindoba/svelte-grid-list';
 	import Group from '@pindoba/svelte-group';
 	import Loading from '@pindoba/svelte-loading';
 	import Menu from '@pindoba/svelte-menu';
@@ -23,10 +24,9 @@
 	import DialogToolbar from '$ui/patterns/dialog-toolbar.svelte';
 	import ListFilter from '$ui/patterns/list-filter.svelte';
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
-	import SelectionRow from '$ui/patterns/selection-row.svelte';
 	import ValidationHint from '$ui/patterns/validation-hint.svelte';
 	import { portal } from '$utils/portal-action';
-	import { css } from '@pindoba/styled-system/css';
+	import { css, cx } from '@pindoba/styled-system/css';
 
 	interface Props {
 		/** Controls dialog visibility. */
@@ -126,14 +126,50 @@
 	// Linked worktrees sit under the repository they belong to.
 	const groups = $derived(groupDiscoveredRepositories(filteredResults));
 
-	const allSelected = $derived(
-		discover.addableCount > 0 && discover.selectedCount === discover.addableCount
+	interface ScanRow {
+		item: DiscoveredItem;
+		/** A linked worktree, drawn under its repository. */
+		nested: boolean;
+	}
+
+	// Flattened for the list: each repository, then its worktrees as rows of
+	// their own (still selectable), drawn indented under it.
+	const rows = $derived<ScanRow[]>(
+		groups.flatMap((group) => [
+			{ item: group.item, nested: false },
+			...group.worktrees.map((worktree) => ({ item: worktree, nested: true }))
+		])
 	);
-	// Some, but not all, addable repositories selected → the select-all control
-	// shows the indeterminate ("mixed") state.
-	const someSelected = $derived(
-		discover.selectedCount > 0 && discover.selectedCount < discover.addableCount
+	// Already-added repositories show checked but can't be picked (or unpicked)
+	// again: the list keeps them out of every toggle, range and select-all.
+	const addedPaths = $derived(
+		new Set(filteredResults.filter((item) => item.alreadyAdded).map((item) => item.path))
 	);
+	const selectedPaths = $derived(
+		new Set([
+			...addedPaths,
+			...filteredResults.filter((item) => discover.isSelected(item.path)).map((item) => item.path)
+		])
+	);
+
+	/** The list reports whole sets; the composable toggles one path at a time,
+	 *  so replay the difference (added rows never change). */
+	function handleSelectionChange(next: Set<string>) {
+		for (const { item } of rows) {
+			if (item.alreadyAdded) continue;
+			if (next.has(item.path) !== discover.isSelected(item.path)) discover.toggle(item.path);
+		}
+	}
+
+	const nameCellClass = css({ display: 'flex', alignItems: 'center', gap: 'sm', minWidth: '0' });
+	// The guide line centres under the parent row's name column start.
+	const nestedClass = css({
+		paddingLeft: 'sm',
+		borderLeftWidth: '1px',
+		borderLeftStyle: 'solid',
+		borderLeftColor: 'neutral.border.muted'
+	});
+	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
 
 	async function runScan() {
 		// A fresh scan replaces the results, so a stale filter shouldn't hide them.
@@ -198,7 +234,7 @@
 <div use:portal>
 	<Dialog
 		{open}
-		onChange={handleOpenChange}
+		onOpenChange={handleOpenChange}
 		title="Find repositories"
 		aria-label="Find git repositories"
 		data-testid="scan-repositories-modal"
@@ -434,7 +470,7 @@
 						})}
 						data-testid="scan-empty"
 					>
-						<Stamp shape="circle" size="lg" emphasis="secondary" feedback="neutral">
+						<Stamp shape="circle" size="lg" emphasis="secondary" tone="neutral">
 							<Icon icon="lucide:search-x" width="20px" height="20px" />
 						</Stamp>
 						<span class={css({ fontSize: 'sm' })}>No git repositories found in this location.</span>
@@ -455,116 +491,81 @@
 						/>
 					</div>
 
-					{#snippet row(item: DiscoveredItem)}
-						{@const selected = discover.isSelected(item.path)}
-						<SelectionRow
-							checked={item.alreadyAdded || selected}
-							disabled={item.alreadyAdded}
-							muted={item.alreadyAdded}
-							onchange={() => discover.toggle(item.path)}
-							ariaLabel={item.name}
-							testId="scan-item"
-						>
-							<!-- One line: the name leads, the path takes the rest. The path is
-							     end-aligned with the folder highlighted so it lands in the same
-							     column on every row however deep the path is. -->
-							<span
-								class={css({
-									display: 'flex',
-									alignItems: 'center',
-									gap: 'sm',
-									minWidth: '0'
-								})}
-							>
-								<span class={css({ fontSize: 'sm', fontWeight: 'medium', flexShrink: '0' })}>
-									{item.name}
-								</span>
-								{#if item.isWorktree}
-									<Badge size="sm" feedback="warning" data-testid="scan-item-worktree">
-										{#snippet leading()}
-											<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
-										{/snippet}
-										worktree
-									</Badge>
-								{/if}
-								<!-- The column, not the segment count, caps the path: short paths
-								     show whole, deep ones truncate to fit the column. `flex: 1`
-								     keeps the box width independent of its text so the fitter
-								     never chases its own output. -->
-								<TruncatedPath
-									path={item.path}
-									highlight={item.name}
-									align="end"
-									class={css({
-										flex: '1',
-										maxWidth: '60%',
-										marginLeft: 'auto',
-										fontSize: 'xs'
-									})}
-									data-testid="scan-item-path"
-								/>
-							</span>
-							{#snippet trailing()}
-								{#if item.alreadyAdded}
-									<Badge
-										size="sm"
-										emphasis="secondary"
-										feedback="success"
-										data-testid="scan-item-added"
-									>
-										Added
-									</Badge>
-								{/if}
-							{/snippet}
-						</SelectionRow>
-					{/snippet}
-
-					{#snippet listHeader()}
-						<Checkbox
-							id="scan-select-all"
-							checked={allSelected}
-							indeterminate={someSelected}
-							disabled={discover.addableCount === 0}
-							onchange={() => discover.setAll(!allSelected)}
-							data-testid="scan-select-all"
-						>
-							Select all
-						</Checkbox>
-						<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
-							{discover.selectedCount} of {discover.addableCount} selected
-						</span>
-					{/snippet}
-
+					<!-- The list's own sticky header carries select-all. The well's
+					     scroller has no top padding, so the header pins flush. -->
 					<ScrollWell
 						class={css({ flex: '1', minHeight: '0' })}
-						header={listHeader}
+						scrollerClass={css({ paddingTop: '0' })}
 						testId="scan-results-scroller"
 					>
-						{#each groups as group (group.item.path)}
-							{@render row(group.item)}
-							{#if group.worktrees.length > 0}
-								<!-- Indented with a guide line so the worktrees read as part of
-								     the repository above, not as more repositories. The 1px line is
-								     centred on the parent's checkbox: the row's `sm` inset plus half
-								     the `md` checkbox box (2rem), minus half the line itself. -->
-								<div
-									class={css({
-										display: 'flex',
-										flexDirection: 'column',
-										gap: '3xs',
-										marginLeft: 'calc(token(spacing.sm) + 1rem - 0.5px)',
-										paddingLeft: 'xs',
-										borderLeftWidth: '1px',
-										borderLeftStyle: 'solid',
-										borderLeftColor: 'neutral.border.muted'
-									})}
-									data-testid="scan-item-worktrees"
-								>
-									{#each group.worktrees as worktree (worktree.path)}
-										{@render row(worktree)}
-									{/each}
-								</div>
-							{/if}
+						{#if rows.length > 0}
+							<GridList
+								label="Found repositories"
+								items={rows}
+								getId={(row: ScanRow) => row.item.path}
+								rowName={(row: ScanRow) => row.item.name}
+								selectable
+								header
+								value={selectedPaths}
+								disabledIds={addedPaths}
+								onValueChange={handleSelectionChange}
+								look="cards"
+								rowBackground="surface.peak"
+								columns={[
+									{ id: 'name', track: 'auto', header: 'Repository' },
+									{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
+									{ id: 'status', track: 'auto', srHeader: 'Status' }
+								]}
+							>
+								{#snippet row({ item, nested }, { cell })}
+									<!-- Worktrees are indented with a guide line so they read as
+									     part of the repository above, not as more repositories. -->
+									<span
+										{...cell('name', {
+											class: nested ? cx(nameCellClass, nestedClass) : nameCellClass
+										})}
+										data-nested={nested || undefined}
+										data-testid="scan-item"
+									>
+										<span
+											class={css({ fontSize: 'sm', fontWeight: 'medium', whiteSpace: 'nowrap' })}
+										>
+											{item.name}
+										</span>
+										{#if item.isWorktree}
+											<Badge size="sm" tone="warning" data-testid="scan-item-worktree">
+												{#snippet leading()}
+													<Stamp emphasis="ghost"><Icon icon="lucide:trees" /></Stamp>
+												{/snippet}
+												worktree
+											</Badge>
+										{/if}
+									</span>
+									<span {...cell('path')}>
+										<!-- End-aligned with the folder highlighted, so it lands in
+										     the same column on every row however deep the path is. -->
+										<TruncatedPath
+											path={item.path}
+											highlight={item.name}
+											align="end"
+											class={pathClass}
+											data-testid="scan-item-path"
+										/>
+									</span>
+									<span {...cell('status')}>
+										{#if item.alreadyAdded}
+											<Badge
+												size="sm"
+												emphasis="secondary"
+												tone="success"
+												data-testid="scan-item-added"
+											>
+												Added
+											</Badge>
+										{/if}
+									</span>
+								{/snippet}
+							</GridList>
 						{:else}
 							<div
 								class={css({
@@ -580,7 +581,7 @@
 							>
 								No repositories match your filter.
 							</div>
-						{/each}
+						{/if}
 					</ScrollWell>
 				{/if}
 			</div>

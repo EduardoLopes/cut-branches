@@ -140,7 +140,7 @@
 			</Button>
 			<Loading loading={deleteRepositoryMutation.isPending} variant="busy" indicator>
 				<Button
-					feedback="danger"
+					tone="danger"
 					autofocus
 					onclick={handleRemove}
 					disabled={deleteRepositoryMutation.isPending}

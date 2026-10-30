@@ -217,6 +217,12 @@ export default defineConfig({
 	},
 
 	jsxFramework: 'svelte',
+	// Read only the `css` prop off components. With the default, Panda 2 takes
+	// every prop of a capitalised component as a style prop, so GridList's
+	// `columns={[…]}` became the CSS `columns` property (junk rules plus a
+	// nested_property warning per list). Svelte gets no style-prop components
+	// anyway, so nothing real is lost.
+	jsxStyleProps: 'minimal',
 
 	// The output directory for your css system
 	outdir: 'styled-system'

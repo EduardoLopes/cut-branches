@@ -38,7 +38,7 @@
 		 *  ref decorations the generic card doesn't model). */
 		footerBadges?: Snippet;
 		/** Semantic palette to follow — inherited from the enclosing branch card. */
-		feedback?: PrimitiveCardProps['feedback'];
+		feedback?: PrimitiveCardProps['tone'];
 		/** Remote tracking ref this commit's branch follows (e.g. `origin/main`);
 		 *  shown as a badge in the footer. Branch-level, so passed in by the
 		 *  composing card rather than read from the commit. */
@@ -372,7 +372,7 @@
 			flexWrap: 'wrap'
 		})}
 	>
-		<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-sha">
+		<Badge size={badgeSize} emphasis="secondary" tone={feedback} data-testid="commit-sha">
 			{#snippet leading()}
 				<Stamp emphasis="ghost"><Icon icon="lucide:git-commit-horizontal" /></Stamp>
 			{/snippet}
@@ -381,7 +381,7 @@
 			</span>
 		</Badge>
 		{#if showUpstream && upstream}
-			<Badge size={badgeSize} emphasis="secondary" {feedback} data-testid="commit-upstream">
+			<Badge size={badgeSize} emphasis="secondary" tone={feedback} data-testid="commit-upstream">
 				{#snippet leading()}
 					<Stamp emphasis="ghost"><Icon icon="lucide:git-branch" /></Stamp>
 				{/snippet}
@@ -420,7 +420,7 @@
 	<Card
 		class={css({ width: '100%', minWidth: '0' })}
 		size={cardSize}
-		{feedback}
+		tone={feedback}
 		{background}
 		{border}
 		{shadow}

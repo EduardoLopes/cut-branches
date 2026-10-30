@@ -230,7 +230,7 @@
 			</Loading>
 		</div>
 	{:else if diffQuery.isError}
-		<Alert feedback="danger" emphasis="secondary" data-testid="file-diff-error">
+		<Alert tone="danger" emphasis="secondary" data-testid="file-diff-error">
 			{diffQuery.error.description ?? diffQuery.error.message}
 		</Alert>
 	{:else if diffQuery.data}
@@ -251,7 +251,7 @@
 			{@const gateLines = countDiffLines(diff.hunks)}
 			{@const totalDiffLines = countDiffLines(diff.hunks, expandedGaps)}
 			{#if gateLines > DIFF_RENDER_GATE_LINES && !renderLargeDiff}
-				<Alert feedback="warning" emphasis="secondary" data-testid="file-diff-large">
+				<Alert tone="warning" emphasis="secondary" data-testid="file-diff-large">
 					<span>
 						This file's diff is very large ({gateLines} lines) — rendering it may take a moment.
 					</span>

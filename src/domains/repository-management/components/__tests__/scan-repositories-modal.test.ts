@@ -62,6 +62,14 @@ beforeEach(() => {
 	vi.mocked(openFolderDialog).mockResolvedValue('/chosen/folder');
 });
 
+/** The results list's own header select-all. */
+function headerSelectAll(screen: Awaited<ReturnType<typeof renderWithTestWrapper>>) {
+	return screen
+		.getByRole('grid', { name: 'Found repositories' })
+		.getByRole('columnheader')
+		.getByRole('checkbox');
+}
+
 describe('ScanRepositoriesModal', () => {
 	describe('auto-scan on open', () => {
 		it('scans the home folder when opened with the home scope', async () => {
@@ -138,10 +146,16 @@ describe('ScanRepositoriesModal', () => {
 			await vi.waitFor(() => expect(screen.getByTestId('scan-item').elements()).toHaveLength(3));
 			expect(screen.getByTestId('scan-item-worktree').elements()).toHaveLength(2);
 			// `/wt` is nested under `/main`; `/lost` has no parent here and stays top-level.
-			const nested = screen.getByTestId('scan-item-worktrees').elements();
+			const items = screen.getByTestId('scan-item').elements();
+			const nested = items.filter((item) => item.hasAttribute('data-nested'));
 			expect(nested).toHaveLength(1);
-			expect(nested[0].querySelectorAll('[data-testid="scan-item"]')).toHaveLength(1);
 			expect(nested[0].textContent).toContain('wt');
+			// …and it follows its repository.
+			expect(items.map((item) => item.textContent?.trim().split(/\s/)[0])).toEqual([
+				'main',
+				'wt',
+				'lost'
+			]);
 		});
 
 		it('shows a scroll shadow only towards the edge with more content', async () => {
@@ -217,12 +231,16 @@ describe('ScanRepositoriesModal', () => {
 			});
 			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 
-			await vi.waitFor(() => expect(screen.getByTestId('scan-select-all')).toBeInTheDocument());
+			await vi.waitFor(() => expect(headerSelectAll(screen).element()).toBeInTheDocument());
 			expect(screen.getByTestId('scan-summary')).toHaveTextContent(
 				'2 repositories · 1,200 folders scanned'
 			);
 			expect(screen.getByTestId('scan-item').elements()).toHaveLength(2);
 			expect(screen.getByTestId('scan-item-added')).toBeInTheDocument();
+			// The added repository stays checked but can't be toggled.
+			const added = screen.getByRole('row').filter({ hasText: '/b' }).getByRole('checkbox');
+			await expect.element(added).toBeChecked();
+			await expect.element(added).toBeDisabled();
 			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Add 1 repository');
 		});
 
@@ -312,15 +330,29 @@ describe('ScanRepositoriesModal', () => {
 			expect(openFolderDialog).toHaveBeenCalled();
 		});
 
-		it('toggles a result and toggles select-all', async () => {
+		it('toggles a result from its checkbox', async () => {
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await tick();
+
+			await screen.getByRole('row').filter({ hasText: '/a' }).getByRole('checkbox').click();
+			expect(h.stub.toggle).toHaveBeenCalledWith('/a');
+		});
+
+		it('toggles a result from anywhere on its row', async () => {
 			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
 			await tick();
 
 			await screen.getByTestId('scan-item').click();
-			expect(h.stub.toggle).toHaveBeenCalledWith('/a');
+			expect(h.stub.toggle).toHaveBeenCalledExactlyOnceWith('/a');
+		});
 
-			await screen.getByTestId('scan-select-all').click();
-			expect(h.stub.setAll).toHaveBeenCalled();
+		it('replays select-all as a toggle per unselected result', async () => {
+			// A fresh render: the stub's `isSelected` never reflects a toggle.
+			const screen = await renderWithTestWrapper(ScanRepositoriesModal, { open: true });
+			await tick();
+
+			await headerSelectAll(screen).click();
+			expect(h.stub.toggle).toHaveBeenCalledExactlyOnceWith('/a');
 		});
 
 		it('adds the selected repositories', async () => {

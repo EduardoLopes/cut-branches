@@ -457,7 +457,7 @@
 >
 	{#if activeFocus !== null}
 		<span class={focusChip} data-testid="canvas-focus-chip">
-			<Badge size="xs" emphasis="secondary" feedback="primary">focus</Badge>
+			<Badge size="xs" emphasis="secondary" tone="primary">focus</Badge>
 			<span class={css({ fontFamily: 'mono' })}>{activeFocus}</span>
 			<span class={css({ color: 'neutral.text.muted' })}>
 				{displayFiles.length - 1} related

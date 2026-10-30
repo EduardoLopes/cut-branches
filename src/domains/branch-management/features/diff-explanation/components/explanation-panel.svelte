@@ -106,7 +106,7 @@
 	</div>
 
 	{#if status === 'error'}
-		<Alert feedback="danger" data-testid="explanation-error">
+		<Alert tone="danger" data-testid="explanation-error">
 			{error ?? 'Explanation failed'}
 		</Alert>
 	{:else if status === 'cancelled' && !text}

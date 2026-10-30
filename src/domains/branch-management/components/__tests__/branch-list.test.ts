@@ -1,407 +1,541 @@
 import { tick } from 'svelte';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 import BranchList from '../branch-list.svelte';
-import { branchesHolder } from './reactive-branches.svelte';
+import { branchesHolder, pathHolder, searchHolder } from './reactive-branches.svelte';
 import { Branch } from '$domains/branch-management/core/models/branch';
-import type { UpdateCurrentBranchInput } from '$infrastructure/bindings';
+import type { Branch as BranchData } from '$infrastructure/bindings';
 import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
-// Generate mock branches using factory and convert to domain models
+const mocks = vi.hoisted(() => ({
+	switchMutate: vi.fn(),
+	switchState: { isPending: false, variables: null as { branch: string } | null },
+	switchOnSuccess: undefined as undefined | ((data: { currentBranch: string }) => void),
+	selectionMutate: vi.fn(),
+	flags: new Set<string>(),
+	metrics: {
+		isLoading: false,
+		value: { isMerged: false, linesAdded: 3, linesRemoved: 1 } as
+			{ isMerged: boolean; linesAdded: number; linesRemoved: number } | undefined
+	},
+	fetchWindow: vi.fn(() => Promise.resolve({})),
+	metricsConfig: undefined as
+		| undefined
+		| { visibleRange: () => unknown; branchNames: () => readonly string[]; enabled: () => boolean }
+}));
+
+function branch(overrides: Partial<BranchData> = {}) {
+	return Branch.fromData(mockDataFactory.branch(overrides));
+}
+
 function createMockBranches() {
 	return [
-		Branch.fromData(mockDataFactory.branch({ name: 'feature/test-branch', current: false })),
-		Branch.fromData(
-			mockDataFactory.branch({ name: 'selected-branch', current: false, isSelected: true })
-		),
-		Branch.fromData(
-			mockDataFactory.branch({ name: 'locked-branch', current: false, isLocked: true })
-		),
-		Branch.fromData(mockDataFactory.branch({ name: 'current-branch', current: true }))
+		branch({ name: 'feature/test-branch' }),
+		branch({ name: 'selected-branch', isSelected: true }),
+		branch({ name: 'locked-branch', isLocked: true }),
+		branch({ name: 'current-branch', current: true, fullyMerged: true })
 	];
 }
 
-function createManyMockBranches(count = 15) {
-	return Array.from({ length: count }, (_, i) =>
-		Branch.fromData(
-			mockDataFactory.branch({
-				name: `branch-${i + 1}`,
-				current: false
-			})
-		)
-	);
-}
-
-// Mock the query to return branches data. The holder is `$state`-backed (see
-// reactive-branches.svelte.ts) so replacing its value re-runs the component's
-// `$derived` chain, letting tests rewrite the list mid-flight like a refetch.
+// `$state`-backed holders (see reactive-branches.svelte.ts): replacing their
+// value re-runs the component's `$derived` chain like a refetch would.
 vi.mock('$domains/branch-management/infrastructure/queries/create-get-branches-query', async () => {
 	const { branchesHolder: holder } = await import('./reactive-branches.svelte');
 	return {
-		createGetBranchesQuery: () => {
-			// Return an object with a getter that always returns current branches
-			const mockQuery = {
-				get data() {
-					return { branches: holder.value };
-				},
-				isLoading: false,
-				isError: false,
-				error: null
-			};
-			return mockQuery;
-		}
+		createGetBranchesQuery: () => ({
+			get data() {
+				return { branches: holder.value };
+			},
+			isLoading: false,
+			isError: false,
+			error: null
+		})
 	};
 });
 
-vi.mock('$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation', () => {
-	const mutate = vi.fn();
+vi.mock('$domains/branch-management/core/composables/search-branches.svelte', async () => {
+	const { searchHolder: holder } = await import('./reactive-branches.svelte');
 	return {
-		createSwitchBranchMutation: () => {
-			return {
-				mutate,
-				isPending: false,
-				variables: null
-			};
+		getSearchBranchesStore: () => ({
+			get state() {
+				return holder.value;
+			}
+		})
+	};
+});
+
+vi.mock('$app/state', async () => {
+	const { pathHolder: holder } = await import('./reactive-branches.svelte');
+	return {
+		page: {
+			url: {
+				get pathname() {
+					return holder.value;
+				}
+			}
 		}
 	};
 });
 
 vi.mock(
+	'$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation',
+	() => ({
+		createSwitchBranchMutation: (options: {
+			onSuccess: (data: { currentBranch: string }) => void;
+		}) => {
+			mocks.switchOnSuccess = options.onSuccess;
+			return {
+				mutate: mocks.switchMutate,
+				get isPending() {
+					return mocks.switchState.isPending;
+				},
+				get variables() {
+					return mocks.switchState.variables;
+				}
+			};
+		}
+	})
+);
+
+vi.mock(
 	'$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation',
 	() => ({
 		createUpdateBranchSelectionBatchMutation: () => ({
-			mutate: vi.fn(),
+			mutate: mocks.selectionMutate,
 			isPending: false
 		})
 	})
 );
 
-vi.mock('../../store/search-branches.svelte', () => ({
-	getSearchBranchesStore: () => ({
-		state: ''
+// The lock toggle runs its own query/mutation; it has its own tests.
+vi.mock('$domains/branch-management/components/lock-branch-toggle.svelte', async () => ({
+	default: (await import('./stub-component.svelte')).default
+}));
+
+// The graph preview runs its own history query; it has its own tests.
+vi.mock(
+	'$domains/branch-management/features/commit-history/components/commit-graph-preview.svelte',
+	async () => ({ default: (await import('./stub-component.svelte')).default })
+);
+
+vi.mock(
+	'$domains/branch-management/features/commit-history/infrastructure/queries/create-get-commit-history-window-query',
+	() => ({
+		fetchCommitHistoryWindow: mocks.fetchWindow,
+		PREVIEW_WINDOW: { contextBefore: 6, limit: 15 }
 	})
-}));
+);
 
-vi.mock('$app/state', () => ({
-	page: {
-		url: {
-			pathname: '/repos/repo1'
-		}
-	}
+vi.mock('$lib/feature-flags.svelte', () => ({
+	isFeatureEnabled: (key: string) => mocks.flags.has(key)
 }));
-
-// Mock Tauri commands via bindings
-vi.mock('$infrastructure/bindings', async () => {
-	const actual = await vi.importActual<typeof import('$infrastructure/bindings')>(
-		'$infrastructure/bindings'
-	);
-	const { branchesHolder: holder } = await import('./reactive-branches.svelte');
-	return {
-		...actual,
-		commands: {
-			getBranchList: vi.fn(() =>
-				Promise.resolve({
-					status: 'ok' as const,
-					data: { branches: holder.value }
-				})
-			),
-			updateCurrentBranch: vi.fn((input: UpdateCurrentBranchInput) =>
-				Promise.resolve({
-					status: 'ok' as const,
-					data: { currentBranch: input.branch }
-				})
-			),
-			updateBranchSelectionBatch: vi.fn(() =>
-				Promise.resolve({
-					status: 'ok' as const,
-					data: {}
-				})
-			),
-			getBranchMergeStatus: vi.fn(() =>
-				Promise.resolve({
-					status: 'ok' as const,
-					data: { isMerged: false }
-				})
-			)
-		}
-	};
-});
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
-	notifications: {
-		push: vi.fn()
+	notifications: { push: vi.fn() }
+}));
+
+// The composable itself skips nothing: the list decides which rows ask.
+vi.mock('$domains/branch-management/core/composables/use-branch-metrics.svelte', () => ({
+	useBranchMetrics: (config: NonNullable<typeof mocks.metricsConfig>) => {
+		mocks.metricsConfig = config;
+		return {
+			getMetrics: () => mocks.metrics.value,
+			get isLoading() {
+				return mocks.metrics.isLoading;
+			}
+		};
 	}
 }));
 
-// The list reads merge status + diff stats from the bulk-metrics composable;
-// the component itself skips the lookup for the current branch, so returning
-// metrics unconditionally still leaves the current card badge-free.
-vi.mock('$domains/branch-management/core/composables/use-branch-metrics.svelte', () => ({
-	useBranchMetrics: () => ({
-		getMetrics: () => ({ isMerged: false, linesAdded: 3, linesRemoved: 1 }),
-		isLoading: false
-	})
-}));
+type Screen = Awaited<ReturnType<typeof renderWithTestWrapper>>;
 
-describe('BranchList Component', () => {
+function render(props: Record<string, unknown> = {}) {
+	return renderWithTestWrapper(BranchList, {
+		repositoryID: 'repo1',
+		repositoryPath: '/test/repo/path',
+		...props
+	});
+}
+
+function row(screen: Screen, name: string) {
+	// Names in these tests are never substrings of one another's row text.
+	return screen.getByRole('row').filter({ hasText: name });
+}
+
+describe('BranchList', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		branchesHolder.value = createMockBranches();
+		searchHolder.value = '';
+		pathHolder.value = '/repos/repo1';
+		mocks.flags.clear();
+		mocks.switchState.isPending = false;
+		mocks.switchState.variables = null;
+		mocks.metrics.isLoading = false;
+		mocks.metrics.value = { isMerged: false, linesAdded: 3, linesRemoved: 1 };
 	});
 
-	test('renders branches list with checkboxes and switch buttons', async () => {
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+	describe('rows', () => {
+		test('renders one grid row per branch, current branch first', async () => {
+			const screen = await render();
+			await tick();
+
+			await expect.element(screen.getByRole('grid', { name: 'Branches' })).toBeInTheDocument();
+			const names = screen.getByTestId('branch-name').elements();
+			expect(names.map((el) => el.textContent?.trim())).toEqual([
+				'current-branch',
+				'feature/test-branch',
+				'selected-branch',
+				'locked-branch'
+			]);
+			await expect.element(screen.getByTestId('branch-current-badge')).toBeInTheDocument();
+			await expect.element(screen.getByTestId('branch-locked-badge')).toBeInTheDocument();
 		});
 
-		// Wait for component to render
-		await tick();
+		test('virtualizes a long list: a window of rows mounted, the full count announced', async () => {
+			branchesHolder.value = Array.from({ length: 300 }, (_, i) => branch({ name: `branch-${i}` }));
+			const screen = await render();
+			const scroller = screen.getByTestId('branch-list-scroller').element() as HTMLElement;
+			scroller.style.flex = 'none';
+			scroller.style.height = '400px';
 
-		// Check that we have list items
-		const list = screen.getByRole('list');
-		expect(list).toBeInTheDocument();
-		const listItems = screen.container.querySelectorAll('[role="listitem"]');
-		expect(listItems.length).toBe(4); // We have 4 branches
+			await vi.waitFor(() => {
+				const mounted = screen.getByTestId('branch-row').elements().length;
+				expect(mounted).toBeGreaterThan(0);
+				expect(mounted).toBeLessThan(300);
+			});
+			// Header row + 300 branch rows.
+			await expect
+				.element(screen.getByRole('grid', { name: 'Branches' }))
+				.toHaveAttribute('aria-rowcount', '301');
+		});
 
-		// Check for checkboxes (2 non-current branches should have checkboxes)
-		const checkboxes = screen.container.querySelectorAll('input[type="checkbox"]');
-		expect(checkboxes.length).toBe(2); // 2 non-current branches
+		test('shows the last commit: subject, author, short sha and when', async () => {
+			branchesHolder.value = [branch({ name: 'feature/x' })];
+			const screen = await render();
+			await tick();
 
-		// Check for switch buttons (non-current branches should have switch buttons)
-		const switchButtons = screen.container.querySelectorAll('[data-testid="switch-button"]');
-		expect(switchButtons.length).toBe(3); // 3 non-current branches
+			await expect
+				.element(screen.getByTestId('branch-commit-subject'))
+				.toHaveTextContent('Test commit');
+			await expect.element(screen.getByTestId('branch-author')).toHaveTextContent('Test User');
+			await expect.element(screen.getByTestId('branch-sha')).toHaveTextContent('abc1234');
+			await expect.element(screen.getByTestId('branch-commit-date')).toMatchTextContent('ago');
+		});
+
+		test('marks whether a branch tracks a remote', async () => {
+			branchesHolder.value = [
+				branch({ name: 'tracked', upstream: 'origin/tracked' }),
+				branch({ name: 'local-only' })
+			];
+			const screen = await render();
+			await tick();
+
+			await expect
+				.element(row(screen, 'tracked').getByTestId('branch-upstream'))
+				.toBeInTheDocument();
+			await expect
+				.element(row(screen, 'local-only').getByTestId('branch-no-upstream'))
+				.toBeInTheDocument();
+		});
 	});
 
-	test('passes diff stats to branch cards for non-current branches only', async () => {
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+	describe('alerts', () => {
+		test('flags unmerged branches, but never the current one', async () => {
+			const screen = await render();
+			await tick();
+
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('branch-alert-not-merged'))
+				.toBeInTheDocument();
+			expect(
+				row(screen, 'current-branch').getByTestId('branch-alert-not-merged').elements()
+			).toHaveLength(0);
 		});
 
-		await tick();
+		test('flags offensive names, and protected names only once selected', async () => {
+			branchesHolder.value = [
+				branch({ name: 'master', fullyMerged: true }),
+				branch({ name: 'release', fullyMerged: true, isSelected: true })
+			];
+			mocks.metrics.value = { isMerged: true, linesAdded: 0, linesRemoved: 0 };
+			const screen = await render();
+			await tick();
 
-		// The mocked diff-stats query returns +3/−1 for enabled branches and
-		// undefined for disabled ones. Asserted per card rather than by count:
-		// the query is also gated on the row being settled inside the viewport,
-		// so how many rows carry badges depends on the virtual window.
-		const otherCard = screen.container.querySelector('[id="branch-feature/test-branch-container"]');
-		expect(otherCard?.querySelector('[data-testid="branch-diff-stats"]')).toBeInTheDocument();
+			await expect
+				.element(row(screen, 'master').getByTestId('offensive-words-alert'))
+				.toBeInTheDocument();
+			expect(row(screen, 'master').getByTestId('protected-words-alert').elements()).toHaveLength(0);
+		});
 
-		const currentCard = screen.container.querySelector('#branch-current-branch-container');
-		expect(currentCard?.querySelector('[data-testid="branch-diff-stats"]')).toBeNull();
+		test('hides every alert when told to', async () => {
+			const screen = await render({ showAlerts: false });
+			await tick();
+
+			expect(screen.getByTestId('branch-alert-not-merged').elements()).toHaveLength(0);
+		});
 	});
 
-	test('virtualizes long lists instead of paginating them', async () => {
-		// Set many branches
-		branchesHolder.value = createManyMockBranches();
+	describe('diff stats', () => {
+		test('shows the lines a branch adds and removes, never for the current branch', async () => {
+			const screen = await render();
+			await tick();
 
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('branch-diff-stats'))
+				.toHaveTextContent('+3 −1');
+			expect(
+				row(screen, 'current-branch').getByTestId('branch-diff-stats').elements()
+			).toHaveLength(0);
 		});
 
-		// Wait for component to render
-		await tick();
+		test('reads "±0" when a branch changes nothing', async () => {
+			mocks.metrics.value = { isMerged: true, linesAdded: 0, linesRemoved: 0 };
+			branchesHolder.value = [branch({ name: 'same' })];
+			const screen = await render();
+			await tick();
 
-		// The pagination control is gone — the list is one continuous scroller.
-		expect(screen.container.textContent).not.toContain('Next');
-		const scroller = screen.container.querySelector('[data-testid="branch-list-scroller"]');
-		expect(scroller).toBeInTheDocument();
+			await expect.element(screen.getByTestId('branch-diff-none')).toHaveTextContent('±0');
+		});
 
-		// Rows are windowed, so each one advertises its place in the full set —
-		// assistive tech still reports 15 branches, not just the rendered slice.
-		const listItems = screen.container.querySelectorAll('[role="listitem"]');
-		expect(listItems.length).toBeGreaterThan(0);
-		expect(listItems[0]?.getAttribute('aria-setsize')).toBe('15');
-		expect(listItems[0]?.getAttribute('aria-posinset')).toBe('1');
+		test('shows a placeholder while the stats load', async () => {
+			mocks.metrics.value = undefined;
+			mocks.metrics.isLoading = true;
+			branchesHolder.value = [branch({ name: 'pending' })];
+			const screen = await render();
+			await tick();
 
-		// The sizer reserves room for every row, so the scrollbar reflects the
-		// whole list rather than the rendered window.
-		const sizer = screen.container.querySelector('[role="list"]') as HTMLElement;
-		expect(Number.parseFloat(sizer.style.height)).toBeGreaterThan(15 * 100);
+			await expect.element(screen.getByTestId('branch-diff-stats-loading')).toBeInTheDocument();
+		});
+
+		test('asks for metrics only for the rows on screen', async () => {
+			branchesHolder.value = Array.from({ length: 80 }, (_, i) => branch({ name: `b-${i}` }));
+			const screen = await render();
+			const scroller = screen.getByTestId('branch-list-scroller').element() as HTMLElement;
+			scroller.style.flex = 'none';
+			scroller.style.height = '200px';
+
+			await vi.waitFor(() => {
+				const range = mocks.metricsConfig?.visibleRange() as {
+					startIndex: number;
+					endIndex: number;
+				} | null;
+				expect(range?.startIndex).toBe(0);
+				// A screen ahead is observed too, but nowhere near all 80 rows.
+				expect(range?.endIndex).toBeGreaterThan(0);
+				expect(range?.endIndex).toBeLessThan(79);
+			});
+			expect(mocks.metricsConfig?.branchNames()).toHaveLength(80);
+			expect(mocks.metricsConfig?.enabled()).toBe(true);
+		});
 	});
 
-	test('keeps rows it has already scrolled past mounted', async () => {
-		branchesHolder.value = createManyMockBranches();
+	describe('selection', () => {
+		test('checks the selected branches and disables the current and locked ones', async () => {
+			const screen = await render();
+			await tick();
 
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+			const checkbox = (name: string) => row(screen, name).getByRole('checkbox');
+			await expect.element(checkbox('selected-branch')).toBeChecked();
+			await expect.element(checkbox('feature/test-branch')).not.toBeChecked();
+			await expect.element(checkbox('current-branch')).toBeDisabled();
+			await expect.element(checkbox('locked-branch')).toBeDisabled();
 		});
 
-		await tick();
+		test('writes a selection change back as a batch', async () => {
+			const screen = await render();
+			await tick();
 
-		const scroller = screen.container.querySelector(
-			'[data-testid="branch-list-scroller"]'
-		) as HTMLElement;
-		// Constrain the port so the list actually overflows and can be scrolled.
-		scroller.style.flex = 'none';
-		scroller.style.height = '200px';
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+			await row(screen, 'feature/test-branch').getByRole('checkbox').click();
+			expect(mocks.selectionMutate).toHaveBeenCalledWith({
+				repoId: 'repo1',
+				branchNames: ['feature/test-branch'],
+				isSelected: true
+			});
 
-		const first = screen.container.querySelectorAll('[role="listitem"]').length;
-		expect(first).toBeGreaterThan(0);
+			await row(screen, 'selected-branch').getByRole('checkbox').click();
+			expect(mocks.selectionMutate).toHaveBeenCalledWith({
+				repoId: 'repo1',
+				branchNames: ['selected-branch'],
+				isSelected: false
+			});
+		});
 
-		// Scroll to the end. A sliding window would have unmounted the top rows;
-		// a growing one keeps them, so the row count only ever goes up.
-		scroller.scrollTop = scroller.scrollHeight;
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-		await tick();
+		test('renders no checkboxes when selection is off', async () => {
+			const screen = await render({ allowSelection: false });
+			await tick();
 
-		const afterScroll = screen.container.querySelectorAll('[role="listitem"]').length;
-		expect(afterScroll).toBeGreaterThanOrEqual(first);
-		// Row 1 was rendered at the top and is still here at the bottom.
-		expect(
-			screen.container.querySelector('[role="listitem"][aria-posinset="1"]')
-		).toBeInTheDocument();
+			expect(screen.getByRole('checkbox').elements()).toHaveLength(0);
+		});
+
+		test('ignores selection changes without a repository', async () => {
+			const screen = await render({ repositoryID: undefined });
+			await tick();
+
+			await row(screen, 'feature/test-branch').getByRole('checkbox').click();
+			expect(mocks.selectionMutate).not.toHaveBeenCalled();
+		});
 	});
 
-	test('drops the retained window when the branch list changes', async () => {
-		branchesHolder.value = createManyMockBranches(40);
+	describe('row actions', () => {
+		test('switches to a branch and drops it from the selection once current', async () => {
+			const screen = await render();
+			await tick();
 
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+			const switches = screen.getByTestId('switch-button');
+			// Every branch but the current one can become current.
+			expect(switches.elements()).toHaveLength(3);
+			await row(screen, 'feature/test-branch').getByTestId('switch-button').click({ force: true });
+			expect(mocks.switchMutate).toHaveBeenCalledWith({
+				path: '/test/repo/path',
+				branch: 'feature/test-branch'
+			});
+
+			mocks.switchOnSuccess?.({ currentBranch: 'feature/test-branch' });
+			expect(mocks.selectionMutate).toHaveBeenCalledWith({
+				repoId: 'repo1',
+				branchNames: ['feature/test-branch'],
+				isSelected: false
+			});
 		});
 
-		await tick();
+		test('does nothing without a repository path, or a repository id on success', async () => {
+			const screen = await render({ repositoryPath: undefined, repositoryID: undefined });
+			await tick();
 
-		const scroller = screen.container.querySelector(
-			'[data-testid="branch-list-scroller"]'
-		) as HTMLElement;
-		scroller.style.flex = 'none';
-		scroller.style.height = '200px';
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+			await row(screen, 'feature/test-branch').getByTestId('switch-button').click({ force: true });
+			expect(mocks.switchMutate).not.toHaveBeenCalled();
+			mocks.switchOnSuccess?.({ currentBranch: 'feature/test-branch' });
+			expect(mocks.selectionMutate).not.toHaveBeenCalled();
+		});
 
-		// Scroll to the bottom so the top rows are only alive via retention.
-		scroller.scrollTop = scroller.scrollHeight;
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-		await tick();
+		test('locks other switch buttons while one switch is in flight', async () => {
+			mocks.switchState.isPending = true;
+			mocks.switchState.variables = { branch: 'feature/test-branch' };
+			const screen = await render();
+			await tick();
 
-		expect(
-			screen.container.querySelector('[role="listitem"][aria-posinset="1"]')
-		).toBeInTheDocument();
-		const retainedCount = screen.container.querySelectorAll('[role="listitem"]').length;
+			await expect
+				.element(row(screen, 'selected-branch').getByTestId('switch-button'))
+				.toBeDisabled();
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('switch-button'))
+				.not.toBeDisabled();
+		});
 
-		// Simulate a refetch that rewrites the list (new names => new keys).
-		branchesHolder.value = Array.from({ length: 40 }, (_, i) =>
-			Branch.fromData(mockDataFactory.branch({ name: `renamed-${i + 1}`, current: false }))
-		);
-		await tick();
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-		await tick();
+		test('links to the diff and history views when their flags are on', async () => {
+			mocks.flags.add('branch-diff');
+			mocks.flags.add('commit-history');
+			const screen = await render();
+			await tick();
 
-		// The retained window was dropped: row 1 (far above the viewport) is gone
-		// and only the band around the current offset is mounted.
-		expect(screen.container.querySelector('[role="listitem"][aria-posinset="1"]')).toBeNull();
-		expect(screen.container.querySelectorAll('[role="listitem"]').length).toBeLessThan(
-			retainedCount
-		);
-		// And a background data change must NOT yank the user back to the top.
-		expect(scroller.scrollTop).toBeGreaterThan(0);
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('branch-diff-link'))
+				.toHaveAttribute('href', expect.stringContaining('diff?branch=feature%2Ftest-branch'));
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('branch-history-link'))
+				.toHaveAttribute('href', expect.stringContaining('history?commit=abc1234'));
+			// The current branch has nothing to diff against itself.
+			expect(row(screen, 'current-branch').getByTestId('branch-diff-link').elements()).toHaveLength(
+				0
+			);
+		});
+
+		test('hides switching and locking when the view disallows them', async () => {
+			const screen = await render({ allowSetCurrent: false, allowLocking: false });
+			await tick();
+
+			expect(screen.getByTestId('switch-button').elements()).toHaveLength(0);
+			expect(screen.getByTestId('stub-component').elements()).toHaveLength(0);
+		});
 	});
 
-	test('collapses the retained window on a bulk selection flip, but not on a single toggle', async () => {
-		branchesHolder.value = createManyMockBranches(60);
+	describe('restore view', () => {
+		test('shows when each branch was deleted, with no upstream, links or metrics', async () => {
+			pathHolder.value = '/repos/repo1/restore';
+			mocks.flags.add('branch-diff');
+			mocks.flags.add('commit-history');
+			branchesHolder.value = [branch({ name: 'gone', deletedAt: '2024-01-01T00:00:00Z' })];
+			const screen = await render({ allowSetCurrent: false, allowLocking: false });
+			await tick();
 
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+			await expect
+				.element(screen.getByTestId('deleted-at-title-gone'))
+				.toMatchTextContent('Deleted');
+			expect(screen.getByTestId('branch-no-upstream').elements()).toHaveLength(0);
+			expect(screen.getByTestId('branch-diff-link').elements()).toHaveLength(0);
+			expect(screen.getByTestId('branch-history-link').elements()).toHaveLength(0);
+			expect(mocks.metricsConfig?.enabled()).toBe(false);
 		});
-
-		await tick();
-
-		const scroller = screen.container.querySelector(
-			'[data-testid="branch-list-scroller"]'
-		) as HTMLElement;
-		scroller.style.flex = 'none';
-		scroller.style.height = '200px';
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-
-		// Scroll to the bottom so the top rows are only alive via retention.
-		scroller.scrollTop = scroller.scrollHeight;
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-		await tick();
-		expect(
-			screen.container.querySelector('[role="listitem"][aria-posinset="1"]')
-		).toBeInTheDocument();
-		const retainedCount = screen.container.querySelectorAll('[role="listitem"]').length;
-
-		// A single toggle (same keys, one isSelected flip) keeps the window.
-		branchesHolder.value = branchesHolder.value.map((b, i) =>
-			i === 0 ? Branch.fromData(mockDataFactory.branch({ name: b.getName(), isSelected: true })) : b
-		);
-		await tick();
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-		await tick();
-		expect(
-			screen.container.querySelector('[role="listitem"][aria-posinset="1"]')
-		).toBeInTheDocument();
-
-		// Select-all: every branch flips at once — the retained window collapses
-		// back to the viewport band so only ~a screenful of cards re-renders.
-		branchesHolder.value = branchesHolder.value.map((b) =>
-			Branch.fromData(mockDataFactory.branch({ name: b.getName(), isSelected: true }))
-		);
-		await tick();
-		await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-		await tick();
-
-		expect(screen.container.querySelector('[role="listitem"][aria-posinset="1"]')).toBeNull();
-		expect(screen.container.querySelectorAll('[role="listitem"]').length).toBeLessThan(
-			retainedCount
-		);
-		// A selection sweep must not yank the user back to the top either.
-		expect(scroller.scrollTop).toBeGreaterThan(0);
 	});
 
-	test('scroll port is focusable and named for keyboard and AT users', async () => {
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+	describe('search', () => {
+		test('filters the rows and scrolls back to the top of the result', async () => {
+			branchesHolder.value = Array.from({ length: 40 }, (_, i) => branch({ name: `b-${i}` }));
+			const screen = await render();
+			const scroller = screen.getByTestId('branch-list-scroller').element() as HTMLElement;
+			scroller.style.flex = 'none';
+			scroller.style.height = '200px';
+			await tick();
+			scroller.scrollTop = 400;
+
+			searchHolder.value = 'b-1';
+			await tick();
+
+			// b-1 and b-10…b-19.
+			expect(screen.getByTestId('branch-row').elements()).toHaveLength(11);
+			await vi.waitFor(() => expect(scroller.scrollTop).toBe(0));
 		});
-
-		await tick();
-
-		const scroller = screen.container.querySelector(
-			'[data-testid="branch-list-scroller"]'
-		) as HTMLElement;
-		expect(scroller).toHaveAttribute('tabindex', '0');
-		expect(scroller).toHaveAttribute('role', 'region');
-		expect(scroller).toHaveAttribute('aria-label', 'Branch list');
-
-		// Once focusable, Chromium scrolls the port natively with the keyboard —
-		// focus landing here is the whole keyboard-access story.
-		scroller.focus();
-		expect(document.activeElement).toBe(scroller);
 	});
 
-	test('toggle checkbox should update selected branches state', async () => {
-		const screen = await renderWithTestWrapper(BranchList, {
-			repositoryID: 'repo1',
-			repositoryPath: '/test/repo/path'
+	describe('commit graph preview', () => {
+		function hover(screen: Screen, name: string, event: 'mouseenter' | 'mouseleave') {
+			row(screen, name)
+				.getByTestId('branch-commit-subject')
+				.element()
+				.dispatchEvent(new MouseEvent(event));
+		}
+
+		// Real timers: faking setTimeout would also freeze expect.element's polling.
+		const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+		test('opens on a resting hover, prefetching the window, and closes on leave', async () => {
+			mocks.flags.add('commit-history');
+			const screen = await render();
+			await tick();
+			const preview = () => screen.getByTestId('branch-commit-preview');
+
+			hover(screen, 'feature/test-branch', 'mouseenter');
+			expect(mocks.fetchWindow).toHaveBeenCalledWith(expect.anything(), {
+				repoId: 'repo1',
+				path: '/test/repo/path',
+				targetSha: 'abc1234567890def1234567890abcdef12345678',
+				contextBefore: 6,
+				limit: 15
+			});
+			// Sweeping across rows doesn't flash previews: nothing until it rests.
+			expect(preview().elements()).toHaveLength(0);
+
+			await expect.element(preview()).toBeVisible();
+
+			// Moving from the subject into the preview keeps it open.
+			hover(screen, 'feature/test-branch', 'mouseleave');
+			preview().element().dispatchEvent(new MouseEvent('mouseenter'));
+			await wait(300);
+			await expect.element(preview()).toBeVisible();
+
+			preview().element().dispatchEvent(new MouseEvent('mouseleave'));
+			await expect.element(preview()).not.toBeVisible();
 		});
 
-		// Wait for component to render
-		await tick();
+		test('stays off without the history flag, and the subject keeps its full message as a title', async () => {
+			const screen = await render();
+			await tick();
 
-		// Find checkbox for the first non-current, non-selected, non-locked branch
-		// That would be 'feature/test-branch' with the id 'checkbox-feature/test-branch'
-		const checkbox = screen.container.querySelector(
-			'#checkbox-feature\\/test-branch'
-		) as HTMLInputElement;
-		expect(checkbox).toBeInTheDocument();
-		expect(checkbox.checked).toBe(false);
-
-		// Click the checkbox
-		checkbox.click();
-
-		// Wait for async mutation to complete
-		await tick();
-
-		// The component now uses mutations instead of direct store manipulation
-		// The mutation will be called via Tauri command, which is mocked
-		// We just verify the checkbox interaction worked without errors
-		expect(checkbox.checked).toBe(true);
+			hover(screen, 'feature/test-branch', 'mouseenter');
+			expect(mocks.fetchWindow).not.toHaveBeenCalled();
+			await expect
+				.element(row(screen, 'feature/test-branch').getByTestId('branch-commit-subject'))
+				.toHaveAttribute('title', 'Test commit');
+		});
 	});
 });

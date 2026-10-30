@@ -105,16 +105,14 @@
      merged = neutral — secondary emphasis, matching the card's own badges. -->
 {#snippet signalBadges(cmp: BranchSignals)}
 	{#if cmp.ahead === 0}
-		<Badge size="xs" emphasis="secondary" feedback="neutral" data-testid="signal-merged">
-			merged
-		</Badge>
+		<Badge size="xs" emphasis="secondary" tone="neutral" data-testid="signal-merged">merged</Badge>
 	{:else}
-		<Badge size="xs" emphasis="secondary" feedback="success" data-testid="signal-ahead">
+		<Badge size="xs" emphasis="secondary" tone="success" data-testid="signal-ahead">
 			{cmp.ahead}↑
 		</Badge>
 	{/if}
 	{#if cmp.behind > 0}
-		<Badge size="xs" emphasis="secondary" feedback="danger" data-testid="signal-behind">
+		<Badge size="xs" emphasis="secondary" tone="danger" data-testid="signal-behind">
 			{cmp.behind}↓
 		</Badge>
 	{/if}

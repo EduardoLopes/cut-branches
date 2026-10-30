@@ -75,7 +75,7 @@
 	passThrough={{ content: { style: css.raw({ padding: '0' }) } }}
 	onClose={() => (open = false)}
 >
-	<Alert feedback="danger" emphasis="secondary" data-testid={testId}>
+	<Alert tone="danger" emphasis="secondary" data-testid={testId}>
 		{message}
 	</Alert>
 </Popover>

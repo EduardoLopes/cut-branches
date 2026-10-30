@@ -1,6 +1,6 @@
 import { describe, test, expect, vi } from 'vitest';
 import { Branch } from '../../core/models/branch';
-import RestoreBranchStatusCard from '../restore-branch-status-card.svelte';
+import RestoreBranchRow from '../restore-branch-row.svelte';
 import type { Branch as BranchData, RestoreBranchResult } from '$infrastructure/bindings';
 import { renderWithTestWrapper } from '$utils/test-utils';
 
@@ -46,6 +46,8 @@ function skippedResult(name: string): RestoreBranchResult {
 }
 
 const baseProps = {
+	// Standing in for GridList's placer: the cells render, unplaced.
+	cell: () => ({}),
 	isPending: false,
 	isCurrentConflict: false,
 	isInFlight: false,
@@ -55,9 +57,9 @@ const baseProps = {
 	onSetPreference: () => {}
 };
 
-describe('RestoreBranchStatusCard', () => {
+describe('RestoreBranchRow', () => {
 	test('shows pre-resolution buttons when branch already exists and not processing', async () => {
-		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -69,7 +71,7 @@ describe('RestoreBranchStatusCard', () => {
 	});
 
 	test('hides pre-resolution buttons when isProcessing', async () => {
-		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -81,7 +83,7 @@ describe('RestoreBranchStatusCard', () => {
 
 	test('clicking pre-skip calls onSetPreference with Skip', async () => {
 		const onSetPreference = vi.fn();
-		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -93,7 +95,7 @@ describe('RestoreBranchStatusCard', () => {
 	});
 
 	test('renders Skipped label when result is skipped', async () => {
-		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: skippedResult('feat-x')
@@ -102,7 +104,7 @@ describe('RestoreBranchStatusCard', () => {
 	});
 
 	test('shows "Waiting for user resolution..." when pending and not current', async () => {
-		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: undefined,
@@ -116,7 +118,7 @@ describe('RestoreBranchStatusCard', () => {
 		// isInFlight is the signal that conflict resolution is currently being
 		// applied — even outside the explicit isProcessing batch state we should
 		// not let the user re-pick a preference for this row.
-		const screen = await renderWithTestWrapper(RestoreBranchStatusCard, {
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
 			...baseProps,
 			branch: makeBranch('feat-x'),
 			result: successResult('feat-x'),
@@ -125,5 +127,69 @@ describe('RestoreBranchStatusCard', () => {
 			isProcessing: true
 		});
 		expect(screen.getByTestId('branch-conflict-warning').elements().length).toBe(0);
+	});
+
+	test('reads each result: restored, pending, failed', async () => {
+		const restored = await renderWithTestWrapper(RestoreBranchRow, {
+			...baseProps,
+			branch: makeBranch('a'),
+			result: successResult('a')
+		});
+		await expect
+			.element(restored.getByTestId('restore-branch-status'))
+			.toHaveTextContent('Restored');
+		restored.unmount();
+
+		const pending = await renderWithTestWrapper(RestoreBranchRow, {
+			...baseProps,
+			branch: makeBranch('b'),
+			result: { ...successResult('b'), success: false, requiresUserAction: true }
+		});
+		await expect
+			.element(pending.getByTestId('restore-branch-status'))
+			.toHaveTextContent('Pending resolution');
+		pending.unmount();
+
+		const failed = await renderWithTestWrapper(RestoreBranchRow, {
+			...baseProps,
+			branch: makeBranch('c'),
+			result: { ...successResult('c'), success: false, message: 'Ref **c** is gone' }
+		});
+		await expect.element(failed.getByTestId('restore-branch-status')).toHaveTextContent('Failed');
+		// The message is markdown, so its text is split across elements.
+		await vi.waitFor(() => expect(failed.container.textContent).toContain('is gone'));
+	});
+
+	test('spins while this branch is in flight, and shows nothing before it starts', async () => {
+		const idle = await renderWithTestWrapper(RestoreBranchRow, {
+			...baseProps,
+			branch: makeBranch('a'),
+			result: undefined
+		});
+		await expect.element(idle.getByTestId('restore-branch-status')).toHaveTextContent('');
+		idle.unmount();
+
+		const busy = await renderWithTestWrapper(RestoreBranchRow, {
+			...baseProps,
+			branch: makeBranch('a'),
+			result: undefined,
+			isInFlight: true
+		});
+		const status = busy.getByTestId('restore-branch-status').element();
+		expect(status.querySelector('[aria-busy="true"]')).not.toBeNull();
+	});
+
+	test('marks the chosen preference and reports Overwrite', async () => {
+		const onSetPreference = vi.fn();
+		const screen = await renderWithTestWrapper(RestoreBranchRow, {
+			...baseProps,
+			branch: makeBranch('feat-x'),
+			result: undefined,
+			existsAlready: true,
+			preference: 'Overwrite',
+			onSetPreference
+		});
+		await screen.getByTestId('pre-overwrite-button').click();
+		expect(onSetPreference).toHaveBeenCalledWith('Overwrite');
 	});
 });

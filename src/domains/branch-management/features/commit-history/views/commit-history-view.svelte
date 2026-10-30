@@ -52,7 +52,7 @@
 
 	{#if view.isStale}
 		<div class={css({ pb: 'sm' })}>
-			<Alert feedback="warning" emphasis="secondary" data-testid="history-stale-banner">
+			<Alert tone="warning" emphasis="secondary" data-testid="history-stale-banner">
 				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm' })}>
 					<span>The repository changed while browsing — this history is out of date.</span>
 					<Button size="xs" onclick={() => view.reload()}>Reload</Button>
@@ -63,7 +63,7 @@
 
 	{#if view.deepLinkError}
 		<div class={css({ pb: 'sm' })}>
-			<Alert feedback="danger" emphasis="secondary" data-testid="history-deep-link-error">
+			<Alert tone="danger" emphasis="secondary" data-testid="history-deep-link-error">
 				<div class={css({ display: 'flex', alignItems: 'center', gap: 'sm' })}>
 					<span>{view.deepLinkError.description ?? view.deepLinkError.message}</span>
 					<Button size="xs" emphasis="ghost" onclick={() => view.dismissDeepLinkError()}>
@@ -75,7 +75,7 @@
 	{/if}
 
 	{#if view.isError && view.error}
-		<Alert feedback="danger" data-testid="history-error">
+		<Alert tone="danger" data-testid="history-error">
 			{view.error.message}
 		</Alert>
 	{:else if !view.isLoading && view.totalCount === 0}
