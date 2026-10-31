@@ -48,20 +48,11 @@ over `PageHeader` + `PageWell`, so `/settings/*` and every other page share one
 implementation.
 
 - Props: `heading`, `subheading?`, `leading?` (icon Stamp snippet), `trailing?`
-  (header action, e.g. a reset button), `testId?`, `children` (the rows).
+  (header action, e.g. a reset button), `testId?`, `children` (the section's lists).
 
-### `settings-field.svelte`
-
-A single row: label + optional help text on the left, an optional control or
-read-only value on the right. Built on the Pindoba `Card` (its header is a
-Banner).
-
-- Props: `heading`, `subheading?`, `leading?`, `control?` (right-aligned
-  snippet) or `value?` (right-aligned read-only mono text), `align?`
-  (`'center'` default | `'start'`), plus `as` / `interactive` / `background` /
-  `feedback` / `border` / `class` / `testId` for polymorphic, clickable rows.
-- Canonical card: `size: sm`, `background: surface.base`, `border: default`
-  (raised above the section's `deep` well).
+Fill the section with pindoba `List`s (`card={{ radius: 'inner' }}` so the card
+stays concentric with the well): stacked rows with a `trailing` control for
+settings, `layout="pairs"` for read-only facts.
 
 ## Dialog convention
 

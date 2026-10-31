@@ -18,17 +18,15 @@ composed into the settings area at the route, not by this domain.
 - `views/settings-shell.svelte` — the settings shell: sidebar section nav +
   search, with a slot for the active section's panel (rendered by each
   `src/routes/settings/*/+page.svelte`).
-- `components/feature-flags-panel.svelte` — the "Feature flags" section.
-- `components/feature-flag-toggle.svelte` — a single flag row (label,
-  description, checkbox).
+- `components/feature-flags-panel.svelte` — the "Feature flags" section: one
+  pindoba `List`, a row per flag (icon, label, description, checkbox).
 - `components/about-panel.svelte` — the "About" section.
 
-Sections compose the shared, global settings patterns
+Sections compose the shared, global
 [`$ui/patterns/settings-section.svelte`](../../ui/patterns/settings-section.svelte)
-(header + recessed well) and
-[`$ui/patterns/settings-field.svelte`](../../ui/patterns/settings-field.svelte)
-(label + description + right-aligned control/value row), so every settings page
-follows one visual convention.
+(header + recessed well) and fill it with pindoba `List`s: stacked rows
+(label + description + trailing control) for settings, `layout="pairs"` for
+read-only facts. So every settings page follows one visual convention.
 
 ## Feature flags
 

@@ -65,6 +65,9 @@ importers:
       '@pindoba/svelte-input-range':
         specifier: alpha
         version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@pindoba/svelte-list':
+        specifier: alpha
+        version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/svelte-loading':
         specifier: alpha
         version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
@@ -878,6 +881,9 @@ packages:
   '@pindoba/core-kbd@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-F824Xg/hAQhBl+lItN/MwkclMykOAMW1+w0/I7UPXOmRX6/EMly5sib5ElpcB0gWYFx5V5WD3dCncTZS8IvoHQ==}
 
+  '@pindoba/core-list@0.0.0-alpha-20261008173743':
+    resolution: {integrity: sha512-MCLmQmasH8YFyf72qFfTW6Sy7wzUb85n7Dq5LpHxmatDRbcSeGa6pu+n0iEaK/3dWKQfM7cOL5iAFZXyOatrxw==}
+
   '@pindoba/core-listbox@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-YMFRoM1MPyqnH16oTvcjmCFcA34pEktT0idYALui2XE0ekvY6q0qHa8LyyEb/QpDLjaBFV3HqwDF+xzuO+gW1w==}
 
@@ -1003,6 +1009,9 @@ packages:
 
   '@pindoba/styles-kbd@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-i34ZDEtTFLrdJcQjxUZBpPgucRpdfZP+70M+b1lUQGaFaQkNCr15KbvPVN5e2/EFIAAc5xLqOMjZXmOvJQj3JA==}
+
+  '@pindoba/styles-list@0.0.0-alpha-20261008173743':
+    resolution: {integrity: sha512-ohuo33hOiULgrSFI6uSewxflCOuqZmuazaPYJmQRxUXJW1tA2UK+Cpm/DlJ1PinnAz7bjIKmH9bjg7ZsKnyBHQ==}
 
   '@pindoba/styles-listbox@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-Ddsz/+o6qMqszoTDo/fe9m7rDNdoCeDysg7djiX5R73QD5DGaBSCiukIBoUvVxnPAOckQvdDYvFiZWZP1X89Xg==}
@@ -1147,6 +1156,11 @@ packages:
 
   '@pindoba/svelte-kbd@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-oqPRHX0mdGtNq3QfPGxgZzZ2xJp2Dc2+1kdXeVbZzQmA3jWOhqhUMQYl6znCmeODZ8wl+OxBXuH0pLCwJiXxsg==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@pindoba/svelte-list@0.0.0-alpha-20261008173743':
+    resolution: {integrity: sha512-+6fVYA6oXGgTcZ8fc1mXM0LLG3YaV/uaa6JDT1F6N8LebuBYFEeJc6semB2KC2Q1r7RYbleLtee9H740btiObQ==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -4791,6 +4805,18 @@ snapshots:
     transitivePeerDependencies:
       - '@pandacss/dev'
 
+  '@pindoba/core-list@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
+    dependencies:
+      '@pindoba/core-affix': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/core-banner': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/core-card': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/normalize-props': 0.0.0-alpha-20261008173743
+      '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/styles-list': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/utils': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+    transitivePeerDependencies:
+      - '@pandacss/dev'
+
   '@pindoba/core-listbox@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
     dependencies:
       '@pindoba/core-affix': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5131,6 +5157,13 @@ snapshots:
     transitivePeerDependencies:
       - '@pandacss/dev'
 
+  '@pindoba/styles-list@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
+    dependencies:
+      '@pindoba/panda-preset': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+    transitivePeerDependencies:
+      - '@pandacss/dev'
+
   '@pindoba/styles-listbox@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
     dependencies:
       '@pindoba/panda-preset': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5442,6 +5475,16 @@ snapshots:
     transitivePeerDependencies:
       - '@pandacss/dev'
 
+  '@pindoba/svelte-list@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
+    dependencies:
+      '@pindoba/core-list': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
+      '@pindoba/svelte-banner': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      '@pindoba/svelte-card': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
+      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
+    transitivePeerDependencies:
+      - '@pandacss/dev'
+
   '@pindoba/svelte-listbox@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
     dependencies:
       '@pindoba/core-listbox': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5674,7 +5717,7 @@ snapshots:
   '@pindoba/utils@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
     dependencies:
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      nanostores: 1.5.3
+      nanostores: 1.5.5
       sanitize-html: 2.18.0
       svg-tag-names: 3.0.1
     transitivePeerDependencies:

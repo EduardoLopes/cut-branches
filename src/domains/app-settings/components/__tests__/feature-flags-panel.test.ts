@@ -1,3 +1,4 @@
+import LucideFlag from '@lucide/svelte/icons/flag';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import FeatureFlagsPanel from '../feature-flags-panel.svelte';
 import type { FeatureFlagDefinition } from '$lib/feature-flags.svelte';
@@ -20,8 +21,21 @@ vi.mock('$lib/feature-flags.svelte', () => ({
 }));
 
 const FLAGS: FeatureFlagDefinition[] = [
-	{ key: 'alpha', label: 'Alpha', description: 'First flag', defaultEnabled: false },
-	{ key: 'beta', label: 'Beta', description: 'Second flag', defaultEnabled: true }
+	{
+		key: 'alpha',
+		label: 'Alpha',
+		description: 'First flag',
+		defaultEnabled: false,
+		icon: LucideFlag
+	},
+	{
+		key: 'beta',
+		label: 'Beta',
+		description: 'Second flag',
+		defaultEnabled: true,
+		icon: LucideFlag
+	},
+	{ key: 'delta', label: 'Delta', description: 'Flag without an icon', defaultEnabled: false }
 ];
 
 const HIDDEN_FLAG: FeatureFlagDefinition = {
@@ -64,11 +78,27 @@ describe('FeatureFlagsPanel', () => {
 		it('renders a toggle per flag reflecting its effective value', async () => {
 			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
 
-			expect(screen.getByTestId('feature-flag-toggle').elements()).toHaveLength(2);
+			expect(screen.getByTestId('feature-flag-toggle').elements()).toHaveLength(3);
 			expect(screen.getByText('Alpha')).toBeInTheDocument();
 			expect(screen.getByText('Beta')).toBeInTheDocument();
 			// A hidden flag stays out of Settings entirely.
 			expect(screen.getByText('Gamma').elements()).toHaveLength(0);
+		});
+
+		it('shows a flag icon only for flags that have one', async () => {
+			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
+
+			// Alpha (off) and Beta (on) both render their stamp, in either state.
+			await expect.element(screen.getByTestId('feature-flag-icon-alpha')).toBeInTheDocument();
+			await expect.element(screen.getByTestId('feature-flag-icon-beta')).toBeInTheDocument();
+			expect(screen.getByTestId('feature-flag-icon-delta').elements()).toHaveLength(0);
+		});
+
+		it('reflects each flag value in its checkbox', async () => {
+			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
+
+			await expect.element(screen.getByRole('checkbox', { name: 'Beta' })).toBeChecked();
+			await expect.element(screen.getByRole('checkbox', { name: 'Alpha' })).not.toBeChecked();
 		});
 
 		it('sets a flag when its toggle changes', async () => {

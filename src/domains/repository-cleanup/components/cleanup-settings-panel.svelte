@@ -4,15 +4,14 @@
 	import Button from '@pindoba/svelte-button';
 	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
+	import List from '@pindoba/svelte-list';
 	import Stamp from '@pindoba/svelte-stamp';
-	import type { Snippet } from 'svelte';
 	import {
 		getCleanupConfig,
 		resetCleanupConfig,
 		setCleanupConfig
 	} from '$domains/repository-cleanup/core/composables/use-cleanup-config.svelte';
 	import Icon from '$ui/core/icon.svelte';
-	import SettingsField from '$ui/patterns/settings-field.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -95,10 +94,18 @@
 		to keep on the cleanup page.
 	</p>
 
-	<SettingsField
-		heading="Staleness threshold (days)"
-		subheading="A repository is “stale” when its most recent commit and file change are both older than this."
-		control={thresholdControl as Snippet}
+	<List
+		card={{ radius: 'inner' }}
+		aria-label="Cleanup settings"
+		items={[
+			{
+				id: 'threshold',
+				title: 'Staleness threshold (days)',
+				description:
+					'A repository is “stale” when its most recent commit and file change are both older than this.',
+				trailing: thresholdControl
+			},
+			{ id: 'deletion', title: 'Default deletion method', trailing: deletionControl }
+		]}
 	/>
-	<SettingsField heading="Default deletion method" control={deletionControl as Snippet} />
 </SettingsSection>

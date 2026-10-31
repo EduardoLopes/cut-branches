@@ -3,23 +3,23 @@
 	import LucideFolderOpen from '@lucide/svelte/icons/folder-open';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
+	import List from '@pindoba/svelte-list';
 	import Stamp from '@pindoba/svelte-stamp';
 	import { useAbout } from '../core/composables/use-about.svelte';
 	import BrandMark from '$ui/core/brand-mark.svelte';
 	import Icon from '$ui/core/icon.svelte';
-	import SettingsField from '$ui/patterns/settings-field.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	const about = useAbout();
 
 	const infoRows = $derived([
-		{ label: 'App version', value: about.appVersion },
-		{ label: 'Build', value: about.build },
-		{ label: 'Operating system', value: about.osSummary },
-		{ label: 'Tauri', value: about.tauriVersion },
-		{ label: 'Locale', value: about.locale },
-		{ label: 'Identifier', value: about.appIdentifier }
+		{ id: 'version', term: 'App version', value: about.appVersion },
+		{ id: 'build', term: 'Build', value: about.build },
+		{ id: 'os', term: 'Operating system', value: about.osSummary },
+		{ id: 'tauri', term: 'Tauri', value: about.tauriVersion },
+		{ id: 'locale', term: 'Locale', value: about.locale },
+		{ id: 'identifier', term: 'Identifier', value: about.appIdentifier }
 	]);
 </script>
 
@@ -42,10 +42,16 @@
 		anything you remove by mistake.
 	</p>
 
-	<!-- Version / environment info -->
-	{#each infoRows as row (row.label)}
-		<SettingsField heading={row.label} value={row.value} />
-	{/each}
+	<!-- Version / environment info: label/value pairs, so one pairs list rather
+	     than a card per fact. Mono values, since most are identifiers. -->
+	<List
+		layout="pairs"
+		valueFont="mono"
+		card={{ radius: 'inner' }}
+		aria-label="Environment"
+		items={infoRows}
+		data-testid="about-environment"
+	/>
 
 	<!-- External links -->
 	<div class={css({ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 'xs' })}>

@@ -97,6 +97,7 @@
 		"@pindoba/svelte-group": "alpha",
 		"@pindoba/svelte-input": "alpha",
 		"@pindoba/svelte-input-range": "alpha",
+		"@pindoba/svelte-list": "alpha",
 		"@pindoba/svelte-loading": "alpha",
 		"@pindoba/svelte-menu": "alpha",
 		"@pindoba/svelte-navigation": "alpha",

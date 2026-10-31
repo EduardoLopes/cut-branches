@@ -2,9 +2,11 @@
 	import LucideFlag from '@lucide/svelte/icons/flag';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
+	import Checkbox from '@pindoba/svelte-checkbox';
+	import List, { type ListRowContext } from '@pindoba/svelte-list';
 	import Stamp from '@pindoba/svelte-stamp';
-	import FeatureFlagToggle from './feature-flag-toggle.svelte';
 	import {
+		type FeatureFlagDefinition,
 		getVisibleFeatureFlags,
 		isFeatureEnabled,
 		resetFeatureFlags,
@@ -17,12 +19,53 @@
 	// Flags marked `hidden` stay out of Settings entirely — they are pinned to
 	// their registry default and must not be user-toggleable.
 	const flags = getVisibleFeatureFlags();
+
+	// One row per flag; the leading/trailing render slots read the flag back
+	// from `data`, so every row gets its icon and switch from one snippet each.
+	const rows = $derived(
+		flags.map((flag) => ({
+			id: flag.key,
+			title: flag.label,
+			description: flag.description,
+			data: flag,
+			'data-testid': 'feature-flag-toggle'
+		}))
+	);
 </script>
 
 {#snippet flagIcon()}
 	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" shadow="sm">
 		<Icon icon={LucideFlag} width="16px" height="16px" />
 	</Stamp>
+{/snippet}
+
+<!-- Every row carries its flag in `data`, so the context's optional `data` is
+     always set here. -->
+{#snippet rowIcon({ data }: ListRowContext<FeatureFlagDefinition>)}
+	{@const flag = data!}
+	{#if flag.icon}
+		{@const enabled = isFeatureEnabled(flag.key)}
+		<Stamp
+			shape="square"
+			size="md"
+			emphasis={enabled ? 'secondary' : 'ghost'}
+			tone={enabled ? 'primary' : 'neutral'}
+			data-testid={`feature-flag-icon-${flag.key}`}
+		>
+			<Icon icon={flag.icon} width="18px" height="18px" />
+		</Stamp>
+	{/if}
+{/snippet}
+
+{#snippet rowToggle({ data }: ListRowContext<FeatureFlagDefinition>)}
+	{@const flag = data!}
+	{@const enabled = isFeatureEnabled(flag.key)}
+	<Checkbox
+		checked={enabled}
+		onchange={() => setFeatureFlag(flag.key, !enabled)}
+		aria-label={flag.label}
+		data-testid={`feature-flag-checkbox-${flag.key}`}
+	/>
 {/snippet}
 
 {#snippet resetButton()}
@@ -52,12 +95,12 @@
 			testId="feature-flags-empty"
 		/>
 	{:else}
-		{#each flags as flag (flag.key)}
-			<FeatureFlagToggle
-				{flag}
-				enabled={isFeatureEnabled(flag.key)}
-				onToggle={(value) => setFeatureFlag(flag.key, value)}
-			/>
-		{/each}
+		<List
+			card={{ radius: 'inner' }}
+			aria-label="Feature flags"
+			items={rows}
+			leading={rowIcon}
+			trailing={rowToggle}
+		/>
 	{/if}
 </SettingsSection>
