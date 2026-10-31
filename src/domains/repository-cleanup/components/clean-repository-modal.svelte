@@ -1,8 +1,8 @@
 <script lang="ts">
 	import LucideSparkles from '@lucide/svelte/icons/sparkles';
 	import Button from '@pindoba/svelte-button';
+	import Choice, { ChoiceItem } from '@pindoba/svelte-choice';
 	import Modal from '@pindoba/svelte-dialog';
-	import Group from '@pindoba/svelte-group';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import Progress from '@pindoba/svelte-progress';
@@ -36,6 +36,10 @@
 
 	let started = $state(false);
 	let mode = $state<DeletionMode>(getCleanupConfig().defaultDeletionMode);
+
+	function setMode(value: string | undefined) {
+		if (value === 'trash' || value === 'permanent') mode = value;
+	}
 	let confirmText = $state('');
 
 	const cleanup = useCleanupTargets({
@@ -195,25 +199,23 @@
 				<span class={css({ fontSize: 'xs', fontWeight: 'medium', color: 'neutral.text.muted' })}>
 					Deletion method
 				</span>
-				<Group orientation="horizontal">
-					<Button
-						size="sm"
-						emphasis={mode === 'trash' ? 'primary' : 'secondary'}
-						onclick={() => (mode = 'trash')}
-						data-testid="cleanup-mode-trash"
-					>
-						Move to Trash
-					</Button>
-					<Button
-						size="sm"
-						emphasis={mode === 'permanent' ? 'primary' : 'secondary'}
-						tone={mode === 'permanent' ? 'danger' : undefined}
-						onclick={() => (mode = 'permanent')}
+				<Choice
+					type="radio"
+					appearance="button"
+					size="sm"
+					value={[mode]}
+					onValueChange={(value) => setMode(value[0])}
+					aria-label="Deletion method"
+				>
+					<ChoiceItem value="trash" label="Move to Trash" data-testid="cleanup-mode-trash" />
+					<ChoiceItem
+						value="permanent"
+						tone="danger"
+						emphasis="primary"
+						label="Delete permanently"
 						data-testid="cleanup-mode-permanent"
-					>
-						Delete permanently
-					</Button>
-				</Group>
+					/>
+				</Choice>
 				<span class={css({ fontSize: 'xs', color: 'neutral.text.muted' })}>
 					{mode === 'trash'
 						? 'Folders go to your system Trash — recoverable until you empty it.'

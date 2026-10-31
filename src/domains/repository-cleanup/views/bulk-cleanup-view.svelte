@@ -5,7 +5,7 @@
 	import Badge from '@pindoba/svelte-badge';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
-	import Group from '@pindoba/svelte-group';
+	import Choice, { ChoiceItem } from '@pindoba/svelte-choice';
 	import Input from '@pindoba/svelte-input';
 	import Loading from '@pindoba/svelte-loading';
 	import Progress from '@pindoba/svelte-progress';
@@ -29,6 +29,10 @@
 	const stale = useStaleRepositories();
 
 	let mode = $state<DeletionMode>(getCleanupConfig().defaultDeletionMode);
+
+	function setMode(value: string | undefined) {
+		if (value === 'trash' || value === 'permanent') mode = value;
+	}
 	let confirmText = $state('');
 
 	// The list takes the folders flat, sorted by repository, and groups them
@@ -201,25 +205,23 @@
 			{#if stale.repositoryCount > 0}
 				<PageToolbar placement="bottom" data-testid="cleanup-actions">
 					{#snippet left()}
-						<Group orientation="horizontal">
-							<Button
-								size="sm"
-								emphasis={mode === 'trash' ? 'primary' : 'secondary'}
-								onclick={() => (mode = 'trash')}
-								data-testid="cleanup-mode-trash"
-							>
-								Move to Trash
-							</Button>
-							<Button
-								size="sm"
-								emphasis={mode === 'permanent' ? 'primary' : 'secondary'}
-								tone={mode === 'permanent' ? 'danger' : undefined}
-								onclick={() => (mode = 'permanent')}
+						<Choice
+							type="radio"
+							appearance="button"
+							size="sm"
+							value={[mode]}
+							onValueChange={(value) => setMode(value[0])}
+							aria-label="Deletion method"
+						>
+							<ChoiceItem value="trash" label="Move to Trash" data-testid="cleanup-mode-trash" />
+							<ChoiceItem
+								value="permanent"
+								tone="danger"
+								emphasis="primary"
+								label="Delete permanently"
 								data-testid="cleanup-mode-permanent"
-							>
-								Delete permanently
-							</Button>
-						</Group>
+							/>
+						</Choice>
 						{#if needsTypedConfirm}
 							<div class={css({ maxWidth: '200px' })}>
 								<Input

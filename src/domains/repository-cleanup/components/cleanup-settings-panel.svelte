@@ -75,6 +75,8 @@
 		<ChoiceItem value="trash" label="Move to Trash" data-testid="cleanup-default-trash" />
 		<ChoiceItem
 			value="permanent"
+			tone="danger"
+			emphasis="primary"
 			label="Delete permanently"
 			data-testid="cleanup-default-permanent"
 		/>
