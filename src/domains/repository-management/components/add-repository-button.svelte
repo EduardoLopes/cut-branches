@@ -32,7 +32,7 @@
 
 <Loading loading={addRepo.isPending}>
 	{#if visuallyHiddenLabel}
-		<Button onclick={addRepo.addFromDialog} {size} {emphasis} {...props}>
+		<Button onclick={addRepo.addFromDialog} {size} {emphasis} shape="square" {...props}>
 			<Stamp emphasis="ghost" border="none" background="transparent">
 				<Icon {icon} width="20px" height="20px" data-testid="add-button-icon" />
 			</Stamp>

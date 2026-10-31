@@ -10,7 +10,6 @@
 	import { createLockedBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-locked-branches-query';
 	import Icon from '$ui/core/icon.svelte';
 	import { formatString } from '$utils/string-utils';
-	import { css } from '@pindoba/styled-system/css';
 	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
@@ -62,13 +61,10 @@
 >
 	{#snippet children(triggerProps)}
 		<Button
-			size="xs"
+			size="sm"
 			shape="square"
-			emphasis={isLocked ? 'primary' : 'secondary'}
-			class={css({
-				width: '24px',
-				height: '24px'
-			})}
+			emphasis="ghost"
+			aria-pressed={isLocked}
 			onclick={toggleLock}
 			data-testid="lock-toggle-button"
 			aria-label={formatString('{action} branch {name}', {
@@ -81,7 +77,7 @@
 			{#if isLocked}
 				<div data-testid="lock-icon">
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideLock} width="14px" height="14px" />
+						<Icon icon={LucideLock} width="16px" height="16px" />
 					</Stamp>
 				</div>
 			{/if}
@@ -89,7 +85,7 @@
 			{#if !isLocked}
 				<div data-testid="unlock-icon">
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideLockOpen} width="14px" height="14px" />
+						<Icon icon={LucideLockOpen} width="16px" height="16px" />
 					</Stamp>
 				</div>
 			{/if}

@@ -102,7 +102,8 @@
 {/snippet}
 
 {#if visuallyHiddenLabel}
-	<Button {size} {emphasis} {...props}>
+	<!-- Icon-only controls are square; a consumer can still pass its own `shape`. -->
+	<Button {size} {emphasis} shape="square" {...props}>
 		<Stamp emphasis="ghost" border="none" background="transparent">
 			{@render glyph()}
 		</Stamp>
