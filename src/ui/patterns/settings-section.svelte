@@ -32,7 +32,20 @@
 	container that each `SettingsGroup` collapses against. The rule above the
 	first group is dropped so the stack starts flush.
 -->
-<PageHeader {leading} {heading} {subheading} {trailing} {testId} />
+<!-- The header shares the content column, so on wide panes the title lines up
+     with the groups instead of hugging the pane's edge. PageHeader brings its
+     own `md` inline padding — the same inset the scroll area gives the column
+     below — so the cap is the column's width plus that padding on both sides. -->
+<div
+	class={css({
+		flexShrink: '0',
+		width: '100%',
+		maxWidth: 'calc(960px + token(spacing.md) * 2)',
+		marginInline: 'auto'
+	})}
+>
+	<PageHeader {leading} {heading} {subheading} {trailing} {testId} />
+</div>
 
 <div
 	class={css({ flex: '1', minHeight: '0', overflowY: 'auto', overflowX: 'hidden', px: 'md' })}
