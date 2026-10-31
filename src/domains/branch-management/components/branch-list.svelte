@@ -522,13 +522,15 @@
 			{ id: 'changes', track: '12rem', header: 'Changes' },
 			{ id: 'meta', track: 'minmax(12rem, auto)', header: isRestoreView ? 'Deleted' : 'Updated' }
 		]}
+		// Folded, the end column follows the name's two lines: when (and the
+		// actions over it) beside the name, the line counts beside the author.
 		narrow={{
 			columns: 'auto minmax(0, 1fr) auto',
 			cells: {
 				status: { column: '1', row: '1' },
-				name: { column: '2', row: '1' },
-				changes: { column: '3', row: '1' },
+				name: { column: '2', row: '1 / span 2' },
 				meta: { column: '3', row: '1' },
+				changes: { column: '3', row: '2' },
 				commit: { hidden: true }
 			}
 		}}
