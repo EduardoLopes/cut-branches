@@ -123,7 +123,7 @@
 				testId="feature-flags-empty"
 			/>
 		{:else}
-			<List card={{}} size="lg" aria-label="Feature flags" items={rows} row={flagRow} />
+			<List density="comfortable" card={{}} aria-label="Feature flags" items={rows} row={flagRow} />
 		{/if}
 	</SettingsGroup>
 </SettingsSection>

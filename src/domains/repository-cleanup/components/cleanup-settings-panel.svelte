@@ -93,6 +93,7 @@
 		description={detectionDescription as BannerProps['subheading']}
 	>
 		<List
+			density="comfortable"
 			card={{}}
 			aria-label="Detection settings"
 			items={[
@@ -112,6 +113,7 @@
 		description="What happens to selected folders when you clean. The Trash keeps them recoverable; permanent deletion frees the space immediately."
 	>
 		<List
+			density="comfortable"
 			card={{}}
 			aria-label="Deletion settings"
 			items={[{ id: 'deletion', title: 'Default deletion method', trailing: deletionControl }]}

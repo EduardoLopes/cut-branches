@@ -124,6 +124,7 @@
 		<!-- Version / environment info: label/value pairs, so one pairs list rather
 		     than a card per fact. Mono values, since most are identifiers. -->
 		<List
+			density="comfortable"
 			layout="pairs"
 			valueFont="mono"
 			card={{}}
@@ -137,13 +138,20 @@
 		heading="Resources"
 		description="Source code, release notes, and where to report a problem."
 	>
-		<List card={{}} aria-label="Links" items={linkRows} leading={linkIcon} trailing={linkAction} />
+		<List
+			density="comfortable"
+			card={{}}
+			aria-label="Links"
+			items={linkRows}
+			leading={linkIcon}
+			trailing={linkAction}
+		/>
 	</SettingsGroup>
 
 	<SettingsGroup
 		heading="Diagnostics"
 		description="Details that help track down a bug. Nothing is sent anywhere — you decide what to share."
 	>
-		<List card={{}} aria-label="Diagnostics" items={diagnosticsRows} />
+		<List density="comfortable" card={{}} aria-label="Diagnostics" items={diagnosticsRows} />
 	</SettingsGroup>
 </SettingsSection>
