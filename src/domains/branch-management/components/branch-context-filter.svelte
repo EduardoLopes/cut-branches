@@ -9,6 +9,7 @@
 	import { page } from '$app/state';
 	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
 	import Icon from '$ui/core/icon.svelte';
+	import { waitForTransitions } from '$utils/wait-for-transitions';
 
 	/**
 	 * Active / Deleted split for the branches page.
@@ -43,59 +44,60 @@
 	const activeCount = $derived(activeBranchesQuery.data?.branches.length ?? 0);
 	const deletedCount = $derived(deletedBranchesQuery.data?.branches.length ?? 0);
 
-	// The route is the source of truth for the active filter.
+	// The route is the source of truth for the active filter. The `(branches)`
+	// layout keeps this control mounted across both routes, so following the
+	// route is what slides the thumb.
 	const current = $derived(page.url.pathname.endsWith('/restore') ? 'deleted' : 'active');
 
-	function goToFilter(next: string | undefined) {
+	let root = $state<HTMLDivElement | null>(null);
+
+	async function goToFilter(next: string | undefined) {
 		if (next === current) return;
+		// Mounting the other list blocks the main thread; let the thumb finish
+		// sliding first, or it runs through that block and appears to snap.
+		if (root) await waitForTransitions(root);
 		if (next === 'deleted') goto(resolveRepositorySubPath(repositoryId, 'restore'));
 		if (next === 'active') goto(resolveRepositoryPath(repositoryId));
 	}
 </script>
 
 <!--
-	Keyed on the route-derived value so the Choice's internal selection can never
-	drift from the active route (it can reset its own state on a re-render, which
-	would otherwise swallow the next click).
+	`appearance="button"` draws the segmented track behind the items. Padding is
+	left at its `none` default — the toolbar owns the row height and centres this
+	against the search field and bulk action beside it, so the control doesn't
+	need its own inset to line up.
 -->
-{#key current}
-	<!--
-		`appearance="button"` draws the segmented track behind the items. Padding is
-		left at its `none` default — the toolbar owns the row height and centres this
-		against the search field and bulk action beside it, so the control doesn't
-		need its own inset to line up.
-	-->
-	<Choice
-		type="radio"
-		appearance="button"
-		size="sm"
-		defaultValue={[current]}
-		onValueChange={(value) => goToFilter(value[0])}
-		aria-label="Branch state"
-		data-testid="branch-context-filter"
-	>
-		<ChoiceItem value="active" label="Active" data-testid="filter-active">
-			{#snippet leading()}
-				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon={LucideGitBranch} width="14px" height="14px" />
-				</Stamp>
-			{/snippet}
-			{#snippet trailing()}
-				<Badge size="sm" emphasis="adaptive" data-testid="filter-active-count">{activeCount}</Badge>
-			{/snippet}
-		</ChoiceItem>
+<Choice
+	type="radio"
+	appearance="button"
+	size="sm"
+	value={[current]}
+	bind:element={root}
+	onValueChange={(value) => goToFilter(value[0])}
+	aria-label="Branch state"
+	data-testid="branch-context-filter"
+>
+	<ChoiceItem value="active" label="Active" data-testid="filter-active">
+		{#snippet leading()}
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon icon={LucideGitBranch} width="14px" height="14px" />
+			</Stamp>
+		{/snippet}
+		{#snippet trailing()}
+			<Badge size="sm" emphasis="adaptive" data-testid="filter-active-count">{activeCount}</Badge>
+		{/snippet}
+	</ChoiceItem>
 
-		<ChoiceItem value="deleted" label="Deleted" data-testid="filter-deleted">
-			{#snippet leading()}
-				<Stamp emphasis="ghost" border="none" background="transparent">
-					<Icon icon={LucideTrash2} width="14px" height="14px" />
-				</Stamp>
-			{/snippet}
-			{#snippet trailing()}
-				<Badge size="sm" emphasis="adaptive" tone="danger" data-testid="filter-deleted-count">
-					{deletedCount}
-				</Badge>
-			{/snippet}
-		</ChoiceItem>
-	</Choice>
-{/key}
+	<ChoiceItem value="deleted" label="Deleted" data-testid="filter-deleted">
+		{#snippet leading()}
+			<Stamp emphasis="ghost" border="none" background="transparent">
+				<Icon icon={LucideTrash2} width="14px" height="14px" />
+			</Stamp>
+		{/snippet}
+		{#snippet trailing()}
+			<Badge size="sm" emphasis="adaptive" tone="danger" data-testid="filter-deleted-count">
+				{deletedCount}
+			</Badge>
+		{/snippet}
+	</ChoiceItem>
+</Choice>

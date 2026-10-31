@@ -46,7 +46,7 @@ export function resolveRepositorySubPath(id: string, subPath: RepositorySubPath)
 		case 'history':
 			return resolve('/repos/[id]/history', params);
 		case 'restore':
-			return resolve('/repos/[id]/restore', params);
+			return resolve('/repos/[id]/(branches)/restore', params);
 		case 'worktrees':
 			return resolve('/repos/[id]/worktrees', params);
 	}

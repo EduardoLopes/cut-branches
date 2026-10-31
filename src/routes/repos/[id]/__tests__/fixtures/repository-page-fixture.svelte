@@ -2,7 +2,7 @@
 	// import { createGetRepositoryQuery } from '$infrastructure/queries/create-get-repository-query';
 	// This is a test fixture that combines SidebarView and Repository components
 	// for integration testing
-	import ActiveBranchesView from '$domains/branch-management/views/active-branches-view.svelte';
+	import BranchesView from '$domains/branch-management/views/branches-view.svelte';
 	import Repository from '$domains/repository-management/views/repository-view.svelte';
 	import SidebarView from '$domains/repository-navigation/views/sidebar-view.svelte';
 	import { css } from '@pindoba/styled-system/css';
@@ -17,7 +17,7 @@
 	</div>
 	<div class={css({ flex: 1 })} data-testid="repository-container">
 		<Repository repositoryId={id}>
-			<ActiveBranchesView {id} />
+			<BranchesView {id} context="active" />
 		</Repository>
 	</div>
 </div>

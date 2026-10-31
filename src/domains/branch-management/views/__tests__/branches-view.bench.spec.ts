@@ -14,7 +14,7 @@
  */
 import { tick } from 'svelte';
 import { vi, describe, test } from 'vitest';
-import ActiveBranchesView from '../active-branches-view.svelte';
+import BranchesView from '../branches-view.svelte';
 import { mockDataFactory, renderWithTestWrapper } from '$utils/test-utils';
 
 const BRANCH_COUNT = Number(import.meta.env.VITE_BENCH_BRANCHES ?? 300);
@@ -101,7 +101,7 @@ async function settle(frames = 20) {
 	}
 }
 
-describe.skipIf(!import.meta.env.VITE_BENCH)('ActiveBranchesView mount cost', () => {
+describe.skipIf(!import.meta.env.VITE_BENCH)('BranchesView mount cost', () => {
 	for (let run = 0; run < 5; run++) {
 		test(`run ${run}`, async () => {
 			const g = globalThis as unknown as {
@@ -125,7 +125,7 @@ describe.skipIf(!import.meta.env.VITE_BENCH)('ActiveBranchesView mount cost', ()
 			observer.observe({ entryTypes: ['longtask'] });
 
 			const start = performance.now();
-			const screen = await renderWithTestWrapper(ActiveBranchesView, { id: 'repo1' });
+			const screen = await renderWithTestWrapper(BranchesView, { id: 'repo1', context: 'active' });
 			const syncMs = performance.now() - start;
 			await settle();
 			const totalMs = performance.now() - start;

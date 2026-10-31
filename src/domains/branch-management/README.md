@@ -35,8 +35,7 @@ switching the current branch, and searching/filtering.
 ```
 branch-management/
 ├── views/                       # Delivery — top-level pages (mounted by routes)
-│   ├── active-branches-view.svelte
-│   └── deleted-branches-view.svelte
+│   └── branches-view.svelte     # active + deleted, one view (the `(branches)` route layout)
 ├── components/                  # Delivery — feature UI
 │   ├── branch-list.svelte · branch-alerts.svelte · lock-branch-toggle.svelte
 │   ├── branch-selection.svelte · branch-context-filter.svelte · branch-search.svelte

@@ -9,7 +9,11 @@ import { renderWithTestWrapper } from '$utils/test-utils';
  * the control, so drive the input directly.
  */
 function clickFilter(container: HTMLElement, testId: string) {
-	container.querySelector<HTMLInputElement>(`[data-testid="${testId}"] input`)?.click();
+	filterInput(container, testId)?.click();
+}
+
+function filterInput(container: HTMLElement, testId: string) {
+	return container.querySelector<HTMLInputElement>(`[data-testid="${testId}"] input`);
 }
 
 const h = vi.hoisted(() => ({
@@ -66,7 +70,8 @@ describe('BranchContextFilter', () => {
 		await tick();
 
 		clickFilter(screen.container, 'filter-deleted');
-		expect(h.goto).toHaveBeenCalledWith('/repos/r1/restore');
+		// Navigation waits for the thumb's slide first.
+		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos/r1/restore'));
 	});
 
 	it('navigates back to the branches route when selecting Active', async () => {
@@ -75,7 +80,8 @@ describe('BranchContextFilter', () => {
 		await tick();
 
 		clickFilter(screen.container, 'filter-active');
-		expect(h.goto).toHaveBeenCalledWith('/repos/r1');
+		// Navigation waits for the thumb's slide first.
+		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos/r1'));
 	});
 
 	it('does not navigate when re-selecting the active filter', async () => {
@@ -84,5 +90,14 @@ describe('BranchContextFilter', () => {
 
 		clickFilter(screen.container, 'filter-active');
 		expect(h.goto).not.toHaveBeenCalled();
+	});
+
+	it('selects the segment the route shows', async () => {
+		h.pathname = '/repos/r1/restore';
+		const screen = await renderWithTestWrapper(BranchContextFilter, { repositoryId: 'r1' });
+		await tick();
+
+		expect(filterInput(screen.container, 'filter-deleted')?.checked).toBe(true);
+		expect(filterInput(screen.container, 'filter-active')?.checked).toBe(false);
 	});
 });
