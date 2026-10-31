@@ -83,6 +83,7 @@
 	tone="danger"
 	look="cards"
 	rowBackground="surface.peak"
+	groupBackground="surface.hill"
 	data-testid="cleanup-target-list"
 	selectOver="icon"
 	columns={[
