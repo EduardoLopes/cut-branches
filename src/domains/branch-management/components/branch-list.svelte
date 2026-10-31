@@ -425,8 +425,13 @@
 	// background layer: one of those moves the whole background into the
 	// scrolled tiles. Clipped to the content box, so it stays off the
 	// scrollbar's gap; `isolation` keeps the sizer's -1 above it.
+	// Only while the list scrolls: a short list leaves the port taller than
+	// its rows, and the fill showed as a slab under the last card. GridList's
+	// scroll-timeline flags are 1 at every position while there is something
+	// to scroll and 0 otherwise, so the fill is the row colour or nothing.
 	const scrollPortStyle = css.raw({
-		backgroundColor: 'var(--gl-row-bg)',
+		backgroundColor:
+			'color-mix(in srgb, var(--gl-row-bg) calc(max(var(--scroll-fade-start, 0), var(--scroll-fade-end, 0)) * 100%), transparent)',
 		backgroundClip: 'content-box',
 		isolation: 'isolate'
 	});
