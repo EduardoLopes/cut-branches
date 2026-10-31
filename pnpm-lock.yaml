@@ -95,9 +95,6 @@ importers:
       '@pindoba/svelte-stamp':
         specifier: alpha
         version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
-      '@pindoba/svelte-theme-mode-select':
-        specifier: alpha
-        version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/svelte-toast':
         specifier: alpha
         version: 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
@@ -923,9 +920,6 @@ packages:
   '@pindoba/core-tab@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-ZUnscXuxdPw5fxfm2lVLSldLIZwdThlzDn7AgYRv8xiydaebgvgZKiUspwd0gZ4M+S5sWvomMAoPHTozux59Cg==}
 
-  '@pindoba/core-theme-mode-select@0.0.0-alpha-20261008173743':
-    resolution: {integrity: sha512-04PiFzJsAdzTg79iVI7NVgFN8Vn8mAM0jFFEUOwK1ckFmDgKp5/d1pBmNFVKVUkvVJMk8QfVUMk5tbWH9mnkyg==}
-
   '@pindoba/core-toast@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-oyP2A74mOcRGz5STjwf34qsMiwKNkffXNLB4TRy4Ph8HHO3e+7rlYxHbL3s50iwLLZQMi58QFNIrJSt7YlYj6w==}
 
@@ -1051,9 +1045,6 @@ packages:
 
   '@pindoba/styles-tab@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-10GhxpMl1CUSmh1jgxpFnXLnIgGCk8NGAQA/O3q9RpOGlZ/k8RoIR6AW9VBwROjzDlCLXWX6Z8iUDZVgg3kGfA==}
-
-  '@pindoba/styles-theme-mode-select@0.0.0-alpha-20261008173743':
-    resolution: {integrity: sha512-r45G6mVlZx+o91NzQRKA6o4K94sCOS8l1GNR7AUtRHA85NMw5qgW3e7fmTelA05Ilm2vo8sM5yv96KchloUG2A==}
 
   '@pindoba/styles-toast@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-O3BygSQ4xg5iFPL4UbuVJoFBZ/ZM6WzFSBnCAf27Tqdul8vkT4ggB/7o83SMOukPxzuwMpdRcsuVp1v08Dz10Q==}
@@ -1226,11 +1217,6 @@ packages:
 
   '@pindoba/svelte-tab@0.0.0-alpha-20261008173743':
     resolution: {integrity: sha512-pZ6U6G1b1H9b5pnpy5Al35jwIslGa6sGTm4u2a5diiqmsxY82/rUBX5QrUc8hycEpsQj7hugge0YRVapP61xZA==}
-    peerDependencies:
-      svelte: ^5.0.0
-
-  '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20261008173743':
-    resolution: {integrity: sha512-o24uiHLpKwUraD/WmF5jGo841+PmR+KR6+Ns99y6heuV9eSttZeC9Suwa+o7QI8tAbrH4V6C3xUIqckp2pQ2qA==}
     peerDependencies:
       svelte: ^5.0.0
 
@@ -4948,15 +4934,6 @@ snapshots:
     transitivePeerDependencies:
       - '@pandacss/dev'
 
-  '@pindoba/core-theme-mode-select@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
-    dependencies:
-      '@pindoba/core-popover': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      '@pindoba/styles-theme-mode-select': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      '@pindoba/utils': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-    transitivePeerDependencies:
-      - '@pandacss/dev'
-
   '@pindoba/core-toast@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
     dependencies:
       '@pindoba/core-panel': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
@@ -5242,12 +5219,6 @@ snapshots:
       - '@pandacss/dev'
 
   '@pindoba/styles-tab@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
-    dependencies:
-      '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-    transitivePeerDependencies:
-      - '@pandacss/dev'
-
-  '@pindoba/styles-theme-mode-select@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))':
     dependencies:
       '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
     transitivePeerDependencies:
@@ -5640,20 +5611,6 @@ snapshots:
       '@pindoba/svelte-group': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/svelte-popover': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/svelte-radio': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
-      '@pindoba/utils': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      svelte: 5.57.0(@typescript-eslint/types@8.69.0)
-    transitivePeerDependencies:
-      - '@pandacss/dev'
-
-  '@pindoba/svelte-theme-mode-select@0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))':
-    dependencies:
-      '@lucide/svelte': 1.65.0(svelte@5.57.0(@typescript-eslint/types@8.69.0))
-      '@pindoba/core-theme-mode-select': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      '@pindoba/styled-system': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      '@pindoba/styles-theme-mode-select': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
-      '@pindoba/svelte-button': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
-      '@pindoba/svelte-menu': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
-      '@pindoba/svelte-stamp': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))(svelte@5.57.0(@typescript-eslint/types@8.69.0))
       '@pindoba/utils': 0.0.0-alpha-20261008173743(@pandacss/dev@2.2.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(postcss@8.5.30))
       svelte: 5.57.0(@typescript-eslint/types@8.69.0)
     transitivePeerDependencies:

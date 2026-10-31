@@ -1,10 +1,10 @@
 <script lang="ts">
 	import LucideBell from '@lucide/svelte/icons/bell';
+	import AppearancePicker from '@pindoba/svelte-appearance';
 	import Attachment from '@pindoba/svelte-attachment';
 	import Button from '@pindoba/svelte-button';
 	import Panel from '@pindoba/svelte-panel';
 	import Stamp from '@pindoba/svelte-stamp';
-	import ThemeModeSelect from '@pindoba/svelte-theme-mode-select';
 	import { $unreadCount as unreadCountAtom, toggleCenter } from '@pindoba/svelte-toast';
 	import Tooltip from '@pindoba/svelte-tooltip';
 	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
@@ -124,21 +124,28 @@
 				{/key}
 			</time>
 		{/if}
-		<ThemeModeSelect
+		<!-- Mode, palette, surface and density in one popover. It shares the
+		     `theme-mode` storage key the old mode select used, so a saved
+		     light/dark choice carries over. -->
+		<AppearancePicker
 			placement="top"
-			triggerProps={{
-				emphasis: 'ghost',
-				border: 'none',
-				size: 'xs',
-				passThrough: {
-					root: {
-						style: css.raw({
-							color: 'neutral.text.muted',
-							'& svg': {
-								width: '14px',
-								height: '14px'
+			pickerPassThrough={{
+				trigger: {
+					props: {
+						emphasis: 'ghost',
+						border: 'none',
+						size: 'xs',
+						passThrough: {
+							root: {
+								style: css.raw({
+									color: 'neutral.text.muted',
+									'& svg': {
+										width: '14px',
+										height: '14px'
+									}
+								})
 							}
-						})
+						}
 					}
 				}
 			}}

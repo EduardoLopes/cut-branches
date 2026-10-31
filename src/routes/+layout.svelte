@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../styles/app.css';
-	import ThemeModeSelectScript from '@pindoba/svelte-theme-mode-select/script';
+	import AppearanceScript from '@pindoba/svelte-appearance/script';
 	import Toaster from '@pindoba/svelte-toast';
 	import { type Snippet } from 'svelte';
 	import AppShell from '$components/app-shell.svelte';
@@ -20,7 +20,8 @@
 	let { children }: Props = $props();
 </script>
 
-<ThemeModeSelectScript />
+<!-- Paints the stored appearance (mode, palette, density) before first paint. -->
+<AppearanceScript />
 
 <Providers>
 	<div
