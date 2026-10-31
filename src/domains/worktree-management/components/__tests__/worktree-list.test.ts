@@ -19,6 +19,16 @@ function wt(name: string, isMain = false): Worktree {
 	return Worktree.fromData(data);
 }
 
+/** The first row's lock action, once a mouse enters the row (rows mount
+ *  their action buttons on hover or focus). */
+async function lockAction(screen: Awaited<ReturnType<typeof render>>) {
+	screen.container
+		.querySelector('[data-row-id]')
+		?.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+	await tick();
+	return screen.container.querySelector<HTMLElement>('[data-grid-list-action="lock"]');
+}
+
 function render(props: Partial<Parameters<typeof WorktreeList>[1]> & { worktrees: Worktree[] }) {
 	return renderWithTestWrapper(WorktreeList, {
 		onLock: vi.fn(),
@@ -54,7 +64,8 @@ describe('WorktreeList', () => {
 		const worktree = wt('a');
 		const screen = await render({ worktrees: [worktree], isLoading: false, onLock });
 		await tick();
-		await screen.getByTestId('worktree-lock').click();
+		expect((await lockAction(screen))?.getAttribute('aria-label')).toBe('Lock worktree');
+		(await lockAction(screen))?.click();
 		expect(onLock).toHaveBeenCalledWith(worktree);
 	});
 
@@ -63,7 +74,8 @@ describe('WorktreeList', () => {
 		const locked = Worktree.fromData({ ...wt('a').toData(), isLocked: true });
 		const screen = await render({ worktrees: [locked], isLoading: false, onUnlock });
 		await tick();
-		await screen.getByTestId('worktree-unlock').click();
+		expect((await lockAction(screen))?.getAttribute('aria-label')).toBe('Unlock worktree');
+		(await lockAction(screen))?.click();
 		expect(onUnlock).toHaveBeenCalledWith(locked);
 	});
 
@@ -145,7 +157,7 @@ describe('WorktreeList', () => {
 			await tick();
 
 			await expect.element(screen.getByTestId('worktree-main-badge')).toBeInTheDocument();
-			expect(screen.getByTestId('worktree-lock').elements()).toHaveLength(0);
+			expect(await lockAction(screen)).toBeNull();
 		});
 
 		it('marks locked and prunable worktrees', async () => {
@@ -178,11 +190,12 @@ describe('WorktreeList', () => {
 			await expect.element(rows.nth(1)).not.toMatchTextContent('abc1234');
 		});
 
-		it('disables the lock controls while a lock change is in flight', async () => {
+		it('takes the lock action off the icon buttons while a lock change is in flight', async () => {
 			const screen = await render({ worktrees: [one()], busy: true });
 			await tick();
 
-			await expect.element(screen.getByTestId('worktree-lock')).toBeDisabled();
+			// A disabled action stays (greyed) in the menu only.
+			expect(await lockAction(screen)).toBeNull();
 		});
 	});
 });

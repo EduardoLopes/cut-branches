@@ -96,7 +96,14 @@ describe('WorktreesView', () => {
 		const screen = await renderWithTestWrapper(WorktreesView, { id: 'r1' });
 		await tick();
 
-		await screen.getByTestId('worktree-lock').click();
+		// Rows mount their action buttons once a mouse enters them.
+		screen
+			.getByRole('row')
+			.filter({ hasText: '/repos/a' })
+			.element()
+			.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+		await tick();
+		screen.container.querySelector<HTMLElement>('[data-grid-list-action="lock"]')?.click();
 		expect(h.actions.lock).toHaveBeenCalledWith('a');
 	});
 

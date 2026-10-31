@@ -5,8 +5,7 @@
 	import LucideLockOpen from '@lucide/svelte/icons/lock-open';
 	import LucideTrees from '@lucide/svelte/icons/trees';
 	import Badge from '@pindoba/svelte-badge';
-	import Button from '@pindoba/svelte-button';
-	import GridList from '@pindoba/svelte-grid-list';
+	import GridList, { type GridListAction, type GridListIcon } from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
@@ -15,7 +14,6 @@
 	import Icon from '$ui/core/icon.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		worktrees: Worktree[];
@@ -52,6 +50,24 @@
 	const disabledIds = $derived(
 		new Set(worktrees.filter((w) => w.isMain() || w.isLocked()).map((w) => w.getName()))
 	);
+	// Locking is the row's one action (the main worktree has no lock). It
+	// steps aside while a selection is up — the bulk bar acts then — and is
+	// greyed while a lock change is in flight.
+	function rowActions(worktree: Worktree): GridListAction<GridListIcon, Worktree>[] {
+		if (worktree.isMain()) return [];
+		const locked = worktree.isLocked();
+		return [
+			{
+				id: 'lock',
+				label: locked ? 'Unlock worktree' : 'Lock worktree',
+				icon: locked ? LucideLockOpen : LucideLock,
+				shortcut: 'l',
+				disabled: busy,
+				onSelect: locked ? onUnlock : onLock
+			}
+		];
+	}
+
 	// A fresh Set per change: GridList adopts a new `value` by identity.
 	const value = $derived(new Set(selected));
 
@@ -75,7 +91,6 @@
 		color: 'neutral.text.muted'
 	});
 	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
-	const actionsCellClass = css({ justifyContent: 'flex-end' });
 </script>
 
 <!-- Surface comes from the enclosing PageWell, which is unpadded for this view.
@@ -134,13 +149,14 @@
 			look="cards"
 			rowBackground="surface.peak"
 			selectOver="status"
+			actions={rowActions}
 			columns={[
 				// The worktree's glyph, with the checkbox laid over it. Main and
 				// locked worktrees can't be selected, so theirs (house, lock) stays.
 				{ id: 'status', track: 'auto', srHeader: 'Status' },
 				{ id: 'name', track: 'minmax(12rem, 1fr)', header: 'Worktree' },
-				{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
-				{ id: 'actions', track: 'auto', srHeader: 'Actions' }
+				// The list adds its own trailing actions column.
+				{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' }
 			]}
 			narrow={{
 				columns: 'auto minmax(0, 1fr) auto',
@@ -216,40 +232,6 @@
 						title={worktree.getPath()}
 						data-testid="worktree-path"
 					/>
-				</span>
-
-				<span {...cell('actions', { class: actionsCellClass })}>
-					<!-- The main worktree has no lock to toggle. -->
-					{#if !worktree.isMain()}
-						<Tooltip
-							content={worktree.isLocked() ? 'Unlock worktree' : 'Lock worktree'}
-							placement="left"
-						>
-							{#snippet children(triggerProps)}
-								<Button
-									size="xs"
-									shape="square"
-									emphasis="ghost"
-									tone={worktree.isLocked() ? 'warning' : undefined}
-									disabled={busy}
-									onclick={() => (worktree.isLocked() ? onUnlock(worktree) : onLock(worktree))}
-									data-testid={worktree.isLocked() ? 'worktree-unlock' : 'worktree-lock'}
-									{...triggerProps}
-								>
-									<Stamp emphasis="ghost" border="none" background="transparent">
-										<Icon
-											icon={worktree.isLocked() ? LucideLock : LucideLockOpen}
-											width="14px"
-											height="14px"
-										/>
-									</Stamp>
-									<span class={visuallyHidden()}>
-										{worktree.isLocked() ? 'Unlock' : 'Lock'}
-									</span>
-								</Button>
-							{/snippet}
-						</Tooltip>
-					{/if}
 				</span>
 			{/snippet}
 		</GridList>
