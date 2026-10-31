@@ -15,11 +15,17 @@ vi.mock('$app/state', () => {
 	};
 });
 
-const { mockPush, mockAddDeletedBranch } = vi.hoisted(() => {
+const { mockPush, mockAddDeletedBranch, mockGoto, flags } = vi.hoisted(() => {
 	const mockPush = vi.fn();
 	const mockAddDeletedBranch = vi.fn();
-	return { mockPush, mockAddDeletedBranch };
+	return { mockPush, mockAddDeletedBranch, mockGoto: vi.fn(), flags: new Set<string>() };
 });
+
+vi.mock('$app/navigation', () => ({ goto: mockGoto }));
+
+vi.mock('$lib/feature-flags.svelte', () => ({
+	isFeatureEnabled: (key: string) => flags.has(key)
+}));
 
 vi.mock('$services/notifications/notifications.svelte', () => ({
 	notifications: {
@@ -207,6 +213,54 @@ describe('DeleteBranchModal Component', () => {
 
 		// Reset mocks
 		vi.clearAllMocks();
+		flags.clear();
+	});
+
+	describe('Row actions', () => {
+		/** Rows mount their action buttons once a mouse enters them. */
+		async function diffAction(screen: Awaited<ReturnType<typeof renderWithTestWrapper>>) {
+			for (const row of screen.getByRole('row').elements()) {
+				row.dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' }));
+			}
+			await tick();
+			return screen.container.ownerDocument.querySelectorAll<HTMLElement>(
+				'[data-grid-list-action="diff"]'
+			);
+		}
+
+		test('opens the branch diff from a row, closing the dialog', async () => {
+			flags.add('branch-diff');
+			mockSelectedBranches = ['feature-1', 'main'];
+			const screen = await renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo',
+				open: true
+			});
+			await expect.element(screen.getByText('feature-1')).toBeInTheDocument();
+
+			// The current branch has nothing to diff against itself.
+			const actions = await diffAction(screen);
+			expect(actions).toHaveLength(1);
+			expect(actions[0].getAttribute('aria-label')).toBe('View branch diff');
+
+			actions[0].click();
+			expect(mockGoto).toHaveBeenCalledWith(expect.stringContaining('diff?branch=feature-1'));
+			const dialog = screen.getByTestId('delete-branch-dialog').element() as HTMLDialogElement;
+			await vi.waitFor(() => expect(dialog.open).toBe(false));
+		});
+
+		test('offers no diff with the flag off or without a repository', async () => {
+			const screen = await renderWithTestWrapper(DeleteBranchModal, {
+				id: 'test-repo',
+				open: true
+			});
+			await expect.element(screen.getByText('feature-1')).toBeInTheDocument();
+			expect(await diffAction(screen)).toHaveLength(0);
+
+			flags.add('branch-diff');
+			const noRepo = await renderWithTestWrapper(DeleteBranchModal, { open: true });
+			await tick();
+			expect(noRepo.container.querySelectorAll('[data-grid-list-action="diff"]')).toHaveLength(0);
+		});
 	});
 
 	describe('Rendering', () => {

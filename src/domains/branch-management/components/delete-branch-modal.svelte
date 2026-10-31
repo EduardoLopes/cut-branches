@@ -5,11 +5,11 @@
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
 	import Modal from '@pindoba/svelte-dialog';
-	import GridList from '@pindoba/svelte-grid-list';
+	import GridList, { type GridListAction, type GridListIcon } from '@pindoba/svelte-grid-list';
 	import Loading from '@pindoba/svelte-loading';
 	import Stamp from '@pindoba/svelte-stamp';
-	import Tooltip from '@pindoba/svelte-tooltip';
 	import { type Branch } from '../core/models/branch';
+	import { goto } from '$app/navigation';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
 	import { getDeletedBranchesStore } from '$domains/branch-management/core/composables/deleted-branches.svelte';
 	import { createDeleteBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-delete-branches-mutation';
@@ -28,7 +28,6 @@
 	import ScrollWell from '$ui/patterns/scroll-well.svelte';
 	import { ensureString, formatString } from '$utils/string-utils';
 	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		id?: string;
@@ -89,6 +88,28 @@
 	let branches = $derived([...(getBranchesQuery.data?.branches ?? [])].sort(sort));
 
 	const diffEnabled = $derived(isFeatureEnabled('branch-diff'));
+
+	// Reviewing what a branch adds is the row's one action: the current
+	// branch has nothing to diff against itself.
+	function rowActions(branch: Branch): GridListAction<GridListIcon, Branch>[] {
+		if (!diffEnabled || !id || branch.isCurrent()) return [];
+		// The path is resolve()d; only a query is appended, which the
+		// navigation rule's static analysis can't see through.
+		const href = `${resolveRepositorySubPath(id, 'diff')}?branch=${encodeURIComponent(branch.getName())}`;
+		return [
+			{
+				id: 'diff',
+				label: 'View branch diff',
+				icon: LucideFileDiff,
+				shortcut: 'd',
+				onSelect: () => {
+					open = false;
+					// eslint-disable-next-line svelte/no-navigation-without-resolve
+					goto(href);
+				}
+			}
+		];
+	}
 
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
 	const nameCellClass = css({ display: 'grid', gap: '3xs', minWidth: '0' });
@@ -171,10 +192,8 @@
 				getId={(branch: Branch) => branch.getName()}
 				look="cards"
 				rowBackground="surface.peak"
-				columns={[
-					{ id: 'name', track: 'minmax(0, 1fr)' },
-					{ id: 'actions', track: 'auto' }
-				]}
+				actions={rowActions}
+				columns={[{ id: 'name', track: 'minmax(0, 1fr)' }]}
 			>
 				{#snippet row(branch, { cell })}
 					{@const alerts = getBranchAlerts(branch, true)}
@@ -194,27 +213,6 @@
 							</span>
 						{/if}
 					</div>
-					<span {...cell('actions')}>
-						{#if diffEnabled && id && !branch.isCurrent()}
-							<Tooltip content="View branch diff">
-								{#snippet children(triggerProps)}
-									<Button
-										size="xs"
-										shape="square"
-										emphasis="ghost"
-										href={`${resolveRepositorySubPath(id, 'diff')}?branch=${encodeURIComponent(branch.getName())}`}
-										data-testid="branch-diff-link"
-										{...triggerProps}
-									>
-										<Stamp emphasis="ghost" border="none" background="transparent">
-											<Icon icon={LucideFileDiff} width="14px" height="14px" />
-										</Stamp>
-										<span class={visuallyHidden()}>View branch diff</span>
-									</Button>
-								{/snippet}
-							</Tooltip>
-						{/if}
-					</span>
 				{/snippet}
 			</GridList>
 		</ScrollWell>
