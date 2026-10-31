@@ -39,20 +39,33 @@ previously copied byte-for-byte between domains to dodge the import rule.
 
 ## Settings convention
 
-Every settings section shares one visual language via two components:
+Every settings section shares one visual language — a mix of Linear's and
+ClickUp's preferences: explanation on the left, controls on the right — via two
+components. The settings shell hosts them in a `PageShell background="valley"`,
+so the `surface.peak` cards lift off the page.
 
 ### `settings-section.svelte`
 
-A settings-flavoured name for the page convention above: it is a thin wrapper
-over `PageHeader` + `PageWell`, so `/settings/*` and every other page share one
-implementation.
+The standard `PageHeader` over a scrolling, centred, width-capped column. No
+`PageWell`: the content sits on the page surface, so cards keep their own radius
+instead of stepping down to `inner`. The column is the `settings` query
+container the groups collapse against.
 
 - Props: `heading`, `subheading?`, `leading?` (icon Stamp snippet), `trailing?`
-  (header action, e.g. a reset button), `testId?`, `children` (the section's lists).
+  (header action, e.g. a reset button), `testId?`, `children` (`SettingsGroup`s).
 
-Fill the section with pindoba `List`s (`card={{ radius: 'inner' }}` so the card
-stays concentric with the well): stacked rows with a `trailing` control for
-settings, `layout="pairs"` for read-only facts.
+### `settings-group.svelte`
+
+One block of a section: a `Banner` (heading + description) on the left, the
+controls on the right, top-aligned, with a pindoba `Separator` between groups.
+Stacks into one column when the section is under 720px wide.
+
+- Props: `heading`, `description?` (string or snippet), `testId?`, `children`.
+
+Fill a group with a pindoba `List` (`card={{}}`): stacked rows with a `trailing`
+control for settings — `Checkbox appearance="switch"` for on/off,
+`Choice appearance="button"` for a small set of options — and `layout="pairs"`
+for read-only facts.
 
 ## Dialog convention
 

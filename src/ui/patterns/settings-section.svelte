@@ -2,7 +2,6 @@
 	import type { BannerProps } from '@pindoba/svelte-banner';
 	import type { Snippet } from 'svelte';
 	import PageHeader from './page-header.svelte';
-	import PageWell from './page-well.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
 	interface Props {
@@ -16,7 +15,7 @@
 		trailing?: BannerProps['trailing'];
 		/** `data-testid` for the section root. */
 		testId?: string;
-		/** Section content — rows/cards rendered inside the recessed well. */
+		/** Section content — one or more `SettingsGroup`s. */
 		children: Snippet;
 	}
 
@@ -24,17 +23,36 @@
 </script>
 
 <!--
-	A settings section is just the standard page contract (header + recessed
-	well) under a settings-flavoured name, so `/settings/*` and every other page
-	share one implementation.
+	A settings page: the standard page header over a scrolling column that sits
+	directly on the page surface — no recessed well, like Linear's and ClickUp's
+	settings. Without a well there is no outer radius for cards to nest inside,
+	so their corners don't have to step down to an `inner` radius.
+
+	The column is centred and width-capped, and it is the `settings` query
+	container that each `SettingsGroup` collapses against. The rule above the
+	first group is dropped so the stack starts flush.
 -->
 <PageHeader {leading} {heading} {subheading} {trailing} {testId} />
 
-<PageWell>
-	<!-- Settings rows are discrete cards, so they need rhythm between them. The
-	     well itself stays gapless — list-style pages (branches, worktrees) set
-	     their own spacing on the list container. -->
-	<div class={css({ display: 'flex', flexDirection: 'column', gap: 'sm' })}>
+<div
+	class={css({ flex: '1', minHeight: '0', overflowY: 'auto', overflowX: 'hidden', px: 'md' })}
+	data-testid="settings-scroll"
+>
+	<div
+		class={css({
+			display: 'flex',
+			flexDirection: 'column',
+			gap: 'xl',
+			width: '100%',
+			maxWidth: '960px',
+			marginInline: 'auto',
+			paddingBlock: 'md',
+			paddingBottom: '3xl',
+			containerType: 'inline-size',
+			containerName: 'settings',
+			'& > section:first-of-type > [data-settings-group-separator]': { display: 'none' }
+		})}
+	>
 		{@render children()}
 	</div>
-</PageWell>
+</div>

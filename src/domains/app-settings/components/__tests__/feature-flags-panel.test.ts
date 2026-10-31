@@ -94,11 +94,22 @@ describe('FeatureFlagsPanel', () => {
 			expect(screen.getByTestId('feature-flag-icon-delta').elements()).toHaveLength(0);
 		});
 
+		it('outlines the stamp only while its flag is on', async () => {
+			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
+
+			await expect
+				.element(screen.getByTestId('feature-flag-icon-beta'))
+				.toHaveAttribute('data-enabled', 'true');
+			await expect
+				.element(screen.getByTestId('feature-flag-icon-alpha'))
+				.toHaveAttribute('data-enabled', 'false');
+		});
+
 		it('reflects each flag value in its checkbox', async () => {
 			const screen = await renderWithTestWrapper(FeatureFlagsPanel);
 
-			await expect.element(screen.getByRole('checkbox', { name: 'Beta' })).toBeChecked();
-			await expect.element(screen.getByRole('checkbox', { name: 'Alpha' })).not.toBeChecked();
+			await expect.element(screen.getByRole('switch', { name: 'Beta' })).toBeChecked();
+			await expect.element(screen.getByRole('switch', { name: 'Alpha' })).not.toBeChecked();
 		});
 
 		it('sets a flag when its toggle changes', async () => {

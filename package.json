@@ -106,6 +106,7 @@
 		"@pindoba/svelte-popover": "alpha",
 		"@pindoba/svelte-progress": "alpha",
 		"@pindoba/svelte-radio": "alpha",
+		"@pindoba/svelte-separator": "alpha",
 		"@pindoba/svelte-stamp": "alpha",
 		"@pindoba/svelte-toast": "alpha",
 		"@pindoba/svelte-tooltip": "alpha",

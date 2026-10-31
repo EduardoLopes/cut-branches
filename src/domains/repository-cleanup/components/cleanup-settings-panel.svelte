@@ -2,7 +2,7 @@
 	import LucideBrushCleaning from '@lucide/svelte/icons/brush-cleaning';
 	import { type BannerProps } from '@pindoba/svelte-banner';
 	import Button from '@pindoba/svelte-button';
-	import Group from '@pindoba/svelte-group';
+	import Choice, { ChoiceItem } from '@pindoba/svelte-choice';
 	import Input from '@pindoba/svelte-input';
 	import List from '@pindoba/svelte-list';
 	import Stamp from '@pindoba/svelte-stamp';
@@ -12,6 +12,7 @@
 		setCleanupConfig
 	} from '$domains/repository-cleanup/core/composables/use-cleanup-config.svelte';
 	import Icon from '$ui/core/icon.svelte';
+	import SettingsGroup from '$ui/patterns/settings-group.svelte';
 	import SettingsSection from '$ui/patterns/settings-section.svelte';
 	import { css } from '@pindoba/styled-system/css';
 
@@ -23,10 +24,16 @@
 			setCleanupConfig({ thresholdDays: parsed });
 		}
 	}
+
+	function updateDeletionMode(value: string | undefined) {
+		if (value === 'trash' || value === 'permanent') {
+			setCleanupConfig({ defaultDeletionMode: value });
+		}
+	}
 </script>
 
 {#snippet cleanupIcon()}
-	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" shadow="sm">
+	<Stamp shape="square" size="sm" emphasis="secondary" tone="neutral" border="none" shadow="sm">
 		<Icon icon={LucideBrushCleaning} width="16px" height="16px" />
 	</Stamp>
 {/snippet}
@@ -35,6 +42,12 @@
 	<Button emphasis="ghost" size="sm" onclick={resetCleanupConfig} data-testid="cleanup-reset">
 		Reset to defaults
 	</Button>
+{/snippet}
+
+{#snippet detectionDescription()}
+	Cleanable folders come from each repository's <code>.gitignore</code> (nested ones included). Only
+	directories your repository ignores are ever proposed — a repository without a
+	<code>.gitignore</code> has nothing to clean.
 {/snippet}
 
 {#snippet thresholdControl()}
@@ -51,24 +64,21 @@
 {/snippet}
 
 {#snippet deletionControl()}
-	<Group orientation="horizontal">
-		<Button
-			size="sm"
-			emphasis={config.defaultDeletionMode === 'trash' ? 'primary' : 'secondary'}
-			onclick={() => setCleanupConfig({ defaultDeletionMode: 'trash' })}
-			data-testid="cleanup-default-trash"
-		>
-			Move to Trash
-		</Button>
-		<Button
-			size="sm"
-			emphasis={config.defaultDeletionMode === 'permanent' ? 'primary' : 'secondary'}
-			onclick={() => setCleanupConfig({ defaultDeletionMode: 'permanent' })}
+	<Choice
+		type="radio"
+		appearance="button"
+		size="sm"
+		value={[config.defaultDeletionMode]}
+		onValueChange={(value) => updateDeletionMode(value[0])}
+		aria-label="Default deletion method"
+	>
+		<ChoiceItem value="trash" label="Move to Trash" data-testid="cleanup-default-trash" />
+		<ChoiceItem
+			value="permanent"
+			label="Delete permanently"
 			data-testid="cleanup-default-permanent"
-		>
-			Delete permanently
-		</Button>
-	</Group>
+		/>
+	</Choice>
 {/snippet}
 
 <SettingsSection
@@ -78,34 +88,33 @@
 	trailing={resetButton as BannerProps['trailing']}
 	testId="cleanup-settings-section"
 >
-	<p
-		class={css({
-			fontSize: 'sm',
-			lineHeight: '1.7',
-			margin: '0',
-			color: 'neutral.text.muted',
-			textWrap: 'pretty'
-		})}
+	<SettingsGroup
+		heading="Detection"
+		description={detectionDescription as BannerProps['subheading']}
 	>
-		Cleanable folders are discovered from each repository's <code>.gitignore</code> (including
-		nested
-		<code>.gitignore</code> files). Only directories your repository ignores are ever proposed or
-		deleted — a repository with no <code>.gitignore</code> has nothing to clean. You choose which paths
-		to keep on the cleanup page.
-	</p>
+		<List
+			card={{}}
+			aria-label="Detection settings"
+			items={[
+				{
+					id: 'threshold',
+					title: 'Staleness threshold (days)',
+					description:
+						'A repository is “stale” when its most recent commit and file change are both older than this.',
+					trailing: thresholdControl
+				}
+			]}
+		/>
+	</SettingsGroup>
 
-	<List
-		card={{ radius: 'inner' }}
-		aria-label="Cleanup settings"
-		items={[
-			{
-				id: 'threshold',
-				title: 'Staleness threshold (days)',
-				description:
-					'A repository is “stale” when its most recent commit and file change are both older than this.',
-				trailing: thresholdControl
-			},
-			{ id: 'deletion', title: 'Default deletion method', trailing: deletionControl }
-		]}
-	/>
+	<SettingsGroup
+		heading="Deletion"
+		description="What happens to selected folders when you clean. The Trash keeps them recoverable; permanent deletion frees the space immediately."
+	>
+		<List
+			card={{}}
+			aria-label="Deletion settings"
+			items={[{ id: 'deletion', title: 'Default deletion method', trailing: deletionControl }]}
+		/>
+	</SettingsGroup>
 </SettingsSection>

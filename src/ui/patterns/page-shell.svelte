@@ -7,9 +7,15 @@
 		children: Snippet;
 		/** `data-testid` for the page root. */
 		testId?: string;
+		/**
+		 * Page surface. `peak` (default) for pages whose content sits in a recessed
+		 * `PageWell`; `valley` for well-less pages (settings) whose `surface.peak`
+		 * cards then lift off the page, Linear-style.
+		 */
+		background?: 'peak' | 'valley';
 	}
 
-	const { children, testId }: Props = $props();
+	const { children, testId, background = 'peak' }: Props = $props();
 </script>
 
 <!--
@@ -26,9 +32,10 @@
 		minHeight: '0',
 		overflow: 'hidden',
 		position: 'relative',
-		background: 'neutral.surface.peak',
+		background: background === 'valley' ? 'neutral.surface.valley' : 'neutral.surface.peak',
 		color: 'neutral.text'
 	})}
+	data-background={background}
 	data-testid={testId}
 >
 	{@render children()}

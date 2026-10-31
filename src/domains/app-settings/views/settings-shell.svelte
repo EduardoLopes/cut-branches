@@ -189,7 +189,7 @@
 		<!-- Content: the active section route renders here, in the same PageShell
 		     every other page uses so settings isn't a bespoke surface. -->
 		<div class={css({ display: 'flex', flexDirection: 'column', flex: '1', minWidth: '0' })}>
-			<PageShell>
+			<PageShell background="valley">
 				{@render children?.()}
 			</PageShell>
 		</div>
