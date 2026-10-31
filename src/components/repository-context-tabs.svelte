@@ -12,6 +12,7 @@
 	import { isFeatureEnabled } from '$lib/feature-flags.svelte';
 	import { resolveRepositoryPath, resolveRepositorySubPath } from '$lib/repository-route';
 	import Icon from '$ui/core/icon.svelte';
+	import { waitForTransitions } from '$utils/wait-for-transitions';
 	import { css } from '@pindoba/styled-system/css';
 
 	/**
@@ -50,17 +51,26 @@
 	const worktreesView = useWorktreesView({ getPath: () => (worktreesEnabled ? repoPath : '') });
 	const worktreeCount = $derived(worktreesView.linkedCount);
 
-	function goToBranches() {
-		if (currentContext !== 'branches') goto(resolveRepositoryPath(id));
+	let tabs = $state<HTMLDivElement | null>(null);
+
+	// Mounting the other page blocks the main thread; let the tab's own
+	// transition play first, or it runs through that block unseen.
+	async function goToBranches() {
+		if (currentContext === 'branches') return;
+		if (tabs) await waitForTransitions(tabs);
+		goto(resolveRepositoryPath(id));
 	}
 
-	function goToWorktrees() {
-		if (currentContext !== 'worktrees') goto(resolveRepositorySubPath(id, 'worktrees'));
+	async function goToWorktrees() {
+		if (currentContext === 'worktrees') return;
+		if (tabs) await waitForTransitions(tabs);
+		goto(resolveRepositorySubPath(id, 'worktrees'));
 	}
 </script>
 
 {#if worktreesEnabled}
 	<Group
+		bind:element={tabs}
 		orientation="horizontal"
 		aria-label="Repository context"
 		data-testid="repository-context-switch"

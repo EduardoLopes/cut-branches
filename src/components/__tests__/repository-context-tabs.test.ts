@@ -68,6 +68,7 @@ describe('RepositoryContextTabs', () => {
 		const screen = await renderWithTestWrapper(RepositoryContextTabs, { id: 'r1' });
 		await tick();
 		await screen.getByTestId('context-worktrees').click();
-		expect(h.goto).toHaveBeenCalledWith('/repos/r1/worktrees');
+		// Navigation waits for the tab's transition first.
+		await vi.waitFor(() => expect(h.goto).toHaveBeenCalledWith('/repos/r1/worktrees'));
 	});
 });
