@@ -376,8 +376,18 @@ describe('BranchList', () => {
 			const checkbox = (name: string) => row(screen, name).getByRole('checkbox');
 			await expect.element(checkbox('selected-branch')).toBeChecked();
 			await expect.element(checkbox('feature/test-branch')).not.toBeChecked();
-			await expect.element(checkbox('current-branch')).toBeDisabled();
-			await expect.element(checkbox('locked-branch')).toBeDisabled();
+			// Unselectable rows keep their status glyph where the checkbox would be;
+			// the disabled checkbox stays in the DOM but never shows over it.
+			const hiddenCheckbox = (name: string) =>
+				row(screen, name).getByRole('checkbox', { includeHidden: true });
+			await expect.element(hiddenCheckbox('current-branch')).toBeDisabled();
+			await expect.element(hiddenCheckbox('locked-branch')).toBeDisabled();
+			await expect
+				.element(row(screen, 'current-branch').getByTestId('branch-status-current'))
+				.toBeVisible();
+			await expect
+				.element(row(screen, 'locked-branch').getByTestId('branch-status-locked'))
+				.toBeVisible();
 		});
 
 		test('writes a selection change back as a batch', async () => {
@@ -626,6 +636,76 @@ describe('BranchList', () => {
 
 			preview().element().dispatchEvent(new MouseEvent('mouseleave'));
 			await expect.element(preview()).not.toBeVisible();
+		});
+
+		/** A list taller than its 200px port, so most rows sit outside the window. */
+		async function renderTall() {
+			mocks.flags.add('commit-history');
+			branchesHolder.value = Array.from({ length: 80 }, (_, i) =>
+				branch({ name: `b-${String(i).padStart(2, '0')}` })
+			);
+			const screen = await render();
+			const scroller = screen.getByTestId('branch-list-scroller').element() as HTMLElement;
+			scroller.style.flex = 'none';
+			scroller.style.height = '200px';
+			await tick();
+			// The scroll port is the list's own grid inside the scroller.
+			const port = scroller.querySelector<HTMLElement>('[role="grid"]') ?? scroller;
+			return { screen, port };
+		}
+
+		function scrollTo(port: HTMLElement, top: number) {
+			port.scrollTop = top;
+			port.dispatchEvent(new Event('scroll'));
+		}
+
+		test('closes when its row scrolls out of the virtual window', async () => {
+			const { screen, port } = await renderTall();
+			const preview = () => screen.getByTestId('branch-commit-preview');
+
+			hover(screen, 'b-05', 'mouseenter');
+			await expect.element(preview()).toBeVisible();
+
+			// No `mouseleave` comes from an unmounted row; the scroll closes it.
+			scrollTo(port, port.scrollHeight);
+			await vi.waitFor(() => expect(row(screen, 'b-05').elements()).toHaveLength(0));
+			await expect.element(preview()).not.toBeVisible();
+		});
+
+		test('closes when its row stays mounted but scrolls out of view', async () => {
+			const { screen, port } = await renderTall();
+			const preview = () => screen.getByTestId('branch-commit-preview');
+
+			// GridList keeps its focus row (the first) mounted wherever it scrolls.
+			hover(screen, 'b-00', 'mouseenter');
+			await expect.element(preview()).toBeVisible();
+
+			scrollTo(port, port.scrollHeight);
+			await expect.element(preview()).not.toBeVisible();
+			expect(row(screen, 'b-00').elements()).toHaveLength(1);
+		});
+
+		test('stays open while the list scrolls with its row still in view', async () => {
+			const { screen, port } = await renderTall();
+			const preview = () => screen.getByTestId('branch-commit-preview');
+
+			hover(screen, 'b-00', 'mouseenter');
+			await expect.element(preview()).toBeVisible();
+
+			scrollTo(port, 1);
+			await wait(100);
+			await expect.element(preview()).toBeVisible();
+		});
+
+		test('does not open for a row that scrolled away while the pointer rested', async () => {
+			const { screen, port } = await renderTall();
+
+			hover(screen, 'b-05', 'mouseenter');
+			scrollTo(port, port.scrollHeight);
+			await vi.waitFor(() => expect(row(screen, 'b-05').elements()).toHaveLength(0));
+			await wait(500);
+
+			expect(screen.getByTestId('branch-commit-preview').elements()).toHaveLength(0);
 		});
 
 		test('stays off without the history flag, and the subject keeps its full message as a title', async () => {

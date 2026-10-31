@@ -1,5 +1,7 @@
 <script lang="ts">
+	import LucideCheck from '@lucide/svelte/icons/check';
 	import LucideChevronDown from '@lucide/svelte/icons/chevron-down';
+	import LucideFolderGit2 from '@lucide/svelte/icons/folder-git-2';
 	import LucideFolderSearch from '@lucide/svelte/icons/folder-search';
 	import LucideHouse from '@lucide/svelte/icons/house';
 	import LucideRefreshCw from '@lucide/svelte/icons/refresh-cw';
@@ -167,6 +169,7 @@
 		}
 	}
 
+	const iconCellClass = css({ justifyContent: 'center', color: 'neutral.text.muted' });
 	const nameCellClass = css({ display: 'flex', alignItems: 'center', gap: 'sm', minWidth: '0' });
 	// The guide line centres under the parent row's name column start.
 	const nestedClass = css({
@@ -519,13 +522,28 @@
 								onValueChange={handleSelectionChange}
 								look="cards"
 								rowBackground="surface.peak"
+								selectOver="icon"
 								columns={[
+									// The checkbox lies over the row's glyph. A repository
+									// already added can't be picked again, so its check stays.
+									{ id: 'icon', track: 'auto', srHeader: 'Type' },
 									{ id: 'name', track: 'auto', header: 'Repository' },
 									{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
 									{ id: 'status', track: 'auto', srHeader: 'Status' }
 								]}
 							>
 								{#snippet row({ item, nested }, { cell })}
+									<span {...cell('icon', { class: iconCellClass })} data-testid="scan-item-icon">
+										<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+											{#if item.alreadyAdded}
+												<Icon icon={LucideCheck} width="14px" height="14px" />
+											{:else if item.isWorktree}
+												<Icon icon={LucideTrees} width="14px" height="14px" />
+											{:else}
+												<Icon icon={LucideFolderGit2} width="14px" height="14px" />
+											{/if}
+										</Stamp>
+									</span>
 									<!-- Worktrees are indented with a guide line so they read as
 									     part of the repository above, not as more repositories. -->
 									<span

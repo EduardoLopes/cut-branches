@@ -79,7 +79,9 @@ describe('WorktreeList', () => {
 
 		const mainRow = screen.getByRole('row').filter({ hasText: 'main' });
 		const linkedRow = screen.getByRole('row').filter({ hasText: '/repos/a' });
-		await expect.element(mainRow.getByRole('checkbox')).toBeDisabled();
+		// An unselectable row keeps its glyph where the checkbox would be; the
+		// disabled checkbox stays in the DOM, hidden.
+		await expect.element(mainRow.getByRole('checkbox', { includeHidden: true })).toBeDisabled();
 		await expect.element(mainRow).toHaveAttribute('aria-disabled', 'true');
 
 		await linkedRow.getByRole('checkbox').click();
@@ -96,7 +98,7 @@ describe('WorktreeList', () => {
 		await tick();
 
 		const lockedRow = screen.getByRole('row').filter({ hasText: '/repos/a' });
-		await expect.element(lockedRow.getByRole('checkbox')).toBeDisabled();
+		await expect.element(lockedRow.getByRole('checkbox', { includeHidden: true })).toBeDisabled();
 	});
 
 	it('checks the rows it is told are selected', async () => {

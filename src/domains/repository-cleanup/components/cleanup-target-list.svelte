@@ -1,9 +1,12 @@
 <script lang="ts">
+	import LucideFolder from '@lucide/svelte/icons/folder';
 	import type { GridListPadding } from '@pindoba/core-grid-list';
 	import Badge from '@pindoba/svelte-badge';
 	import GridList, { type GridListGroupContext } from '@pindoba/svelte-grid-list';
+	import Stamp from '@pindoba/svelte-stamp';
 	import type { Snippet } from 'svelte';
 	import type { CleanupTarget } from '$infrastructure/bindings';
+	import Icon from '$ui/core/icon.svelte';
 	import TruncatedPath from '$ui/core/truncated-path.svelte';
 	import { formatBytes } from '$utils/format-bytes';
 	import { css } from '@pindoba/styled-system/css';
@@ -50,6 +53,7 @@
 		}
 	}
 
+	const iconCellClass = css({ justifyContent: 'center', color: 'neutral.text.muted' });
 	const nameClass = css({ fontSize: 'sm', fontWeight: 'medium', whiteSpace: 'nowrap' });
 	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
 	const sizeCellClass = css({ justifyContent: 'flex-end' });
@@ -80,13 +84,21 @@
 	look="cards"
 	rowBackground="surface.peak"
 	data-testid="cleanup-target-list"
+	selectOver="icon"
 	columns={[
+		// The checkbox lies over the folder glyph: no blank column at rest.
+		{ id: 'icon', track: 'auto', srHeader: 'Type' },
 		{ id: 'name', track: 'auto', header: 'Folder' },
 		{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
 		{ id: 'size', track: 'auto', header: 'Size' }
 	]}
 >
 	{#snippet row(target, { cell })}
+		<span {...cell('icon', { class: iconCellClass })}>
+			<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+				<Icon icon={LucideFolder} width="14px" height="14px" />
+			</Stamp>
+		</span>
 		<span {...cell('name', { class: nameClass })} data-testid="cleanup-target">
 			{target.folderName}
 		</span>

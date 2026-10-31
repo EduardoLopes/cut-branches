@@ -128,6 +128,7 @@
 		open = false;
 	}
 
+	const iconCellClass = css({ justifyContent: 'center', color: 'neutral.text.muted' });
 	const nameClass = css({ fontSize: 'sm', fontWeight: 'medium', whiteSpace: 'nowrap' });
 	const pathClass = css({ fontSize: 'xs', minWidth: '0' });
 
@@ -249,13 +250,22 @@
 							tone="danger"
 							look="cards"
 							rowBackground="surface.peak"
+							selectOver="icon"
 							columns={[
+								// The checkbox lies over the repository glyph: no blank
+								// column at rest.
+								{ id: 'icon', track: 'auto', srHeader: 'Type' },
 								{ id: 'name', track: 'auto', header: 'Repository' },
 								{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
 								{ id: 'branches', track: 'auto', header: 'Branches' }
 							]}
 						>
 							{#snippet row(repository, { cell })}
+								<span {...cell('icon', { class: iconCellClass })}>
+									<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+										<Icon icon={LucideFolderGit2} width="14px" height="14px" />
+									</Stamp>
+								</span>
 								<span {...cell('name', { class: nameClass })} data-testid="manage-item">
 									{repository.name}
 								</span>

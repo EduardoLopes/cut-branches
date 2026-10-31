@@ -63,6 +63,7 @@
 	});
 
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
+	const statusCellClass = css({ justifyContent: 'center', color: 'neutral.text.muted' });
 	const nameCellClass = css({ display: 'grid', gap: '3xs', minWidth: '0' });
 	const lineClass = css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' });
 	const nameClass = css({ fontWeight: 'semibold', truncate: true });
@@ -132,30 +133,39 @@
 			tone="danger"
 			look="cards"
 			rowBackground="surface.peak"
+			selectOver="status"
 			columns={[
+				// The worktree's glyph, with the checkbox laid over it. Main and
+				// locked worktrees can't be selected, so theirs (house, lock) stays.
+				{ id: 'status', track: 'auto', srHeader: 'Status' },
 				{ id: 'name', track: 'minmax(12rem, 1fr)', header: 'Worktree' },
 				{ id: 'path', track: 'minmax(0, 1fr)', header: 'Path' },
 				{ id: 'actions', track: 'auto', srHeader: 'Actions' }
 			]}
 			narrow={{
-				columns: 'minmax(0, 1fr) auto',
+				columns: 'auto minmax(0, 1fr) auto',
 				cells: {
-					name: { column: '1', row: '1' },
-					actions: { column: '2', row: '1' },
+					status: { column: '1', row: '1' },
+					name: { column: '2', row: '1' },
+					actions: { column: '3', row: '1' },
 					path: { hidden: true }
 				}
 			}}
 		>
 			{#snippet row(worktree, { cell })}
+				<span {...cell('status', { class: statusCellClass })} data-testid="worktree-status">
+					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+						{#if worktree.isMain()}
+							<Icon icon={LucideHouse} width="14px" height="14px" />
+						{:else if worktree.isLocked()}
+							<Icon icon={LucideLock} width="14px" height="14px" />
+						{:else}
+							<Icon icon={LucideTrees} width="14px" height="14px" />
+						{/if}
+					</Stamp>
+				</span>
 				<div {...cell('name', { class: nameCellClass })} data-testid="worktree-row">
 					<span class={lineClass}>
-						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-							<Icon
-								icon={worktree.isMain() ? LucideHouse : LucideTrees}
-								width="16px"
-								height="16px"
-							/>
-						</Stamp>
 						<span class={nameClass} data-testid="worktree-name">{worktree.getName()}</span>
 						{#if worktree.isMain()}
 							<Badge size="sm" emphasis="secondary" data-testid="worktree-main-badge">main</Badge>

@@ -4,6 +4,7 @@
 	import LucideFileDiff from '@lucide/svelte/icons/file-diff';
 	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
 	import LucideHistory from '@lucide/svelte/icons/history';
+	import LucideLock from '@lucide/svelte/icons/lock';
 	import LucideMapPin from '@lucide/svelte/icons/map-pin';
 	import Badge from '@pindoba/svelte-badge';
 	import Button from '@pindoba/svelte-button';
@@ -223,6 +224,8 @@
 			...PREVIEW_WINDOW
 		}).catch(() => {});
 		openTimer = setTimeout(() => {
+			// The row may have scrolled out of the virtual window meanwhile.
+			if (!anchor.isConnected) return;
 			preview = { anchor, sha };
 			previewOpen = true;
 		}, PREVIEW_OPEN_DELAY);
@@ -237,7 +240,35 @@
 		clearTimeout(closeTimer);
 	}
 
-	onDestroy(clearPreviewTimers);
+	// A virtual row that scrolls out of the window is unmounted, and a removed
+	// element never fires `mouseleave` — the preview would stay open pointing
+	// at nothing. Close it once its subject is gone or out of the scroll port.
+	// Checked a frame after the scroll, once the virtualizer has re-rendered.
+	let scrollFrame = 0;
+	function handleListScroll(event: Event) {
+		if (!previewOpen) return;
+		// Captured on the list wrapper, so the target is always an element.
+		const port = event.target as Element;
+		cancelAnimationFrame(scrollFrame);
+		scrollFrame = requestAnimationFrame(() => {
+			const anchor = preview?.anchor;
+			if (!anchor?.isConnected || !isInside(anchor, port)) {
+				clearPreviewTimers();
+				previewOpen = false;
+			}
+		});
+	}
+
+	function isInside(anchor: Element, port: Element) {
+		const a = anchor.getBoundingClientRect();
+		const p = port.getBoundingClientRect();
+		return a.bottom > p.top && a.top < p.bottom;
+	}
+
+	onDestroy(() => {
+		clearPreviewTimers();
+		cancelAnimationFrame(scrollFrame);
+	});
 
 	// ---------------------------------------------------------------------------
 	// Row actions. The hover cell (switch, lock, diff, history) is most of a
@@ -363,7 +394,7 @@
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
 	const twoLineCellClass = css({ display: 'grid', gap: '3xs', minWidth: '0' });
 	const lineClass = css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' });
-	const iconSpacerClass = css({ display: 'flex', visibility: 'hidden' });
+	const statusCellClass = css({ justifyContent: 'center', color: 'neutral.text.muted' });
 	const nameClass = css({ fontWeight: 'semibold', truncate: true });
 	const mutedClass = css({ fontSize: 'sm', color: 'neutral.text.muted', truncate: true });
 	const shaClass = css({
@@ -400,6 +431,7 @@
 	onpointerleave={() => (hoveredRow = null)}
 	onfocusin={(event) => (focusedRow = rowIdOf(event.target))}
 	onfocusout={handleFocusOut}
+	onscrollcapture={handleListScroll}
 >
 	<!-- The sticky header carries select-all (it covers the selectable rows
 	     the search leaves; ⌘A does the same from a focused row). Narrower than
@@ -430,7 +462,12 @@
 		rowBackground="surface.peak"
 		passThrough={{ grid: { style: scrollPortStyle }, spacer: { style: spacerStyle } }}
 		aria-busy={branchesQuery.isLoading}
+		selectOver="status"
 		columns={[
+			// The row's status glyph, with the checkbox laid over it: it gives way
+			// to the checkbox on hover / selection, and stays put on the rows that
+			// can't be selected (current, locked) — the glyph says why.
+			{ id: 'status', track: 'auto', srHeader: 'Status' },
 			{ id: 'name', track: 'minmax(14rem, 1.2fr)', header: 'Branch' },
 			{ id: 'commit', track: 'minmax(0, 1.5fr)', header: 'Last commit' },
 			// Fixed widths, not `auto`: an auto track follows whichever rows
@@ -441,11 +478,12 @@
 			{ id: 'meta', track: 'minmax(12rem, auto)', header: isRestoreView ? 'Deleted' : 'Updated' }
 		]}
 		narrow={{
-			columns: 'minmax(0, 1fr) auto',
+			columns: 'auto minmax(0, 1fr) auto',
 			cells: {
-				name: { column: '1', row: '1' },
-				changes: { column: '2', row: '1' },
-				meta: { column: '2', row: '1' },
+				status: { column: '1', row: '1' },
+				name: { column: '2', row: '1' },
+				changes: { column: '3', row: '1' },
+				meta: { column: '3', row: '1' },
 				commit: { hidden: true }
 			}
 		}}
@@ -461,6 +499,23 @@
 			{@const showActions =
 				switching || hoveredRow === branch.getName() || focusedRow === branch.getName()}
 
+			<span {...cell('status', { class: statusCellClass })} data-testid="branch-status">
+				<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
+					{#if branch.isCurrent()}
+						<Icon
+							icon={LucideMapPin}
+							width="14px"
+							height="14px"
+							data-testid="branch-status-current"
+						/>
+					{:else if branch.getIsLocked()}
+						<Icon icon={LucideLock} width="14px" height="14px" data-testid="branch-status-locked" />
+					{:else}
+						<Icon icon={LucideGitBranch} width="14px" height="14px" />
+					{/if}
+				</Stamp>
+			</span>
+
 			<!-- Line 1: who the branch is. Line 2: what needs attention, then who
 			     last touched it. -->
 			<div
@@ -469,9 +524,6 @@
 				data-testid="branch-row"
 			>
 				<span class={lineClass}>
-					<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideGitBranch} width="14px" height="14px" />
-					</Stamp>
 					<span class={nameClass} title={branch.getName()} data-testid="branch-name">
 						{branch.getName()}
 					</span>
@@ -506,11 +558,6 @@
 					{/if}
 				</span>
 				<span class={lineClass}>
-					<span class={iconSpacerClass} aria-hidden="true">
-						<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
-							<Icon icon={LucideGitBranch} width="14px" height="14px" />
-						</Stamp>
-					</span>
 					{#if hasAlerts}
 						<BranchAlerts {alerts} {branch} />
 					{/if}
@@ -603,7 +650,7 @@
 			<Tooltip content="Set as current">
 				{#snippet children(triggerProps)}
 					<Button
-						size="xs"
+						size="sm"
 						shape="square"
 						emphasis="ghost"
 						disabled={switchBranchMutation.isPending && !switching}
@@ -612,7 +659,7 @@
 						{...triggerProps}
 					>
 						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon={LucideMapPin} width="14px" height="14px" />
+							<Icon icon={LucideMapPin} width="16px" height="16px" />
 						</Stamp>
 						<span class={visuallyHidden()}>Set as current</span>
 					</Button>
@@ -627,7 +674,7 @@
 		<Tooltip content="View branch diff">
 			{#snippet children(triggerProps)}
 				<Button
-					size="xs"
+					size="sm"
 					shape="square"
 					emphasis="ghost"
 					href={`${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`}
@@ -635,7 +682,7 @@
 					{...triggerProps}
 				>
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideFileDiff} width="14px" height="14px" />
+						<Icon icon={LucideFileDiff} width="16px" height="16px" />
 					</Stamp>
 					<span class={visuallyHidden()}>View branch diff</span>
 				</Button>
@@ -646,7 +693,7 @@
 		<Tooltip content="Show in history">
 			{#snippet children(triggerProps)}
 				<Button
-					size="xs"
+					size="sm"
 					shape="square"
 					emphasis="ghost"
 					href={`${resolveRepositorySubPath(repositoryID, 'history')}?commit=${commit.getSha()}`}
@@ -654,7 +701,7 @@
 					{...triggerProps}
 				>
 					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideHistory} width="14px" height="14px" />
+						<Icon icon={LucideHistory} width="16px" height="16px" />
 					</Stamp>
 					<span class={visuallyHidden()}>Show in history</span>
 				</Button>

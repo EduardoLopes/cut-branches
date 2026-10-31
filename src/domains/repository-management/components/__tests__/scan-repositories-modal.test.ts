@@ -233,8 +233,12 @@ describe('ScanRepositoriesModal', () => {
 			);
 			expect(screen.getByTestId('scan-item').elements()).toHaveLength(2);
 			expect(screen.getByTestId('scan-item-added')).toBeInTheDocument();
-			// The added repository stays checked but can't be toggled.
-			const added = screen.getByRole('row').filter({ hasText: '/b' }).getByRole('checkbox');
+			// The added repository stays checked but can't be toggled; its check
+			// glyph stands where the (hidden) checkbox would be.
+			const added = screen
+				.getByRole('row')
+				.filter({ hasText: '/b' })
+				.getByRole('checkbox', { includeHidden: true });
 			await expect.element(added).toBeChecked();
 			await expect.element(added).toBeDisabled();
 			expect(screen.getByTestId('scan-add-selected')).toHaveTextContent('Add 1 repository');
