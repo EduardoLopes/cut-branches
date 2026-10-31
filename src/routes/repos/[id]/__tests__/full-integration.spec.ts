@@ -397,13 +397,12 @@ describe('Repository Page Integration Test', () => {
 		await tick(); // Initial tick
 		await tick(); // Additional tick for async updates
 
-		// Row actions mount for the hovered (or focused) row only. Focus, not a
-		// pointer hover: it doesn't depend on where the pointer lands.
+		// Row actions sit over the date, shown on hover or focus.
 		const featureRow = screen.getByRole('row').filter({ hasText: 'feature-branch' });
 		await expect.element(featureRow).toBeInTheDocument();
 		(featureRow.element() as HTMLElement).focus();
 		await tick();
-		const switchButtons = screen.getByTestId('switch-button').first();
+		const switchButtons = featureRow.getByRole('button', { name: 'Set as current' });
 		await expect.element(switchButtons).toBeInTheDocument();
 
 		await switchButtons.click({ force: true });

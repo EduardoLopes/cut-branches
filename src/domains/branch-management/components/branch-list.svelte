@@ -5,11 +5,10 @@
 	import LucideGitBranch from '@lucide/svelte/icons/git-branch';
 	import LucideHistory from '@lucide/svelte/icons/history';
 	import LucideLock from '@lucide/svelte/icons/lock';
+	import LucideLockOpen from '@lucide/svelte/icons/lock-open';
 	import LucideMapPin from '@lucide/svelte/icons/map-pin';
 	import Badge from '@pindoba/svelte-badge';
-	import Button from '@pindoba/svelte-button';
-	import GridList from '@pindoba/svelte-grid-list';
-	import Loading from '@pindoba/svelte-loading';
+	import GridList, { type GridListAction, type GridListIcon } from '@pindoba/svelte-grid-list';
 	import Popover from '@pindoba/svelte-popover';
 	import Stamp from '@pindoba/svelte-stamp';
 	import Tooltip from '@pindoba/svelte-tooltip';
@@ -21,11 +20,13 @@
 		fetchCommitHistoryWindow,
 		PREVIEW_WINDOW
 	} from '../features/commit-history/infrastructure/queries/create-get-commit-history-window-query';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import BranchAlerts from '$domains/branch-management/components/branch-alerts.svelte';
-	import LockBranchToggle from '$domains/branch-management/components/lock-branch-toggle.svelte';
 	import { useBranchMetrics } from '$domains/branch-management/core/composables/use-branch-metrics.svelte';
 	import { type Branch } from '$domains/branch-management/core/models/branch';
+	import { createAddLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-add-locked-branches-mutation';
+	import { createRemoveLockedBranchesMutation } from '$domains/branch-management/infrastructure/mutations/create-remove-locked-branches-mutation';
 	import { createSwitchBranchMutation } from '$domains/branch-management/infrastructure/mutations/create-switch-branch-mutation';
 	import { createUpdateBranchSelectionBatchMutation } from '$domains/branch-management/infrastructure/mutations/create-update-branch-selection-batch-mutation';
 	import { createGetBranchesQuery } from '$domains/branch-management/infrastructure/queries/create-get-branches-query';
@@ -41,7 +42,6 @@
 	import Icon from '$ui/core/icon.svelte';
 	import { safeFormatDate, safeFormatRelativeDate } from '$utils/date-utils';
 	import { css } from '@pindoba/styled-system/css';
-	import { visuallyHidden } from '@pindoba/styled-system/patterns';
 
 	interface Props {
 		repositoryID?: string;
@@ -271,27 +271,75 @@
 	});
 
 	// ---------------------------------------------------------------------------
-	// Row actions. The hover cell (switch, lock, diff, history) is most of a
-	// row's weight — a tooltip, button and their effects per action — and it
-	// only shows while the row is hovered or holds the focus. So it mounts for
-	// that row alone: rows scrolling past stay light. GridList finds a row's
-	// controls when a key asks for them, and the focus lands on the row first,
-	// which mounts them.
+	// Row actions, as GridList data: icon buttons over the date on hover/focus,
+	// the same list on right-click and on touch (⋯), each with a shortcut on
+	// the focused row. They step aside while a selection is up — the bulk bar
+	// acts then. Locked rows keep theirs: unlocking is one of them.
 	// ---------------------------------------------------------------------------
-	let hoveredRow = $state<string | null>(null);
-	let focusedRow = $state<string | null>(null);
+	const addLockedMutation = createAddLockedBranchesMutation();
+	const removeLockedMutation = createRemoveLockedBranchesMutation();
 
-	function rowIdOf(target: EventTarget | null): string | null {
-		return target instanceof Element
-			? (target.closest<HTMLElement>('[data-row-id]')?.dataset.rowId ?? null)
-			: null;
+	function toggleLock(branch: Branch) {
+		if (!repositoryID) return;
+		const branchNames = [branch.getName()];
+		if (branch.getIsLocked()) {
+			removeLockedMutation.mutate({ repoId: repositoryID, branchNames });
+			return;
+		}
+		addLockedMutation.mutate({ repoId: repositoryID, branchNames });
+		// A locked branch is protected: it leaves any pending deletion.
+		updateSelectionMutation.mutate({ repoId: repositoryID, branchNames, isSelected: false });
 	}
 
-	function handleFocusOut(event: FocusEvent) {
-		const { currentTarget, relatedTarget } = event;
-		if (!(relatedTarget instanceof Node) || !(currentTarget as Node).contains(relatedTarget)) {
-			focusedRow = null;
+	function rowActions(branch: Branch): GridListAction<GridListIcon, Branch>[] {
+		const actions: GridListAction<GridListIcon, Branch>[] = [];
+		const name = branch.getName();
+		if (allowSetCurrent && !branch.isCurrent()) {
+			actions.push({
+				id: 'switch',
+				label: 'Set as current',
+				icon: LucideMapPin,
+				shortcut: 's',
+				// One checkout at a time.
+				disabled: switchBranchMutation.isPending,
+				onSelect: () => handleSwitchBranch(name)
+			});
 		}
+		if (allowLocking && !branch.isCurrent()) {
+			const locked = branch.getIsLocked();
+			actions.push({
+				id: 'lock',
+				label: locked ? 'Unlock branch' : 'Lock branch',
+				icon: locked ? LucideLockOpen : LucideLock,
+				shortcut: 'l',
+				onSelect: toggleLock
+			});
+		}
+		// The paths are resolve()d; only a query is appended, which the
+		// navigation rule's static analysis can't see through.
+		if (diffEnabled && !branch.isCurrent() && repositoryID) {
+			const href = `${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(name)}`;
+			actions.push({
+				id: 'diff',
+				label: 'View branch diff',
+				icon: LucideFileDiff,
+				shortcut: 'd',
+				// eslint-disable-next-line svelte/no-navigation-without-resolve
+				onSelect: () => goto(href)
+			});
+		}
+		if (historyEnabled && repositoryID) {
+			const href = `${resolveRepositorySubPath(repositoryID, 'history')}?commit=${branch.getLastCommit().getSha()}`;
+			actions.push({
+				id: 'history',
+				label: 'Show in history',
+				icon: LucideHistory,
+				shortcut: 'h',
+				// eslint-disable-next-line svelte/no-navigation-without-resolve
+				onSelect: () => goto(href)
+			});
+		}
+		return actions;
 	}
 
 	// Filtering rewrites the list under a scroll offset that no longer means
@@ -323,8 +371,7 @@
 	const ESTIMATED_ROW_HEIGHT = 67;
 
 	/** Rows rendered past each end of the view (GridList's default is 6).
-	 *  Rows are light now that their actions mount on hover, so a deep buffer
-	 *  is cheap per frame, and it is what a fast flick scrolls into before
+	 *  Rows are light, so a deep buffer is cheap per frame, and it is what a fast flick scrolls into before
 	 *  the next render catches up. Arrival mounts the narrower one, so the
 	 *  list opens fast; once it has settled the buffer widens, mounting the
 	 *  extra rows while nobody is scrolling. */
@@ -411,7 +458,6 @@
 		color: 'neutral.text.muted',
 		whiteSpace: 'nowrap'
 	});
-	const actionsCellClass = css({ gap: '3xs', justifyContent: 'flex-end' });
 </script>
 
 <!-- Surface comes from the enclosing PageWell, which is unpadded for this view.
@@ -427,10 +473,6 @@
 		flex: '1',
 		minHeight: '0'
 	})}
-	onpointerover={(event) => (hoveredRow = rowIdOf(event.target))}
-	onpointerleave={() => (hoveredRow = null)}
-	onfocusin={(event) => (focusedRow = rowIdOf(event.target))}
-	onfocusout={handleFocusOut}
 	onscrollcapture={handleListScroll}
 >
 	<!-- The sticky header carries select-all (it covers the selectable rows
@@ -463,6 +505,9 @@
 		passThrough={{ grid: { style: scrollPortStyle }, spacer: { style: spacerStyle } }}
 		aria-busy={branchesQuery.isLoading}
 		selectOver="status"
+		actions={rowActions}
+		actionsInline={4}
+		actionsOver="meta"
 		columns={[
 			// The row's status glyph, with the checkbox laid over it: it gives way
 			// to the checkbox on hover / selection, and stays put on the rows that
@@ -472,8 +517,8 @@
 			{ id: 'commit', track: 'minmax(0, 1.5fr)', header: 'Last commit' },
 			// Fixed widths, not `auto`: an auto track follows whichever rows
 			// are mounted, so every scroll nudged the whole grid sideways. The
-			// meta floor fits the longest relative date and all four hover
-			// actions, which mount only for the hovered row.
+			// meta floor fits the longest relative date and all four row
+			// actions, which lie over it on hover.
 			{ id: 'changes', track: '12rem', header: 'Changes' },
 			{ id: 'meta', track: 'minmax(12rem, auto)', header: isRestoreView ? 'Deleted' : 'Updated' }
 		]}
@@ -493,11 +538,6 @@
 			{@const metrics = branch.isCurrent() ? undefined : branchMetrics.getMetrics(branch.getName())}
 			{@const alerts = getBranchAlerts(branch, branch.getIsSelected() ?? false, metrics?.isMerged)}
 			{@const hasAlerts = showAlerts && shouldShowBranchAlerts(alerts, branch)}
-			{@const switching =
-				switchBranchMutation.isPending &&
-				switchBranchMutation.variables?.branch === branch.getName()}
-			{@const showActions =
-				switching || hoveredRow === branch.getName() || focusedRow === branch.getName()}
 
 			<span {...cell('status', { class: statusCellClass })} data-testid="branch-status">
 				<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
@@ -619,8 +659,8 @@
 				{/if}
 			</span>
 
-			<!-- At rest: when. On hover or focus: what you can do. -->
-			<span {...cell('meta', { reveal: 'rest', class: dateCellClass })}>
+			<!-- At rest: when. On hover or focus the row actions lie over it. -->
+			<span {...cell('meta', { class: dateCellClass })}>
 				{#if isRestoreView && branch.getDeletedAt()}
 					<span
 						title={safeFormatDate(branch.getDeletedAt()!)}
@@ -634,81 +674,9 @@
 					</span>
 				{/if}
 			</span>
-			<span {...cell('meta', { reveal: 'hover', class: actionsCellClass })}>
-				{#if showActions}
-					{@render rowActions(branch, switching)}
-				{/if}
-			</span>
 		{/snippet}
 	</GridList>
 </div>
-
-{#snippet rowActions(branch: Branch, switching: boolean)}
-	{@const commit = branch.getLastCommit()}
-	{#if allowSetCurrent && !branch.isCurrent()}
-		<Loading loading={switching}>
-			<Tooltip content="Set as current">
-				{#snippet children(triggerProps)}
-					<Button
-						size="sm"
-						shape="square"
-						emphasis="ghost"
-						disabled={switchBranchMutation.isPending && !switching}
-						onclick={() => handleSwitchBranch(branch.getName())}
-						data-testid="switch-button"
-						{...triggerProps}
-					>
-						<Stamp emphasis="ghost" border="none" background="transparent">
-							<Icon icon={LucideMapPin} width="16px" height="16px" />
-						</Stamp>
-						<span class={visuallyHidden()}>Set as current</span>
-					</Button>
-				{/snippet}
-			</Tooltip>
-		</Loading>
-	{/if}
-	{#if allowLocking && !branch.isCurrent()}
-		<LockBranchToggle {repositoryID} branch={branch.getName()} />
-	{/if}
-	{#if diffEnabled && !branch.isCurrent() && repositoryID}
-		<Tooltip content="View branch diff">
-			{#snippet children(triggerProps)}
-				<Button
-					size="sm"
-					shape="square"
-					emphasis="ghost"
-					href={`${resolveRepositorySubPath(repositoryID, 'diff')}?branch=${encodeURIComponent(branch.getName())}`}
-					data-testid="branch-diff-link"
-					{...triggerProps}
-				>
-					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideFileDiff} width="16px" height="16px" />
-					</Stamp>
-					<span class={visuallyHidden()}>View branch diff</span>
-				</Button>
-			{/snippet}
-		</Tooltip>
-	{/if}
-	{#if historyEnabled && repositoryID}
-		<Tooltip content="Show in history">
-			{#snippet children(triggerProps)}
-				<Button
-					size="sm"
-					shape="square"
-					emphasis="ghost"
-					href={`${resolveRepositorySubPath(repositoryID, 'history')}?commit=${commit.getSha()}`}
-					data-testid="branch-history-link"
-					{...triggerProps}
-				>
-					<Stamp emphasis="ghost" border="none" background="transparent">
-						<Icon icon={LucideHistory} width="16px" height="16px" />
-					</Stamp>
-					<span class={visuallyHidden()}>Show in history</span>
-				</Button>
-			{/snippet}
-		</Tooltip>
-	{/if}
-{/snippet}
 
 {#if historyEnabled && preview && repositoryID && repositoryPath}
 	<!-- Hover-only, like the card's preview was: keyboard users reach the
