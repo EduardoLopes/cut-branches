@@ -443,6 +443,13 @@
 		'--gl-scroll-end-inset': 'var(--page-well-overlay-clearance, 0px)'
 	});
 
+	// Upstream refs are long, hyphenated paths: at the tooltip's default 20rem
+	// cap they break mid-name. A wider cap keeps typical refs on one line, and
+	// the viewport bound still lets a pathological one wrap instead of overflow.
+	const upstreamTooltipPassThrough = {
+		root: { style: css.raw({ maxWidth: 'min(48rem, calc(100vw - 2rem))' }) }
+	};
+
 	// Hoisted: `css()` is a runtime merge, not worth repeating per row.
 	const twoLineCellClass = css({ display: 'grid', gap: '3xs', minWidth: '0' });
 	const lineClass = css({ display: 'flex', alignItems: 'center', gap: 'xs', minWidth: '0' });
@@ -582,7 +589,10 @@
 					{/if}
 					{#if !isRestoreView}
 						{#if branch.getUpstream()}
-							<Tooltip content={`Tracks ${branch.getUpstream()}`}>
+							<Tooltip
+								content={`Tracks ${branch.getUpstream()}`}
+								passThrough={upstreamTooltipPassThrough}
+							>
 								{#snippet children(triggerProps)}
 									<span {...triggerProps} data-testid="branch-upstream">
 										<Stamp size="sm" emphasis="ghost" border="none" background="transparent">
